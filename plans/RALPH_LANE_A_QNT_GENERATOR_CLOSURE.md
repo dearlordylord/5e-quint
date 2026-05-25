@@ -142,8 +142,80 @@ work remains.
     {
       "number": 21,
       "id": "A67-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next unit-feature QNT generator batch"
+    },
+    {
+      "number": 22,
+      "id": "A68-METAMAGIC-OPTION-FACT-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Metamagic option fact and cost core"
+    },
+    {
+      "number": 23,
+      "id": "A69-METAMAGIC-STACKING-ADMISSION-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Metamagic known option and stacking admission core"
+    },
+    {
+      "number": 24,
+      "id": "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Quickened action spell procedure support core"
+    },
+    {
+      "number": 25,
+      "id": "A71-QUICKENED-RESTORATION-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Quickened direct restoration execution core"
+    },
+    {
+      "number": 26,
+      "id": "A72-QUICKENED-SCALAR-BUFF-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Quickened scalar buff execution core"
+    },
+    {
+      "number": 27,
+      "id": "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Quickened same-turn level-1-plus spell ledger core"
+    },
+    {
+      "number": 28,
+      "id": "A74-SAVE-METAMAGIC-ADMISSION-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split save-affecting Metamagic admission core"
+    },
+    {
+      "number": 29,
+      "id": "A75-CAREFUL-SPELL-TARGET-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Careful Spell protected-target core"
+    },
+    {
+      "number": 30,
+      "id": "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Heightened Spell save roll-mode core"
+    },
+    {
+      "number": 31,
+      "id": "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Move Metamagic run blocks into proof-only examples"
+    },
+    {
+      "number": 32,
+      "id": "A78-METAMAGIC-GENERATOR-READINESS-ROW",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Refresh Metamagic generator-readiness row after splits"
+    },
+    {
+      "number": 33,
+      "id": "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Verify Metamagic generator closure"
     }
   ]
 }
@@ -437,7 +509,7 @@ unit-feature evidence by profile instead of as stale broad-owner claims.
 
 ### Task 21 - A67-RECURSIVE-NEXT-BATCH - Mine next unit-feature QNT generator batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current checker-owned artifacts after A66.
 
@@ -446,3 +518,219 @@ Output: append at least 12 new atomic runnable tasks or prove from
 `qnt-owner-roles.jsonl` that no unit-feature QNT generator work remains.
 
 Acceptance: plan has new runnable tasks or a concise durable closure note.
+
+Closed by checker-owned artifacts after A66: the broad
+`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` row is `generation-subset-clean`,
+but `profile-obligations.jsonl` still maps
+`unit-feature.metamagic-cast-governor-quickened` to
+`BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`. That obligation is covered,
+`qnt-owner-roles.jsonl` classifies
+`packages/battle-runtime/battle-runtime-metamagic.qnt` as `semantic-core`, and
+the generated semantic-core run-block report finds the remaining generator
+blocker there. The durable next batch is therefore A68-A79 below, all scoped to
+splitting the Metamagic semantic core and proof-only run blocks without changing
+selected-identity policy or adding new battle reducer behavior outside the
+existing covered obligation.
+
+### Task 22 - A68-METAMAGIC-OPTION-FACT-CORE - Split Metamagic option fact and cost core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A67
+
+Input: `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`,
+`packages/battle-runtime/battle-runtime-metamagic.qnt`, Sorcerer Metamagic RAW,
+and `UBIQUITOUS_LANGUAGE.md` Pool/Spend terms.
+
+Output: focused QNT semantic core for typed Metamagic option facts, Sorcery
+Point cost projection, and supported option effect kinds, with examples kept
+outside the semantic-core owner.
+
+Acceptance: focused QNT check green; `pnpm rules-kernel-coverage:check` remains
+green.
+
+### Task 23 - A69-METAMAGIC-STACKING-ADMISSION-CORE - Split Metamagic known option and stacking admission core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A68
+
+Input: selected known-option, affordability, and one-option-per-spell predicates
+from `battle-runtime-metamagic.qnt`.
+
+Output: focused QNT semantic core for known-option membership, total selected
+Sorcery Point cost, one-option-per-spell default, and explicit stacking
+exceptions, without authored option identity dispatch.
+
+Acceptance: focused QNT examples cover known, unknown, affordable,
+unaffordable, stackable, and non-stackable selections; checker green.
+
+### Task 24 - A70-QUICKENED-PROCEDURE-SUPPORT-CORE - Split Quickened action spell procedure support core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A69
+
+Input: `BattleRuntimeQuickenedActionSpellProcedure` and
+`quickenedActionSpellProcedureSupportsBonusActionRewrite`.
+
+Output: focused QNT semantic core for which supported action-casting Spell
+Invocation procedure classes admit Quickened's Bonus Action rewrite in the
+current profile subset, preserving deferred all-action-spell expansion tasks.
+
+Acceptance: examples cover admitted direct restoration and scalar buff
+procedures plus currently closed damage, control, ongoing-effect, and other
+procedure classes; checker green.
+
+### Task 25 - A71-QUICKENED-RESTORATION-CORE - Split Quickened direct restoration execution core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A70
+
+Input: `resolveQuickenedDirectHitPointRestoration` and the direct Hit Point
+restoration action-cost predicates.
+
+Output: focused QNT semantic core for Quickened direct restoration resolution:
+Bonus Action spend, Spell Slot spend, Sorcery Point spend, target healing, and
+rejection without state change when admission fails.
+
+Acceptance: focused QNT examples cover successful Cure Wounds-style resolution,
+Healing Word-style non-action rejection, invalid target count, insufficient
+Sorcery Points, and state preservation on rejection; checker green.
+
+### Task 26 - A72-QUICKENED-SCALAR-BUFF-CORE - Split Quickened scalar buff execution core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A70
+
+Input: `resolveQuickenedScalarBuffSpell` and scalar buff action-cost predicates.
+
+Output: focused QNT semantic core for Quickened scalar buff resolution: Bonus
+Action spend, Spell Slot spend, Sorcery Point spend, resolved buff projection,
+and rejection without state change when admission fails.
+
+Acceptance: focused QNT examples cover successful False Life-style resolution,
+Bonus Action spell rejection, failed target/willingness resolution, and state
+preservation on rejection; checker green.
+
+### Task 27 - A73-QUICKENED-SAME-TURN-LEDGER-CORE - Split Quickened same-turn level-1-plus spell ledger core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A71, A72
+
+Input: Quickened level-1-plus spell cast turn facts in
+`battle-runtime-metamagic.qnt` and `battle-runtime-turn-order.qnt`.
+
+Output: focused QNT semantic core or existing-core reuse for the same-turn
+level-1-plus spell prohibition, including slot and free-cast witnesses, with no
+duplicate Spell Slot state.
+
+Acceptance: focused QNT examples cover prior slot spell, prior free level-1-plus
+spell, Quickened spell commit, and same-turn post-Quickened cast blocking;
+checker green.
+
+### Task 28 - A74-SAVE-METAMAGIC-ADMISSION-CORE - Split save-affecting Metamagic admission core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A69
+
+Input: `BattleRuntimeSaveMetamagicProcedure`,
+`saveMetamagicCanModifySaveSpell`, and Sorcerer Careful/Heightened RAW.
+
+Output: focused QNT semantic core for Careful and Heightened admission against
+supported save-gated procedures, including known-option, stacking, cost, and
+Sleep/non-save closure predicates.
+
+Acceptance: examples cover supported save-for-half and non-damage save
+procedures, Sleep target admission rejection, non-save rejection, unknown
+selection, unaffordable selection, and unsupported stacking; checker green.
+
+### Task 29 - A75-CAREFUL-SPELL-TARGET-CORE - Split Careful Spell protected-target core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A74
+
+Input: `carefulSpellMaxProtectedTargets`,
+`carefulSpellProtectedTargetSelectionValid`, and
+`carefulSpellSuppressesSuccessfulHalfDamage`.
+
+Output: focused QNT semantic core for Charisma-modifier-limited protected target
+selection, automatic save success boundary facts, and successful-save half-damage
+suppression.
+
+Acceptance: examples cover minimum one protected target, Charisma modifier
+limit, target membership, non-empty selection, half-damage suppression, and
+no-damage-on-success non-suppression; checker green.
+
+### Task 30 - A76-HEIGHTENED-SPELL-ROLL-MODE-CORE - Split Heightened Spell save roll-mode core
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A74
+
+Input: `heightenedSpellTargetSelectionValid`,
+`savingThrowRollModeWithHeightenedSpell`, and
+`combineSavingThrowRollModes`.
+
+Output: focused QNT semantic core for one-target Heightened selection and
+Saving Throw roll-mode projection, using existing Advantage/Disadvantage
+combination semantics.
+
+Acceptance: examples cover selected target Disadvantage, unselected target
+unchanged mode, invalid target rejection, existing Advantage cancellation, and
+duplicate Disadvantage idempotence; checker green.
+
+### Task 31 - A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT - Move Metamagic run blocks into proof-only examples
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A68-A76
+
+Input: the eight current `run` blocks in
+`packages/battle-runtime/battle-runtime-metamagic.qnt`.
+
+Output: semantic-core Metamagic QNT files contain no `run` blocks or `assert`
+forms; proof-only examples preserve the behavioral checks without becoming
+generator input.
+
+Acceptance: generated semantic-core run-block findings no longer list
+`BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`; focused QNT examples green;
+checker green.
+
+### Task 32 - A78-METAMAGIC-GENERATOR-READINESS-ROW - Refresh Metamagic generator-readiness row after splits
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A77
+
+Input: refreshed Metamagic semantic-core owners, proof-only example owners,
+`generator-readiness.jsonl`, and `qnt-owner-roles.jsonl`.
+
+Output: `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` readiness row
+records the split semantic cores, proof-only examples, observed
+`generatorSubset`, and no stale A67 blocker.
+
+Acceptance: `pnpm rules-kernel-coverage:check -- --write` produces stable
+reports; `pnpm rules-kernel-coverage:check` green.
+
+### Task 33 - A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY - Verify Metamagic generator closure
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: A78
+
+Input: A68-A78 outputs and generated rules-kernel reports.
+
+Output: durable closure note confirming no unit-feature generator-readiness
+backlog rows or run-block findings remain for covered `BATTLE.FEATURE.*`
+obligations owned by Lane A.
+
+Acceptance: `pnpm rules-kernel-coverage:check`; `pnpm unit-profile-coverage:check`;
+focused Metamagic QNT checks; `git diff --check`; reviewer loop convergence
+with RAW, ubiquitous-language/domain, architecture/connascence, and code-review
+passes.

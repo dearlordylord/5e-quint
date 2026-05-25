@@ -7538,15 +7538,28 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [],
+      "blockedBy": [
+        "run-block-coupled"
+      ],
       "followUpTaskIds": [
-        "A67-RECURSIVE-NEXT-BATCH"
+        "A68-METAMAGIC-OPTION-FACT-CORE",
+        "A69-METAMAGIC-STACKING-ADMISSION-CORE",
+        "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
+        "A71-QUICKENED-RESTORATION-CORE",
+        "A72-QUICKENED-SCALAR-BUFF-CORE",
+        "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
+        "A74-SAVE-METAMAGIC-ADMISSION-CORE",
+        "A75-CAREFUL-SPELL-TARGET-CORE",
+        "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
+        "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
+        "A78-METAMAGIC-GENERATOR-READINESS-ROW",
+        "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY"
       ],
       "generatorSubset": [],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "proofOnly": [],
       "semanticCore": [],
-      "status": "not-assessed"
+      "status": "blocked"
     },
     {
       "blockedBy": [],
@@ -8846,16 +8859,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "ownerRoles": [
         {
@@ -8944,7 +8947,18 @@
     {
       "blocker": "run-block-coupled",
       "followUpTaskIds": [
-        "A67-RECURSIVE-NEXT-BATCH"
+        "A68-METAMAGIC-OPTION-FACT-CORE",
+        "A69-METAMAGIC-STACKING-ADMISSION-CORE",
+        "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
+        "A71-QUICKENED-RESTORATION-CORE",
+        "A72-QUICKENED-SCALAR-BUFF-CORE",
+        "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
+        "A74-SAVE-METAMAGIC-ADMISSION-CORE",
+        "A75-CAREFUL-SPELL-TARGET-CORE",
+        "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
+        "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
+        "A78-METAMAGIC-GENERATOR-READINESS-ROW",
+        "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "owners": [
@@ -8962,7 +8976,7 @@
           "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
         }
       ],
-      "readinessStatus": "not-assessed"
+      "readinessStatus": "blocked"
     },
     {
       "blocker": "run-block-coupled",
