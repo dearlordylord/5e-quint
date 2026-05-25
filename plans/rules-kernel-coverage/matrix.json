@@ -1761,6 +1761,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/chromatic-orb-chained-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/chained-attack-sequence.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
