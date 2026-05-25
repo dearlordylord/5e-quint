@@ -47,7 +47,7 @@ remains.
     {
       "number": 6,
       "id": "C6-MBT-WITNESS-KIND-NORMALIZATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Normalize MBT/runtime witness kinds in the metric"
     },
     {
@@ -227,7 +227,7 @@ remain green.
 
 ### Task 6 - C6-MBT-WITNESS-KIND-NORMALIZATION - Normalize MBT/runtime witness kinds in the metric
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: documented and checked witness-kind vocabulary distinguishing focused
 MBT, deterministic QNT replay, runtime test, and MCP scenario evidence.
