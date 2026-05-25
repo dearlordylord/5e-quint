@@ -148,7 +148,7 @@ work remains.
     {
       "number": 22,
       "id": "A68-METAMAGIC-OPTION-FACT-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Metamagic option fact and cost core"
     },
     {
@@ -534,7 +534,7 @@ existing covered obligation.
 
 ### Task 22 - A68-METAMAGIC-OPTION-FACT-CORE - Split Metamagic option fact and cost core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: A67
 
@@ -548,6 +548,9 @@ outside the semantic-core owner.
 
 Acceptance: focused QNT check green; `pnpm rules-kernel-coverage:check` remains
 green.
+
+Closed by the split Metamagic option fact core and refreshed
+rules-kernel coverage owner artifacts.
 
 ### Task 23 - A69-METAMAGIC-STACKING-ADMISSION-CORE - Split Metamagic known option and stacking admission core
 

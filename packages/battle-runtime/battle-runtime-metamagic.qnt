@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 
 module battleRuntimeMetamagic {
+  import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
@@ -12,22 +13,6 @@ module battleRuntimeMetamagic {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
-
-  type BattleRuntimeMetamagicEffectKind =
-    | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
-    | DamageDiceRerollStackingException
-    | SavingThrowProtection
-    | SavingThrowDisadvantage
-
-  type BattleRuntimeMetamagicStackingMode =
-    | OnePerSpell
-    | CanCombineWithDifferentMetamagic
-
-  type BattleRuntimeMetamagicOptionFact = {
-    effectKind: BattleRuntimeMetamagicEffectKind,
-    stackingMode: BattleRuntimeMetamagicStackingMode,
-    sorceryPointCost: int,
-  }
 
   type BattleRuntimeQuickenedMetamagicResult = {
     state: BattleState,
@@ -48,49 +33,20 @@ module battleRuntimeMetamagic {
     | SleepTargetAdmissionProcedure
     | NonSaveMetamagicProcedure
 
-  pure val quickenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 2,
-  }
-
-  pure val empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: DamageDiceRerollStackingException,
-    stackingMode: CanCombineWithDifferentMetamagic,
-    sorceryPointCost: 1,
-  }
-
-  pure val carefulSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: SavingThrowProtection,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 1,
-  }
-
-  pure val heightenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: SavingThrowDisadvantage,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 2,
-  }
-
   pure def selectedMetamagicOptionsKnown(
     knownOptions: Set[BattleRuntimeMetamagicOptionFact],
     selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
   ): bool =
     selectedOptions.forall(option => knownOptions.contains(option))
 
-  pure def selectedMetamagicSorceryPointCost(
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): int =
-    selectedOptions
-      .map(option => option.sorceryPointCost)
-      .fold(0, (total, cost) => total + cost)
-
   pure def selectedMetamagicOptionsCanStack(
     selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
   ): bool =
     selectedOptions.size() <= 1 or (
       selectedOptions.size() == 2 and
-      selectedOptions.exists(option => option.stackingMode == CanCombineWithDifferentMetamagic)
+      selectedOptions.exists(
+        option => battleRuntimeMetamagicOptionStackingMode(option) == CanCombineWithDifferentMetamagic
+      )
     )
 
   pure def selectedMetamagicOptionsSupportedByQuickenedActionSpell(

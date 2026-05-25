@@ -739,6 +739,7 @@
         "unit-feature.metamagic-cast-governor-quickened"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/battle-runtime/battle-runtime-metamagic.qnt"
       ],
       "runtime": "battle",
@@ -5521,6 +5522,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt is the covered obligation QNT owner carrying typed Metamagic option effect-kind, stacking-mode, and Sorcery Point cost projection semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-mirror-image.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
@@ -8964,14 +8973,14 @@
       "owners": [
         {
           "lines": [
-            337,
-            363,
-            378,
-            393,
-            416,
-            488,
-            509,
-            545
+            293,
+            319,
+            334,
+            349,
+            372,
+            444,
+            465,
+            501
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
         }
