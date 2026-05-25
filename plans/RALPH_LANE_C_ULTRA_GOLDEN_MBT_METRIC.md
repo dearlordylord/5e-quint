@@ -161,7 +161,7 @@ remains.
     {
       "number": 25,
       "id": "C25-GENERATOR-READINESS-MARKED-DAMAGE-RIDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify marked damage rider generator readiness"
     },
     {
@@ -600,7 +600,7 @@ longer `not-assessed`.
 
 ### Task 25 - C25-GENERATOR-READINESS-MARKED-DAMAGE-RIDER - Classify marked damage rider generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
