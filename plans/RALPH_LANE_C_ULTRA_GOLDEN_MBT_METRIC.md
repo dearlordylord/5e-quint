@@ -278,7 +278,7 @@ Acceptance: focused MCP test green; slow tests get explicit timeout if needed.
 
 ### Task 12 - C12-LEVEL12-ULTRA-GOLDEN-SUMMARY - Publish level 1-2 ultra-golden summary
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: concise generated summary of level 1-2 support, QNT/generator,
 MBT/parity, and MCP layers.

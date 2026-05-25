@@ -34,6 +34,7 @@ const {
 } = require("./srd-unit-inventory.cjs");
 const {
   buildUltraGoldenGate,
+  renderLevel12UltraGoldenSummary,
   renderUltraGoldenGate,
   validateMcpScenarioEvidence,
 } = require("./ultra-golden-gate.cjs");
@@ -224,6 +225,15 @@ function main() {
     { root, write },
     paths.level12QntMbtJoinReport,
     renderLevel12QntMbtJoin(level12QntMbtJoin),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12UltraGoldenSummaryReport,
+    renderLevel12UltraGoldenSummary({
+      level12FullSupport,
+      level12QntMbtJoin,
+      ultraGoldenGate,
+    }),
   );
   writeOrCompare(
     { root, write },

@@ -890,27 +890,219 @@ function renderSelectedIdentityAuditRows(scope) {
   });
 }
 
-function renderMcpScenarioEvidenceRows(scope) {
+function renderMcpScenarioEvidenceRow({ flow, includeScope, mcpLayer, scope }) {
+  const evidenceRows = (mcpLayer.evidenceRows ?? []).filter(
+    (row) => row.flowId === flow.flowId,
+  );
+  const scenarioIds =
+    evidenceRows.length === 0
+      ? "_missing_"
+      : evidenceRows.map((row) => `\`${row.scenarioId}\``).join(", ");
+  const witnessKinds =
+    evidenceRows.length === 0
+      ? "_missing_"
+      : evidenceRows.map((row) => `\`${row.kind}\``).join(", ");
+  const followUp =
+    evidenceRows.length === 0 ? `\`${flow.followUpTaskId}\`` : "_none_";
+  const status = evidenceRows.length === 0 ? blockedStatus : passStatus;
+  const scopeCells = includeScope ? `${scope.scopeId} | ` : "";
+  return `| ${scopeCells}${flow.flowId} | ${status} | ${witnessKinds} | ${scenarioIds} | ${followUp} |`;
+}
+
+function renderMcpScenarioEvidenceRows(scope, { includeScope = true } = {}) {
   const mcpLayer = scope.layers.find(
     (layer) => layer.id === layerId.mcpScenarioEvidence,
   );
-  return (mcpLayer?.requiredFlows ?? []).map((flow) => {
-    const evidenceRows = (mcpLayer.evidenceRows ?? []).filter(
-      (row) => row.flowId === flow.flowId,
-    );
-    const scenarioIds =
-      evidenceRows.length === 0
-        ? "_missing_"
-        : evidenceRows.map((row) => `\`${row.scenarioId}\``).join(", ");
-    const witnessKinds =
-      evidenceRows.length === 0
-        ? "_missing_"
-        : evidenceRows.map((row) => `\`${row.kind}\``).join(", ");
-    const followUp =
-      evidenceRows.length === 0 ? `\`${flow.followUpTaskId}\`` : "_none_";
-    const status = evidenceRows.length === 0 ? blockedStatus : passStatus;
-    return `| ${scope.scopeId} | ${flow.flowId} | ${status} | ${witnessKinds} | ${scenarioIds} | ${followUp} |`;
+  return (mcpLayer?.requiredFlows ?? []).map((flow) =>
+    renderMcpScenarioEvidenceRow({ flow, includeScope, mcpLayer, scope }),
+  );
+}
+
+function countBy(values, selectKey) {
+  return Object.fromEntries(
+    Array.from(
+      values.reduce((counts, value) => {
+        const key = selectKey(value);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+        return counts;
+      }, new Map()),
+    ).sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+function findLayer(scope, id) {
+  const layer = scope.layers.find((entry) => entry.id === id);
+  if (layer === undefined) {
+    throw new Error(`Missing ultra-golden layer ${id} for ${scope.scopeId}.`);
+  }
+  return layer;
+}
+
+function renderCoverageMetric(metric) {
+  return `${metric.numerator}/${metric.denominator}${
+    metric.percent === undefined ? "" : ` (${metric.percent})`
+  }`;
+}
+
+function renderCountCoverage(metric) {
+  return `${metric.numerator}/${metric.denominator}`;
+}
+
+function renderCountRows(counts) {
+  const entries = Object.entries(counts).sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
+  if (entries.length === 0) return ["| _none_ | 0 |"];
+  return entries.map(([key, count]) => `| ${md(key)} | ${count} |`);
+}
+
+function renderLayerSnapshotRow({ detail, layer, layerLabel }) {
+  const blocking =
+    layer.blockingCount === 0 ? "_none_" : `${layer.blockingCount} blocker(s)`;
+  return `| ${layerLabel} | ${layer.status} | ${md(detail)} | ${blocking} |`;
+}
+
+function renderLevel12UltraGoldenSummary({
+  level12FullSupport,
+  level12QntMbtJoin,
+  ultraGoldenGate,
+}) {
+  const scope = ultraGoldenGate.scopes.find(
+    (entry) => entry.scopeId === "level-1-2",
+  );
+  if (scope === undefined) {
+    throw new Error("Missing level-1-2 ultra-golden scope.");
+  }
+  const supportLayer = findLayer(scope, layerId.supportCompleteness);
+  const qntGeneratorLayer = findLayer(scope, layerId.qntGeneratorReadiness);
+  const mbtParityLayer = findLayer(scope, layerId.mbtParityEvidence);
+  const mcpScenarioLayer = findLayer(scope, layerId.mcpScenarioEvidence);
+  const qntReadinessCounts = countBy(
+    qntGeneratorLayer.generatorBlockingRows ?? [],
+    (row) => row.readinessStatus,
+  );
+  const qntBlockerCounts = countBy(
+    (qntGeneratorLayer.generatorBlockingRows ?? []).flatMap((row) =>
+      row.blockedBy.length === 0
+        ? ["no blocker token (readiness not assessed)"]
+        : row.blockedBy,
+    ),
+    (blockedBy) => blockedBy,
+  );
+  const mcpFlowRows = renderMcpScenarioEvidenceRows(scope, {
+    includeScope: false,
   });
+  const productRowsByStatus =
+    level12FullSupport.metrics.productReadiness.rowsByStatus ?? {};
+  const witnessKinds = mbtParityLayer.evidence.witnessKinds ?? {};
+  const sourceArtifacts = uniqueSorted([
+    level12QntMbtJoin.sourceArtifacts.level12FullSupport,
+    level12QntMbtJoin.sourceArtifacts.rulesKernelMatrix,
+    level12QntMbtJoin.sourceArtifacts.profileObligations,
+    ultraGoldenGate.sourceArtifacts.mcpScenarioEvidence,
+    ultraGoldenGate.sourceArtifacts.unitMatrix,
+  ]);
+  return `${[
+    "# Level 1-2 Ultra-Golden Summary",
+    "",
+    "Generated by `scripts/unit-profile-coverage-check.cjs`.",
+    "",
+    `Scope: **${md(level12FullSupport.scope.title)}**.`,
+    "",
+    `Ultra-golden status: **${scope.status}** (${scope.layerResult.completeLayers}/${scope.layerResult.totalLayers} required layers complete).`,
+    "",
+    "This summary is layer-by-layer. It deliberately does not publish a blended ultra-golden percentage; a pass in support completeness, MBT/parity, or MCP scenario evidence cannot satisfy a blocked QNT/generator readiness layer.",
+    "",
+    "## Layer Snapshot",
+    "",
+    "| Layer | Status | Evidence | Blocking issue |",
+    "| --- | --- | --- | --- |",
+    renderLayerSnapshotRow({
+      layer: supportLayer,
+      layerLabel: "Support completeness",
+      detail: [
+        `strict target closure ${renderCoverageMetric(level12FullSupport.metrics.strictTargetClosure)}`,
+        `selected identity ${renderCoverageMetric(level12FullSupport.selectedIdentityReadiness.metrics)}`,
+        `SRD authored product readiness ${renderCoverageMetric(level12FullSupport.srdAuthoredProductReadiness.metrics)}`,
+      ].join("; "),
+    }),
+    renderLayerSnapshotRow({
+      layer: qntGeneratorLayer,
+      layerLabel: "QNT/generator readiness",
+      detail: [
+        `QNT-covered obligations ${renderCountCoverage(qntGeneratorLayer.evidence.qntCoveredObligations)}`,
+        `generator-ready semantic-core obligations ${renderCountCoverage(qntGeneratorLayer.evidence.generatorReadySemanticCoreObligations)}`,
+      ].join("; "),
+    }),
+    renderLayerSnapshotRow({
+      layer: mbtParityLayer,
+      layerLabel: "MBT/parity evidence",
+      detail: [
+        `parity-witnessed obligations ${renderCountCoverage(mbtParityLayer.evidence.parityWitnessedObligations)}`,
+        `witness kinds ${Object.entries(witnessKinds)
+          .map(([kind, count]) => `${kind}: ${count}`)
+          .join(", ")}`,
+      ].join("; "),
+    }),
+    renderLayerSnapshotRow({
+      layer: mcpScenarioLayer,
+      layerLabel: "MCP scenario evidence",
+      detail: [
+        `scenario flows ${renderCountCoverage(mcpScenarioLayer.evidence.scenarioEvidenceFlows)}`,
+        `check ${mcpScenarioLayer.evidence.check.command}`,
+      ].join("; "),
+    }),
+    "",
+    "## Support Claim",
+    "",
+    `Full-support claim gate: **${level12FullSupport.claimGate.status}**.`,
+    "",
+    "| Gate | Result | Blocking rows |",
+    "| --- | ---: | ---: |",
+    `| Strict target closure | ${renderCoverageMetric(level12FullSupport.metrics.strictTargetClosure)} | ${level12FullSupport.claimGate.strictTargetOpenCount} |`,
+    `| Selected identity readiness | ${renderCoverageMetric(level12FullSupport.selectedIdentityReadiness.metrics)} | ${level12FullSupport.claimGate.selectedIdentityBlockerCount} |`,
+    `| SRD authored product readiness | ${renderCoverageMetric(level12FullSupport.srdAuthoredProductReadiness.metrics)} | ${level12FullSupport.claimGate.authoredReadinessBlockerCount} |`,
+    "",
+    "Product readiness remains a separate diagnostic lower-layer view, not a substitute for the support claim gate.",
+    "",
+    "| Product readiness status | Rows |",
+    "| --- | ---: |",
+    ...renderCountRows(productRowsByStatus),
+    "",
+    "## QNT, Generator, And Parity",
+    "",
+    `Level 1-2 QNT/MBT join open gaps: **${level12QntMbtJoin.openGapRows.length}**.`,
+    "",
+    "| Join metric | Result |",
+    "| --- | ---: |",
+    `| Supported Units in join | ${renderCoverageMetric(level12QntMbtJoin.metrics.supportedUnits)} |`,
+    `| Rules-kernel profiles in join | ${renderCoverageMetric(level12QntMbtJoin.metrics.rulesKernelProfiles)} |`,
+    `| Obligation join rows without open gaps | ${renderCoverageMetric(level12QntMbtJoin.metrics.obligationJoinRows)} |`,
+    `| Unique covered obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueCoveredObligations)} |`,
+    `| Unique QNT-owned obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueQntOwnedObligations)} |`,
+    `| Unique parity-witnessed obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueParityWitnessedObligations)} |`,
+    "",
+    "Generator readiness is the incomplete layer.",
+    "",
+    "| Generator readiness status | Blocking rows |",
+    "| --- | ---: |",
+    ...renderCountRows(qntReadinessCounts),
+    "",
+    "| Generator blocker | Blocking rows |",
+    "| --- | ---: |",
+    ...renderCountRows(qntBlockerCounts),
+    "",
+    "## MCP Scenario Evidence",
+    "",
+    "| Flow | Status | Witness kind | Scenario evidence | Follow-up task |",
+    "| --- | --- | --- | --- | --- |",
+    ...mcpFlowRows,
+    "",
+    "## Source Artifacts",
+    "",
+    ...sourceArtifacts.map((sourceArtifact) => `- \`${sourceArtifact}\``),
+    "",
+  ].join("\n")}`;
 }
 
 function renderUltraGoldenGate(gate) {
@@ -984,6 +1176,7 @@ function renderUltraGoldenGate(gate) {
 
 module.exports = {
   buildUltraGoldenGate,
+  renderLevel12UltraGoldenSummary,
   renderUltraGoldenGate,
   validateMcpScenarioEvidence,
 };

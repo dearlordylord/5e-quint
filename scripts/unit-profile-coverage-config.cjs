@@ -269,6 +269,10 @@ function coveragePaths(root) {
     ),
     level12QntMbtJoin: path.join(coverageDir, "level1-2-qnt-mbt-join.json"),
     level12QntMbtJoinReport: path.join(coverageDir, "LEVEL1_2_QNT_MBT_JOIN.md"),
+    level12UltraGoldenSummaryReport: path.join(
+      coverageDir,
+      "LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md",
+    ),
     spellProcedureMbtEvidenceGate: path.join(
       coverageDir,
       "spell-procedure-mbt-evidence-gate.json",

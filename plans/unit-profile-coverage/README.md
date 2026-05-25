@@ -15,7 +15,8 @@ level are separate axes: character levels 1-2 include cantrips and spell-level-1
 spells; character level 3 is the first frontier that includes spell-level-2
 spells; spell-level-3 spells belong to the later character-level-5 frontier.
 The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
-`LEVEL1_2_FULL_SUPPORT.md`, `LEVEL1_3_FULL_SUPPORT.md`, and
+`LEVEL1_2_FULL_SUPPORT.md`, `LEVEL1_2_QNT_MBT_JOIN.md`,
+`LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`, `LEVEL1_3_FULL_SUPPORT.md`, and
 `ULTRA_GOLDEN_GATE.md`.
 
 This lane is the authored-content breadth layer. It does not by itself prove
