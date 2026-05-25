@@ -32,6 +32,13 @@ const profileKinds = new Set([
   "equipment",
   "table-caller",
 ]);
+const unitFeatureProfileIdPrefix = "unit-feature.";
+function isUnitFeatureProfileId(profileId) {
+  return (
+    typeof profileId === "string" &&
+    profileId.startsWith(unitFeatureProfileIdPrefix)
+  );
+}
 const rulesKernelProfileKindClasses = new Set([
   "rules-kernel",
   "surface-authored-data",
@@ -324,6 +331,7 @@ module.exports = {
   deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
   fungiTerms,
+  isUnitFeatureProfileId,
   nearCanonicalDenyList,
   profileKinds,
   protectedExpressionFields,
@@ -336,6 +344,7 @@ module.exports = {
   selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,
+  unitFeatureProfileIdPrefix,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
   ultraGoldenWitnessKinds,

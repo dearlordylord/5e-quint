@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 
 module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntime.* from "./battle-runtime"

@@ -90,6 +90,7 @@ function buildRulesKernelProfileJoin({
     return stable({
       profileId: profile.id,
       profileKind: profile.profileKind,
+      qntOwners: uniqueSorted(profile.qntOwners ?? []),
       ...(mapping.followUpTaskIds.length > 0
         ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
         : {}),

@@ -857,6 +857,7 @@ function runSelfTest(root) {
                 {
                   profileId: "unit-feature.fixture",
                   profileKind: "resource",
+                  qntOwners: ["fixture/feature-profile.qnt"],
                   joinStatus: "covered",
                   obligations: [
                     {
@@ -883,7 +884,10 @@ function runSelfTest(root) {
             status: "covered",
             runtime: "battle",
             title: "Fixture feature obligation",
-            qntOwners: ["fixture/feature.qnt"],
+            qntOwners: [
+              "fixture/feature-profile.qnt",
+              "fixture/stale-obligation-owner.qnt",
+            ],
             parityWitnesses: [
               {
                 kind: "runtime-test",
@@ -894,7 +898,11 @@ function runSelfTest(root) {
         ],
         qntOwnerRoles: [
           {
-            ownerPath: "fixture/feature.qnt",
+            ownerPath: "fixture/feature-profile.qnt",
+            role: "semantic-core",
+          },
+          {
+            ownerPath: "fixture/stale-obligation-owner.qnt",
             role: "semantic-core",
           },
         ],
@@ -910,6 +918,17 @@ function runSelfTest(root) {
     ) {
       fail(
         `Self-test failed: expected feature procedure gate to expose runtime-test-only QNT/MBT gap, got ${JSON.stringify(featureProcedureEvidenceGate)}`,
+      );
+    }
+    const fixtureFeatureOwners =
+      fixtureFeatureScope?.rows[0]?.qntOwners.map((owner) => owner.ownerPath) ??
+      [];
+    if (
+      fixtureFeatureOwners.length !== 1 ||
+      fixtureFeatureOwners[0] !== "fixture/feature-profile.qnt"
+    ) {
+      fail(
+        `Self-test failed: expected feature procedure gate to emit profile-scoped QNT owner evidence, got ${JSON.stringify(fixtureFeatureOwners)}`,
       );
     }
     const malformedUnitEvidenceIssues = validateCoverageInputs({

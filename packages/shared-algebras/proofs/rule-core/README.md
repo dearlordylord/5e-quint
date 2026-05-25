@@ -300,12 +300,15 @@ budget near the `any` action.
 
 `unit-feature-action-count-core.qnt`, `unit-feature-pool-cost-core.qnt`,
 `unit-feature-rage-reckless-core.qnt`,
-`unit-feature-attack-rider-core.qnt`, and
-`unit-feature-procedure-profiles.qnt` model projection-shaped feature procedure
-facts for character-derived battle features without importing Unit ids, Surface
-records, or authored catalog enumeration. Focused `*-core.qnt` files carry
-generator-facing semantic facts; matching `*-examples.qnt` files keep run
-examples proof-only.
+`unit-feature-attack-rider-core.qnt`, `unit-feature-save-damage-core.qnt`,
+`unit-feature-reaction-reduction-core.qnt`,
+`unit-feature-passive-movement-defense-core.qnt`,
+`unit-feature-martial-arts-core.qnt`, and
+`unit-feature-zero-hit-point-core.qnt` model projection-shaped feature
+procedure facts for character-derived battle features without importing Unit
+ids, Surface records, or authored catalog enumeration. Focused `*-core.qnt`
+files carry generator-facing semantic facts; matching `*-examples.qnt` files
+keep run examples proof-only.
 
 Scope:
 
@@ -345,6 +348,10 @@ Scope:
 - Evasion-style save damage replacement applies to Dexterity Saving Throw
   damage whose ordinary success result is half damage and is blocked by
   Incapacitated;
+- Relentless Endurance-style zero-Hit-Point replacement spends a feature Pool
+  use to replace a non-outright player-character drop to 0 Hit Points with
+  1 Hit Point while preserving the shared zero-Hit-Point lifecycle for rejected
+  cases;
 - Defense-style passive Armor Class bonus adds 1 AC while the character is
   wearing Light, Medium, or Heavy armor;
 - Cutting Words and Uncanny Dodge spend Reaction quota, with Cutting Words also
@@ -366,8 +373,8 @@ Out of scope for QCORE9:
 `unit-feature-procedure-profiles-inductive.qnt` is the owned proof machine. It
 samples bounded feature Pool uses, ordinary/Bonus Action and Reaction quota
 spends, Rage/Reckless/Sneak occurrence state, passive Armor Class bonus facts,
-and representative damage or healing amounts while keeping feature facts
-projection-shaped and Surface-free.
+zero-Hit-Point replacement facts, and representative damage or healing amounts
+while keeping feature facts projection-shaped and Surface-free.
 
 ## QCORE10: Spell Procedure Profiles
 

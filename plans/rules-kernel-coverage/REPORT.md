@@ -264,6 +264,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` |
 | `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
+| `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
@@ -306,9 +307,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` | mbt-fixture | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
 | `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-turn-order.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
-| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
@@ -369,7 +371,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` | semantic-core | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/creature-attack.qnt` | semantic-core | `BATTLE.ATTACK.MINIMAL_RESOLUTION` |
 
 ## Generator Readiness
@@ -381,7 +384,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `pattern-match` |  |  |
-| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` | `run-block-coupled` | `A44-UNIT-FEATURE-MARTIAL-ARTS-CORE`, `A45-UNIT-FEATURE-ZERO-HP-CORE`, `A46-MONK-FOCUS-BATTLE-CORE` |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership`, `size` |  |  |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
@@ -391,7 +394,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed |  |  |  |
 | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
@@ -434,10 +437,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold` |  |  |
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
-| `BATTLE.DAMAGE.ATTACK_BRANCHES` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` | `run-block-coupled` | `A44-UNIT-FEATURE-MARTIAL-ARTS-CORE` |
-| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership`, `list`, `fold`, `map`, `exists` |  |  |
-| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` | `run-block-coupled` | `A45-UNIT-FEATURE-ZERO-HP-CORE` |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed |  |  |  |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed |  |  |  |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed |  |  |  |
@@ -473,13 +476,11 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 
 | Obligation | Readiness status | Blocker | Semantic-core run blocks |
 | --- | --- | --- | --- |
-| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `200`, `239`, `290`<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: lines `134`, `140`, `149`, `159`, `168`, `178`, `199` |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: lines `163` |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: lines `249`, `261`, `271`, `290`, `302`, `320`, `329` |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: lines `187`, `205`, `217`, `228` |
-| `BATTLE.DAMAGE.ATTACK_BRANCHES` | fixture-bound | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `200`, `239`, `290` |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 

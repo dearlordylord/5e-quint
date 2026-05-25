@@ -3,7 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling
 
 module battleRuntimeFeatureTurnEndEffects {
-  import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
+  import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
 
   // RAW trace:
   // - Classes/Fighter.md Level 5: Extra Attack lets a Fighter attack twice

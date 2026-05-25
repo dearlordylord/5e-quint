@@ -1,8 +1,5 @@
 {
-  "blockedScopeIds": [
-    "level-1",
-    "level-1-2"
-  ],
+  "blockedScopeIds": [],
   "definition": {
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
@@ -38,7 +35,7 @@
   "scopes": [
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -72,46 +69,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 1,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 31
+              "numerator": 32
             },
             "qntCoveredObligations": {
               "denominator": 44,
               "numerator": 44
             }
           },
-          "generatorBlockingRows": [
-            {
-              "blockedBy": [
-                "run-block-coupled"
-              ],
-              "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-                "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-                "packages/battle-runtime/battle-runtime-movement.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-                "packages/battle-runtime/battle-runtime-monk-focus.qnt"
-              ]
-            }
-          ],
+          "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
           "missingOrOpenObligations": [],
-          "status": "blocked"
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -319,12 +291,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Level 1"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -358,46 +330,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 1,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 31
+              "numerator": 32
             },
             "qntCoveredObligations": {
               "denominator": 47,
               "numerator": 47
             }
           },
-          "generatorBlockingRows": [
-            {
-              "blockedBy": [
-                "run-block-coupled"
-              ],
-              "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-                "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-                "packages/battle-runtime/battle-runtime-movement.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-                "packages/battle-runtime/battle-runtime-monk-focus.qnt"
-              ]
-            }
-          ],
+          "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
           "missingOrOpenObligations": [],
-          "status": "blocked"
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -608,7 +555,7 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-2",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-2"
     }
   ],
@@ -667,5 +614,5 @@
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
-  "status": "blocked"
+  "status": "pass"
 }

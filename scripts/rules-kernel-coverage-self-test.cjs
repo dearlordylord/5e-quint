@@ -308,6 +308,88 @@ function runSelfTest() {
   );
   const sampleQntPath = path.join(root, "sample.qnt");
   const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
+  const unitFeatureObligationsPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "obligations.jsonl",
+  );
+  const initialUnitFeatureObligationsText = fs.readFileSync(
+    unitFeatureObligationsPath,
+    "utf8",
+  );
+  const [sampleObligation, boundaryObligation] = initialUnitFeatureObligationsText
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  const unitFeatureOwnerPath =
+    "packages/shared-algebras/proofs/rule-core/unit-feature-sample.qnt";
+  writeFile(
+    path.join(root, unitFeatureOwnerPath),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module unitFeatureSample {",
+      "  pure def countValues(values: Set[int]): int = values.size()",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    unitFeatureObligationsPath,
+    [
+      JSON.stringify({
+        ...sampleObligation,
+        qntOwners: [
+          unitFeatureOwnerPath,
+          "sample-inductive.qnt",
+          "sample-examples.qnt",
+        ],
+      }),
+      JSON.stringify(boundaryObligation),
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleQntOwnerRolesPath,
+    [
+      JSON.stringify({
+        ownerPath: unitFeatureOwnerPath,
+        role: "semantic-core",
+        evidence:
+          "unit-feature-sample.qnt is the qnt-owner marker source for BATTLE.SAMPLE.",
+      }),
+      JSON.stringify({
+        ownerPath: "sample-inductive.qnt",
+        role: "proof-only",
+        evidence: "sample-inductive.qnt is proof-only sample evidence.",
+      }),
+      JSON.stringify({
+        ownerPath: "sample-examples.qnt",
+        role: "proof-only",
+        evidence: "sample-examples.qnt is example-only sample evidence.",
+      }),
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: [unitFeatureOwnerPath],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
+      generatorSubset: ["pure-def", "int", "set"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const unitFeatureMissingSizeResult = buildKernelCoverage({ root });
+  assert.ok(
+    unitFeatureMissingSizeResult.issues.includes(
+      "generator-readiness row 1.generatorSubset omits observed unit-feature QNT construct(s): size.",
+    ),
+    `Expected unit-feature size construct issue, got ${JSON.stringify(unitFeatureMissingSizeResult.issues)}`,
+  );
+  writeFile(unitFeatureObligationsPath, initialUnitFeatureObligationsText);
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+
   writeFile(
     sampleQntPath,
     [

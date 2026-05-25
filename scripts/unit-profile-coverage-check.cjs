@@ -4,6 +4,7 @@ const {
   coveragePaths,
   deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
+  isUnitFeatureProfileId,
   selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
@@ -64,6 +65,88 @@ const selectedIdentityHardGate = process.argv.includes(
   "--selected-identity-hard-gate",
 );
 const paths = coveragePaths(root);
+
+function validateSupportedUnitFeatureRulesKernelJoins(
+  rulesKernelSupportedUnitJoin,
+) {
+  return rulesKernelSupportedUnitJoin.units.flatMap((unit) =>
+    unit.profiles
+      .filter(
+        (profile) =>
+          isUnitFeatureProfileId(profile.profileId) &&
+          profile.joinStatus !== "covered",
+      )
+      .map(
+        (profile) =>
+          `supported Unit ${unit.unitId} unit-feature profile ${profile.profileId} has rules-kernel join status ${profile.joinStatus}.`,
+      ),
+  );
+}
+
+function uniqueSorted(values) {
+  return Array.from(new Set(values)).sort();
+}
+
+function sameStrings(left, right) {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
+}
+
+function describeOwnerDelta(actual, expected) {
+  const actualSet = new Set(actual);
+  const expectedSet = new Set(expected);
+  const missing = expected.filter((ownerPath) => !actualSet.has(ownerPath));
+  const stale = actual.filter((ownerPath) => !expectedSet.has(ownerPath));
+  return [
+    missing.length > 0 ? `missing ${missing.join(", ")}` : undefined,
+    stale.length > 0 ? `stale ${stale.join(", ")}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
+function validateUnitFeatureProfileScopedOwnerEvidence({
+  featureProcedureMbtEvidenceGate,
+  level12QntMbtJoin,
+  profiles,
+}) {
+  const issues = [];
+  const profileOwnersById = new Map(
+    profiles
+      .filter((profile) => isUnitFeatureProfileId(profile.id))
+      .map((profile) => [profile.id, uniqueSorted(profile.qntOwners ?? [])]),
+  );
+  const validateRow = (row, context) => {
+    if (
+      !isUnitFeatureProfileId(row.profileId) ||
+      row.tag !== "obligation-evidence"
+    ) {
+      return;
+    }
+    const expected = profileOwnersById.get(row.profileId);
+    if (expected === undefined) return;
+    const actual = uniqueSorted(
+      (row.qntOwners ?? []).map((owner) => owner.ownerPath),
+    );
+    if (sameStrings(actual, expected)) return;
+    const delta = describeOwnerDelta(actual, expected);
+    issues.push(
+      `${context} for ${row.profileId} emits non-profile-scoped QNT owner evidence (${delta}).`,
+    );
+  };
+  for (const scope of featureProcedureMbtEvidenceGate.scopes ?? []) {
+    for (const [index, row] of (scope.rows ?? []).entries()) {
+      validateRow(
+        row,
+        `feature-procedure evidence gate ${scope.scopeId} row ${index + 1}`,
+      );
+    }
+  }
+  for (const [index, row] of (level12QntMbtJoin.rows ?? []).entries()) {
+    validateRow(row, `level1-2 qnt-mbt join row ${index + 1}`);
+  }
+  return issues;
+}
 
 function main() {
   const collections = readJson(paths.collections);
@@ -172,6 +255,22 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
+  const postBuildIssues =
+    validateSupportedUnitFeatureRulesKernelJoins(
+      matrix.rulesKernelProfileJoin.supportedUnitJoin,
+    ).concat(
+      validateUnitFeatureProfileScopedOwnerEvidence({
+        featureProcedureMbtEvidenceGate,
+        level12QntMbtJoin,
+        profiles,
+      }),
+    );
+  if (postBuildIssues.length > 0) {
+    for (const issue of postBuildIssues)
+      console.error(`unit-profile-coverage: ${issue}`);
+    process.exitCode = 1;
+    return;
+  }
   writeOrCompare(
     { root, write },
     paths.matrix,

@@ -64,6 +64,13 @@ function qntOwnerRows(obligation, qntOwnerRolesByPath) {
   }));
 }
 
+function profileQntOwnerRows(profile, qntOwnerRolesByPath) {
+  return (profile?.qntOwners ?? []).map((ownerPath) => ({
+    ownerPath,
+    role: qntOwnerRolesByPath.get(ownerPath) ?? "missing-role",
+  }));
+}
+
 function parityWitnessRows(obligation) {
   return (obligation?.parityWitnesses ?? []).map((witness) =>
     stable({
@@ -94,6 +101,7 @@ function obligationGaps({
   parityWitnesses,
   qntMbtWitnesses,
   qntOwners,
+  qntOwnerEvidenceLabel,
 }) {
   if (obligation === undefined) {
     return [
@@ -116,7 +124,7 @@ function obligationGaps({
       ? [
           {
             kind: "missing-qnt-owner",
-            detail: "Rules-kernel obligation has no QNT owner path.",
+            detail: `${qntOwnerEvidenceLabel} has no QNT owner path.`,
           },
         ]
       : []),
@@ -157,6 +165,7 @@ function procedureProfiles(levelReport, selectProfile) {
 
 function evidenceRowsForProfile({
   missingProfileObligationDetail,
+  ownerEvidence,
   obligationsById,
   profile,
   qntOwnerRolesByPath,
@@ -185,7 +194,10 @@ function evidenceRowsForProfile({
 
   return profile.obligations.map((obligationRef) => {
     const obligation = obligationsById.get(obligationRef.obligationId);
-    const qntOwners = qntOwnerRows(obligation, qntOwnerRolesByPath);
+    const qntOwners =
+      ownerEvidence === "profile"
+        ? profileQntOwnerRows(profile, qntOwnerRolesByPath)
+        : qntOwnerRows(obligation, qntOwnerRolesByPath);
     const parityWitnesses = parityWitnessRows(obligation);
     const qntMbtWitnesses = qntMbtWitnessRows(parityWitnesses);
     const gaps = obligationGaps({
@@ -194,6 +206,10 @@ function evidenceRowsForProfile({
       parityWitnesses,
       qntMbtWitnesses,
       qntOwners,
+      qntOwnerEvidenceLabel:
+        ownerEvidence === "profile"
+          ? "Unit profile owner evidence"
+          : "Rules-kernel obligation",
     });
     return stable({
       tag: "obligation-evidence",
@@ -219,6 +235,7 @@ function buildScope({
   levelReport,
   metricNames,
   missingProfileObligationDetail,
+  ownerEvidence,
   rulesKernelMatrix,
   scopeId,
   selectProfile,
@@ -230,6 +247,7 @@ function buildScope({
     .flatMap(({ unit, profile }) =>
       evidenceRowsForProfile({
         missingProfileObligationDetail,
+        ownerEvidence,
         obligationsById,
         profile,
         qntOwnerRolesByPath,
@@ -278,6 +296,7 @@ function buildProcedureMbtEvidenceGate({
   level12FullSupport,
   metricNames,
   missingProfileObligationDetail,
+  ownerEvidence = "obligation",
   rulesKernelMatrix,
   selectProfile,
 }) {
@@ -287,6 +306,7 @@ function buildProcedureMbtEvidenceGate({
       levelReport: level1FullSupport,
       metricNames,
       missingProfileObligationDetail,
+      ownerEvidence,
       rulesKernelMatrix,
       scopeId: "level-1",
       selectProfile,
@@ -296,6 +316,7 @@ function buildProcedureMbtEvidenceGate({
       levelReport: level12FullSupport,
       metricNames,
       missingProfileObligationDetail,
+      ownerEvidence,
       rulesKernelMatrix,
       scopeId: "level-1-2",
       selectProfile,

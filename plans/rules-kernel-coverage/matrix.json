@@ -179,10 +179,15 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
-        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+        "packages/battle-runtime/battle-runtime-turn-order.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2065,7 +2070,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2164,7 +2169,8 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5331,6 +5337,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt is current QNT proof evidence for Bardic Inspiration grant and failed-D20-Test feature profiles; it is not a generator semantic core while its run blocks remain colocated.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt is the focused QNT owner carrying Blur self Spell Effect, Blindsight/Truesight bypass, attack-roll mode projection, Concentration, and cleanup semantics.",
       "obligationIds": [
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"
@@ -5522,7 +5536,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-monk-focus.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-monk-focus.qnt carries focused Monk's Focus battle-option semantics for Focus Point capacity, Flurry of Blows Bonus Action strike grants, Patient Defense Disengage/Dodge modes, Step of the Wind Dash/Disengage modes, and turn-scoped jump-distance multiplier projection.",
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
@@ -5701,6 +5715,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-timed-effects.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
@@ -5708,6 +5723,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-turn-order.qnt is current QNT proof evidence for Alert Initiative Swap feature profile joins; it is not a generator semantic core while its run blocks remain colocated.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-warding-bond.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -5720,6 +5743,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
@@ -6221,12 +6245,21 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt is the covered obligation QNT owner carrying Martial Arts eligibility, die scaling, Dexterity substitution, Unarmed Strike Grapple/Shove DC, and Bonus Action Unarmed Strike facts without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt is the covered obligation QNT owner carrying Relentless Endurance-style zero-Hit-Point replacement semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -6403,14 +6436,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
-      "followUpTaskIds": [
-        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
-        "A45-UNIT-FEATURE-ZERO-HP-CORE",
-        "A46-MONK-FOCUS-BATTLE-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6418,6 +6444,7 @@
         "record-update",
         "pure-def",
         "constant-def",
+        "constant-val",
         "int",
         "bool",
         "if-expression",
@@ -6429,8 +6456,12 @@
         "pattern-match",
         "set",
         "map",
+        "filter",
+        "fold",
+        "exists",
         "set-operators",
-        "membership"
+        "membership",
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
       "proofOnly": [
@@ -6441,7 +6472,12 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt",
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+        "packages/battle-runtime/battle-runtime-turn-order.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
@@ -6451,12 +6487,15 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
-        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6662,13 +6701,11 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",
@@ -7801,12 +7838,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
-      "followUpTaskIds": [
-        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7834,6 +7866,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -7842,9 +7875,9 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7852,9 +7885,7 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -7915,19 +7946,12 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
-      "followUpTaskIds": [
-        "A45-UNIT-FEATURE-ZERO-HP-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -7935,21 +7959,20 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "membership"
+        "all-block"
       ],
       "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt",
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8230,33 +8253,6 @@
   "semanticCoreRunBlockFindings": [
     {
       "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-      "owners": [
-        {
-          "lines": [
-            200,
-            239,
-            290
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-        },
-        {
-          "lines": [
-            134,
-            140,
-            149,
-            159,
-            168,
-            178,
-            199
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
-        }
-      ],
-      "readinessStatus": "fixture-bound"
-    },
-    {
-      "blocker": "run-block-coupled",
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "owners": [
         {
@@ -8347,21 +8343,6 @@
         }
       ],
       "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
-      "owners": [
-        {
-          "lines": [
-            200,
-            239,
-            290
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-        }
-      ],
-      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",

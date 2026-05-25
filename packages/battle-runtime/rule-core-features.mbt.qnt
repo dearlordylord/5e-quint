@@ -13,7 +13,8 @@ module ruleCoreFeaturesMbt {
   import unitFeatureAttackRiderCore.* from "../shared-algebras/proofs/rule-core/unit-feature-attack-rider-core"
   import unitFeatureSaveDamageCore.* from "../shared-algebras/proofs/rule-core/unit-feature-save-damage-core"
   import unitFeatureReactionReductionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core"
-  import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
+  import unitFeaturePassiveMovementDefenseCore.* from "../shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core"
+  import unitFeatureZeroHitPointCore.* from "../shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
 
   // Fixture bounds:
@@ -641,9 +642,7 @@ module ruleCoreFeaturesMbt {
 
   action doDefenseArmorClass = {
     val armorClass = defenseArmorClass(16, {
-      wearingLightArmor: true,
-      wearingMediumArmor: false,
-      wearingHeavyArmor: false,
+      armorWorn: LightArmorWorn,
     })
     all {
       qHoles == Set(),

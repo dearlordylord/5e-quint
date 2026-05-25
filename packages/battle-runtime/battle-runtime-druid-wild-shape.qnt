@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.druid-wild-shape-known-form
 //
 // Focused semantic core for SRD Druid Wild Shape battle form lifecycle state.
 // RAW anchors:

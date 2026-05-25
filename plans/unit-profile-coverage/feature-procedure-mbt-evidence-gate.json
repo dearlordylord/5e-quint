@@ -7,7 +7,7 @@
       "deterministic-qnt-replay",
       "focused-mbt"
     ],
-    "rowPolicy": "Every supported unit-feature profile fact must emit an obligation evidence row with QNT owners and focused MBT or deterministic QNT replay witnesses, or an explicit gap row."
+    "rowPolicy": "Every supported unit-feature profile fact must emit an obligation evidence row with profile-scoped QNT owners and focused MBT or deterministic QNT replay witnesses, or an explicit gap row."
   },
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "scopes": [
@@ -76,47 +76,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -163,48 +123,8 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -250,48 +170,8 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -339,46 +219,6 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
               "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -424,47 +264,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -511,47 +311,11 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -599,46 +363,6 @@
           "qntOwners": [
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -716,47 +440,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -803,47 +487,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -890,47 +534,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -977,48 +581,8 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1064,48 +628,8 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1151,47 +675,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1240,46 +724,6 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
               "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -1327,46 +771,6 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
               "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -1412,47 +816,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1499,47 +863,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1588,46 +912,6 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
               "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -1673,47 +957,11 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1761,46 +1009,6 @@
           "qntOwners": [
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
               "role": "semantic-core"
             }
           ],
