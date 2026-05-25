@@ -19,27 +19,132 @@ work remains.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "A38-UNIT-FEATURE-ACTION-COUNT-CORE", "status": "done", "title": "Split unit feature action grant and attack-count core" },
-    { "number": 2, "id": "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE", "status": "done", "title": "Split Rage, Reckless Attack, and Frenzy core" },
-    { "number": 3, "id": "A40-UNIT-FEATURE-ATTACK-RIDER-CORE", "status": "done", "title": "Split unit feature attack roll and damage rider core" },
-    { "number": 4, "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE", "status": "done", "title": "Split unit feature Saving Throw and save-damage core" },
-    { "number": 5, "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE", "status": "done", "title": "Split unit feature reaction reduction and redirect core" },
-    { "number": 6, "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE", "status": "done", "title": "Split passive movement and defense feature core" },
-    { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "done", "title": "Split Martial Arts projection core" },
-    { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "done", "title": "Split zero-Hit-Point feature replacement core" },
-    { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "done", "title": "Split Monk Focus battle option core" },
-    { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "done", "title": "Refresh unit-feature owner roles after semantic-core splits" },
-    { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "done", "title": "Close unit-feature generator-readiness row" },
-    { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "done", "title": "Audit supported feature profile to rules-kernel joins" },
-    { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "done", "title": "Audit unit-feature MBT bridge coverage" },
-    { "number": 14, "id": "A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature generator subset tokens" },
-    { "number": 15, "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature run-block scanner findings" },
-    { "number": 16, "id": "A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE", "status": "ready-for-research", "title": "Classify unit-feature example files as proof-only" },
-    { "number": 17, "id": "A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK", "status": "ready-for-research", "title": "Check selected-identity fallout from feature splits" },
-    { "number": 18, "id": "A64-UNIT-FEATURE-END-TO-END-VERIFY", "status": "ready-for-research", "title": "Verify unit-feature QNT core closure" },
-    { "number": 19, "id": "A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT", "status": "ready-for-research", "title": "Audit strict level 1-2 denominator fallout" },
-    { "number": 20, "id": "A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE", "status": "ready-for-research", "title": "Refresh rules-kernel reports after unit-feature closure" },
-    { "number": 21, "id": "A67-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Mine next unit-feature QNT generator batch" }
+    {
+      "number": 1,
+      "id": "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
+      "status": "done",
+      "title": "Split unit feature action grant and attack-count core"
+    },
+    {
+      "number": 2,
+      "id": "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
+      "status": "done",
+      "title": "Split Rage, Reckless Attack, and Frenzy core"
+    },
+    {
+      "number": 3,
+      "id": "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
+      "status": "done",
+      "title": "Split unit feature attack roll and damage rider core"
+    },
+    {
+      "number": 4,
+      "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE",
+      "status": "done",
+      "title": "Split unit feature Saving Throw and save-damage core"
+    },
+    {
+      "number": 5,
+      "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
+      "status": "done",
+      "title": "Split unit feature reaction reduction and redirect core"
+    },
+    {
+      "number": 6,
+      "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE",
+      "status": "done",
+      "title": "Split passive movement and defense feature core"
+    },
+    {
+      "number": 7,
+      "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
+      "status": "done",
+      "title": "Split Martial Arts projection core"
+    },
+    {
+      "number": 8,
+      "id": "A45-UNIT-FEATURE-ZERO-HP-CORE",
+      "status": "done",
+      "title": "Split zero-Hit-Point feature replacement core"
+    },
+    {
+      "number": 9,
+      "id": "A46-MONK-FOCUS-BATTLE-CORE",
+      "status": "done",
+      "title": "Split Monk Focus battle option core"
+    },
+    {
+      "number": 10,
+      "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE",
+      "status": "done",
+      "title": "Refresh unit-feature owner roles after semantic-core splits"
+    },
+    {
+      "number": 11,
+      "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE",
+      "status": "done",
+      "title": "Close unit-feature generator-readiness row"
+    },
+    {
+      "number": 12,
+      "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT",
+      "status": "done",
+      "title": "Audit supported feature profile to rules-kernel joins"
+    },
+    {
+      "number": 13,
+      "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT",
+      "status": "done",
+      "title": "Audit unit-feature MBT bridge coverage"
+    },
+    {
+      "number": 14,
+      "id": "A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT",
+      "status": "done",
+      "title": "Audit unit-feature generator subset tokens"
+    },
+    {
+      "number": 15,
+      "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Close unit-feature run-block scanner findings"
+    },
+    {
+      "number": 16,
+      "id": "A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Classify unit-feature example files as proof-only"
+    },
+    {
+      "number": 17,
+      "id": "A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK",
+      "status": "ready-for-research",
+      "title": "Check selected-identity fallout from feature splits"
+    },
+    {
+      "number": 18,
+      "id": "A64-UNIT-FEATURE-END-TO-END-VERIFY",
+      "status": "ready-for-research",
+      "title": "Verify unit-feature QNT core closure"
+    },
+    {
+      "number": 19,
+      "id": "A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit strict level 1-2 denominator fallout"
+    },
+    {
+      "number": 20,
+      "id": "A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Refresh rules-kernel reports after unit-feature closure"
+    },
+    {
+      "number": 21,
+      "id": "A67-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Mine next unit-feature QNT generator batch"
+    }
   ]
 }
 -->
@@ -243,7 +348,7 @@ required under the current checker policy.
 
 ### Task 14 - A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT - Audit unit-feature generator subset tokens
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: generator subset tokens for unit-feature rows match observed QNT
 constructs.
