@@ -136,7 +136,7 @@ work remains.
     {
       "number": 20,
       "id": "A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh rules-kernel reports after unit-feature closure"
     },
     {
@@ -423,12 +423,17 @@ fallout. Task 20 still owns the broader rules-kernel report refresh.
 
 ### Task 20 - A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE - Refresh rules-kernel reports after unit-feature closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: generated rules-kernel reports reflect the new unit-feature core shape.
 
 Acceptance: generated reports have no stale broad-owner claims for unit-feature
 rows.
+
+Closed by checker-owned report projection: the broad
+`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` obligation now points readers to
+unit-feature profile-scoped owner rows, and QNT owner-role reporting renders
+unit-feature evidence by profile instead of as stale broad-owner claims.
 
 ### Task 21 - A67-RECURSIVE-NEXT-BATCH - Mine next unit-feature QNT generator batch
 

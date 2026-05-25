@@ -58,6 +58,8 @@ const generatorReadinessSubsetStatuses = new Set([
 const generatorReadinessBlockerStatuses = new Set(["fixture-bound", "blocked"]);
 const semanticCoreRunBlockBlocker =
   generatorReadinessScannerBlockers.semanticCoreRunBlock;
+const unitFeatureProcedureProfileObligationId =
+  "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS";
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -1720,6 +1722,51 @@ function semanticCoreOwnerPaths(obligation, qntOwnerRolesByPath) {
   );
 }
 
+function unitFeatureProfileOwnerRows(
+  profileIds,
+  profilesById,
+  qntOwnerRolesByPath,
+  obligationIdsByProfileId,
+  obligationIdsByQntOwner,
+) {
+  return profileIds
+    .filter(isUnitFeatureProfileId)
+    .map((profileId) => profilesById.get(profileId))
+    .filter((profile) => profile !== undefined)
+    .map((profile) =>
+      stable({
+        profileId: profile.id,
+        qntOwners: (profile.qntOwners ?? []).map((ownerPath) => {
+          const profileObligationIds =
+            obligationIdsByProfileId.get(profile.id) ?? [];
+          const ownerObligationIds = obligationIdsByQntOwner.get(ownerPath) ?? [];
+          return {
+            obligationIds: profileObligationIds.filter((obligationId) =>
+              ownerObligationIds.includes(obligationId),
+            ),
+            ownerPath,
+            role: qntOwnerRolesByPath.get(ownerPath) ?? "missing-role",
+          };
+        }),
+      }),
+    );
+}
+
+function profileScopesByQntOwner(unitFeatureProfileOwnerRows) {
+  const groups = new Map();
+  for (const row of unitFeatureProfileOwnerRows) {
+    for (const owner of row.qntOwners ?? []) {
+      const current = groups.get(owner.ownerPath) ?? [];
+      current.push({
+        obligationIds: owner.obligationIds ?? [],
+        profileId: row.profileId,
+      });
+      groups.set(owner.ownerPath, current);
+    }
+  }
+  return groups;
+}
+
 function buildGeneratorReadinessBacklog(
   obligations,
   generatorReadiness,
@@ -1803,6 +1850,19 @@ function buildMatrix(rootPath) {
   const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
+  const obligationIdsByProfileId = new Map(
+    profileObligations
+      .filter(
+        (mapping) =>
+          isRecord(mapping) && typeof mapping.profileId === "string",
+      )
+      .map((mapping) => [mapping.profileId, mapping.obligationIds ?? []]),
+  );
+  const profilesById = new Map(
+    profiles
+      .filter((profile) => isRecord(profile) && typeof profile.id === "string")
+      .map((profile) => [profile.id, profile]),
+  );
   const qntOwnerRolesByPath = qntOwnerRoleMap(qntOwnerRoleRows);
   const semanticCoreRunBlocksByPath = scanSemanticCoreRunBlocks(
     rootPath,
@@ -1817,29 +1877,52 @@ function buildMatrix(rootPath) {
       obligationIdsByQntOwner.set(ownerPath, current);
     }
   }
+  const unitFeatureProfileOwnerEvidence = unitFeatureProfileOwnerRows(
+    profileIdsByObligation.get(unitFeatureProcedureProfileObligationId) ?? [],
+    profilesById,
+    qntOwnerRolesByPath,
+    obligationIdsByProfileId,
+    obligationIdsByQntOwner,
+  );
+  const unitFeatureProfileScopesByQntOwner = profileScopesByQntOwner(
+    unitFeatureProfileOwnerEvidence,
+  );
   return {
     summary: buildSummary(obligations),
     derivedFields: {
       "obligations[].profiles":
-        "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
+        "Derived from profileObligations by obligation id, except BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS unit-feature profiles are reported under unitFeatureProfileOwnerRows so the broad obligation does not claim profile-scoped QNT ownership.",
       "qntOwnerRoles[].obligationIds":
         "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
+      "qntOwnerRoles[].profileScopes":
+        "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS.",
     },
     battleHoleFrontierSummary: buildBattleFrontierSummary(battleHoleFrontier),
     obligations: obligations.map((obligation) =>
       stable({
         ...obligation,
-        profiles: profileIdsByObligation.get(obligation.id) ?? [],
+        profiles:
+          obligation.id === unitFeatureProcedureProfileObligationId
+            ? []
+            : profileIdsByObligation.get(obligation.id) ?? [],
       }),
     ),
     battleHoleFrontier: battleHoleFrontier.map((row) => stable(row)),
     profileObligations: profileObligations.map((mapping) => stable(mapping)),
-    qntOwnerRoles: qntOwnerRoleRows.map((row) =>
-      stable({
+    qntOwnerRoles: qntOwnerRoleRows.map((row) => {
+      const obligationIds = (
+        obligationIdsByQntOwner.get(row.ownerPath) ?? []
+      ).sort();
+      const profileScopes = (
+        unitFeatureProfileScopesByQntOwner.get(row.ownerPath) ?? []
+      ).sort((left, right) => left.profileId.localeCompare(right.profileId));
+      return stable({
         ...row,
-        obligationIds: (obligationIdsByQntOwner.get(row.ownerPath) ?? []).sort(),
-      }),
-    ),
+        obligationIds,
+        ...(profileScopes.length > 0 ? { profileScopes } : {}),
+      });
+    }),
+    unitFeatureProfileOwnerRows: unitFeatureProfileOwnerEvidence,
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
     ),
@@ -1953,14 +2036,35 @@ function renderReport(matrix, issues) {
   if (matrix.qntOwnerRoles.length === 0) {
     lines.push("No QNT owner roles recorded yet.");
   } else {
-    lines.push("| Owner | Role | Obligations |");
+    lines.push("| Owner | Role | Obligations / profile-scoped rows |");
     lines.push("| --- | --- | --- |");
     for (const row of matrix.qntOwnerRoles) {
-      const obligations =
-        (row.obligationIds ?? [])
-          .map((obligationId) => `\`${obligationId}\``)
-          .join(", ") || "_none_";
-      lines.push(`| \`${row.ownerPath}\` | ${row.role} | ${obligations} |`);
+      lines.push(
+        `| \`${row.ownerPath}\` | ${row.role} | ${renderQntOwnerRoleScopes(row)} |`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push("## Unit Feature Profile QNT Owners");
+  lines.push("");
+  lines.push(
+    "Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for profiles mapped to `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`. They report profile-scoped QNT owner evidence so the broad procedure obligation does not credit unrelated unit-feature profiles.",
+  );
+  lines.push("");
+  if ((matrix.unitFeatureProfileOwnerRows ?? []).length === 0) {
+    lines.push("No unit-feature profile QNT owners recorded.");
+  } else {
+    lines.push("| Profile | QNT owners |");
+    lines.push("| --- | --- |");
+    for (const row of matrix.unitFeatureProfileOwnerRows) {
+      const owners =
+        (row.qntOwners ?? [])
+          .map(
+            (owner) =>
+              `\`${owner.ownerPath}\` (${owner.role}; ${renderList(owner.obligationIds ?? [])})`,
+          )
+          .join("<br>") || "_none_";
+      lines.push(`| \`${row.profileId}\` | ${owners} |`);
     }
   }
   lines.push("");
@@ -2098,6 +2202,9 @@ function renderObligationFollowUp(obligation) {
 }
 
 function renderObligationProfiles(obligation) {
+  if (obligation.id === unitFeatureProcedureProfileObligationId) {
+    return "_unit-feature profile-scoped owner rows below_";
+  }
   if ((obligation.profiles ?? []).length > 0) {
     return obligation.profiles.map((profile) => `\`${profile}\``).join(", ");
   }
@@ -2110,6 +2217,41 @@ function renderObligationProfiles(obligation) {
     return "_outside reducer semantics_";
   }
   return "_profile mapping pending_";
+}
+
+function renderQntOwnerRoleScopes(row) {
+  const profileScopedObligationIds = new Set(
+    (row.profileScopes ?? []).flatMap((scope) => scope.obligationIds ?? []),
+  );
+  const scopes = [];
+  const obligationIds = (row.obligationIds ?? []).filter(
+    (obligationId) =>
+      !(
+        obligationId === unitFeatureProcedureProfileObligationId &&
+        profileScopedObligationIds.has(obligationId)
+      ),
+  );
+  if (obligationIds.length > 0) {
+    scopes.push(
+      obligationIds.map((obligationId) => `\`${obligationId}\``).join(", "),
+    );
+  }
+  if ((row.profileScopes ?? []).length > 0) {
+    scopes.push(
+      `profile-scoped: ${(row.profileScopes ?? [])
+        .map(
+          (scope) =>
+            `\`${scope.profileId}\` (${renderList(scope.obligationIds ?? [])})`,
+        )
+        .join(", ")}`,
+    );
+  }
+  return scopes.length > 0 ? scopes.join("<br>") : "_none_";
+}
+
+function renderList(values) {
+  if (values.length === 0) return "_none_";
+  return values.map((value) => `\`${value}\``).join(", ");
 }
 
 function buildKernelCoverage({ root: rootPath }) {

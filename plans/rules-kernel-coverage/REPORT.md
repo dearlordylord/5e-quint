@@ -33,7 +33,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | `spell.invocation-expeditious-retreat-dash`, `spell.invocation-forced-reaction-movement`, `spell.invocation-grease-ground-hazard`, `spell.invocation-jump-movement-replacement` |
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
-| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.attack-damage-rider`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.initiative-proficiency-and-swap`, `unit-feature.innate-sorcery-activation`, `unit-feature.martial-arts-attack-projection`, `unit-feature.monk-focus-battle-options`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.weapon-mastery-cleave`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.zero-hit-point-replacement` |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | _unit-feature profile-scoped owner rows below_ |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-see-invisible-observer-sight`, `spell.invocation-spiritual-weapon-attack-proxy`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-direct-condition` |
@@ -259,12 +259,12 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## QNT Owner Roles
 
-| Owner | Role | Obligations |
+| Owner | Role | Obligations / profile-scoped rows |
 | --- | --- | --- |
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` |
 | `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
-| `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | profile-scoped: `unit-feature.bardic-inspiration-failed-d20-test` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bardic-inspiration-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
@@ -275,7 +275,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | semantic-core | `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | profile-scoped: `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | mbt-fixture | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
@@ -287,9 +287,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
-| `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | profile-scoped: `unit-feature.monk-focus-battle-options` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | semantic-core | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-movement.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-movement.qnt` | semantic-core | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE`<br>profile-scoped: `unit-feature.bonus-action-dash-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
@@ -307,9 +307,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` | mbt-fixture | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
 | `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-turn-order.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`<br>profile-scoped: `unit-feature.weapon-mastery-sap` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-turn-order.qnt` | proof-only | profile-scoped: `unit-feature.initiative-proficiency-and-swap` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`<br>profile-scoped: `unit-feature.weapon-mastery-cleave` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-sap` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-topple` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
@@ -339,7 +339,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` | semantic-core | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` |
 | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | semantic-core | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` |
 | `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` | semantic-core | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` |
-| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME` |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME`<br>profile-scoped: `unit-feature.reaction-roll-or-damage-reduction` (`BATTLE.REACTION.OFFER_DECLINE_RESUME`) |
 | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | semantic-core | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` |
 | `packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
@@ -363,17 +363,54 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` | semantic-core | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` | semantic-core | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` | semantic-core | profile-scoped: `unit-feature.alternate-action-cost` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bonus-action-dash-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.failed-ability-check-resource-boost` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.innate-sorcery-activation` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.self-bonus-action-healing` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.action-surge-resource` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.attack-damage-rider` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bonus-action-ongoing-rage` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.first-attack-roll-reckless-advantage` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.attack-damage-rider` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.attack-roll-miss-to-hit-replacement` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.passive-ranged-attack-roll-bonus` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-critical-range-19` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-damage-dice-roll-choice` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.passive-saving-throw-roll-mode` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.save-damage-replacement` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.attack-damage-reduction-zero-damage-redirect` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.reaction-roll-or-damage-reduction` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` | semantic-core | profile-scoped: `unit-feature.passive-armor-class-bonus` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.passive-speed-bonus` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.passive-speed-kind-grants` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`<br>profile-scoped: `unit-feature.martial-arts-attack-projection` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` | semantic-core | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`<br>profile-scoped: `unit-feature.zero-hit-point-replacement` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/creature-attack.qnt` | semantic-core | `BATTLE.ATTACK.MINIMAL_RESOLUTION` |
 | `packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
+
+## Unit Feature Profile QNT Owners
+
+Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for profiles mapped to `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`. They report profile-scoped QNT owner evidence so the broad procedure obligation does not credit unrelated unit-feature profiles.
+
+| Profile | QNT owners |
+| --- | --- |
+| `unit-feature.action-surge-resource` | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.alternate-action-cost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.attack-action-attack-count-scaling` | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.attack-damage-reduction-zero-damage-redirect` | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.attack-damage-rider` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.attack-roll-miss-to-hit-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.bardic-inspiration-failed-d20-test` | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.bardic-inspiration-grant` | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.bonus-action-dash-temporary-hit-points` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-movement.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.bonus-action-ongoing-rage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.failed-ability-check-resource-boost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.first-attack-roll-reckless-advantage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.initiative-proficiency-and-swap` | `packages/battle-runtime/battle-runtime-turn-order.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.innate-sorcery-activation` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.martial-arts-attack-projection` | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.monk-focus-battle-options` | `packages/battle-runtime/battle-runtime-monk-focus.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.passive-armor-class-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.passive-ranged-attack-roll-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.passive-saving-throw-roll-mode` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.passive-speed-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.passive-speed-kind-grants` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.reaction-roll-or-damage-reduction` | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` (semantic-core; `BATTLE.REACTION.OFFER_DECLINE_RESUME`) |
+| `unit-feature.save-damage-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.self-bonus-action-healing` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-critical-range-19` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-damage-dice-roll-choice` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-mastery-cleave` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-mastery-sap` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-mastery-topple` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.zero-hit-point-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 
 ## Generator Readiness
 

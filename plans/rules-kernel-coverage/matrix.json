@@ -21,8 +21,9 @@
     }
   },
   "derivedFields": {
-    "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
-    "qntOwnerRoles[].obligationIds": "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only."
+    "obligations[].profiles": "Derived from profileObligations by obligation id, except BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS unit-feature profiles are reported under unitFeatureProfileOwnerRows so the broad obligation does not claim profile-scoped QNT ownership.",
+    "qntOwnerRoles[].obligationIds": "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
+    "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
     "total": 110,
@@ -140,38 +141,7 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [
-        "unit-feature.action-surge-resource",
-        "unit-feature.alternate-action-cost",
-        "unit-feature.attack-action-attack-count-scaling",
-        "unit-feature.attack-damage-reduction-zero-damage-redirect",
-        "unit-feature.attack-damage-rider",
-        "unit-feature.attack-roll-miss-to-hit-replacement",
-        "unit-feature.bardic-inspiration-failed-d20-test",
-        "unit-feature.bardic-inspiration-grant",
-        "unit-feature.bonus-action-dash-temporary-hit-points",
-        "unit-feature.bonus-action-ongoing-rage",
-        "unit-feature.failed-ability-check-resource-boost",
-        "unit-feature.first-attack-roll-reckless-advantage",
-        "unit-feature.initiative-proficiency-and-swap",
-        "unit-feature.innate-sorcery-activation",
-        "unit-feature.martial-arts-attack-projection",
-        "unit-feature.monk-focus-battle-options",
-        "unit-feature.passive-armor-class-bonus",
-        "unit-feature.passive-ranged-attack-roll-bonus",
-        "unit-feature.passive-saving-throw-roll-mode",
-        "unit-feature.passive-speed-bonus",
-        "unit-feature.passive-speed-kind-grants",
-        "unit-feature.reaction-roll-or-damage-reduction",
-        "unit-feature.save-damage-replacement",
-        "unit-feature.self-bonus-action-healing",
-        "unit-feature.weapon-critical-range-19",
-        "unit-feature.weapon-damage-dice-roll-choice",
-        "unit-feature.weapon-mastery-cleave",
-        "unit-feature.weapon-mastery-sap",
-        "unit-feature.weapon-mastery-topple",
-        "unit-feature.zero-hit-point-replacement"
-      ],
+      "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
@@ -5343,6 +5313,20 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.bardic-inspiration-grant"
+        }
+      ],
       "role": "proof-only"
     },
     {
@@ -5436,6 +5420,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-action-attack-count-scaling"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -5542,6 +5534,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.monk-focus-battle-options"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -5560,6 +5560,14 @@
         "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.bonus-action-dash-temporary-hit-points"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -5724,6 +5732,14 @@
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-sap"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -5732,6 +5748,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.initiative-proficiency-and-swap"
+        }
+      ],
       "role": "proof-only"
     },
     {
@@ -5741,6 +5765,26 @@
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-cleave"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-sap"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-topple"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -5990,6 +6034,14 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+          ],
+          "profileId": "unit-feature.reaction-roll-or-damage-reduction"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6183,6 +6235,38 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.alternate-action-cost"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.bonus-action-dash-temporary-hit-points"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.failed-ability-check-resource-boost"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.innate-sorcery-activation"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.self-bonus-action-healing"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6192,6 +6276,20 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.action-surge-resource"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-action-attack-count-scaling"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6201,6 +6299,26 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-damage-rider"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.bonus-action-ongoing-rage"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.first-attack-roll-reckless-advantage"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6210,6 +6328,38 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-damage-rider"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-roll-miss-to-hit-replacement"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.passive-ranged-attack-roll-bonus"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-critical-range-19"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-damage-dice-roll-choice"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6219,6 +6369,20 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.passive-saving-throw-roll-mode"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.save-damage-replacement"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6228,6 +6392,20 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.reaction-roll-or-damage-reduction"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6236,6 +6414,26 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.passive-armor-class-bonus"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.passive-speed-bonus"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.passive-speed-kind-grants"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6245,6 +6443,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.martial-arts-attack-projection"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6254,6 +6460,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.zero-hit-point-replacement"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -6271,6 +6485,403 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
       "role": "semantic-core"
+    }
+  ],
+  "unitFeatureProfileOwnerRows": [
+    {
+      "profileId": "unit-feature.action-surge-resource",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.alternate-action-cost",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-action-attack-count-scaling",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-damage-rider",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-roll-miss-to-hit-replacement",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+          "role": "proof-only"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.bardic-inspiration-grant",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+          "role": "proof-only"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.bonus-action-ongoing-rage",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.failed-ability-check-resource-boost",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.first-attack-roll-reckless-advantage",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.initiative-proficiency-and-swap",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt",
+          "role": "proof-only"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.innate-sorcery-activation",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.martial-arts-attack-projection",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.monk-focus-battle-options",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-armor-class-bonus",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-saving-throw-roll-mode",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-speed-bonus",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-speed-kind-grants",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.save-damage-replacement",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.self-bonus-action-healing",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-critical-range-19",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-damage-dice-roll-choice",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-cleave",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-sap",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-topple",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.zero-hit-point-replacement",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
     }
   ],
   "generatorReadiness": [
