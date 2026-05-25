@@ -10,6 +10,7 @@ module unitFeatureProcedureProfilesInductive {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota

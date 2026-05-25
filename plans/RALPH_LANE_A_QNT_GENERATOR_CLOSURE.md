@@ -230,7 +230,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 37,
       "id": "A37-UNIT-FEATURE-POOL-COST-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split unit feature pool and turn-cost core"
     },
     {
@@ -409,7 +409,7 @@ Lane A must not:
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | done | A24,A26 | Classified unit feature procedure readiness as fixture-bound and split blockers into A37-A46 follow-ups. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | done | A24,A25 | Classified broad `battle-runtime.qnt` ownership into slice cleanup, generator-readiness split tasks, and boundary classification. |
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | done | A28 | Direct Hit Point restoration facts now live in a focused generator-clean semantic core. |
-| 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | ready-for-research | A34 | Extract feature use pools, Bonus Action costs, and resource-spend facts from unit feature procedure profiles. |
+| 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | done | A34 | Feature Pool, Bonus Action turn-cost, and immediate resource-spend facts now live in a focused generator-facing core. |
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | ready-for-research | A34 | Extract Action Surge and Extra Attack action-count facts without run blocks. |
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | ready-for-research | A34 | Extract Rage lifecycle, Reckless Attack, and Frenzy facts without profile fixture coupling. |
 | 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | ready-for-research | A34 | Extract Sneak Attack, Improved Critical, Savage Attacker, Archery, and miss-to-hit replacement facts. |
@@ -917,7 +917,7 @@ proof/example files remain proof-only.
 
 ### Task 37 - A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`,
@@ -931,6 +931,15 @@ proof-only owner and do not infer selected feature identity from catalog rows.
 Acceptance: the new core has no `run` blocks, owner roles and readiness rows
 point to the split core, and the original unit feature owner no longer supplies
 these pool/cost facts as generator input.
+
+Result: feature Pool, Bonus Action turn-cost, self-healing, failed ability-check
+boost, Innate Sorcery activation, and Bonus Action Dash Temporary Hit Points
+facts now live in
+`packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt`.
+Examples live in
+`packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt`,
+and A38-A46 remain the visible follow-up surface for the rest of the unit
+feature procedure split.
 
 ### Task 38 - A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core
 

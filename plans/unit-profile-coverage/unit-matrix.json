@@ -244,7 +244,7 @@
       "id": "unit-feature.alternate-action-cost",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -518,7 +518,7 @@
       "id": "unit-feature.bonus-action-dash-temporary-hit-points",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -575,7 +575,7 @@
       "id": "unit-feature.innate-sorcery-activation",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -606,7 +606,7 @@
       "id": "unit-feature.failed-ability-check-resource-boost",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1057,7 +1057,7 @@
       "id": "unit-feature.self-bonus-action-healing",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -12697,7 +12697,7 @@
           "id": "unit-feature.self-bonus-action-healing",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -12969,7 +12969,7 @@
           "id": "unit-feature.failed-ability-check-resource-boost",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -15211,7 +15211,7 @@
           "id": "unit-feature.alternate-action-cost",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -15563,7 +15563,7 @@
           "id": "unit-feature.innate-sorcery-activation",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17904,7 +17904,7 @@
           "id": "unit-feature.bonus-action-dash-temporary-hit-points",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -27682,7 +27682,7 @@
           "id": "unit-feature.alternate-action-cost",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"

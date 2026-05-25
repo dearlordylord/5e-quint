@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 module unitFeatureProcedureProfiles {
@@ -11,6 +11,7 @@ module unitFeatureProcedureProfiles {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
   // - Classes/Fighter.md: Second Wind, Action Surge, Champion Improved Critical.
@@ -26,21 +27,6 @@ module unitFeatureProcedureProfiles {
   //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
   //   Damage, Resistance and Vulnerability.
 
-  type FeatureUsePool = {
-    usesRemaining: int,
-    maximumUses: int,
-  }
-
-  type InnateSorceryOccurrence =
-    | NoInnateSorceryOccurrence
-    | InnateSorceryOneMinuteDuration
-
-  type InnateSorceryState = {
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    occurrence: InnateSorceryOccurrence,
-  }
-
   type ActionSurgeActionGrant =
     | NoActionSurgeActionGrant
     | ActionSurgeActionAvailable
@@ -54,41 +40,6 @@ module unitFeatureProcedureProfiles {
   type ActionSurgeActionResult = {
     actionSurge: ActionSurgeState,
     actionWasTaken: bool,
-  }
-
-  type SecondWindFacts = {
-    healingRoll: int,
-    fighterLevel: int,
-  }
-
-  type SecondWindResult = {
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    recovery: HitPointRecoveryResult,
-  }
-
-  type FailedAbilityCheckResourceBoostFacts = {
-    originalTotal: int,
-    dc: int,
-    boostRoll: int,
-  }
-
-  type FailedAbilityCheckResourceBoostResult = {
-    pool: FeatureUsePool,
-    originalSucceeded: bool,
-    boostedTotal: int,
-    boostedSucceeded: bool,
-  }
-
-  type CunningActionChoice =
-    | CunningDash
-    | CunningDisengage
-    | CunningHide
-
-  type CunningActionFacts = {
-    choice: CunningActionChoice,
-    speedFeet: int,
-    hideFacts: HideProcedureFacts,
   }
 
   type RageResistanceDamageType =
@@ -358,19 +309,6 @@ module unitFeatureProcedureProfiles {
     dashMovementBonusFeet: int,
   }
 
-  type BonusActionDashTemporaryHitPointsFacts = {
-    speedFeet: int,
-    proficiencyBonus: int,
-    existingTemporaryHitPoints: int,
-    chooseNewTemporaryHitPoints: bool,
-  }
-
-  type BonusActionDashTemporaryHitPointsResult = {
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    temporaryHitPoints: int,
-  }
-
   type PassiveRangedAttackRollBonusResult = {
     bonus: int,
     effectiveAttackRollTotal: int,
@@ -479,13 +417,6 @@ module unitFeatureProcedureProfiles {
     attackWasResolved: bool,
   }
 
-  pure def legalFeatureUsePool(pool: FeatureUsePool): bool = all {
-    pool.maximumUses >= 0,
-    pool.maximumUses <= 6,
-    pool.usesRemaining >= 0,
-    pool.usesRemaining <= pool.maximumUses,
-  }
-
   pure def wearingArmorForDefense(facts: PassiveArmorClassBonusFacts): bool =
     facts.wearingLightArmor or facts.wearingMediumArmor or facts.wearingHeavyArmor
 
@@ -568,41 +499,6 @@ module unitFeatureProcedureProfiles {
     val speed = rovingEffectiveSpeed(facts)
     val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
     resolveRovingSpeedKindBudget(dashed, facts)
-  }
-
-  pure def resolveTemporaryHitPointsChoice(
-    existingTemporaryHitPoints: int,
-    newTemporaryHitPoints: int,
-    chooseNewTemporaryHitPoints: bool
-  ): int =
-    if (chooseNewTemporaryHitPoints) newTemporaryHitPoints
-    else existingTemporaryHitPoints
-
-  pure def resolveBonusActionDashTemporaryHitPoints(
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    facts: BonusActionDashTemporaryHitPointsFacts
-  ): BonusActionDashTemporaryHitPointsResult = {
-    val admitted = all {
-      legalFeatureUsePool(pool),
-      pool.usesRemaining > 0,
-      facts.speedFeet >= 0,
-      facts.proficiencyBonus >= 2,
-      facts.proficiencyBonus <= 6,
-      facts.existingTemporaryHitPoints >= 0,
-    }
-    val dashed =
-      if (admitted) resolveDash(turn, facts.speedFeet, BonusActionCost) else turn
-    {
-      turn: dashed,
-      pool: if (admitted) spendFeatureUsePool(pool) else pool,
-      temporaryHitPoints:
-        if (admitted) resolveTemporaryHitPointsChoice(
-          facts.existingTemporaryHitPoints,
-          facts.proficiencyBonus,
-          facts.chooseNewTemporaryHitPoints
-        ) else facts.existingTemporaryHitPoints,
-    }
   }
 
   pure def resolveArcheryAttackRoll(
@@ -885,30 +781,6 @@ module unitFeatureProcedureProfiles {
   ): AttackActionAttackCountState =
     state.with("extraAttackSlotOpen", false).with("turnEnded", true)
 
-  pure def spendFeatureUsePool(pool: FeatureUsePool): FeatureUsePool =
-    if (pool.usesRemaining <= 0) pool
-    else pool.with("usesRemaining", pool.usesRemaining - 1)
-
-  pure def legalInnateSorceryState(state: InnateSorceryState): bool = all {
-    legalFeatureUsePool(state.pool),
-    state.occurrence.in(Set(NoInnateSorceryOccurrence, InnateSorceryOneMinuteDuration)),
-    state.occurrence == NoInnateSorceryOccurrence or state.pool.usesRemaining < state.pool.maximumUses,
-  }
-
-  pure def activateInnateSorcery(state: InnateSorceryState): InnateSorceryState = {
-    val admitted = all {
-      legalInnateSorceryState(state),
-      canSpendBonusAction(state.turn),
-      state.pool.usesRemaining > 0,
-      state.occurrence == NoInnateSorceryOccurrence,
-    }
-    {
-      turn: if (admitted) spendActionCost(state.turn, BonusActionCost) else state.turn,
-      pool: if (admitted) spendFeatureUsePool(state.pool) else state.pool,
-      occurrence: if (admitted) InnateSorceryOneMinuteDuration else state.occurrence,
-    }
-  }
-
   pure def legalActionSurgeState(state: ActionSurgeState): bool = all {
     legalFeatureUsePool(state.pool),
     state.actionGrant.in(Set(
@@ -947,87 +819,6 @@ module unitFeatureProcedureProfiles {
     } else {
       actionSurge: state.with("actionGrant", ActionSurgeActionSpent),
       actionWasTaken: true,
-    }
-
-  pure def legalSecondWindFacts(facts: SecondWindFacts): bool = all {
-    facts.healingRoll >= 1,
-    facts.healingRoll <= 10,
-    facts.fighterLevel >= 1,
-    facts.fighterLevel <= 20,
-  }
-
-  pure def resolveSecondWind(
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    vitals: CreatureVitals,
-    deathSavingThrows: DeathSavingThrowLifecycle,
-    positiveHitPointUnconsciousRecovery: PositiveHitPointUnconsciousRecovery,
-    facts: SecondWindFacts
-  ): SecondWindResult = {
-    val admitted = all {
-      legalSecondWindFacts(facts),
-      canSpendBonusAction(turn),
-      pool.usesRemaining > 0,
-    }
-    val spentTurn = if (admitted) spendActionCost(turn, BonusActionCost) else turn
-    val spentPool = if (admitted) spendFeatureUsePool(pool) else pool
-    {
-      turn: spentTurn,
-      pool: spentPool,
-      recovery:
-        if (admitted) applyHitPointHealing(
-          vitals,
-          deathSavingThrows,
-          positiveHitPointUnconsciousRecovery,
-          facts.healingRoll + facts.fighterLevel
-        ) else {
-          vitals: vitals,
-          deathSavingThrows: deathSavingThrows,
-          positiveHitPointUnconsciousRecovery: positiveHitPointUnconsciousRecovery,
-          hitPointsRegained: 0,
-        },
-    }
-  }
-
-  pure def legalFailedAbilityCheckResourceBoostFacts(
-    facts: FailedAbilityCheckResourceBoostFacts
-  ): bool = all {
-    facts.boostRoll >= 1,
-    facts.boostRoll <= 10,
-  }
-
-  pure def resolveFailedAbilityCheckResourceBoost(
-    pool: FeatureUsePool,
-    facts: FailedAbilityCheckResourceBoostFacts
-  ): FailedAbilityCheckResourceBoostResult = {
-    val originalSucceeded = facts.originalTotal >= facts.dc
-    val boostedTotal = facts.originalTotal + facts.boostRoll
-    val boostedSucceeded = boostedTotal >= facts.dc
-    val admitted = all {
-      legalFeatureUsePool(pool),
-      legalFailedAbilityCheckResourceBoostFacts(facts),
-      pool.usesRemaining > 0,
-      not(originalSucceeded),
-    }
-    val spend = admitted and boostedSucceeded
-    {
-      pool: if (spend) spendFeatureUsePool(pool) else pool,
-      originalSucceeded: originalSucceeded,
-      boostedTotal: boostedTotal,
-      boostedSucceeded: boostedSucceeded,
-    }
-  }
-
-  pure def resolveCunningAction(
-    turn: TurnProcedureState,
-    facts: CunningActionFacts
-  ): TurnProcedureState =
-    if (facts.choice == CunningDash) {
-      resolveDash(turn, facts.speedFeet, BonusActionCost)
-    } else if (facts.choice == CunningDisengage) {
-      resolveDisengage(turn, BonusActionCost)
-    } else {
-      resolveHide(turn, facts.hideFacts, BonusActionCost)
     }
 
   pure def championImprovedCriticalThreshold: int = 19
@@ -1408,132 +1199,6 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  run test_second_wind_spends_bonus_action_and_heals = {
-    val result = resolveSecondWind(
-      initialTurnProcedureState,
-      { usesRemaining: 2, maximumUses: 2 },
-      {
-        kind: PlayerCharacter,
-        hitPoints: 3,
-        hitPointMaximum: 20,
-        temporaryHitPoints: 0,
-        dead: false,
-        unconscious: false,
-      },
-      resetDeathSavingThrowLifecycle,
-      NoPositiveHitPointUnconsciousRecovery,
-      { healingRoll: 6, fighterLevel: 4 }
-    )
-    all {
-      assert(not(result.turn.bonusActionAvailable)),
-      assert(result.pool.usesRemaining == 1),
-      assert(result.recovery.vitals.hitPoints == 13),
-      assert(legalHitPointRecoveryState(
-        result.recovery.vitals,
-        result.recovery.deathSavingThrows,
-        result.recovery.positiveHitPointUnconsciousRecovery
-      )),
-    }
-  }
-
-  run test_second_wind_non_admission_preserves_recovery_lifecycle = {
-    val lifecycle = {
-      successes: 0,
-      failures: 0,
-      stable: false,
-      hpRegained: false,
-    }
-    val result = resolveSecondWind(
-      initialTurnProcedureState,
-      { usesRemaining: 0, maximumUses: 2 },
-      {
-        kind: PlayerCharacter,
-        hitPoints: 5,
-        hitPointMaximum: 20,
-        temporaryHitPoints: 0,
-        dead: false,
-        unconscious: true,
-      },
-      lifecycle,
-      EndsWhenHitPointsRegained,
-      { healingRoll: 6, fighterLevel: 4 }
-    )
-    all {
-      assert(result.turn == initialTurnProcedureState),
-      assert(result.pool.usesRemaining == 0),
-      assert(result.recovery.vitals.hitPoints == 5),
-      assert(result.recovery.deathSavingThrows == lifecycle),
-      assert(result.recovery.positiveHitPointUnconsciousRecovery == EndsWhenHitPointsRegained),
-      assert(result.recovery.hitPointsRegained == 0),
-    }
-  }
-
-  run test_tactical_mind_spends_second_wind_only_on_converted_success = {
-    val converted = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 13, dc: 15, boostRoll: 3 }
-    )
-    val stillFailed = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 10, dc: 15, boostRoll: 4 }
-    )
-    all {
-      assert(not(converted.originalSucceeded)),
-      assert(converted.boostedSucceeded),
-      assert(converted.boostedTotal == 16),
-      assert(converted.pool.usesRemaining == 1),
-      assert(not(stillFailed.originalSucceeded)),
-      assert(not(stillFailed.boostedSucceeded)),
-      assert(stillFailed.boostedTotal == 14),
-      assert(stillFailed.pool.usesRemaining == 2),
-    }
-  }
-
-  run test_tactical_mind_requires_failed_ability_check_and_second_wind_use = {
-    val originalSuccess = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 2, maximumUses: 2 },
-      { originalTotal: 15, dc: 15, boostRoll: 1 }
-    )
-    val depleted = resolveFailedAbilityCheckResourceBoost(
-      { usesRemaining: 0, maximumUses: 2 },
-      { originalTotal: 14, dc: 15, boostRoll: 1 }
-    )
-    all {
-      assert(originalSuccess.originalSucceeded),
-      assert(originalSuccess.boostedSucceeded),
-      assert(originalSuccess.pool.usesRemaining == 2),
-      assert(not(depleted.originalSucceeded)),
-      assert(depleted.boostedSucceeded),
-      assert(depleted.pool.usesRemaining == 0),
-    }
-  }
-
-  run test_cunning_action_spends_bonus_action_for_dash_disengage_or_hide = {
-    val dash = resolveCunningAction(initialTurnProcedureState, {
-      choice: CunningDash,
-      speedFeet: 30,
-      hideFacts: { prerequisiteSatisfied: false, checkTotal: 0, dc: 10 },
-    })
-    val disengage = resolveCunningAction(initialTurnProcedureState, {
-      choice: CunningDisengage,
-      speedFeet: 30,
-      hideFacts: { prerequisiteSatisfied: false, checkTotal: 0, dc: 10 },
-    })
-    val hide = resolveCunningAction(initialTurnProcedureState, {
-      choice: CunningHide,
-      speedFeet: 30,
-      hideFacts: { prerequisiteSatisfied: true, checkTotal: 18, dc: 15 },
-    })
-    all {
-      assert(not(dash.bonusActionAvailable)),
-      assert(dash.dashMovementBonusFeet == 30),
-      assert(not(disengage.bonusActionAvailable)),
-      assert(disengage.disengaged),
-      assert(not(hide.bonusActionAvailable)),
-      assert(hide.hidden),
-    }
-  }
-
   run test_champion_improved_critical_is_weapon_or_unarmed_threshold_nineteen_fact = {
     val weaponOutcome = resolveAttackRoll({
       naturalD20: 19,
@@ -1564,25 +1229,6 @@ module unitFeatureProcedureProfiles {
       assert(unarmedOutcome.critical),
       assert(not(nonEligibleAttackOutcome.hits)),
       assert(not(nonEligibleAttackOutcome.critical)),
-    }
-  }
-
-  run test_innate_sorcery_spends_bonus_action_and_long_rest_use = {
-    val state = {
-      turn: initialTurnProcedureState,
-      pool: { usesRemaining: 2, maximumUses: 2 },
-      occurrence: NoInnateSorceryOccurrence,
-    }
-    val active = activateInnateSorcery(state)
-    val exhausted = activateInnateSorcery(state.with("pool", { usesRemaining: 0, maximumUses: 2 }))
-    val alreadyActive = activateInnateSorcery(active)
-    all {
-      assert(not(active.turn.bonusActionAvailable)),
-      assert(active.pool.usesRemaining == 1),
-      assert(active.occurrence == InnateSorceryOneMinuteDuration),
-      assert(exhausted.occurrence == NoInnateSorceryOccurrence),
-      assert(exhausted.pool.usesRemaining == 0),
-      assert(alreadyActive.pool.usesRemaining == 1),
     }
   }
 
@@ -2214,43 +1860,6 @@ module unitFeatureProcedureProfiles {
       assert(budget.climbSpeedFeet == 30),
       assert(budget.swimSpeedFeet == 30),
       assert(budget.movementRemainingFeet == 20),
-    }
-  }
-
-  run test_adrenaline_rush_spends_bonus_action_dash_use_and_applies_temporary_hit_points = {
-    val result = resolveBonusActionDashTemporaryHitPoints(
-      initialTurnProcedureState,
-      { usesRemaining: 2, maximumUses: 2 },
-      {
-        speedFeet: 30,
-        proficiencyBonus: 3,
-        existingTemporaryHitPoints: 1,
-        chooseNewTemporaryHitPoints: true,
-      }
-    )
-    all {
-      assert(not(result.turn.bonusActionAvailable)),
-      assert(result.turn.dashMovementBonusFeet == 30),
-      assert(result.pool.usesRemaining == 1),
-      assert(result.temporaryHitPoints == 3),
-    }
-  }
-
-  run test_adrenaline_rush_can_keep_higher_existing_temporary_hit_points = {
-    val result = resolveBonusActionDashTemporaryHitPoints(
-      initialTurnProcedureState,
-      { usesRemaining: 1, maximumUses: 2 },
-      {
-        speedFeet: 30,
-        proficiencyBonus: 2,
-        existingTemporaryHitPoints: 5,
-        chooseNewTemporaryHitPoints: false,
-      }
-    )
-    all {
-      assert(result.turn.dashMovementBonusFeet == 30),
-      assert(result.pool.usesRemaining == 0),
-      assert(result.temporaryHitPoints == 5),
     }
   }
 
