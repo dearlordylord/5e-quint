@@ -7241,11 +7241,36 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "list",
+        "filter",
+        "exists",
+        "forall",
+        "map",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8000,16 +8025,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
         }
       ],

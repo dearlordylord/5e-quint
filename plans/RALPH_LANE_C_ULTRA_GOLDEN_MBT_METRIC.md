@@ -185,7 +185,7 @@ remains.
     {
       "number": 29,
       "id": "C29-GENERATOR-READINESS-SCALAR-BUFFS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify scalar buff active-effect generator readiness"
     },
     {
@@ -671,7 +671,7 @@ longer `not-assessed`.
 
 ### Task 29 - C29-GENERATOR-READINESS-SCALAR-BUFFS - Classify scalar buff active-effect generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,

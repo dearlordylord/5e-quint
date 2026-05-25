@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 16,
+          "blockingCount": 15,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 16
+              "numerator": 17
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -230,15 +230,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []
@@ -514,11 +505,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 16,
+          "blockingCount": 15,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 16
+              "numerator": 17
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -672,15 +663,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []
