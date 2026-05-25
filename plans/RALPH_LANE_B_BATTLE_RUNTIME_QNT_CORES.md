@@ -238,7 +238,7 @@ Acceptance: checker green; focused tests green.
 
 ### Task 6 - B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE - Split Dragon's Breath effect and granted action core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Dragon's Breath initial-effect and granted-action rows, plus any
 `later-task-typecheck-coupled` focused verification blockers introduced by

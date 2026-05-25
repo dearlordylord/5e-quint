@@ -3060,7 +3060,7 @@
         "spell.invocation-dragons-breath-initial"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -3090,7 +3090,7 @@
         "spell.invocation-dragons-breath-granted-action"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "reason": "The target-attached Dragon's Breath effect grants the current target a Magic action. The reducer validates caller/table Cone membership facts, applies Dexterity save-for-half slot-scaled damage of the retained type, spends the target's Magic action, and reuses the shared damage lifecycle for Concentration and zero-Hit-Point follow-up holes.",
       "runtime": "battle",
@@ -5668,6 +5668,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-dragons-breath.qnt carries Dragon's Breath initial target-attached effect and target-granted Magic action reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
@@ -5675,8 +5684,6 @@
         "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
-        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
         "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
@@ -6523,12 +6530,7 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "later-task-typecheck-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6557,7 +6559,7 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6584,12 +6586,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "later-task-typecheck-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6620,7 +6617,7 @@
         "packages/battle-runtime/battle-runtime-light.qnt",
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6631,12 +6628,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "later-task-typecheck-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6664,7 +6656,7 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7541,19 +7533,13 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -7561,36 +7547,28 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -7598,21 +7576,19 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

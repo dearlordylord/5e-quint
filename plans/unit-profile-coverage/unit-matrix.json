@@ -3772,7 +3772,7 @@
       "id": "spell.invocation-dragons-breath-initial",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -3788,7 +3788,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -3804,7 +3804,7 @@
       "id": "spell.invocation-dragons-breath-granted-action",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -3821,7 +3821,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -20482,7 +20482,7 @@
           "id": "spell.invocation-dragons-breath-initial",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -20498,7 +20498,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -20514,7 +20514,7 @@
           "id": "spell.invocation-dragons-breath-granted-action",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -20531,7 +20531,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
             },
             {
               "kind": "focused-mbt",
