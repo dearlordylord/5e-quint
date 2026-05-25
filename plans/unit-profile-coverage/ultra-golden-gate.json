@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 17,
+          "blockingCount": 16,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 15
+              "numerator": 16
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -230,16 +230,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []
@@ -524,11 +514,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 17,
+          "blockingCount": 16,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 15
+              "numerator": 16
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -682,16 +672,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []
