@@ -255,7 +255,8 @@ support and reducer-kernel coverage can be read together without merging their
 denominators. A `supported-profile` Unit claim means the authored Unit is
 admitted to a typed support profile; it counts as full rules-kernel chain
 coverage only when every reducer-owned profile for that Unit maps to covered
-rules-kernel obligations.
+rules-kernel obligations. Open profile-to-obligation gaps are reported with the
+owning `followUpTaskIds` from `profile-obligations.jsonl`.
 
 The generated ultra-golden gate is stricter than the full-support reports. It
 is a conjunctive aggregate over support completeness, QNT/generator readiness,

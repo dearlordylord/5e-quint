@@ -127,6 +127,12 @@ function evidenceRowsForProfile({
         unitId,
         profileId: profile.profileId,
         profileKind: profile.profileKind,
+        ...((profile.followUpTaskIds ?? []).length > 0
+          ? { followUpTaskIds: profile.followUpTaskIds }
+          : {}),
+        ...(profile.gapReason !== undefined
+          ? { gapReason: profile.gapReason }
+          : {}),
         joinStatus: profile.joinStatus,
         gaps: [
           {
@@ -172,6 +178,9 @@ function evidenceRowsForProfile({
       obligationId: obligationRef.obligationId,
       obligationStatus: obligation?.status ?? "missing",
       obligationTitle: obligation?.title ?? obligationRef.title,
+      ...((obligation?.followUpTaskIds ?? []).length > 0
+        ? { followUpTaskIds: obligation.followUpTaskIds }
+        : {}),
       runtime: obligation?.runtime ?? obligationRef.runtime,
       qntOwners,
       parityWitnesses,
@@ -294,8 +303,15 @@ function renderGapDetails(gaps) {
   return gaps.map((gap) => md(gap.detail)).join("<br>");
 }
 
+function renderFollowUpTaskIds(taskIds, { planUpdateRequired = false } = {}) {
+  if ((taskIds ?? []).length === 0) {
+    return planUpdateRequired ? "_plan-update-required_" : "_none_";
+  }
+  return taskIds.map(code).join("<br>");
+}
+
 function renderOpenGapRow(row) {
-  return `| ${code(row.unitId)} | ${code(row.profileId)} | ${code(row.obligationId ?? "_profile_")} | ${renderGapKinds(row.gaps)} | ${renderGapDetails(row.gaps)} |`;
+  return `| ${code(row.unitId)} | ${code(row.profileId)} | ${code(row.obligationId ?? "_profile_")} | ${renderGapKinds(row.gaps)} | ${renderFollowUpTaskIds(row.followUpTaskIds, { planUpdateRequired: true })} | ${md(row.gapReason ?? "_none_")} | ${renderGapDetails(row.gaps)} |`;
 }
 
 function renderEvidenceRow(row) {
@@ -323,10 +339,10 @@ function renderLevel12QntMbtJoin(report) {
     "",
     "## Open Evidence Gaps",
     "",
-    "| Unit | Profile | Obligation | Gap | Detail |",
-    "| --- | --- | --- | --- | --- |",
+    "| Unit | Profile | Obligation | Gap | Follow-up tasks | Reason | Detail |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...(report.openGapRows.length === 0
-      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
       : report.openGapRows.map(renderOpenGapRow)),
     "",
     "## Full Join Rows",

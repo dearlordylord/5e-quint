@@ -17,9 +17,9 @@ This report joins the level 1-2 supported Unit profiles to rules-kernel obligati
 
 ## Open Evidence Gaps
 
-| Unit | Profile | Obligation | Gap | Detail |
-| --- | --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ | _none_ |
+| Unit | Profile | Obligation | Gap | Follow-up tasks | Reason | Detail |
+| --- | --- | --- | --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Full Join Rows
 

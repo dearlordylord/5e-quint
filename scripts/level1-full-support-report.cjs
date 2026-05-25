@@ -1211,6 +1211,21 @@ function mdUnitIds(unitIds) {
   return unitIds.map((unitId) => `\`${unitId}\``).join(", ");
 }
 
+function profileFollowUpTaskIds(profile) {
+  return [
+    ...(profile.followUpTaskIds ?? []),
+    ...profile.obligations.flatMap(
+      (obligation) => obligation.followUpTaskIds ?? [],
+    ),
+  ];
+}
+
+function renderRulesKernelFollowUpTaskIds(taskIds) {
+  const uniqueTaskIds = Array.from(new Set(taskIds)).sort();
+  if (uniqueTaskIds.length === 0) return "_plan-update-required_";
+  return uniqueTaskIds.map((taskId) => `\`${taskId}\``).join(", ");
+}
+
 function renderMetric(metric) {
   return `${metric.numerator}/${metric.denominator} (${metric.percent})`;
 }
@@ -1432,12 +1447,12 @@ function renderStrictFullSupport(report, scope) {
     "",
     "`plans/unit-profile-coverage/` owns this strict authored-content view. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join for supported profiles.",
     "",
-    "| Unit | Status | Profiles Needing Attention |",
-    "| --- | --- | --- |",
+    "| Unit | Status | Profiles Needing Attention | Follow-up tasks |",
+    "| --- | --- | --- | --- |",
     ...(report.rulesKernelSupportedUnitJoin.units.filter(
       (row) => row.joinStatus !== "covered",
     ).length === 0
-      ? ["| _none_ | _none_ | _none_ |"]
+      ? ["| _none_ | _none_ | _none_ | _none_ |"]
       : report.rulesKernelSupportedUnitJoin.units
           .filter((row) => row.joinStatus !== "covered")
           .map((row) => {
@@ -1456,7 +1471,10 @@ function renderStrictFullSupport(report, scope) {
                 return `\`${profile.profileId}\` (${profile.joinStatus}: ${obligations})`;
               })
               .join("; ");
-            return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} |`;
+            const followUpTasks = renderRulesKernelFollowUpTaskIds(
+              row.profiles.flatMap(profileFollowUpTaskIds),
+            );
+            return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} | ${followUpTasks} |`;
           })),
     "",
     "## Non-Supported Frontier Detail",

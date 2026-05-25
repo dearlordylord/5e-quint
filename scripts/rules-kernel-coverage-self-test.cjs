@@ -230,6 +230,35 @@ function runSelfTest() {
   assert.equal(result.matrix.semanticCoreRunBlockFindings.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
+  const sampleProfileObligationsPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "profile-obligations.jsonl",
+  );
+  const initialProfileObligationsText = fs.readFileSync(
+    sampleProfileObligationsPath,
+    "utf8",
+  );
+  writeFile(
+    sampleProfileObligationsPath,
+    JSON.stringify({
+      profileId: "spell.sample",
+      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      reason: "sample profile still needs a semantic obligation join",
+    }) + "\n",
+  );
+  const profileGapResult = buildKernelCoverage({ root });
+  assert.deepEqual(profileGapResult.issues, []);
+  assert.deepEqual(profileGapResult.matrix.profileObligations, [
+    {
+      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      profileId: "spell.sample",
+      reason: "sample profile still needs a semantic obligation join",
+    },
+  ]);
+  writeFile(sampleProfileObligationsPath, initialProfileObligationsText);
+
   const sampleQntOwnerRolesPath = path.join(
     root,
     "plans",
@@ -577,7 +606,7 @@ function runSelfTest() {
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     "utf8",
   );
-  const initialProfileObligationsText = fs.readFileSync(
+  const currentProfileObligationsText = fs.readFileSync(
     path.join(
       root,
       "plans",
@@ -706,7 +735,7 @@ function runSelfTest() {
       "rules-kernel-coverage",
       "profile-obligations.jsonl",
     ),
-    initialProfileObligationsText,
+    currentProfileObligationsText,
   );
   writeFile(
     path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),

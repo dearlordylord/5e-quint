@@ -41,7 +41,7 @@ remains.
     {
       "number": 5,
       "id": "C5-UNIT-PROFILE-RULES-KERNEL-GAP-REPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Report supported profile rules-kernel gaps"
     },
     {
@@ -217,7 +217,7 @@ Acceptance: no authored identity dispatch is introduced.
 
 ### Task 5 - C5-UNIT-PROFILE-RULES-KERNEL-GAP-REPORT - Report supported profile rules-kernel gaps
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: supported profile rows missing rules-kernel obligation joins are
 reported with owning follow-up task ids.

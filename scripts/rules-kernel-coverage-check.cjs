@@ -693,7 +693,13 @@ function validateObligationShape(obligation) {
   return issues;
 }
 
-function validateProfileMapping(mapping, index, obligationIds, profilesById) {
+function validateProfileMapping(
+  mapping,
+  index,
+  obligationIds,
+  profilesById,
+  knownRalphTaskIds,
+) {
   const issues = [];
   const context = `profile-obligations row ${index + 1}`;
   if (!isRecord(mapping)) return [`${context} must be an object.`];
@@ -711,25 +717,77 @@ function validateProfileMapping(mapping, index, obligationIds, profilesById) {
       );
     }
   }
-  if (
-    !Array.isArray(mapping.obligationIds) ||
-    mapping.obligationIds.length === 0
-  ) {
-    issues.push(`${context}.obligationIds must be a non-empty array.`);
-  } else {
-    const obligationIdSet = new Set();
-    for (const obligationId of mapping.obligationIds) {
-      if (obligationIdSet.has(obligationId)) {
-        issues.push(
-          `${context}.obligationIds repeats obligation ${obligationId}.`,
-        );
+  const hasObligationIds = Object.prototype.hasOwnProperty.call(
+    mapping,
+    "obligationIds",
+  );
+  const hasFollowUpTaskIds = Object.prototype.hasOwnProperty.call(
+    mapping,
+    "followUpTaskIds",
+  );
+  if (hasObligationIds && hasFollowUpTaskIds) {
+    issues.push(
+      `${context} must declare either obligationIds or followUpTaskIds, not both.`,
+    );
+  }
+  if (!hasObligationIds && !hasFollowUpTaskIds) {
+    issues.push(`${context} must declare obligationIds or followUpTaskIds.`);
+  }
+  if (hasObligationIds) {
+    if (
+      !Array.isArray(mapping.obligationIds) ||
+      mapping.obligationIds.length === 0
+    ) {
+      issues.push(`${context}.obligationIds must be a non-empty array.`);
+    } else {
+      const obligationIdSet = new Set();
+      for (const obligationId of mapping.obligationIds) {
+        if (obligationIdSet.has(obligationId)) {
+          issues.push(
+            `${context}.obligationIds repeats obligation ${obligationId}.`,
+          );
+        }
+        obligationIdSet.add(obligationId);
+        if (!obligationIds.has(obligationId)) {
+          issues.push(
+            `${context} references unknown obligation ${obligationId}.`,
+          );
+        }
       }
-      obligationIdSet.add(obligationId);
-      if (!obligationIds.has(obligationId)) {
-        issues.push(
-          `${context} references unknown obligation ${obligationId}.`,
-        );
+    }
+    if (Object.prototype.hasOwnProperty.call(mapping, "reason")) {
+      issues.push(`${context}.reason is only valid with followUpTaskIds.`);
+    }
+  }
+  if (hasFollowUpTaskIds) {
+    issues.push(
+      ...validateRequiredStringArray(
+        mapping.followUpTaskIds,
+        `${context}.followUpTaskIds`,
+      ),
+    );
+    if (
+      Array.isArray(mapping.followUpTaskIds) &&
+      mapping.followUpTaskIds.length === 0
+    ) {
+      issues.push(
+        `${context}.followUpTaskIds must name at least one follow-up task.`,
+      );
+    }
+    if (Array.isArray(mapping.followUpTaskIds)) {
+      for (const duplicate of duplicateStrings(mapping.followUpTaskIds)) {
+        issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
       }
+      issues.push(
+        ...validateFollowUpTaskIds(
+          mapping.followUpTaskIds,
+          context,
+          knownRalphTaskIds,
+        ),
+      );
+    }
+    if (typeof mapping.reason !== "string" || mapping.reason.length === 0) {
+      issues.push(`${context}.reason must be a non-empty string.`);
     }
   }
   return issues;
@@ -1876,7 +1934,13 @@ function buildKernelCoverage({ root: rootPath }) {
   const mappedProfileIds = new Set();
   for (const [index, mapping] of profileObligations.entries()) {
     issues.push(
-      ...validateProfileMapping(mapping, index, obligationIds, profilesById),
+      ...validateProfileMapping(
+        mapping,
+        index,
+        obligationIds,
+        profilesById,
+        knownRalphTaskIds,
+      ),
     );
     if (isRecord(mapping) && typeof mapping.profileId === "string") {
       if (mappedProfileIds.has(mapping.profileId)) {

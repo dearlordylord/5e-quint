@@ -47,8 +47,10 @@ replay, or a profile-scoped runtime test connects the modeled obligation to
 current TS behavior according to the witness-mode rules below.
 
 `profile-obligations.jsonl` is the single source of truth for the join from a
-Unit support profile to rules-kernel semantic obligations. Obligation rows do
-not duplicate their profile lists; generated reports derive those lists from
+Unit support profile to rules-kernel semantic obligations. A row either maps a
+profile to one or more obligation ids or, for an intentionally open profile
+join, names non-empty `followUpTaskIds` plus a `reason`. Obligation rows do not
+duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current

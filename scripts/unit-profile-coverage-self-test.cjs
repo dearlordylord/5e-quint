@@ -18,6 +18,10 @@ const {
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
 } = require("./level1-full-support-report.cjs");
+const {
+  buildRulesKernelProfileJoin,
+  buildRulesKernelSupportedUnitJoin,
+} = require("./rules-kernel-profile-join.cjs");
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const {
   validateCollections,
@@ -492,6 +496,48 @@ function runSelfTest(root) {
           `Self-test failed: expected copied rules-kernel join field issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(copiedJoinFieldIssues)}`,
         );
       }
+    }
+    const rulesKernelProfileJoin = buildRulesKernelProfileJoin({
+      obligations: [],
+      profileObligations: [
+        {
+          profileId: "fixture.profile",
+          followUpTaskIds: ["C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE"],
+          reason: "fixture missing rules-kernel mapping",
+        },
+      ],
+      profiles: [
+        {
+          id: "fixture.profile",
+          profileKind: "spell-invocation",
+        },
+      ],
+    });
+    const rulesKernelSupportedUnitJoin = buildRulesKernelSupportedUnitJoin(
+      [
+        {
+          unitId: "fixture_unit",
+          claim: { tag: "supported-profile" },
+          profiles: [
+            {
+              id: "fixture.profile",
+              profileKind: "spell-invocation",
+            },
+          ],
+        },
+      ],
+      rulesKernelProfileJoin,
+    );
+    const fixtureProfileGap = rulesKernelSupportedUnitJoin.units[0]?.profiles[0];
+    if (
+      fixtureProfileGap?.joinStatus !== "unmapped" ||
+      fixtureProfileGap.followUpTaskIds?.[0] !==
+        "C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE" ||
+      fixtureProfileGap.gapReason !== "fixture missing rules-kernel mapping"
+    ) {
+      fail(
+        `Self-test failed: expected rules-kernel profile gap follow-up ownership, got ${JSON.stringify(fixtureProfileGap)}`,
+      );
     }
     const malformedUnitEvidenceIssues = validateCoverageInputs({
       root: tempDir,

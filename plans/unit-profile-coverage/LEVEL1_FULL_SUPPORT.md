@@ -116,9 +116,9 @@ This gate checks authored records and retained Unit references that must resolve
 
 `plans/unit-profile-coverage/` owns this strict authored-content view. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join for supported profiles.
 
-| Unit | Status | Profiles Needing Attention |
-| --- | --- | --- |
-| _none_ | _none_ | _none_ |
+| Unit | Status | Profiles Needing Attention | Follow-up tasks |
+| --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ |
 
 ## Non-Supported Frontier Detail
 

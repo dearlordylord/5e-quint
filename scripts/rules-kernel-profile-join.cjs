@@ -37,8 +37,13 @@ function uniqueSorted(values) {
 
 function buildProfileObligationMap(profileObligations) {
   return profileObligations.reduce((groups, row) => {
-    const current = groups.get(row.profileId) ?? [];
-    current.push(...(row.obligationIds ?? []));
+    const current = groups.get(row.profileId) ?? {
+      followUpTaskIds: [],
+      obligationIds: [],
+    };
+    current.obligationIds.push(...(row.obligationIds ?? []));
+    current.followUpTaskIds.push(...(row.followUpTaskIds ?? []));
+    if (row.reason !== undefined) current.reason = row.reason;
     groups.set(row.profileId, current);
     return groups;
   }, new Map());
@@ -63,13 +68,20 @@ function buildRulesKernelProfileJoin({
   );
   const obligationIdsByProfile = buildProfileObligationMap(profileObligations);
   const rows = profiles.filter(isRulesKernelProfile).map((profile) => {
+    const mapping = obligationIdsByProfile.get(profile.id) ?? {
+      followUpTaskIds: [],
+      obligationIds: [],
+    };
     const obligationIds = uniqueSorted(
-      obligationIdsByProfile.get(profile.id) ?? [],
+      mapping.obligationIds,
     );
     const obligationRows = obligationIds.map((obligationId) => {
       const obligation = obligationsById.get(obligationId);
       return {
         obligationId,
+        ...((obligation?.followUpTaskIds ?? []).length > 0
+          ? { followUpTaskIds: obligation.followUpTaskIds }
+          : {}),
         runtime: obligation?.runtime ?? "unknown",
         status: obligation?.status ?? "unknown",
         title: obligation?.title ?? "unknown obligation",
@@ -78,6 +90,10 @@ function buildRulesKernelProfileJoin({
     return stable({
       profileId: profile.id,
       profileKind: profile.profileKind,
+      ...(mapping.followUpTaskIds.length > 0
+        ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
+        : {}),
+      ...(mapping.reason !== undefined ? { gapReason: mapping.reason } : {}),
       joinStatus: profileJoinStatus(obligationIds, obligationsById),
       obligations: obligationRows,
     });
