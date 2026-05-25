@@ -149,7 +149,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 23,
       "id": "B23-LEVITATE-CREATURE-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Levitate creature lifecycle readiness"
     },
     {
@@ -541,7 +541,7 @@ classification changes use executable behavior.
 
 ### Task 23 - B23-LEVITATE-CREATURE-READINESS - Classify Levitate creature lifecycle readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` rows; QNT owner
 `packages/battle-runtime/battle-runtime-levitate-creature.qnt`; runtime witness

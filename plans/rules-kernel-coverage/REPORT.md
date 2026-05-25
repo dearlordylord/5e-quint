@@ -307,7 +307,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` | mbt-fixture | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
 | `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-turn-order.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
@@ -398,7 +398,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed |  |  |  |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |  | `A67-RECURSIVE-NEXT-BATCH` |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
@@ -455,7 +455,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 | Obligation | Status | Semantic-core owners | Owner roles |
 | --- | --- | --- | --- |
-| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: semantic-core |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `packages/battle-runtime/battle-runtime-metamagic.qnt` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: semantic-core |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`, `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: semantic-core |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | `packages/battle-runtime/battle-runtime-self-transformation.qnt`: semantic-core |
@@ -470,7 +469,6 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 
 | Obligation | Readiness status | Blocker | Follow-up | Semantic-core run blocks |
 | --- | --- | --- | --- | --- |
-| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `run-block-coupled` | _none_ | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: lines `249`, `261`, `271`, `290`, `302`, `320`, `329` |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `A67-RECURSIVE-NEXT-BATCH` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | _none_ | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
