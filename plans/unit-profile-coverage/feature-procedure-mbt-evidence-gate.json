@@ -1,0 +1,1264 @@
+{
+  "blockedScopeIds": [],
+  "criteria": {
+    "noRuntimeBehavior": "This gate is checker/report evidence only and does not change feature reducers, Surface admission, or QNT semantics.",
+    "profileIdPrefix": "unit-feature.",
+    "qntMbtWitnessKinds": [
+      "deterministic-qnt-replay",
+      "focused-mbt"
+    ],
+    "rowPolicy": "Every supported unit-feature profile fact must emit an obligation evidence row with QNT owners and focused MBT or deterministic QNT replay witnesses, or an explicit gap row."
+  },
+  "generatedBy": "scripts/unit-profile-coverage-check.cjs",
+  "scopes": [
+    {
+      "denominatorRule": "supported Unit unit-feature profile facts in the scoped level-support report",
+      "metrics": {
+        "evidenceRows": {
+          "denominator": 7,
+          "numerator": 7,
+          "percent": "100%"
+        },
+        "featureProcedureProfiles": {
+          "denominator": 7,
+          "numerator": 7,
+          "percent": "100%"
+        },
+        "openGapRows": {
+          "denominator": 7,
+          "numerator": 0,
+          "percent": "0%"
+        },
+        "supportedFeatureUnits": {
+          "denominator": 6,
+          "numerator": 6,
+          "percent": "100%"
+        }
+      },
+      "openGapRows": [],
+      "rows": [
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bonus-action-ongoing-rage",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_rage"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-grant",
+          "profileKind": "bonus-action",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.self-bonus-action-healing",
+          "profileKind": "bonus-action",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_second_wind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.martial-arts-attack-projection",
+          "profileKind": "passive",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_martial_arts"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.attack-damage-rider",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_sneak_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.innate-sorcery-activation",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "sorcerer_innate_sorcery"
+        }
+      ],
+      "scopeId": "level-1",
+      "status": "pass",
+      "title": "Character Level 1"
+    },
+    {
+      "denominatorRule": "supported Unit unit-feature profile facts in the scoped level-support report",
+      "metrics": {
+        "evidenceRows": {
+          "denominator": 13,
+          "numerator": 13,
+          "percent": "100%"
+        },
+        "featureProcedureProfiles": {
+          "denominator": 13,
+          "numerator": 13,
+          "percent": "100%"
+        },
+        "openGapRows": {
+          "denominator": 13,
+          "numerator": 0,
+          "percent": "0%"
+        },
+        "supportedFeatureUnits": {
+          "denominator": 12,
+          "numerator": 12,
+          "percent": "100%"
+        }
+      },
+      "openGapRows": [],
+      "rows": [
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_danger_sense"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bonus-action-ongoing-rage",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_rage"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.first-attack-roll-reckless-advantage",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_reckless_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-grant",
+          "profileKind": "bonus-action",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.action-surge-resource",
+          "profileKind": "resource",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_action_surge"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.self-bonus-action-healing",
+          "profileKind": "bonus-action",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_second_wind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.failed-ability-check-resource-boost",
+          "profileKind": "resource",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_tactical_mind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.martial-arts-attack-projection",
+          "profileKind": "passive",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_martial_arts"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.passive-speed-bonus",
+          "profileKind": "passive",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_unarmored_movement"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.alternate-action-cost",
+          "profileKind": "bonus-action",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_cunning_action"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.attack-damage-rider",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_sneak_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.innate-sorcery-activation",
+          "profileKind": "persistent-effect",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "sorcerer_innate_sorcery"
+        }
+      ],
+      "scopeId": "level-1-2",
+      "status": "pass",
+      "title": "Character Levels 1-2"
+    }
+  ],
+  "sourceArtifacts": {
+    "level12FullSupport": "plans/unit-profile-coverage/level1-2-full-support.json",
+    "level1FullSupport": "plans/unit-profile-coverage/level1-full-support.json",
+    "profileObligations": "plans/rules-kernel-coverage/profile-obligations.jsonl",
+    "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json"
+  },
+  "status": "pass"
+}

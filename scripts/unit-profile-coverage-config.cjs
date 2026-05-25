@@ -277,6 +277,14 @@ function coveragePaths(root) {
       coverageDir,
       "SPELL_PROCEDURE_MBT_EVIDENCE_GATE.md",
     ),
+    featureProcedureMbtEvidenceGate: path.join(
+      coverageDir,
+      "feature-procedure-mbt-evidence-gate.json",
+    ),
+    featureProcedureMbtEvidenceGateReport: path.join(
+      coverageDir,
+      "FEATURE_PROCEDURE_MBT_EVIDENCE_GATE.md",
+    ),
     mcpScenarioEvidence: path.join(coverageDir, "mcp-scenario-evidence.json"),
     level13FullSupport: path.join(coverageDir, "level1-3-full-support.json"),
     level13FullSupportReport: path.join(

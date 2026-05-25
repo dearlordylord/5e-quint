@@ -45,6 +45,10 @@ const {
   buildSpellProcedureMbtEvidenceGate,
   renderSpellProcedureMbtEvidenceGate,
 } = require("./spell-procedure-mbt-evidence-gate.cjs");
+const {
+  buildFeatureProcedureMbtEvidenceGate,
+  renderFeatureProcedureMbtEvidenceGate,
+} = require("./feature-procedure-mbt-evidence-gate.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
@@ -162,6 +166,11 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
+  const featureProcedureMbtEvidenceGate = buildFeatureProcedureMbtEvidenceGate({
+    level1FullSupport,
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+  });
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -225,6 +234,16 @@ function main() {
     { root, write },
     paths.spellProcedureMbtEvidenceGateReport,
     renderSpellProcedureMbtEvidenceGate(spellProcedureMbtEvidenceGate),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.featureProcedureMbtEvidenceGate,
+    `${JSON.stringify(featureProcedureMbtEvidenceGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.featureProcedureMbtEvidenceGateReport,
+    renderFeatureProcedureMbtEvidenceGate(featureProcedureMbtEvidenceGate),
   );
   writeOrCompare(
     { root, write },

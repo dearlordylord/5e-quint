@@ -59,7 +59,7 @@ remains.
     {
       "number": 8,
       "id": "C8-FEATURE-PROCEDURE-MBT-EVIDENCE-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gate feature procedure MBT evidence for supported profiles"
     },
     {
@@ -245,7 +245,7 @@ Acceptance: no new spell behavior; checker/report only.
 
 ### Task 8 - C8-FEATURE-PROCEDURE-MBT-EVIDENCE-GATE - Gate feature procedure MBT evidence for supported profiles
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: unit-feature supported profiles have explicit QNT/MBT evidence rows or
 gap rows.

@@ -34,6 +34,9 @@ const { validateMcpScenarioEvidence } = require("./ultra-golden-gate.cjs");
 const {
   buildSpellProcedureMbtEvidenceGate,
 } = require("./spell-procedure-mbt-evidence-gate.cjs");
+const {
+  buildFeatureProcedureMbtEvidenceGate,
+} = require("./feature-procedure-mbt-evidence-gate.cjs");
 
 function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
@@ -670,6 +673,72 @@ function runSelfTest(root) {
     ) {
       fail(
         `Self-test failed: expected spell procedure gate to expose runtime-test-only QNT/MBT gap, got ${JSON.stringify(spellProcedureEvidenceGate)}`,
+      );
+    }
+    const featureProcedureEvidenceGate = buildFeatureProcedureMbtEvidenceGate({
+      level1FullSupport: {
+        scope: { title: "Fixture level 1" },
+        rulesKernelSupportedUnitJoin: {
+          units: [
+            {
+              unitId: "fixture_feature",
+              profiles: [
+                {
+                  profileId: "unit-feature.fixture",
+                  profileKind: "resource",
+                  joinStatus: "covered",
+                  obligations: [
+                    {
+                      obligationId: "BATTLE.FIXTURE.FEATURE",
+                      runtime: "battle",
+                      status: "covered",
+                      title: "Fixture feature obligation",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      level12FullSupport: {
+        scope: { title: "Fixture level 1-2" },
+        rulesKernelSupportedUnitJoin: { units: [] },
+      },
+      rulesKernelMatrix: {
+        obligations: [
+          {
+            id: "BATTLE.FIXTURE.FEATURE",
+            status: "covered",
+            runtime: "battle",
+            title: "Fixture feature obligation",
+            qntOwners: ["fixture/feature.qnt"],
+            parityWitnesses: [
+              {
+                kind: "runtime-test",
+                ownerPath: "fixture/feature.test.ts",
+              },
+            ],
+          },
+        ],
+        qntOwnerRoles: [
+          {
+            ownerPath: "fixture/feature.qnt",
+            role: "semantic-core",
+          },
+        ],
+      },
+    });
+    const fixtureFeatureScope = featureProcedureEvidenceGate.scopes.find(
+      (scope) => scope.scopeId === "level-1",
+    );
+    const fixtureFeatureGap = fixtureFeatureScope?.openGapRows[0]?.gaps[0];
+    if (
+      featureProcedureEvidenceGate.status !== "blocked" ||
+      fixtureFeatureGap?.kind !== "missing-qnt-mbt-witness"
+    ) {
+      fail(
+        `Self-test failed: expected feature procedure gate to expose runtime-test-only QNT/MBT gap, got ${JSON.stringify(featureProcedureEvidenceGate)}`,
       );
     }
     const malformedUnitEvidenceIssues = validateCoverageInputs({
