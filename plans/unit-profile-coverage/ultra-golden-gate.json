@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 19,
+          "blockingCount": 18,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 13
+              "numerator": 14
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -222,16 +222,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
@@ -544,11 +534,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 19,
+          "blockingCount": 18,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 13
+              "numerator": 14
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -694,16 +684,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
