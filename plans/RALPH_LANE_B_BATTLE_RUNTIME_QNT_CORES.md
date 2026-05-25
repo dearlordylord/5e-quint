@@ -167,7 +167,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 26,
       "id": "B26-PROTECTION-FROM-POISON-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Protection from Poison readiness"
     },
     {
@@ -585,7 +585,7 @@ classification changes rely on executable behavior.
 
 ### Task 26 - B26-PROTECTION-FROM-POISON-READINESS - Classify Protection from Poison readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` rows, focused on
 `packages/battle-runtime/battle-runtime-protection-from-poison.qnt`, poison

@@ -7645,34 +7645,37 @@
     },
     {
       "blockedBy": [],
-      "followUpTaskIds": [
-        "B26-PROTECTION-FROM-POISON-READINESS"
-      ],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "record-update",
         "pure-def",
+        "constant-def",
         "int",
         "bool",
         "if-expression",
         "let-binding",
+        "arithmetic",
         "comparison",
         "boolean-connective",
         "pattern-match",
         "set",
         "filter",
-        "exists"
+        "exists",
+        "set-operators",
+        "membership"
       ],
       "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt"
+        "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt",
+        "packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt"
+        "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+        "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
       ],
-      "status": "semantic-core-candidate"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8350,24 +8353,6 @@
     }
   ],
   "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [
-        "B26-PROTECTION-FROM-POISON-READINESS"
-      ],
-      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-      "owners": [
-        {
-          "lines": [
-            101,
-            116,
-            126
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
-        }
-      ],
-      "readinessStatus": "semantic-core-candidate"
-    },
     {
       "blocker": "run-block-coupled",
       "followUpTaskIds": [],

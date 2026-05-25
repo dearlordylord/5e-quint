@@ -15,6 +15,7 @@ module battleRuntimeSelfTests {
   import battleRuntimeObjectContactDamageTests.* from "./battle-runtime-object-contact-damage-tests"
   import battleRuntimeDragonsBreathTests.* from "./battle-runtime-dragons-breath-tests"
   import battleRuntimeDirectConditionRemovalTests.* from "./battle-runtime-direct-condition-removal-tests"
+  import battleRuntimeProtectionFromPoisonTests.* from "./battle-runtime-protection-from-poison-tests"
   import battleRuntimeGustOfWindTests.* from "./battle-runtime-gust-of-wind-tests"
   import battleRuntimeLevitateCreatureTests.* from "./battle-runtime-levitate-creature-tests"
   import battleRuntimeReactionWindowTests.* from "./battle-runtime-reaction-window-tests"
