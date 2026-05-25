@@ -7,6 +7,7 @@
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
   import unitFeatureMetamagicSpellModificationAdmissionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core"
+  import unitFeatureQuickenedActionSpellProcedureSupportCore.* from "../shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
@@ -20,38 +21,11 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
-  type BattleRuntimeQuickenedActionSpellProcedure =
-    | QuickenedDirectRestorationProcedure
-    | QuickenedScalarBuffProcedure
-    | QuickenedDamageProcedure
-    | QuickenedControlProcedure
-    | QuickenedOngoingEffectProcedure
-    | QuickenedOtherActionProcedure
-
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
     | SleepTargetAdmissionProcedure
     | NonSaveMetamagicProcedure
-
-  pure def selectedMetamagicOptionsSupportedByQuickenedActionSpell(
-    procedure: BattleRuntimeQuickenedActionSpellProcedure,
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): bool =
-    selectedOptions == Set(quickenedSpellMetamagicFact) and
-    quickenedActionSpellProcedureSupportsBonusActionRewrite(procedure)
-
-  pure def quickenedActionSpellProcedureSupportsBonusActionRewrite(
-    procedure: BattleRuntimeQuickenedActionSpellProcedure,
-  ): bool =
-    match procedure {
-      | QuickenedDirectRestorationProcedure => true
-      | QuickenedScalarBuffProcedure => true
-      | QuickenedDamageProcedure => false
-      | QuickenedControlProcedure => false
-      | QuickenedOngoingEffectProcedure => false
-      | QuickenedOtherActionProcedure => false
-    }
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,

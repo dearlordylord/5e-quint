@@ -160,7 +160,7 @@ work remains.
     {
       "number": 24,
       "id": "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Quickened action spell procedure support core"
     },
     {
@@ -570,7 +570,7 @@ unaffordable, stackable, and non-stackable selections; checker green.
 
 ### Task 24 - A70-QUICKENED-PROCEDURE-SUPPORT-CORE - Split Quickened action spell procedure support core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: A69
 

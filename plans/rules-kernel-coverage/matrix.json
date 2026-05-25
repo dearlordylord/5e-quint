@@ -741,6 +741,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt",
         "packages/battle-runtime/battle-runtime-metamagic.qnt"
       ],
       "runtime": "battle",
@@ -5540,6 +5541,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt is the covered obligation QNT owner carrying Quickened action-casting procedure support semantics for the direct Hit Point restoration and scalar buff profile subset, while keeping damage, control, ongoing-effect, and other action procedure expansion deferred.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-mirror-image.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
@@ -8983,14 +8992,14 @@
       "owners": [
         {
           "lines": [
+            257,
             283,
-            309,
-            324,
-            339,
-            362,
-            434,
-            455,
-            491
+            298,
+            313,
+            336,
+            408,
+            429,
+            465
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
         }
