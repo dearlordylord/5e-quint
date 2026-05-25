@@ -130,7 +130,7 @@ work remains.
     {
       "number": 19,
       "id": "A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit strict level 1-2 denominator fallout"
     },
     {
@@ -407,12 +407,19 @@ remains in the unit-feature closure set.
 
 ### Task 19 - A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT - Audit strict level 1-2 denominator fallout
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: level 1 and level 1-2 strict support gates remain green after ownership
 changes.
 
 Acceptance: `pnpm unit-profile-coverage:check` green.
+
+Closed by checker evidence in
+`plans/unit-profile-coverage/A65_UNIT_FEATURE_STRICT_DENOMINATOR_AUDIT.md`:
+level 1 and level 1-2 full-support claim gates remain `pass`, strict target
+open counts remain zero, selected-identity blocker counts remain zero, and no
+additional strict-denominator follow-up is required for the unit-feature split
+fallout. Task 20 still owns the broader rules-kernel report refresh.
 
 ### Task 20 - A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE - Refresh rules-kernel reports after unit-feature closure
 
