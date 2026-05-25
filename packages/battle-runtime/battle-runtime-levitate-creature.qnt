@@ -47,6 +47,12 @@ module battleRuntimeLevitateCreature {
       | _ => false
     })
 
+  pure def targetActiveEffects(state: BattleState, target: Actor): Set[ActiveEffect] =
+    match target {
+      | Fighter => state.fighter.activeEffects
+      | Goblin => state.goblin.activeEffects
+    }
+
   pure def levitatedCreatureStillActiveFrom(state: BattleState, source: Actor): bool =
     activeEffectsContainLevitatedCreatureFrom(state.fighter.activeEffects, source) or
       activeEffectsContainLevitatedCreatureFrom(state.goblin.activeEffects, source)
@@ -194,11 +200,13 @@ module battleRuntimeLevitateCreature {
       if (not(targetIsWilling) and constitutionSaveSucceeded)
         commitActorSpellSlotUse({ ...state, actionAvailable: false }, Fighter)
       else {
+        val displacedEffects = targetActiveEffects(state, target)
         val concentrationBase = breakConcentrationSpellEffects(state, Fighter)
         val effected = stateWithLevitatedCreatureTargetEffect(concentrationBase, target, Fighter, initialRiseFeet)
+        val cleaned = stateWithDisplacedLevitatedCreatureConcentrationCleanup(effected, displacedEffects)
         commitActorSpellSlotUse({
-          ...effected,
-          fighter: { ...effected.fighter, concentrating: true },
+          ...cleaned,
+          fighter: { ...cleaned.fighter, concentrating: true },
           actionAvailable: false,
         }, Fighter)
       }
@@ -245,106 +253,4 @@ module battleRuntimeLevitateCreature {
       stateWithLevitatedCreatureAltitudeChanged(state, target, source, directionUp, distanceFeet)
     else
       state
-
-  run levitateCreatureInitialRiseIsCallerSelected = {
-    val resolved = resolveLevitateCreature(initialState, Goblin, true, false, 5, 2)
-    val tooHigh = resolveLevitateCreature(initialState, Goblin, true, false, 25, 2)
-    all {
-      assert(targetLevitatedCreatureAltitudeFrom(resolved, Goblin, Fighter) == 5),
-      assert(not(targetHasLevitatedCreatureFrom(tooHigh, Goblin, Fighter))),
-      assert(not(resolved.actionAvailable)),
-      assert(resolved.spellSlotUsesThisTurn.contains(BattleCommittedSpellSlotUse(Fighter))),
-      assert(resolved.fighter.concentrating),
-    }
-  }
-
-  run levitateCreatureSuccessfulSaveSpendsOnly = {
-    val resolved = resolveLevitateCreature(initialState, Goblin, false, true, 10, 2)
-    all {
-      assert(not(resolved.actionAvailable)),
-      assert(resolved.spellSlotUsesThisTurn.contains(BattleCommittedSpellSlotUse(Fighter))),
-      assert(not(targetHasLevitatedCreatureFrom(resolved, Goblin, Fighter))),
-      assert(not(resolved.fighter.concentrating)),
-    }
-  }
-
-  run levitateCreatureMovementWitnessAndCasterControl = {
-    val cast = resolveLevitateCreature(initialState, Goblin, true, false, 10, 2)
-    val goblinTurn = { ...cast, initiative: { ...cast.initiative, alreadyActed: [Fighter], stillToAct: [Goblin] }, actionAvailable: true }
-    val missingWitness = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, false, WalkSpeedKind, 10, true, 5)
-    val underpaidClimb = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 5, true, 5)
-    val witnessedMove = moveLevitatedTargetWithWitness(goblinTurn, Goblin, Fighter, true, WalkSpeedKind, 10, true, 5)
-    val fighterTurn = { ...witnessedMove, initiative: { ...witnessedMove.initiative, alreadyActed: [], stillToAct: [Fighter, Goblin] }, actionAvailable: true }
-    val outOfRange = controlLevitatedCreatureAltitude(fighterTurn, Goblin, Fighter, false, true, 5)
-    val controlled = controlLevitatedCreatureAltitude(fighterTurn, Goblin, Fighter, true, false, 10)
-    all {
-      assert(targetLevitatedCreatureAltitudeFrom(missingWitness, Goblin, Fighter) == 10),
-      assert(targetLevitatedCreatureAltitudeFrom(underpaidClimb, Goblin, Fighter) == 10),
-      assert(targetLevitatedCreatureAltitudeFrom(witnessedMove, Goblin, Fighter) == 15),
-      assert(targetLevitatedCreatureAltitudeFrom(outOfRange, Goblin, Fighter) == 15),
-      assert(targetLevitatedCreatureAltitudeFrom(controlled, Goblin, Fighter) == 5),
-      assert(not(controlled.actionAvailable)),
-    }
-  }
-
-  run levitateCreatureSelfTargetUsesMovementOnlyForAltitude = {
-    val cast = resolveLevitateCreature(initialState, Fighter, true, false, 10, 2)
-    val fighterTurn = { ...cast, actionAvailable: true }
-    val magicActionControl = controlLevitatedCreatureAltitude(fighterTurn, Fighter, Fighter, true, true, 5)
-    val witnessedMove = moveLevitatedTargetWithWitness(fighterTurn, Fighter, Fighter, true, WalkSpeedKind, 10, true, 5)
-    all {
-      assert(targetLevitatedCreatureAltitudeFrom(magicActionControl, Fighter, Fighter) == 10),
-      assert(magicActionControl.actionAvailable),
-      assert(targetLevitatedCreatureAltitudeFrom(witnessedMove, Fighter, Fighter) == 15),
-    }
-  }
-
-  run levitateCreatureReplacementClearsDisplacedSourceConcentration = {
-    val goblinLevitatingItself = {
-      ...initialState,
-      goblin: {
-        ...initialState.goblin,
-        concentrating: true,
-        activeEffects: Set(levitatedCreatureEffect(Goblin, 8)),
-      },
-    }
-    val replaced = resolveLevitateCreature(goblinLevitatingItself, Goblin, true, false, 10, 2)
-    all {
-      assert(not(replaced.goblin.concentrating)),
-      assert(replaced.fighter.concentrating),
-      assert(not(targetHasLevitatedCreatureFrom(replaced, Goblin, Goblin))),
-      assert(targetHasLevitatedCreatureFrom(replaced, Goblin, Fighter)),
-    }
-  }
-
-  run levitateCreatureConcentrationCleanupRemovesTargetEffect = {
-    val resolved = resolveLevitateCreature(initialState, Goblin, true, false, 10, 2)
-    val cleaned = breakConcentrationSpellEffects(resolved, Fighter)
-    all {
-      assert(not(cleaned.fighter.concentrating)),
-      assert(not(targetHasLevitatedCreatureFrom(cleaned, Goblin, Fighter))),
-    }
-  }
-
-  run levitateCreatureDurationCleanupRemovesTargetEffect = {
-    val resolved = resolveLevitateCreature(initialState, Goblin, true, false, 10, 2)
-    val expiring = {
-      ...resolved,
-      goblin: {
-        ...resolved.goblin,
-        activeEffects: Set(LevitatedCreature({
-          source: Fighter,
-          altitudeFeet: 10,
-          maxAltitudeChangeFeet: levitateAltitudeChangeMaxFeet,
-          rangeFeet: levitateRangeFeet,
-          durationTicks: 1,
-        })),
-      },
-    }
-    val cleaned = tickRoundDurationSpellEffects(expiring)
-    all {
-      assert(not(cleaned.fighter.concentrating)),
-      assert(not(targetHasLevitatedCreatureFrom(cleaned, Goblin, Fighter))),
-    }
-  }
 }

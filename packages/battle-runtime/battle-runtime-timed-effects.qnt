@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle unit-feature.weapon-mastery-sap
 
@@ -10,6 +10,12 @@ module battleRuntimeTimedEffects {
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+
+  pure def activeEffectsContainTimedLevitatedCreatureFrom(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | LevitatedCreature(data) => data.source == source
+      | _ => false
+    })
 
   pure def activeEffectsWithoutExpiredEndOfTurnRiders(
     effects: Set[ActiveEffect],
@@ -535,24 +541,32 @@ module battleRuntimeTimedEffects {
     val goblinEffects = tickDurationActiveEffects(state.goblin.activeEffects)
     val fighterTimedConcentrationBefore =
       activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)
+        or activeEffectsContainTimedLevitatedCreatureFrom(state.fighter.activeEffects, Fighter)
+        or activeEffectsContainTimedLevitatedCreatureFrom(state.goblin.activeEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Fighter)
     val fighterTimedConcentrationAfter =
       activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)
+        or activeEffectsContainTimedLevitatedCreatureFrom(fighterEffects, Fighter)
+        or activeEffectsContainTimedLevitatedCreatureFrom(goblinEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(fighterEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(goblinEffects, Fighter)
     val goblinTimedConcentrationBefore =
       activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)
+        or activeEffectsContainTimedLevitatedCreatureFrom(state.fighter.activeEffects, Goblin)
+        or activeEffectsContainTimedLevitatedCreatureFrom(state.goblin.activeEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Goblin)
     val goblinTimedConcentrationAfter =
       activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)
+        or activeEffectsContainTimedLevitatedCreatureFrom(fighterEffects, Goblin)
+        or activeEffectsContainTimedLevitatedCreatureFrom(goblinEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(fighterEffects, Goblin)

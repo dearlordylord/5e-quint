@@ -664,7 +664,8 @@
         "spell.invocation-levitated-creature"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "reason": "The reducer owns the creature-branch active effect, altitude scalar, action/resource spending, save outcome, caster control command, target movement altitude update, and concentration/duration cleanup. Caller/table facts still own target visibility, target range, fixed-object or surface reach, and map geometry.",
       "runtime": "battle",
@@ -5757,6 +5758,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
@@ -7525,11 +7527,37 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators"
+      ],
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7566,28 +7594,44 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size"
       ],
-      "followUpTaskIds": [
-        "A68-METAMAGIC-OPTION-FACT-CORE",
-        "A69-METAMAGIC-STACKING-ADMISSION-CORE",
-        "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
-        "A71-QUICKENED-RESTORATION-CORE",
-        "A72-QUICKENED-SCALAR-BUFF-CORE",
-        "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
-        "A74-SAVE-METAMAGIC-ADMISSION-CORE",
-        "A75-CAREFUL-SPELL-TARGET-CORE",
-        "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
-        "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
-        "A78-METAMAGIC-GENERATOR-READINESS-ROW",
-        "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY"
-      ],
-      "generatorSubset": [],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "blocked"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8246,11 +8290,37 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt",
+        "packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+        "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8877,30 +8947,6 @@
   ],
   "generatorReadinessBacklog": [
     {
-      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
       "ownerRoles": [
         {
@@ -8952,86 +8998,6 @@
     }
   ],
   "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [],
-      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
-      "owners": [
-        {
-          "lines": [
-            249,
-            261,
-            271,
-            290,
-            302,
-            320,
-            329
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [
-        "A68-METAMAGIC-OPTION-FACT-CORE",
-        "A69-METAMAGIC-STACKING-ADMISSION-CORE",
-        "A70-QUICKENED-PROCEDURE-SUPPORT-CORE",
-        "A71-QUICKENED-RESTORATION-CORE",
-        "A72-QUICKENED-SCALAR-BUFF-CORE",
-        "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
-        "A74-SAVE-METAMAGIC-ADMISSION-CORE",
-        "A75-CAREFUL-SPELL-TARGET-CORE",
-        "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
-        "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
-        "A78-METAMAGIC-GENERATOR-READINESS-ROW",
-        "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY"
-      ],
-      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "owners": [
-        {
-          "lines": [
-            257,
-            283,
-            298,
-            313,
-            336,
-            408,
-            429,
-            465
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
-        }
-      ],
-      "readinessStatus": "blocked"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [],
-      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-      "owners": [
-        {
-          "lines": [
-            137,
-            163,
-            183,
-            196,
-            220
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt"
-        },
-        {
-          "lines": [
-            101,
-            116,
-            126
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
     {
       "blocker": "run-block-coupled",
       "followUpTaskIds": [],
