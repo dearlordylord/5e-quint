@@ -28,7 +28,7 @@ work remains.
     { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "done", "title": "Split Martial Arts projection core" },
     { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "done", "title": "Split zero-Hit-Point feature replacement core" },
     { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "done", "title": "Split Monk Focus battle option core" },
-    { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "ready-for-research", "title": "Refresh unit-feature owner roles after semantic-core splits" },
+    { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "done", "title": "Refresh unit-feature owner roles after semantic-core splits" },
     { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature generator-readiness row" },
     { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported feature profile to rules-kernel joins" },
     { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature MBT bridge coverage" },
@@ -188,12 +188,16 @@ Acceptance: checker green; focused QNT/parity checks green.
 
 ### Task 10 - A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE - Refresh unit-feature owner roles after semantic-core splits
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: `qnt-owner-roles.jsonl` has correct semantic-core/proof-only roles for
 all unit-feature owners.
 
 Acceptance: checker green.
+
+Closed by checker evidence: current owner-role artifacts classify the split
+unit-feature semantic owners as `semantic-core`; example and inductive owners
+remain proof-only closure work under Task 16.
 
 ### Task 11 - A57-UNIT-FEATURE-READINESS-ROW-CLOSURE - Close unit-feature generator-readiness row
 
