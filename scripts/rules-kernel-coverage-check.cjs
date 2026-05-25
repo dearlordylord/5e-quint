@@ -183,6 +183,185 @@ function scanSemanticCoreRunBlocks(rootPath, qntOwnerRoleRows) {
   return runBlocksByPath;
 }
 
+function stripStringLiteralsPreserveLines(text) {
+  let output = "";
+  let quote = null;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (quote !== null) {
+      if (char === "\n") {
+        output += "\n";
+      } else {
+        output += " ";
+      }
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      output += " ";
+      continue;
+    }
+    output += char;
+  }
+  return output;
+}
+
+function qntConstructScanSource(text) {
+  return stripStringLiteralsPreserveLines(stripCommentsPreserveLines(text));
+}
+
+function hasQntRecordConstruct(source) {
+  return (
+    /\btype\s+\w+\s*=\s*\{/.test(source) ||
+    /[=,(]\s*\{[\s\S]*?:/.test(source)
+  );
+}
+
+function hasQntVariantConstruct(source) {
+  return (
+    /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*\s*\()/m.test(source) ||
+    /\b[A-Z]\w*\s*\(/.test(source)
+  );
+}
+
+function findQntGeneratorSubsetConstructs(text) {
+  const source = qntConstructScanSource(text);
+  const constructs = new Set();
+  const add = (construct, detected) => {
+    if (detected) constructs.add(construct);
+  };
+  add("all-block", /\ball\s*\{/.test(source));
+  add(
+    "arithmetic",
+    /[+/%]|(^|[^.])\*|\bmax\s*\(|\bmin\s*\(|(^|[^=<>!])-($|[^>])/.test(
+      source,
+    ),
+  );
+  add(
+    "boolean-connective",
+    /\b(?:and|or|not)\s*\(|\b(?:and|or)\b/.test(source),
+  );
+  add("bool", /\btrue\b|\bfalse\b|\bbool\b/.test(source));
+  add(
+    "comparison",
+    /==|!=|<=|>=|(^|[^=<>!])<($|[^=])|(^|[^=<>!])>($|[^=])/.test(
+      source,
+    ),
+  );
+  add(
+    "constant-def",
+    /^\s*pure\s+def\s+\w+\s*(?:\(\s*\))?\s*:/m.test(source),
+  );
+  add("constant-val", /^\s*pure\s+val\s+/m.test(source));
+  add("exists", /\.exists\s*\(/.test(source));
+  add("filter", /\.filter\s*\(/.test(source));
+  add("fold", /\.(?:fold|foldl)\s*\(/.test(source));
+  add("forall", /\.forall\s*\(/.test(source));
+  add("if-expression", /\bif\s*\(/.test(source));
+  add("import", /^\s*import\s+/m.test(source));
+  add("implies", /\bimplies\b/.test(source));
+  add("int", /\b\d+\b|\bint\b/.test(source));
+  add("let-binding", /^\s*val\s+\w+\s*=/m.test(source));
+  add("list", /\bList\s*(?:\[|\()/.test(source));
+  add("map", /\.map\s*\(/.test(source));
+  add("membership", /\.(?:contains|in)\s*\(/.test(source));
+  add("pattern-match", /\bmatch\s+/.test(source));
+  add("pure-def", /^\s*pure\s+def\s+\w+/m.test(source));
+  add("range", /\.to\s*\(/.test(source));
+  add("record", hasQntRecordConstruct(source));
+  add("record-update", /\.with\s*\(|\{\s*\.\.\./.test(source));
+  add("set", /\bSet\s*(?:\[|\()/.test(source));
+  add(
+    "set-operators",
+    /\.(?:union|intersect|exclude|diff|flatten)\s*\(/.test(source),
+  );
+  add("size", /\.size\s*\(/.test(source));
+  add("variant", hasQntVariantConstruct(source));
+  return constructs;
+}
+
+function findUnsupportedUnitFeatureGeneratorConstructs(text) {
+  const source = qntConstructScanSource(text);
+  const unsupported = [];
+  if (/^\s*action\s+\w+/m.test(source)) unsupported.push("action-def");
+  if (/^\s*run\s+\w+/m.test(source)) unsupported.push("run-block");
+  if (/^\s*nondet\s+\w+/m.test(source)) unsupported.push("nondet");
+  if (/\bassume\s*\(/.test(source)) unsupported.push("assume");
+  if (/\bassert\s*\(/.test(source)) unsupported.push("assert");
+  return unsupported;
+}
+
+function isUnitFeatureGeneratorSubsetAuditRow(readiness) {
+  const semanticCorePaths = stringArrayOrEmpty(readiness.semanticCore);
+  return (
+    (typeof readiness.obligationId === "string" &&
+      readiness.obligationId.startsWith("BATTLE.FEATURE.")) ||
+    semanticCorePaths.some((ownerPath) => ownerPath.includes("/unit-feature-"))
+  );
+}
+
+function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
+  if (!isUnitFeatureGeneratorSubsetAuditRow(readiness)) return [];
+  const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
+  if (semanticCore.length === 0) return [];
+  const issues = [];
+  const observedConstructs = new Set();
+  const unsupportedByPath = [];
+  for (const ownerPath of semanticCore) {
+    const ownerAbsolutePath = path.join(rootPath, ownerPath);
+    if (!fs.existsSync(ownerAbsolutePath)) continue;
+    const ownerText = fs.readFileSync(ownerAbsolutePath, "utf8");
+    for (const construct of findQntGeneratorSubsetConstructs(ownerText)) {
+      observedConstructs.add(construct);
+    }
+    const unsupported = findUnsupportedUnitFeatureGeneratorConstructs(ownerText);
+    if (unsupported.length > 0) {
+      unsupportedByPath.push({ ownerPath, unsupported });
+    }
+  }
+  const claimedConstructs = new Set(
+    stringArrayOrEmpty(readiness.generatorSubset),
+  );
+  const missing = [...observedConstructs]
+    .filter((construct) => !claimedConstructs.has(construct))
+    .sort();
+  const extra = [...claimedConstructs]
+    .filter((construct) => !observedConstructs.has(construct))
+    .sort();
+  const undocumented = [...observedConstructs]
+    .filter((construct) => !generatorSubsetConstructs.has(construct))
+    .sort();
+  if (undocumented.length > 0) {
+    issues.push(
+      `${context}.generatorSubset scanner found undocumented unit-feature QNT construct(s): ${undocumented.join(", ")}.`,
+    );
+  }
+  if (missing.length > 0) {
+    issues.push(
+      `${context}.generatorSubset omits observed unit-feature QNT construct(s): ${missing.join(", ")}.`,
+    );
+  }
+  if (extra.length > 0) {
+    issues.push(
+      `${context}.generatorSubset claims unobserved unit-feature QNT construct(s): ${extra.join(", ")}.`,
+    );
+  }
+  for (const finding of unsupportedByPath) {
+    issues.push(
+      `${context}.semanticCore path ${finding.ownerPath} contains unsupported unit-feature generator construct(s): ${finding.unsupported.join(", ")}.`,
+    );
+  }
+  return issues;
+}
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
@@ -1143,6 +1322,9 @@ function validateGeneratorReadiness(
       }
     }
   }
+  issues.push(
+    ...validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath),
+  );
   if (readiness.dryRun !== undefined) {
     if (typeof readiness.dryRun !== "string" || readiness.dryRun.length === 0) {
       issues.push(`${context}.dryRun must be a non-empty string when present.`);

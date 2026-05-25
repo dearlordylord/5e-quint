@@ -87,6 +87,7 @@ const generatorSubsetVocabulary = {
   "record-update": "Record `.with(...)` update expressions.",
   set: "`Set[...]` types or values.",
   "set-operators": "Set union or similar set algebra operators.",
+  size: "Collection `.size()` cardinality queries.",
   variant: "Tagged union variants.",
 };
 
