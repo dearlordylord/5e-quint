@@ -166,55 +166,55 @@ work remains.
     {
       "number": 25,
       "id": "A71-QUICKENED-RESTORATION-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split Quickened direct restoration execution core"
     },
     {
       "number": 26,
       "id": "A72-QUICKENED-SCALAR-BUFF-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split Quickened scalar buff execution core"
     },
     {
       "number": 27,
       "id": "A73-QUICKENED-SAME-TURN-LEDGER-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split Quickened same-turn level-1-plus spell ledger core"
     },
     {
       "number": 28,
       "id": "A74-SAVE-METAMAGIC-ADMISSION-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split save-affecting Metamagic admission core"
     },
     {
       "number": 29,
       "id": "A75-CAREFUL-SPELL-TARGET-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split Careful Spell protected-target core"
     },
     {
       "number": 30,
       "id": "A76-HEIGHTENED-SPELL-ROLL-MODE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Split Heightened Spell save roll-mode core"
     },
     {
       "number": 31,
       "id": "A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Move Metamagic run blocks into proof-only examples"
     },
     {
       "number": 32,
       "id": "A78-METAMAGIC-GENERATOR-READINESS-ROW",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Refresh Metamagic generator-readiness row after splits"
     },
     {
       "number": 33,
       "id": "A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "deferred",
       "title": "Verify Metamagic generator closure"
     }
   ]
@@ -587,7 +587,7 @@ procedure classes; checker green.
 
 ### Task 25 - A71-QUICKENED-RESTORATION-CORE - Split Quickened direct restoration execution core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A70
 
@@ -604,7 +604,7 @@ Sorcery Points, and state preservation on rejection; checker green.
 
 ### Task 26 - A72-QUICKENED-SCALAR-BUFF-CORE - Split Quickened scalar buff execution core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A70
 
@@ -620,7 +620,7 @@ preservation on rejection; checker green.
 
 ### Task 27 - A73-QUICKENED-SAME-TURN-LEDGER-CORE - Split Quickened same-turn level-1-plus spell ledger core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A71, A72
 
@@ -637,7 +637,7 @@ checker green.
 
 ### Task 28 - A74-SAVE-METAMAGIC-ADMISSION-CORE - Split save-affecting Metamagic admission core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A69
 
@@ -654,7 +654,7 @@ selection, unaffordable selection, and unsupported stacking; checker green.
 
 ### Task 29 - A75-CAREFUL-SPELL-TARGET-CORE - Split Careful Spell protected-target core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A74
 
@@ -672,7 +672,7 @@ no-damage-on-success non-suppression; checker green.
 
 ### Task 30 - A76-HEIGHTENED-SPELL-ROLL-MODE-CORE - Split Heightened Spell save roll-mode core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A74
 
@@ -690,7 +690,7 @@ duplicate Disadvantage idempotence; checker green.
 
 ### Task 31 - A77-METAMAGIC-RUN-BLOCK-EXAMPLES-SPLIT - Move Metamagic run blocks into proof-only examples
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A68-A76
 
@@ -707,7 +707,7 @@ checker green.
 
 ### Task 32 - A78-METAMAGIC-GENERATOR-READINESS-ROW - Refresh Metamagic generator-readiness row after splits
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A77
 
@@ -723,7 +723,7 @@ reports; `pnpm rules-kernel-coverage:check` green.
 
 ### Task 33 - A79-METAMAGIC-GENERATOR-CLOSURE-VERIFY - Verify Metamagic generator closure
 
-Status: `ready-for-implementation-after-light-research`
+Status: `deferred`
 
 Depends on: A78
 
