@@ -75,6 +75,8 @@ Checked source-of-truth artifacts:
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
+- `plans/QNT_GENERATOR_READINESS_BACKLOG.md` parks drained A/B lane work that is
+  not currently runnable.
 
 Active runnable queues:
 
