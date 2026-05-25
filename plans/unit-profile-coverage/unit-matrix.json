@@ -658,7 +658,7 @@
       "id": "unit-feature.passive-armor-class-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -798,7 +798,7 @@
       "id": "unit-feature.passive-speed-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -824,7 +824,7 @@
       "id": "unit-feature.passive-speed-kind-grants",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13442,7 +13442,7 @@
           "id": "unit-feature.passive-speed-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14778,7 +14778,7 @@
           "id": "unit-feature.passive-speed-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16799,7 +16799,7 @@
           "id": "unit-feature.passive-armor-class-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -17525,7 +17525,7 @@
           "id": "unit-feature.passive-speed-kind-grants",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

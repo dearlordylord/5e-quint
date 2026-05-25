@@ -16,6 +16,7 @@ module unitFeatureProcedureProfilesInductive {
   import unitFeatureAttackRiderCore.* from "./unit-feature-attack-rider-core"
   import unitFeatureSaveDamageCore.* from "./unit-feature-save-damage-core"
   import unitFeatureReactionReductionCore.* from "./unit-feature-reaction-reduction-core"
+  import unitFeaturePassiveMovementDefenseCore.* from "./unit-feature-passive-movement-defense-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota
@@ -488,14 +489,10 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action doDefenseArmorClass = {
-    nondet wearingLightArmor = Set(true, false).oneOf()
-    nondet wearingMediumArmor = Set(true, false).oneOf()
-    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet armorWorn = Set(NoArmorWorn, LightArmorWorn, MediumArmorWorn, HeavyArmorWorn).oneOf()
     all {
       qLastArmorClass' = defenseArmorClass(16, {
-        wearingLightArmor: wearingLightArmor,
-        wearingMediumArmor: wearingMediumArmor,
-        wearingHeavyArmor: wearingHeavyArmor,
+        armorWorn: armorWorn,
       }),
       qLastDamageAmount' = qLastDamageAmount,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
@@ -644,16 +641,14 @@ module unitFeatureProcedureProfilesInductive {
   action doFastMovementSpeedBonus = {
     nondet armorWorn = Set(NoArmorWorn, HeavyArmorWorn).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
-    val result = resolvePassiveSpeedBonusDash(qTurn, {
+    val result = resolvePassiveSpeedBonusDash(qTurn, NotWearingHeavyArmorSpeedBonus({
       baseSpeedFeet: 30,
-      gate: NotWearingHeavyArmorSpeedBonusGate,
       armorWorn: armorWorn,
-      wieldingShield: false,
       movementSpentFeet: movementSpentFeet,
-    })
+    }))
     all {
       qLastDamageAmount' = result.movementRemainingFeet,
-      qLastArmorClass' = result.effectiveSpeedFeet,
+      qLastArmorClass' = result.speedFeet,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -666,23 +661,23 @@ module unitFeatureProcedureProfilesInductive {
       qFrenzyUsedThisTurn' = qFrenzyUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
-      recordTurn(resolveDash(qTurn, result.effectiveSpeedFeet, StandardActionCost(DashAction))),
+      recordTurn(resolveDash(qTurn, result.speedFeet, StandardActionCost(DashAction))),
     }
   }
 
   action doRovingSpeedKindGrants = {
-    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet armorWorn = Set(NoArmorWorn, HeavyArmorWorn).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
     nondet chosenSpeedKind = Set(WalkSpeedKind, ClimbSpeedKind, SwimSpeedKind).oneOf()
     val result = resolveRovingSpeedKindDash(qTurn, {
       baseSpeedFeet: 30,
-      wearingHeavyArmor: wearingHeavyArmor,
+      armorWorn: armorWorn,
       movementSpentFeet: movementSpentFeet,
       chosenSpeedKind: chosenSpeedKind,
     })
     all {
       qLastDamageAmount' = result.movementRemainingFeet,
-      qLastArmorClass' = result.walkSpeedFeet,
+      qLastArmorClass' = result.speedFeet,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -695,7 +690,7 @@ module unitFeatureProcedureProfilesInductive {
       qFrenzyUsedThisTurn' = qFrenzyUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
-      recordTurn(resolveDash(qTurn, result.walkSpeedFeet, StandardActionCost(DashAction))),
+      recordTurn(resolveDash(qTurn, result.speedFeet, StandardActionCost(DashAction))),
     }
   }
 

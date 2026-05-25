@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.martial-arts-attack-projection unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 module unitFeatureProcedureProfiles {
@@ -14,64 +14,11 @@ module unitFeatureProcedureProfiles {
   // RAW anchors:
   // - Classes/Rogue.md: Cunning Action.
   // - Classes/Sorcerer.md: Innate Sorcery activation.
-  // - Classes/Monk.md: Martial Arts attack projection, Unarmored Movement,
-  //   and Roving.
-  // - Feats.md: Defense.
+  // - Classes/Monk.md: Martial Arts attack projection.
   // - Character-Origins.md: Orc Relentless Endurance.
   // - Playing-the-Game.md: Bonus Actions, Damage Rolls, Dropping to 0 Hit
   //   Points, Instant Death, Saving Throws and Damage, Resistance and
   //   Vulnerability.
-
-  type PassiveArmorClassBonusFacts = {
-    wearingLightArmor: bool,
-    wearingMediumArmor: bool,
-    wearingHeavyArmor: bool,
-  }
-
-  type PassiveSpeedBonusEquipmentGate =
-    | NotWearingHeavyArmorSpeedBonusGate
-    | UnarmoredUnshieldedSpeedBonusGate
-
-  type ArmorWorn =
-    | NoArmorWorn
-    | LightArmorWorn
-    | MediumArmorWorn
-    | HeavyArmorWorn
-
-  type PassiveSpeedBonusFacts = {
-    baseSpeedFeet: int,
-    gate: PassiveSpeedBonusEquipmentGate,
-    armorWorn: ArmorWorn,
-    wieldingShield: bool,
-    movementSpentFeet: int,
-  }
-
-  type PassiveSpeedBonusResult = {
-    effectiveSpeedFeet: int,
-    movementRemainingFeet: int,
-    dashMovementBonusFeet: int,
-  }
-
-  type MovementSpeedKind =
-    | WalkSpeedKind
-    | ClimbSpeedKind
-    | SwimSpeedKind
-
-  type PassiveSpeedKindGrantsFacts = {
-    baseSpeedFeet: int,
-    wearingHeavyArmor: bool,
-    movementSpentFeet: int,
-    chosenSpeedKind: MovementSpeedKind,
-  }
-
-  type PassiveSpeedKindGrantsResult = {
-    chosenSpeedKind: MovementSpeedKind,
-    walkSpeedFeet: int,
-    climbSpeedFeet: int,
-    swimSpeedFeet: int,
-    movementRemainingFeet: int,
-    dashMovementBonusFeet: int,
-  }
 
   type MartialArtsAttackForm =
     | MartialArtsUnarmedStrike
@@ -118,87 +65,6 @@ module unitFeatureProcedureProfiles {
     pool: FeatureUsePool,
     vitals: CreatureVitals,
     deathSavingThrows: DeathSavingThrowLifecycle,
-  }
-
-  pure def wearingArmorForDefense(facts: PassiveArmorClassBonusFacts): bool =
-    facts.wearingLightArmor or facts.wearingMediumArmor or facts.wearingHeavyArmor
-
-  pure def defenseArmorClass(baseArmorClass: int, facts: PassiveArmorClassBonusFacts): int =
-    if (wearingArmorForDefense(facts)) baseArmorClass + 1 else baseArmorClass
-
-  pure def wearingAnyArmorForSpeedBonus(facts: PassiveSpeedBonusFacts): bool =
-    facts.armorWorn != NoArmorWorn
-
-  pure def passiveSpeedBonusApplies(facts: PassiveSpeedBonusFacts): bool =
-    match facts.gate {
-      | NotWearingHeavyArmorSpeedBonusGate => facts.armorWorn != HeavyArmorWorn
-      | UnarmoredUnshieldedSpeedBonusGate =>
-        not(wearingAnyArmorForSpeedBonus(facts)) and not(facts.wieldingShield)
-    }
-
-  pure def passiveSpeedBonusDelta(facts: PassiveSpeedBonusFacts): int =
-    if (passiveSpeedBonusApplies(facts)) 10 else 0
-
-  pure def passiveSpeedBonus(facts: PassiveSpeedBonusFacts): int =
-    passiveSpeedBonusDelta(facts)
-
-  pure def passiveSpeedBonusEffectiveSpeed(facts: PassiveSpeedBonusFacts): int =
-    facts.baseSpeedFeet + passiveSpeedBonus(facts)
-
-  pure def resolvePassiveSpeedBonusBudget(
-    turn: TurnProcedureState,
-    facts: PassiveSpeedBonusFacts
-  ): PassiveSpeedBonusResult = {
-    val speed = passiveSpeedBonusEffectiveSpeed(facts)
-    {
-      effectiveSpeedFeet: speed,
-      movementRemainingFeet:
-        nonnegative(speed + turn.dashMovementBonusFeet - facts.movementSpentFeet),
-      dashMovementBonusFeet: turn.dashMovementBonusFeet,
-    }
-  }
-
-  pure def resolvePassiveSpeedBonusDash(
-    turn: TurnProcedureState,
-    facts: PassiveSpeedBonusFacts
-  ): PassiveSpeedBonusResult = {
-    val speed = passiveSpeedBonusEffectiveSpeed(facts)
-    val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
-    resolvePassiveSpeedBonusBudget(dashed, facts)
-  }
-
-  pure def rovingEffectiveSpeed(facts: PassiveSpeedKindGrantsFacts): int =
-    passiveSpeedBonusEffectiveSpeed({
-      baseSpeedFeet: facts.baseSpeedFeet,
-      gate: NotWearingHeavyArmorSpeedBonusGate,
-      armorWorn: if (facts.wearingHeavyArmor) HeavyArmorWorn else NoArmorWorn,
-      wieldingShield: false,
-      movementSpentFeet: facts.movementSpentFeet,
-    })
-
-  pure def resolveRovingSpeedKindBudget(
-    turn: TurnProcedureState,
-    facts: PassiveSpeedKindGrantsFacts
-  ): PassiveSpeedKindGrantsResult = {
-    val speed = rovingEffectiveSpeed(facts)
-    {
-      chosenSpeedKind: facts.chosenSpeedKind,
-      walkSpeedFeet: speed,
-      climbSpeedFeet: speed,
-      swimSpeedFeet: speed,
-      movementRemainingFeet:
-        nonnegative(speed + turn.dashMovementBonusFeet - facts.movementSpentFeet),
-      dashMovementBonusFeet: turn.dashMovementBonusFeet,
-    }
-  }
-
-  pure def resolveRovingSpeedKindDash(
-    turn: TurnProcedureState,
-    facts: PassiveSpeedKindGrantsFacts
-  ): PassiveSpeedKindGrantsResult = {
-    val speed = rovingEffectiveSpeed(facts)
-    val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
-    resolveRovingSpeedKindBudget(dashed, facts)
   }
 
   pure def martialArtsAttackEligible(facts: MartialArtsEligibilityFacts): bool =
@@ -328,140 +194,6 @@ module unitFeatureProcedureProfiles {
           lifecycle,
           damaged
         ),
-    }
-  }
-
-  run test_defense_adds_armor_class_while_wearing_armor = {
-    val light = defenseArmorClass(16, {
-      wearingLightArmor: true,
-      wearingMediumArmor: false,
-      wearingHeavyArmor: false,
-    })
-    val medium = defenseArmorClass(16, {
-      wearingLightArmor: false,
-      wearingMediumArmor: true,
-      wearingHeavyArmor: false,
-    })
-    val heavy = defenseArmorClass(16, {
-      wearingLightArmor: false,
-      wearingMediumArmor: false,
-      wearingHeavyArmor: true,
-    })
-    val unarmored = defenseArmorClass(16, {
-      wearingLightArmor: false,
-      wearingMediumArmor: false,
-      wearingHeavyArmor: false,
-    })
-    all {
-      assert(light == 17),
-      assert(medium == 17),
-      assert(heavy == 17),
-      assert(unarmored == 16),
-    }
-  }
-
-  run test_fast_movement_adds_ten_to_speed_budget_and_dash_when_not_wearing_heavy_armor = {
-    val facts = {
-      baseSpeedFeet: 30,
-      gate: NotWearingHeavyArmorSpeedBonusGate,
-      armorWorn: NoArmorWorn,
-      wieldingShield: false,
-      movementSpentFeet: 5,
-    }
-    val budget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, facts)
-    val dashed = resolvePassiveSpeedBonusDash(initialTurnProcedureState, facts)
-    all {
-      assert(budget.effectiveSpeedFeet == 40),
-      assert(budget.movementRemainingFeet == 35),
-      assert(dashed.effectiveSpeedFeet == 40),
-      assert(dashed.dashMovementBonusFeet == 40),
-      assert(dashed.movementRemainingFeet == 75),
-    }
-  }
-
-  run test_fast_movement_does_not_add_speed_when_wearing_heavy_armor = {
-    val facts = {
-      baseSpeedFeet: 30,
-      gate: NotWearingHeavyArmorSpeedBonusGate,
-      armorWorn: HeavyArmorWorn,
-      wieldingShield: false,
-      movementSpentFeet: 5,
-    }
-    val budget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, facts)
-    val dashed = resolvePassiveSpeedBonusDash(initialTurnProcedureState, facts)
-    all {
-      assert(budget.effectiveSpeedFeet == 30),
-      assert(budget.movementRemainingFeet == 25),
-      assert(dashed.dashMovementBonusFeet == 30),
-      assert(dashed.movementRemainingFeet == 55),
-    }
-  }
-
-  run test_unarmored_movement_adds_ten_only_when_unarmored_and_unshielded = {
-    val eligible = {
-      baseSpeedFeet: 30,
-      gate: UnarmoredUnshieldedSpeedBonusGate,
-      armorWorn: NoArmorWorn,
-      wieldingShield: false,
-      movementSpentFeet: 5,
-    }
-    val lightArmor = eligible.with("armorWorn", LightArmorWorn)
-    val mediumArmor = eligible.with("armorWorn", MediumArmorWorn)
-    val heavyArmor = eligible.with("armorWorn", HeavyArmorWorn)
-    val shield = eligible.with("wieldingShield", true)
-    val eligibleBudget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, eligible)
-    val lightArmorBudget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, lightArmor)
-    val mediumArmorBudget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, mediumArmor)
-    val heavyArmorBudget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, heavyArmor)
-    val shieldBudget = resolvePassiveSpeedBonusBudget(initialTurnProcedureState, shield)
-    all {
-      assert(eligibleBudget.effectiveSpeedFeet == 40),
-      assert(eligibleBudget.movementRemainingFeet == 35),
-      assert(lightArmorBudget.effectiveSpeedFeet == 30),
-      assert(lightArmorBudget.movementRemainingFeet == 25),
-      assert(mediumArmorBudget.effectiveSpeedFeet == 30),
-      assert(mediumArmorBudget.movementRemainingFeet == 25),
-      assert(heavyArmorBudget.effectiveSpeedFeet == 30),
-      assert(heavyArmorBudget.movementRemainingFeet == 25),
-      assert(shieldBudget.effectiveSpeedFeet == 30),
-      assert(shieldBudget.movementRemainingFeet == 25),
-    }
-  }
-
-  run test_roving_grants_walk_climb_and_swim_equal_effective_speed = {
-    val facts = {
-      baseSpeedFeet: 30,
-      wearingHeavyArmor: false,
-      movementSpentFeet: 5,
-      chosenSpeedKind: ClimbSpeedKind,
-    }
-    val budget = resolveRovingSpeedKindBudget(initialTurnProcedureState, facts)
-    val dashed =
-      resolveRovingSpeedKindDash(initialTurnProcedureState, facts.with("chosenSpeedKind", SwimSpeedKind))
-    all {
-      assert(budget.walkSpeedFeet == 40),
-      assert(budget.climbSpeedFeet == 40),
-      assert(budget.swimSpeedFeet == 40),
-      assert(budget.movementRemainingFeet == 35),
-      assert(dashed.chosenSpeedKind == SwimSpeedKind),
-      assert(dashed.dashMovementBonusFeet == 40),
-      assert(dashed.movementRemainingFeet == 75),
-    }
-  }
-
-  run test_roving_heavy_armor_removes_speed_increase_but_keeps_special_speeds_equal = {
-    val facts = {
-      baseSpeedFeet: 30,
-      wearingHeavyArmor: true,
-      movementSpentFeet: 10,
-      chosenSpeedKind: SwimSpeedKind,
-    }
-    val budget = resolveRovingSpeedKindBudget(initialTurnProcedureState, facts)
-    all {
-      assert(budget.walkSpeedFeet == 30),
-      assert(budget.climbSpeedFeet == 30),
-      assert(budget.swimSpeedFeet == 30),
-      assert(budget.movementRemainingFeet == 20),
     }
   }
 

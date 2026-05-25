@@ -178,6 +178,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -6059,6 +6060,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt is the covered obligation QNT owner carrying passive Armor Class, Speed bonus, Dash projection, and speed-kind grant facts without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
@@ -6246,7 +6255,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE",
         "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
         "A45-UNIT-FEATURE-ZERO-HP-CORE",
         "A46-MONK-FOCUS-BATTLE-CORE"
@@ -6280,6 +6288,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -6289,6 +6298,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
@@ -8114,15 +8124,9 @@
       "owners": [
         {
           "lines": [
-            334,
-            363,
-            382,
-            400,
-            431,
-            452,
-            468,
-            507,
-            558
+            200,
+            239,
+            290
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         },
@@ -8240,15 +8244,9 @@
       "owners": [
         {
           "lines": [
-            334,
-            363,
-            382,
-            400,
-            431,
-            452,
-            468,
-            507,
-            558
+            200,
+            239,
+            290
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
@@ -8261,15 +8259,9 @@
       "owners": [
         {
           "lines": [
-            334,
-            363,
-            382,
-            400,
-            431,
-            452,
-            468,
-            507,
-            558
+            200,
+            239,
+            290
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }

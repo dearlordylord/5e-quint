@@ -24,7 +24,7 @@ work remains.
     { "number": 3, "id": "A40-UNIT-FEATURE-ATTACK-RIDER-CORE", "status": "done", "title": "Split unit feature attack roll and damage rider core" },
     { "number": 4, "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE", "status": "done", "title": "Split unit feature Saving Throw and save-damage core" },
     { "number": 5, "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE", "status": "done", "title": "Split unit feature reaction reduction and redirect core" },
-    { "number": 6, "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE", "status": "ready-for-research", "title": "Split passive movement and defense feature core" },
+    { "number": 6, "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE", "status": "done", "title": "Split passive movement and defense feature core" },
     { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "ready-for-research", "title": "Split Martial Arts projection core" },
     { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "ready-for-research", "title": "Split zero-Hit-Point feature replacement core" },
     { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "ready-for-research", "title": "Split Monk Focus battle option core" },
@@ -145,7 +145,7 @@ Acceptance: checker green; unit-profile check green when artifacts changed.
 
 ### Task 6 - A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: passive Armor Class, ranged attack roll, saving throw roll mode, Speed,
 and speed-kind grant facts.
