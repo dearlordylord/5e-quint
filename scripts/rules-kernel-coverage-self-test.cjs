@@ -24,7 +24,7 @@ function runSelfTest() {
     '{"id":"spell.sample","profileKind":"spell-invocation"}\n',
   );
   writeFile(
-    path.join(root, "plans", "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md"),
+    path.join(root, "plans", "RALPH_LANE_SELF_TEST.md"),
     [
       "| 99 | A99-SAMPLE-FIXTURE-SPLIT - Split sample fixture | ready-for-research | none | Self-test follow-up. |",
       "",

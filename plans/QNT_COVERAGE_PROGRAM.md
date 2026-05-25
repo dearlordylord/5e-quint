@@ -75,15 +75,13 @@ Checked source-of-truth artifacts:
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
-- `plans/QNT_GENERATOR_READINESS_BACKLOG.md` parks drained A/B lane work that is
-  not currently runnable.
+- `plans/QNT_GENERATOR_READINESS_BACKLOG.md` parks drained lane work that is not
+  currently runnable.
 
 Active runnable queues:
 
-- `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md` owns shared-algebra
-  unit-feature semantic-core cleanup and its readiness rows.
-- `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` owns broad
-  battle-runtime QNT semantic-core splits and their readiness rows.
+- None. Reopen parked work by carving a small coherent batch out of
+  `plans/QNT_GENERATOR_READINESS_BACKLOG.md` into a fresh Ralph lane plan.
 
 ## Working Discipline
 

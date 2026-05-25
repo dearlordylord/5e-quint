@@ -442,10 +442,12 @@ function readKnownRalphTaskIds(rootPath) {
   const taskIds = new Set();
   const taskHeadingPattern =
     /^### Task [0-9]+ - ([ABC][0-9]+-[A-Z0-9-]+) - /gm;
-  const planNames = [
-    "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md",
-    "RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md",
-  ];
+  const plansPath = path.join(rootPath, "plans");
+  const planNames = fs.existsSync(plansPath)
+    ? fs
+        .readdirSync(plansPath)
+        .filter((planName) => /^RALPH_LANE_.*\.md$/.test(planName))
+    : [];
   let foundAnyPlan = false;
   for (const planName of planNames) {
     const planPath = path.join(rootPath, "plans", planName);

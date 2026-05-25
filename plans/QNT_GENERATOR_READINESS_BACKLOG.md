@@ -6,14 +6,12 @@ plan: do not run `ralph-run.sh` against this file directly. When reopening this
 work, split a small coherent group into a fresh lane plan with a
 `ralph-task-index`, reviewer-loop verification, and current checker-owned inputs.
 
-Current active lanes should finish only their in-flight tasks:
-
-- A: `A70-QUICKENED-PROCEDURE-SUPPORT-CORE`
-- B: `B26-PROTECTION-FROM-POISON-READINESS`
+The drained A/B lane plans were merged, then deleted. Their remaining
+not-yet-runnable work is parked here so future lanes can reopen it deliberately.
 
 ## Parked Metamagic Generator Tasks
 
-Source lane: `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md`.
+Former source lane: Ralph lane A, deleted after merge.
 
 | Original task | Title | Depends on | Output |
 | --- | --- | --- | --- |
@@ -29,7 +27,7 @@ Source lane: `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md`.
 
 ## Parked Battle Runtime Readiness Tasks
 
-Source lane: `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md`.
+Former source lane: Ralph lane B, deleted after merge.
 
 | Original task | Title | Input | Output |
 | --- | --- | --- | --- |

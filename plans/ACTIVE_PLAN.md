@@ -6,20 +6,17 @@ selected-identity MBT 17/85). Per-task history lives in git.
 
 ## Active Ralph Queues
 
-The recursive Ralph workflow has moved to the lane plans, each with its own
-`ralph-task-index`:
+No Ralph lane is active right now. The current durable planning entrypoints are:
 
 - `plans/QNT_COVERAGE_PROGRAM.md` — top-level program rollup against ADR-0001.
-- `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md` — shared-algebra unit-feature
-  semantic-core cleanup and readiness rows.
-- `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` — broad battle-runtime QNT
-  semantic-core splits and readiness rows.
+- `plans/QNT_GENERATOR_READINESS_BACKLOG.md` — parked, non-runnable QNT
+  generator readiness tasks from drained lanes.
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` — character levels 1–2 full-support
   closure backlog.
 
 `scripts/ralph-run.sh` still defaults to this file. Pointing it at one of the
-lane plans above is the current Ralph entrypoint; this file is intentionally
-kept so the default does not error.
+future lane plans is the Ralph entrypoint; this file is intentionally kept so
+the default does not error.
 
 ## Tooling
 
