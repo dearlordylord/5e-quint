@@ -1964,7 +1964,7 @@
       "kind": "hole-frontier",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture: Search fails and succeeds against a hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
+          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture advanced by a deterministic replay index: Search fails and succeeds against an admitted hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
@@ -1973,7 +1973,7 @@
       ],
       "profiles": [],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
         "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
       ],
       "runtime": "battle",
@@ -1985,7 +1985,14 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks",
+        ".references/srd-5.2.1/Playing-the-Game.md#Actions",
+        ".references/srd-5.2.1/Rules-Glossary.md#Hide [Action]",
+        ".references/srd-5.2.1/Rules-Glossary.md#Search [Action]",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
       "title": "Battle Search target and Ability Check holes plus spell skill and ability choices feed reducer legality and Ability Check state"
     },
     {
@@ -3146,7 +3153,7 @@
       "followUpTaskIds": [],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Search target identity is semantic after the table supplies the hidden candidate set: the reducer compares the Ability Check total to the stored discovery DC and may reveal the target. Candidate discovery, vicinity, visibility, range, and other target-admission facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -3409,7 +3416,7 @@
       "followUpTaskIds": [],
       "holeKind": "skillChoice",
       "id": "BattleSpellSkillChoiceHole",
-      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state covered by the Ability Check and spell roll-modifier obligations.",
+      "reason": "Skill choice is generator-input semantics for roll-modifier spells: the selected Ability Check specialization becomes reducer-visible effect state, not display metadata.",
       "subject": "battle-hole-family"
     },
     {
@@ -3422,7 +3429,7 @@
       "followUpTaskIds": [],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and is covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
+      "reason": "Ability choice is generator-input semantics when it selects later Ability Check roll mode or marked-rider state. The chosen ability is stored as reducer-visible active-effect data.",
       "subject": "battle-hole-family"
     },
     {
@@ -3434,7 +3441,7 @@
       "followUpTaskIds": [],
       "holeKind": "targetAbilityChoices",
       "id": "BattleSpellTargetAbilityChoicesHole",
-      "reason": "Per-target ability choices bind each selected target to the Ability Check Advantage ability for target-scaled roll-modifier spells, so the selected choices are reducer-visible spell roll-modifier and Ability Check semantics.",
+      "reason": "Per-target ability choices are generator-input semantics for target-scaled roll-modifier spells: each selected target receives reducer-visible Ability Check Advantage state for its chosen ability.",
       "subject": "battle-hole-family"
     },
     {
@@ -3722,7 +3729,7 @@
       "followUpTaskIds": [],
       "holeKind": "abilityCheck",
       "id": "BattleAbilityCheckHole",
-      "reason": "Ability Check fills resolve Hide, Search, spell-restraint escape, and similar reducer-visible checks; table prerequisites and spatial witnesses remain boundary facts.",
+      "reason": "Ability Check totals are caller roll facts, but total-vs-DC success and reducer consequences are semantic ownership for Hide, Search, spell-restraint escape, and similar checks. Table prerequisites, vicinity, and spatial witnesses remain boundary facts.",
       "subject": "battle-hole-family"
     },
     {
@@ -3861,7 +3868,7 @@
       "fillKind": "skillChoice",
       "followUpTaskIds": [],
       "id": "skillChoice",
-      "reason": "Skill choices determine which Ability Check specialization receives a modifier or advantage.",
+      "reason": "Skill-choice fills are generator-input semantics for Ability Check roll-modifier state; they determine which Ability Check specialization receives the stored modifier or advantage.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3874,7 +3881,7 @@
       "fillKind": "abilityChoice",
       "followUpTaskIds": [],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
+      "reason": "Ability-choice fills are generator-input semantics when they determine later Ability Check roll modifiers, checks, or marked-damage rider state.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3886,7 +3893,7 @@
       "fillKind": "targetAbilityChoices",
       "followUpTaskIds": [],
       "id": "targetAbilityChoices",
-      "reason": "Per-target ability-choice fills determine which Ability Check Advantage effect is attached to each selected target for target-scaled roll-modifier spells.",
+      "reason": "Per-target ability-choice fills are generator-input semantics for target-scaled roll-modifier spells; each target gets the chosen Ability Check Advantage effect.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3956,7 +3963,7 @@
       "fillKind": "targetChoice",
       "followUpTaskIds": [],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
+      "reason": "Target-choice fills are semantic after target-admission facts are supplied. For Search, the chosen hidden target plus Ability Check result can reveal the target; candidate discovery, vicinity, visibility, and range facts stay boundary-owned.",
       "subject": "battle-fill-kind"
     },
     {
@@ -4135,7 +4142,7 @@
       "fillKind": "abilityCheck",
       "followUpTaskIds": [],
       "id": "abilityCheck",
-      "reason": "Ability Check fills resolve reducer-visible checks such as Hide, Search, and escape attempts.",
+      "reason": "Ability Check fills supply the roll total; the reducer-owned semantic step is total-vs-DC success and state update for Hide, Search, escape attempts, and similar checks.",
       "subject": "battle-fill-kind"
     },
     {
@@ -5539,6 +5546,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-ability-check-search.qnt carries the focused Ability Check total-vs-DC and Search hidden-target reveal semantics. Search vicinity, candidate discovery, and hidden-target existence remain caller/table facts at the hole boundary.",
+      "obligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
@@ -5703,7 +5718,6 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
-        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
       ],
@@ -7272,41 +7286,30 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "fold"
       ],
       "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
+        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

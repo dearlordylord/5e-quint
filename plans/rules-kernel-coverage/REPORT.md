@@ -291,6 +291,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.SPELL.REACTION_CASTING_TIME` |
 | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
+| `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | semantic-core | `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
@@ -309,7 +310,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
@@ -423,7 +424,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed |  |  |  |
 | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed |  |  |  |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
-| `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `list`, `map`, `filter`, `set-operators`, `membership` | `bridge-projection-coupled` | `B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE` |
+| `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold` |  |  |
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | not-assessed |  |  |  |
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` | `run-block-coupled` | `A38-UNIT-FEATURE-ACTION-COUNT-CORE`, `A39-UNIT-FEATURE-RAGE-RECKLESS-CORE`, `A40-UNIT-FEATURE-ATTACK-RIDER-CORE`, `A42-UNIT-FEATURE-REACTION-REDUCTION-CORE`, `A44-UNIT-FEATURE-MARTIAL-ARTS-CORE` |
 | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` | `run-block-coupled` | `A41-UNIT-FEATURE-SAVE-DAMAGE-CORE` |
