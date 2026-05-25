@@ -112,7 +112,7 @@ work remains.
     {
       "number": 16,
       "id": "A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify unit-feature example files as proof-only"
     },
     {
@@ -302,7 +302,7 @@ Acceptance: checker green.
 
 Closed by checker evidence: current owner-role artifacts classify the split
 unit-feature semantic owners as `semantic-core`; example and inductive owners
-remain proof-only closure work under Task 16.
+are closed as proof-only readiness-row evidence by Task 16.
 
 ### Task 11 - A57-UNIT-FEATURE-READINESS-ROW-CLOSURE - Close unit-feature generator-readiness row
 
@@ -366,11 +366,15 @@ Acceptance: checker green.
 
 ### Task 16 - A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE - Classify unit-feature example files as proof-only
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: example/inductive files are proof-only and not generator input.
 
 Acceptance: checker green.
+
+Closed by checker evidence: the current generator-readiness rows classify the
+unit-feature example and inductive files in `proofOnly`, while
+`qnt-owner-roles.jsonl` remains limited to covered obligation QNT owners.
 
 ### Task 17 - A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK - Check selected-identity fallout from feature splits
 
