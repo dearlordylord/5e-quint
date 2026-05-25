@@ -640,7 +640,8 @@
         "spell.invocation-creature-size-change"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "runtime": "battle",
@@ -5325,11 +5326,20 @@
       "obligationIds": [
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-creature-size-change.qnt is the focused QNT owner carrying Enlarge/Reduce creature Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, prior-Concentration replacement, and active-effect application semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
       "role": "semantic-core"
     },
     {
@@ -5718,8 +5728,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
       "role": "semantic-core"
@@ -6586,11 +6595,36 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7665,20 +7699,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
           "role": "semantic-core"
         }
       ],

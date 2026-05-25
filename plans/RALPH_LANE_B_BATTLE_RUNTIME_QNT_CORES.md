@@ -71,7 +71,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 10,
       "id": "B10-BATTLE-RUNTIME-CONCENTRATION-CLEANUP-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split concentration cleanup and duration-expiry facts"
     },
     {
@@ -286,7 +286,7 @@ only prose.
 
 ### Task 10 - B10-BATTLE-RUNTIME-CONCENTRATION-CLEANUP-CORE - Split concentration cleanup and duration-expiry facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: obligations and QNT owners involving concentration ending, duration
 cleanup, and active-effect removal.

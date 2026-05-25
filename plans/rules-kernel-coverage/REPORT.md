@@ -265,7 +265,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
-| `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | semantic-core | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
@@ -310,7 +311,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
@@ -386,7 +387,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |  |  |
-| `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | not-assessed |  |  |  |
+| `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |  |  |
@@ -450,7 +451,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: semantic-core |
-| `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: semantic-core |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `packages/battle-runtime/battle-runtime-metamagic.qnt` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: semantic-core |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`: semantic-core |

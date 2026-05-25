@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-object-contact-damage
