@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 12,
+          "blockingCount": 11,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 20
+              "numerator": 21
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -212,16 +212,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             }
           ],
@@ -474,11 +464,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 12,
+          "blockingCount": 11,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 20
+              "numerator": 21
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -614,16 +604,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             }
           ],

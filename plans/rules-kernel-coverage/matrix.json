@@ -6336,11 +6336,31 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "exists",
+        "map",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7991,20 +8011,6 @@
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
       "ownerRoles": [

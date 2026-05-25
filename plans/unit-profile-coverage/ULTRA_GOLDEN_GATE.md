@@ -38,11 +38,11 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | Scope | Layer | Status | Blocking issue |
 | --- | --- | --- | --- |
 | level-1 | support-completeness | pass | _none_ |
-| level-1 | qnt-generator-readiness | blocked | 12 blocker(s) |
+| level-1 | qnt-generator-readiness | blocked | 11 blocker(s) |
 | level-1 | mbt-parity-evidence | pass | _none_ |
 | level-1 | mcp-scenario-evidence | pass | _none_ |
 | level-1-2 | support-completeness | pass | _none_ |
-| level-1-2 | qnt-generator-readiness | blocked | 12 blocker(s) |
+| level-1-2 | qnt-generator-readiness | blocked | 11 blocker(s) |
 | level-1-2 | mbt-parity-evidence | pass | _none_ |
 | level-1-2 | mcp-scenario-evidence | pass | _none_ |
 

@@ -362,7 +362,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `list`, `map`, `filter`, `set-operators`, `membership` | `bridge-projection-coupled` | `B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE` |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | not-assessed |  |  |  |
+| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `exists`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed |  |  |  |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed |  |  |  |
@@ -429,7 +429,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 | Obligation | Status | Semantic-core owners | Owner roles |
 | --- | --- | --- | --- |
-| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core |
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed | `packages/battle-runtime/battle-runtime-see-invisibility.qnt` | `packages/battle-runtime/battle-runtime-see-invisibility.qnt`: semantic-core |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core |

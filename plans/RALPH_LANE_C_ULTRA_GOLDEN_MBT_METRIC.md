@@ -209,7 +209,7 @@ remains.
     {
       "number": 33,
       "id": "C33-GENERATOR-READINESS-SAVE-GATED-ATTACK-ADVANTAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify save-gated attack-advantage generator readiness"
     },
     {
@@ -740,7 +740,7 @@ longer `not-assessed`.
 
 ### Task 33 - C33-GENERATOR-READINESS-SAVE-GATED-ATTACK-ADVANTAGE - Classify save-gated attack-advantage generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
