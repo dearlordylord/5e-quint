@@ -101,7 +101,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 15,
       "id": "B15-BATTLE-RUNTIME-SPELL-ACTIVE-EFFECT-INDEX",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Index remaining broad battle-runtime semantic-core owners"
     },
     {
@@ -341,7 +341,7 @@ Acceptance: checker green; focused damage tests green.
 
 ### Task 15 - B15-BATTLE-RUNTIME-SPELL-ACTIVE-EFFECT-INDEX - Index remaining broad battle-runtime semantic-core owners
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: all remaining `generator-readiness.jsonl` rows whose `semanticCore`
 contains `packages/battle-runtime/battle-runtime.qnt`.
@@ -351,6 +351,12 @@ frontier, or record that no battle-runtime broad-owner blocker remains.
 
 Acceptance: at least 8 new tasks are appended when frontier remains; otherwise
 checker evidence proves closure.
+
+Closure evidence: `generator-readiness.jsonl` has 69 rows and no exact or
+substring `semanticCore` references to
+`packages/battle-runtime/battle-runtime.qnt`; the rules-kernel coverage checker
+passes with 97 obligations, so no broad-owner frontier remains for this task to
+split.
 
 ### Task 16 - B16-BATTLE-RUNTIME-END-TO-END-VERIFY - Verify battle-runtime QNT core closure
 
