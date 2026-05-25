@@ -35,7 +35,7 @@ remains.
     {
       "number": 4,
       "id": "C4-SELECTED-IDENTITY-EVIDENCE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit selected-identity evidence against supported Units"
     },
     {
@@ -208,7 +208,7 @@ Acceptance: MCP evidence failure cannot be mistaken for support-profile failure.
 
 ### Task 4 - C4-SELECTED-IDENTITY-EVIDENCE-AUDIT - Audit selected-identity evidence against supported Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: audit rows for supported Units whose selected-identity evidence exists
 but lacks an ultra-golden join to QNT/MBT or MCP evidence.
