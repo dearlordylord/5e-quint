@@ -154,7 +154,7 @@ work remains.
     {
       "number": 23,
       "id": "A69-METAMAGIC-STACKING-ADMISSION-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Metamagic known option and stacking admission core"
     },
     {
@@ -554,7 +554,7 @@ rules-kernel coverage owner artifacts.
 
 ### Task 23 - A69-METAMAGIC-STACKING-ADMISSION-CORE - Split Metamagic known option and stacking admission core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: A68
 
