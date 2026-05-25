@@ -11,6 +11,12 @@ module unitFeatureProcedureProfilesInductive {
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
+  import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "./unit-feature-rage-reckless-core"
+  import unitFeatureAttackRiderCore.* from "./unit-feature-attack-rider-core"
+  import unitFeatureSaveDamageCore.* from "./unit-feature-save-damage-core"
+  import unitFeatureReactionReductionCore.* from "./unit-feature-reaction-reduction-core"
+  import unitFeaturePassiveMovementDefenseCore.* from "./unit-feature-passive-movement-defense-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota
@@ -79,6 +85,15 @@ module unitFeatureProcedureProfilesInductive {
     occurrence: qRecklessOccurrence,
     attackRollMadeThisTurn: qAttackRollMadeThisTurn,
   }
+
+  pure def qFrenzyState: FrenzyState =
+    initialFrenzyState(
+      qRageState,
+      qRecklessAttackState,
+      qFrenzyUsedThisTurn
+        or (qRageOccurrence != NoRageOccurrence
+          and qRecklessOccurrence == RecklessAttackUntilStartOfTurn)
+    ).with("firstEligibleHitResolvedThisTurn", qFrenzyUsedThisTurn)
 
   action init = all {
     recordTurn(initialTurnProcedureState),
@@ -309,18 +324,22 @@ module unitFeatureProcedureProfilesInductive {
     nondet recklessWhileRaging = Set(true, false).oneOf()
     nondet strengthAttack = Set(true, false).oneOf()
     nondet attackForm = Set(RageWeaponAttack, RageUnarmedStrikeAttack).oneOf()
-    val result = resolveFrenzy({
-      rageActive: rageActive,
-      recklessAttackUsedWhileRagingThisTurn: recklessWhileRaging,
+    val state = initialFrenzyState(
+      qRageState.with("occurrence", if (rageActive) RageUntilEndOfNextTurn else NoRageOccurrence),
+      qRecklessAttackState
+        .with("occurrence", if (recklessWhileRaging) RecklessAttackUntilStartOfTurn else NoRecklessAttackOccurrence)
+        .with("attackRollMadeThisTurn", recklessWhileRaging),
+      recklessWhileRaging
+    ).with("firstEligibleHitResolvedThisTurn", qFrenzyUsedThisTurn)
+    val result = resolveFrenzy(state, {
       hitWithAttackRoll: true,
       strengthBasedAttack: strengthAttack,
       attackForm: attackForm,
-      usedThisTurn: qFrenzyUsedThisTurn,
       barbarianLevel: 3,
       attackDamageType: SlashingDamage,
     })
     all {
-      qFrenzyUsedThisTurn' = result.usedThisTurn,
+      qFrenzyUsedThisTurn' = result.state.firstEligibleHitResolvedThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
@@ -416,9 +435,9 @@ module unitFeatureProcedureProfilesInductive {
     nondet savingThrowSucceeded = Set(true, false).oneOf()
     nondet incapacitated = Set(true, false).oneOf()
     all {
-      qLastDamageAmount' = saveDamageAfterEvasionReplacement({
+      qLastDamageAmount' = saveDamageAfterSuccessToZeroFailureToHalfReplacement({
         savingThrowAbility: DexteritySavingThrowFact,
-        normalSuccessTakesHalfDamage: true,
+        normalSuccessfulSavingThrowDamage: HalfDamageOnSuccessfulSavingThrow,
         savingThrowSucceeded: savingThrowSucceeded,
         incapacitated: incapacitated,
       }, 20),
@@ -470,14 +489,10 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action doDefenseArmorClass = {
-    nondet wearingLightArmor = Set(true, false).oneOf()
-    nondet wearingMediumArmor = Set(true, false).oneOf()
-    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet armorWorn = Set(NoArmorWorn, LightArmorWorn, MediumArmorWorn, HeavyArmorWorn).oneOf()
     all {
       qLastArmorClass' = defenseArmorClass(16, {
-        wearingLightArmor: wearingLightArmor,
-        wearingMediumArmor: wearingMediumArmor,
-        wearingHeavyArmor: wearingHeavyArmor,
+        armorWorn: armorWorn,
       }),
       qLastDamageAmount' = qLastDamageAmount,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
@@ -626,16 +641,14 @@ module unitFeatureProcedureProfilesInductive {
   action doFastMovementSpeedBonus = {
     nondet armorWorn = Set(NoArmorWorn, HeavyArmorWorn).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
-    val result = resolvePassiveSpeedBonusDash(qTurn, {
+    val result = resolvePassiveSpeedBonusDash(qTurn, NotWearingHeavyArmorSpeedBonus({
       baseSpeedFeet: 30,
-      gate: NotWearingHeavyArmorSpeedBonusGate,
       armorWorn: armorWorn,
-      wieldingShield: false,
       movementSpentFeet: movementSpentFeet,
-    })
+    }))
     all {
       qLastDamageAmount' = result.movementRemainingFeet,
-      qLastArmorClass' = result.effectiveSpeedFeet,
+      qLastArmorClass' = result.speedFeet,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -648,23 +661,23 @@ module unitFeatureProcedureProfilesInductive {
       qFrenzyUsedThisTurn' = qFrenzyUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
-      recordTurn(resolveDash(qTurn, result.effectiveSpeedFeet, StandardActionCost(DashAction))),
+      recordTurn(resolveDash(qTurn, result.speedFeet, StandardActionCost(DashAction))),
     }
   }
 
   action doRovingSpeedKindGrants = {
-    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet armorWorn = Set(NoArmorWorn, HeavyArmorWorn).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
     nondet chosenSpeedKind = Set(WalkSpeedKind, ClimbSpeedKind, SwimSpeedKind).oneOf()
     val result = resolveRovingSpeedKindDash(qTurn, {
       baseSpeedFeet: 30,
-      wearingHeavyArmor: wearingHeavyArmor,
+      armorWorn: armorWorn,
       movementSpentFeet: movementSpentFeet,
       chosenSpeedKind: chosenSpeedKind,
     })
     all {
       qLastDamageAmount' = result.movementRemainingFeet,
-      qLastArmorClass' = result.walkSpeedFeet,
+      qLastArmorClass' = result.speedFeet,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
       qActionSurgeGrant' = qActionSurgeGrant,
@@ -677,7 +690,7 @@ module unitFeatureProcedureProfilesInductive {
       qFrenzyUsedThisTurn' = qFrenzyUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
-      recordTurn(resolveDash(qTurn, result.walkSpeedFeet, StandardActionCost(DashAction))),
+      recordTurn(resolveDash(qTurn, result.speedFeet, StandardActionCost(DashAction))),
     }
   }
 
@@ -795,5 +808,6 @@ module unitFeatureProcedureProfilesInductive {
     legalFeatureUsePool(qFeaturePool),
     legalActionSurgeState(qActionSurgeState),
     legalRageState(qRageState),
+    legalFrenzyState(qFrenzyState),
   }
 }

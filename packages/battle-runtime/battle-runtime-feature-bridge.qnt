@@ -5,6 +5,12 @@ module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
+  import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
+  import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "../shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core"
+  import unitFeatureAttackRiderCore.* from "../shared-algebras/proofs/rule-core/unit-feature-attack-rider-core"
+  import unitFeatureSaveDamageCore.* from "../shared-algebras/proofs/rule-core/unit-feature-save-damage-core"
+  import unitFeatureReactionReductionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
 
   type BattleRuntimeRageResistanceProjection = {
@@ -138,17 +144,20 @@ module battleRuntimeFeatureBridge {
     attackForm: RageAttackForm,
     usedThisTurn: bool,
     barbarianLevel: int
-  ): int =
-    resolveFrenzy({
-      rageActive: rageActive,
-      recklessAttackUsedWhileRagingThisTurn: recklessAttackUsedWhileRagingThisTurn,
+  ): int = {
+    val state = initialFrenzyState(
+      battleRuntimeRageState(rageActive),
+      battleRuntimeRecklessAttackState(recklessAttackUsedWhileRagingThisTurn, true),
+      recklessAttackUsedWhileRagingThisTurn
+    ).with("firstEligibleHitResolvedThisTurn", usedThisTurn)
+    resolveFrenzy(state, {
       hitWithAttackRoll: hitWithAttackRoll,
       strengthBasedAttack: strengthBasedAttack,
       attackForm: attackForm,
-      usedThisTurn: usedThisTurn,
       barbarianLevel: barbarianLevel,
       attackDamageType: BludgeoningDamage,
     }).damageDice
+  }
 
   pure def battleRuntimePassiveSavingThrowRollMode(
     ability: SavingThrowAbilityFact,

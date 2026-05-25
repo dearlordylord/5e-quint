@@ -7,6 +7,12 @@ module ruleCoreFeaturesMbt {
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
+  import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
+  import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "../shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core"
+  import unitFeatureAttackRiderCore.* from "../shared-algebras/proofs/rule-core/unit-feature-attack-rider-core"
+  import unitFeatureSaveDamageCore.* from "../shared-algebras/proofs/rule-core/unit-feature-save-damage-core"
+  import unitFeatureReactionReductionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
 
@@ -450,16 +456,20 @@ module ruleCoreFeaturesMbt {
   }
 
   action doFrenzy = {
-    val result = resolveFrenzy({
-      rageActive: true,
-      recklessAttackUsedWhileRagingThisTurn: true,
-      hitWithAttackRoll: true,
-      strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
-      usedThisTurn: false,
-      barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
-    })
+    val result = resolveFrenzy(
+      initialFrenzyState(
+        qRageState.with("occurrence", RageUntilEndOfNextTurn),
+        qRecklessState.with("occurrence", RecklessAttackUntilStartOfTurn),
+        true
+      ),
+      {
+        hitWithAttackRoll: true,
+        strengthBasedAttack: true,
+        attackForm: RageWeaponAttack,
+        barbarianLevel: 3,
+        attackDamageType: SlashingDamage,
+      }
+    )
     all {
       qHoles == Set(),
       recordProjection(
@@ -539,9 +549,9 @@ module ruleCoreFeaturesMbt {
   }
 
   action doEvasionSuccess = {
-    val damage = saveDamageAfterEvasionReplacement({
+    val damage = saveDamageAfterSuccessToZeroFailureToHalfReplacement({
       savingThrowAbility: DexteritySavingThrowFact,
-      normalSuccessTakesHalfDamage: true,
+      normalSuccessfulSavingThrowDamage: HalfDamageOnSuccessfulSavingThrow,
       savingThrowSucceeded: true,
       incapacitated: false,
     }, 6)
@@ -555,9 +565,9 @@ module ruleCoreFeaturesMbt {
   }
 
   action doEvasionFailure = {
-    val damage = saveDamageAfterEvasionReplacement({
+    val damage = saveDamageAfterSuccessToZeroFailureToHalfReplacement({
       savingThrowAbility: DexteritySavingThrowFact,
-      normalSuccessTakesHalfDamage: true,
+      normalSuccessfulSavingThrowDamage: HalfDamageOnSuccessfulSavingThrow,
       savingThrowSucceeded: false,
       incapacitated: false,
     }, 6)

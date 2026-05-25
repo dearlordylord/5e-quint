@@ -269,7 +269,7 @@
       "id": "unit-feature.action-surge-resource",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -295,7 +295,7 @@
       "id": "unit-feature.attack-action-attack-count-scaling",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -409,7 +409,7 @@
       "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -439,7 +439,8 @@
       "id": "unit-feature.attack-damage-rider",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -549,7 +550,7 @@
       "id": "unit-feature.bonus-action-ongoing-rage",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -631,7 +632,7 @@
       "id": "unit-feature.first-attack-roll-reckless-advantage",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -657,7 +658,7 @@
       "id": "unit-feature.passive-armor-class-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -682,7 +683,7 @@
       "id": "unit-feature.passive-ranged-attack-roll-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -740,7 +741,7 @@
       "id": "unit-feature.passive-saving-throw-roll-mode",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -772,7 +773,7 @@
       "id": "unit-feature.attack-roll-miss-to-hit-replacement",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -797,7 +798,7 @@
       "id": "unit-feature.passive-speed-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -823,7 +824,7 @@
       "id": "unit-feature.passive-speed-kind-grants",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -849,7 +850,7 @@
       "id": "unit-feature.weapon-damage-dice-roll-choice",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -987,7 +988,7 @@
       "id": "unit-feature.reaction-roll-or-damage-reduction",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
@@ -1031,7 +1032,7 @@
       "id": "unit-feature.save-damage-replacement",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1041,7 +1042,7 @@
         "QCORE9",
         "QMBT4"
       ],
-      "title": "Unit feature replaces Dexterity half-damage save outcomes",
+      "title": "Unit feature replaces Dexterity half-damage Saving Throw outcomes",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1158,7 +1159,7 @@
       "id": "unit-feature.weapon-critical-range-19",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -12890,7 +12891,7 @@
           "id": "unit-feature.action-surge-resource",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -12951,7 +12952,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -13073,7 +13074,7 @@
           "id": "unit-feature.weapon-critical-range-19",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -13138,7 +13139,8 @@
           "id": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13199,7 +13201,7 @@
           "id": "unit-feature.bonus-action-ongoing-rage",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13312,7 +13314,7 @@
           "id": "unit-feature.first-attack-roll-reckless-advantage",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13373,7 +13375,7 @@
           "id": "unit-feature.passive-saving-throw-roll-mode",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -13440,7 +13442,7 @@
           "id": "unit-feature.passive-speed-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13692,7 +13694,7 @@
           "id": "unit-feature.reaction-roll-or-damage-reduction",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
@@ -14776,7 +14778,7 @@
           "id": "unit-feature.passive-speed-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14951,7 +14953,7 @@
           "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -15315,7 +15317,7 @@
           "id": "unit-feature.save-damage-replacement",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -15325,7 +15327,7 @@
             "QCORE9",
             "QMBT4"
           ],
-          "title": "Unit feature replaces Dexterity half-damage save outcomes",
+          "title": "Unit feature replaces Dexterity half-damage Saving Throw outcomes",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -15377,7 +15379,7 @@
           "id": "unit-feature.reaction-roll-or-damage-reduction",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
@@ -15518,7 +15520,8 @@
           "id": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16675,7 +16678,7 @@
           "id": "unit-feature.passive-ranged-attack-roll-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16736,7 +16739,7 @@
           "id": "unit-feature.attack-roll-miss-to-hit-replacement",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16796,7 +16799,7 @@
           "id": "unit-feature.passive-armor-class-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -16979,7 +16982,7 @@
           "id": "unit-feature.weapon-damage-dice-roll-choice",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17311,7 +17314,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -17460,7 +17463,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -17522,7 +17525,7 @@
           "id": "unit-feature.passive-speed-kind-grants",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
