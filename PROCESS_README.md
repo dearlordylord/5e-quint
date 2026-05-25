@@ -1,6 +1,18 @@
 # QA Validation Pipeline — How It Works
 
-This pipeline validates the formal D&D 5e spec ([creature.qnt](creature.qnt)) against community-agreed rule interpretations sourced from RPG Stack Exchange and Reddit.
+> **Scope:** This document describes the QA LLM-assertion pipeline only. The
+> pipeline's reference spec is the archived root `creature.qnt`, because that
+> file is what was used as the LLM prompt when the pipeline was built. It is
+> **not** the project's active runtime spec; active verification lives in the
+> package-local Quint specs and the rule-core slices under
+> `packages/shared-algebras/proofs/rule-core/`. See `ARCHITECTURE.md` and
+> `docs/adr/0001-forest-of-qnt-slices.md` for the active architecture. The QA
+> pipeline is independent of development verification (see `CLAUDE.md`'s
+> "QA pipeline" note).
+
+This pipeline validates the archived monolithic D&D 5e spec
+([creature.qnt](creature.qnt)) against community-agreed rule interpretations
+sourced from RPG Stack Exchange and Reddit.
 
 ## The Big Picture
 

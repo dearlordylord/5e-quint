@@ -97,7 +97,7 @@ For runnable Rust migration or generator-readiness queue selection, start from
 `plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`. This
 README owns the row contract and vocabulary; it is not a historical task queue.
 Closed QNT/QMBT planning files redirect to that entrypoint because the durable
-facts now live in checked JSONL artifacts and the active A/B/C Ralph plans.
+facts now live in checked JSONL artifacts and the active A/B Ralph plans.
 
 `generator-readiness.jsonl` is obligation-centered. Each row must point to a
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
@@ -122,8 +122,7 @@ with empty arrays until the C-lane classification is known.
 - `followUpTaskIds`: optional Ralph or rules-kernel follow-up task ids that own
   blocker resolution. `fixture-bound` and `blocked` rows require at least one
   follow-up task id so blocker rows cannot leave future work untracked. Ralph
-  task ids are checked against the active A/B/C ultra-golden lane plans in
-  `plans/`.
+  task ids are checked against the active A/B lane plans in `plans/`.
 
 `generatorSubset` and `blockedBy` values are checked vocabularies documented in
 `scripts/rules-kernel-coverage-config.cjs`. Keep the token catalog there so
