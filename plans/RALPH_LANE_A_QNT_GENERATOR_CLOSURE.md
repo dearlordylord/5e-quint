@@ -106,7 +106,7 @@ work remains.
     {
       "number": 15,
       "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close unit-feature run-block scanner findings"
     },
     {
@@ -357,7 +357,7 @@ Acceptance: checker green; no unsupported construct hidden behind broad tokens.
 
 ### Task 15 - A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE - Close unit-feature run-block scanner findings
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: scanner findings for unit-feature semantic-core owners are zero or have
 live follow-up tasks.
