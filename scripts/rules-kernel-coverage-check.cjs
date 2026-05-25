@@ -244,7 +244,7 @@ function validateRequiredStringArray(value, context) {
   return validateStringArray(value, context);
 }
 
-const ralphFollowUpTaskIdPattern = /^A[0-9]+-[A-Z0-9-]+$/;
+const ralphFollowUpTaskIdPattern = /^[ABC][0-9]+-[A-Z0-9-]+$/;
 
 function validFollowUpTaskId(taskId) {
   return (
@@ -254,24 +254,29 @@ function validFollowUpTaskId(taskId) {
 }
 
 function readKnownRalphTaskIds(rootPath) {
-  const planPath = path.join(
-    rootPath,
-    "plans",
-    "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md",
-  );
-  if (!fs.existsSync(planPath)) return undefined;
   const taskIds = new Set();
   const taskHeadingPattern =
-    /^### Task [0-9]+ - (A[0-9]+-[A-Z0-9-]+) - /gm;
-  const text = fs.readFileSync(planPath, "utf8");
-  for (
-    let match = taskHeadingPattern.exec(text);
-    match !== null;
-    match = taskHeadingPattern.exec(text)
-  ) {
-    taskIds.add(match[1]);
+    /^### Task [0-9]+ - ([ABC][0-9]+-[A-Z0-9-]+) - /gm;
+  const planNames = [
+    "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md",
+    "RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md",
+    "RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md",
+  ];
+  let foundAnyPlan = false;
+  for (const planName of planNames) {
+    const planPath = path.join(rootPath, "plans", planName);
+    if (!fs.existsSync(planPath)) continue;
+    foundAnyPlan = true;
+    const text = fs.readFileSync(planPath, "utf8");
+    for (
+      let match = taskHeadingPattern.exec(text);
+      match !== null;
+      match = taskHeadingPattern.exec(text)
+    ) {
+      taskIds.add(match[1]);
+    }
   }
-  return taskIds;
+  return foundAnyPlan ? taskIds : undefined;
 }
 
 function validateFollowUpTaskIds(taskIds, context, knownRalphTaskIds) {
