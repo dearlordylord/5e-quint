@@ -33,6 +33,7 @@
   ],
   "evidence": [
     {
+      "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
       "scenarioId": "discover-mcp-surface",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",

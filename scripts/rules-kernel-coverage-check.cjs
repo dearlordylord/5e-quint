@@ -27,6 +27,9 @@ const {
   rulesKernelProfileKinds,
   rulesKernelProfileKindClassificationIssues,
 } = require("./unit-profile-coverage-config.cjs");
+const {
+  witnessKindCatalogIssues,
+} = require("./evidence-witness-kind-config.cjs");
 
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -1893,6 +1896,7 @@ function buildKernelCoverage({ root: rootPath }) {
   const markerIndex = buildMarkerIndex(scanned.markers);
   const knownRalphTaskIds = readKnownRalphTaskIds(rootPath);
   const issues = [];
+  issues.push(...witnessKindCatalogIssues());
   issues.push(...generatorReadinessBlockerCatalogIssues());
   issues.push(...rulesKernelProfileKindClassificationIssues());
   const obligationIds = new Set();

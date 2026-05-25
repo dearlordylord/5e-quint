@@ -1,4 +1,9 @@
 const path = require("node:path");
+const {
+  mcpScenarioWitnessKind,
+  ultraGoldenWitnessKinds,
+  witnessKindDescriptions,
+} = require("./evidence-witness-kind-config.cjs");
 
 const collectionIds = new Set(["srd-5.2.1", "classic-2024-non-srd-mechanics"]);
 const catalogAdmissionDispositionCategory = {
@@ -306,10 +311,13 @@ module.exports = {
   rulesKernelProfileKindClassificationReasons,
   rulesKernelProfileKindClassifications,
   rulesKernelProfileKinds,
+  mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
+  ultraGoldenWitnessKinds,
+  witnessKindDescriptions,
 };

@@ -1,4 +1,7 @@
 const path = require("node:path");
+const {
+  parityWitnessKinds,
+} = require("./evidence-witness-kind-config.cjs");
 
 const coverageDirName = "rules-kernel-coverage";
 
@@ -35,12 +38,6 @@ const obligationKinds = new Set([
   "composition",
   "projection-scalar",
   "boundary-protocol",
-]);
-
-const parityWitnessKinds = new Set([
-  "focused-mbt",
-  "deterministic-qnt-replay",
-  "runtime-test",
 ]);
 
 const battleFrontierSubjects = new Set([

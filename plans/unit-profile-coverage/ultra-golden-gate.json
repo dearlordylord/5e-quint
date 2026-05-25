@@ -26,7 +26,13 @@
         "id": "mcp-scenario-evidence",
         "label": "MCP scenario evidence"
       }
-    ]
+    ],
+    "witnessKinds": {
+      "deterministic-qnt-replay": "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
+      "focused-mbt": "Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings.",
+      "mcp-scenario": "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",
+      "runtime-test": "Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership."
+    }
   },
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "scopes": [
@@ -403,11 +409,13 @@
               "denominator": 4,
               "numerator": 1
             },
-            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json"
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
           },
           "evidenceRows": [
             {
               "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
               "scenarioId": "discover-mcp-surface",
               "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
@@ -879,11 +887,13 @@
               "denominator": 4,
               "numerator": 1
             },
-            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json"
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
           },
           "evidenceRows": [
             {
               "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
               "scenarioId": "discover-mcp-surface",
               "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"

@@ -1,5 +1,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const {
+  mcpScenarioWitnessKind,
+  ultraGoldenWitnessKinds,
+  witnessKindDescriptions,
+} = require("./unit-profile-coverage-config.cjs");
 
 const passStatus = "pass";
 const blockedStatus = "blocked";
@@ -123,6 +128,7 @@ const mcpRequiredFlowFields = new Set([
   "description",
 ]);
 const mcpEvidenceRowFields = new Set([
+  "kind",
   "flowId",
   "scenarioId",
   "ownerPath",
@@ -237,6 +243,11 @@ function validateMcpScenarioEvidence(manifest, { root }) {
       issues.push(
         ...unexpectedFieldIssues(row, mcpEvidenceRowFields, rowContext),
       );
+      if (row.kind !== mcpScenarioWitnessKind) {
+        issues.push(
+          `${rowContext}.kind must be ${mcpScenarioWitnessKind}.`,
+        );
+      }
       for (const field of mcpEvidenceRowFields) {
         if (!isNonEmptyString(row[field])) {
           issues.push(`${rowContext}.${field} must be a non-empty string.`);
@@ -486,10 +497,12 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
         requiredFlows.length,
       ),
       source: mcpScenarioEvidenceSourcePath,
+      witnessKind: mcpScenarioWitnessKind,
     },
     evidenceRows: requiredFlows.flatMap((flow) =>
       (evidenceRowsByFlowId.get(flow.flowId) ?? []).map((row) => ({
         flowId: flow.flowId,
+        kind: row.kind,
         scenarioId: row.scenarioId,
         taskId: row.taskId,
         testPath: row.testPath,
@@ -811,6 +824,11 @@ function buildUltraGoldenGate({
       aggregateRule:
         "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
       layers: layerDefinitions,
+      witnessKinds: Object.fromEntries(
+        Array.from(ultraGoldenWitnessKinds)
+          .sort()
+          .map((kind) => [kind, witnessKindDescriptions[kind]]),
+      ),
     },
     status: blockedScopes.length === 0 ? passStatus : blockedStatus,
     blockedScopeIds: blockedScopes.map((scope) => scope.scopeId),
@@ -839,6 +857,12 @@ function renderDefinitionRows() {
   return layerDefinitions.map(
     (definition) =>
       `| ${definition.id} | ${definition.label} | ${md(definition.criterion)} |`,
+  );
+}
+
+function renderWitnessKindRows(gate) {
+  return Object.entries(gate.definition.witnessKinds).map(
+    ([kind, description]) => `| ${kind} | ${md(description)} |`,
   );
 }
 
@@ -878,10 +902,14 @@ function renderMcpScenarioEvidenceRows(scope) {
       evidenceRows.length === 0
         ? "_missing_"
         : evidenceRows.map((row) => `\`${row.scenarioId}\``).join(", ");
+    const witnessKinds =
+      evidenceRows.length === 0
+        ? "_missing_"
+        : evidenceRows.map((row) => `\`${row.kind}\``).join(", ");
     const followUp =
       evidenceRows.length === 0 ? `\`${flow.followUpTaskId}\`` : "_none_";
     const status = evidenceRows.length === 0 ? blockedStatus : passStatus;
-    return `| ${scope.scopeId} | ${flow.flowId} | ${status} | ${scenarioIds} | ${followUp} |`;
+    return `| ${scope.scopeId} | ${flow.flowId} | ${status} | ${witnessKinds} | ${scenarioIds} | ${followUp} |`;
   });
 }
 
@@ -905,6 +933,14 @@ function renderUltraGoldenGate(gate) {
     "| --- | --- | --- |",
     ...renderDefinitionRows(),
     "",
+    "## Witness Kind Vocabulary",
+    "",
+    "The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, or `runtime-test`; MCP scenario rows must use `mcp-scenario`.",
+    "",
+    "| Witness kind | Meaning |",
+    "| --- | --- |",
+    ...renderWitnessKindRows(gate),
+    "",
     "## Scope Summary",
     "",
     "| Scope | Status | Complete layers | Scoped obligations |",
@@ -923,8 +959,8 @@ function renderUltraGoldenGate(gate) {
     "",
     "MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the package-local command checks that admitted evidence stays tied to executable MCP scenario tests.",
     "",
-    "| Scope | Flow | Status | Scenario evidence | Follow-up task |",
-    "| --- | --- | --- | --- | --- |",
+    "| Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |",
+    "| --- | --- | --- | --- | --- | --- |",
     ...gate.scopes.flatMap(renderMcpScenarioEvidenceRows),
     "",
     "## Selected Identity Evidence Join Audit",

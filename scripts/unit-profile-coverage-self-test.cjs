@@ -3,6 +3,7 @@ const os = require("node:os");
 const path = require("node:path");
 const {
   deterministicAdmissionProjectionEvidenceTag,
+  mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
@@ -29,6 +30,7 @@ const {
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
+const { validateMcpScenarioEvidence } = require("./ultra-golden-gate.cjs");
 
 function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
@@ -47,6 +49,36 @@ function installedFixtureUnit(unitId, kind, sourceRecordPath) {
     sourceRecordPath,
     kind,
     executableMechanics: kind !== "background" && kind !== "class",
+  };
+}
+
+function mcpScenarioEvidenceFixture(kind) {
+  return {
+    schema: "dnd.mcp-scenario-evidence.v1",
+    ownerPackage: "@dnd/mcp",
+    check: {
+      packageName: "@dnd/mcp",
+      script: "test:mcp-scenario-evidence",
+    },
+    requiredFlows: [
+      {
+        flowId: "mcp-workflow-discovery",
+        scopeIds: ["level-1"],
+        followUpTaskId: "C3-MCP-LEVEL12-SCENARIO-GATE",
+        description: "sample MCP flow",
+      },
+    ],
+    evidence: [
+      {
+        kind,
+        flowId: "mcp-workflow-discovery",
+        scenarioId: "discover-mcp-surface",
+        ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+        testPath: "packages/mcp/src/mcp-protocol.test.ts",
+        taskId: "C3-MCP-LEVEL12-SCENARIO-GATE",
+        summary: "sample MCP evidence",
+      },
+    ],
   };
 }
 
@@ -195,6 +227,38 @@ function runSelfTest(root) {
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
   );
   try {
+    writeFixtureJson(tempDir, "packages/mcp/package.json", {
+      scripts: {
+        "test:mcp-scenario-evidence": "vitest run src/mcp-protocol.test.ts",
+      },
+    });
+    writeFixtureJson(
+      tempDir,
+      "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      {},
+    );
+    writeFixtureJson(tempDir, "packages/mcp/src/mcp-protocol.test.ts", {});
+    const validMcpScenarioIssues = validateMcpScenarioEvidence(
+      mcpScenarioEvidenceFixture(mcpScenarioWitnessKind),
+      { root: tempDir },
+    );
+    if (validMcpScenarioIssues.length !== 0) {
+      fail(
+        `Self-test failed: expected valid MCP scenario evidence to pass, got ${JSON.stringify(validMcpScenarioIssues)}`,
+      );
+    }
+    const invalidMcpScenarioIssues = validateMcpScenarioEvidence(
+      mcpScenarioEvidenceFixture("focused-mbt"),
+      { root: tempDir },
+    );
+    const expectedMcpScenarioIssue =
+      "MCP scenario evidence manifest evidence[0].kind must be mcp-scenario.";
+    if (!invalidMcpScenarioIssues.includes(expectedMcpScenarioIssue)) {
+      fail(
+        `Self-test failed: expected invalid MCP witness kind issue ${JSON.stringify(expectedMcpScenarioIssue)}, got ${JSON.stringify(invalidMcpScenarioIssues)}`,
+      );
+    }
+
     const specPath = path.join(tempDir, "fixture.mbt.qnt");
     const testPath = path.join(tempDir, "fixture.mbt.test.ts");
     fs.writeFileSync(

@@ -15,6 +15,17 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 | mbt-parity-evidence | MBT/parity evidence | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
 | mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command. |
 
+## Witness Kind Vocabulary
+
+The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, or `runtime-test`; MCP scenario rows must use `mcp-scenario`.
+
+| Witness kind | Meaning |
+| --- | --- |
+| deterministic-qnt-replay | Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage. |
+| focused-mbt | Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings. |
+| mcp-scenario | Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows. |
+| runtime-test | Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership. |
+
 ## Scope Summary
 
 | Scope | Status | Complete layers | Scoped obligations |
@@ -39,16 +50,16 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 
 MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the package-local command checks that admitted evidence stays tied to executable MCP scenario tests.
 
-| Scope | Flow | Status | Scenario evidence | Follow-up task |
-| --- | --- | --- | --- | --- |
-| level-1 | mcp-workflow-discovery | pass | `discover-mcp-surface` | _none_ |
-| level-1 | character-creation | blocked | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
-| level-1 | character-sheet | blocked | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
-| level-1 | battle | blocked | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
-| level-1-2 | mcp-workflow-discovery | pass | `discover-mcp-surface` | _none_ |
-| level-1-2 | character-creation | blocked | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
-| level-1-2 | character-sheet | blocked | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
-| level-1-2 | battle | blocked | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
+| Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |
+| --- | --- | --- | --- | --- | --- |
+| level-1 | mcp-workflow-discovery | pass | `mcp-scenario` | `discover-mcp-surface` | _none_ |
+| level-1 | character-creation | blocked | _missing_ | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1 | character-sheet | blocked | _missing_ | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
+| level-1 | battle | blocked | _missing_ | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
+| level-1-2 | mcp-workflow-discovery | pass | `mcp-scenario` | `discover-mcp-surface` | _none_ |
+| level-1-2 | character-creation | blocked | _missing_ | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1-2 | character-sheet | blocked | _missing_ | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
+| level-1-2 | battle | blocked | _missing_ | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
 
 ## Selected Identity Evidence Join Audit
 

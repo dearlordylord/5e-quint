@@ -238,6 +238,11 @@ New reducer semantics are QNT-first:
 
 ## Parity Witness Modes
 
+Rules-kernel parity witness rows use the checked witness-kind vocabulary
+`focused-mbt`, `deterministic-qnt-replay`, and `runtime-test`. MCP scenario
+evidence uses `mcp-scenario` in `plans/unit-profile-coverage/`; it is an
+ultra-golden user-flow layer, not a rules-kernel parity witness.
+
 The default witness for reducer procedures is focused MBT with random traces.
 Use it for sequencing, holes, reactions, resources, active-effect lifecycle,
 interleavings, and any behavior where branch interaction is the risk.

@@ -113,6 +113,16 @@ Current evidence tags are:
   actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay rows
   for those actions, and compares QCORE-observable projections.
 
+Ultra-golden witness kinds are checked vocabulary, not prose labels:
+
+- `focused-mbt`: random-trace QNT/MBT reducer parity evidence.
+- `deterministic-qnt-replay`: closed-case QNT replay evidence; not MBT
+  coverage by itself.
+- `runtime-test`: profile-scoped runtime test evidence for a reducer path that
+  already has profile-level QNT proof ownership.
+- `mcp-scenario`: package-local MCP acceptance scenario evidence for
+  user-facing tool and workflow flows.
+
 Profile-subset claims may also classify selected-identity expectations for
 their deferred mechanics. Use
 `deferredMechanicsSelectedIdentityDisposition: { tag: "not-applicable", owner,
