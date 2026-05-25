@@ -36,14 +36,16 @@ const {
   buildUltraGoldenGate,
   renderUltraGoldenGate,
 } = require("./ultra-golden-gate.cjs");
+const {
+  buildLevel12QntMbtJoin,
+  renderLevel12QntMbtJoin,
+} = require("./level12-qnt-mbt-join-report.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
   validateCoverageInputs,
 } = require("./unit-profile-coverage-validation.cjs");
-const {
-  buildKernelCoverage,
-} = require("./rules-kernel-coverage-check.cjs");
+const { buildKernelCoverage } = require("./rules-kernel-coverage-check.cjs");
 
 const root = process.env.UNIT_PROFILE_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -141,6 +143,10 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
+  const level12QntMbtJoin = buildLevel12QntMbtJoin({
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+  });
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -184,6 +190,16 @@ function main() {
     { root, write },
     paths.level12FullSupportReport,
     renderLevel12FullSupport(level12FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12QntMbtJoin,
+    `${JSON.stringify(level12QntMbtJoin, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12QntMbtJoinReport,
+    renderLevel12QntMbtJoin(level12QntMbtJoin),
   );
   writeOrCompare(
     { root, write },

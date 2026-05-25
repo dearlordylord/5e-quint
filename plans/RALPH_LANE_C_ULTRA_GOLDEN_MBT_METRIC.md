@@ -23,7 +23,7 @@ remains.
     {
       "number": 2,
       "id": "C2-LEVEL12-QNT-MBT-JOIN-REPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Report level 1-2 support to QNT/MBT evidence join"
     },
     {
@@ -190,7 +190,7 @@ is explicitly complete.
 
 ### Task 2 - C2-LEVEL12-QNT-MBT-JOIN-REPORT - Report level 1-2 support to QNT/MBT evidence join
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: generated report joining level 1-2 supported profiles to
 rules-kernel obligations, QNT owners, and parity witnesses.
