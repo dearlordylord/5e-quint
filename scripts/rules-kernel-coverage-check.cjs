@@ -24,6 +24,7 @@ const {
 } = require("./rules-kernel-coverage-config.cjs");
 const { scanClaimFiles } = require("./rules-kernel-coverage-claim-scan.cjs");
 const {
+  isUnitFeatureProfileId,
   rulesKernelProfileKinds,
   rulesKernelProfileKindClassificationIssues,
 } = require("./unit-profile-coverage-config.cjs");
@@ -791,6 +792,45 @@ function validateProfileMapping(
     }
     if (typeof mapping.reason !== "string" || mapping.reason.length === 0) {
       issues.push(`${context}.reason must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function validateUnitFeatureProfileOwnerJoins(
+  profileObligations,
+  profilesById,
+  obligationsById,
+) {
+  const issues = [];
+  for (const [index, mapping] of profileObligations.entries()) {
+    const context = `profile-obligations row ${index + 1}`;
+    if (!isRecord(mapping) || typeof mapping.profileId !== "string") continue;
+    if (!isUnitFeatureProfileId(mapping.profileId)) continue;
+    const profile = profilesById.get(mapping.profileId);
+    if (profile === undefined) continue;
+    const obligationIds = Array.isArray(mapping.obligationIds)
+      ? mapping.obligationIds
+      : [];
+    if (obligationIds.length === 0) {
+      issues.push(
+        `${context} for unit-feature profile ${mapping.profileId} must join to at least one rules-kernel obligation.`,
+      );
+      continue;
+    }
+    const mappedQntOwners = new Set(
+      obligationIds.flatMap(
+        (obligationId) => obligationsById.get(obligationId)?.qntOwners ?? [],
+      ),
+    );
+    for (const ownerPath of profile.qntOwners ?? []) {
+      if (!mappedQntOwners.has(ownerPath)) {
+        const mappedOwnerList =
+          Array.from(mappedQntOwners).sort().join(", ") || "_none_";
+        issues.push(
+          `${context} for unit-feature profile ${mapping.profileId} has stale QNT owner ${ownerPath}; mapped obligation QNT owners are ${mappedOwnerList}.`,
+        );
+      }
     }
   }
   return issues;
@@ -1955,6 +1995,13 @@ function buildKernelCoverage({ root: rootPath }) {
       mappedProfileIds.add(mapping.profileId);
     }
   }
+  issues.push(
+    ...validateUnitFeatureProfileOwnerJoins(
+      profileObligations,
+      profilesById,
+      obligationsById,
+    ),
+  );
 
   const seenBattleHoleFamilies = new Set();
   const seenBattleFillKinds = new Set();

@@ -30,7 +30,7 @@ work remains.
     { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "done", "title": "Split Monk Focus battle option core" },
     { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "done", "title": "Refresh unit-feature owner roles after semantic-core splits" },
     { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "done", "title": "Close unit-feature generator-readiness row" },
-    { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported feature profile to rules-kernel joins" },
+    { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "done", "title": "Audit supported feature profile to rules-kernel joins" },
     { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature MBT bridge coverage" },
     { "number": 14, "id": "A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature generator subset tokens" },
     { "number": 15, "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature run-block scanner findings" },
@@ -214,12 +214,17 @@ ids.
 
 ### Task 12 - A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT - Audit supported feature profile to rules-kernel joins
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: supported unit-feature profiles join to rules-kernel obligations without
 missing or stale owner evidence.
 
 Acceptance: `pnpm unit-profile-coverage:check` and rules-kernel check green.
+
+Closed by checker evidence: supported `unit-feature.` profile joins now require
+rules-kernel coverage, and feature procedure evidence reports use profile-scoped
+QNT owner evidence so broad obligation owners cannot satisfy unrelated
+profiles.
 
 ### Task 13 - A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT - Audit unit-feature MBT bridge coverage
 

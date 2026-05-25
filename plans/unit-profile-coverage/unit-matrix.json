@@ -459,7 +459,7 @@
       "id": "unit-feature.bardic-inspiration-grant",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -474,7 +474,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
         },
         {
           "kind": "runtime-test",
@@ -486,7 +486,7 @@
       "id": "unit-feature.bardic-inspiration-failed-d20-test",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -500,7 +500,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
         },
         {
           "kind": "runtime-test",
@@ -868,7 +868,8 @@
       "id": "unit-feature.weapon-mastery-sap",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -882,7 +883,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -894,7 +895,7 @@
       "id": "unit-feature.weapon-mastery-topple",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -908,7 +909,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -924,7 +925,7 @@
       "id": "unit-feature.weapon-mastery-cleave",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -938,7 +939,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3186,7 +3187,7 @@
       "id": "unit-feature.druid-wild-shape-known-form",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -3210,7 +3211,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3934,7 +3935,10 @@
           }
         ],
         "profileId": "unit-feature.alternate-action-cost",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -3947,7 +3951,10 @@
           }
         ],
         "profileId": "unit-feature.action-surge-resource",
-        "profileKind": "resource"
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -3960,7 +3967,11 @@
           }
         ],
         "profileId": "unit-feature.attack-action-attack-count-scaling",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+          "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -3973,7 +3984,10 @@
           }
         ],
         "profileId": "unit-feature.martial-arts-attack-projection",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -3986,7 +4000,10 @@
           }
         ],
         "profileId": "unit-feature.monk-focus-battle-options",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4005,7 +4022,10 @@
           }
         ],
         "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
-        "profileKind": "reaction"
+        "profileKind": "reaction",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4018,7 +4038,11 @@
           }
         ],
         "profileId": "unit-feature.attack-damage-rider",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4031,7 +4055,10 @@
           }
         ],
         "profileId": "unit-feature.bardic-inspiration-grant",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4044,7 +4071,10 @@
           }
         ],
         "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
-        "profileKind": "resource"
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4057,7 +4087,11 @@
           }
         ],
         "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-movement.qnt",
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4070,7 +4104,10 @@
           }
         ],
         "profileId": "unit-feature.bonus-action-ongoing-rage",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4083,7 +4120,10 @@
           }
         ],
         "profileId": "unit-feature.innate-sorcery-activation",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4096,7 +4136,10 @@
           }
         ],
         "profileId": "unit-feature.failed-ability-check-resource-boost",
-        "profileKind": "resource"
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4109,7 +4152,10 @@
           }
         ],
         "profileId": "unit-feature.first-attack-roll-reckless-advantage",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4122,7 +4168,10 @@
           }
         ],
         "profileId": "unit-feature.passive-armor-class-bonus",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4135,7 +4184,10 @@
           }
         ],
         "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4148,7 +4200,10 @@
           }
         ],
         "profileId": "unit-feature.initiative-proficiency-and-swap",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-turn-order.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4161,7 +4216,10 @@
           }
         ],
         "profileId": "unit-feature.passive-saving-throw-roll-mode",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4174,7 +4232,10 @@
           }
         ],
         "profileId": "unit-feature.attack-roll-miss-to-hit-replacement",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4187,7 +4248,10 @@
           }
         ],
         "profileId": "unit-feature.passive-speed-bonus",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4200,7 +4264,10 @@
           }
         ],
         "profileId": "unit-feature.passive-speed-kind-grants",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4213,7 +4280,10 @@
           }
         ],
         "profileId": "unit-feature.weapon-damage-dice-roll-choice",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4226,7 +4296,11 @@
           }
         ],
         "profileId": "unit-feature.weapon-mastery-sap",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4239,7 +4313,10 @@
           }
         ],
         "profileId": "unit-feature.weapon-mastery-topple",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4252,7 +4329,10 @@
           }
         ],
         "profileId": "unit-feature.weapon-mastery-cleave",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4265,7 +4345,10 @@
           }
         ],
         "profileId": "unit-feature.zero-hit-point-replacement",
-        "profileKind": "persistent-effect"
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4284,7 +4367,11 @@
           }
         ],
         "profileId": "unit-feature.reaction-roll-or-damage-reduction",
-        "profileKind": "reaction"
+        "profileKind": "reaction",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4297,7 +4384,10 @@
           }
         ],
         "profileId": "unit-feature.save-damage-replacement",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4310,7 +4400,10 @@
           }
         ],
         "profileId": "unit-feature.self-bonus-action-healing",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4323,7 +4416,8 @@
           }
         ],
         "profileId": "character-sheet.healing-resource-action",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -4336,7 +4430,8 @@
           }
         ],
         "profileId": "character-sheet.short-rest-spell-slot-recovery",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -4349,7 +4444,8 @@
           }
         ],
         "profileId": "character-sheet.spellbook-ritual-invocation",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -4362,7 +4458,8 @@
           }
         ],
         "profileId": "character-sheet.weapon-mastery-reselection",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -4375,7 +4472,10 @@
           }
         ],
         "profileId": "unit-feature.weapon-critical-range-19",
-        "profileKind": "passive"
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4388,7 +4488,10 @@
           }
         ],
         "profileId": "spell.invocation-after-hit-damage-illumination",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4407,7 +4510,10 @@
           }
         ],
         "profileId": "spell.invocation-damage-save-or-attack",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4420,7 +4526,10 @@
           }
         ],
         "profileId": "spell.invocation-chained-attack-damage",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4433,7 +4542,10 @@
           }
         ],
         "profileId": "spell.invocation-condition-save",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4446,7 +4558,10 @@
           }
         ],
         "profileId": "spell.invocation-sleep-target-admission",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4459,7 +4574,10 @@
           }
         ],
         "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4478,7 +4596,10 @@
           }
         ],
         "profileId": "spell.invocation-grease-ground-hazard",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4491,7 +4612,10 @@
           }
         ],
         "profileId": "spell.invocation-fog-cloud-obscurement",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4504,7 +4628,10 @@
           }
         ],
         "profileId": "spell.invocation-magical-darkness-point-origin",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4517,7 +4644,10 @@
           }
         ],
         "profileId": "spell.invocation-object-light",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4548,7 +4678,10 @@
           }
         ],
         "profileId": "spell.invocation-flaming-sphere-hazard-ram",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4561,7 +4694,10 @@
           }
         ],
         "profileId": "spell.invocation-held-light-emitter",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4592,7 +4728,10 @@
           }
         ],
         "profileId": "spell.invocation-spell-created-held-object",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4605,7 +4744,10 @@
           }
         ],
         "profileId": "spell.invocation-dancing-lights-movable-dim-light",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4618,7 +4760,10 @@
           }
         ],
         "profileId": "spell.invocation-command-halt-grovel",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4631,7 +4776,10 @@
           }
         ],
         "profileId": "spell.invocation-command-drop-held-object",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4644,7 +4792,10 @@
           }
         ],
         "profileId": "spell.invocation-command-approach-route",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4657,7 +4808,10 @@
           }
         ],
         "profileId": "spell.invocation-command-flee-route",
-        "profileKind": "table-caller"
+        "profileKind": "table-caller",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4676,7 +4830,10 @@
           }
         ],
         "profileId": "spell.invocation-expeditious-retreat-dash",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4695,7 +4852,10 @@
           }
         ],
         "profileId": "spell.invocation-feather-fall-mitigation",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4714,7 +4874,10 @@
           }
         ],
         "profileId": "spell.reaction-hellish-rebuke",
-        "profileKind": "reaction"
+        "profileKind": "reaction",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4733,7 +4896,10 @@
           }
         ],
         "profileId": "spell.reaction-counterspell",
-        "profileKind": "reaction"
+        "profileKind": "reaction",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4752,7 +4918,10 @@
           }
         ],
         "profileId": "spell.invocation-jump-movement-replacement",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4777,7 +4946,10 @@
           }
         ],
         "profileId": "spell.invocation-forced-reaction-movement",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4790,7 +4962,10 @@
           }
         ],
         "profileId": "spell.invocation-damage-reduction",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4803,7 +4978,10 @@
           }
         ],
         "profileId": "spell.invocation-make-stable",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4816,7 +4994,10 @@
           }
         ],
         "profileId": "spell.invocation-weapon-damage-rider",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4829,7 +5010,10 @@
           }
         ],
         "profileId": "spell.invocation-after-hit-damage",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4842,7 +5026,10 @@
           }
         ],
         "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4855,7 +5042,10 @@
           }
         ],
         "profileId": "spell.invocation-after-hit-timed-damage-save",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4868,7 +5058,10 @@
           }
         ],
         "profileId": "spell.invocation-spell-hosted-weapon-attack",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4881,7 +5074,10 @@
           }
         ],
         "profileId": "spell.invocation-weapon-attack-override",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4894,7 +5090,10 @@
           }
         ],
         "profileId": "spell.invocation-independent-attack-sequence",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4907,7 +5106,10 @@
           }
         ],
         "profileId": "spell.invocation-marked-damage-rider",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4920,7 +5122,10 @@
           }
         ],
         "profileId": "spell.hit-point-restoration",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4939,7 +5144,11 @@
           }
         ],
         "profileId": "spell.reaction-shield",
-        "profileKind": "reaction"
+        "profileKind": "reaction",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4958,7 +5167,11 @@
           }
         ],
         "profileId": "spell.readied-action-time-spell",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4971,7 +5184,10 @@
           }
         ],
         "profileId": "spell.invocation-roll-modifier",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4984,7 +5200,10 @@
           }
         ],
         "profileId": "spell.invocation-creature-size-change",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -4997,7 +5216,10 @@
           }
         ],
         "profileId": "spell.creature-type-protection-and-charm",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5010,7 +5232,10 @@
           }
         ],
         "profileId": "spell.invocation-attack-roll-advantage-save",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5023,7 +5248,10 @@
           }
         ],
         "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5042,7 +5270,10 @@
           }
         ],
         "profileId": "spell.invocation-save-gated-condition-immunity",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5055,7 +5286,10 @@
           }
         ],
         "profileId": "spell.scalar-buff",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5068,7 +5302,10 @@
           }
         ],
         "profileId": "stat-block.attack-control",
-        "profileKind": "stat-block-control"
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5081,7 +5318,8 @@
           }
         ],
         "profileId": "character-sheet.armor-class-base-formula",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5094,7 +5332,10 @@
           }
         ],
         "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5107,7 +5348,10 @@
           }
         ],
         "profileId": "spell.invocation-sanctuary-targeting-interdiction",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5120,7 +5364,10 @@
           }
         ],
         "profileId": "spell.find-familiar-lifecycle",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5133,7 +5380,8 @@
           }
         ],
         "profileId": "character-creation.class-feature-feat-choice",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5146,7 +5394,8 @@
           }
         ],
         "profileId": "character-creation.class-feature-advancement-replacement",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5159,7 +5408,8 @@
           }
         ],
         "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5172,7 +5422,8 @@
           }
         ],
         "profileId": "character-creation.warlock-pact-magic-advancement",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5185,7 +5436,8 @@
           }
         ],
         "profileId": "character-creation.weapon-mastery-choice",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5198,7 +5450,8 @@
           }
         ],
         "profileId": "character-creation.eldritch-invocation-choice",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5211,7 +5464,8 @@
           }
         ],
         "profileId": "character-creation.class-feature-option-projection",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5224,7 +5478,8 @@
           }
         ],
         "profileId": "character-creation.skill-expertise-choice",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5237,7 +5492,8 @@
           }
         ],
         "profileId": "character-creation.class-feature-resource-projection",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5250,7 +5506,8 @@
           }
         ],
         "profileId": "character-creation.class-feature-source-fact-projection",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5263,7 +5520,8 @@
           }
         ],
         "profileId": "character-creation.wizard-spellbook-learning-choice",
-        "profileKind": "character-creation"
+        "profileKind": "character-creation",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5276,7 +5534,10 @@
           }
         ],
         "profileId": "spell.invocation-self-ability-check-advantage",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5289,7 +5550,8 @@
           }
         ],
         "profileId": "character-sheet.ability-check-proficiency-bonus",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5302,7 +5564,8 @@
           }
         ],
         "profileId": "character-sheet.pact-slot-recovery",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5315,7 +5578,8 @@
           }
         ],
         "profileId": "character-sheet.class-feature-use-count-resource",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5328,7 +5592,8 @@
           }
         ],
         "profileId": "character-sheet.class-feature-point-pool-resource",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5341,7 +5606,8 @@
           }
         ],
         "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5354,7 +5620,8 @@
           }
         ],
         "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5367,7 +5634,8 @@
           }
         ],
         "profileId": "character-sheet.metamagic-battle-resource-bridge",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5380,7 +5648,8 @@
           }
         ],
         "profileId": "character-sheet.class-feature-long-rest-use-state",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5393,7 +5662,8 @@
           }
         ],
         "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5406,7 +5676,10 @@
           }
         ],
         "profileId": "spell.invocation-self-teleport",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5419,7 +5692,10 @@
           }
         ],
         "profileId": "spell.invocation-blur-attack-roll-defense",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5432,7 +5708,10 @@
           }
         ],
         "profileId": "spell.invocation-mirror-image-hit-interception",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5445,7 +5724,10 @@
           }
         ],
         "profileId": "spell.invocation-condition-removal-protection",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5458,7 +5740,10 @@
           }
         ],
         "profileId": "spell.invocation-warding-bond-linked-effect",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5471,7 +5756,10 @@
           }
         ],
         "profileId": "spell.invocation-direct-condition",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5484,7 +5772,10 @@
           }
         ],
         "profileId": "unit-feature.druid-wild-shape-known-form",
-        "profileKind": "stat-block-control"
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5497,7 +5788,10 @@
           }
         ],
         "profileId": "spell.invocation-direct-condition-removal",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5510,7 +5804,10 @@
           }
         ],
         "profileId": "spell.invocation-self-transformation-mode",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5541,7 +5838,10 @@
           }
         ],
         "profileId": "spell.invocation-moonbeam-movable-zone",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5554,7 +5854,10 @@
           }
         ],
         "profileId": "spell.invocation-object-contact-damage",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5567,7 +5870,10 @@
           }
         ],
         "profileId": "spell.invocation-gust-of-wind-line",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5580,7 +5886,10 @@
           }
         ],
         "profileId": "spell.invocation-magic-weapon-enhancement",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5593,7 +5902,10 @@
           }
         ],
         "profileId": "spell.invocation-web-restraint-hazard",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5606,7 +5918,10 @@
           }
         ],
         "profileId": "spell.invocation-levitated-creature",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5619,7 +5934,10 @@
           }
         ],
         "profileId": "spell.invocation-ongoing-spell-ending",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5632,7 +5950,10 @@
           }
         ],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
-        "profileKind": "bonus-action"
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5645,7 +5966,10 @@
           }
         ],
         "profileId": "character-sheet.spell-rest-benefit-application",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": [
+          "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5658,7 +5982,10 @@
           }
         ],
         "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5671,7 +5998,10 @@
           }
         ],
         "profileId": "spell.invocation-spike-growth-movement-hazard",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5690,7 +6020,10 @@
           }
         ],
         "profileId": "spell.invocation-see-invisible-observer-sight",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5703,7 +6036,15 @@
           }
         ],
         "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-armor-class.qnt",
+          "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "packages/battle-runtime/battle-runtime-model.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+          "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5716,7 +6057,10 @@
           }
         ],
         "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5729,7 +6073,10 @@
           }
         ],
         "profileId": "spell.invocation-dragons-breath-initial",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5742,7 +6089,10 @@
           }
         ],
         "profileId": "spell.invocation-dragons-breath-granted-action",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -5755,7 +6105,8 @@
           }
         ],
         "profileId": "character-sheet.class-feature-prepared-spell-access",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5768,7 +6119,8 @@
           }
         ],
         "profileId": "character-sheet.druid-circle-land-spell-access",
-        "profileKind": "character-sheet"
+        "profileKind": "character-sheet",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -5781,7 +6133,10 @@
           }
         ],
         "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
-        "profileKind": "spell-invocation"
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -5818,7 +6173,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -5837,7 +6195,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "acid_splash"
@@ -5856,7 +6218,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "aid"
@@ -5875,7 +6240,10 @@
                 }
               ],
               "profileId": "unit-feature.initiative-proficiency-and-swap",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-turn-order.qnt"
+              ]
             }
           ],
           "unitId": "alert"
@@ -5894,7 +6262,10 @@
                 }
               ],
               "profileId": "spell.invocation-self-transformation-mode",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "alter_self"
@@ -5913,7 +6284,10 @@
                 }
               ],
               "profileId": "spell.creature-type-protection-and-charm",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "animal_friendship"
@@ -5932,7 +6306,10 @@
                 }
               ],
               "profileId": "spell.invocation-roll-modifier",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "bane"
@@ -5951,7 +6328,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-saving-throw-roll-mode",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
             }
           ],
           "unitId": "barbarian_danger_sense"
@@ -5970,7 +6350,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-speed-bonus",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+              ]
             }
           ],
           "unitId": "barbarian_fast_movement"
@@ -5989,7 +6372,11 @@
                 }
               ],
               "profileId": "unit-feature.attack-damage-rider",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+              ]
             }
           ],
           "unitId": "barbarian_frenzy"
@@ -6008,7 +6395,10 @@
                 }
               ],
               "profileId": "unit-feature.bonus-action-ongoing-rage",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+              ]
             }
           ],
           "unitId": "barbarian_rage"
@@ -6027,7 +6417,10 @@
                 }
               ],
               "profileId": "unit-feature.first-attack-roll-reckless-advantage",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+              ]
             }
           ],
           "unitId": "barbarian_reckless_attack"
@@ -6046,7 +6439,8 @@
                 }
               ],
               "profileId": "character-sheet.armor-class-base-formula",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "barbarian_unarmored_defense"
@@ -6065,7 +6459,10 @@
                 }
               ],
               "profileId": "unit-feature.bardic-inspiration-grant",
-              "profileKind": "bonus-action"
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6078,7 +6475,10 @@
                 }
               ],
               "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
-              "profileKind": "resource"
+              "profileKind": "resource",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+              ]
             }
           ],
           "unitId": "bard_bardic_inspiration"
@@ -6103,7 +6503,11 @@
                 }
               ],
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+              ]
             }
           ],
           "unitId": "bard_cutting_words"
@@ -6122,7 +6526,8 @@
                 }
               ],
               "profileId": "character-sheet.ability-check-proficiency-bonus",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "bard_jack_of_all_trades"
@@ -6141,7 +6546,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "barkskin"
@@ -6160,7 +6568,10 @@
                 }
               ],
               "profileId": "spell.invocation-roll-modifier",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "bless"
@@ -6179,7 +6590,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "blindness_deafness"
@@ -6198,7 +6612,10 @@
                 }
               ],
               "profileId": "spell.invocation-blur-attack-roll-defense",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
+              ]
             }
           ],
           "unitId": "blur"
@@ -6223,7 +6640,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6242,7 +6662,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "burning_hands"
@@ -6267,7 +6691,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6286,7 +6713,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "chill_touch"
@@ -6305,7 +6736,10 @@
                 }
               ],
               "profileId": "spell.invocation-chained-attack-damage",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6324,7 +6758,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "chromatic_orb"
@@ -6343,7 +6781,8 @@
                 }
               ],
               "profileId": "character-creation.class-feature-resource-projection",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "cleric_channel_divinity"
@@ -6362,7 +6801,8 @@
                 }
               ],
               "profileId": "character-creation.class-feature-option-projection",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "cleric_divine_order"
@@ -6381,7 +6821,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "color_spray"
@@ -6400,7 +6843,10 @@
                 }
               ],
               "profileId": "spell.invocation-command-halt-grovel",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6413,7 +6859,10 @@
                 }
               ],
               "profileId": "spell.invocation-command-drop-held-object",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6426,7 +6875,10 @@
                 }
               ],
               "profileId": "spell.invocation-command-approach-route",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6439,7 +6891,10 @@
                 }
               ],
               "profileId": "spell.invocation-command-flee-route",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "command"
@@ -6464,7 +6919,10 @@
                 }
               ],
               "profileId": "spell.reaction-counterspell",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "counterspell"
@@ -6483,7 +6941,10 @@
                 }
               ],
               "profileId": "spell.hit-point-restoration",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+              ]
             }
           ],
           "unitId": "cure_wounds"
@@ -6502,7 +6963,10 @@
                 }
               ],
               "profileId": "spell.invocation-dancing-lights-movable-dim-light",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "dancing_lights"
@@ -6521,7 +6985,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-armor-class-bonus",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+              ]
             }
           ],
           "unitId": "defense"
@@ -6546,7 +7013,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6571,7 +7041,10 @@
                 }
               ],
               "profileId": "spell.invocation-forced-reaction-movement",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "dissonant_whispers"
@@ -6590,7 +7063,10 @@
                 }
               ],
               "profileId": "spell.invocation-weapon-damage-rider",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "divine_favor"
@@ -6609,7 +7085,10 @@
                 }
               ],
               "profileId": "spell.invocation-after-hit-damage",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "divine_smite"
@@ -6628,7 +7107,10 @@
                 }
               ],
               "profileId": "spell.invocation-dragons-breath-initial",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -6641,7 +7123,10 @@
                 }
               ],
               "profileId": "spell.invocation-dragons-breath-granted-action",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+              ]
             }
           ],
           "unitId": "dragons_breath"
@@ -6660,7 +7145,8 @@
                 }
               ],
               "profileId": "character-sheet.druid-circle-land-spell-access",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "druid_circle_of_the_land_spells"
@@ -6679,7 +7165,8 @@
                 }
               ],
               "profileId": "character-creation.class-feature-option-projection",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "druid_primal_order"
@@ -6698,7 +7185,10 @@
                 }
               ],
               "profileId": "spell.invocation-independent-attack-sequence",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "eldritch_blast"
@@ -6717,7 +7207,10 @@
                 }
               ],
               "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "ensnaring_strike"
@@ -6736,7 +7229,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "entangle"
@@ -6761,7 +7257,10 @@
                 }
               ],
               "profileId": "spell.invocation-expeditious-retreat-dash",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "expeditious_retreat"
@@ -6780,7 +7279,10 @@
                 }
               ],
               "profileId": "spell.invocation-attack-roll-advantage-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "faerie_fire"
@@ -6799,7 +7301,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "false_life"
@@ -6818,7 +7323,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+              ]
             }
           ],
           "unitId": "feat_archery"
@@ -6837,7 +7345,10 @@
                 }
               ],
               "profileId": "unit-feature.attack-roll-miss-to-hit-replacement",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+              ]
             }
           ],
           "unitId": "feat_boon_of_combat_prowess"
@@ -6856,7 +7367,10 @@
                 }
               ],
               "profileId": "unit-feature.weapon-damage-dice-roll-choice",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+              ]
             }
           ],
           "unitId": "feat_savage_attacker"
@@ -6881,7 +7395,10 @@
                 }
               ],
               "profileId": "spell.invocation-feather-fall-mitigation",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "feather_fall"
@@ -6900,7 +7417,10 @@
                 }
               ],
               "profileId": "unit-feature.action-surge-resource",
-              "profileKind": "resource"
+              "profileKind": "resource",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+              ]
             }
           ],
           "unitId": "fighter_action_surge"
@@ -6919,7 +7439,11 @@
                 }
               ],
               "profileId": "unit-feature.attack-action-attack-count-scaling",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+              ]
             }
           ],
           "unitId": "fighter_extra_attack"
@@ -6938,7 +7462,8 @@
                 }
               ],
               "profileId": "character-creation.class-feature-feat-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -6951,7 +7476,8 @@
                 }
               ],
               "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "fighter_fighting_style"
@@ -6970,7 +7496,10 @@
                 }
               ],
               "profileId": "unit-feature.weapon-critical-range-19",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+              ]
             }
           ],
           "unitId": "fighter_improved_critical"
@@ -6989,7 +7518,10 @@
                 }
               ],
               "profileId": "unit-feature.self-bonus-action-healing",
-              "profileKind": "bonus-action"
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "fighter_second_wind"
@@ -7008,7 +7540,10 @@
                 }
               ],
               "profileId": "unit-feature.failed-ability-check-resource-boost",
-              "profileKind": "resource"
+              "profileKind": "resource",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "fighter_tactical_mind"
@@ -7033,7 +7568,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "fire_bolt"
@@ -7070,7 +7608,10 @@
                 }
               ],
               "profileId": "spell.invocation-spell-created-held-object",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "flame_blade"
@@ -7107,7 +7648,10 @@
                 }
               ],
               "profileId": "spell.invocation-flaming-sphere-hazard-ram",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "flaming_sphere"
@@ -7126,7 +7670,10 @@
                 }
               ],
               "profileId": "spell.invocation-fog-cloud-obscurement",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "fog_cloud"
@@ -7151,7 +7698,10 @@
                 }
               ],
               "profileId": "spell.invocation-grease-ground-hazard",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "grease"
@@ -7170,7 +7720,10 @@
                 }
               ],
               "profileId": "spell.invocation-roll-modifier",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "guidance"
@@ -7195,7 +7748,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -7214,7 +7770,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "guiding_bolt"
@@ -7233,7 +7793,10 @@
                 }
               ],
               "profileId": "spell.hit-point-restoration",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+              ]
             }
           ],
           "unitId": "healing_word"
@@ -7252,7 +7815,10 @@
                 }
               ],
               "profileId": "spell.invocation-object-contact-damage",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "heat_metal"
@@ -7277,7 +7843,10 @@
                 }
               ],
               "profileId": "spell.reaction-hellish-rebuke",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -7296,7 +7865,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "hellish_rebuke"
@@ -7315,7 +7887,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "heroism"
@@ -7334,7 +7909,10 @@
                 }
               ],
               "profileId": "spell.invocation-marked-damage-rider",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "hex"
@@ -7353,7 +7931,10 @@
                 }
               ],
               "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "hideous_laughter"
@@ -7372,7 +7953,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "hold_person"
@@ -7391,7 +7975,10 @@
                 }
               ],
               "profileId": "spell.invocation-marked-damage-rider",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "hunters_mark"
@@ -7416,7 +8003,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "ice_knife"
@@ -7441,7 +8031,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -7460,7 +8053,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "inflict_wounds"
@@ -7479,7 +8076,10 @@
                 }
               ],
               "profileId": "spell.invocation-direct-condition",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "invisibility"
@@ -7504,7 +8104,10 @@
                 }
               ],
               "profileId": "spell.invocation-jump-movement-replacement",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "jump"
@@ -7523,7 +8126,10 @@
                 }
               ],
               "profileId": "spell.invocation-direct-condition-removal",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "lesser_restoration"
@@ -7542,7 +8148,10 @@
                 }
               ],
               "profileId": "spell.invocation-object-light",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "light"
@@ -7567,7 +8176,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "lightning_bolt"
@@ -7586,7 +8198,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "longstrider"
@@ -7611,7 +8226,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -7630,7 +8248,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "mage_armor"
@@ -7655,7 +8277,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -7674,7 +8299,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "magic_missile"
@@ -7693,7 +8322,10 @@
                 }
               ],
               "profileId": "spell.invocation-magic-weapon-enhancement",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "magic_weapon"
@@ -7712,7 +8344,10 @@
                 }
               ],
               "profileId": "spell.hit-point-restoration",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+              ]
             }
           ],
           "unitId": "mass_cure_wounds"
@@ -7731,7 +8366,10 @@
                 }
               ],
               "profileId": "spell.hit-point-restoration",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+              ]
             }
           ],
           "unitId": "mass_healing_word"
@@ -7750,7 +8388,10 @@
                 }
               ],
               "profileId": "unit-feature.weapon-mastery-cleave",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+              ]
             }
           ],
           "unitId": "mastery_cleave"
@@ -7769,7 +8410,11 @@
                 }
               ],
               "profileId": "unit-feature.weapon-mastery-sap",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+                "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+              ]
             }
           ],
           "unitId": "mastery_sap"
@@ -7788,7 +8433,10 @@
                 }
               ],
               "profileId": "unit-feature.weapon-mastery-topple",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+              ]
             }
           ],
           "unitId": "mastery_topple"
@@ -7807,7 +8455,10 @@
                 }
               ],
               "profileId": "spell.invocation-mirror-image-hit-interception",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "mirror_image"
@@ -7826,7 +8477,10 @@
                 }
               ],
               "profileId": "spell.invocation-self-teleport",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "misty_step"
@@ -7851,7 +8505,10 @@
                 }
               ],
               "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+              ]
             }
           ],
           "unitId": "monk_deflect_attacks"
@@ -7870,7 +8527,10 @@
                 }
               ],
               "profileId": "unit-feature.martial-arts-attack-projection",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
+              ]
             }
           ],
           "unitId": "monk_martial_arts"
@@ -7889,7 +8549,8 @@
                 }
               ],
               "profileId": "character-sheet.armor-class-base-formula",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "monk_unarmored_defense"
@@ -7908,7 +8569,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-speed-bonus",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+              ]
             }
           ],
           "unitId": "monk_unarmored_movement"
@@ -7927,7 +8591,8 @@
                 }
               ],
               "profileId": "character-creation.class-feature-source-fact-projection",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -7940,7 +8605,8 @@
                 }
               ],
               "profileId": "character-sheet.class-feature-long-rest-use-state",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -7953,7 +8619,8 @@
                 }
               ],
               "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "monk_uncanny_metabolism"
@@ -7972,7 +8639,10 @@
                 }
               ],
               "profileId": "unit-feature.alternate-action-cost",
-              "profileKind": "bonus-action"
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "mycelium_step"
@@ -7991,7 +8661,11 @@
                 }
               ],
               "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
-              "profileKind": "bonus-action"
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-movement.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "orc_adrenaline_rush"
@@ -8010,7 +8684,10 @@
                 }
               ],
               "profileId": "unit-feature.zero-hit-point-replacement",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
+              ]
             }
           ],
           "unitId": "orc_relentless_endurance"
@@ -8029,7 +8706,11 @@
                 }
               ],
               "profileId": "unit-feature.attack-action-attack-count-scaling",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+              ]
             }
           ],
           "unitId": "paladin_extra_attack"
@@ -8048,7 +8729,8 @@
                 }
               ],
               "profileId": "character-sheet.healing-resource-action",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "paladin_lay_on_hands"
@@ -8067,7 +8749,10 @@
                 }
               ],
               "profileId": "spell.invocation-after-hit-damage",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "paladin_paladins_smite"
@@ -8086,7 +8771,8 @@
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -8099,7 +8785,8 @@
                 }
               ],
               "profileId": "character-sheet.weapon-mastery-reselection",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "paladin_weapon_mastery"
@@ -8124,7 +8811,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8143,7 +8833,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "poison_spray"
@@ -8168,7 +8862,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8181,7 +8878,10 @@
                 }
               ],
               "profileId": "spell.invocation-held-light-emitter",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "produce_flame"
@@ -8200,7 +8900,10 @@
                 }
               ],
               "profileId": "spell.creature-type-protection-and-charm",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "protection_from_evil_and_good"
@@ -8219,7 +8922,10 @@
                 }
               ],
               "profileId": "spell.invocation-condition-removal-protection",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "protection_from_poison"
@@ -8238,7 +8944,8 @@
                 }
               ],
               "profileId": "character-creation.skill-expertise-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "ranger_deft_explorer"
@@ -8257,7 +8964,11 @@
                 }
               ],
               "profileId": "unit-feature.attack-action-attack-count-scaling",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+              ]
             }
           ],
           "unitId": "ranger_extra_attack"
@@ -8276,7 +8987,10 @@
                 }
               ],
               "profileId": "unit-feature.passive-speed-kind-grants",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+              ]
             }
           ],
           "unitId": "ranger_roving"
@@ -8295,7 +9009,8 @@
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -8308,7 +9023,8 @@
                 }
               ],
               "profileId": "character-sheet.weapon-mastery-reselection",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "ranger_weapon_mastery"
@@ -8327,7 +9043,15 @@
                 }
               ],
               "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-armor-class.qnt",
+                "packages/battle-runtime/battle-runtime-concentration.qnt",
+                "packages/battle-runtime/battle-runtime-model.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+                "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8340,7 +9064,10 @@
                 }
               ],
               "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              ]
             }
           ],
           "unitId": "ray_of_enfeeblement"
@@ -8365,7 +9092,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8384,7 +9114,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "ray_of_frost"
@@ -8409,7 +9143,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8428,7 +9165,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "ray_of_sickness"
@@ -8447,7 +9188,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-reduction",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "resistance"
@@ -8466,7 +9210,10 @@
                 }
               ],
               "profileId": "unit-feature.alternate-action-cost",
-              "profileKind": "bonus-action"
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "rogue_cunning_action"
@@ -8485,7 +9232,10 @@
                 }
               ],
               "profileId": "unit-feature.save-damage-replacement",
-              "profileKind": "passive"
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
             }
           ],
           "unitId": "rogue_evasion"
@@ -8504,7 +9254,8 @@
                 }
               ],
               "profileId": "character-creation.skill-expertise-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "rogue_expertise"
@@ -8523,7 +9274,11 @@
                 }
               ],
               "profileId": "unit-feature.attack-damage-rider",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+              ]
             }
           ],
           "unitId": "rogue_sneak_attack"
@@ -8548,7 +9303,11 @@
                 }
               ],
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+              ]
             }
           ],
           "unitId": "rogue_uncanny_dodge"
@@ -8567,7 +9326,8 @@
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -8580,7 +9340,8 @@
                 }
               ],
               "profileId": "character-sheet.weapon-mastery-reselection",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "rogue_weapon_mastery"
@@ -8605,7 +9366,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8624,7 +9388,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "sacred_flame"
@@ -8643,7 +9411,10 @@
                 }
               ],
               "profileId": "spell.invocation-sanctuary-targeting-interdiction",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "sanctuary"
@@ -8662,7 +9433,10 @@
                 }
               ],
               "profileId": "spell.invocation-independent-attack-sequence",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "scorching_ray"
@@ -8681,7 +9455,10 @@
                 }
               ],
               "profileId": "spell.invocation-after-hit-timed-damage-save",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "searing_smite"
@@ -8706,7 +9483,10 @@
                 }
               ],
               "profileId": "spell.invocation-see-invisible-observer-sight",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+              ]
             }
           ],
           "unitId": "see_invisibility"
@@ -8731,7 +9511,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "shatter"
@@ -8756,7 +9539,11 @@
                 }
               ],
               "profileId": "spell.reaction-shield",
-              "profileKind": "reaction"
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "shield"
@@ -8775,7 +9562,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "shield_of_faith"
@@ -8794,7 +9584,10 @@
                 }
               ],
               "profileId": "spell.invocation-weapon-attack-override",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "shillelagh"
@@ -8813,7 +9606,10 @@
                 }
               ],
               "profileId": "spell.invocation-after-hit-damage-illumination",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "shining_smite"
@@ -8838,7 +9634,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8857,7 +9656,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "shocking_grasp"
@@ -8876,7 +9679,10 @@
                 }
               ],
               "profileId": "spell.invocation-sleep-target-admission",
-              "profileKind": "table-caller"
+              "profileKind": "table-caller",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -8889,7 +9695,10 @@
                 }
               ],
               "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "sleep"
@@ -8908,7 +9717,10 @@
                 }
               ],
               "profileId": "unit-feature.innate-sorcery-activation",
-              "profileKind": "persistent-effect"
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
             }
           ],
           "unitId": "sorcerer_innate_sorcery"
@@ -8933,7 +9745,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "sorcerous_burst"
@@ -8952,7 +9767,10 @@
                 }
               ],
               "profileId": "spell.invocation-make-stable",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "spare_the_dying"
@@ -8971,7 +9789,10 @@
                 }
               ],
               "profileId": "spell.scalar-buff",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "spider_climb"
@@ -8990,7 +9811,10 @@
                 }
               ],
               "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+              ]
             }
           ],
           "unitId": "spiritual_weapon"
@@ -9015,7 +9839,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "starry_wisp"
@@ -9040,7 +9867,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             }
           ],
           "unitId": "thunderwave"
@@ -9059,7 +9889,10 @@
                 }
               ],
               "profileId": "spell.invocation-spell-hosted-weapon-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "true_strike"
@@ -9084,7 +9917,10 @@
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
             },
             {
               "joinStatus": "covered",
@@ -9103,7 +9939,11 @@
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+              ]
             }
           ],
           "unitId": "vicious_mockery"
@@ -9122,7 +9962,10 @@
                 }
               ],
               "profileId": "spell.invocation-warding-bond-linked-effect",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "warding_bond"
@@ -9141,7 +9984,8 @@
                 }
               ],
               "profileId": "character-creation.eldritch-invocation-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             },
             {
               "joinStatus": "covered",
@@ -9154,7 +9998,8 @@
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "warlock_eldritch_invocations"
@@ -9173,7 +10018,8 @@
                 }
               ],
               "profileId": "character-sheet.pact-slot-recovery",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "warlock_magical_cunning"
@@ -9192,7 +10038,8 @@
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "warlock_pact_magic"
@@ -9211,7 +10058,10 @@
                 }
               ],
               "profileId": "spell.invocation-web-restraint-hazard",
-              "profileKind": "spell-invocation"
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ]
             }
           ],
           "unitId": "web"
@@ -9230,7 +10080,8 @@
                 }
               ],
               "profileId": "character-sheet.short-rest-spell-slot-recovery",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "wizard_arcane_recovery"
@@ -9249,7 +10100,8 @@
                 }
               ],
               "profileId": "character-sheet.spellbook-ritual-invocation",
-              "profileKind": "character-sheet"
+              "profileKind": "character-sheet",
+              "qntOwners": []
             }
           ],
           "unitId": "wizard_ritual_adept"
@@ -9268,7 +10120,8 @@
                 }
               ],
               "profileId": "character-creation.skill-expertise-choice",
-              "profileKind": "character-creation"
+              "profileKind": "character-creation",
+              "qntOwners": []
             }
           ],
           "unitId": "wizard_scholar"
@@ -13590,7 +14443,7 @@
           "id": "unit-feature.bardic-inspiration-grant",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13605,7 +14458,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
             },
             {
               "kind": "runtime-test",
@@ -13617,7 +14470,7 @@
           "id": "unit-feature.bardic-inspiration-failed-d20-test",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -13631,7 +14484,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
             },
             {
               "kind": "runtime-test",
@@ -14313,7 +15166,7 @@
           "id": "unit-feature.druid-wild-shape-known-form",
           "profileKind": "stat-block-control",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14337,7 +15190,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
             },
             {
               "kind": "runtime-test",
@@ -17736,7 +18589,7 @@
           "id": "unit-feature.weapon-mastery-cleave",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17750,7 +18603,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -17801,7 +18654,8 @@
           "id": "unit-feature.weapon-mastery-sap",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+            "packages/battle-runtime/battle-runtime-timed-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17815,7 +18669,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -17862,7 +18716,7 @@
           "id": "unit-feature.weapon-mastery-topple",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17876,7 +18730,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
             },
             {
               "kind": "runtime-test",

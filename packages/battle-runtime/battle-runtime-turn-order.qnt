@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.initiative-proficiency-and-swap

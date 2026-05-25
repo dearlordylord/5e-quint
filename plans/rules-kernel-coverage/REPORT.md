@@ -264,6 +264,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` |
 | `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
+| `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
@@ -306,9 +307,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` | mbt-fixture | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
 | `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-turn-order.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
-| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
