@@ -113,8 +113,110 @@ remains.
     {
       "number": 17,
       "id": "C17-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next ultra-golden metric or MBT batch"
+    },
+    {
+      "number": 18,
+      "id": "C18-GENERATOR-READINESS-COMMAND-OPTION",
+      "status": "ready-for-research",
+      "title": "Classify Command option generator readiness"
+    },
+    {
+      "number": 19,
+      "id": "C19-GENERATOR-READINESS-SANCTUARY",
+      "status": "ready-for-research",
+      "title": "Classify Sanctuary targeting generator readiness"
+    },
+    {
+      "number": 20,
+      "id": "C20-GENERATOR-READINESS-AFTER-HIT-RIDERS",
+      "status": "ready-for-research",
+      "title": "Classify after-hit damage rider generator readiness"
+    },
+    {
+      "number": 21,
+      "id": "C21-GENERATOR-READINESS-SPELL-ATTACK-SEQUENCES",
+      "status": "ready-for-research",
+      "title": "Classify chained spell attack generator readiness"
+    },
+    {
+      "number": 22,
+      "id": "C22-GENERATOR-READINESS-CONDITION-IMMUNITY-THP",
+      "status": "ready-for-research",
+      "title": "Classify condition-immunity temporary-hit-point generator readiness"
+    },
+    {
+      "number": 23,
+      "id": "C23-GENERATOR-READINESS-CREATURE-TYPE-PROTECTION",
+      "status": "ready-for-research",
+      "title": "Classify creature-type protection generator readiness"
+    },
+    {
+      "number": 24,
+      "id": "C24-GENERATOR-READINESS-MAKE-STABLE",
+      "status": "ready-for-research",
+      "title": "Classify Make Stable generator readiness"
+    },
+    {
+      "number": 25,
+      "id": "C25-GENERATOR-READINESS-MARKED-DAMAGE-RIDER",
+      "status": "ready-for-research",
+      "title": "Classify marked damage rider generator readiness"
+    },
+    {
+      "number": 26,
+      "id": "C26-GENERATOR-READINESS-REACTION-CASTING-TIME",
+      "status": "ready-for-research",
+      "title": "Classify reaction casting-time generator readiness"
+    },
+    {
+      "number": 27,
+      "id": "C27-GENERATOR-READINESS-ROLL-MODIFIERS",
+      "status": "ready-for-research",
+      "title": "Classify roll modifier active-effect generator readiness"
+    },
+    {
+      "number": 28,
+      "id": "C28-GENERATOR-READINESS-SAVE-GATED-SPELLS",
+      "status": "ready-for-research",
+      "title": "Classify save-gated condition generator readiness"
+    },
+    {
+      "number": 29,
+      "id": "C29-GENERATOR-READINESS-SCALAR-BUFFS",
+      "status": "ready-for-research",
+      "title": "Classify scalar buff active-effect generator readiness"
+    },
+    {
+      "number": 30,
+      "id": "C30-GENERATOR-READINESS-SLEEP-REPEAT-SAVE",
+      "status": "ready-for-research",
+      "title": "Classify Sleep repeat-save generator readiness"
+    },
+    {
+      "number": 31,
+      "id": "C31-GENERATOR-READINESS-WEAPON-HOSTED-RIDERS",
+      "status": "ready-for-research",
+      "title": "Classify weapon-hosted spell rider generator readiness"
+    },
+    {
+      "number": 32,
+      "id": "C32-GENERATOR-READINESS-INDEPENDENT-ATTACK-SEQUENCE",
+      "status": "ready-for-research",
+      "title": "Classify independent spell attack generator readiness"
+    },
+    {
+      "number": 33,
+      "id": "C33-GENERATOR-READINESS-SAVE-GATED-ATTACK-ADVANTAGE",
+      "status": "ready-for-research",
+      "title": "Classify save-gated attack-advantage generator readiness"
+    },
+    {
+      "number": 34,
+      "id": "C34-GENERATOR-READINESS-BATCH-VERIFY",
+      "status": "ready-for-research",
+      "title": "Verify generator-readiness classification batch"
     }
   ]
 }
@@ -347,7 +449,7 @@ Result:
 
 ### Task 17 - C17-RECURSIVE-NEXT-BATCH - Mine next ultra-golden metric or MBT batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current metric reports and checker-owned artifacts after C16.
 
@@ -355,3 +457,319 @@ Output: append at least 12 new atomic runnable tasks or prove from generated
 reports that no ultra-golden metric/MBT work remains.
 
 Acceptance: plan has new runnable tasks or a concise durable closure note.
+
+Result:
+
+- Mined the checker-owned C17 artifacts. `ULTRA_GOLDEN_GATE.md` and
+  `LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` show support completeness,
+  MBT/parity evidence, and MCP scenario evidence passing for level 1 and
+  level 1-2, while QNT/generator readiness remains blocked with 27 scoped
+  rows.
+- The remaining scoped blockers are 11 `fixture-bound` rows that already point
+  to Lane A/B follow-up tasks, plus 16 `not-assessed` generator-readiness rows
+  with owner paths but no readiness classification. The next Lane C work is
+  therefore metric/readiness classification, not new SRD runtime support or a
+  new MBT evidence batch.
+- Appended C18-C33: 16 atomic classification tasks over the 16 unassessed
+  scoped obligations, plus C34 as the batch verification task.
+
+### Task 18 - C18-GENERATOR-READINESS-COMMAND-OPTION - Classify Command option generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-command-choice.qnt`, and
+`packages/battle-runtime/battle-runtime-ground-command.qnt`.
+
+Output: classify `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` in
+`generator-readiness.jsonl` with semantic-core/proof-only owners, generator
+subset tokens, blocker tokens, and follow-up task ids if extraction is needed.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 19 - C19-GENERATOR-READINESS-SANCTUARY - Classify Sanctuary targeting generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, and
+`packages/battle-runtime/battle-runtime-sanctuary.qnt`.
+
+Output: classify `BATTLE.SANCTUARY.TARGETING_INTERDICTION` in
+`generator-readiness.jsonl` with owner roles, subset tokens, blocker tokens, and
+follow-up task ids if extraction is needed.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 20 - C20-GENERATOR-READINESS-AFTER-HIT-RIDERS - Classify after-hit damage rider generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-concentration.qnt`,
+`packages/battle-runtime/battle-runtime-spell-invocation.qnt`, and
+`packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`.
+
+Output: classify `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` in
+`generator-readiness.jsonl`, preserving the distinction between reusable
+semantic cores and fixture or bridge-only owners.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 21 - C21-GENERATOR-READINESS-SPELL-ATTACK-SEQUENCES - Classify chained spell attack generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-chained-spell-attack.qnt`,
+`packages/battle-runtime/battle-runtime-spell-attack.qnt`, and
+`packages/battle-runtime/battle-runtime-spell-invocation.qnt`.
+
+Output: classify `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` in
+`generator-readiness.jsonl`, preserving any distinction between spell-attack
+core semantics and invocation bridge owners.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 22 - C22-GENERATOR-READINESS-CONDITION-IMMUNITY-THP - Classify condition-immunity temporary-hit-point generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-concentration.qnt`,
+`packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`, and
+`packages/battle-runtime/battle-runtime-timed-effects.qnt`.
+
+Output: classify
+`BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` in
+`generator-readiness.jsonl` with checked generator subset and blocker tokens.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 23 - C23-GENERATOR-READINESS-CREATURE-TYPE-PROTECTION - Classify creature-type protection generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, and
+`packages/battle-runtime/battle-runtime-creature-type-protection.qnt`.
+
+Output: classify
+`BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 24 - C24-GENERATOR-READINESS-MAKE-STABLE - Classify Make Stable generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, and
+`packages/battle-runtime/battle-runtime-hit-points.qnt`.
+
+Output: classify `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 25 - C25-GENERATOR-READINESS-MARKED-DAMAGE-RIDER - Classify marked damage rider generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-concentration.qnt`,
+`packages/battle-runtime/battle-runtime-marked-riders.qnt`, and
+`packages/battle-runtime/battle-runtime-marked-spells.qnt`.
+
+Output: classify `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 26 - C26-GENERATOR-READINESS-REACTION-CASTING-TIME - Classify reaction casting-time generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-reaction-window.qnt`, and
+`packages/battle-runtime/battle-runtime-spell-invocation.qnt`.
+
+Output: classify `BATTLE.SPELL.REACTION_CASTING_TIME` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 27 - C27-GENERATOR-READINESS-ROLL-MODIFIERS - Classify roll modifier active-effect generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`, and
+`packages/battle-runtime/battle-runtime-thaumaturgy.qnt`.
+
+Output: classify `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 28 - C28-GENERATOR-READINESS-SAVE-GATED-SPELLS - Classify save-gated condition generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-save-gated-spell.qnt`,
+`packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`, and
+`packages/battle-runtime/battle-runtime-spell-attack.qnt`.
+
+Output: classify `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` in
+`generator-readiness.jsonl`, preserving any distinction between save-gate core
+semantics and Sleep/Hideous Laughter lifecycle fixtures.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 29 - C29-GENERATOR-READINESS-SCALAR-BUFFS - Classify scalar buff active-effect generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, and
+`packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`.
+
+Output: classify `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 30 - C30-GENERATOR-READINESS-SLEEP-REPEAT-SAVE - Classify Sleep repeat-save generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, and
+`packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`.
+
+Output: classify `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 31 - C31-GENERATOR-READINESS-WEAPON-HOSTED-RIDERS - Classify weapon-hosted spell rider generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-light.qnt`,
+`packages/battle-runtime/battle-runtime-spell-invocation.qnt`,
+`packages/battle-runtime/battle-runtime-weapon-attacks.qnt`, and
+`packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`.
+
+Output: classify `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` in
+`generator-readiness.jsonl`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 32 - C32-GENERATOR-READINESS-INDEPENDENT-ATTACK-SEQUENCE - Classify independent spell attack generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-spell-attack.qnt`, and
+`packages/battle-runtime/battle-runtime-spell-invocation.qnt`.
+
+Output: classify `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` in
+`generator-readiness.jsonl`, preserving any distinction between reusable
+multi-attack sequence semantics and invocation fixture ownership.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 33 - C33-GENERATOR-READINESS-SAVE-GATED-ATTACK-ADVANTAGE - Classify save-gated attack-advantage generator readiness
+
+Status: `ready-for-research`
+
+Input:
+`plans/unit-profile-coverage/ultra-golden-gate.json`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`,
+`packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, and
+`packages/battle-runtime/battle-runtime-spell-attack.qnt`.
+
+Output: classify `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` in
+`generator-readiness.jsonl`, preserving any distinction between save-gate core
+semantics and attack-roll advantage projection fixtures.
+
+Acceptance: `pnpm rules-kernel-coverage:check` remains green and the row is no
+longer `not-assessed`.
+
+### Task 34 - C34-GENERATOR-READINESS-BATCH-VERIFY - Verify generator-readiness classification batch
+
+Status: `ready-for-research`
+
+Input: C18-C33 results, `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`,
+`plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`,
+`plans/rules-kernel-coverage/generator-readiness.jsonl`, and
+`plans/rules-kernel-coverage/REPORT.md`.
+
+Output: refresh and verify checker-owned reports after the generator-readiness
+classification batch. If the ultra-golden gate is still blocked, record only
+durable blockers with owning follow-up tasks; do not implement runtime feature
+support in this verification task.
+
+Acceptance: `pnpm unit-profile-coverage:check && pnpm rules-kernel-coverage:check`
+green; Task 34 result records whether QNT/generator readiness is complete or
+which non-C-lane follow-up remains.
