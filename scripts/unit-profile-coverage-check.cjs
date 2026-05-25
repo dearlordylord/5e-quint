@@ -146,6 +146,8 @@ function main() {
     level12FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
+    selectedIdentityMbtEvidenceTag,
+    unitMatrix: matrix,
   });
   const level12QntMbtJoin = buildLevel12QntMbtJoin({
     level12FullSupport,
