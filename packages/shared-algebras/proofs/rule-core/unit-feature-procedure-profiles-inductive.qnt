@@ -14,6 +14,7 @@ module unitFeatureProcedureProfilesInductive {
   import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
   import unitFeatureRageRecklessCore.* from "./unit-feature-rage-reckless-core"
   import unitFeatureAttackRiderCore.* from "./unit-feature-attack-rider-core"
+  import unitFeatureSaveDamageCore.* from "./unit-feature-save-damage-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota
@@ -432,9 +433,9 @@ module unitFeatureProcedureProfilesInductive {
     nondet savingThrowSucceeded = Set(true, false).oneOf()
     nondet incapacitated = Set(true, false).oneOf()
     all {
-      qLastDamageAmount' = saveDamageAfterEvasionReplacement({
+      qLastDamageAmount' = saveDamageAfterSuccessToZeroFailureToHalfReplacement({
         savingThrowAbility: DexteritySavingThrowFact,
-        normalSuccessTakesHalfDamage: true,
+        normalSuccessfulSavingThrowDamage: HalfDamageOnSuccessfulSavingThrow,
         savingThrowSucceeded: savingThrowSucceeded,
         incapacitated: incapacitated,
       }, 20),

@@ -741,7 +741,7 @@
       "id": "unit-feature.passive-saving-throw-roll-mode",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -1032,7 +1032,7 @@
       "id": "unit-feature.save-damage-replacement",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1042,7 +1042,7 @@
         "QCORE9",
         "QMBT4"
       ],
-      "title": "Unit feature replaces Dexterity half-damage save outcomes",
+      "title": "Unit feature replaces Dexterity half-damage Saving Throw outcomes",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -13375,7 +13375,7 @@
           "id": "unit-feature.passive-saving-throw-roll-mode",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -15317,7 +15317,7 @@
           "id": "unit-feature.save-damage-replacement",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -15327,7 +15327,7 @@
             "QCORE9",
             "QMBT4"
           ],
-          "title": "Unit feature replaces Dexterity half-damage save outcomes",
+          "title": "Unit feature replaces Dexterity half-damage Saving Throw outcomes",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

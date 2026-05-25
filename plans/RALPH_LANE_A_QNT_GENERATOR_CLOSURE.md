@@ -254,7 +254,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 41,
       "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split unit feature Saving Throw and save-damage core"
     },
     {
@@ -413,7 +413,7 @@ Lane A must not:
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | done | A34 | Action Surge and Extra Attack action-count facts now live in a focused generator-facing core. |
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | done | A34 | Rage, Reckless Attack, and Frenzy facts now live in a focused generator-facing core. |
 | 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | done | A34 | Attack-roll and damage-rider facts now live in a focused generator-facing core. |
-| 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | ready-for-research | A34 | Extract Evasion, Danger Sense, and save-damage replacement facts. |
+| 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | done | A34 | Evasion, Danger Sense, and save-damage replacement facts now live in a focused generator-facing core. |
 | 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | ready-for-research | A34 | Extract Cutting Words, Uncanny Dodge, and Deflect Attacks reaction facts. |
 | 43 | A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core | ready-for-research | A34 | Extract passive Armor Class, Speed, and speed-kind grant facts. |
 | 44 | A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core | ready-for-research | A34 | Extract Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus Unarmed Strike facts. |
@@ -1002,7 +1002,7 @@ enough for generator input.
 
 ### Task 41 - A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,

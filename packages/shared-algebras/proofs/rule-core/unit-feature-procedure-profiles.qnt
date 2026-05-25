@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.zero-hit-point-replacement
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.zero-hit-point-replacement
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -13,8 +13,7 @@ module unitFeatureProcedureProfiles {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Classes/Rogue.md: Cunning Action, Evasion, Uncanny Dodge.
-  // - Classes/Barbarian.md: Danger Sense.
+  // - Classes/Rogue.md: Cunning Action and Uncanny Dodge.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Classes/Sorcerer.md: Innate Sorcery activation.
   // - Classes/Monk.md: Martial Arts attack projection, Unarmored Movement,
@@ -24,27 +23,6 @@ module unitFeatureProcedureProfiles {
   // - Playing-the-Game.md: Bonus Actions, Reactions, Damage Rolls, Dropping to
   //   0 Hit Points, Instant Death, Saving Throws and Damage, Resistance and
   //   Vulnerability.
-
-  type SavingThrowAbilityFact =
-    | StrengthSavingThrowFact
-    | DexteritySavingThrowFact
-    | ConstitutionSavingThrowFact
-
-  type PassiveSavingThrowRollMode =
-    | NormalSavingThrowMode
-    | AdvantageSavingThrowMode
-
-  type PassiveSavingThrowRollModeFacts = {
-    savingThrowAbility: SavingThrowAbilityFact,
-    incapacitated: bool,
-  }
-
-  type SaveDamageReplacementFacts = {
-    savingThrowAbility: SavingThrowAbilityFact,
-    normalSuccessTakesHalfDamage: bool,
-    savingThrowSucceeded: bool,
-    incapacitated: bool,
-  }
 
   type ReactionRollReductionKind =
     | CuttingWordsAttackRollReduction
@@ -429,28 +407,6 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  pure def saveDamageAfterEvasionReplacement(
-    facts: SaveDamageReplacementFacts,
-    normalFailedSaveDamage: int
-  ): int =
-    if (all {
-      facts.savingThrowAbility == DexteritySavingThrowFact,
-      facts.normalSuccessTakesHalfDamage,
-      not(facts.incapacitated),
-    }) {
-      if (facts.savingThrowSucceeded) 0 else normalFailedSaveDamage / 2
-    } else {
-      if (facts.savingThrowSucceeded and facts.normalSuccessTakesHalfDamage)
-      normalFailedSaveDamage / 2
-      else normalFailedSaveDamage
-    }
-
-  pure def passiveSavingThrowRollMode(facts: PassiveSavingThrowRollModeFacts): PassiveSavingThrowRollMode =
-    if (facts.savingThrowAbility == DexteritySavingThrowFact and not(facts.incapacitated))
-      AdvantageSavingThrowMode
-    else
-      NormalSavingThrowMode
-
   pure def cuttingWordsRollTotalAfterReduction(facts: CuttingWordsRollFacts): int =
     nonnegative(facts.originalTotal - facts.bardicDieRoll)
 
@@ -581,49 +537,6 @@ module unitFeatureProcedureProfiles {
       reducedAmount:
         if (admitted) uncannyDodgeDamage(facts)
         else nonnegative(facts.incomingDamage),
-    }
-  }
-
-  run test_evasion_replaces_dexterity_save_damage_only_when_not_incapacitated = {
-    val success = saveDamageAfterEvasionReplacement({
-      savingThrowAbility: DexteritySavingThrowFact,
-      normalSuccessTakesHalfDamage: true,
-      savingThrowSucceeded: true,
-      incapacitated: false,
-    }, 20)
-    val failure = saveDamageAfterEvasionReplacement({
-      savingThrowAbility: DexteritySavingThrowFact,
-      normalSuccessTakesHalfDamage: true,
-      savingThrowSucceeded: false,
-      incapacitated: false,
-    }, 20)
-    val incapacitated = saveDamageAfterEvasionReplacement({
-      savingThrowAbility: DexteritySavingThrowFact,
-      normalSuccessTakesHalfDamage: true,
-      savingThrowSucceeded: true,
-      incapacitated: true,
-    }, 20)
-    all {
-      assert(success == 0),
-      assert(failure == 10),
-      assert(incapacitated == 10),
-    }
-  }
-
-  run test_danger_sense_grants_dexterity_saving_throw_advantage_when_not_incapacitated = {
-    all {
-      assert(passiveSavingThrowRollMode({
-        savingThrowAbility: DexteritySavingThrowFact,
-        incapacitated: false,
-      }) == AdvantageSavingThrowMode),
-      assert(passiveSavingThrowRollMode({
-        savingThrowAbility: DexteritySavingThrowFact,
-        incapacitated: true,
-      }) == NormalSavingThrowMode),
-      assert(passiveSavingThrowRollMode({
-        savingThrowAbility: ConstitutionSavingThrowFact,
-        incapacitated: false,
-      }) == NormalSavingThrowMode),
     }
   }
 
