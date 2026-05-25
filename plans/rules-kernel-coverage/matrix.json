@@ -5934,7 +5934,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY",
         "A37-UNIT-FEATURE-POOL-COST-CORE",
         "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
         "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
@@ -6014,12 +6013,41 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6062,36 +6090,152 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A53-BATTLE-RUNTIME-COMPANION-FORM-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A53-BATTLE-RUNTIME-COMPANION-FORM-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6102,12 +6246,41 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6118,12 +6291,41 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6134,124 +6336,559 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A54-BATTLE-RUNTIME-BLUR-DEFENSE-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6413,12 +7050,41 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A55-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6632,20 +7298,78 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "bridge-projection-coupled"
+      ],
+      "followUpTaskIds": [
+        "A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "list",
+        "map",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6657,28 +7381,6 @@
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
       "ownerRoles": [
@@ -6750,60 +7452,10 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
           "role": "semantic-core"
         }
       ],
@@ -6820,170 +7472,10 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
           "role": "semantic-core"
         }
       ],
@@ -7210,20 +7702,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
       "ownerRoles": [
         {
@@ -7262,26 +7740,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
           "role": "semantic-core"
         }
       ],

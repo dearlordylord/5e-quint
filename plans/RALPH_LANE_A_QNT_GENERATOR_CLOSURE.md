@@ -218,7 +218,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 35,
       "id": "A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Survey battle-runtime mega-owner readiness split"
     },
     {
@@ -286,6 +286,60 @@ or prove from checker-owned artifacts that no such work remains.
       "id": "A46-MONK-FOCUS-BATTLE-CORE",
       "status": "ready-for-research",
       "title": "Split Monk Focus battle option core"
+    },
+    {
+      "number": 47,
+      "id": "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Close existing battle-runtime composite slice owner markers"
+    },
+    {
+      "number": 48,
+      "id": "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE",
+      "status": "ready-for-research",
+      "title": "Split light emitter and held object lifecycle core"
+    },
+    {
+      "number": 49,
+      "id": "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE",
+      "status": "ready-for-research",
+      "title": "Split ground, obscurement, and restraint hazard core"
+    },
+    {
+      "number": 50,
+      "id": "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE",
+      "status": "ready-for-research",
+      "title": "Split movement and reaction spell lifecycle core"
+    },
+    {
+      "number": 51,
+      "id": "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE",
+      "status": "ready-for-research",
+      "title": "Split object-contact and ongoing spell ending core"
+    },
+    {
+      "number": 52,
+      "id": "A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE",
+      "status": "ready-for-research",
+      "title": "Split Dragon's Breath effect and granted action core"
+    },
+    {
+      "number": 53,
+      "id": "A53-BATTLE-RUNTIME-COMPANION-FORM-CORE",
+      "status": "ready-for-research",
+      "title": "Split companion and form lifecycle core"
+    },
+    {
+      "number": 54,
+      "id": "A54-BATTLE-RUNTIME-BLUR-DEFENSE-CORE",
+      "status": "ready-for-research",
+      "title": "Split Blur attack-roll defense lifecycle core"
+    },
+    {
+      "number": 55,
+      "id": "A55-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Classify ability-check and Search hole readiness"
     }
   ]
 }
@@ -353,7 +407,7 @@ Lane A must not:
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | done | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | done | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | done | A24,A26 | Classified unit feature procedure readiness as fixture-bound and split blockers into A37-A46 follow-ups. |
-| 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
+| 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | done | A24,A25 | Classified broad `battle-runtime.qnt` ownership into slice cleanup, generator-readiness split tasks, and boundary classification. |
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | ready-for-research | A28 | Extract reusable direct Hit Point restoration facts from the spell procedure fixture world. |
 | 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | ready-for-research | A34 | Extract feature use pools, Bonus Action costs, and resource-spend facts from unit feature procedure profiles. |
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | ready-for-research | A34 | Extract Action Surge and Extra Attack action-count facts without run blocks. |
@@ -365,6 +419,15 @@ Lane A must not:
 | 44 | A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core | ready-for-research | A34 | Extract Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus Unarmed Strike facts. |
 | 45 | A45-UNIT-FEATURE-ZERO-HP-CORE - Split zero-Hit-Point feature replacement core | ready-for-research | A34 | Extract Relentless Endurance and zero-Hit-Point replacement facts. |
 | 46 | A46-MONK-FOCUS-BATTLE-CORE - Split Monk Focus battle option core | ready-for-research | A34 | Extract Flurry of Blows, Patient Defense, Step of the Wind, and Focus Point facts from the battle-runtime Monk owner. |
+| 47 | A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE - Close existing battle-runtime composite slice owner markers | ready-for-research | A35 | Move already-sliced Direct Condition, Flaming Sphere, and Moonbeam readiness away from the broad owner. |
+| 48 | A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE - Split light emitter and held object lifecycle core | ready-for-research | A35 | Extract object light, held light, spell-created held object, and Dancing Lights lifecycle facts. |
+| 49 | A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE - Split ground, obscurement, and restraint hazard core | ready-for-research | A35 | Extract Grease, Web, Fog Cloud, and Darkness spatial hazard facts without table spatial policy. |
+| 50 | A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE - Split movement and reaction spell lifecycle core | ready-for-research | A35 | Extract Expeditious Retreat, Feather Fall, Jump, forced Reaction movement, and self-teleport facts. |
+| 51 | A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE - Split object-contact and ongoing spell ending core | ready-for-research | A35 | Extract Heat Metal, Dispel Magic, and Antimagic Field state transition facts. |
+| 52 | A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE - Split Dragon's Breath effect and granted action core | ready-for-research | A35 | Extract Dragon's Breath initial effect state and granted Magic action damage facts. |
+| 53 | A53-BATTLE-RUNTIME-COMPANION-FORM-CORE - Split companion and form lifecycle core | ready-for-research | A35 | Extract Find Familiar companion lifecycle and Wild Shape form lifecycle facts. |
+| 54 | A54-BATTLE-RUNTIME-BLUR-DEFENSE-CORE - Split Blur attack-roll defense lifecycle core | ready-for-research | A35 | Extract Blur roll-defense lifecycle facts and bypass witnesses. |
+| 55 | A55-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE - Classify ability-check and Search hole readiness | ready-for-research | A35 | Decide whether the hole-frontier row is generator input, bridge-boundary evidence, or slice cleanliness work. |
 
 ## Task Details
 
@@ -802,7 +865,7 @@ point to the relevant split tasks instead of the monolithic survey.
 
 ### Task 35 - A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: covered obligations currently owned by
 `packages/battle-runtime/battle-runtime.qnt`, the generated `REPORT.md`, and
@@ -814,6 +877,21 @@ atomic tasks. Keep production reducer behavior unchanged.
 
 Acceptance: append concrete follow-up tasks or record a checker-backed reason
 no further split is needed; checker passes.
+
+Result: `battle-runtime.qnt` remains a broad semantic owner, not an atomic
+generator input. Existing slice work already owns Direct Condition, Flaming
+Sphere, and Moonbeam parity; A47 should close those owner markers and readiness
+rows without reducer changes. The remaining broad-owner rows split by SRD
+procedure invariant: A48 owns light emitter and held-object lifecycles; A49
+owns ground, obscurement, and restraint hazards; A50 owns movement and
+Reaction-movement spell lifecycles; A51 owns object-contact damage and ongoing
+spell ending/suppression; A52 owns Dragon's Breath initial effect state and
+granted action; A53 owns companion/form lifecycles; A54 owns Blur's attack-roll
+defense lifecycle; and A55 owns the non-spell ability-check/Search hole
+classification. A37-A46 continue to own the feature-procedure subset already
+split by Task 34. The checker-owned readiness rows for these broad-owner
+obligations are `fixture-bound` with `bridge-projection-coupled` until the
+focused owners replace or classify the broad runtime marker.
 
 ### Task 36 - A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core
 
@@ -1001,6 +1079,170 @@ Acceptance: `battle-runtime-monk-focus.qnt` no longer blocks generator
 readiness through run tests, the split core preserves battle-state parity, and
 no selected Monk feature identity policy is added.
 
+### Task 47 - A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE - Close existing battle-runtime composite slice owner markers
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`,
+`BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`,
+`BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, the existing slice QNT/MBT
+files, `qnt-owner-roles.jsonl`, and `generator-readiness.jsonl`.
+
+Output: update owner roles and readiness rows so already-sliced composite
+semantics point at the focused slice owners rather than treating
+`battle-runtime.qnt` as generator input. Do not change reducer behavior.
+
+Acceptance: checker passes, the generated report no longer lists these rows as
+unassessed because of the broad owner, and any remaining broad owner is
+documented as integration/slice cleanliness rather than generator-readiness
+input.
+
+### Task 48 - A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE - Split light emitter and held object lifecycle core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE`,
+`BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE`,
+`BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE`,
+`BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE`,
+`battle-runtime.qnt`, and the SRD Light, Continual Flame, Produce Flame, Flame
+Blade, and Dancing Lights passages.
+
+Output: extract generator-facing lifecycle facts for emitted light, held spell
+objects, recast replacement, hurl/release cleanup, duration cleanup, and
+Concentration ownership. Keep table spatial presentation, object inspection,
+and target placement as witnesses or boundary facts.
+
+Acceptance: the new core is run-block-free, readiness rows point to the split
+owner instead of the broad runtime file, and no authored spell identity dispatch
+is introduced.
+
+### Task 49 - A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE - Split ground, obscurement, and restraint hazard core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`,
+`BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE`,
+`BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`,
+`BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`,
+`battle-runtime.qnt`, and the SRD Grease, Web, Fog Cloud, and Darkness
+passages.
+
+Output: extract area lifecycle facts for Difficult Terrain, restraint saves,
+Prone application, obscurement or Darkness projection, Concentration, and
+cleanup. Preserve table-owned spatial membership, origin placement, and
+visibility/light witnesses as explicit fills.
+
+Acceptance: the split core contains no run blocks, generator readiness no
+longer depends on `battle-runtime.qnt` for these hazard facts, and slice or MBT
+work remains bounded to the hazard transitions.
+
+### Task 50 - A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE - Split movement and reaction spell lifecycle core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`,
+`BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE`,
+`BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE`,
+`BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE`,
+`BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE`, `battle-runtime.qnt`, and the SRD
+Expeditious Retreat, Feather Fall, Jump, Dissonant Whispers, and Misty Step
+passages.
+
+Output: extract movement permission, Reaction-window, landing cleanup,
+forced-movement continuation, teleport witness, and turn-cost facts into
+focused semantic cores. Keep route, elevation, destination legality, and
+Opportunity Attack spatial facts at the table/fill boundary.
+
+Acceptance: readiness rows identify focused owners, no Movement/Speed facts are
+duplicated beside their source facts, and any remaining work is explicitly
+classified as composite-slice or integration MBT rather than generator input.
+
+### Task 51 - A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE - Split object-contact and ongoing spell ending core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE`,
+`BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`,
+`BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION`, `battle-runtime.qnt`, and
+the SRD Heat Metal, Dispel Magic, and Antimagic Field passages.
+
+Output: extract object-contact occurrence state, repeat damage, drop/save
+outcomes, target-scoped ongoing spell ending, higher-level check gating, and
+suppression-without-deletion facts. Keep object identity, physical contact,
+range, and emanation membership as witnesses.
+
+Acceptance: the extracted facts are run-block-free, readiness rows stop using
+the broad runtime file as generator input, and suppression/ending semantics do
+not collapse provenance, structured input, and runtime projection.
+
+### Task 52 - A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE - Split Dragon's Breath effect and granted action core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE`,
+`BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `battle-runtime.qnt`, and the SRD
+Dragon's Breath, Cone, and Concentration passages.
+
+Output: extract target-attached effect state, retained damage type, granted
+Magic action availability, Cone save-for-half damage, action spend, and
+Concentration cleanup facts into focused semantic cores.
+
+Acceptance: initial-effect and granted-action readiness are split from the
+broad runtime owner, table-owned Cone membership remains a witness, and the
+runtime reducer behavior is unchanged.
+
+### Task 53 - A53-BATTLE-RUNTIME-COMPANION-FORM-CORE - Split companion and form lifecycle core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`,
+`BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE`, `battle-runtime.qnt`, and the SRD
+Find Familiar, Pact of the Chain, Wild Shape, Shape-Shifting, and Temporary Hit
+Points passages.
+
+Output: split companion lifecycle, replacement, touch delivery/reaction attack
+state, form-stat projection, form Temporary Hit Points, spellcasting
+restriction, and supported revert facts without adding selected identity
+policy.
+
+Acceptance: generator readiness identifies focused semantic owners or concrete
+non-generator boundary reasons, companion/form authored identity remains a
+selection boundary, and table-owned form choice or familiar tactics are not
+modeled as runtime decisions.
+
+### Task 54 - A54-BATTLE-RUNTIME-BLUR-DEFENSE-CORE - Split Blur attack-roll defense lifecycle core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`,
+`battle-runtime.qnt`, and the SRD Blur, Blindsight, and Truesight passages.
+
+Output: extract self-effect state, Attack Roll Disadvantage projection,
+bypass-witness handling, roll-mode cancellation, Concentration, and cleanup
+facts into a focused semantic core.
+
+Acceptance: the core is independent of authored spell identity, contains no
+run blocks, and the readiness row distinguishes roll-defense facts from
+general active-effect lifecycle plumbing.
+
+### Task 55 - A55-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE - Classify ability-check and Search hole readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `battle-runtime.qnt`,
+`battle-runtime-roll-modifier-choice.qnt`, `kernel-ir-boundaries.jsonl`, and
+the QCP composite-slice rules.
+
+Output: determine whether this row has generator-facing semantic input,
+bridge-boundary evidence, or only deterministic replay/slice cleanliness work.
+Update readiness and boundary rows accordingly without changing reducer hole
+protocol.
+
+Acceptance: checker passes and the generated report no longer leaves the row
+`not-assessed`; if it is not generator input, the reason is encoded in the
+coverage artifacts rather than buried in plan prose.
+
 ## Verification
 
 - `pnpm --filter @dnd/shared-algebras exec quint test proofs/rule-core/spell-procedure-profiles-examples.qnt`
@@ -1102,7 +1344,7 @@ no selected Monk feature identity policy is added.
   `attack-damage-composition.qnt`, `damage-component-adjustments.qnt`,
   `shove-outcome.qnt`, `stat-block-controls.qnt`, `hit-point-recovery.qnt`,
   `unit-feature-procedure-profiles.qnt`, and the broad
-  `battle-runtime.qnt` owner. A24-A36 turn that discovery into checker and
+  `battle-runtime.qnt` owner. A24-A55 turn that discovery into checker and
   readiness tasks instead of treating the clean readiness rows as proof of
   generator-readiness exhaustion.
 - Task 34 survey: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` is
@@ -1123,3 +1365,14 @@ no selected Monk feature identity policy is added.
   `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` also cite the unit feature owner, so
   those rows must stay fixture-bound or not-assessed until the relevant split
   owner replaces the monolithic file.
+- Task 35 survey: checker-owned `REPORT.md` lists `battle-runtime.qnt` as a
+  semantic owner for 26 covered obligations. The checker-owned readiness rows
+  now classify the broad-owner rows as `fixture-bound` on
+  `bridge-projection-coupled` and point each row at A47-A55. Three are existing
+  composite-slice cleanup/readiness-closure work (Direct Condition, Flaming
+  Sphere, Moonbeam); one is a hole-frontier classification
+  (`BATTLE.ABILITY_CHECK...`); the rest require future atomic or focused
+  semantic-core split tasks by SRD procedure invariant. This keeps QCP
+  composite slice work separate from generator-readiness extraction and avoids
+  treating the broad promoted battle spec as a generator input just because it
+  is the canonical runtime parity owner.
