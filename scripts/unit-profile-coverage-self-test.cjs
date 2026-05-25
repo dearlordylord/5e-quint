@@ -30,7 +30,11 @@ const {
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
-const { validateMcpScenarioEvidence } = require("./ultra-golden-gate.cjs");
+const {
+  buildUltraGoldenGate,
+  renderUltraGoldenGate,
+  validateMcpScenarioEvidence,
+} = require("./ultra-golden-gate.cjs");
 const {
   buildSpellProcedureMbtEvidenceGate,
 } = require("./spell-procedure-mbt-evidence-gate.cjs");
@@ -202,6 +206,55 @@ function assertAuthoredReadinessBlocked(readiness, expected) {
   }
 }
 
+function fullSupportReportFixture({
+  claimGate,
+  rulesKernelSupportedUnitJoin,
+  scopeTitle,
+}) {
+  return {
+    scope: { title: scopeTitle },
+    metrics: {
+      strictTargetClosure:
+        claimGate.strictTargetOpenCount === 0
+          ? { denominator: 1, numerator: 1, percent: "100%" }
+          : { denominator: 1, numerator: 0, percent: "0%" },
+    },
+    selectedIdentityReadiness: {
+      metrics:
+        claimGate.selectedIdentityBlockerCount === 0
+          ? { denominator: 1, numerator: 1, percent: "100%" }
+          : { denominator: 1, numerator: 0, percent: "0%" },
+    },
+    srdAuthoredProductReadiness: {
+      metrics:
+        claimGate.authoredReadinessBlockerCount === 0
+          ? { denominator: 1, numerator: 1, percent: "100%" }
+          : { denominator: 1, numerator: 0, percent: "0%" },
+    },
+    claimGate,
+    groups: [],
+    rulesKernelSupportedUnitJoin,
+  };
+}
+
+function requireSelfTestScope(gate, scopeId) {
+  const scope = gate.scopes.find((entry) => entry.scopeId === scopeId);
+  if (scope === undefined) {
+    fail(`Self-test failed: expected ultra-golden scope ${scopeId}.`);
+  }
+  return scope;
+}
+
+function requireSelfTestLayer(scope, layerId) {
+  const layer = scope.layers.find((entry) => entry.id === layerId);
+  if (layer === undefined) {
+    fail(
+      `Self-test failed: expected ultra-golden layer ${layerId} in ${scope.scopeId}.`,
+    );
+  }
+  return layer;
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -263,6 +316,124 @@ function runSelfTest(root) {
       fail(
         `Self-test failed: expected invalid MCP witness kind issue ${JSON.stringify(expectedMcpScenarioIssue)}, got ${JSON.stringify(invalidMcpScenarioIssues)}`,
       );
+    }
+    const incompleteLevelReport = fullSupportReportFixture({
+      scopeTitle: "Fixture incomplete level",
+      claimGate: {
+        status: "blocked",
+        strictTargetOpenCount: 1,
+        selectedIdentityBlockerCount: 1,
+        authoredReadinessBlockerCount: 1,
+      },
+      rulesKernelSupportedUnitJoin: {
+        units: [
+          {
+            unitId: "fixture_incomplete_unit",
+            profiles: [
+              {
+                profileId: "fixture.incomplete-profile",
+                obligations: [
+                  {
+                    obligationId: "BATTLE.FIXTURE.INCOMPLETE",
+                    runtime: "battle",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const completeLevelReport = fullSupportReportFixture({
+      scopeTitle: "Fixture complete level",
+      claimGate: {
+        status: "pass",
+        strictTargetOpenCount: 0,
+        selectedIdentityBlockerCount: 0,
+        authoredReadinessBlockerCount: 0,
+      },
+      rulesKernelSupportedUnitJoin: { units: [] },
+    });
+    const ultraGoldenGate = buildUltraGoldenGate({
+      level1FullSupport: incompleteLevelReport,
+      level12FullSupport: completeLevelReport,
+      mcpScenarioEvidence: {
+        check: {
+          packageName: "@dnd/mcp",
+          script: "test:mcp-scenario-evidence",
+        },
+        requiredFlows: [
+          {
+            flowId: "fixture-missing-flow",
+            scopeIds: ["level-1"],
+            followUpTaskId: "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+            description: "fixture missing scenario evidence",
+          },
+        ],
+        evidence: [],
+      },
+      rulesKernelMatrix: {
+        obligations: [
+          {
+            id: "BATTLE.FIXTURE.INCOMPLETE",
+            runtime: "battle",
+            status: "boundary-only",
+            parityWitnesses: [],
+          },
+        ],
+        generatorReadiness: [],
+        qntOwnerRoles: [
+          {
+            ownerPath: "fixture/incomplete.qnt",
+            role: "semantic-core",
+            obligationIds: ["BATTLE.FIXTURE.INCOMPLETE"],
+          },
+        ],
+      },
+      selectedIdentityMbtEvidenceTag,
+      unitMatrix: { units: [] },
+    });
+    const incompleteScope = requireSelfTestScope(ultraGoldenGate, "level-1");
+    const completeScope = requireSelfTestScope(ultraGoldenGate, "level-1-2");
+    if (
+      ultraGoldenGate.status !== "blocked" ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
+      incompleteScope.status !== "blocked" ||
+      completeScope.status !== "pass" ||
+      incompleteScope.layerResult.completeLayers !== 0 ||
+      incompleteScope.layerResult.totalLayers !== 4
+    ) {
+      fail(
+        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer and leave level-1-2 pass, got ${JSON.stringify(ultraGoldenGate)}`,
+      );
+    }
+    for (const fixtureLayerId of [
+      "support-completeness",
+      "qnt-generator-readiness",
+      "mbt-parity-evidence",
+      "mcp-scenario-evidence",
+    ]) {
+      const layer = requireSelfTestLayer(incompleteScope, fixtureLayerId);
+      if (layer.status !== "blocked" || layer.blockingCount < 1) {
+        fail(
+          `Self-test failed: expected incomplete ultra-golden layer ${fixtureLayerId} to report blockers, got ${JSON.stringify(layer)}`,
+        );
+      }
+    }
+    const renderedUltraGoldenGate = renderUltraGoldenGate(ultraGoldenGate);
+    for (const expectedRow of [
+      "Ultra-golden gate: **blocked**.",
+      "| level-1 | support-completeness | blocked |",
+      "| level-1 | qnt-generator-readiness | blocked |",
+      "| level-1 | mbt-parity-evidence | blocked |",
+      "| level-1 | mcp-scenario-evidence | blocked |",
+      "| level-1-2 | pass | 4/4 | 0 |",
+    ]) {
+      if (!renderedUltraGoldenGate.includes(expectedRow)) {
+        fail(
+          `Self-test failed: expected rendered ultra-golden gate row ${JSON.stringify(expectedRow)}, got ${JSON.stringify(renderedUltraGoldenGate)}`,
+        );
+      }
     }
 
     const specPath = path.join(tempDir, "fixture.mbt.qnt");

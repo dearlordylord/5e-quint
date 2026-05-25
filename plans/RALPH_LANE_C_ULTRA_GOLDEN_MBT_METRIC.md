@@ -101,7 +101,7 @@ remains.
     {
       "number": 15,
       "id": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add ultra-golden checker regression coverage"
     },
     {
@@ -316,11 +316,17 @@ Result:
 
 ### Task 15 - C15-ULTRA-GOLDEN-CHECKER-REGRESSION - Add ultra-golden checker regression coverage
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: checker self-test proving incomplete layers are reported as incomplete.
 
 Acceptance: regression fails before the new gate and passes after.
+
+Result:
+
+- Added a checker self-test fixture proving incomplete ultra-golden scopes report
+  support completeness, QNT/generator readiness, MBT/parity evidence, and MCP
+  scenario evidence as blocked while an adjacent complete scope still passes.
 
 ### Task 16 - C16-END-TO-END-ULTRA-GOLDEN-VERIFY - Verify ultra-golden gate and focused MCP/MBT checks
 
