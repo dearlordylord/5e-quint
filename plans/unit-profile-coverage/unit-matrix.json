@@ -439,7 +439,7 @@
       "id": "unit-feature.attack-damage-rider",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
       ],
       "runtimeOwners": [
@@ -683,7 +683,7 @@
       "id": "unit-feature.passive-ranged-attack-roll-bonus",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -773,7 +773,7 @@
       "id": "unit-feature.attack-roll-miss-to-hit-replacement",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -850,7 +850,7 @@
       "id": "unit-feature.weapon-damage-dice-roll-choice",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1159,7 +1159,7 @@
       "id": "unit-feature.weapon-critical-range-19",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -13074,7 +13074,7 @@
           "id": "unit-feature.weapon-critical-range-19",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -13139,7 +13139,7 @@
           "id": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
             "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
@@ -15520,7 +15520,7 @@
           "id": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
             "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
           ],
           "runtimeOwners": [
@@ -16678,7 +16678,7 @@
           "id": "unit-feature.passive-ranged-attack-roll-bonus",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16739,7 +16739,7 @@
           "id": "unit-feature.attack-roll-miss-to-hit-replacement",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -16982,7 +16982,7 @@
           "id": "unit-feature.weapon-damage-dice-roll-choice",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

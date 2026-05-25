@@ -248,7 +248,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 40,
       "id": "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split unit feature attack roll and damage rider core"
     },
     {
@@ -412,10 +412,10 @@ Lane A must not:
 | 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | done | A34 | Feature Pool, Bonus Action turn-cost, and immediate resource-spend facts now live in a focused generator-facing core. |
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | done | A34 | Action Surge and Extra Attack action-count facts now live in a focused generator-facing core. |
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | done | A34 | Rage, Reckless Attack, and Frenzy facts now live in a focused generator-facing core. |
-| 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | ready-for-research | A34 | Extract Sneak Attack, Improved Critical, Savage Attacker, Archery, and miss-to-hit replacement facts. |
+| 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | done | A34 | Attack-roll and damage-rider facts now live in a focused generator-facing core. |
 | 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | ready-for-research | A34 | Extract Evasion, Danger Sense, and save-damage replacement facts. |
 | 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | ready-for-research | A34 | Extract Cutting Words, Uncanny Dodge, and Deflect Attacks reaction facts. |
-| 43 | A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core | ready-for-research | A34 | Extract passive Armor Class, attack-roll, Speed, and speed-kind grant facts. |
+| 43 | A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core | ready-for-research | A34 | Extract passive Armor Class, Speed, and speed-kind grant facts. |
 | 44 | A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core | ready-for-research | A34 | Extract Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus Unarmed Strike facts. |
 | 45 | A45-UNIT-FEATURE-ZERO-HP-CORE - Split zero-Hit-Point feature replacement core | ready-for-research | A34 | Extract Relentless Endurance and zero-Hit-Point replacement facts. |
 | 46 | A46-MONK-FOCUS-BATTLE-CORE - Split Monk Focus battle option core | ready-for-research | A34 | Extract Flurry of Blows, Patient Defense, Step of the Wind, and Focus Point facts from the battle-runtime Monk owner. |
@@ -984,7 +984,7 @@ changing runtime behavior.
 
 ### Task 40 - A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the
@@ -1042,12 +1042,11 @@ Status: `ready-for-research`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `unit-feature-procedure-profiles.qnt`, and the SRD Defense, Fast Movement,
-Unarmored Movement, Roving, Archery, and Speed passages.
+Unarmored Movement, Roving, and Speed passages.
 
-Output: extract passive Armor Class, passive attack-roll bonus, Speed bonus,
-Dash projection, and speed-kind grant facts into a generator-facing semantic
-core. Keep equipment gates as explicit fields rather than derived catalog
-labels.
+Output: extract passive Armor Class, Speed bonus, Dash projection, and
+speed-kind grant facts into a generator-facing semantic core. Keep equipment
+gates as explicit fields rather than derived catalog labels.
 
 Acceptance: the core contains no run blocks, no duplicated derived Speed or
 Armor Class state, and readiness ownership separates passive continuous facts

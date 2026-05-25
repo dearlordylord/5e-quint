@@ -299,11 +299,13 @@ budget near the `any` action.
 ## QCORE9: Unit Feature Procedure Profiles
 
 `unit-feature-action-count-core.qnt`, `unit-feature-pool-cost-core.qnt`,
-`unit-feature-rage-reckless-core.qnt`, and `unit-feature-procedure-profiles.qnt`
-model projection-shaped feature procedure facts for character-derived battle
-features without importing Unit ids, Surface records, or authored catalog
-enumeration. Focused `*-core.qnt` files carry generator-facing semantic facts;
-matching `*-examples.qnt` files keep run examples proof-only.
+`unit-feature-rage-reckless-core.qnt`,
+`unit-feature-attack-rider-core.qnt`, and
+`unit-feature-procedure-profiles.qnt` model projection-shaped feature procedure
+facts for character-derived battle features without importing Unit ids, Surface
+records, or authored catalog enumeration. Focused `*-core.qnt` files carry
+generator-facing semantic facts; matching `*-examples.qnt` files keep run
+examples proof-only.
 
 Scope:
 
@@ -315,9 +317,6 @@ Scope:
   recovery through QCORE3;
 - Cunning Action admits Dash, Disengage, and Hide through QCORE6's Bonus Action
   cost path;
-- Champion Improved Critical is the existing QCORE5 critical-threshold-19
-  attack-roll fact, with the feature-profile boundary restricted to weapon and
-  Unarmed Strike attack forms;
 - Rage spends a Bonus Action/use, creates an Active Ongoing Feature Occurrence,
   breaks/prevents Concentration, grants Bludgeoning/Piercing/Slashing
   Resistance facts, adds Strength weapon/Unarmed Strike damage, and models
@@ -329,10 +328,20 @@ Scope:
 - Frenzy uses the focused Rage and Reckless Attack core's active Rage state,
   Reckless-while-Raging fact, and first eligible hit state to admit its
   Rage-Damage-bonus d6 rider once on the Barbarian's turn;
+- Champion Improved Critical is the existing QCORE5 critical-threshold-19
+  attack-roll fact, with the feature-profile boundary restricted to weapon and
+  Unarmed Strike attack forms;
 - Sneak Attack is an optional once-per-turn Attack Damage Rider for attack-roll
   hits with Finesse or Ranged weapons, with Advantage/Disadvantage cancellation
   applied before the Advantage branch and the ally-within-5-feet branch modeled
   as caller-supplied spatial/condition facts;
+- Archery adds a passive +2 attack-roll bonus to Ranged weapon attacks while
+  keeping hit calculation in the shared attack-roll procedure;
+- Savage Attacker admits one weapon-hit damage-dice choice per turn, carrying
+  the selected weapon damage dice total separately from the ordinary weapon
+  damage modifier;
+- Boon of Combat Prowess admits one miss-to-hit replacement until the start of
+  the next turn without making the replacement a Critical Hit;
 - Evasion-style save damage replacement applies to Dexterity Saving Throw
   damage whose ordinary success result is half damage and is blocked by
   Incapacitated;

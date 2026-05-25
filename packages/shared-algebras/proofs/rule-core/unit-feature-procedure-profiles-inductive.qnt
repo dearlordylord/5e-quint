@@ -13,6 +13,7 @@ module unitFeatureProcedureProfilesInductive {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
   import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
   import unitFeatureRageRecklessCore.* from "./unit-feature-rage-reckless-core"
+  import unitFeatureAttackRiderCore.* from "./unit-feature-attack-rider-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota

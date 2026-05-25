@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 module unitFeatureProcedureProfiles {
@@ -8,58 +8,22 @@ module unitFeatureProcedureProfiles {
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
-  import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Classes/Fighter.md: Champion Improved Critical.
-  // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
+  // - Classes/Rogue.md: Cunning Action, Evasion, Uncanny Dodge.
   // - Classes/Barbarian.md: Danger Sense.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Classes/Sorcerer.md: Innate Sorcery activation.
   // - Classes/Monk.md: Martial Arts attack projection, Unarmored Movement,
   //   Deflect Attacks.
-  // - Feats.md: Archery, Defense, Savage Attacker, Boon of Combat Prowess.
-  // - Character-Origins.md: Orc Adrenaline Rush and Relentless Endurance.
-  // - Playing-the-Game.md: Bonus Actions, Reactions, Attack Rolls, Critical Hits,
-  //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
-  //   Damage, Resistance and Vulnerability.
-
-  type ChampionImprovedCriticalAttackForm =
-    | ChampionWeaponAttack
-    | ChampionUnarmedStrikeAttack
-
-  type AttackCriticalThresholdProfile =
-    | StandardAttackCriticalThresholdProfile
-    | ChampionImprovedCriticalThresholdProfile({
-      attackForm: ChampionImprovedCriticalAttackForm,
-    })
-
-  type WeaponProcedureKind =
-    | FinesseWeapon
-    | RangedWeapon
-    | OtherWeapon
-
-  type SneakAttackFacts = {
-    hitWithAttackRoll: bool,
-    weaponKind: WeaponProcedureKind,
-    hasAdvantage: bool,
-    hasDisadvantage: bool,
-    allyWithinFiveFeet: bool,
-    allyIncapacitated: bool,
-    usedThisTurn: bool,
-    rogueLevel: int,
-    weaponDamageType: RuleDamageType,
-  }
-
-  type SneakAttackResult = {
-    admitted: bool,
-    usedThisTurn: bool,
-    damageDice: int,
-    damageType: RuleDamageType,
-  }
+  // - Feats.md: Defense.
+  // - Character-Origins.md: Orc Relentless Endurance.
+  // - Playing-the-Game.md: Bonus Actions, Reactions, Damage Rolls, Dropping to
+  //   0 Hit Points, Instant Death, Saving Throws and Damage, Resistance and
+  //   Vulnerability.
 
   type SavingThrowAbilityFact =
     | StrengthSavingThrowFact
@@ -162,13 +126,6 @@ module unitFeatureProcedureProfiles {
     wearingHeavyArmor: bool,
   }
 
-  type PassiveRangedAttackRollBonusFacts = {
-    weaponKind: WeaponProcedureKind,
-    baseAttackRollTotal: int,
-    targetArmorClass: int,
-    naturalD20: int,
-  }
-
   type PassiveSpeedBonusEquipmentGate =
     | NotWearingHeavyArmorSpeedBonusGate
     | UnarmoredUnshieldedSpeedBonusGate
@@ -214,33 +171,6 @@ module unitFeatureProcedureProfiles {
     dashMovementBonusFeet: int,
   }
 
-  type PassiveRangedAttackRollBonusResult = {
-    bonus: int,
-    effectiveAttackRollTotal: int,
-    hits: bool,
-  }
-
-  type WeaponDamageDiceRollChoiceFacts = {
-    hitWithWeapon: bool,
-    criticalHit: bool,
-    usedThisTurn: bool,
-    choosesFeature: bool,
-    weaponDamageDice: int,
-    weaponDamageDieSize: int,
-    firstCandidateTotal: int,
-    secondCandidateTotal: int,
-    chooseSecondCandidate: bool,
-    damageModifier: int,
-  }
-
-  type WeaponDamageDiceRollChoiceResult = {
-    admitted: bool,
-    usedThisTurn: bool,
-    weaponDamageDiceRolledPerCandidate: int,
-    selectedWeaponDamageDiceTotal: int,
-    effectiveDamage: int,
-  }
-
   type MartialArtsAttackForm =
     | MartialArtsUnarmedStrike
     | MartialArtsMonkWeapon
@@ -276,22 +206,6 @@ module unitFeatureProcedureProfiles {
     admitted: bool,
   }
 
-  type AttackRollMissToHitReplacementFacts = {
-    naturalD20: int,
-    total: int,
-    armorClass: int,
-    usedSinceTurnStart: bool,
-    choosesFeature: bool,
-  }
-
-  type AttackRollMissToHitReplacementResult = {
-    admitted: bool,
-    usedSinceTurnStart: bool,
-    ordinaryHits: bool,
-    effectiveHits: bool,
-    critical: bool,
-  }
-
   type ZeroHitPointReplacementFacts = {
     incomingDamage: int,
     choosesFeature: bool,
@@ -309,9 +223,6 @@ module unitFeatureProcedureProfiles {
 
   pure def defenseArmorClass(baseArmorClass: int, facts: PassiveArmorClassBonusFacts): int =
     if (wearingArmorForDefense(facts)) baseArmorClass + 1 else baseArmorClass
-
-  pure def archeryAttackRollBonus(facts: PassiveRangedAttackRollBonusFacts): int =
-    if (facts.weaponKind == RangedWeapon) 2 else 0
 
   pure def wearingAnyArmorForSpeedBonus(facts: PassiveSpeedBonusFacts): bool =
     facts.armorWorn != NoArmorWorn
@@ -386,64 +297,6 @@ module unitFeatureProcedureProfiles {
     val speed = rovingEffectiveSpeed(facts)
     val dashed = resolveDash(turn, speed, StandardActionCost(DashAction))
     resolveRovingSpeedKindBudget(dashed, facts)
-  }
-
-  pure def resolveArcheryAttackRoll(
-    facts: PassiveRangedAttackRollBonusFacts
-  ): PassiveRangedAttackRollBonusResult = {
-    val bonus = archeryAttackRollBonus(facts)
-    val total = facts.baseAttackRollTotal + bonus
-    val outcome = resolveAttackRoll({
-      naturalD20: facts.naturalD20,
-      total: total,
-      armorClass: facts.targetArmorClass,
-      criticalThreshold: 20,
-    })
-    {
-      bonus: bonus,
-      effectiveAttackRollTotal: total,
-      hits: outcome.hits,
-    }
-  }
-
-  pure def savageAttackerCandidateDiceCount(facts: WeaponDamageDiceRollChoiceFacts): int =
-    if (facts.criticalHit) facts.weaponDamageDice * 2 else facts.weaponDamageDice
-
-  pure def legalWeaponDamageDiceRollChoiceFacts(
-    facts: WeaponDamageDiceRollChoiceFacts
-  ): bool = all {
-    facts.weaponDamageDice >= 1,
-    facts.weaponDamageDice <= 4,
-    facts.weaponDamageDieSize >= 4,
-    facts.weaponDamageDieSize <= 12,
-    facts.firstCandidateTotal >= savageAttackerCandidateDiceCount(facts),
-    facts.secondCandidateTotal >= savageAttackerCandidateDiceCount(facts),
-    facts.firstCandidateTotal <= savageAttackerCandidateDiceCount(facts) * facts.weaponDamageDieSize,
-    facts.secondCandidateTotal <= savageAttackerCandidateDiceCount(facts) * facts.weaponDamageDieSize,
-  }
-
-  pure def resolveWeaponDamageDiceRollChoice(
-    facts: WeaponDamageDiceRollChoiceFacts,
-    ordinaryWeaponDamageDiceTotal: int
-  ): WeaponDamageDiceRollChoiceResult = {
-    val admitted = all {
-      legalWeaponDamageDiceRollChoiceFacts(facts),
-      facts.hitWithWeapon,
-      not(facts.usedThisTurn),
-      facts.choosesFeature,
-    }
-    val selectedTotal =
-      if (admitted) {
-        if (facts.chooseSecondCandidate) facts.secondCandidateTotal
-        else facts.firstCandidateTotal
-      } else ordinaryWeaponDamageDiceTotal
-    {
-      admitted: admitted,
-      usedThisTurn: facts.usedThisTurn or admitted,
-      weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
-      selectedWeaponDamageDiceTotal: selectedTotal,
-      effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
-    }
   }
 
   pure def martialArtsAttackEligible(facts: MartialArtsEligibilityFacts): bool =
@@ -526,35 +379,6 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  pure def resolveAttackRollMissToHitReplacement(
-    facts: AttackRollMissToHitReplacementFacts
-  ): AttackRollMissToHitReplacementResult = {
-    val ordinaryOutcome = resolveAttackRoll({
-      naturalD20: facts.naturalD20,
-      total: facts.total,
-      armorClass: facts.armorClass,
-      criticalThreshold: 20,
-    })
-    val admitted = all {
-      legalAttackRollProcedureFacts({
-        naturalD20: facts.naturalD20,
-        total: facts.total,
-        armorClass: facts.armorClass,
-        criticalThreshold: 20,
-      }),
-      not(ordinaryOutcome.hits),
-      not(facts.usedSinceTurnStart),
-      facts.choosesFeature,
-    }
-    {
-      admitted: admitted,
-      usedSinceTurnStart: facts.usedSinceTurnStart or admitted,
-      ordinaryHits: ordinaryOutcome.hits,
-      effectiveHits: ordinaryOutcome.hits or admitted,
-      critical: ordinaryOutcome.critical,
-    }
-  }
-
   pure def damageWouldKillOutright(
     before: CreatureVitals,
     damageResult: DamageResult
@@ -602,57 +426,6 @@ module unitFeatureProcedureProfiles {
           lifecycle,
           damaged
         ),
-    }
-  }
-
-  pure def championImprovedCriticalThreshold: int = 19
-
-  pure def attackCriticalThreshold(profile: AttackCriticalThresholdProfile): int =
-    match profile {
-      | StandardAttackCriticalThresholdProfile => 20
-      | ChampionImprovedCriticalThresholdProfile(v) =>
-        match v.attackForm {
-          | ChampionWeaponAttack => championImprovedCriticalThreshold
-          | ChampionUnarmedStrikeAttack => championImprovedCriticalThreshold
-        }
-    }
-
-  pure def sneakAttackDiceForRogueLevel(rogueLevel: int): int =
-    if (rogueLevel >= 19) 10
-    else if (rogueLevel >= 17) 9
-    else if (rogueLevel >= 15) 8
-    else if (rogueLevel >= 13) 7
-    else if (rogueLevel >= 11) 6
-    else if (rogueLevel >= 9) 5
-    else if (rogueLevel >= 7) 4
-    else if (rogueLevel >= 5) 3
-    else if (rogueLevel >= 3) 2
-    else if (rogueLevel >= 1) 1
-    else 0
-
-  pure def sneakAttackWeaponEligible(kind: WeaponProcedureKind): bool =
-    kind == FinesseWeapon or kind == RangedWeapon
-
-  pure def rollHasEffectiveAdvantage(hasAdvantage: bool, hasDisadvantage: bool): bool =
-    hasAdvantage and not(hasDisadvantage)
-
-  pure def sneakAttackEligibilityBranch(facts: SneakAttackFacts): bool =
-    rollHasEffectiveAdvantage(facts.hasAdvantage, facts.hasDisadvantage)
-      or (facts.allyWithinFiveFeet and not(facts.allyIncapacitated) and not(facts.hasDisadvantage))
-
-  pure def resolveSneakAttack(facts: SneakAttackFacts): SneakAttackResult = {
-    val admitted = all {
-      facts.hitWithAttackRoll,
-      sneakAttackWeaponEligible(facts.weaponKind),
-      sneakAttackEligibilityBranch(facts),
-      not(facts.usedThisTurn),
-      sneakAttackDiceForRogueLevel(facts.rogueLevel) > 0,
-    }
-    {
-      admitted: admitted,
-      usedThisTurn: facts.usedThisTurn or admitted,
-      damageDice: if (admitted) sneakAttackDiceForRogueLevel(facts.rogueLevel) else 0,
-      damageType: facts.weaponDamageType,
     }
   }
 
@@ -808,113 +581,6 @@ module unitFeatureProcedureProfiles {
       reducedAmount:
         if (admitted) uncannyDodgeDamage(facts)
         else nonnegative(facts.incomingDamage),
-    }
-  }
-
-  run test_champion_improved_critical_is_weapon_or_unarmed_threshold_nineteen_fact = {
-    val weaponOutcome = resolveAttackRoll({
-      naturalD20: 19,
-      total: 1,
-      armorClass: 30,
-      criticalThreshold: attackCriticalThreshold(ChampionImprovedCriticalThresholdProfile({
-        attackForm: ChampionWeaponAttack,
-      })),
-    })
-    val unarmedOutcome = resolveAttackRoll({
-      naturalD20: 19,
-      total: 1,
-      armorClass: 30,
-      criticalThreshold: attackCriticalThreshold(ChampionImprovedCriticalThresholdProfile({
-        attackForm: ChampionUnarmedStrikeAttack,
-      })),
-    })
-    val nonEligibleAttackOutcome = resolveAttackRoll({
-      naturalD20: 19,
-      total: 1,
-      armorClass: 30,
-      criticalThreshold: attackCriticalThreshold(StandardAttackCriticalThresholdProfile),
-    })
-    all {
-      assert(weaponOutcome.hits),
-      assert(weaponOutcome.critical),
-      assert(unarmedOutcome.hits),
-      assert(unarmedOutcome.critical),
-      assert(not(nonEligibleAttackOutcome.hits)),
-      assert(not(nonEligibleAttackOutcome.critical)),
-    }
-  }
-
-  run test_sneak_attack_uses_attack_roll_weapon_and_once_per_turn_facts = {
-    val result = resolveSneakAttack({
-      hitWithAttackRoll: true,
-      weaponKind: FinesseWeapon,
-      hasAdvantage: true,
-      hasDisadvantage: false,
-      allyWithinFiveFeet: false,
-      allyIncapacitated: false,
-      usedThisTurn: false,
-      rogueLevel: 5,
-      weaponDamageType: SlashingDamage,
-    })
-    val repeated = resolveSneakAttack({
-      hitWithAttackRoll: true,
-      weaponKind: FinesseWeapon,
-      hasAdvantage: true,
-      hasDisadvantage: false,
-      allyWithinFiveFeet: false,
-      allyIncapacitated: false,
-      usedThisTurn: result.usedThisTurn,
-      rogueLevel: 5,
-      weaponDamageType: SlashingDamage,
-    })
-    all {
-      assert(result.admitted),
-      assert(result.damageDice == 3),
-      assert(result.damageType == SlashingDamage),
-      assert(result.usedThisTurn),
-      assert(not(repeated.admitted)),
-    }
-  }
-
-  run test_sneak_attack_ally_branch_requires_no_disadvantage_and_active_ally = {
-    val admitted = resolveSneakAttack({
-      hitWithAttackRoll: true,
-      weaponKind: RangedWeapon,
-      hasAdvantage: false,
-      hasDisadvantage: false,
-      allyWithinFiveFeet: true,
-      allyIncapacitated: false,
-      usedThisTurn: false,
-      rogueLevel: 7,
-      weaponDamageType: PoisonDamage,
-    })
-    val blocked = resolveSneakAttack({
-      hitWithAttackRoll: true,
-      weaponKind: RangedWeapon,
-      hasAdvantage: false,
-      hasDisadvantage: true,
-      allyWithinFiveFeet: true,
-      allyIncapacitated: false,
-      usedThisTurn: false,
-      rogueLevel: 7,
-      weaponDamageType: PoisonDamage,
-    })
-    val canceledAdvantage = resolveSneakAttack({
-      hitWithAttackRoll: true,
-      weaponKind: RangedWeapon,
-      hasAdvantage: true,
-      hasDisadvantage: true,
-      allyWithinFiveFeet: false,
-      allyIncapacitated: false,
-      usedThisTurn: false,
-      rogueLevel: 7,
-      weaponDamageType: PoisonDamage,
-    })
-    all {
-      assert(admitted.admitted),
-      assert(admitted.damageDice == 4),
-      assert(not(blocked.admitted)),
-      assert(not(canceledAdvantage.admitted)),
     }
   }
 
@@ -1165,74 +831,6 @@ module unitFeatureProcedureProfiles {
       assert(medium == 17),
       assert(heavy == 17),
       assert(unarmored == 16),
-    }
-  }
-
-  run test_archery_adds_two_to_ranged_weapon_attack_rolls_only = {
-    val ranged = resolveArcheryAttackRoll({
-      weaponKind: RangedWeapon,
-      baseAttackRollTotal: 14,
-      targetArmorClass: 16,
-      naturalD20: 10,
-    })
-    val nonRanged = resolveArcheryAttackRoll({
-      weaponKind: OtherWeapon,
-      baseAttackRollTotal: 14,
-      targetArmorClass: 16,
-      naturalD20: 10,
-    })
-    all {
-      assert(ranged.bonus == 2),
-      assert(ranged.effectiveAttackRollTotal == 16),
-      assert(ranged.hits),
-      assert(nonRanged.bonus == 0),
-      assert(nonRanged.effectiveAttackRollTotal == 14),
-      assert(not(nonRanged.hits)),
-    }
-  }
-
-  run test_attack_roll_miss_to_hit_replacement_turns_one_miss_into_hit = {
-    val replaced = resolveAttackRollMissToHitReplacement({
-      naturalD20: 2,
-      total: 10,
-      armorClass: 16,
-      usedSinceTurnStart: false,
-      choosesFeature: true,
-    })
-    val declined = resolveAttackRollMissToHitReplacement({
-      naturalD20: 2,
-      total: 10,
-      armorClass: 16,
-      usedSinceTurnStart: false,
-      choosesFeature: false,
-    })
-    val reused = resolveAttackRollMissToHitReplacement({
-      naturalD20: 2,
-      total: 10,
-      armorClass: 16,
-      usedSinceTurnStart: true,
-      choosesFeature: true,
-    })
-    val ordinaryHit = resolveAttackRollMissToHitReplacement({
-      naturalD20: 10,
-      total: 16,
-      armorClass: 16,
-      usedSinceTurnStart: false,
-      choosesFeature: true,
-    })
-    all {
-      assert(replaced.admitted),
-      assert(not(replaced.ordinaryHits)),
-      assert(replaced.effectiveHits),
-      assert(replaced.usedSinceTurnStart),
-      assert(not(replaced.critical)),
-      assert(not(declined.effectiveHits)),
-      assert(not(declined.usedSinceTurnStart)),
-      assert(not(reused.admitted)),
-      assert(not(reused.effectiveHits)),
-      assert(ordinaryHit.ordinaryHits),
-      assert(ordinaryHit.effectiveHits),
-      assert(not(ordinaryHit.admitted)),
     }
   }
 
