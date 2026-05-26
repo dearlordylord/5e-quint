@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "QNTGR-B05-CREATION-FILL-BATCH-ASSESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess creation fill-batch slice replay readiness"
     },
     {
@@ -211,7 +211,7 @@ creation obligations.
 
 ### Task 5 - QNTGR-B05-CREATION-FILL-BATCH-ASSESS - Assess creation fill-batch slice replay readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`,
 character creation slice QNT, owner-role rows, and current run-block outcome.
