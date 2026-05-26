@@ -1,4 +1,4 @@
-# Ralph Lane C: QNT Deepening
+# Ralph Lane B: QNT Deepening
 
 <!-- ralph-task-index
 {
@@ -6,73 +6,73 @@
   "tasks": [
     {
       "number": 1,
-      "id": "QNTD-C01-HP-RECOVERY-RUST-DRY-RUN",
+      "id": "QNTD-B01-HP-RECOVERY-RUST-DRY-RUN",
       "status": "ready-for-research",
       "title": "Run the Hit Point recovery manual Rust dry-run vertical"
     },
     {
       "number": 2,
-      "id": "QNTD-C02-HP-RECOVERY-DRY-RUN-REVIEW",
+      "id": "QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW",
       "status": "blocked",
       "title": "Review the recovery dry run for projection and connascence gaps"
     },
     {
       "number": 3,
-      "id": "QNTD-C03-CREATURE-SIZE-FOCUSED-MBT",
+      "id": "QNTD-B03-CREATURE-SIZE-FOCUSED-MBT",
       "status": "ready-for-research",
       "title": "Add Enlarge/Reduce creature-size lifecycle focused MBT"
     },
     {
       "number": 4,
-      "id": "QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT",
+      "id": "QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT",
       "status": "ready-for-research",
       "title": "Add Levitate creature lifecycle focused MBT"
     },
     {
       "number": 5,
-      "id": "QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT",
+      "id": "QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT",
       "status": "ready-for-research",
       "title": "Add roll-modifier active effects focused MBT"
     },
     {
       "number": 6,
-      "id": "QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT",
+      "id": "QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT",
       "status": "ready-for-research",
       "title": "Add after-hit damage riders focused MBT"
     },
     {
       "number": 7,
-      "id": "QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT",
+      "id": "QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT",
       "status": "ready-for-research",
       "title": "Add weapon-hosted attack and riders focused MBT"
     },
     {
       "number": 8,
-      "id": "QNTD-C08-COMMAND-OPTION-FOCUSED-MBT",
+      "id": "QNTD-B08-COMMAND-OPTION-FOCUSED-MBT",
       "status": "blocked",
       "title": "Add Command option and next-turn focused MBT"
     },
     {
       "number": 9,
-      "id": "QNTD-C09-ABILITY-CHECK-SEARCH-FOCUSED-MBT",
+      "id": "QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT",
       "status": "blocked",
       "title": "Add Ability Check choice and Search holes focused MBT"
     },
     {
       "number": 10,
-      "id": "QNTD-C10-SHOVE-WITNESS-POLICY",
+      "id": "QNTD-B10-SHOVE-WITNESS-POLICY",
       "status": "blocked",
       "title": "Decide whether Shove deterministic replay needs focused MBT"
     },
     {
       "number": 11,
-      "id": "QNTD-C11-QNT-DEEPENING-CLOSEOUT",
+      "id": "QNTD-B11-QNT-DEEPENING-CLOSEOUT",
       "status": "blocked",
       "title": "Close out QNT deepening artifacts and program rollup"
     },
     {
       "number": 12,
-      "id": "QNTD-C12-RECURSIVE-NEXT-BATCH",
+      "id": "QNTD-B12-RECURSIVE-NEXT-BATCH",
       "status": "blocked",
       "title": "Plan the next QNT deepening batch if this lane drains"
     }
@@ -162,22 +162,22 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | QNTD-C01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | ready-for-research | none | Starts the manual Rust dry-run path. |
-| 2 | QNTD-C02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | blocked | QNTD-C01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
-| 3 | QNTD-C03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 4 | QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 5 | QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 6 | QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 7 | QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 8 | QNTD-C08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT | blocked | QNTD-C03-CREATURE-SIZE-FOCUSED-MBT, QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
-| 9 | QNTD-C09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT | blocked | QNTD-C03-CREATURE-SIZE-FOCUSED-MBT, QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
-| 10 | QNTD-C10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT | blocked | QNTD-C08-COMMAND-OPTION-FOCUSED-MBT, QNTD-C09-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Runs after deterministic-replay upgrades are decided for Command and Search. |
-| 11 | QNTD-C11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup | blocked | QNTD-C01-HP-RECOVERY-RUST-DRY-RUN, QNTD-C02-HP-RECOVERY-DRY-RUN-REVIEW, QNTD-C03-CREATURE-SIZE-FOCUSED-MBT, QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, QNTD-C08-COMMAND-OPTION-FOCUSED-MBT, QNTD-C09-ABILITY-CHECK-SEARCH-FOCUSED-MBT, QNTD-C10-SHOVE-WITNESS-POLICY | Closes after all implementation and policy tasks. |
-| 12 | QNTD-C12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains | blocked | QNTD-C11-QNT-DEEPENING-CLOSEOUT | Keeps the lane recursive after closeout. |
+| 1 | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | ready-for-research | none | Starts the manual Rust dry-run path. |
+| 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | blocked | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
+| 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 6 | QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 7 | QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 8 | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT | blocked | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
+| 9 | QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT | blocked | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
+| 10 | QNTD-B10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT | blocked | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Runs after deterministic-replay upgrades are decided for Command and Search. |
+| 11 | QNTD-B11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup | blocked | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN, QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW, QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT, QNTD-B10-SHOVE-WITNESS-POLICY | Closes after all implementation and policy tasks. |
+| 12 | QNTD-B12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains | blocked | QNTD-B11-QNT-DEEPENING-CLOSEOUT | Keeps the lane recursive after closeout. |
 
 ## Task Details
 
-### Task 1 - QNTD-C01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical
+### Task 1 - QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical
 
 Status: `ready-for-research`
 
@@ -210,7 +210,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 2 - QNTD-C02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps
+### Task 2 - QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps
 
 Status: `blocked`
 
@@ -231,7 +231,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 3 - QNTD-C03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT
+### Task 3 - QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT
 
 Status: `ready-for-research`
 
@@ -253,7 +253,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 4 - QNTD-C04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT
+### Task 4 - QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT
 
 Status: `ready-for-research`
 
@@ -277,7 +277,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 5 - QNTD-C05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT
+### Task 5 - QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT
 
 Status: `ready-for-research`
 
@@ -299,7 +299,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 6 - QNTD-C06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT
+### Task 6 - QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT
 
 Status: `ready-for-research`
 
@@ -321,7 +321,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 7 - QNTD-C07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT
+### Task 7 - QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT
 
 Status: `ready-for-research`
 
@@ -342,7 +342,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 8 - QNTD-C08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT
+### Task 8 - QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT
 
 Status: `blocked`
 
@@ -365,7 +365,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 9 - QNTD-C09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT
+### Task 9 - QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT
 
 Status: `blocked`
 
@@ -387,7 +387,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 10 - QNTD-C10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT
+### Task 10 - QNTD-B10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT
 
 Status: `blocked`
 
@@ -410,7 +410,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 11 - QNTD-C11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup
+### Task 11 - QNTD-B11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup
 
 Status: `blocked`
 
@@ -433,7 +433,7 @@ Acceptance:
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
-### Task 12 - QNTD-C12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains
+### Task 12 - QNTD-B12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains
 
 Status: `blocked`
 

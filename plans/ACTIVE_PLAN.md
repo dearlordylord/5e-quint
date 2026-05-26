@@ -9,7 +9,7 @@ proof 62/62, selected-identity MBT 17/85). Per-task history lives in git.
 
 The next runnable QNT deepening lane is:
 
-- `plans/RALPH_LANE_C_QNT_DEEPENING.md` — focused QNT witness deepening plus the
+- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — focused QNT witness deepening plus the
   next manual Rust dry-run vertical after generator readiness closure.
 
 The current durable planning entrypoints are:
