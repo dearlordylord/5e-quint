@@ -4,22 +4,102 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY", "status": "ready-for-research", "title": "Close Mind Spike selected-identity witness" },
-    { "number": 2, "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH", "status": "ready-for-research", "title": "Refresh level 1-3 full-support claim artifacts" },
-    { "number": 3, "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION", "status": "ready-for-research", "title": "Admit level 1-3 into aggregate ultra-golden gate" },
-    { "number": 4, "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT", "status": "ready-for-research", "title": "Audit MCP scenario evidence for level 1-3 scope" },
-    { "number": 5, "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED", "status": "ready-for-research", "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap" },
-    { "number": 6, "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE", "status": "ready-for-research", "title": "Add regression coverage for deferred selected-identity disposition" },
-    { "number": 7, "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT", "status": "ready-for-research", "title": "Audit level 1-3 follow-up splits for claim-gate correctness" },
-    { "number": 8, "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT", "status": "ready-for-research", "title": "Audit non-blocking product-readiness diagnostics" },
-    { "number": 9, "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING", "status": "ready-for-research", "title": "Tighten claim-gate wording around diagnostics" },
-    { "number": 10, "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY", "status": "ready-for-research", "title": "Verify generated report consistency after scope admission" },
-    { "number": 11, "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported Unit to rules-kernel join for level 1-3" },
-    { "number": 12, "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT", "status": "ready-for-research", "title": "Audit SRD pressure rows with no Unit matrix row" },
-    { "number": 13, "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT", "status": "ready-for-research", "title": "RAW audit closed runtime-detached dispositions in level 1-3" },
-    { "number": 14, "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS", "status": "ready-for-research", "title": "Extend checker self-tests for level 1-3 ultra-golden failures" },
-    { "number": 15, "id": "L13UG-A15-LEVEL13-CLOSEOUT", "status": "ready-for-research", "title": "Close out level 1-3 ultra-golden lane" },
-    { "number": 16, "id": "L13UG-A16-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Plan the next level-support batch if this lane drains" }
+    {
+      "number": 1,
+      "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY",
+      "status": "done",
+      "title": "Close Mind Spike selected-identity witness"
+    },
+    {
+      "number": 2,
+      "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH",
+      "status": "ready-for-research",
+      "title": "Refresh level 1-3 full-support claim artifacts"
+    },
+    {
+      "number": 3,
+      "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION",
+      "status": "ready-for-research",
+      "title": "Admit level 1-3 into aggregate ultra-golden gate"
+    },
+    {
+      "number": 4,
+      "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit MCP scenario evidence for level 1-3 scope"
+    },
+    {
+      "number": 5,
+      "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
+      "status": "ready-for-research",
+      "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap"
+    },
+    {
+      "number": 6,
+      "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE",
+      "status": "ready-for-research",
+      "title": "Add regression coverage for deferred selected-identity disposition"
+    },
+    {
+      "number": 7,
+      "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit level 1-3 follow-up splits for claim-gate correctness"
+    },
+    {
+      "number": 8,
+      "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit non-blocking product-readiness diagnostics"
+    },
+    {
+      "number": 9,
+      "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING",
+      "status": "ready-for-research",
+      "title": "Tighten claim-gate wording around diagnostics"
+    },
+    {
+      "number": 10,
+      "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY",
+      "status": "ready-for-research",
+      "title": "Verify generated report consistency after scope admission"
+    },
+    {
+      "number": 11,
+      "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit supported Unit to rules-kernel join for level 1-3"
+    },
+    {
+      "number": 12,
+      "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit SRD pressure rows with no Unit matrix row"
+    },
+    {
+      "number": 13,
+      "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT",
+      "status": "ready-for-research",
+      "title": "RAW audit closed runtime-detached dispositions in level 1-3"
+    },
+    {
+      "number": 14,
+      "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS",
+      "status": "ready-for-research",
+      "title": "Extend checker self-tests for level 1-3 ultra-golden failures"
+    },
+    {
+      "number": 15,
+      "id": "L13UG-A15-LEVEL13-CLOSEOUT",
+      "status": "ready-for-research",
+      "title": "Close out level 1-3 ultra-golden lane"
+    },
+    {
+      "number": 16,
+      "id": "L13UG-A16-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Plan the next level-support batch if this lane drains"
+    }
   ]
 }
 -->
@@ -81,7 +161,7 @@ artifact changes:
 
 ### Task 1 - L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY - Close Mind Spike selected-identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current Mind Spike Unit claim/evidence rows, local SRD Mind Spike text,
 and existing selected-identity MBT patterns for save-damage spells.
