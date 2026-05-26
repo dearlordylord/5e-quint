@@ -26,4 +26,5 @@ module battleRuntimeSelfTests {
   import battleRuntimeStatBlockBridgeExamples.* from "./battle-runtime-stat-block-bridge-examples"
   import battleRuntimeFeatureBridgeExamples.* from "./battle-runtime-feature-bridge-examples"
   import battleRuntimeMovementBridgeExamples.* from "./battle-runtime-movement-bridge-examples"
+  import battleRuntimeSpellBridgeExamples.* from "./battle-runtime-spell-bridge-examples"
 }
