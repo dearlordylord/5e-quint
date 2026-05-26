@@ -84,14 +84,16 @@ The Rust-facing recovery state is a projection of existing sheet facts:
 | `PositiveHitPointUnconsciousRecovery` | `sheet.hitPoints.tag === "knockedOut"` | Knocked Out projects to `EndsWhenHitPointsRegained`; all other sheet states project to `NoPositiveHitPointUnconsciousRecovery`. |
 
 The reverse projection consumes `HitPointRecoveryResult` through the existing
-`characterSheetHitPoints(...)` constructor. It does not write a parallel HP,
-Death Saving Throw, Stable, or Knocked Out model:
+`characterSheetHitPoints(...)` constructor and the source `CharacterSheet` that
+was projected into the pure transition. It does not write a parallel HP, Death
+Saving Throw, Stable, or Knocked Out model:
 
 | Recovery result fact | Character Sheet projection |
 | --- | --- |
 | `vitals.hitPoints > 0` and recovery is `NoPositiveHitPointUnconsciousRecovery` | `CharacterSheetHitPoints` variant `positive` with `currentHp` from `vitals.hitPoints`. |
 | `vitals.hitPoints > 0` and recovery is `EndsWhenHitPointsRegained` | `CharacterSheetHitPoints` variant `knockedOut`; legal state requires exactly 1 Hit Point. |
-| `vitals.hitPoints == 0` and not dead | `CharacterSheetHitPoints` variant `zero` with the projected zero-HP lifecycle. |
+| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained == 0` | Preserve the source sheet's `zero` lifecycle, including any `CharacterSheetStableRecovery` timer. |
+| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained > 0` | Unreachable for a legal recovery result because regained Hit Points imply positive resulting Hit Points. |
 | `vitals.dead` | `CharacterSheetHitPoints` variant `zero` with lifecycle `dead`. |
 | `hitPointsRegained` | Returned as a pure result fact for callers that need the regained-Hit-Point amount; it is not stored on the sheet. |
 
@@ -106,6 +108,13 @@ The Character Sheet owner currently projects that marker only from the
 a boundary invariant, not a second runtime model: if a future owner needs a
 different positive-Hit-Point Unconscious source, it should define its own
 projection boundary instead of widening Character Sheet HP state.
+
+Dead-character healing remains an effect-facing Character Sheet boundary error.
+The pure QNT transition returns a no-op for `vitals.dead`, matching the shared
+algebra shape, but the current Character Sheet callers keep their typed
+`CharacterSheetIssue` rejection before projecting into this pure rule. A future
+generated wrapper must preserve that caller-facing invalid result instead of
+exposing the no-op branch as successful sheet behavior.
 
 ## Hypothetical Rust Shapes
 
@@ -256,3 +265,39 @@ construction. A public boundary should return a typed error instead.
 - Death Saving Throw reset and positive-Hit-Point Unconscious recovery cleanup
   are coupled by the SRD phrase "regains any Hit Points"; the generated
   boundary should keep both facts in the single `HitPointRecoveryResult` shape.
+
+## Task 2 Review Outcome
+
+The dry run was reviewed against
+`plans/rules-kernel-coverage/kernel-ir-boundaries.jsonl`,
+`packages/character-sheet-runtime/src/index.ts`,
+`packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`, the SRD
+anchors above, and `UBIQUITOUS_LANGUAGE.md#Hit Points and Death`.
+
+Review findings:
+
+- No duplicated durable Character Sheet state remains. `HitPointRecoveryState`
+  is a rule-core projection, `hitPointMaximum` is derived from existing
+  `maximumHp` and `hitPointMaximumReduction`, and `hitPointsRegained` is a
+  result fact rather than stored sheet state.
+- The ambiguous raw optional fields are outside the generator-facing boundary.
+  `positiveHpUnconscious` and `zeroHpLifecycle` are accepted only by
+  `CharacterSheetHitPointsInput`; the dry run projects from the canonical
+  `CharacterSheetHitPoints` union after `characterSheetHitPoints(...)` has
+  collapsed those inputs into `positive`, `knockedOut`, or `zero`.
+- Stable recovery elapsed-time details are intentionally not added to the Rust
+  recovery shape. The QNT `DeathSavingThrowLifecycle` owns only the Stable flag;
+  the reverse projection preserves any source `CharacterSheetStableRecovery`
+  timer when `hitPointsRegained == 0`, and drops it only when regained Hit
+  Points move the sheet out of the zero-HP lifecycle.
+- The strong connascence around the SRD phrase "regains any Hit Points" is
+  localized in one result boundary: the same `hitPointsRegained > 0` fact drives
+  Death Saving Throw reset, zero-HP Unconscious cleanup, and positive-Hit-Point
+  Knock Out cleanup. Future wrappers should not split these into separate
+  caller protocols.
+- Domain language stays in the repo vocabulary: Hit Points, Hit Point Maximum,
+  Temporary Hit Points, Death Saving Throw, Stable, Unconscious, and Knock Out.
+
+Conclusion: no reasonable unresolved projection or connascence finding remains
+after the boundary clarifications above. No repair task is appended for this
+lane.

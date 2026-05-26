@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Review the recovery dry run for projection and connascence gaps"
     },
     {
@@ -98,7 +98,7 @@ Read only these by default:
 - `plans/QNT_COVERAGE_PROGRAM.md`
 - `plans/rules-kernel-coverage/README.md`
 - `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`
-- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md`
+- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`
 - The relevant rows in `plans/rules-kernel-coverage/obligations.jsonl`
 - The relevant rows in `plans/rules-kernel-coverage/generator-readiness.jsonl`
 - The exact QNT owners, TS owners, parity witnesses, SRD passages, and
@@ -163,7 +163,7 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | done | none | Starts the manual Rust dry-run path. |
-| 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | ready-for-research | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
+| 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | done | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
 | 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | ready-for-research | none | Independent focused MBT promotion. |
@@ -212,7 +212,7 @@ Acceptance:
 
 ### Task 2 - QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 1 artifact, `kernel-ir-boundaries.jsonl`, and the existing
 Character Sheet HP/rest runtime owner.
