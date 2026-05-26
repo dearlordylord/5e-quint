@@ -93,6 +93,19 @@ function mcpScenarioEvidenceFixture(kind) {
         summary: "sample MCP evidence",
       },
     ],
+    scopeAuditDecisions: [
+      {
+        scopeId: "level-1-3",
+        auditTaskId: "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+        result: "new-scenario-required",
+        reason: "fixture missing scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture scenario",
+          inputs: ["fixture input"],
+        },
+      },
+    ],
   };
 }
 
@@ -321,6 +334,32 @@ function runSelfTest(root) {
         `Self-test failed: expected invalid MCP witness kind issue ${JSON.stringify(expectedMcpScenarioIssue)}, got ${JSON.stringify(invalidMcpScenarioIssues)}`,
       );
     }
+    const duplicateMcpAuditOwnership = mcpScenarioEvidenceFixture(
+      mcpScenarioWitnessKind,
+    );
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].missingFlowIds = [
+      "mcp-workflow-discovery",
+    ];
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].requiredEvidence.followUpTaskId =
+      "fixture-duplicate-follow-up";
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].requiredEvidence.coveredFlowIds =
+      ["mcp-workflow-discovery"];
+    const duplicateMcpAuditOwnershipIssues = validateMcpScenarioEvidence(
+      duplicateMcpAuditOwnership,
+      { root: tempDir },
+    );
+    const expectedDuplicateMcpAuditOwnershipIssues = [
+      "MCP scenario evidence manifest scopeAuditDecisions[0] must not include unsupported field missingFlowIds.",
+      "MCP scenario evidence manifest scopeAuditDecisions[0].requiredEvidence must not include unsupported field followUpTaskId.",
+      "MCP scenario evidence manifest scopeAuditDecisions[0].requiredEvidence must not include unsupported field coveredFlowIds.",
+    ];
+    for (const expectedIssue of expectedDuplicateMcpAuditOwnershipIssues) {
+      if (!duplicateMcpAuditOwnershipIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected duplicate MCP audit ownership issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(duplicateMcpAuditOwnershipIssues)}`,
+        );
+      }
+    }
     const incompleteLevelReport = fullSupportReportFixture({
       scopeTitle: "Fixture incomplete level",
       claimGate: {
@@ -379,6 +418,30 @@ function runSelfTest(root) {
           },
         ],
         evidence: [],
+        scopeAuditDecisions: [
+          {
+            scopeId: "level-1",
+            auditTaskId: "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+            result: "new-scenario-required",
+            reason: "fixture missing scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture scenario",
+              inputs: ["fixture input"],
+            },
+          },
+          {
+            scopeId: "level-1-3",
+            auditTaskId: "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            result: "new-scenario-required",
+            reason: "fixture missing scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture scenario",
+              inputs: ["fixture input"],
+            },
+          },
+        ],
       },
       rulesKernelMatrix: {
         obligations: [

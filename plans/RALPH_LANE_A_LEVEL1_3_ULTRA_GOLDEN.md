@@ -25,14 +25,14 @@
     {
       "number": 4,
       "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit MCP scenario evidence for level 1-3 scope"
     },
     {
       "number": 5,
       "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
       "status": "ready-for-research",
-      "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap"
+      "title": "Add level 1-3 MCP scenario evidence for the audited gap"
     },
     {
       "number": 6,
@@ -205,7 +205,7 @@ pass; otherwise it reports the precise blocked layer.
 
 ### Task 4 - L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT - Audit MCP scenario evidence for level 1-3 scope
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: MCP scenario evidence manifest and level 1-3 required user-facing flows.
 
@@ -215,16 +215,35 @@ Output: written checker-owned decision, preferably generated, on whether level
 Acceptance: no hand-wavy reuse. Either existing scenario evidence is tied to
 level 1-3 requirements, or Task 5 remains necessary with exact inputs.
 
-### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence only if the audit finds a real gap
+### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence for the audited gap
 
 Status: `ready-for-research`
 
-Input: Task 4 audit.
+Input: Task 4 generated MCP level-scope audit decision. Existing evidence reuses
+only `mcp-workflow-discovery`; level 1-3 still needs scenario evidence for
+`character-creation`, `character-sheet`, and `battle`.
 
-Output: if needed, one focused MCP scenario that demonstrates a level-3
-character path using supported level 1-3 content without PHB+ identity leakage.
-If not needed, mark this task done with an evidence-backed no-op commit or plan
-update.
+Output: one focused MCP scenario that demonstrates a level-3 character path
+using supported level 1-3 content without PHB+ identity leakage.
+
+Required scenario inputs:
+
+- Use only SRD-authored ids already installed in this repo, such as
+  `class_wizard`, `subclass_wizard_evoker`, `species_elf` or `species_orc`,
+  `background_soldier`, and supported Wizard spell-list spells.
+- Drive character creation through create, discover, fill, and finalize MCP
+  tools for Wizard level 3, including Evoker subclass and returned
+  spellbook/prepared-spell holes.
+- Include at least one supported spell-level-2 Wizard spell in the spellbook
+  and prepared spell set; `scorching_ray` is the primary battle-path candidate
+  because it already has battle support.
+- Verify durable Character Sheet spellcasting exposes four level-1 Spell Slots
+  and two level-2 Spell Slots before battle.
+- Start battle from the finalized Wizard and an SRD Stat Block, cast
+  `scorching_ray` through returned target, attack-roll, and rolled-dice holes,
+  and verify one level-2 Spell Slot is expended.
+- End battle and verify list or session snapshot output still exposes the
+  durable level-3 Character Sheet state and level-2 Spell Slot expenditure.
 
 Acceptance: MCP evidence layer for level 1-3 is pass or explicitly blocked
 with a concrete missing scenario.

@@ -649,7 +649,27 @@
           "status": "pass"
         },
         {
-          "blockingCount": 4,
+          "auditDecision": {
+            "auditTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            "reason": "Existing executable MCP acceptance scenarios cover a level-1 Fighter plus level-2 Fighter and Wizard paths. The reusable discovery scenario is level-agnostic, but no existing scenario finalizes a character-level-3 build, selects a level-3 subclass, exposes level-2 Spell Slots on the Character Sheet, or casts a spell-level-2 supported spell through MCP battle tools.",
+            "requiredEvidence": {
+              "inputs": [
+                "Use only SRD-authored ids already installed in this repo, such as class_wizard, subclass_wizard_evoker, species_elf or species_orc, background_soldier, and supported spells from the Wizard spell list.",
+                "Drive character creation through create_character_draft, discover_creation_holes, fill_creation_holes, and finalize_character for Wizard level 3, including subclass_wizard_evoker and returned spellbook/prepared-spell holes.",
+                "Include at least one supported spell-level-2 Wizard spell in the spellbook and prepared spell set; scorching_ray is the primary battle-path candidate because it already has battle support. misty_step may be included as an additional level-2 prepared spell if the scenario also wants a bonus-action spell path.",
+                "Verify list_characters or the finalization payload exposes character-level-3 Wizard spellcasting with four level-1 Spell Slots and two level-2 Spell Slots before battle.",
+                "Start battle from the finalized Wizard and an SRD Stat Block, discover the Wizard battle acts, resolve Scorching Ray through returned target, attack-roll, and rolled-dice holes, and verify one level-2 Spell Slot is expended.",
+                "End battle and verify list_characters or the session snapshot still exposes the durable level-3 Character Sheet state and the level-2 Spell Slot expenditure."
+              ],
+              "scenarioGoal": "Add one focused SRD Wizard 3 MCP scenario that creates and finalizes a supported character-level-3 build, inspects durable Character Sheet state, starts battle, casts a supported spell-level-2 spell, and ends battle with updated sheet state visible."
+            },
+            "result": "new-scenario-required",
+            "reusedFlowIds": [
+              "mcp-workflow-discovery"
+            ],
+            "scopeId": "level-1-3"
+          },
+          "blockingCount": 3,
           "evidence": {
             "check": {
               "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
@@ -658,55 +678,58 @@
             },
             "scenarioEvidenceFlows": {
               "denominator": 4,
-              "numerator": 0
+              "numerator": 1
             },
             "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
             "witnessKind": "mcp-scenario"
           },
-          "evidenceRows": [],
+          "evidenceRows": [
+            {
+              "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
+              "scenarioId": "discover-mcp-surface",
+              "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            }
+          ],
           "id": "mcp-scenario-evidence",
           "missingEvidenceRows": [
             {
-              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
-              "flowId": "mcp-workflow-discovery",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
-            },
-            {
               "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
               "flowId": "character-creation",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             },
             {
               "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             },
             {
               "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
               "flowId": "battle",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             }
           ],
           "requiredFlows": [
             {
               "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
               "flowId": "mcp-workflow-discovery",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             },
             {
               "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
               "flowId": "character-creation",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             },
             {
               "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             },
             {
               "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
               "flowId": "battle",
-              "followUpTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT"
+              "followUpTaskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED"
             }
           ],
           "status": "blocked"

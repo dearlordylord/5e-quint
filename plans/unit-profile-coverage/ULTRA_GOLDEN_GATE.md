@@ -49,7 +49,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-3 | support-completeness | pass | _none_ |
 | level-1-3 | qnt-generator-readiness | blocked | 2 blocker(s) |
 | level-1-3 | mbt-parity-evidence | pass | _none_ |
-| level-1-3 | mcp-scenario-evidence | blocked | 4 blocker(s) |
+| level-1-3 | mcp-scenario-evidence | blocked | 3 blocker(s) |
 
 ## MCP Scenario Evidence
 
@@ -65,10 +65,20 @@ MCP scenario evidence is an explicit required layer. Its manifest records requir
 | level-1-2 | character-creation | pass | `mcp-scenario`, `mcp-scenario`, `mcp-scenario` | `create-baseline-character`, `create-warrior-second-level`, `create-wizard-with-spells` | _none_ |
 | level-1-2 | character-sheet | pass | `mcp-scenario`, `mcp-scenario`, `mcp-scenario` | `create-baseline-character`, `create-wizard-with-spells`, `finish-battle-and-inspect-character-state` | _none_ |
 | level-1-2 | battle | pass | `mcp-scenario`, `mcp-scenario`, `mcp-scenario`, `mcp-scenario`, `mcp-scenario`, `mcp-scenario`, `mcp-scenario` | `select-monsters`, `start-battle-with-initiative`, `take-turns-and-resolve-attacks`, `use-action-surge`, `cast-cantrips-and-slotted-spells`, `finish-battle-and-inspect-character-state`, `recover-from-invalid-or-stale-actions` | _none_ |
-| level-1-3 | mcp-workflow-discovery | blocked | _missing_ | _missing_ | `L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT` |
-| level-1-3 | character-creation | blocked | _missing_ | _missing_ | `L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT` |
-| level-1-3 | character-sheet | blocked | _missing_ | _missing_ | `L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT` |
-| level-1-3 | battle | blocked | _missing_ | _missing_ | `L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT` |
+| level-1-3 | mcp-workflow-discovery | pass | `mcp-scenario` | `discover-mcp-surface` | _none_ |
+| level-1-3 | character-creation | blocked | _missing_ | _missing_ | `L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED` |
+| level-1-3 | character-sheet | blocked | _missing_ | _missing_ | `L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED` |
+| level-1-3 | battle | blocked | _missing_ | _missing_ | `L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED` |
+
+## MCP Level-Scope Audit Decisions
+
+Scope audit decisions are checker-owned conclusions from the MCP scenario evidence manifest. When existing executable scenarios are insufficient for a scoped flow, the required follow-up inputs stay with the missing evidence row instead of being inferred from selected-identity or support-profile coverage.
+
+| Scope | Decision | Existing evidence reused | Missing flows | Follow-up task | Required scenario inputs |
+| --- | --- | --- | --- | --- | --- |
+| level-1 | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-2 | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-3 | new-scenario-required | `mcp-workflow-discovery` | `character-creation`, `character-sheet`, `battle` | `L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED` | Use only SRD-authored ids already installed in this repo, such as class_wizard, subclass_wizard_evoker, species_elf or species_orc, background_soldier, and supported spells from the Wizard spell list.<br>Drive character creation through create_character_draft, discover_creation_holes, fill_creation_holes, and finalize_character for Wizard level 3, including subclass_wizard_evoker and returned spellbook/prepared-spell holes.<br>Include at least one supported spell-level-2 Wizard spell in the spellbook and prepared spell set; scorching_ray is the primary battle-path candidate because it already has battle support. misty_step may be included as an additional level-2 prepared spell if the scenario also wants a bonus-action spell path.<br>Verify list_characters or the finalization payload exposes character-level-3 Wizard spellcasting with four level-1 Spell Slots and two level-2 Spell Slots before battle.<br>Start battle from the finalized Wizard and an SRD Stat Block, discover the Wizard battle acts, resolve Scorching Ray through returned target, attack-roll, and rolled-dice holes, and verify one level-2 Spell Slot is expended.<br>End battle and verify list_characters or the session snapshot still exposes the durable level-3 Character Sheet state and the level-2 Spell Slot expenditure. |
 
 ## Selected Identity Evidence Join Audit
 
