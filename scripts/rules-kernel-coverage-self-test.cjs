@@ -349,6 +349,11 @@ function runSelfTest() {
 
   const sampleQntPath = path.join(root, "sample.qnt");
   const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
+  const sampleInductiveQntPath = path.join(root, "sample-inductive.qnt");
+  const initialSampleInductiveQntText = fs.readFileSync(
+    sampleInductiveQntPath,
+    "utf8",
+  );
   writeFile(
     sampleQntPath,
     [
@@ -515,7 +520,7 @@ function runSelfTest() {
   const semanticCoreCandidateRunBlockResult = buildKernelCoverage({ root });
   assert.ok(
     semanticCoreCandidateRunBlockResult.issues.includes(
-      `generator-readiness row 1.semantic-core-candidate cannot include semanticCore path(s) with run blocks (sample.qnt); split the run blocks out or classify with ${runBlockBlocker}.`,
+      `generator-readiness row 1.semantic-core-candidate cannot include semanticCore run block(s) at sample.qnt:5; split the run blocks out or classify with ${runBlockBlocker}.`,
     ),
     `Expected semantic-core run-block candidate issue, got ${JSON.stringify(semanticCoreCandidateRunBlockResult.issues)}`,
   );
@@ -533,8 +538,45 @@ function runSelfTest() {
   );
   assert.ok(
     semanticCoreCandidateRunBlockResult.report.includes(
-      `| \`BATTLE.SAMPLE\` | semantic-core-candidate | \`${runBlockBlocker}\` | _none_ | \`sample.qnt\`: lines \`5\` |`,
+      `| \`BATTLE.SAMPLE\` | semantic-core-candidate | \`${runBlockBlocker}\` | _none_ | \`sample.qnt:5\` |`,
     ),
+  );
+  writeFile(sampleQntPath, initialSampleQntText);
+  writeFile(
+    sampleInductiveQntPath,
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module sampleInductive {",
+      "  run proof_only_example = true",
+      "}",
+    ].join("\n") + "\n",
+  );
+  const proofOnlyRunBlockResult = buildKernelCoverage({ root });
+  assert.deepEqual(
+    proofOnlyRunBlockResult.matrix.semanticCoreRunBlockFindings,
+    [],
+  );
+  assert.equal(
+    proofOnlyRunBlockResult.issues.some((issue) =>
+      issue.includes("sample-inductive.qnt:3"),
+    ),
+    false,
+    `Expected proof-only run block exemption, got ${JSON.stringify(proofOnlyRunBlockResult.issues)}`,
+  );
+  writeFile(
+    sampleInductiveQntPath,
+    initialSampleInductiveQntText,
+  );
+  writeFile(
+    sampleQntPath,
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "// run commented_out = true",
+      "module sample {",
+      "",
+      "  run sample_run_block = true",
+      "}",
+    ].join("\n") + "\n",
   );
   writeFile(
     sampleGeneratorReadinessPath,
@@ -551,7 +593,7 @@ function runSelfTest() {
   const fixtureBoundMissingRunBlockResult = buildKernelCoverage({ root });
   assert.ok(
     fixtureBoundMissingRunBlockResult.issues.includes(
-      `generator-readiness row 1.fixture-bound has semanticCore path(s) with run blocks (sample.qnt) and must include blockedBy ${runBlockBlocker}.`,
+      `generator-readiness row 1.fixture-bound has semanticCore run block(s) at sample.qnt:5 and must include blockedBy ${runBlockBlocker}.`,
     ),
     `Expected fixture-bound run-block blocker issue, got ${JSON.stringify(fixtureBoundMissingRunBlockResult.issues)}`,
   );
