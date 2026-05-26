@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "QNTGR-B12-COMPOSITE-SLICE-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next composite slice candidates"
     },
     {
@@ -295,13 +295,16 @@ runtime state.
 
 ### Task 12 - QNTGR-B12-COMPOSITE-SLICE-CANDIDATES - Mine next composite slice candidates
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QNT_COVERAGE_PROGRAM.md`, profile obligations, and readiness rows.
 
 Output: 5-10 candidate composite slice tasks with precise inputs/outputs, if
 real gaps remain. If not, record why the current composite slice layer is
 closed enough for the next phase.
+
+Result: `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records
+the candidate queue and the current non-blocking gate status.
 
 Acceptance: future Ralph work can start without rereading historical lanes.
 

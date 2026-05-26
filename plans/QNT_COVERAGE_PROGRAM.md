@@ -75,16 +75,23 @@ Checked source-of-truth artifacts:
 - `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` is the
   next planned manual dry-run vertical, scoped to Hit Point recovery without
   adding parallel Character Sheet state.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the next
+  optional battle composite-slice candidates. It also records that current
+  coverage and generator-readiness gates are closed enough for the next phase;
+  the remaining candidates are witness-shape deepening, not blocker cleanup.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
 - `plans/QNT_GENERATOR_READINESS_BACKLOG.md` parks drained lane work that is not
   currently runnable.
 
-Active runnable queues:
+Active generator and Rust queues:
 
 - None. Reopen parked work by carving a small coherent batch out of
   `plans/QNT_GENERATOR_READINESS_BACKLOG.md` into a fresh Ralph lane plan.
+  Optional battle composite-slice deepening candidates are listed in
+  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
+  generator-readiness blockers.
 
 ## Working Discipline
 
