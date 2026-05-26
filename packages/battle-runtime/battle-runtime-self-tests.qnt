@@ -24,4 +24,5 @@ module battleRuntimeSelfTests {
   import battleRuntimeDruidWildShapeTests.* from "./battle-runtime-druid-wild-shape-tests"
   import battleRuntimeMonkFocusTests.* from "./battle-runtime-monk-focus-tests"
   import battleRuntimeStatBlockBridgeExamples.* from "./battle-runtime-stat-block-bridge-examples"
+  import battleRuntimeFeatureBridgeExamples.* from "./battle-runtime-feature-bridge-examples"
 }
