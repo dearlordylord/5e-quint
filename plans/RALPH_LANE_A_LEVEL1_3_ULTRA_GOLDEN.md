@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit supported Unit to rules-kernel join for level 1-3"
     },
     {
@@ -313,7 +313,7 @@ JSON agree on blockers and layer statuses.
 
 ### Task 11 - L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT - Audit supported Unit to rules-kernel join for level 1-3
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `level1-3-full-support.json`, `unit-matrix.json`, and
 `rules-kernel-coverage/profile-obligations.jsonl`.
