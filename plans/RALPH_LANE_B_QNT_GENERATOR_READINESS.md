@@ -4,22 +4,102 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "QNTGR-B01-SELF-TRANSFORMATION-ASSESS", "status": "ready-for-research", "title": "Assess self-transformation generator readiness" },
-    { "number": 2, "id": "QNTGR-B02-MIRROR-IMAGE-ASSESS", "status": "ready-for-research", "title": "Assess Mirror Image generator readiness" },
-    { "number": 3, "id": "QNTGR-B03-MINIMAL-ATTACK-ASSESS", "status": "ready-for-research", "title": "Assess minimal attack generator readiness" },
-    { "number": 4, "id": "QNTGR-B04-CREATION-SLICE-RUN-BLOCK-SPLIT", "status": "ready-for-research", "title": "Split character creation slice run blocks" },
-    { "number": 5, "id": "QNTGR-B05-CREATION-FILL-BATCH-ASSESS", "status": "ready-for-research", "title": "Assess creation fill-batch slice replay readiness" },
-    { "number": 6, "id": "QNTGR-B06-CREATION-CHOICE-CARDINALITY-ASSESS", "status": "ready-for-research", "title": "Assess creation choice discovery cardinality readiness" },
-    { "number": 7, "id": "QNTGR-B07-GENERATOR-READINESS-REPORT-REFRESH", "status": "ready-for-research", "title": "Refresh generator readiness reports" },
-    { "number": 8, "id": "QNTGR-B08-NOT-ASSESSED-ZERO-GATE", "status": "ready-for-research", "title": "Add or verify zero not-assessed gate" },
-    { "number": 9, "id": "QNTGR-B09-GENERATOR-SUBSET-VOCAB-AUDIT", "status": "ready-for-research", "title": "Audit generator subset vocabulary for new rows" },
-    { "number": 10, "id": "QNTGR-B10-QNT-OWNER-ROLE-AUDIT", "status": "ready-for-research", "title": "Audit QNT owner roles for assessed rows" },
-    { "number": 11, "id": "QNTGR-B11-RUST-DRY-RUN-NEXT-VERTICAL", "status": "ready-for-research", "title": "Plan or prototype next Rust dry-run vertical" },
-    { "number": 12, "id": "QNTGR-B12-COMPOSITE-SLICE-CANDIDATES", "status": "ready-for-research", "title": "Mine next composite slice candidates" },
-    { "number": 13, "id": "QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING", "status": "ready-for-research", "title": "Harden run-block scanner expectations" },
-    { "number": 14, "id": "QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE", "status": "ready-for-research", "title": "Update QNT coverage program rollup" },
-    { "number": 15, "id": "QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT", "status": "ready-for-research", "title": "Close out generator readiness closure state" },
-    { "number": 16, "id": "QNTGR-B16-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Plan the next QNT deepening batch if this lane drains" }
+    {
+      "number": 1,
+      "id": "QNTGR-B01-SELF-TRANSFORMATION-ASSESS",
+      "status": "done",
+      "title": "Assess self-transformation generator readiness"
+    },
+    {
+      "number": 2,
+      "id": "QNTGR-B02-MIRROR-IMAGE-ASSESS",
+      "status": "ready-for-research",
+      "title": "Assess Mirror Image generator readiness"
+    },
+    {
+      "number": 3,
+      "id": "QNTGR-B03-MINIMAL-ATTACK-ASSESS",
+      "status": "ready-for-research",
+      "title": "Assess minimal attack generator readiness"
+    },
+    {
+      "number": 4,
+      "id": "QNTGR-B04-CREATION-SLICE-RUN-BLOCK-SPLIT",
+      "status": "ready-for-research",
+      "title": "Split character creation slice run blocks"
+    },
+    {
+      "number": 5,
+      "id": "QNTGR-B05-CREATION-FILL-BATCH-ASSESS",
+      "status": "ready-for-research",
+      "title": "Assess creation fill-batch slice replay readiness"
+    },
+    {
+      "number": 6,
+      "id": "QNTGR-B06-CREATION-CHOICE-CARDINALITY-ASSESS",
+      "status": "ready-for-research",
+      "title": "Assess creation choice discovery cardinality readiness"
+    },
+    {
+      "number": 7,
+      "id": "QNTGR-B07-GENERATOR-READINESS-REPORT-REFRESH",
+      "status": "ready-for-research",
+      "title": "Refresh generator readiness reports"
+    },
+    {
+      "number": 8,
+      "id": "QNTGR-B08-NOT-ASSESSED-ZERO-GATE",
+      "status": "ready-for-research",
+      "title": "Add or verify zero not-assessed gate"
+    },
+    {
+      "number": 9,
+      "id": "QNTGR-B09-GENERATOR-SUBSET-VOCAB-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit generator subset vocabulary for new rows"
+    },
+    {
+      "number": 10,
+      "id": "QNTGR-B10-QNT-OWNER-ROLE-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit QNT owner roles for assessed rows"
+    },
+    {
+      "number": 11,
+      "id": "QNTGR-B11-RUST-DRY-RUN-NEXT-VERTICAL",
+      "status": "ready-for-research",
+      "title": "Plan or prototype next Rust dry-run vertical"
+    },
+    {
+      "number": 12,
+      "id": "QNTGR-B12-COMPOSITE-SLICE-CANDIDATES",
+      "status": "ready-for-research",
+      "title": "Mine next composite slice candidates"
+    },
+    {
+      "number": 13,
+      "id": "QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING",
+      "status": "ready-for-research",
+      "title": "Harden run-block scanner expectations"
+    },
+    {
+      "number": 14,
+      "id": "QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE",
+      "status": "ready-for-research",
+      "title": "Update QNT coverage program rollup"
+    },
+    {
+      "number": 15,
+      "id": "QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT",
+      "status": "ready-for-research",
+      "title": "Close out generator readiness closure state"
+    },
+    {
+      "number": 16,
+      "id": "QNTGR-B16-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Plan the next QNT deepening batch if this lane drains"
+    }
   ]
 }
 -->
@@ -76,7 +156,7 @@ row changes:
 
 ### Task 1 - QNTGR-B01-SELF-TRANSFORMATION-ASSESS - Assess self-transformation generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.SELF_TRANSFORMATION_MODE`,
 `packages/battle-runtime/battle-runtime-self-transformation.qnt`, owner-role
