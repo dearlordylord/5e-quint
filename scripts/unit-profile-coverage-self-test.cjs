@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const {
+  battleReadinessClosureKind,
   deterministicAdmissionProjectionEvidenceTag,
   mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
@@ -16,6 +17,7 @@ const {
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
+  buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
 } = require("./level1-full-support-report.cjs");
@@ -41,6 +43,19 @@ const {
 const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
+const {
+  selectedIdentityEvidenceStatus,
+  selectedIdentityStatus,
+} = require("./unit-profile-coverage-report.cjs");
+
+const mindSpikeFixture = Object.freeze({
+  unitId: "mind_spike",
+  profileId: "spell.invocation-damage-save-or-attack",
+  sourceRecordPath: "packages/surface/content/mind_spike.json",
+  selectedIdentityTaskId: "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY",
+  selectedIdentityOwnerPath:
+    "packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts",
+});
 
 function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
@@ -272,6 +287,104 @@ function requireSelfTestLayer(scope, layerId) {
   return layer;
 }
 
+function mindSpikeDeferredSelectedIdentityUnit(withSelectedIdentityEvidence) {
+  return {
+    unitId: mindSpikeFixture.unitId,
+    collectionId: "srd-5.2.1",
+    catalogAdmission: {
+      status: "installed",
+      collectionId: "srd-5.2.1",
+    },
+    sourceRecordPath: mindSpikeFixture.sourceRecordPath,
+    kind: "spell",
+    executableMechanics: true,
+    claim: {
+      tag: "profile-subset-supported",
+      profileIds: [mindSpikeFixture.profileId],
+      supportedMechanics: [
+        "Magic Action level-2-or-higher Spell Slot casting",
+        "Wisdom Saving Throw against the caster Spell Save DC",
+        "Psychic damage on failed or successful save",
+        "failed-save Concentration ownership and duration cleanup",
+      ],
+      deferredMechanics: [
+        {
+          mechanic:
+            "failed-save same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial",
+          battleReadinessClosure: {
+            kind:
+              battleReadinessClosureKind.outsideRuntimePresentationExploration,
+            owner: "runtime-detached table/perception/knowledge owner",
+            reason:
+              "The promoted battle runtime does not store duplicate table/perception knowledge state.",
+          },
+        },
+      ],
+      deferredMechanicsSelectedIdentityDisposition: {
+        tag: "not-applicable",
+        owner: "runtime-detached table/perception/knowledge owner",
+        reason:
+          "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
+      },
+    },
+    evidence: withSelectedIdentityEvidence
+      ? [
+          {
+            tag: selectedIdentityMbtEvidenceTag,
+            taskId: mindSpikeFixture.selectedIdentityTaskId,
+            ownerPath: mindSpikeFixture.selectedIdentityOwnerPath,
+          },
+        ]
+      : [],
+  };
+}
+
+function mindSpikeDeferredSelectedIdentityReadinessRow(
+  withSelectedIdentityEvidence,
+) {
+  const unit = mindSpikeDeferredSelectedIdentityUnit(
+    withSelectedIdentityEvidence,
+  );
+  return {
+    unitId: unit.unitId,
+    status: "closed-outside-battle-runtime-boundary",
+    claimTag: unit.claim.tag,
+    selectedIdentity: selectedIdentityEvidenceStatus(
+      unit,
+      selectedIdentityMbtEvidenceTag,
+    ),
+    sourceRecordPath: unit.sourceRecordPath,
+  };
+}
+
+function assertMindSpikeDeferredSelectedIdentityGate() {
+  const withoutWitness = buildSelectedIdentityReadiness([
+    mindSpikeDeferredSelectedIdentityReadinessRow(false),
+  ]);
+  if (
+    withoutWitness.blockingRows.length !== 1 ||
+    withoutWitness.blockingRows[0].unitId !== mindSpikeFixture.unitId ||
+    withoutWitness.blockingRows[0].selectedIdentityStatus !==
+      selectedIdentityStatus.missingWitnessDeferredNotApplicable
+  ) {
+    fail(
+      `Self-test failed: expected Mind Spike deferred selected-identity disposition to block without selected identity evidence, got ${JSON.stringify(withoutWitness)}`,
+    );
+  }
+
+  const withWitness = buildSelectedIdentityReadiness([
+    mindSpikeDeferredSelectedIdentityReadinessRow(true),
+  ]);
+  if (
+    withWitness.blockingRows.length !== 0 ||
+    withWitness.readyRowsByStatus[selectedIdentityStatus.witnessPresent] !== 1
+  ) {
+    fail(
+      `Self-test failed: expected Mind Spike selected identity evidence to satisfy the supported subset gate, got ${JSON.stringify(withWitness)}`,
+    );
+  }
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -298,6 +411,7 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 3 bands to include spell-level-2 and exclude spell-level-3, got ${JSON.stringify(levelThreeBands)}`,
     );
   }
+  assertMindSpikeDeferredSelectedIdentityGate();
 
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
@@ -1152,11 +1266,26 @@ function runSelfTest(root) {
             rawRecord: {},
             executableMechanics: true,
           },
+          {
+            unitId: mindSpikeFixture.unitId,
+            collectionId: "srd-5.2.1",
+            sourceRecordPath: mindSpikeFixture.sourceRecordPath,
+            provenance: { kind: "srd-5.2.1" },
+            rawRecord: {},
+            executableMechanics: true,
+          },
         ],
         profiles: [
           {
             id: "fixture.profile",
             profileKind: "equipment",
+            qntOwners: [],
+            runtimeOwners: [],
+            verificationOwners: [],
+          },
+          {
+            id: mindSpikeFixture.profileId,
+            profileKind: "spell-invocation",
             qntOwners: [],
             runtimeOwners: [],
             verificationOwners: [],
@@ -1195,6 +1324,11 @@ function runSelfTest(root) {
               },
             },
           },
+          {
+            unitId: mindSpikeFixture.unitId,
+            collectionId: "srd-5.2.1",
+            claim: mindSpikeDeferredSelectedIdentityUnit(false).claim,
+          },
         ],
         unitEvidence: [],
         taskClaims: [],
@@ -1214,6 +1348,15 @@ function runSelfTest(root) {
     if (!selectedIdentityHardGateIssues.includes(missingIdentityExpected)) {
       fail(
         `Self-test failed: expected selected identity hard-gate issue ${JSON.stringify(missingIdentityExpected)}, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
+      );
+    }
+    const mindSpikeMissingIdentityExpected =
+      `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-mbt evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
+    if (
+      !selectedIdentityHardGateIssues.includes(mindSpikeMissingIdentityExpected)
+    ) {
+      fail(
+        `Self-test failed: expected Mind Spike deferred mechanics disposition to keep the supported subset in the selected identity hard gate, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
       );
     }
     const nonApplicableBoundaryIssue = selectedIdentityHardGateIssues.find(
