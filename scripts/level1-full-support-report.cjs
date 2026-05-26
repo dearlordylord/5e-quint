@@ -962,14 +962,31 @@ function noMatrixDecisionArtifactPath(unitId, root) {
   return artifactPath;
 }
 
+function noMatrixPressureSourceDescription(sourceRows) {
+  const rowKinds = new Set(sourceRows.map((row) => row.rowKind));
+  const levelBands = Array.from(
+    new Set(sourceRows.map((row) => row.levelBand)),
+  ).sort();
+  const levelBandLabel = levelBands.join("/");
+
+  if (rowKinds.size === 1 && rowKinds.has("spell-unit-pressure")) {
+    return `${levelBandLabel} spell-list Unit pressure`;
+  }
+  if (rowKinds.size === 1 && rowKinds.has("class-feature-grant")) {
+    return `${levelBandLabel} class-feature pressure`;
+  }
+  return `${levelBandLabel} SRD pressure`;
+}
+
 function noMatrixSrdPressureRow(unitId, sourceRows, root) {
   const decisionArtifact = noMatrixDecisionArtifactPath(unitId, root);
+  const pressureSource = noMatrixPressureSourceDescription(sourceRows);
   return outsideRow(unitId, sourceRows, {
     ...(decisionArtifact === undefined ? {} : { decisionArtifact }),
     reason:
       decisionArtifact === undefined
-        ? "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet."
-        : "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        ? `The SRD row has ${pressureSource}, but no Unit matrix row exists yet.`
+        : `The SRD row has ${pressureSource} and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.`,
   });
 }
 

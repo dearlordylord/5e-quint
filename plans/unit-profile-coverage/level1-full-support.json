@@ -1082,7 +1082,7 @@
     "noMatrixSrdPressure": [
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1113,7 +1113,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1156,7 +1156,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1175,7 +1175,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1218,7 +1218,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1237,7 +1237,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1268,7 +1268,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1311,7 +1311,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1366,7 +1366,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1433,7 +1433,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1488,7 +1488,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1543,7 +1543,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1586,7 +1586,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
