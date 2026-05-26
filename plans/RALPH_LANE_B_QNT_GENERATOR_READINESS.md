@@ -171,7 +171,7 @@ Acceptance: no `not-assessed` row remains for self-transformation.
 
 ### Task 2 - QNTGR-B02-MIRROR-IMAGE-ASSESS - Assess Mirror Image generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION`,
 `packages/battle-runtime/battle-runtime-mirror-image.qnt`, owner-role rows,
