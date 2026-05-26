@@ -502,10 +502,7 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.
 
-| Obligation | Readiness status | Blocker | Follow-up | Semantic-core run blocks |
-| --- | --- | --- | --- | --- |
-| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
-| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+No semantic-core QNT owners contain run blocks.
 
 ## Kernel IR Boundaries
 

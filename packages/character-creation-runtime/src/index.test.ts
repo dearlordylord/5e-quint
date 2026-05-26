@@ -758,8 +758,8 @@ describe("CharacterEquipmentItemId", () => {
 });
 
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
-const characterCreationRuntimeSlicePath = fileURLToPath(
-  new URL("../character-creation-runtime-slice.qnt", import.meta.url),
+const characterCreationRuntimeSliceTestsPath = fileURLToPath(
+  new URL("../character-creation-runtime-slice-tests.qnt", import.meta.url),
 );
 
 describe("character creation hole discovery", () => {
@@ -8610,7 +8610,7 @@ function runQuintSliceSelfTests(): void {
       "test",
       "--backend",
       "typescript",
-      characterCreationRuntimeSlicePath,
+      characterCreationRuntimeSliceTestsPath,
       "--match",
       "test_",
     ],

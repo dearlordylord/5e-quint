@@ -9028,58 +9028,7 @@
       "status": "not-assessed"
     }
   ],
-  "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [],
-      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
-      "owners": [
-        {
-          "lines": [
-            578,
-            582,
-            595,
-            603,
-            619,
-            633,
-            653,
-            669,
-            682,
-            695,
-            719,
-            741
-          ],
-          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [],
-      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
-      "owners": [
-        {
-          "lines": [
-            578,
-            582,
-            595,
-            603,
-            619,
-            633,
-            653,
-            669,
-            682,
-            695,
-            719,
-            741
-          ],
-          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    }
-  ],
+  "semanticCoreRunBlockFindings": [],
   "kernelIrBoundaries": [
     {
       "boundary": "command",
