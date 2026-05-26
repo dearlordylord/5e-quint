@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit non-blocking product-readiness diagnostics"
     },
     {
@@ -276,7 +276,7 @@ gap.
 
 ### Task 8 - L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT - Audit non-blocking product-readiness diagnostics
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: level 1-3 product readiness diagnostic rows with
 `battle-runtime-required`, `owner-evidence-required`, and
