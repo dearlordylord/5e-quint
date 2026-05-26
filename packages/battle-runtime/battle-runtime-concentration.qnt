@@ -5,13 +5,13 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 
 module battleRuntimeConcentration {
-  import battleRuntimeConcentrationBridge.* from "./battle-runtime-concentration-bridge"
+  import reactionsContinuationsConcentration as RC from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
 
   pure def concentrationSavingThrowDc(damage: int): int = {
-    battleRuntimeConcentrationSavingThrowDc(damage)
+    RC::concentrationSavingThrowDc(damage)
   }
 
   pure def eldritchMindConcentrationSavingThrowMode(hasEldritchMind: bool): SavingThrowRollMode =

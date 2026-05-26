@@ -17,7 +17,6 @@ flowchart TB
 
     subgraph Bridges["battle-runtime QNT bridge modules"]
       MoveBridge["battle-runtime-movement-bridge.qnt"]
-      ConcBridge["battle-runtime-concentration-bridge.qnt"]
       IntBridge["battle-runtime-interrupt-bridge.qnt"]
       StatBridge["battle-runtime-stat-block-bridge.qnt"]
       FeatureBridge["battle-runtime-feature-bridge.qnt"]
@@ -67,15 +66,14 @@ flowchart TB
   end
 
   BRQ --> MoveBridge
-  BRQ --> ConcBridge
   BRQ --> IntBridge
   BRQ --> StatBridge
   BRQ --> FeatureBridge
   BRQ --> SpellBridge
+  BRQ --> Reactions
 
   MoveBridge --> ActionTurn
   MoveBridge --> Movement
-  ConcBridge --> Reactions
   IntBridge --> Reactions
   StatBridge --> StatControls
   FeatureBridge --> Features
@@ -119,7 +117,7 @@ flowchart TB
   classDef verify fill:#fff6df,stroke:#a87020,color:#112;
   classDef boundary fill:#f8eeee,stroke:#a43b3b,color:#112;
 
-  class BRQ,TraceQ,MoveBridge,ConcBridge,IntBridge,StatBridge,FeatureBridge,SpellBridge,ActionTurn,Movement,HP,DamageAdj,AttackComp,Reactions,StatControls,Features,Spells,IntegratedMbtQ,FocusedRuntimeMbtQ,RuleCoreMbtQ qnt;
+  class BRQ,TraceQ,MoveBridge,IntBridge,StatBridge,FeatureBridge,SpellBridge,ActionTurn,Movement,HP,DamageAdj,AttackComp,Reactions,StatControls,Features,Spells,IntegratedMbtQ,FocusedRuntimeMbtQ,RuleCoreMbtQ qnt;
   class PublicIndex,TraceTS,BattleReducer,ReducerIndex,Discovery,Dispatcher,AttackTS,MovementTS,SpellsTS,FeaturesTS,StatTS ts;
   class TraceTest,PublicTests,MbtDrivers verify;
 ```
