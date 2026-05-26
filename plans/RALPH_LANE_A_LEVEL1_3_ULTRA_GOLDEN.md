@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh level 1-3 full-support claim artifacts"
     },
     {
@@ -178,7 +178,7 @@ mechanics remain explicitly runtime-detached.
 
 ### Task 2 - L13UG-A02-LEVEL13-CLAIM-REFRESH - Refresh level 1-3 full-support claim artifacts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 1 output and generated coverage artifacts.
 
