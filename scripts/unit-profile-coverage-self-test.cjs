@@ -628,6 +628,152 @@ function runSelfTest(root) {
         );
       }
     }
+    const completeLevel13ScopeId = "level-1-3";
+    const completeLevel13ObligationId = "BATTLE.FIXTURE.COMPLETE";
+    const completeLevel13McpFlowId = "fixture-covered-flow";
+    const completeLevel13McpTaskId =
+      "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
+    const completeLevel13Report = fullSupportReportFixture({
+      scopeTitle: "Fixture complete level 1-3",
+      claimGate: {
+        status: "pass",
+        strictTargetOpenCount: 0,
+        selectedIdentityBlockerCount: 0,
+        authoredReadinessBlockerCount: 0,
+      },
+      rulesKernelSupportedUnitJoin: {
+        units: [
+          {
+            unitId: "fixture_complete_unit",
+            profiles: [
+              {
+                profileId: "fixture.complete-profile",
+                obligations: [
+                  {
+                    obligationId: completeLevel13ObligationId,
+                    runtime: "battle",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const completeLevel13Gate = buildUltraGoldenGate({
+      level1FullSupport: completeLevelReport,
+      level12FullSupport: completeLevelReport,
+      level13FullSupport: completeLevel13Report,
+      mcpScenarioEvidence: {
+        check: {
+          packageName: "@dnd/mcp",
+          script: "test:mcp-scenario-evidence",
+        },
+        requiredFlows: [
+          {
+            flowId: completeLevel13McpFlowId,
+            scopeIds: [completeLevel13ScopeId],
+            followUpTaskIdsByScope: {
+              [completeLevel13ScopeId]: "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            },
+            description: "fixture covered scenario evidence",
+          },
+        ],
+        evidence: [
+          {
+            kind: mcpScenarioWitnessKind,
+            flowId: completeLevel13McpFlowId,
+            scopeIds: [completeLevel13ScopeId],
+            scenarioId: "fixture-covered-scenario",
+            ownerPath:
+              "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+            testPath: "packages/mcp/src/mcp-protocol.test.ts",
+            taskId: completeLevel13McpTaskId,
+            summary: "fixture MCP scenario evidence",
+          },
+        ],
+        scopeAuditDecisions: [],
+      },
+      rulesKernelMatrix: {
+        obligations: [
+          {
+            id: completeLevel13ObligationId,
+            runtime: "battle",
+            status: "covered",
+            parityWitnesses: [
+              {
+                kind: "focused-mbt",
+                ownerPath: "fixture/complete.mbt.test.ts",
+              },
+            ],
+          },
+        ],
+        generatorReadiness: [
+          {
+            obligationId: completeLevel13ObligationId,
+            status: "generation-subset-clean",
+            blockedBy: [],
+          },
+        ],
+        qntOwnerRoles: [
+          {
+            ownerPath: "fixture/complete.qnt",
+            role: "semantic-core",
+            obligationIds: [completeLevel13ObligationId],
+          },
+        ],
+      },
+      selectedIdentityMbtEvidenceTag,
+      unitMatrix: { units: [] },
+    });
+    const completeLevel13PassScope = requireSelfTestScope(
+      completeLevel13Gate,
+      completeLevel13ScopeId,
+    );
+    if (
+      completeLevel13Gate.status !== "pass" ||
+      completeLevel13PassScope.status !== "pass" ||
+      completeLevel13PassScope.layerResult.completeLayers !== 4 ||
+      completeLevel13PassScope.layerResult.totalLayers !== 4 ||
+      completeLevel13PassScope.scopedObligationIds.length !== 1
+    ) {
+      fail(
+        `Self-test failed: expected complete level-1-3 ultra-golden fixture to pass all four layers with a scoped obligation, got ${JSON.stringify(completeLevel13Gate)}`,
+      );
+    }
+    for (const fixtureLayerId of [
+      "support-completeness",
+      "qnt-generator-readiness",
+      "mbt-parity-evidence",
+      "mcp-scenario-evidence",
+    ]) {
+      const layer = requireSelfTestLayer(
+        completeLevel13PassScope,
+        fixtureLayerId,
+      );
+      if (layer.status !== "pass" || layer.blockingCount !== 0) {
+        fail(
+          `Self-test failed: expected complete level-1-3 ultra-golden layer ${fixtureLayerId} to pass, got ${JSON.stringify(layer)}`,
+        );
+      }
+    }
+    const renderedCompleteLevel13Gate = renderUltraGoldenGate(
+      completeLevel13Gate,
+    );
+    for (const expectedRow of [
+      "Ultra-golden gate: **pass**.",
+      `| ${completeLevel13ScopeId} | pass | 4/4 | 1 |`,
+      `| ${completeLevel13ScopeId} | support-completeness | pass |`,
+      `| ${completeLevel13ScopeId} | qnt-generator-readiness | pass |`,
+      `| ${completeLevel13ScopeId} | mbt-parity-evidence | pass |`,
+      `| ${completeLevel13ScopeId} | mcp-scenario-evidence | pass |`,
+    ]) {
+      if (!renderedCompleteLevel13Gate.includes(expectedRow)) {
+        fail(
+          `Self-test failed: expected rendered complete level-1-3 ultra-golden gate row ${JSON.stringify(expectedRow)}, got ${JSON.stringify(renderedCompleteLevel13Gate)}`,
+        );
+      }
+    }
 
     const specPath = path.join(tempDir, "fixture.mbt.qnt");
     const testPath = path.join(tempDir, "fixture.mbt.test.ts");

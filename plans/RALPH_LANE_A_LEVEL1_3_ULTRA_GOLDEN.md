@@ -380,7 +380,7 @@ document the sampled evidence and why the closure vocabulary holds.
 
 ### Task 14 - L13UG-A14-LEVEL13-CHECKER-SELFTESTS - Extend checker self-tests for level 1-3 ultra-golden failures
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: unit-profile coverage checker self-tests.
 
