@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "QNTGR-B11-RUST-DRY-RUN-NEXT-VERTICAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan or prototype next Rust dry-run vertical"
     },
     {
@@ -281,7 +281,7 @@ Acceptance: no assessed row relies on an owner whose role is missing or wrong.
 
 ### Task 11 - QNTGR-B11-RUST-DRY-RUN-NEXT-VERTICAL - Plan or prototype next Rust dry-run vertical
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current `HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and generation-subset-clean
 rows after Tasks 1-10.
