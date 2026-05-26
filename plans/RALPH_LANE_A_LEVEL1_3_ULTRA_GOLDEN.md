@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Tighten claim-gate wording around diagnostics"
     },
     {
@@ -289,7 +289,7 @@ Acceptance: no diagnostic status is left ambiguous as a hidden blocker.
 
 ### Task 9 - L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING - Tighten claim-gate wording around diagnostics
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: findings from Tasks 7 and 8.
 
