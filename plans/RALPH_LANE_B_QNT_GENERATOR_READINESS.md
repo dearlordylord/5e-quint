@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Update QNT coverage program rollup"
     },
     {
@@ -322,7 +322,7 @@ proof-only exemption.
 
 ### Task 14 - QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE - Update QNT coverage program rollup
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: this lane's closure state and `plans/QNT_COVERAGE_PROGRAM.md`.
 
