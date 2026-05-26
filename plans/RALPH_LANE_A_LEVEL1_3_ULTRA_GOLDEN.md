@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L13UG-A15-L3-DURABLE-ABILITY-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing durable and ability-check level-3 feature Units"
     },
     {
@@ -392,7 +392,7 @@ regression.
 
 ### Task 15 - L13UG-A15-L3-DURABLE-ABILITY-UNITS - Admit missing durable and ability-check level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `barbarian_primal_knowledge`, `rogue_second_story_work`, and

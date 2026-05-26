@@ -496,6 +496,8 @@ export function describeModifyAcSetBase(
       return `${effect.formula.base} + DEX mod + CON mod`;
     case "base_plus_dex_wis":
       return `${effect.formula.base} + DEX mod + WIS mod`;
+    case "base_plus_dex_cha":
+      return `${effect.formula.base} + DEX mod + CHA mod`;
     default: {
       const _exhaustive: never = effect.formula;
       throw new Error(`unhandled AC base formula: ${String(_exhaustive)}`);

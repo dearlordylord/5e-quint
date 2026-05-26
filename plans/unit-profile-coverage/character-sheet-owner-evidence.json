@@ -391,6 +391,41 @@
         "packages/character-sheet-runtime/src/index.test.ts:warlockMagicalCunningBuild",
         "packages/character-sheet-runtime/src/index.test.ts:requireRight"
       ]
+    },
+    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
+      "taskId": "L13UG-A15",
+      "profile": "Character Sheet Ability Check ability substitution projection",
+      "summary": "Barbarian Primal Knowledge is read from the retained class-feature Unit and projected by Character Sheet as a Rage-active optional Strength substitution for the listed skill Ability Checks. The runtime requires caller-supplied active Rage evidence and derives the skill list from the Surface feature fact without duplicating skill proficiency state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetAbilityCheckAbility"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
+      ]
+    },
+    "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work": {
+      "taskId": "L13UG-A15",
+      "profile": "Character Sheet linked-Speed and jump-distance projections",
+      "summary": "Rogue Second-Story Work is read from the selected Thief subclass feature grants and projected by Character Sheet as a Climb Speed linked to walk Speed plus an optional Dexterity-for-Strength jump-distance ability substitution. The linked Speed remains a source link rather than a copied numeric Speed.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetLinkedSpeedGrants",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetJumpDistanceAbility"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:secondStoryWorkProjectionTestName"
+      ]
+    },
+    "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
+      "taskId": "L13UG-A15",
+      "profile": "Character Sheet Armor Class base formula projection",
+      "summary": "Sorcerer Draconic Resilience is read from the selected Draconic Sorcery subclass feature grants and projected by Character Sheet as an unarmored base Armor Class of 10 plus Dexterity and Charisma modifiers from the installed Surface modify_ac_set_base fact and equipment predicate.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:draconicResilienceArmorClassProjectionTestName"
+      ]
     }
   }
 }

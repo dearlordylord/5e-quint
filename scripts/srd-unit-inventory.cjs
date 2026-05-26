@@ -1179,6 +1179,26 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
     };
   }
   if (row.rowKind === "class-feature-grant") {
+    const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+      row.id,
+    );
+    if (characterCreationEvidence) {
+      return {
+        kind: "evidence-present",
+        owner: "character-creation-runtime",
+        evidence: characterCreationEvidence,
+      };
+    }
+    const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+      row.id,
+    );
+    if (characterSheetEvidence) {
+      return {
+        kind: "evidence-present",
+        owner: "character-sheet-runtime",
+        evidence: characterSheetEvidence,
+      };
+    }
     const levelThreeClassFeatureSplit = levelThreeClassFeatureOwnerSplits.get(
       row.id,
     );

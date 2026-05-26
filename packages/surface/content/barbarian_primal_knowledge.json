@@ -1,0 +1,68 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "barbarian",
+  "description": "You gain proficiency in another skill of your choice from the skill list available to Barbarians at level 1. In addition, while your Rage is active, you can channel primal power when you attempt certain tasks; if you make an Ability Check using Acrobatics, Intimidation, Perception, Stealth, or Survival, you can make it as a Strength check even if it normally uses a different ability.",
+  "id": "barbarian_primal_knowledge",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_proficiency",
+        "proficiency": {
+          "count": 1,
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "skill",
+              "skill": "animal_handling"
+            },
+            {
+              "kind": "skill",
+              "skill": "athletics"
+            },
+            {
+              "kind": "skill",
+              "skill": "intimidation"
+            },
+            {
+              "kind": "skill",
+              "skill": "nature"
+            },
+            {
+              "kind": "skill",
+              "skill": "perception"
+            },
+            {
+              "kind": "skill",
+              "skill": "survival"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "offer_ability_substitution_for_ability_checks",
+        "requiredActiveFeature": {
+          "kind": "class_feature",
+          "unitId": "barbarian_rage"
+        },
+        "skillFilter": {
+          "kind": "fixed",
+          "skills": [
+            "acrobatics",
+            "intimidation",
+            "perception",
+            "stealth",
+            "survival"
+          ]
+        },
+        "use": "str"
+      }
+    ]
+  },
+  "name": "Primal Knowledge",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Primal Knowledge"
+  }
+}

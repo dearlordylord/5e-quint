@@ -1308,7 +1308,14 @@ export function discoverClassFeatureGrantHoles(
       featureUnitId,
       unitLibrary,
     ),
-    ownedSkillProficiencies: draftOwnedSkillProficiencies(draft, unitLibrary),
+    ownedSkillProficiencies: draftOwnedSkillProficiencies(
+      draft,
+      unitLibrary,
+      (selection) =>
+        selection.kind === "unitChoice" &&
+        selection.source.unitId === featureUnitId &&
+        selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+    ),
     knownLanguages: draftKnownLanguages(draft, featureUnitId, unitLibrary),
   }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
 }
@@ -1563,7 +1570,11 @@ function passiveGrantChoiceHoles(
     return hole === undefined ? [] : [hole];
   }
   if (grant.kind === "grant_proficiency") {
-    return proficiencyGrantChoiceHoles(featureUnitId, grant.proficiency);
+    return proficiencyGrantChoiceHoles(
+      featureUnitId,
+      grant.proficiency,
+      input.ownedSkillProficiencies ?? [],
+    );
   }
   if (grant.kind === "grant_expertise") {
     return expertiseGrantChoiceHole(
@@ -1863,6 +1874,9 @@ function skillFromChoiceOptionId(
 function draftOwnedSkillProficiencies(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
 ): readonly Skill[] {
   const backgroundSkills =
     draft.selections.background == null
@@ -1871,9 +1885,10 @@ function draftOwnedSkillProficiencies(
   const selectedSkills = skillProficienciesFromChoiceSelections(
     draft.selections.choices,
     (selection) =>
-      selection.kind === "unitChoice" &&
-      grantExpertiseSkillSourceForSelection(selection, unitLibrary) !==
-        undefined,
+      shouldIgnoreSelection(selection) ||
+      (selection.kind === "unitChoice" &&
+        grantExpertiseSkillSourceForSelection(selection, unitLibrary) !==
+          undefined),
   );
 
   return uniqueSkills([...backgroundSkills, ...selectedSkills]);
@@ -1963,6 +1978,7 @@ function featGrantFeatureHoleSource(
 function proficiencyGrantChoiceHoles(
   sourceUnitId: UnitRecord["id"],
   proficiency: ProficiencyGrant,
+  ownedSkillProficiencies: readonly Skill[] = [],
 ): readonly ChoiceCreationHole[] {
   if (proficiency.kind === "choice") {
     return proficiencyGrantChoiceHole(
@@ -1970,6 +1986,7 @@ function proficiencyGrantChoiceHoles(
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
       proficiency.count,
       proficiency.options,
+      ownedSkillProficiencies,
     );
   }
   if (proficiency.kind === "mixed") {
@@ -1978,6 +1995,7 @@ function proficiencyGrantChoiceHoles(
       proficiency.choice.choiceKey,
       proficiency.choice.count,
       proficiency.choice.options,
+      ownedSkillProficiencies,
     );
   }
   if (proficiency.kind === "mixed_choices") {
@@ -1987,6 +2005,7 @@ function proficiencyGrantChoiceHoles(
         choice.choiceKey,
         choice.count,
         choice.options,
+        ownedSkillProficiencies,
       ),
     );
   }
@@ -1999,12 +2018,18 @@ function proficiencyGrantChoiceHole(
   choiceKeyText: string,
   count: number,
   subjects: readonly ProficiencyGrantSubject[],
+  ownedSkillProficiencies: readonly Skill[],
 ): readonly ChoiceCreationHole[] {
   const choiceKey = unitChoiceKey(choiceKeyText);
   if (Either.isLeft(choiceKey)) {
     return [];
   }
-  const options = subjects.flatMap(proficiencyGrantSubjectOptions);
+  const ownedSkills = uniqueSkills(ownedSkillProficiencies);
+  const options = subjects.flatMap((subject) =>
+    subject.kind === "skill" && ownedSkills.includes(subject.skill)
+      ? []
+      : proficiencyGrantSubjectOptions(subject),
+  );
   const cardinality = exactChoiceCardinality(count);
   if (
     cardinality === undefined ||

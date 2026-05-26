@@ -575,18 +575,18 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 152,
-              "numerator": 152,
+              "denominator": 155,
+              "numerator": 155,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 76,
-              "numerator": 76,
+              "denominator": 77,
+              "numerator": 77,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 182,
-              "numerator": 182,
+              "denominator": 185,
+              "numerator": 185,
               "percent": "100%"
             }
           },

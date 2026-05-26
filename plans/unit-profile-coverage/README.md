@@ -302,6 +302,12 @@ When a Unit supports only an executable subset of the SRD text, use
 `deferredMechanics` with follow-up task ids. Do not hide omitted SRD clauses
 behind a full `supported-profile` claim just because catalog admission passes.
 
+The rules-kernel join includes profiles that have a rules-kernel profile kind
+and either QNT owners or an explicit `profile-obligations.jsonl` mapping.
+Projection-only Character Creation and Character Sheet profiles with runtime
+tests but no QNT owner stay in the Unit/profile evidence lane until a task adds
+an actual QNT-connected obligation.
+
 The generated report includes a `Metric Semantics` section, and
 `unit-matrix.json` includes the same definitions under `metricSemantics`.
 Those definitions are the local authority for each metric's planning question,

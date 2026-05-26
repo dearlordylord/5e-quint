@@ -1323,6 +1323,23 @@ type EffectAtom =
       readonly scope: "unarmed_or_monk_weapon";
     }
   | {
+      readonly kind: "offer_ability_substitution_for_ability_checks";
+      readonly use: Ability;
+      readonly skillFilter: {
+        readonly kind: "fixed";
+        readonly skills: ReadonlyNonEmptyArray<Skill>;
+      };
+      readonly requiredActiveFeature?: {
+        readonly kind: "class_feature";
+        readonly unitId: string;
+      };
+    }
+  | {
+      readonly kind: "offer_ability_substitution_for_jump_distance";
+      readonly use: Ability;
+      readonly replaces: Ability;
+    }
+  | {
       readonly kind: "composite";
       readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
@@ -2340,6 +2357,10 @@ const BaseAcReplacementFormulaSchema = Schema.Union(
     kind: Schema.Literal("base_plus_dex_wis"),
     base: Schema.Number,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("base_plus_dex_cha"),
+    base: Schema.Number,
+  }),
 );
 
 export const ModifyAcSetBaseEffectSchema = Schema.Struct({
@@ -3181,6 +3202,25 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           ),
         ),
         scope: Schema.Literal("unarmed_or_monk_weapon"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("offer_ability_substitution_for_ability_checks"),
+        use: AbilitySchema,
+        skillFilter: Schema.Struct({
+          kind: Schema.Literal("fixed"),
+          skills: nonEmpty(SkillSchema),
+        }),
+        requiredActiveFeature: optionalExact(
+          Schema.Struct({
+            kind: Schema.Literal("class_feature"),
+            unitId: Schema.String,
+          }),
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("offer_ability_substitution_for_jump_distance"),
+        use: AbilitySchema,
+        replaces: AbilitySchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_condition_immunity"),

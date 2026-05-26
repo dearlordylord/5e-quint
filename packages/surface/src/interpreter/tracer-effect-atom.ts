@@ -145,6 +145,8 @@ export function traceEffectAtom(
     case "grant_bonus_action_attack":
     case "replace_damage_die":
     case "substitute_ability_for_rolls":
+    case "offer_ability_substitution_for_ability_checks":
+    case "offer_ability_substitution_for_jump_distance":
     case "grant_magic_weapon_enhancement":
     case "grant_condition_immunity":
     case "suppress_condition_benefit":

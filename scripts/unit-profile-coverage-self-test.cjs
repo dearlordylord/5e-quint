@@ -1119,6 +1119,42 @@ function runSelfTest(root) {
         `Self-test failed: expected rules-kernel profile gap follow-up ownership, got ${JSON.stringify(fixtureProfileGap)}`,
       );
     }
+    const projectionOnlyRulesKernelProfileJoin = buildRulesKernelProfileJoin({
+      obligations: [],
+      profileObligations: [],
+      profiles: [
+        {
+          id: "fixture.sheet-projection",
+          profileKind: "character-sheet",
+          qntOwners: [],
+        },
+      ],
+    });
+    const projectionOnlyRulesKernelSupportedUnitJoin =
+      buildRulesKernelSupportedUnitJoin(
+        [
+          {
+            unitId: "fixture_projection_unit",
+            claim: { tag: "supported-profile" },
+            profiles: [
+              {
+                id: "fixture.sheet-projection",
+                profileKind: "character-sheet",
+                qntOwners: [],
+              },
+            ],
+          },
+        ],
+        projectionOnlyRulesKernelProfileJoin,
+      );
+    if (
+      projectionOnlyRulesKernelProfileJoin.profiles.length !== 0 ||
+      projectionOnlyRulesKernelSupportedUnitJoin.units.length !== 0
+    ) {
+      fail(
+        `Self-test failed: projection-only sheet profiles without QNT owners or profile-obligation mappings must not enter the rules-kernel join, got ${JSON.stringify({ projectionOnlyRulesKernelProfileJoin, projectionOnlyRulesKernelSupportedUnitJoin })}`,
+      );
+    }
     const spellProcedureEvidenceGate = buildSpellProcedureMbtEvidenceGate({
       level1FullSupport: {
         scope: { title: "Fixture level 1" },

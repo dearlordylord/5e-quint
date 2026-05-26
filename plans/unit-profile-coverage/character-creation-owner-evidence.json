@@ -3126,6 +3126,51 @@
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
+    },
+    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
+      "taskId": "L13UG-A15",
+      "profile": "Character Creation class-feature source fact and proficiency choice projection",
+      "summary": "Barbarian Primal Knowledge is retained from the level-3 Barbarian class feature grant. Character Creation discovers the one-skill proficiency choice from the installed Surface grant_proficiency fact over the Barbarian level-1 skill list and finalizes the selected skill through the existing proficiency choice projection without duplicating skill state.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:derives Primal Knowledge proficiency choice from the level-3 Barbarian feature grant"
+      ]
+    },
+    "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
+      "taskId": "L13UG-A15",
+      "profile": "Character Creation Hit Point maximum projection",
+      "summary": "Sorcerer Draconic Resilience is retained only from the selected level-3 Draconic Sorcery subclass feature grants. Character Creation derives the Hit Point maximum bonus from the installed Surface modify_max_hp class-level scaling fact and the existing Sorcerer class level, without storing a parallel Hit Point table.",
+      "discovery": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints",
+        "packages/character-creation-runtime/src/finalization.ts:classFeatureHitPointMaximumBonus"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints",
+        "packages/character-creation-runtime/src/finalization.ts:classFeatureHitPointMaximumBonus"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature"
+      ]
     }
   }
 }

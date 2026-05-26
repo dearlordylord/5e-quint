@@ -135,6 +135,7 @@ import type {
   DruidCircleLandChoice,
   EquipmentPredicate,
   LandChoicePreparedSpellAccessGrant,
+  PassiveMechanics,
   PointPoolResource,
   RestResetCadence,
   SpellRecord,
@@ -178,6 +179,9 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.druid-circle-land-spell-access
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-ability-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.jump-distance-ability-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.linked-speed-grant-projection
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -888,6 +892,48 @@ export type CharacterSheetAbilityCheckProficiencyBonus =
       readonly bonus: number;
     };
 
+export type CharacterSheetAbilityCheckAbilityInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly skill: SurfaceSkill;
+  readonly defaultAbility: Ability;
+  readonly activeFeatureUnitIds: readonly UnitRecord["id"][];
+};
+
+export type CharacterSheetAbilityCheckAbilitySubstitution = {
+  readonly ability: Ability;
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly requiredActiveFeatureUnitId?: UnitRecord["id"];
+};
+
+export type CharacterSheetAbilityCheckAbility = {
+  readonly defaultAbility: Ability;
+  readonly optionalSubstitutions: readonly CharacterSheetAbilityCheckAbilitySubstitution[];
+};
+
+export type CharacterSheetJumpDistanceAbilityInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly defaultAbility: Ability;
+};
+
+export type CharacterSheetJumpDistanceAbilitySubstitution = {
+  readonly ability: Ability;
+  readonly replaces: Ability;
+  readonly sourceUnitId: UnitRecord["id"];
+};
+
+export type CharacterSheetJumpDistanceAbility = {
+  readonly defaultAbility: Ability;
+  readonly optionalSubstitutions: readonly CharacterSheetJumpDistanceAbilitySubstitution[];
+};
+
+export type CharacterSheetLinkedSpeedGrant = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly speedKind: "fly" | "swim" | "climb" | "burrow";
+  readonly feet: number | { readonly kind: "walk_speed" };
+};
+
 export type CharacterSheetSpellInvocationInput = {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -1022,6 +1068,134 @@ export function characterSheetAbilityCheckProficiencyBonus(
     ),
     Match.exhaustive,
   );
+}
+
+export function characterSheetAbilityCheckAbility(
+  input: CharacterSheetAbilityCheckAbilityInput,
+): Either.Either<CharacterSheetAbilityCheckAbility, CharacterSheetIssue> {
+  const optionalSubstitutions: CharacterSheetAbilityCheckAbilitySubstitution[] =
+    [];
+  const activeFeatureUnitIds = new Set(input.activeFeatureUnitIds);
+
+  for (const feature of characterSheetClassFeatureComponents(
+    input.build,
+    input.unitLibrary,
+  )) {
+    if (Either.isLeft(feature)) return Either.left(feature.left);
+    for (const grant of feature.right.mechanics.grants) {
+      if (
+        grant.kind !== "offer_ability_substitution_for_ability_checks" ||
+        !grant.skillFilter.skills.includes(input.skill)
+      ) {
+        continue;
+      }
+      if (
+        grant.requiredActiveFeature !== undefined &&
+        !activeFeatureUnitIds.has(grant.requiredActiveFeature.unitId)
+      ) {
+        continue;
+      }
+      optionalSubstitutions.push({
+        ability: grant.use,
+        sourceUnitId: feature.right.unitId,
+        ...(grant.requiredActiveFeature === undefined
+          ? {}
+          : {
+              requiredActiveFeatureUnitId: grant.requiredActiveFeature.unitId,
+            }),
+      });
+    }
+  }
+
+  return Either.right({
+    defaultAbility: input.defaultAbility,
+    optionalSubstitutions,
+  });
+}
+
+export function characterSheetJumpDistanceAbility(
+  input: CharacterSheetJumpDistanceAbilityInput,
+): Either.Either<CharacterSheetJumpDistanceAbility, CharacterSheetIssue> {
+  const optionalSubstitutions: CharacterSheetJumpDistanceAbilitySubstitution[] =
+    [];
+
+  for (const feature of characterSheetClassFeatureComponents(
+    input.build,
+    input.unitLibrary,
+  )) {
+    if (Either.isLeft(feature)) return Either.left(feature.left);
+    for (const grant of feature.right.mechanics.grants) {
+      if (
+        grant.kind === "offer_ability_substitution_for_jump_distance" &&
+        grant.replaces === input.defaultAbility
+      ) {
+        optionalSubstitutions.push({
+          ability: grant.use,
+          replaces: grant.replaces,
+          sourceUnitId: feature.right.unitId,
+        });
+      }
+    }
+  }
+
+  return Either.right({
+    defaultAbility: input.defaultAbility,
+    optionalSubstitutions,
+  });
+}
+
+export function characterSheetLinkedSpeedGrants(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly CharacterSheetLinkedSpeedGrant[], CharacterSheetIssue> {
+  const grants: CharacterSheetLinkedSpeedGrant[] = [];
+  for (const feature of characterSheetClassFeatureComponents(
+    build,
+    unitLibrary,
+  )) {
+    if (Either.isLeft(feature)) return Either.left(feature.left);
+    for (const grant of feature.right.mechanics.grants) {
+      if (grant.kind !== "grant_speed") continue;
+      grants.push({
+        sourceUnitId: feature.right.unitId,
+        speedKind: grant.speedKind,
+        feet: grant.feet,
+      });
+    }
+  }
+  return Either.right(grants);
+}
+
+function* characterSheetClassFeatureComponents(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Generator<
+  Either.Either<
+    {
+      readonly unitId: UnitRecord["id"];
+      readonly mechanics: PassiveMechanics;
+    },
+    CharacterSheetIssue
+  >
+> {
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) {
+      yield Either.left(unit.left);
+      continue;
+    }
+    if (unit.right.kind !== "class_feature") continue;
+    if (unit.right.mechanics.family === "composite") {
+      for (const part of unit.right.mechanics.parts) {
+        if (part.family !== "passive") continue;
+        yield Either.right({ unitId, mechanics: part });
+      }
+      continue;
+    }
+    if (unit.right.mechanics.family === "passive") {
+      yield Either.right({ unitId, mechanics: unit.right.mechanics });
+    }
+  }
 }
 
 function characterBuildJackOfAllTradesFeatureUnitId(
@@ -3280,6 +3454,15 @@ function armorClassBaseSourceForFormula(
       base: armorClass(formula.base),
       abilityModifiers: ["dex", "wis"],
       source: "unarmored_defense",
+      sourceUnitId,
+    };
+  }
+  if (formula.kind === "base_plus_dex_cha") {
+    return {
+      kind: "ability_sum",
+      base: armorClass(formula.base),
+      abilityModifiers: ["dex", "cha"],
+      source: "class_feature_base_plus_ability",
       sourceUnitId,
     };
   }
