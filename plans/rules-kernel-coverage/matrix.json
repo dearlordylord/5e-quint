@@ -8551,11 +8551,32 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists"
+      ],
       "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-mirror-image.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8963,24 +8984,29 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "boolean-connective",
+        "pattern-match"
+      ],
       "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/creature-attack.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/creature-attack.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
       "ownerRoles": [
@@ -8996,16 +9022,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/creature-attack.qnt",
           "role": "semantic-core"
         }
       ],

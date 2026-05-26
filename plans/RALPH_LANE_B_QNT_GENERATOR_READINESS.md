@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "QNTGR-B03-MINIMAL-ATTACK-ASSESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess minimal attack generator readiness"
     },
     {
@@ -184,7 +184,7 @@ Acceptance: no `not-assessed` row remains for Mirror Image.
 
 ### Task 3 - QNTGR-B03-MINIMAL-ATTACK-ASSESS - Assess minimal attack generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.ATTACK.MINIMAL_RESOLUTION`,
 `packages/battle-runtime/creature-attack.qnt`, `creature-attack.mbt.qnt`, and

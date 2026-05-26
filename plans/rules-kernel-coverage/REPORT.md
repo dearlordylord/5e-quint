@@ -471,7 +471,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `map`, `fold`, `set-operators` |  |  |
 | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed |  |  |  |
+| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists` |  |  |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective` |  |  |
 | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `map`, `fold`, `set-operators` |  |  |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
@@ -487,7 +487,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed |  |  |  |
+| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `boolean-connective`, `pattern-match` |  |  |
 
 ### Generator Readiness Backlog
 
@@ -495,10 +495,8 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 | Obligation | Status | Semantic-core owners | Owner roles |
 | --- | --- | --- | --- |
-| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | `packages/battle-runtime/battle-runtime-mirror-image.qnt`: semantic-core |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
-| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed | `packages/battle-runtime/creature-attack.qnt` | `packages/battle-runtime/creature-attack.qnt`: semantic-core |
 
 ### Semantic-Core Run Block Findings
 
@@ -528,4 +526,60 @@ No open transitional obligations.
 
 ## Checker Issues
 
-No checker issues.
+- BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE parity witness packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE parity witness packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE parity witness packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE parity witness packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE parity witness packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.MAKE_STABLE_LIFECYCLE parity witness packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.MAKE_STABLE_LIFECYCLE parity witness packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.MAKE_STABLE_LIFECYCLE parity witness packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION parity witness packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION parity witness packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION parity witness packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION parity witness packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION parity witness packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION parity witness packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-condition-removal-protection-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER parity witness packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE parity witness packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE parity witness packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE parity witness packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-beam-sequence-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.SANCTUARY.TARGETING_INTERDICTION parity witness packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.SANCTUARY.TARGETING_INTERDICTION parity witness packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.SANCTUARY.TARGETING_INTERDICTION parity witness packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt with step step and stateCheck.
+- BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION parity witness packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts does not call quint-connect run().
+- BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION parity witness packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts does not define a stateCheck().
+- BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION parity witness packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts does not run packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt with step step and stateCheck.
