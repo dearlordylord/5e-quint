@@ -482,8 +482,8 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership`, `list`, `fold`, `map`, `exists` |  |  |
 | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists` |  |  |
-| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed |  |  |  |
-| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed |  |  |  |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
@@ -493,10 +493,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 
 Rows here are derived from covered obligations with semantic-core QNT owners whose generator-readiness row is either omitted or still `not-assessed`.
 
-| Obligation | Status | Semantic-core owners | Owner roles |
-| --- | --- | --- | --- |
-| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
-| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
+No missing or not-assessed generator-readiness rows.
 
 ### Semantic-Core Run Block Findings
 

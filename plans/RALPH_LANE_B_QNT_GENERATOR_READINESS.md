@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "QNTGR-B07-GENERATOR-READINESS-REPORT-REFRESH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh generator readiness reports"
     },
     {
@@ -235,7 +235,7 @@ Acceptance: no `not-assessed` row remains for choice discovery cardinality.
 
 ### Task 7 - QNTGR-B07-GENERATOR-READINESS-REPORT-REFRESH - Refresh generator readiness reports
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: results from Tasks 1-6.
 

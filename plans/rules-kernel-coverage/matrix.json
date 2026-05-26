@@ -8883,19 +8883,66 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "list",
+        "fold",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "list",
+        "fold",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -9006,28 +9053,7 @@
       "status": "generation-subset-clean"
     }
   ],
-  "generatorReadinessBacklog": [
-    {
-      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    }
-  ],
+  "generatorReadinessBacklog": [],
   "semanticCoreRunBlockFindings": [],
   "kernelIrBoundaries": [
     {
