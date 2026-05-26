@@ -236,6 +236,7 @@ function main() {
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
+    level13FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityMbtEvidenceTag,

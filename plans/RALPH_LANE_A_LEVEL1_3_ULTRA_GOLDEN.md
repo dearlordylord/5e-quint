@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit level 1-3 into aggregate ultra-golden gate"
     },
     {
@@ -191,7 +191,7 @@ Mind Spike row.
 
 ### Task 3 - L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION - Admit level 1-3 into aggregate ultra-golden gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: passing level 1-3 full-support claim and current ultra-golden checker
 scope.

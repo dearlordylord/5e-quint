@@ -73,8 +73,11 @@ function mcpScenarioEvidenceFixture(kind) {
     requiredFlows: [
       {
         flowId: "mcp-workflow-discovery",
-        scopeIds: ["level-1"],
-        followUpTaskId: "C3-MCP-LEVEL12-SCENARIO-GATE",
+        scopeIds: ["level-1", "level-1-3"],
+        followUpTaskIdsByScope: {
+          "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
+          "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+        },
         description: "sample MCP flow",
       },
     ],
@@ -82,6 +85,7 @@ function mcpScenarioEvidenceFixture(kind) {
       {
         kind,
         flowId: "mcp-workflow-discovery",
+        scopeIds: ["level-1"],
         scenarioId: "discover-mcp-surface",
         ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
         testPath: "packages/mcp/src/mcp-protocol.test.ts",
@@ -357,6 +361,7 @@ function runSelfTest(root) {
     const ultraGoldenGate = buildUltraGoldenGate({
       level1FullSupport: incompleteLevelReport,
       level12FullSupport: completeLevelReport,
+      level13FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",
@@ -365,8 +370,11 @@ function runSelfTest(root) {
         requiredFlows: [
           {
             flowId: "fixture-missing-flow",
-            scopeIds: ["level-1"],
-            followUpTaskId: "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+            scopeIds: ["level-1", "level-1-3"],
+            followUpTaskIdsByScope: {
+              "level-1": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+              "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            },
             description: "fixture missing scenario evidence",
           },
         ],
@@ -395,16 +403,22 @@ function runSelfTest(root) {
     });
     const incompleteScope = requireSelfTestScope(ultraGoldenGate, "level-1");
     const completeScope = requireSelfTestScope(ultraGoldenGate, "level-1-2");
+    const completeLevel13Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-3",
+    );
     if (
       ultraGoldenGate.status !== "blocked" ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1-3") ||
       incompleteScope.status !== "blocked" ||
       completeScope.status !== "pass" ||
+      completeLevel13Scope.status !== "blocked" ||
       incompleteScope.layerResult.completeLayers !== 0 ||
       incompleteScope.layerResult.totalLayers !== 4
     ) {
       fail(
-        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer and leave level-1-2 pass, got ${JSON.stringify(ultraGoldenGate)}`,
+        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer, block level-1-3 on MCP evidence, and leave level-1-2 pass, got ${JSON.stringify(ultraGoldenGate)}`,
       );
     }
     for (const fixtureLayerId of [
@@ -428,6 +442,8 @@ function runSelfTest(root) {
       "| level-1 | mbt-parity-evidence | blocked |",
       "| level-1 | mcp-scenario-evidence | blocked |",
       "| level-1-2 | pass | 4/4 | 0 |",
+      "| level-1-3 | blocked | 3/4 | 0 |",
+      "| level-1-3 | mcp-scenario-evidence | blocked |",
     ]) {
       if (!renderedUltraGoldenGate.includes(expectedRow)) {
         fail(

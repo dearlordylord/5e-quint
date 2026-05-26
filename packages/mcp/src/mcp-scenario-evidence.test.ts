@@ -11,12 +11,13 @@ import {
 type McpRequiredFlow = {
   readonly flowId: string;
   readonly scopeIds: readonly string[];
-  readonly followUpTaskId: string;
+  readonly followUpTaskIdsByScope: Readonly<Record<string, string>>;
   readonly description: string;
 };
 
 type McpScenarioEvidenceRow = {
   readonly flowId: string;
+  readonly scopeIds: readonly string[];
   readonly scenarioId: string;
   readonly ownerPath: string;
   readonly testPath: string;
@@ -41,6 +42,7 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
+const taskIdPattern = /^(?:C\d+|L13UG-A\d+)-[A-Z0-9-]+$/;
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
@@ -71,16 +73,22 @@ describe("MCP scenario evidence manifest", () => {
     for (const flow of manifest.requiredFlows) {
       expect(flow.flowId).toMatch(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
       expect(flow.scopeIds.length).toBeGreaterThan(0);
-      expect(flow.followUpTaskId).toMatch(/^C\d+-[A-Z0-9-]+$/);
+      expect(Object.keys(flow.followUpTaskIdsByScope).sort()).toEqual(
+        [...flow.scopeIds].sort(),
+      );
+      for (const scopeId of flow.scopeIds) {
+        expect(flow.followUpTaskIdsByScope[scopeId]).toMatch(taskIdPattern);
+      }
       expect(flow.description.trim()).not.toBe("");
     }
 
     for (const row of manifest.evidence) {
       expect(requiredFlowIds.has(row.flowId)).toBe(true);
+      expect(row.scopeIds.length).toBeGreaterThan(0);
       expect(scenarioIds.has(row.scenarioId)).toBe(true);
       expect(existsSync(resolve(repoRoot, row.ownerPath))).toBe(true);
       expect(existsSync(resolve(repoRoot, row.testPath))).toBe(true);
-      expect(row.taskId).toMatch(/^C\d+-[A-Z0-9-]+$/);
+      expect(row.taskId).toMatch(taskIdPattern);
       expect(row.summary.trim()).not.toBe("");
     }
   });
