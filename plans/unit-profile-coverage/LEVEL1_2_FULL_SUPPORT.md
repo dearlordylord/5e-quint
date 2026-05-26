@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 91/115 (79.1%) |
 | Strict target closure | 115/115 (100%) |
 | Selected identity readiness | 104/104 (100%) |
-| Product readiness | 397/400 (99.3%) |
+| Diagnostic product readiness | 397/400 (99.3%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 70/70 (100%) |
 | Rules-kernel covered profile join | 70/70 (100%) |
@@ -25,9 +25,11 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-### Product Readiness Accounting
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 397/400 (99.3%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
-Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+### Diagnostic Product Readiness Accounting
+
+Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.
 
 | Status | Rows |
 | --- | ---: |
@@ -59,7 +61,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Selected identity readiness | pass | 104/104 (100%) | _none_ |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
-Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
+Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
 ## SRD-Authored Product Readiness
 

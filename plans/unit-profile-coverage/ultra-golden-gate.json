@@ -6,7 +6,7 @@
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
       {
-        "criterion": "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers.",
+        "criterion": "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
         "id": "support-completeness",
         "label": "Support completeness"
       },

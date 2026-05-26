@@ -27,9 +27,9 @@ Full-support claim gate: **pass**.
 | Selected identity readiness | 104/104 (100%) | 0 |
 | SRD authored product readiness | 76/76 (100%) | 0 |
 
-Product readiness remains a separate diagnostic lower-layer view, not a substitute for the support claim gate.
+Diagnostic product readiness remains a separate lower-layer accounting view, not a substitute for the support claim gate. It can be below 100% while support completeness passes when the strict, selected-identity, and SRD-authored blocker counts are all zero.
 
-| Product readiness status | Rows |
+| Diagnostic product-readiness status | Rows |
 | --- | ---: |
 | accepted | 297 |
 | accepted-no-battle-effect | 100 |

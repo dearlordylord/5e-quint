@@ -10,7 +10,7 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 
 | Layer | Label | Criterion |
 | --- | --- | --- |
-| support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers. |
+| support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set. |
 | qnt-generator-readiness | QNT/generator readiness | Every scoped reducer-semantic obligation is covered, and every scoped semantic-core QNT owner is generation-subset-clean with no run-block blocker. |
 | mbt-parity-evidence | MBT/parity evidence | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
 | mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command. |

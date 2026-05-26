@@ -1320,6 +1320,10 @@ function renderSelectedIdentityBlockerRows(rows) {
       );
 }
 
+function renderClaimDiagnosticSeparation(report) {
+  return `The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the claim gate reports **${report.claimGate.status}** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.`;
+}
+
 function renderStrictFullSupport(report, scope) {
   return `${[
     `# ${scope.outputTitle}`,
@@ -1341,7 +1345,7 @@ function renderStrictFullSupport(report, scope) {
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
     `| Selected identity readiness | ${renderMetric(report.selectedIdentityReadiness.metrics)} |`,
-    `| Product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
+    `| Diagnostic product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
     `| SRD authored product readiness | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} |`,
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
@@ -1349,9 +1353,11 @@ function renderStrictFullSupport(report, scope) {
     "",
     "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
     "",
-    "### Product Readiness Accounting",
+    renderClaimDiagnosticSeparation(report),
     "",
-    "Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.",
+    "### Diagnostic Product Readiness Accounting",
+    "",
+    "Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.",
     "",
     "| Status | Rows |",
     "| --- | ---: |",
@@ -1381,7 +1387,7 @@ function renderStrictFullSupport(report, scope) {
     "| --- | --- | ---: | --- |",
     ...renderFullSupportGateRows(report),
     "",
-    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.",
+    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.",
     "",
     "## SRD-Authored Product Readiness",
     "",

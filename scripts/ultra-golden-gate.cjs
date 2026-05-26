@@ -31,7 +31,7 @@ const layerDefinitions = [
     id: layerId.supportCompleteness,
     label: "Support completeness",
     criterion:
-      "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers.",
+      "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
   },
   {
     id: layerId.qntGeneratorReadiness,
@@ -1394,9 +1394,9 @@ function renderLevel12UltraGoldenSummary({
     `| Selected identity readiness | ${renderCoverageMetric(level12FullSupport.selectedIdentityReadiness.metrics)} | ${level12FullSupport.claimGate.selectedIdentityBlockerCount} |`,
     `| SRD authored product readiness | ${renderCoverageMetric(level12FullSupport.srdAuthoredProductReadiness.metrics)} | ${level12FullSupport.claimGate.authoredReadinessBlockerCount} |`,
     "",
-    "Product readiness remains a separate diagnostic lower-layer view, not a substitute for the support claim gate.",
+    "Diagnostic product readiness remains a separate lower-layer accounting view, not a substitute for the support claim gate. It can be below 100% while support completeness passes when the strict, selected-identity, and SRD-authored blocker counts are all zero.",
     "",
-    "| Product readiness status | Rows |",
+    "| Diagnostic product-readiness status | Rows |",
     "| --- | ---: |",
     ...renderCountRows(productRowsByStatus),
     "",
