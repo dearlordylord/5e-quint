@@ -87,6 +87,19 @@ const agentConversationScenarios = [
       "Spell Unit ids are now catalog-discoverable, but legal prepared/cantrip choices still correctly come from creation holes.",
   },
   {
+    id: "create-level-three-wizard-and-cast-scorching-ray",
+    name: "Create a level 3 Wizard and cast Scorching Ray",
+    userSays:
+      "Create an Elf Soldier Wizard 3 Evoker with Scorching Ray, then cast it in battle.",
+    agentReads:
+      "After the Wizard 3 progression fill, discovery returns the subclass, spellbook, prepared spell, equipment, and Evocation Savant holes. The finalized Character Sheet exposes four level-1 Spell Slots and two level-2 Spell Slots before battle.",
+    agentDecision:
+      "It selects subclass_wizard_evoker, includes scorching_ray in the returned spellbook and prepared-spell holes, starts battle from the finalized Character Sheet and an SRD Stat Block, then follows Scorching Ray target, attack-roll, and damage holes returned by discover_battle_acts and fill_battle_hole.",
+    executableCoverage: "verifyLevelThreeWizardVertical",
+    insufficiency:
+      "This is a known-good MCP scenario. It proves the level-3 path and level-2 Spell Slot handoff, while autonomous id selection remains delegated to catalog and hole discovery.",
+  },
+  {
     id: "select-monsters",
     name: "Select monsters",
     userSays: "Fight a Goblin Warrior, then fight a Skeleton.",
@@ -768,6 +781,155 @@ export async function verifyWidthVertical(client: Client) {
   ]);
 }
 
+export async function verifyLevelThreeWizardVertical(client: Client) {
+  const wizardDraftId = "draft:stdio-level-three-elf-soldier-wizard";
+  const finalizedWizard = await createAndFinalizeElfWizardThree(
+    client,
+    wizardDraftId,
+  );
+  assert.deepEqual(
+    get(
+      finalizedWizard,
+      "finalization.build.spellcasting.slotPools.spellcasting.slots",
+    ),
+    [
+      { count: 4, spellLevel: 1 },
+      { count: 2, spellLevel: 2 },
+    ],
+  );
+  assert.equal(
+    get(finalizedWizard, "finalization.build.species"),
+    "species_elf",
+  );
+  assert.ok(
+    stringArrayAt(
+      finalizedWizard,
+      "finalization.build.spellcasting.sources.0.spellbook",
+    ).includes("scorching_ray"),
+  );
+  assert.ok(
+    stringArrayAt(
+      finalizedWizard,
+      "finalization.build.spellcasting.sources.0.preparedSpells",
+    ).includes("scorching_ray"),
+  );
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  assert.deepEqual(
+    get(
+      characterRow(listedBeforeBattle, testCharacterId(wizardDraftId)),
+      "spellSlots",
+    ),
+    [
+      { count: 4, expended: 0, spellLevel: 1 },
+      { count: 2, expended: 0, spellLevel: 2 },
+    ],
+  );
+
+  const selected = await callTool(client, "select_stat_block", {
+    statBlockId: "stat_block_sphinx_of_wonder",
+  });
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Sphinx of Wonder",
+  );
+
+  const started = await callTool(client, "start_battle", {
+    battleId: "battle:stdio-level-three-scorching-ray",
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(wizardDraftId),
+        combatantId: "wizard-level-3",
+        initiative: 16,
+        side: "party",
+      },
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+    ],
+  });
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    "wizard-level-3",
+    "sphinx",
+  ]);
+  assert.deepEqual(wizardSpellSlotsFor(started, "wizard-level-3"), [
+    { count: 4, expended: 0, spellLevel: 1 },
+    { count: 2, expended: 0, spellLevel: 2 },
+  ]);
+
+  const wizardActs = await callTool(client, "discover_battle_acts", {});
+  const scorchingRayAct = battleActByLabel(wizardActs, "Scorching Ray");
+  assert.ok(scorchingRayAct, "Missing Scorching Ray act");
+  const targetHoles = initialHolesOfKind(scorchingRayAct, "targetChoice");
+  assert.equal(targetHoles.length, 3);
+  const scorchingRaySubject = spellSlotSubject(
+    "wizard-level-3",
+    "scorching_ray",
+    2,
+    "spellAttackSequence",
+  );
+
+  let pendingScorchingRay = wizardActs;
+  for (const hole of targetHoles) {
+    pendingScorchingRay = await callTool(client, "fill_battle_hole", {
+      subject: scorchingRaySubject,
+      fill: spellTargetFill(
+        hole.holeId,
+        "wizard-level-3",
+        "scorching_ray",
+        "sphinx",
+      ),
+    });
+  }
+
+  let next = await fillAttackSequencePart(client, {
+    subject: scorchingRaySubject,
+    pending: pendingScorchingRay,
+    partIndex: 0,
+    attackTotal: 18,
+    naturalD20: 13,
+    damageRolls: [3, 4],
+  });
+  assert.equal(combatantHp(next, "sphinx"), 32);
+  next = await fillAttackSequencePart(client, {
+    subject: scorchingRaySubject,
+    pending: next,
+    partIndex: 1,
+    attackTotal: 17,
+    naturalD20: 12,
+    damageRolls: [2, 3],
+  });
+  assert.equal(combatantHp(next, "sphinx"), 27);
+  next = await fillAttackSequencePart(client, {
+    subject: scorchingRaySubject,
+    pending: next,
+    partIndex: 2,
+    attackTotal: 16,
+    naturalD20: 11,
+    damageRolls: [1, 1],
+  });
+  assert.equal(get(next, "result.tag"), "resolved");
+  assert.deepEqual(wizardSpellSlotsFor(next, "wizard-level-3"), [
+    { count: 4, expended: 0, spellLevel: 1 },
+    { count: 2, expended: 1, spellLevel: 2 },
+  ]);
+
+  const ended = await callTool(client, "end_battle", {});
+  assert.equal(
+    get(ended, "endedBattleId"),
+    "battle:stdio-level-three-scorching-ray",
+  );
+  const listedAfterBattle = await callTool(client, "list_characters", {});
+  const wizard = characterRow(
+    listedAfterBattle,
+    testCharacterId(wizardDraftId),
+  );
+  assert.equal(get(wizard, "displayName"), "Elf Soldier Wizard 3");
+  assert.deepEqual(get(wizard, "spellSlots"), [
+    { count: 4, expended: 0, spellLevel: 1 },
+    { count: 2, expended: 1, spellLevel: 2 },
+  ]);
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -946,6 +1108,161 @@ async function createAndFinalizeElfWizardTwo(client: Client, draftId: string) {
   return callTool(client, "finalize_character", { draftId });
 }
 
+async function createAndFinalizeElfWizardThree(
+  client: Client,
+  draftId: string,
+) {
+  await callTool(client, "create_character_draft", { draftId });
+  await fillBaseCharacter(client, draftId, {
+    progression:
+      "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
+    species: "species_elf",
+    abilityScores: {
+      str: 8,
+      dex: 14,
+      con: 13,
+      int: 15,
+      wis: 10,
+      cha: 12,
+    },
+  });
+
+  const choices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.ok(
+    holeIds(choices).includes(
+      unitHoleId("class_wizard", "class_subclass_choice"),
+    ),
+  );
+  assert.ok(
+    holeIds(choices).includes(
+      unitHoleId("class_wizard", "wizard_spellbook_choices"),
+    ),
+  );
+  assert.ok(
+    holeIds(choices).includes(
+      unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+    ),
+  );
+
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 1,
+    fills: [
+      choiceFill(
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
+        "arcana",
+        "history",
+      ),
+      choiceFill(
+        unitHoleId("class_wizard", "class_subclass_choice"),
+        "subclass_wizard_evoker",
+      ),
+      choiceFill(
+        unitHoleId("class_wizard", "wizard_cantrip_choices"),
+        "light",
+        "fire_bolt",
+        "ray_of_frost",
+      ),
+      choiceFill(
+        unitHoleId("class_wizard", "wizard_spellbook_choices"),
+        "detect_magic",
+        "mage_armor",
+        "magic_missile",
+        "shield",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+        "scorching_ray",
+        "mirror_image",
+        "misty_step",
+      ),
+      choiceFill(
+        unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+        "mage_armor",
+        "magic_missile",
+        "shield",
+        "chromatic_orb",
+        "scorching_ray",
+        "misty_step",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_ability_score_increase"),
+        "two_and_one:str:con",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_tool_choice"),
+        "tool_dice_set",
+      ),
+      choiceFill(
+        unitHoleId("class_wizard", "class_equipment_choice"),
+        "option_b",
+      ),
+      choiceFill(
+        unitHoleId("background_soldier", "background_equipment_choice"),
+        "option_b",
+      ),
+    ],
+  });
+
+  const evocationSavantChoices = await callTool(
+    client,
+    "discover_creation_holes",
+    { draftId },
+  );
+  assert.ok(
+    holeIds(evocationSavantChoices).includes(
+      unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
+    ),
+  );
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 2,
+    fills: [
+      choiceFill(
+        unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
+        "continual_flame",
+        "shatter",
+      ),
+    ],
+  });
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 3,
+    fills: [
+      choiceFill(
+        unitHoleId("class_wizard", "equipment_purchase"),
+        "weapon_longsword",
+        "weapon_dagger",
+        "equipment_shield",
+      ),
+    ],
+  });
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 4,
+    fills: [
+      choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
+      choiceFill(
+        loadoutHoleId("weapon_longsword", "weapon"),
+        "wielded_one_handed",
+      ),
+    ],
+  });
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 5,
+    fills: [
+      choiceFill(
+        unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
+        "arcana",
+      ),
+    ],
+  });
+  return callTool(client, "finalize_character", { draftId });
+}
+
 async function fillBaseOrcSoldier(
   client: Client,
   draftId: string,
@@ -1052,18 +1369,35 @@ function statBlockCombatant(
 }
 
 function magicSubject(actorId: string, spellId: string) {
+  if (spellId === "magic_missile") {
+    return spellSlotSubject(actorId, spellId, 1, "repeatedDamageAllocation");
+  }
   return {
     tag: "actionSpell",
     actorId,
-    invocation:
-      spellId === "magic_missile"
-        ? {
-            tag: "spellSlot",
-            spellId,
-            slotLevel: 1,
-            procedure: "repeatedDamageAllocation",
-          }
-        : { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
+    invocation: { tag: "cantrip", spellId, procedure: "spellAttackDamage" },
+    mode: { tag: "cast" },
+  };
+}
+
+function spellSlotSubject(
+  actorId: string,
+  spellId: string,
+  slotLevel: number,
+  procedure:
+    | "repeatedDamageAllocation"
+    | "spellAttackDamage"
+    | "spellAttackSequence",
+) {
+  return {
+    tag: "actionSpell",
+    actorId,
+    invocation: {
+      tag: "spellSlot",
+      spellId,
+      slotLevel,
+      procedure,
+    },
     mode: { tag: "cast" },
   };
 }
@@ -1120,16 +1454,86 @@ function targetFill(value: string) {
   };
 }
 
+function spellTargetFill(
+  holeId: string,
+  casterId: string,
+  spellId: string,
+  targetId: string,
+) {
+  return {
+    kind: "targetChoice",
+    holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId,
+      },
+    ],
+  };
+}
+
 function attackRollFill(total: number, naturalD20: number, rollMode?: string) {
+  return battleAttackRollFill(
+    "battle:attack:roll",
+    total,
+    naturalD20,
+    rollMode,
+  );
+}
+
+function battleAttackRollFill(
+  holeId: string,
+  total: number,
+  naturalD20: number,
+  rollMode?: string,
+) {
   return {
     kind: "attackRoll",
-    holeId: "battle:attack:roll",
+    holeId,
     value: {
       total,
       naturalD20,
       ...(rollMode === undefined ? {} : { rollMode }),
     },
   };
+}
+
+async function fillAttackSequencePart(
+  client: Client,
+  input: {
+    readonly subject: JsonObject;
+    readonly pending: JsonObject;
+    readonly partIndex: number;
+    readonly attackTotal: number;
+    readonly naturalD20: number;
+    readonly damageRolls: readonly number[];
+  },
+) {
+  const attackRollHole = resultHole(input.pending, "attackRoll");
+  assert.equal(
+    attackRollHole.holeId,
+    `battle:spell:attack-sequence-part-attack-roll:scorching_ray:${input.partIndex}`,
+  );
+  const attackResult = await callTool(client, "fill_battle_hole", {
+    subject: input.subject,
+    fill: battleAttackRollFill(
+      attackRollHole.holeId,
+      input.attackTotal,
+      input.naturalD20,
+    ),
+  });
+  const damageHole = resultHole(attackResult, "rolledDice");
+  assert.equal(
+    damageHole.holeId,
+    `battle:spell:attack-sequence-part-damage:scorching_ray:${input.partIndex}:normal`,
+  );
+  return callTool(client, "fill_battle_hole", {
+    subject: input.subject,
+    fill: rolledDiceFill(damageHole.holeId, [input.damageRolls]),
+  });
 }
 
 function rolledDiceFill(
@@ -1167,7 +1571,21 @@ function combatantHp(payload: JsonObject, combatantId: string) {
   return combatant.hp;
 }
 
+function resultHole(payload: JsonObject, kind: string) {
+  const holes = get(payload, "result.holes") as
+    | ReadonlyArray<{ readonly kind: string; readonly holeId: string }>
+    | undefined;
+  assert.ok(holes, "Expected result holes");
+  const hole = holes.find((candidate) => candidate.kind === kind);
+  assert.ok(hole, `Missing ${kind} result hole`);
+  return hole;
+}
+
 function wizardSpellSlots(payload: JsonObject) {
+  return wizardSpellSlotsFor(payload, "wizard");
+}
+
+function wizardSpellSlotsFor(payload: JsonObject, combatantId: string) {
   const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
     readonly combatantId: string;
     readonly origin: {
@@ -1177,10 +1595,35 @@ function wizardSpellSlots(payload: JsonObject) {
     };
   }>;
   const wizard = combatants.find(
-    (candidate) => candidate.combatantId === "wizard",
+    (candidate) => candidate.combatantId === combatantId,
   );
-  assert.ok(wizard, "Missing wizard combatant");
+  assert.ok(wizard, `Missing ${combatantId} combatant`);
   return wizard.origin.spellcasting?.spellSlots;
+}
+
+function battleActByLabel(payload: JsonObject, label: string) {
+  return (
+    get(payload, "snapshot.acts") as ReadonlyArray<{
+      readonly label: string;
+      readonly initialHoles: readonly JsonObject[];
+    }>
+  ).find((act) => act.label === label);
+}
+
+function initialHolesOfKind(
+  act: { readonly initialHoles: readonly JsonObject[] },
+  kind: string,
+) {
+  const matchingHoles: Array<{
+    readonly kind: string;
+    readonly holeId: string;
+  }> = [];
+  for (const hole of act.initialHoles) {
+    if (hole.kind !== kind) continue;
+    const holeId = parseString(hole.holeId, `${kind} holeId`);
+    matchingHoles.push({ kind, holeId });
+  }
+  return matchingHoles;
 }
 
 function characterRow(payload: JsonObject, characterId: string) {
@@ -1204,8 +1647,25 @@ function get(value: unknown, path: string): unknown {
   }, value);
 }
 
+function stringArrayAt(payload: JsonObject, path: string) {
+  const value = get(payload, path);
+  assert.ok(Array.isArray(value), `${path} must be an array`);
+  const strings: string[] = [];
+  for (const [index, entry] of value.entries()) {
+    strings.push(parseString(entry, `${path}.${index}`));
+  }
+  return strings;
+}
+
+function parseString(value: unknown, context: string) {
+  if (typeof value !== "string") {
+    assert.fail(`${context} must be a string`);
+  }
+  return value;
+}
+
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 13);
+  assert.equal(agentConversationScenarios.length, 14);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

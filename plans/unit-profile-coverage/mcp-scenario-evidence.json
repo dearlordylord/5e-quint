@@ -61,6 +61,16 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
+      "scopeIds": ["level-1-3"],
+      "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-3 Elf Soldier Wizard through create, discover, fill, and finalize tools while selecting the SRD Evoker subclass plus returned Wizard spellbook, Evocation Savant spellbook, and prepared-spell holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
@@ -91,6 +101,16 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
+      "scopeIds": ["level-1-3"],
+      "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
+      "summary": "The protocol acceptance scenario verifies the finalized level-3 Wizard Character Sheet exposes four level-1 Spell Slots and two level-2 Spell Slots before battle, then verifies list_characters still exposes the durable sheet with one level-2 Spell Slot expended after battle handoff."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
@@ -117,6 +137,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario ends battle and inspects list_characters plus the session snapshot to prove durable Character Sheet Hit Points and Spell Slot expenditure remain visible to MCP callers."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-3"],
+      "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
+      "summary": "The protocol acceptance scenario starts battle from the finalized level-3 Wizard and an SRD Sphinx of Wonder Stat Block, discovers the Scorching Ray act, fills returned target, attack-roll, and rolled-dice holes, and verifies one level-2 Spell Slot is expended."
     },
     {
       "kind": "mcp-scenario",
@@ -193,20 +223,14 @@
     {
       "scopeId": "level-1-3",
       "auditTaskId": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
-      "result": "new-scenario-required",
-      "reason": "Existing executable MCP acceptance scenarios cover a level-1 Fighter plus level-2 Fighter and Wizard paths. The reusable discovery scenario is level-agnostic, but no existing scenario finalizes a character-level-3 build, selects a level-3 subclass, exposes level-2 Spell Slots on the Character Sheet, or casts a spell-level-2 supported spell through MCP battle tools.",
-      "reusedFlowIds": ["mcp-workflow-discovery"],
-      "requiredEvidence": {
-        "scenarioGoal": "Add one focused SRD Wizard 3 MCP scenario that creates and finalizes a supported character-level-3 build, inspects durable Character Sheet state, starts battle, casts a supported spell-level-2 spell, and ends battle with updated sheet state visible.",
-        "inputs": [
-          "Use only SRD-authored ids already installed in this repo, such as class_wizard, subclass_wizard_evoker, species_elf or species_orc, background_soldier, and supported spells from the Wizard spell list.",
-          "Drive character creation through create_character_draft, discover_creation_holes, fill_creation_holes, and finalize_character for Wizard level 3, including subclass_wizard_evoker and returned spellbook/prepared-spell holes.",
-          "Include at least one supported spell-level-2 Wizard spell in the spellbook and prepared spell set; scorching_ray is the primary battle-path candidate because it already has battle support. misty_step may be included as an additional level-2 prepared spell if the scenario also wants a bonus-action spell path.",
-          "Verify list_characters or the finalization payload exposes character-level-3 Wizard spellcasting with four level-1 Spell Slots and two level-2 Spell Slots before battle.",
-          "Start battle from the finalized Wizard and an SRD Stat Block, discover the Wizard battle acts, resolve Scorching Ray through returned target, attack-roll, and rolled-dice holes, and verify one level-2 Spell Slot is expended.",
-          "End battle and verify list_characters or the session snapshot still exposes the durable level-3 Character Sheet state and the level-2 Spell Slot expenditure."
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Task 5 added the executable create-level-three-wizard-and-cast-scorching-ray MCP acceptance scenario. Together with the reusable mcp-workflow-discovery scenario, level-1-3 now has scenario evidence for character creation, Character Sheet durability, and battle handoff using a level-3 SRD Wizard, Evoker subclass selection, level-2 Spell Slots, and Scorching Ray through returned battle holes.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     }
   ]
 }

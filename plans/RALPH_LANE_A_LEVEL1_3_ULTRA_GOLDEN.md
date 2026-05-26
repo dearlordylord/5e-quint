@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add level 1-3 MCP scenario evidence for the audited gap"
     },
     {
@@ -217,7 +217,7 @@ level 1-3 requirements, or Task 5 remains necessary with exact inputs.
 
 ### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence for the audited gap
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 4 generated MCP level-scope audit decision. Existing evidence reuses
 only `mcp-workflow-discovery`; level 1-3 still needs scenario evidence for
