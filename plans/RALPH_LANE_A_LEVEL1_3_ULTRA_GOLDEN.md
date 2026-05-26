@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "RAW audit closed runtime-detached dispositions in level 1-3"
     },
     {
@@ -114,13 +114,19 @@
     },
     {
       "number": 19,
-      "id": "L13UG-A19-LEVEL13-CLOSEOUT",
+      "id": "L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Promote or block Suggestion Charmed lifecycle subset"
+    },
+    {
+      "number": 20,
+      "id": "L13UG-A20-LEVEL13-CLOSEOUT",
       "status": "ready-for-research",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
-      "number": 20,
-      "id": "L13UG-A20-RECURSIVE-NEXT-BATCH",
+      "number": 21,
+      "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
       "status": "ready-for-research",
       "title": "Plan the next level-support batch if this lane drains"
     }
@@ -362,7 +368,7 @@ Acceptance: no level 1-3 SRD pressure gap is hidden outside the Unit matrix.
 
 ### Task 13 - L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT - RAW audit closed runtime-detached dispositions in level 1-3
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: closed runtime-detached rows in level 1-3 and local SRD passages.
 
@@ -448,11 +454,36 @@ Acceptance: the six real missing attack/movement level-3 class-feature rows no
 longer appear as no-matrix SRD pressure, and each promoted behavior is admitted
 through typed procedure facts and runtime state rather than authored identity.
 
-### Task 19 - L13UG-A19-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
+### Task 19 - L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE - Promote or block Suggestion Charmed lifecycle subset
 
 Status: `ready-for-research`
 
-Input: results from Tasks 1-18.
+Input: Task 13 closed-disposition RAW audit, local SRD Suggestion text, current
+Suggestion Surface record and Unit claim/evidence rows, Charm Person Charmed
+lifecycle implementation patterns, and package-local battle-runtime Quint
+parity files.
+
+Output: promote or explicitly block Suggestion's executable battle subset:
+Magic Action and level-2 Spell Slot spend, one visible creature target supplied
+by caller facts, Wisdom Saving Throw against the caster Spell Save DC,
+failed-save spell-owned Charmed condition for Concentration up to 8 hours,
+cleanup on Concentration or duration end, and cleanup when the caster or allies
+damage the target. Keep hearing/understanding, suggested activity text,
+achievable/not-obviously-damaging judgment, target pursuit, and
+activity-completion ending runtime-detached under the table/social owner.
+
+Acceptance: Suggestion has either a `profile-subset-supported` Unit claim for
+the save-gated Charmed lifecycle with deterministic admission/projection
+evidence, focused runtime tests, selected-identity evidence if promoted, and
+promoted Quint/runtime parity without authored-identity dispatch; or a concrete
+blocked-follow-up claim explaining the missing typed owner and preserving the
+table/social split.
+
+### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
+
+Status: `ready-for-research`
+
+Input: results from Tasks 1-19.
 
 Output: concise closeout section in this plan or generated summary identifying
 whether level 1-3 is now ultra-golden, what remains non-blocking, and what the
@@ -461,11 +492,11 @@ next frontier is.
 Acceptance: no active task remains in this lane except recursive planning if
 new work is discovered.
 
-### Task 20 - L13UG-A20-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
+### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
 Status: `ready-for-research`
 
-Input: current generated reports after Task 19.
+Input: current generated reports after Task 20.
 
 Output: if level 1-3 is closed, create the next coherent level-support lane
 plan with 10-20 atomic tasks and context-budget rules. If level 1-3 is not
