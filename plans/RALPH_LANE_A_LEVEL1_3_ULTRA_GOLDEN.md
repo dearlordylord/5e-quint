@@ -38,7 +38,7 @@ Read only these by default:
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`
 - Relevant `mind_spike` files when a task touches Mind Spike:
-  `.references/srd-5.2.1/Spells/Mind Spike.md`,
+  `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Mind Spike`,
   `packages/surface/content/mind_spike.json`,
   `plans/unit-profile-coverage/unit-claims.jsonl`,
   `plans/unit-profile-coverage/unit-evidence.jsonl`,
