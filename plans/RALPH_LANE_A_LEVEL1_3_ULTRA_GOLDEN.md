@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extend checker self-tests for level 1-3 ultra-golden failures"
     },
     {
