@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const {
+  battleReadinessClosureKind,
   deterministicAdmissionProjectionEvidenceTag,
   mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
@@ -16,6 +17,7 @@ const {
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
+  buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
 } = require("./level1-full-support-report.cjs");
@@ -41,6 +43,19 @@ const {
 const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
+const {
+  selectedIdentityEvidenceStatus,
+  selectedIdentityStatus,
+} = require("./unit-profile-coverage-report.cjs");
+
+const mindSpikeFixture = Object.freeze({
+  unitId: "mind_spike",
+  profileId: "spell.invocation-damage-save-or-attack",
+  sourceRecordPath: "packages/surface/content/mind_spike.json",
+  selectedIdentityTaskId: "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY",
+  selectedIdentityOwnerPath:
+    "packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts",
+});
 
 function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
@@ -73,8 +88,11 @@ function mcpScenarioEvidenceFixture(kind) {
     requiredFlows: [
       {
         flowId: "mcp-workflow-discovery",
-        scopeIds: ["level-1"],
-        followUpTaskId: "C3-MCP-LEVEL12-SCENARIO-GATE",
+        scopeIds: ["level-1", "level-1-3"],
+        followUpTaskIdsByScope: {
+          "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
+          "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+        },
         description: "sample MCP flow",
       },
     ],
@@ -82,11 +100,25 @@ function mcpScenarioEvidenceFixture(kind) {
       {
         kind,
         flowId: "mcp-workflow-discovery",
+        scopeIds: ["level-1"],
         scenarioId: "discover-mcp-surface",
         ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
         testPath: "packages/mcp/src/mcp-protocol.test.ts",
         taskId: "C3-MCP-LEVEL12-SCENARIO-GATE",
         summary: "sample MCP evidence",
+      },
+    ],
+    scopeAuditDecisions: [
+      {
+        scopeId: "level-1-3",
+        auditTaskId: "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+        result: "new-scenario-required",
+        reason: "fixture missing scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture scenario",
+          inputs: ["fixture input"],
+        },
       },
     ],
   };
@@ -255,6 +287,104 @@ function requireSelfTestLayer(scope, layerId) {
   return layer;
 }
 
+function mindSpikeDeferredSelectedIdentityUnit(withSelectedIdentityEvidence) {
+  return {
+    unitId: mindSpikeFixture.unitId,
+    collectionId: "srd-5.2.1",
+    catalogAdmission: {
+      status: "installed",
+      collectionId: "srd-5.2.1",
+    },
+    sourceRecordPath: mindSpikeFixture.sourceRecordPath,
+    kind: "spell",
+    executableMechanics: true,
+    claim: {
+      tag: "profile-subset-supported",
+      profileIds: [mindSpikeFixture.profileId],
+      supportedMechanics: [
+        "Magic Action level-2-or-higher Spell Slot casting",
+        "Wisdom Saving Throw against the caster Spell Save DC",
+        "Psychic damage on failed or successful save",
+        "failed-save Concentration ownership and duration cleanup",
+      ],
+      deferredMechanics: [
+        {
+          mechanic:
+            "failed-save same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial",
+          battleReadinessClosure: {
+            kind:
+              battleReadinessClosureKind.outsideRuntimePresentationExploration,
+            owner: "runtime-detached table/perception/knowledge owner",
+            reason:
+              "The promoted battle runtime does not store duplicate table/perception knowledge state.",
+          },
+        },
+      ],
+      deferredMechanicsSelectedIdentityDisposition: {
+        tag: "not-applicable",
+        owner: "runtime-detached table/perception/knowledge owner",
+        reason:
+          "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
+      },
+    },
+    evidence: withSelectedIdentityEvidence
+      ? [
+          {
+            tag: selectedIdentityMbtEvidenceTag,
+            taskId: mindSpikeFixture.selectedIdentityTaskId,
+            ownerPath: mindSpikeFixture.selectedIdentityOwnerPath,
+          },
+        ]
+      : [],
+  };
+}
+
+function mindSpikeDeferredSelectedIdentityReadinessRow(
+  withSelectedIdentityEvidence,
+) {
+  const unit = mindSpikeDeferredSelectedIdentityUnit(
+    withSelectedIdentityEvidence,
+  );
+  return {
+    unitId: unit.unitId,
+    status: "closed-outside-battle-runtime-boundary",
+    claimTag: unit.claim.tag,
+    selectedIdentity: selectedIdentityEvidenceStatus(
+      unit,
+      selectedIdentityMbtEvidenceTag,
+    ),
+    sourceRecordPath: unit.sourceRecordPath,
+  };
+}
+
+function assertMindSpikeDeferredSelectedIdentityGate() {
+  const withoutWitness = buildSelectedIdentityReadiness([
+    mindSpikeDeferredSelectedIdentityReadinessRow(false),
+  ]);
+  if (
+    withoutWitness.blockingRows.length !== 1 ||
+    withoutWitness.blockingRows[0].unitId !== mindSpikeFixture.unitId ||
+    withoutWitness.blockingRows[0].selectedIdentityStatus !==
+      selectedIdentityStatus.missingWitnessDeferredNotApplicable
+  ) {
+    fail(
+      `Self-test failed: expected Mind Spike deferred selected-identity disposition to block without selected identity evidence, got ${JSON.stringify(withoutWitness)}`,
+    );
+  }
+
+  const withWitness = buildSelectedIdentityReadiness([
+    mindSpikeDeferredSelectedIdentityReadinessRow(true),
+  ]);
+  if (
+    withWitness.blockingRows.length !== 0 ||
+    withWitness.readyRowsByStatus[selectedIdentityStatus.witnessPresent] !== 1
+  ) {
+    fail(
+      `Self-test failed: expected Mind Spike selected identity evidence to satisfy the supported subset gate, got ${JSON.stringify(withWitness)}`,
+    );
+  }
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -281,6 +411,7 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 3 bands to include spell-level-2 and exclude spell-level-3, got ${JSON.stringify(levelThreeBands)}`,
     );
   }
+  assertMindSpikeDeferredSelectedIdentityGate();
 
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
@@ -316,6 +447,32 @@ function runSelfTest(root) {
       fail(
         `Self-test failed: expected invalid MCP witness kind issue ${JSON.stringify(expectedMcpScenarioIssue)}, got ${JSON.stringify(invalidMcpScenarioIssues)}`,
       );
+    }
+    const duplicateMcpAuditOwnership = mcpScenarioEvidenceFixture(
+      mcpScenarioWitnessKind,
+    );
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].missingFlowIds = [
+      "mcp-workflow-discovery",
+    ];
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].requiredEvidence.followUpTaskId =
+      "fixture-duplicate-follow-up";
+    duplicateMcpAuditOwnership.scopeAuditDecisions[0].requiredEvidence.coveredFlowIds =
+      ["mcp-workflow-discovery"];
+    const duplicateMcpAuditOwnershipIssues = validateMcpScenarioEvidence(
+      duplicateMcpAuditOwnership,
+      { root: tempDir },
+    );
+    const expectedDuplicateMcpAuditOwnershipIssues = [
+      "MCP scenario evidence manifest scopeAuditDecisions[0] must not include unsupported field missingFlowIds.",
+      "MCP scenario evidence manifest scopeAuditDecisions[0].requiredEvidence must not include unsupported field followUpTaskId.",
+      "MCP scenario evidence manifest scopeAuditDecisions[0].requiredEvidence must not include unsupported field coveredFlowIds.",
+    ];
+    for (const expectedIssue of expectedDuplicateMcpAuditOwnershipIssues) {
+      if (!duplicateMcpAuditOwnershipIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected duplicate MCP audit ownership issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(duplicateMcpAuditOwnershipIssues)}`,
+        );
+      }
     }
     const incompleteLevelReport = fullSupportReportFixture({
       scopeTitle: "Fixture incomplete level",
@@ -357,6 +514,7 @@ function runSelfTest(root) {
     const ultraGoldenGate = buildUltraGoldenGate({
       level1FullSupport: incompleteLevelReport,
       level12FullSupport: completeLevelReport,
+      level13FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",
@@ -365,12 +523,39 @@ function runSelfTest(root) {
         requiredFlows: [
           {
             flowId: "fixture-missing-flow",
-            scopeIds: ["level-1"],
-            followUpTaskId: "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+            scopeIds: ["level-1", "level-1-3"],
+            followUpTaskIdsByScope: {
+              "level-1": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+              "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            },
             description: "fixture missing scenario evidence",
           },
         ],
         evidence: [],
+        scopeAuditDecisions: [
+          {
+            scopeId: "level-1",
+            auditTaskId: "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+            result: "new-scenario-required",
+            reason: "fixture missing scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture scenario",
+              inputs: ["fixture input"],
+            },
+          },
+          {
+            scopeId: "level-1-3",
+            auditTaskId: "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+            result: "new-scenario-required",
+            reason: "fixture missing scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture scenario",
+              inputs: ["fixture input"],
+            },
+          },
+        ],
       },
       rulesKernelMatrix: {
         obligations: [
@@ -395,16 +580,22 @@ function runSelfTest(root) {
     });
     const incompleteScope = requireSelfTestScope(ultraGoldenGate, "level-1");
     const completeScope = requireSelfTestScope(ultraGoldenGate, "level-1-2");
+    const completeLevel13Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-3",
+    );
     if (
       ultraGoldenGate.status !== "blocked" ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1-3") ||
       incompleteScope.status !== "blocked" ||
       completeScope.status !== "pass" ||
+      completeLevel13Scope.status !== "blocked" ||
       incompleteScope.layerResult.completeLayers !== 0 ||
       incompleteScope.layerResult.totalLayers !== 4
     ) {
       fail(
-        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer and leave level-1-2 pass, got ${JSON.stringify(ultraGoldenGate)}`,
+        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer, block level-1-3 on MCP evidence, and leave level-1-2 pass, got ${JSON.stringify(ultraGoldenGate)}`,
       );
     }
     for (const fixtureLayerId of [
@@ -428,6 +619,8 @@ function runSelfTest(root) {
       "| level-1 | mbt-parity-evidence | blocked |",
       "| level-1 | mcp-scenario-evidence | blocked |",
       "| level-1-2 | pass | 4/4 | 0 |",
+      "| level-1-3 | blocked | 3/4 | 0 |",
+      "| level-1-3 | mcp-scenario-evidence | blocked |",
     ]) {
       if (!renderedUltraGoldenGate.includes(expectedRow)) {
         fail(
@@ -1073,11 +1266,26 @@ function runSelfTest(root) {
             rawRecord: {},
             executableMechanics: true,
           },
+          {
+            unitId: mindSpikeFixture.unitId,
+            collectionId: "srd-5.2.1",
+            sourceRecordPath: mindSpikeFixture.sourceRecordPath,
+            provenance: { kind: "srd-5.2.1" },
+            rawRecord: {},
+            executableMechanics: true,
+          },
         ],
         profiles: [
           {
             id: "fixture.profile",
             profileKind: "equipment",
+            qntOwners: [],
+            runtimeOwners: [],
+            verificationOwners: [],
+          },
+          {
+            id: mindSpikeFixture.profileId,
+            profileKind: "spell-invocation",
             qntOwners: [],
             runtimeOwners: [],
             verificationOwners: [],
@@ -1116,6 +1324,11 @@ function runSelfTest(root) {
               },
             },
           },
+          {
+            unitId: mindSpikeFixture.unitId,
+            collectionId: "srd-5.2.1",
+            claim: mindSpikeDeferredSelectedIdentityUnit(false).claim,
+          },
         ],
         unitEvidence: [],
         taskClaims: [],
@@ -1135,6 +1348,15 @@ function runSelfTest(root) {
     if (!selectedIdentityHardGateIssues.includes(missingIdentityExpected)) {
       fail(
         `Self-test failed: expected selected identity hard-gate issue ${JSON.stringify(missingIdentityExpected)}, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
+      );
+    }
+    const mindSpikeMissingIdentityExpected =
+      `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-mbt evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
+    if (
+      !selectedIdentityHardGateIssues.includes(mindSpikeMissingIdentityExpected)
+    ) {
+      fail(
+        `Self-test failed: expected Mind Spike deferred mechanics disposition to keep the supported subset in the selected identity hard gate, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
       );
     }
     const nonApplicableBoundaryIssue = selectedIdentityHardGateIssues.find(

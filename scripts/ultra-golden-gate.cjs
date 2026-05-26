@@ -11,6 +11,14 @@ const blockedStatus = "blocked";
 const mcpScenarioEvidenceSchema = "dnd.mcp-scenario-evidence.v1";
 const mcpScenarioEvidenceSourcePath =
   "plans/unit-profile-coverage/mcp-scenario-evidence.json";
+const ultraGoldenScopeFields = Object.freeze([
+  { scopeId: "level-1", reportField: "level1FullSupport" },
+  { scopeId: "level-1-2", reportField: "level12FullSupport" },
+  { scopeId: "level-1-3", reportField: "level13FullSupport" },
+]);
+const ultraGoldenScopeIds = Object.freeze(
+  ultraGoldenScopeFields.map((scope) => scope.scopeId),
+);
 const layerId = Object.freeze({
   supportCompleteness: "support-completeness",
   qntGeneratorReadiness: "qnt-generator-readiness",
@@ -119,23 +127,280 @@ const mcpScenarioEvidenceFields = new Set([
   "check",
   "requiredFlows",
   "evidence",
+  "scopeAuditDecisions",
 ]);
 const mcpScenarioEvidenceCheckFields = new Set(["packageName", "script"]);
 const mcpRequiredFlowFields = new Set([
   "flowId",
   "scopeIds",
-  "followUpTaskId",
+  "followUpTaskIdsByScope",
   "description",
 ]);
 const mcpEvidenceRowFields = new Set([
   "kind",
   "flowId",
+  "scopeIds",
   "scenarioId",
   "ownerPath",
   "testPath",
   "taskId",
   "summary",
 ]);
+const mcpScopeAuditDecisionFields = new Set([
+  "scopeId",
+  "auditTaskId",
+  "result",
+  "reason",
+  "reusedFlowIds",
+  "requiredEvidence",
+]);
+const mcpRequiredEvidenceFields = new Set([
+  "scenarioGoal",
+  "inputs",
+]);
+const mcpAuditDecisionResults = new Set([
+  "new-scenario-required",
+  "reuse-existing-evidence",
+]);
+
+function validateNonEmptyStringArray(value, context) {
+  if (!Array.isArray(value) || value.length === 0) {
+    return [`${context} must be a non-empty array.`];
+  }
+  return value.flatMap((entry, index) =>
+    isNonEmptyString(entry)
+      ? []
+      : [`${context}[${index}] must be a non-empty string.`],
+  );
+}
+
+function validateStringArray(value, context) {
+  if (!Array.isArray(value)) {
+    return [`${context} must be an array.`];
+  }
+  return value.flatMap((entry, index) =>
+    isNonEmptyString(entry)
+      ? []
+      : [`${context}[${index}] must be a non-empty string.`],
+  );
+}
+
+function mcpMissingFlowIdsByScope(manifest) {
+  const evidenceRows = Array.isArray(manifest.evidence)
+    ? manifest.evidence.filter(isRecord)
+    : [];
+  const flowIdsByCoveredScope = new Map();
+  for (const row of evidenceRows) {
+    if (!isNonEmptyString(row.flowId) || !Array.isArray(row.scopeIds)) {
+      continue;
+    }
+    for (const scopeId of row.scopeIds) {
+      const coveredForScope = flowIdsByCoveredScope.get(scopeId) ?? new Set();
+      coveredForScope.add(row.flowId);
+      flowIdsByCoveredScope.set(scopeId, coveredForScope);
+    }
+  }
+
+  const missingByScope = new Map();
+  const requiredFlows = Array.isArray(manifest.requiredFlows)
+    ? manifest.requiredFlows.filter(isRecord)
+    : [];
+  for (const flow of requiredFlows) {
+    if (!isNonEmptyString(flow.flowId) || !Array.isArray(flow.scopeIds)) {
+      continue;
+    }
+    for (const scopeId of flow.scopeIds) {
+      const coveredFlowIds = flowIdsByCoveredScope.get(scopeId) ?? new Set();
+      if (coveredFlowIds.has(flow.flowId)) continue;
+      const missingForScope = missingByScope.get(scopeId) ?? [];
+      missingForScope.push(flow.flowId);
+      missingByScope.set(scopeId, missingForScope);
+    }
+  }
+  return new Map(
+    Array.from(missingByScope, ([scopeId, flowIds]) => [
+      scopeId,
+      uniqueSorted(flowIds),
+    ]),
+  );
+}
+
+function validateMcpScopeAuditDecisions(manifest, context) {
+  const issues = [];
+  const requiredFlowIdsByScope = new Map();
+  for (const flow of Array.isArray(manifest.requiredFlows)
+    ? manifest.requiredFlows.filter(isRecord)
+    : []) {
+    if (!isNonEmptyString(flow.flowId) || !Array.isArray(flow.scopeIds)) {
+      continue;
+    }
+    for (const scopeId of flow.scopeIds) {
+      const requiredForScope = requiredFlowIdsByScope.get(scopeId) ?? [];
+      requiredForScope.push(flow.flowId);
+      requiredFlowIdsByScope.set(scopeId, requiredForScope);
+    }
+  }
+  const missingByScope = mcpMissingFlowIdsByScope(manifest);
+  const decisions = manifest.scopeAuditDecisions;
+  if (!Array.isArray(decisions)) {
+    if (missingByScope.size > 0) {
+      issues.push(
+        `${context} scopeAuditDecisions must be an array when scoped MCP evidence is missing.`,
+      );
+    }
+    return issues;
+  }
+
+  const decisionsByScope = new Map();
+  for (const [index, decision] of decisions.entries()) {
+    const decisionContext = `${context} scopeAuditDecisions[${index}]`;
+    if (!isRecord(decision)) {
+      issues.push(`${decisionContext} must be an object.`);
+      continue;
+    }
+    issues.push(
+      ...unexpectedFieldIssues(
+        decision,
+        mcpScopeAuditDecisionFields,
+        decisionContext,
+      ),
+    );
+    for (const field of ["scopeId", "auditTaskId", "result", "reason"]) {
+      if (!isNonEmptyString(decision[field])) {
+        issues.push(`${decisionContext}.${field} must be a non-empty string.`);
+      }
+    }
+    if (
+      isNonEmptyString(decision.result) &&
+      !mcpAuditDecisionResults.has(decision.result)
+    ) {
+      issues.push(
+        `${decisionContext}.result must be one of ${Array.from(
+          mcpAuditDecisionResults,
+        ).join(", ")}.`,
+      );
+    }
+    if (
+      isNonEmptyString(decision.scopeId) &&
+      !ultraGoldenScopeIds.includes(decision.scopeId)
+    ) {
+      issues.push(
+        `${decisionContext}.scopeId references unknown scope ${decision.scopeId}.`,
+      );
+    } else if (isNonEmptyString(decision.scopeId)) {
+      if (decisionsByScope.has(decision.scopeId)) {
+        issues.push(
+          `${context} has duplicate scope audit decision for ${decision.scopeId}.`,
+        );
+      }
+      decisionsByScope.set(decision.scopeId, decision);
+    }
+
+    const requiredFlowIds = new Set(
+      requiredFlowIdsByScope.get(decision.scopeId) ?? [],
+    );
+    issues.push(
+      ...validateStringArray(
+        decision.reusedFlowIds,
+        `${decisionContext}.reusedFlowIds`,
+      ),
+    );
+    if (Array.isArray(decision.reusedFlowIds)) {
+      const seen = new Set();
+      const missingFlowIdsForScope = new Set(
+        missingByScope.get(decision.scopeId) ?? [],
+      );
+      for (const flowId of decision.reusedFlowIds) {
+        if (seen.has(flowId)) {
+          issues.push(
+            `${decisionContext}.reusedFlowIds must not repeat ${flowId}.`,
+          );
+        }
+        seen.add(flowId);
+        if (isNonEmptyString(flowId) && !requiredFlowIds.has(flowId)) {
+          issues.push(
+            `${decisionContext}.reusedFlowIds references flow ${flowId}, which is not required by ${decision.scopeId}.`,
+          );
+        }
+        if (isNonEmptyString(flowId) && missingFlowIdsForScope.has(flowId)) {
+          issues.push(
+            `${decisionContext}.reusedFlowIds must not include missing flow ${flowId}.`,
+          );
+        }
+      }
+    }
+    if (
+      decision.result === "new-scenario-required" &&
+      (missingByScope.get(decision.scopeId) ?? []).length === 0
+    ) {
+      issues.push(
+        `${decisionContext}.result must not require a new scenario when the scope has no missing MCP flows.`,
+      );
+    }
+    if (
+      decision.result === "reuse-existing-evidence" &&
+      Array.isArray(decision.reusedFlowIds) &&
+      decision.reusedFlowIds.length === 0
+    ) {
+      issues.push(
+        `${decisionContext}.reusedFlowIds must be non-empty for a reuse-existing-evidence decision.`,
+      );
+    }
+    if (
+      decision.result === "reuse-existing-evidence" &&
+      (missingByScope.get(decision.scopeId) ?? []).length !== 0
+    ) {
+      issues.push(
+        `${decisionContext}.result must require a new scenario while the scope has missing MCP flows.`,
+      );
+    }
+
+    if (decision.result === "new-scenario-required") {
+      if (!isRecord(decision.requiredEvidence)) {
+        issues.push(`${decisionContext}.requiredEvidence must be an object.`);
+      } else {
+        issues.push(
+          ...unexpectedFieldIssues(
+            decision.requiredEvidence,
+            mcpRequiredEvidenceFields,
+            `${decisionContext}.requiredEvidence`,
+          ),
+        );
+        if (!isNonEmptyString(decision.requiredEvidence.scenarioGoal)) {
+          issues.push(
+            `${decisionContext}.requiredEvidence.scenarioGoal must be a non-empty string.`,
+          );
+        }
+        issues.push(
+          ...validateNonEmptyStringArray(
+            decision.requiredEvidence.inputs,
+            `${decisionContext}.requiredEvidence.inputs`,
+          ),
+        );
+      }
+    } else if (decision.requiredEvidence !== undefined) {
+      issues.push(
+        `${decisionContext}.requiredEvidence is only allowed for new-scenario-required decisions.`,
+      );
+    }
+  }
+
+  for (const [scopeId, missingFlowIds] of missingByScope) {
+    const decision = decisionsByScope.get(scopeId);
+    if (decision === undefined) {
+      issues.push(
+        `${context} must include a scope audit decision for ${scopeId} missing flows ${missingFlowIds.join(", ")}.`,
+      );
+      continue;
+    }
+    if (decision.result !== "new-scenario-required") {
+      issues.push(
+        `${context} scope audit decision for ${scopeId} must require a new scenario while evidence is missing.`,
+      );
+    }
+  }
+  return issues;
+}
 
 function validateMcpScenarioEvidence(manifest, { root }) {
   const context = "MCP scenario evidence manifest";
@@ -210,28 +475,42 @@ function validateMcpScenarioEvidence(manifest, { root }) {
         issues.push(`${flowContext}.scopeIds must be a non-empty array.`);
       } else {
         for (const scopeId of flow.scopeIds) {
-          if (scopeId !== "level-1" && scopeId !== "level-1-2") {
+          if (!ultraGoldenScopeIds.includes(scopeId)) {
             issues.push(`${flowContext}.scopeIds includes unknown ${scopeId}.`);
           }
         }
       }
-      if (!isNonEmptyString(flow.followUpTaskId)) {
-        issues.push(
-          `${flowContext}.followUpTaskId must be a non-empty string.`,
-        );
-      }
       if (!isNonEmptyString(flow.description)) {
         issues.push(`${flowContext}.description must be a non-empty string.`);
+      }
+      if (!isRecord(flow.followUpTaskIdsByScope)) {
+        issues.push(`${flowContext}.followUpTaskIdsByScope must be an object.`);
+      } else if (Array.isArray(flow.scopeIds)) {
+        const requiredScopeIds = new Set(flow.scopeIds);
+        for (const scopeId of flow.scopeIds) {
+          if (!isNonEmptyString(flow.followUpTaskIdsByScope[scopeId])) {
+            issues.push(
+              `${flowContext}.followUpTaskIdsByScope.${scopeId} must be a non-empty string.`,
+            );
+          }
+        }
+        for (const scopeId of Object.keys(flow.followUpTaskIdsByScope)) {
+          if (!requiredScopeIds.has(scopeId)) {
+            issues.push(
+              `${flowContext}.followUpTaskIdsByScope includes non-required scope ${scopeId}.`,
+            );
+          }
+        }
       }
     }
   }
   if (!Array.isArray(manifest.evidence)) {
     issues.push(`${context} evidence must be an array.`);
   } else {
-    const requiredFlowIds = new Set(
+    const requiredFlowsById = new Map(
       (Array.isArray(manifest.requiredFlows) ? manifest.requiredFlows : [])
         .filter(isRecord)
-        .map((flow) => flow.flowId),
+        .map((flow) => [flow.flowId, flow]),
     );
     const seenEvidenceRows = new Set();
     for (const [index, row] of manifest.evidence.entries()) {
@@ -244,19 +523,40 @@ function validateMcpScenarioEvidence(manifest, { root }) {
         ...unexpectedFieldIssues(row, mcpEvidenceRowFields, rowContext),
       );
       if (row.kind !== mcpScenarioWitnessKind) {
-        issues.push(
-          `${rowContext}.kind must be ${mcpScenarioWitnessKind}.`,
-        );
+        issues.push(`${rowContext}.kind must be ${mcpScenarioWitnessKind}.`);
       }
-      for (const field of mcpEvidenceRowFields) {
+      for (const field of [
+        "kind",
+        "flowId",
+        "scenarioId",
+        "ownerPath",
+        "testPath",
+        "taskId",
+        "summary",
+      ]) {
         if (!isNonEmptyString(row[field])) {
           issues.push(`${rowContext}.${field} must be a non-empty string.`);
         }
       }
-      if (isNonEmptyString(row.flowId) && !requiredFlowIds.has(row.flowId)) {
+      const requiredFlow = requiredFlowsById.get(row.flowId);
+      if (isNonEmptyString(row.flowId) && requiredFlow === undefined) {
         issues.push(
           `${rowContext}.flowId references unknown flow ${row.flowId}.`,
         );
+      }
+      if (!Array.isArray(row.scopeIds) || row.scopeIds.length === 0) {
+        issues.push(`${rowContext}.scopeIds must be a non-empty array.`);
+      } else {
+        const requiredScopeIds = new Set(requiredFlow?.scopeIds ?? []);
+        for (const scopeId of row.scopeIds) {
+          if (!ultraGoldenScopeIds.includes(scopeId)) {
+            issues.push(`${rowContext}.scopeIds includes unknown ${scopeId}.`);
+          } else if (!requiredScopeIds.has(scopeId)) {
+            issues.push(
+              `${rowContext}.scopeIds includes ${scopeId}, which is not required by flow ${row.flowId}.`,
+            );
+          }
+        }
       }
       const rowKey = `${row.flowId}\u0000${row.scenarioId}\u0000${row.testPath}`;
       if (seenEvidenceRows.has(rowKey)) {
@@ -281,6 +581,7 @@ function validateMcpScenarioEvidence(manifest, { root }) {
       }
     }
   }
+  issues.push(...validateMcpScopeAuditDecisions(manifest, context));
   return issues;
 }
 
@@ -467,7 +768,9 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
   const requiredFlows = (mcpScenarioEvidence.requiredFlows ?? []).filter(
     (flow) => flow.scopeIds.includes(scopeId),
   );
-  const evidenceRows = mcpScenarioEvidence.evidence ?? [];
+  const evidenceRows = (mcpScenarioEvidence.evidence ?? []).filter((row) =>
+    row.scopeIds.includes(scopeId),
+  );
   const evidenceRowsByFlowId = evidenceRows.reduce((groups, row) => {
     const current = groups.get(row.flowId) ?? [];
     current.push(row);
@@ -480,9 +783,12 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
     .map((flow) => ({
       description: flow.description,
       flowId: flow.flowId,
-      followUpTaskId: flow.followUpTaskId,
+      followUpTaskId: flow.followUpTaskIdsByScope[scopeId],
     }));
   return stable({
+    auditDecision: (mcpScenarioEvidence.scopeAuditDecisions ?? []).find(
+      (decision) => decision.scopeId === scopeId,
+    ),
     id: layerId.mcpScenarioEvidence,
     status: statusFor(missingEvidenceRows.length),
     blockingCount: missingEvidenceRows.length,
@@ -512,7 +818,7 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
     requiredFlows: requiredFlows.map((flow) => ({
       description: flow.description,
       flowId: flow.flowId,
-      followUpTaskId: flow.followUpTaskId,
+      followUpTaskId: flow.followUpTaskIdsByScope[scopeId],
     })),
   });
 }
@@ -664,12 +970,11 @@ function buildSelectedIdentityEvidenceAuditScope({
 }) {
   const unitsById = indexUnits(unitMatrix);
   const scopedSupportedUnitIds = supportedUnitIds(levelReport);
-  const qntMbtRowsByUnitId = qntMbtJoinRowsByUnitId(
-    levelReport,
-    kernelIndexes,
-  );
+  const qntMbtRowsByUnitId = qntMbtJoinRowsByUnitId(levelReport, kernelIndexes);
   const coveredMcpFlowIds = new Set(
-    (mcpScenarioEvidence.evidence ?? []).map((row) => row.flowId),
+    (mcpScenarioEvidence.evidence ?? [])
+      .filter((row) => row.scopeIds.includes(scopeId))
+      .map((row) => row.flowId),
   );
   const auditedRows = Array.from(scopedSupportedUnitIds)
     .map((unitId) => requireAuditUnit(unitsById, unitId))
@@ -699,12 +1004,18 @@ function buildSelectedIdentityEvidenceAuditScope({
   return stable({
     scopeId,
     metrics: {
-      auditedEvidenceRows: countCoverage(auditedRows.length, auditedRows.length),
+      auditedEvidenceRows: countCoverage(
+        auditedRows.length,
+        auditedRows.length,
+      ),
       joinedEvidenceRows: countCoverage(
         auditedRows.length - missingJoinRows.length,
         auditedRows.length,
       ),
-      missingJoinRows: countCoverage(missingJoinRows.length, auditedRows.length),
+      missingJoinRows: countCoverage(
+        missingJoinRows.length,
+        auditedRows.length,
+      ),
     },
     rowCount: missingJoinRows.length,
     rows: missingJoinRows,
@@ -714,12 +1025,18 @@ function buildSelectedIdentityEvidenceAuditScope({
 function buildSelectedIdentityEvidenceAudit({
   level1FullSupport,
   level12FullSupport,
+  level13FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
   unitMatrix,
 }) {
   const kernelIndexes = buildKernelIndexes(rulesKernelMatrix);
+  const levelReports = {
+    level1FullSupport,
+    level12FullSupport,
+    level13FullSupport,
+  };
   return stable({
     criteria: {
       evidenceTag: selectedIdentityMbtEvidenceTag,
@@ -730,24 +1047,16 @@ function buildSelectedIdentityEvidenceAudit({
       rowPolicy:
         "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join.",
     },
-    scopes: [
+    scopes: ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
       buildSelectedIdentityEvidenceAuditScope({
         kernelIndexes,
-        levelReport: level1FullSupport,
+        levelReport: levelReports[reportField],
         mcpScenarioEvidence,
-        scopeId: "level-1",
+        scopeId,
         selectedIdentityMbtEvidenceTag,
         unitMatrix,
       }),
-      buildSelectedIdentityEvidenceAuditScope({
-        kernelIndexes,
-        levelReport: level12FullSupport,
-        mcpScenarioEvidence,
-        scopeId: "level-1-2",
-        selectedIdentityMbtEvidenceTag,
-        unitMatrix,
-      }),
-    ],
+    ),
   });
 }
 
@@ -782,29 +1091,30 @@ function buildScopeGate({
 function buildUltraGoldenGate({
   level1FullSupport,
   level12FullSupport,
+  level13FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
   unitMatrix,
 }) {
-  const scopes = [
+  const levelReports = {
+    level1FullSupport,
+    level12FullSupport,
+    level13FullSupport,
+  };
+  const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
-      levelReport: level1FullSupport,
+      levelReport: levelReports[reportField],
       mcpScenarioEvidence,
       rulesKernelMatrix,
-      scopeId: "level-1",
+      scopeId,
     }),
-    buildScopeGate({
-      levelReport: level12FullSupport,
-      mcpScenarioEvidence,
-      rulesKernelMatrix,
-      scopeId: "level-1-2",
-    }),
-  ];
+  );
   const blockedScopes = scopes.filter((scope) => scope.status !== passStatus);
   const selectedIdentityEvidenceAudit = buildSelectedIdentityEvidenceAudit({
     level1FullSupport,
     level12FullSupport,
+    level13FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityMbtEvidenceTag,
@@ -816,6 +1126,8 @@ function buildUltraGoldenGate({
       level1FullSupport: "plans/unit-profile-coverage/level1-full-support.json",
       level12FullSupport:
         "plans/unit-profile-coverage/level1-2-full-support.json",
+      level13FullSupport:
+        "plans/unit-profile-coverage/level1-3-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",
@@ -916,6 +1228,25 @@ function renderMcpScenarioEvidenceRows(scope, { includeScope = true } = {}) {
   return (mcpLayer?.requiredFlows ?? []).map((flow) =>
     renderMcpScenarioEvidenceRow({ flow, includeScope, mcpLayer, scope }),
   );
+}
+
+function renderMcpAuditDecisionRow(scope) {
+  const mcpLayer = findLayer(scope, layerId.mcpScenarioEvidence);
+  const decision = mcpLayer.auditDecision;
+  if (decision === undefined) {
+    return `| ${scope.scopeId} | _none_ | _none_ | _none_ | _none_ | _none_ |`;
+  }
+  const requiredEvidence = decision.requiredEvidence;
+  const missingFlowIds = (mcpLayer.missingEvidenceRows ?? []).map(
+    (row) => row.flowId,
+  );
+  const followUpTaskIds = uniqueSorted(
+    (mcpLayer.missingEvidenceRows ?? []).map((row) => row.followUpTaskId),
+  );
+  const followUp =
+    followUpTaskIds.length === 0 ? "_none_" : renderList(followUpTaskIds);
+  const inputs = requiredEvidence?.inputs?.map(md).join("<br>") ?? "_none_";
+  return `| ${scope.scopeId} | ${md(decision.result)} | ${renderList(decision.reusedFlowIds)} | ${renderList(missingFlowIds)} | ${followUp} | ${inputs} |`;
 }
 
 function countBy(values, selectKey) {
@@ -1154,6 +1485,14 @@ function renderUltraGoldenGate(gate) {
     "| Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |",
     "| --- | --- | --- | --- | --- | --- |",
     ...gate.scopes.flatMap(renderMcpScenarioEvidenceRows),
+    "",
+    "## MCP Level-Scope Audit Decisions",
+    "",
+    "Scope audit decisions are checker-owned conclusions from the MCP scenario evidence manifest. When existing executable scenarios are insufficient for a scoped flow, the required follow-up inputs stay with the missing evidence row instead of being inferred from selected-identity or support-profile coverage.",
+    "",
+    "| Scope | Decision | Existing evidence reused | Missing flows | Follow-up task | Required scenario inputs |",
+    "| --- | --- | --- | --- | --- | --- |",
+    ...gate.scopes.map(renderMcpAuditDecisionRow),
     "",
     "## Selected Identity Evidence Join Audit",
     "",

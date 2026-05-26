@@ -1,8 +1,8 @@
 {
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
-    "selectedIdentityBlockerCount": 1,
-    "status": "blocked",
+    "selectedIdentityBlockerCount": 0,
+    "status": "pass",
     "strictTargetOpenCount": 0
   },
   "frontierRows": [
@@ -2011,9 +2011,8 @@
       "kind": "spell",
       "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state.",
       "selectedIdentity": {
-        "owner": "runtime-detached table/perception/knowledge owner",
-        "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-        "status": "missing-witness-deferred-not-applicable"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/mind_spike.json",
       "sourceRows": [
@@ -9752,31 +9751,19 @@
     "title": "Character Levels 1-3"
   },
   "selectedIdentityReadiness": {
-    "blockingRows": [
-      {
-        "claimTag": "profile-subset-supported",
-        "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
-        "sourceRecordPath": "packages/surface/content/mind_spike.json",
-        "status": "closed-runtime-detached-table-adjudication",
-        "unitId": "mind_spike"
-      }
-    ],
-    "blockingRowsByStatus": {
-      "missing-witness-deferred-not-applicable": 1
-    },
+    "blockingRows": [],
+    "blockingRowsByStatus": {},
     "metrics": {
       "denominator": 152,
-      "numerator": 151,
-      "percent": "99.3%"
+      "numerator": 152,
+      "percent": "100%"
     },
     "readyRowsByStatus": {
-      "witness-present": 151
+      "witness-present": 152
     },
     "rowsByStatus": {
-      "missing-witness-deferred-not-applicable": 1,
       "not-required": 30,
-      "witness-present": 151
+      "witness-present": 152
     }
   },
   "sourceArtifacts": {

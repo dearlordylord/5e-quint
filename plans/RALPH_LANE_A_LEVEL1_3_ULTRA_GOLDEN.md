@@ -4,22 +4,102 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY", "status": "ready-for-research", "title": "Close Mind Spike selected-identity witness" },
-    { "number": 2, "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH", "status": "ready-for-research", "title": "Refresh level 1-3 full-support claim artifacts" },
-    { "number": 3, "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION", "status": "ready-for-research", "title": "Admit level 1-3 into aggregate ultra-golden gate" },
-    { "number": 4, "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT", "status": "ready-for-research", "title": "Audit MCP scenario evidence for level 1-3 scope" },
-    { "number": 5, "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED", "status": "ready-for-research", "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap" },
-    { "number": 6, "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE", "status": "ready-for-research", "title": "Add regression coverage for deferred selected-identity disposition" },
-    { "number": 7, "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT", "status": "ready-for-research", "title": "Audit level 1-3 follow-up splits for claim-gate correctness" },
-    { "number": 8, "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT", "status": "ready-for-research", "title": "Audit non-blocking product-readiness diagnostics" },
-    { "number": 9, "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING", "status": "ready-for-research", "title": "Tighten claim-gate wording around diagnostics" },
-    { "number": 10, "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY", "status": "ready-for-research", "title": "Verify generated report consistency after scope admission" },
-    { "number": 11, "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported Unit to rules-kernel join for level 1-3" },
-    { "number": 12, "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT", "status": "ready-for-research", "title": "Audit SRD pressure rows with no Unit matrix row" },
-    { "number": 13, "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT", "status": "ready-for-research", "title": "RAW audit closed runtime-detached dispositions in level 1-3" },
-    { "number": 14, "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS", "status": "ready-for-research", "title": "Extend checker self-tests for level 1-3 ultra-golden failures" },
-    { "number": 15, "id": "L13UG-A15-LEVEL13-CLOSEOUT", "status": "ready-for-research", "title": "Close out level 1-3 ultra-golden lane" },
-    { "number": 16, "id": "L13UG-A16-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Plan the next level-support batch if this lane drains" }
+    {
+      "number": 1,
+      "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY",
+      "status": "done",
+      "title": "Close Mind Spike selected-identity witness"
+    },
+    {
+      "number": 2,
+      "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH",
+      "status": "done",
+      "title": "Refresh level 1-3 full-support claim artifacts"
+    },
+    {
+      "number": 3,
+      "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION",
+      "status": "done",
+      "title": "Admit level 1-3 into aggregate ultra-golden gate"
+    },
+    {
+      "number": 4,
+      "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+      "status": "done",
+      "title": "Audit MCP scenario evidence for level 1-3 scope"
+    },
+    {
+      "number": 5,
+      "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
+      "status": "done",
+      "title": "Add level 1-3 MCP scenario evidence for the audited gap"
+    },
+    {
+      "number": 6,
+      "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE",
+      "status": "done",
+      "title": "Add regression coverage for deferred selected-identity disposition"
+    },
+    {
+      "number": 7,
+      "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT",
+      "status": "done",
+      "title": "Audit level 1-3 follow-up splits for claim-gate correctness"
+    },
+    {
+      "number": 8,
+      "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit non-blocking product-readiness diagnostics"
+    },
+    {
+      "number": 9,
+      "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING",
+      "status": "ready-for-research",
+      "title": "Tighten claim-gate wording around diagnostics"
+    },
+    {
+      "number": 10,
+      "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY",
+      "status": "ready-for-research",
+      "title": "Verify generated report consistency after scope admission"
+    },
+    {
+      "number": 11,
+      "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit supported Unit to rules-kernel join for level 1-3"
+    },
+    {
+      "number": 12,
+      "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit SRD pressure rows with no Unit matrix row"
+    },
+    {
+      "number": 13,
+      "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT",
+      "status": "ready-for-research",
+      "title": "RAW audit closed runtime-detached dispositions in level 1-3"
+    },
+    {
+      "number": 14,
+      "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS",
+      "status": "ready-for-research",
+      "title": "Extend checker self-tests for level 1-3 ultra-golden failures"
+    },
+    {
+      "number": 15,
+      "id": "L13UG-A15-LEVEL13-CLOSEOUT",
+      "status": "ready-for-research",
+      "title": "Close out level 1-3 ultra-golden lane"
+    },
+    {
+      "number": 16,
+      "id": "L13UG-A16-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Plan the next level-support batch if this lane drains"
+    }
   ]
 }
 -->
@@ -38,7 +118,7 @@ Read only these by default:
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`
 - Relevant `mind_spike` files when a task touches Mind Spike:
-  `.references/srd-5.2.1/Spells/Mind Spike.md`,
+  `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Mind Spike`,
   `packages/surface/content/mind_spike.json`,
   `plans/unit-profile-coverage/unit-claims.jsonl`,
   `plans/unit-profile-coverage/unit-evidence.jsonl`,
@@ -81,7 +161,7 @@ artifact changes:
 
 ### Task 1 - L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY - Close Mind Spike selected-identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current Mind Spike Unit claim/evidence rows, local SRD Mind Spike text,
 and existing selected-identity MBT patterns for save-damage spells.
@@ -98,7 +178,7 @@ mechanics remain explicitly runtime-detached.
 
 ### Task 2 - L13UG-A02-LEVEL13-CLAIM-REFRESH - Refresh level 1-3 full-support claim artifacts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 1 output and generated coverage artifacts.
 
@@ -111,7 +191,7 @@ Mind Spike row.
 
 ### Task 3 - L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION - Admit level 1-3 into aggregate ultra-golden gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: passing level 1-3 full-support claim and current ultra-golden checker
 scope.
@@ -125,7 +205,7 @@ pass; otherwise it reports the precise blocked layer.
 
 ### Task 4 - L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT - Audit MCP scenario evidence for level 1-3 scope
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: MCP scenario evidence manifest and level 1-3 required user-facing flows.
 
@@ -135,23 +215,42 @@ Output: written checker-owned decision, preferably generated, on whether level
 Acceptance: no hand-wavy reuse. Either existing scenario evidence is tied to
 level 1-3 requirements, or Task 5 remains necessary with exact inputs.
 
-### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence only if the audit finds a real gap
+### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence for the audited gap
 
-Status: `ready-for-research`
+Status: `done`
 
-Input: Task 4 audit.
+Input: Task 4 generated MCP level-scope audit decision. Existing evidence reuses
+only `mcp-workflow-discovery`; level 1-3 still needs scenario evidence for
+`character-creation`, `character-sheet`, and `battle`.
 
-Output: if needed, one focused MCP scenario that demonstrates a level-3
-character path using supported level 1-3 content without PHB+ identity leakage.
-If not needed, mark this task done with an evidence-backed no-op commit or plan
-update.
+Output: one focused MCP scenario that demonstrates a level-3 character path
+using supported level 1-3 content without PHB+ identity leakage.
+
+Required scenario inputs:
+
+- Use only SRD-authored ids already installed in this repo, such as
+  `class_wizard`, `subclass_wizard_evoker`, `species_elf` or `species_orc`,
+  `background_soldier`, and supported Wizard spell-list spells.
+- Drive character creation through create, discover, fill, and finalize MCP
+  tools for Wizard level 3, including Evoker subclass and returned
+  spellbook/prepared-spell holes.
+- Include at least one supported spell-level-2 Wizard spell in the spellbook
+  and prepared spell set; `scorching_ray` is the primary battle-path candidate
+  because it already has battle support.
+- Verify durable Character Sheet spellcasting exposes four level-1 Spell Slots
+  and two level-2 Spell Slots before battle.
+- Start battle from the finalized Wizard and an SRD Stat Block, cast
+  `scorching_ray` through returned target, attack-roll, and rolled-dice holes,
+  and verify one level-2 Spell Slot is expended.
+- End battle and verify list or session snapshot output still exposes the
+  durable level-3 Character Sheet state and level-2 Spell Slot expenditure.
 
 Acceptance: MCP evidence layer for level 1-3 is pass or explicitly blocked
 with a concrete missing scenario.
 
 ### Task 6 - L13UG-A06-MIND-SPIKE-REGRESSION-GATE - Add regression coverage for deferred selected-identity disposition
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: checker code and self-tests around selected-identity dispositions.
 
@@ -164,7 +263,7 @@ claim gate in the self-test shape.
 
 ### Task 7 - L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT - Audit level 1-3 follow-up splits for claim-gate correctness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: six current `blocked-follow-up-split` rows in
 `LEVEL1_3_FULL_SUPPORT.md`.

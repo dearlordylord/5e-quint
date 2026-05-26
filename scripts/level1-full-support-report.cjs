@@ -1529,6 +1529,7 @@ module.exports = {
   buildLevel12FullSupport,
   buildLevel13FullSupport,
   buildSrdAuthoredProductReadiness,
+  buildSelectedIdentityReadiness,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,

@@ -6,9 +6,9 @@ This strict view tracks executable SRD character-level-1 through character-level
 
 ## Claim Summary
 
-Full-support claim: **blocked**.
+Full-support claim: **pass**.
 
-Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,7 +16,7 @@ Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 121/182 (66.5%) |
 | Strict target closure | 182/182 (100%) |
-| Selected identity readiness | 151/152 (99.3%) |
+| Selected identity readiness | 152/152 (100%) |
 | Product readiness | 577/607 (95.1%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 94/94 (100%) |
@@ -43,22 +43,21 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| missing-witness-deferred-not-applicable | 1 |
 | not-required | 30 |
-| witness-present | 151 |
+| witness-present | 152 |
 
 ### Selected Identity Blockers
 
 | Unit | Strict status | Claim | Selected identity status | Reason |
 | --- | --- | --- | --- | --- |
-| `mind_spike` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 182/182 (100%) | _none_ |
-| Selected identity readiness | blocked | 151/152 (99.3%) | 1 selected-identity blocker row(s) |
+| Selected identity readiness | pass | 152/152 (100%) | _none_ |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
@@ -168,7 +167,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `locate_animals_or_plants` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime. |
 | `locate_object` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime. |
 | `magic_mouth` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime. |
-| `mind_spike` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | installed | outside-runtime-presentation-exploration | The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state. |
+| `mind_spike` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
 | `monk_monks_focus` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane. |
 | `moonbeam` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION: Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them. Owner: shared shape-shifting runtime plus spell active-effect lifecycle owners. Required output: Focused spell-transformation runtime tests, package-local promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.; L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION: Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state. Owner: shared shape-shifting runtime plus stat-block battle controls. Required output: Focused stat-block runtime tests, package-local promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence. |
