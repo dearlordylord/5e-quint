@@ -23,9 +23,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -89,27 +87,21 @@ import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
-const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
-  init: {},
-  doDivineFavorWeaponDamageRider: {},
-  doDivineSmiteAfterHitDamage: {},
-  doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
-  doFalseLifeTemporaryHitPoints: {},
-  doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
-  doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: {},
-  doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: {},
-  doHexMarkedDamageRiderAndLaterTurnTransfer: {},
-  doLongstriderSpeedIncrease: {},
-  doSearingSmiteAfterHitTimedDamageAndSaveCleanup: {},
-  doShillelaghWeaponAttackOverride: {},
-  doTrueStrikeSpellHostedWeaponAttack: {},
-  step: {},
-} as const;
-type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
-  keyof typeof level1BuffMarkSmiteSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+type Level1BuffMarkSmiteSelectedIdentityAction =
+  | "doDivineFavorWeaponDamageRider"
+  | "doDivineSmiteAfterHitDamage"
+  | "doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape"
+  | "doFalseLifeTemporaryHitPoints"
+  | "doHeroismFrightenedImmunityTurnStartTemporaryHitPoints"
+  | "doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup"
+  | "doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer"
+  | "doHexMarkedDamageRiderAndLaterTurnTransfer"
+  | "doLongstriderSpeedIncrease"
+  | "doSearingSmiteAfterHitTimedDamageAndSaveCleanup"
+  | "doShillelaghWeaponAttackOverride"
+  | "doTrueStrikeSpellHostedWeaponAttack";
 
 const divineFavorUnitId = "divine_favor";
 const divineSmiteUnitId = "divine_smite";
@@ -417,7 +409,7 @@ type TrueStrikeSpellHostedWeaponAttackProjection =
     };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
-  readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityAction[];
   readonly expected: Level1BuffMarkSmiteSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
@@ -434,7 +426,7 @@ type SelectedUnitIdentityReplay = {
     | "L1E-SHILLELAGH"
     | "L1E-TRUE-STRIKE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
-  readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
@@ -806,60 +798,55 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Level 1 buff mark smite selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<Level1BuffMarkSmiteSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createLevel1BuffMarkSmiteSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Level 1 buff mark smite selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Level 1 buff mark smite selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Level 1 buff mark smite selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createLevel1BuffMarkSmiteSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: level1BuffMarkSmiteSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+defineSelectedIdentityWitness({
+  describeLabel: "Level 1 buff mark smite selected identity MBT",
+  taskId: "level1-buff-mark-smite-selected-identity",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {},
+  initialProjection: expectedProjection(),
+  normalizeQuintState: normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState,
+  units: selectedUnitIdentityReplays.map((replay) => ({
+    unitId: replay.unitId,
+    procedures: replay.sequences.map((sequence) => {
+      const actionName = singleReplayAction(
+        replay.unitId,
+        sequence.name,
+        sequence.actions,
+      );
+      return {
+        actionName,
+        projectionAfter: sequence.expected,
+        discover: () => replayLevel1BuffMarkSmiteAction(actionName),
+      };
+    }),
+  })),
 });
 
-function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
-  return defineDriver(level1BuffMarkSmiteSelectedIdentityDriverSchema, () => {
+function singleReplayAction(
+  unitId: Level1BuffMarkSmiteSpellId,
+  sequenceName: string,
+  actions: readonly Level1BuffMarkSmiteSelectedIdentityAction[],
+): Level1BuffMarkSmiteSelectedIdentityAction {
+  if (actions.length !== 1 || actions[0] === undefined) {
+    throw new Error(
+      `Expected single Level 1 buff mark smite selected identity replay action for ${unitId}:${sequenceName}.`,
+    );
+  }
+  return actions[0];
+}
+
+function replayLevel1BuffMarkSmiteAction(
+  actionName: Level1BuffMarkSmiteSelectedIdentityAction,
+): Level1BuffMarkSmiteSelectedIdentityProjection {
+  const runtime = createLevel1BuffMarkSmiteSelectedIdentityRuntime();
+  runtime[actionName]();
+  return runtime.getState();
+}
+
+function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     let state = level1BuffMarkSmiteBattle();
     let damageRider:
       | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
@@ -1581,7 +1568,6 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           lastResult,
         ),
     };
-  });
 }
 
 function expectedProjection(
@@ -4153,14 +4139,3 @@ function mbtLastResult(
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);
 }
-
-const level1BuffMarkSmiteSelectedIdentityStateCheck = stateCheck(
-  normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState,
-  (
-    spec: Level1BuffMarkSmiteSelectedIdentityProjection,
-    impl: Level1BuffMarkSmiteSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

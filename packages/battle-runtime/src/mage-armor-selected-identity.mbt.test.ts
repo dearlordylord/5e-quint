@@ -2,9 +2,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   abilityModifier as armorAbilityModifier,
@@ -30,6 +28,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   battleCombatantSide,
   battleId,
@@ -53,19 +52,6 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
-const mageArmorSelectedIdentityDriverSchema = {
-  init: {},
-  doDiscoverMageArmorUnarmoredSelfTarget: {},
-  doRejectMageArmorArmoredTarget: {},
-  doResolveMageArmorBaseArmorClassProjection: {},
-  doExpireMageArmorDuration: {},
-  step: {},
-} as const;
-type MageArmorSelectedIdentityDriverAction = Exclude<
-  keyof typeof mageArmorSelectedIdentityDriverSchema,
-  "init" | "step"
->;
-
 type MageArmorSelectedIdentityLastResult =
   | "init"
   | "discovered"
@@ -83,17 +69,6 @@ type MageArmorSelectedIdentityProjection = {
   readonly level1SlotsExpended: number;
   readonly actionAvailable: boolean;
   readonly lastResult: MageArmorSelectedIdentityLastResult;
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly MageArmorSelectedIdentityDriverAction[];
-  readonly expected: MageArmorSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1H-MAGE-ARMOR";
-  readonly unitId: typeof mageArmorUnitId;
-  readonly actions: readonly MageArmorSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 type ArmorClassState = ReturnType<typeof defaultArmorClassState>;
@@ -133,134 +108,70 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "L1H-MAGE-ARMOR",
-    unitId: "mage_armor",
-    actions: [
-      "doDiscoverMageArmorUnarmoredSelfTarget",
-      "doRejectMageArmorArmoredTarget",
-      "doResolveMageArmorBaseArmorClassProjection",
-      "doExpireMageArmorDuration",
-    ],
-    sequences: [
-      {
-        name: "unarmored-self-target-is-admitted",
-        actions: ["doDiscoverMageArmorUnarmoredSelfTarget"],
-        expected: expectedProjection({ lastResult: "discovered" }),
-      },
-      {
-        name: "armored-target-is-rejected-before-spend",
-        actions: ["doRejectMageArmorArmoredTarget"],
-        expected: expectedProjection({
-          armoredTargetRejected: true,
-          lastResult: "armoredRejected",
-        }),
-      },
-      {
-        name: "base-ac-projects-from-active-effect-not-stored-armor",
-        actions: ["doResolveMageArmorBaseArmorClassProjection"],
-        expected: expectedProjection({
-          mageArmorEffectPresent: true,
-          projectedBaseIsMageArmor: true,
-          armorClass: mageArmorArmorClass,
-          mageArmorDurationTicks,
-          level1SlotsExpended: 1,
-          actionAvailable: false,
-          lastResult: "resolved",
-        }),
-      },
-      {
-        name: "timed-duration-expiry-cleans-up-ac-projection",
-        actions: ["doExpireMageArmorDuration"],
-        expected: expectedProjection({
-          level1SlotsExpended: 1,
-          actionAvailable: false,
-          lastResult: "durationExpired",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Mage Armor selected identity MBT",
+  taskId: "L1H-MAGE-ARMOR",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-mage-armor-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    selfTargetAdmitted: "bool",
+    armoredTargetRejected: "bool",
+    mageArmorEffectPresent: "bool",
+    storedArmorBaseStillUnarmored: "bool",
+    projectedBaseIsMageArmor: "bool",
+    armorClass: "int",
+    mageArmorDurationTicks: "int",
+    level1SlotsExpended: "int",
+    actionAvailable: "bool",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Mage Armor selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<MageArmorSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createMageArmorSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Mage Armor selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Mage Armor selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Mage Armor selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-mage-armor-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMageArmorSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: mageArmorSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: mageArmorUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverMageArmorUnarmoredSelfTarget",
+          projectionAfter: expectedProjection({ lastResult: "discovered" }),
+          discover: () => projectInitialBattle("discovered"),
+        },
+        {
+          actionName: "doRejectMageArmorArmoredTarget",
+          projectionAfter: expectedProjection({
+            armoredTargetRejected: true,
+            lastResult: "armoredRejected",
+          }),
+          discover: projectArmoredTargetRejection,
+        },
+        {
+          actionName: "doResolveMageArmorBaseArmorClassProjection",
+          projectionAfter: expectedProjection({
+            mageArmorEffectPresent: true,
+            projectedBaseIsMageArmor: true,
+            armorClass: mageArmorArmorClass,
+            mageArmorDurationTicks,
+            level1SlotsExpended: 1,
+            actionAvailable: false,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            projectResolvedBattle(resolveMageArmorSelf(), "resolved"),
+        },
+        {
+          actionName: "doExpireMageArmorDuration",
+          projectionAfter: expectedProjection({
+            level1SlotsExpended: 1,
+            actionAvailable: false,
+            lastResult: "durationExpired",
+          }),
+          discover: projectExpiredDurationBattle,
+        },
+      ],
+    },
+  ],
 });
-
-function createMageArmorSelectedIdentityDriver() {
-  return defineDriver(mageArmorSelectedIdentityDriverSchema, () => {
-    let projection = projectInitialBattle("init");
-
-    function reset(): void {
-      projection = projectInitialBattle("init");
-    }
-
-    return {
-      init: reset,
-      doDiscoverMageArmorUnarmoredSelfTarget: () => {
-        projection = projectInitialBattle("discovered");
-      },
-      doRejectMageArmorArmoredTarget: () => {
-        projection = projectArmoredTargetRejection();
-      },
-      doResolveMageArmorBaseArmorClassProjection: () => {
-        projection = projectResolvedBattle(resolveMageArmorSelf(), "resolved");
-      },
-      doExpireMageArmorDuration: () => {
-        projection = projectExpiredDurationBattle();
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
-}
 
 function expectedProjection(
   overrides: Partial<MageArmorSelectedIdentityProjection> = {},
@@ -649,73 +560,6 @@ function requireResolved(result: BattleResolutionResult): ResolvedBattleResult {
   return result;
 }
 
-function normalizeMageArmorSelectedIdentityQuintState(
-  raw: unknown,
-): MageArmorSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    selfTargetAdmitted: booleanField(state, "qSelfTargetAdmitted"),
-    armoredTargetRejected: booleanField(state, "qArmoredTargetRejected"),
-    mageArmorEffectPresent: booleanField(state, "qMageArmorEffectPresent"),
-    storedArmorBaseStillUnarmored: booleanField(
-      state,
-      "qStoredArmorBaseStillUnarmored",
-    ),
-    projectedBaseIsMageArmor: booleanField(
-      state,
-      "qProjectedBaseIsMageArmor",
-    ),
-    armorClass: numberFromQuintInt(state["qArmorClass"], "qArmorClass"),
-    mageArmorDurationTicks: numberFromQuintInt(
-      state["qMageArmorDurationTicks"],
-      "qMageArmorDurationTicks",
-    ),
-    level1SlotsExpended: numberFromQuintInt(
-      state["qLevel1SlotsExpended"],
-      "qLevel1SlotsExpended",
-    ),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): MageArmorSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "discovered" ||
-    raw === "armoredRejected" ||
-    raw === "resolved" ||
-    raw === "durationExpired"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
 function requireElapsedHours(hours: number) {
   const parsed = elapsedTimeTicksFromHours(hours);
   if (Either.isLeft(parsed)) {
@@ -723,14 +567,3 @@ function requireElapsedHours(hours: number) {
   }
   return parsed.right;
 }
-
-const mageArmorSelectedIdentityStateCheck = stateCheck(
-  normalizeMageArmorSelectedIdentityQuintState,
-  (
-    spec: MageArmorSelectedIdentityProjection,
-    impl: MageArmorSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

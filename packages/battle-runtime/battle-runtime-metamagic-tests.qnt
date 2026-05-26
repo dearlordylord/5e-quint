@@ -1,6 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMetamagicTests {
+  import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
+  import unitFeatureMetamagicSpellModificationAdmissionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core"
+  import unitFeatureQuickenedActionSpellProcedureSupportCore.* from "../shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core"
   import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"

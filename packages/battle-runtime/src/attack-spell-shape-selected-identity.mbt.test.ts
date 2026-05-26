@@ -6,9 +6,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -47,21 +45,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const attackSpellShapeSelectedIdentityDriverSchema = {
-  init: {},
-  doFireBoltHit: {},
-  doChillTouchHitPointRegainPrevention: {},
-  doGuidingBoltNextAttackAdvantage: {},
-  doInflictWoundsFailedSave: {},
-  doInflictWoundsSuccessfulSave: {},
-  doShockingGraspOpportunityAttackDenied: {},
-  step: {},
-} as const;
-type AttackSpellShapeSelectedIdentityDriverAction = Exclude<
-  keyof typeof attackSpellShapeSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const attackSpellShapeSpellIds = [
   "fire_bolt",
@@ -92,17 +76,6 @@ type AttackSpellShapeSelectedIdentityProjection = {
     | "inflictWoundsSuccess"
     | "shockingGrasp";
 };
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly AttackSpellShapeSelectedIdentityDriverAction[];
-  readonly expected: AttackSpellShapeSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "attack-spell-shape";
-  readonly unitId: AttackSpellShapeSpellId;
-  readonly actions: readonly AttackSpellShapeSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
-};
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
@@ -123,279 +96,166 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "attack-spell-shape",
-    unitId: "fire_bolt",
-    actions: ["doFireBoltHit"],
-    sequences: [
-      {
-        name: "ranged-spell-attack-fire-damage",
-        actions: ["doFireBoltHit"],
-        expected: expectedProjection({
-          targetHp: 8,
-          lastResult: "fireBolt",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Attack spell shape selected identity MBT",
+  taskId: "attack-spell-shape",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    targetHp: "int",
+    spellSlotSpentThisTurn: "bool",
+    level1SlotsRemaining: "int",
+    activeEffectKind: "str",
+    activeEffectCount: "int",
+    lastResult: "str",
   },
-  {
-    taskId: "attack-spell-shape",
-    unitId: "chill_touch",
-    actions: ["doChillTouchHitPointRegainPrevention"],
-    sequences: [
-      {
-        name: "melee-spell-attack-necrotic-hit-point-regain-prevention",
-        actions: ["doChillTouchHitPointRegainPrevention"],
-        expected: expectedProjection({
-          targetHp: 8,
-          activeEffectKind: "hitPointRegainPrevented",
-          activeEffectCount: 1,
-          lastResult: "chillTouch",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "attack-spell-shape",
-    unitId: "guiding_bolt",
-    actions: ["doGuidingBoltNextAttackAdvantage"],
-    sequences: [
-      {
-        name: "ranged-spell-attack-radiant-next-attack-advantage",
-        actions: ["doGuidingBoltNextAttackAdvantage"],
-        expected: expectedProjection({
-          targetHp: 8,
-          spellSlotSpentThisTurn: true,
-          level1SlotsRemaining: 1,
-          activeEffectKind: "nextAttackRollAgainstSelf",
-          activeEffectCount: 1,
-          lastResult: "guidingBolt",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "attack-spell-shape",
-    unitId: "inflict_wounds",
-    actions: ["doInflictWoundsFailedSave", "doInflictWoundsSuccessfulSave"],
-    sequences: [
-      {
-        name: "constitution-save-failure-full-necrotic-damage",
-        actions: ["doInflictWoundsFailedSave"],
-        expected: expectedProjection({
-          targetHp: 6,
-          spellSlotSpentThisTurn: true,
-          level1SlotsRemaining: 1,
-          lastResult: "inflictWoundsFailure",
-        }),
-      },
-      {
-        name: "constitution-save-success-half-necrotic-damage",
-        actions: ["doInflictWoundsSuccessfulSave"],
-        expected: expectedProjection({
-          targetHp: 9,
-          spellSlotSpentThisTurn: true,
-          level1SlotsRemaining: 1,
-          lastResult: "inflictWoundsSuccess",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "attack-spell-shape",
-    unitId: "shocking_grasp",
-    actions: ["doShockingGraspOpportunityAttackDenied"],
-    sequences: [
-      {
-        name: "melee-spell-attack-lightning-opportunity-attack-denial",
-        actions: ["doShockingGraspOpportunityAttackDenied"],
-        expected: expectedProjection({
-          targetHp: 8,
-          activeEffectKind: "opportunityAttackDenied",
-          activeEffectCount: 1,
-          lastResult: "shockingGrasp",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Attack spell shape selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<AttackSpellShapeSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createAttackSpellShapeSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing attack spell shape selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Attack spell shape selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays attack spell shape selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAttackSpellShapeSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: attackSpellShapeSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: "fire_bolt",
+      procedures: [
+        {
+          actionName: "doFireBoltHit",
+          projectionAfter: expectedProjection({
+            targetHp: 8,
+            lastResult: "fireBolt",
+          }),
+          discover: () =>
+            resolveAttackSpellShapeProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "wizard",
+                cantrips: [spellRecord("fire_bolt")],
+              }),
+              spellId: "fire_bolt",
+              damageGroups: [[4]],
+              lastResult: "fireBolt",
+            }),
+        },
+      ],
+    },
+    {
+      unitId: "chill_touch",
+      procedures: [
+        {
+          actionName: "doChillTouchHitPointRegainPrevention",
+          projectionAfter: expectedProjection({
+            targetHp: 8,
+            activeEffectKind: "hitPointRegainPrevented",
+            activeEffectCount: 1,
+            lastResult: "chillTouch",
+          }),
+          discover: () =>
+            resolveAttackSpellShapeProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "wizard",
+                cantrips: [spellRecord("chill_touch")],
+              }),
+              spellId: "chill_touch",
+              damageGroups: [[4]],
+              lastResult: "chillTouch",
+            }),
+        },
+      ],
+    },
+    {
+      unitId: "guiding_bolt",
+      procedures: [
+        {
+          actionName: "doGuidingBoltNextAttackAdvantage",
+          projectionAfter: expectedProjection({
+            targetHp: 8,
+            spellSlotSpentThisTurn: true,
+            level1SlotsRemaining: 1,
+            activeEffectKind: "nextAttackRollAgainstSelf",
+            activeEffectCount: 1,
+            lastResult: "guidingBolt",
+          }),
+          discover: () =>
+            resolveAttackSpellShapeProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "cleric",
+                preparedSpells: [spellRecord("guiding_bolt")],
+              }),
+              spellId: "guiding_bolt",
+              damageGroups: [[1, 1, 1, 1]],
+              lastResult: "guidingBolt",
+            }),
+        },
+      ],
+    },
+    {
+      unitId: "inflict_wounds",
+      procedures: [
+        {
+          actionName: "doInflictWoundsFailedSave",
+          projectionAfter: expectedProjection({
+            targetHp: 6,
+            spellSlotSpentThisTurn: true,
+            level1SlotsRemaining: 1,
+            lastResult: "inflictWoundsFailure",
+          }),
+          discover: () =>
+            resolveSaveDamageProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "cleric",
+                preparedSpells: [spellRecord("inflict_wounds")],
+              }),
+              spellId: "inflict_wounds",
+              succeeded: false,
+              damageGroups: [[3, 3]],
+              lastResult: "inflictWoundsFailure",
+            }),
+        },
+        {
+          actionName: "doInflictWoundsSuccessfulSave",
+          projectionAfter: expectedProjection({
+            targetHp: 9,
+            spellSlotSpentThisTurn: true,
+            level1SlotsRemaining: 1,
+            lastResult: "inflictWoundsSuccess",
+          }),
+          discover: () =>
+            resolveSaveDamageProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "cleric",
+                preparedSpells: [spellRecord("inflict_wounds")],
+              }),
+              spellId: "inflict_wounds",
+              succeeded: true,
+              damageGroups: [[3, 3]],
+              lastResult: "inflictWoundsSuccess",
+            }),
+        },
+      ],
+    },
+    {
+      unitId: "shocking_grasp",
+      procedures: [
+        {
+          actionName: "doShockingGraspOpportunityAttackDenied",
+          projectionAfter: expectedProjection({
+            targetHp: 8,
+            activeEffectKind: "opportunityAttackDenied",
+            activeEffectCount: 1,
+            lastResult: "shockingGrasp",
+          }),
+          discover: () =>
+            resolveAttackSpellShapeProjection({
+              state: attackSpellShapeBattle({
+                sourceClassName: "wizard",
+                cantrips: [spellRecord("shocking_grasp")],
+              }),
+              spellId: "shocking_grasp",
+              damageGroups: [[4]],
+              lastResult: "shockingGrasp",
+            }),
+        },
+      ],
+    },
+  ],
 });
-
-function createAttackSpellShapeSelectedIdentityDriver() {
-  return defineDriver(attackSpellShapeSelectedIdentityDriverSchema, () => {
-    let state = attackSpellShapeBattle();
-    let lastResult: AttackSpellShapeSelectedIdentityProjection["lastResult"] =
-      "init";
-
-    function reset(): void {
-      state = attackSpellShapeBattle();
-      lastResult = "init";
-    }
-
-    function recordResolvedResult(
-      result: BattleResolutionResult,
-      resultKind: Exclude<
-        AttackSpellShapeSelectedIdentityProjection["lastResult"],
-        "init"
-      >,
-    ): void {
-      if (result.tag !== "resolved") {
-        throw new Error(
-          `Expected attack spell shape action to resolve, got ${result.tag}: ${
-            "reason" in result ? result.reason : "unknown"
-          } ${"message" in result ? result.message : ""}`,
-        );
-      }
-      state = result.state;
-      lastResult = resultKind;
-    }
-
-    return {
-      init: reset,
-      doFireBoltHit: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "wizard",
-          cantrips: [spellRecord("fire_bolt")],
-        });
-        recordResolvedResult(
-          resolveSpellAttackHit({
-            state,
-            spellId: "fire_bolt",
-            damageGroups: [[4]],
-          }),
-          "fireBolt",
-        );
-      },
-      doChillTouchHitPointRegainPrevention: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "wizard",
-          cantrips: [spellRecord("chill_touch")],
-        });
-        recordResolvedResult(
-          resolveSpellAttackHit({
-            state,
-            spellId: "chill_touch",
-            damageGroups: [[4]],
-          }),
-          "chillTouch",
-        );
-      },
-      doGuidingBoltNextAttackAdvantage: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "cleric",
-          preparedSpells: [spellRecord("guiding_bolt")],
-        });
-        recordResolvedResult(
-          resolveSpellAttackHit({
-            state,
-            spellId: "guiding_bolt",
-            damageGroups: [[1, 1, 1, 1]],
-          }),
-          "guidingBolt",
-        );
-      },
-      doInflictWoundsFailedSave: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "cleric",
-          preparedSpells: [spellRecord("inflict_wounds")],
-        });
-        recordResolvedResult(
-          resolveSaveDamageSpell({
-            state,
-            spellId: "inflict_wounds",
-            succeeded: false,
-            damageGroups: [[3, 3]],
-          }),
-          "inflictWoundsFailure",
-        );
-      },
-      doInflictWoundsSuccessfulSave: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "cleric",
-          preparedSpells: [spellRecord("inflict_wounds")],
-        });
-        recordResolvedResult(
-          resolveSaveDamageSpell({
-            state,
-            spellId: "inflict_wounds",
-            succeeded: true,
-            damageGroups: [[3, 3]],
-          }),
-          "inflictWoundsSuccess",
-        );
-      },
-      doShockingGraspOpportunityAttackDenied: () => {
-        state = attackSpellShapeBattle({
-          sourceClassName: "wizard",
-          cantrips: [spellRecord("shocking_grasp")],
-        });
-        recordResolvedResult(
-          resolveSpellAttackHit({
-            state,
-            spellId: "shocking_grasp",
-            damageGroups: [[4]],
-          }),
-          "shockingGrasp",
-        );
-      },
-      step: () => {},
-      getState: () =>
-        projectAttackSpellShapeSelectedIdentityState(state, lastResult),
-    };
-  });
-}
 
 function expectedProjection(
   overrides: Partial<AttackSpellShapeSelectedIdentityProjection> = {},
@@ -409,6 +269,65 @@ function expectedProjection(
     lastResult: "init",
     ...overrides,
   };
+}
+
+function requireResolvedAttackSpellShape(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected attack spell shape action to resolve, got ${result.tag}: ${
+        "reason" in result ? result.reason : "unknown"
+      } ${"message" in result ? result.message : ""}`,
+    );
+  }
+  return result;
+}
+
+function resolveAttackSpellShapeProjection(input: {
+  readonly state: BattleState;
+  readonly spellId: Exclude<AttackSpellShapeSpellId, "inflict_wounds">;
+  readonly damageGroups: readonly (readonly number[])[];
+  readonly lastResult: Exclude<
+    AttackSpellShapeSelectedIdentityProjection["lastResult"],
+    "init" | "inflictWoundsFailure" | "inflictWoundsSuccess"
+  >;
+}): AttackSpellShapeSelectedIdentityProjection {
+  const resolved = requireResolvedAttackSpellShape(
+    resolveSpellAttackHit({
+      state: input.state,
+      spellId: input.spellId,
+      damageGroups: input.damageGroups,
+    }),
+  );
+  return projectAttackSpellShapeSelectedIdentityState(
+    resolved.state,
+    input.lastResult,
+  );
+}
+
+function resolveSaveDamageProjection(input: {
+  readonly state: BattleState;
+  readonly spellId: Extract<AttackSpellShapeSpellId, "inflict_wounds">;
+  readonly succeeded: boolean;
+  readonly damageGroups: readonly (readonly number[])[];
+  readonly lastResult: Extract<
+    AttackSpellShapeSelectedIdentityProjection["lastResult"],
+    "inflictWoundsFailure" | "inflictWoundsSuccess"
+  >;
+}): AttackSpellShapeSelectedIdentityProjection {
+  const resolved = requireResolvedAttackSpellShape(
+    resolveSaveDamageSpell({
+      state: input.state,
+      spellId: input.spellId,
+      succeeded: input.succeeded,
+      damageGroups: input.damageGroups,
+    }),
+  );
+  return projectAttackSpellShapeSelectedIdentityState(
+    resolved.state,
+    input.lastResult,
+  );
 }
 
 function resolveSpellAttackHit(input: {
@@ -816,87 +735,3 @@ function level1SlotsRemaining(
   );
   return slot === undefined ? 0 : Number(slot.count) - Number(slot.expended);
 }
-
-function normalizeAttackSpellShapeSelectedIdentityQuintState(
-  raw: unknown,
-): AttackSpellShapeSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
-    level1SlotsRemaining: numberFromQuintInt(
-      state["qLevel1SlotsRemaining"],
-      "qLevel1SlotsRemaining",
-    ),
-    activeEffectKind: activeEffectKindFromMbt(state["qActiveEffectKind"]),
-    activeEffectCount: numberFromQuintInt(
-      state["qActiveEffectCount"],
-      "qActiveEffectCount",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function activeEffectKindFromMbt(
-  raw: unknown,
-): AttackSpellShapeSelectedIdentityProjection["activeEffectKind"] {
-  if (
-    raw === "none" ||
-    raw === "hitPointRegainPrevented" ||
-    raw === "nextAttackRollAgainstSelf" ||
-    raw === "opportunityAttackDenied"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected active effect kind ${String(raw)}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): AttackSpellShapeSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "fireBolt" ||
-    raw === "chillTouch" ||
-    raw === "guidingBolt" ||
-    raw === "inflictWoundsFailure" ||
-    raw === "inflictWoundsSuccess" ||
-    raw === "shockingGrasp"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const attackSpellShapeSelectedIdentityStateCheck = stateCheck(
-  normalizeAttackSpellShapeSelectedIdentityQuintState,
-  (
-    spec: AttackSpellShapeSelectedIdentityProjection,
-    impl: AttackSpellShapeSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

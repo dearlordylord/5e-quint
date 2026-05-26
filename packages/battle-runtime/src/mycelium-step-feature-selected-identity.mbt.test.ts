@@ -2,9 +2,8 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-MYCELIUM-STEP mycelium_step doDiscoverMyceliumStepDash doDashAsBonusAction
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -32,38 +31,18 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   battleUnitSupportProfilesForUnit,
   type BattleUnitSupportProfile,
   type ClassicNonSrdMechanicsUnit,
 } from "./unit-feature-support.ts";
 
-const myceliumStepSelectedIdentityDriverSchema = {
-  init: {},
-  doDiscoverMyceliumStepDash: {},
-  doDashAsBonusAction: {},
-  step: {},
-} as const;
-type MyceliumStepSelectedIdentityDriverAction = Exclude<
-  keyof typeof myceliumStepSelectedIdentityDriverSchema,
-  "init" | "step"
->;
-type MyceliumStepSelectedIdentityLastResult = "init" | "discovered" | "dashed";
-type MyceliumStepSelectedIdentityProjection = {
+type MyceliumStepLastResult = "init" | "discovered" | "dashed";
+type MyceliumStepProjection = {
   readonly bonusActionAvailable: boolean;
   readonly dashBonusFeet: number;
-  readonly lastResult: MyceliumStepSelectedIdentityLastResult;
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly MyceliumStepSelectedIdentityDriverAction[];
-  readonly expected: MyceliumStepSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1D2-MYCELIUM-STEP";
-  readonly unitId: typeof myceliumStepUnitId;
-  readonly actions: readonly MyceliumStepSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+  readonly lastResult: MyceliumStepLastResult;
 };
 type MyceliumStepDashAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -81,152 +60,73 @@ const classicMechanicsProvenance = "classic-2024-mechanics-source-lane";
 const myceliumStepSyntheticLabel = "Mycelium Step";
 const actorId = combatantId("mycelium-step-selected-identity-actor");
 const partySide = battleCombatantSide("party");
-const selectedUnitRuntimeBoundaryIds = new Set<string>();
 const myceliumStepUnit = mechanicsOnlyClassicUnit(myceliumStepInput);
 const myceliumStepSupportProfile =
   requireMyceliumStepAlternateActionCostProfile(myceliumStepUnit);
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "L1D2-MYCELIUM-STEP",
-    unitId: "mycelium_step",
-    actions: ["doDiscoverMyceliumStepDash", "doDashAsBonusAction"],
-    sequences: [
-      {
-        name: "discovers-synthetic-unit-as-bonus-action-dash-source",
-        actions: ["doDiscoverMyceliumStepDash"],
-        expected: expectedProjection({
-          lastResult: "discovered",
-        }),
-      },
-      {
-        name: "spends-bonus-action-for-dash-through-synthetic-unit",
-        actions: ["doDashAsBonusAction"],
-        expected: expectedProjection({
-          bonusActionAvailable: false,
-          dashBonusFeet: 30,
-          lastResult: "dashed",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Mycelium Step feature selected identity MBT",
+  taskId: "L1D2-MYCELIUM-STEP",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-mycelium-step-feature-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    bonusActionAvailable: "bool",
+    dashBonusFeet: "int",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Mycelium Step feature selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<MyceliumStepSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createMyceliumStepSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Mycelium Step selected identity driver action ${actionName}.`,
+  initialProjection: projectBattleState(myceliumStepBattle(), "init"),
+  units: [
+    {
+      unitId: myceliumStepUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverMyceliumStepDash",
+          projectionAfter: {
+            bonusActionAvailable: true,
+            dashBonusFeet: 0,
+            lastResult: "discovered",
+          },
+          discover: () => {
+            const state = myceliumStepBattle();
+            const act = myceliumStepDashAct(state);
+            assertMyceliumStepSourceUnitId(act.subject.sourceUnitId);
+            return projectBattleState(state, "discovered");
+          },
+        },
+        {
+          actionName: "doDashAsBonusAction",
+          projectionAfter: {
+            bonusActionAvailable: false,
+            dashBonusFeet: 30,
+            lastResult: "dashed",
+          },
+          discover: () => {
+            const state = myceliumStepBattle();
+            const act = myceliumStepDashAct(state);
+            assertMyceliumStepSourceUnitId(act.subject.sourceUnitId);
+            return projectBattleState(
+              requireResolved(
+                resolveBattleSubject({
+                  state,
+                  subject: act.subject,
+                  fills: [],
+                }),
+              ).state,
+              "dashed",
             );
-          }
-          await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Mycelium Step selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Mycelium Step selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-mycelium-step-feature-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMyceliumStepSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: myceliumStepSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+          },
+        },
+      ],
+    },
+  ],
 });
-
-function createMyceliumStepSelectedIdentityDriver() {
-  return defineDriver(myceliumStepSelectedIdentityDriverSchema, () => {
-    let projection = projectInitialBattle();
-
-    function reset(): void {
-      projection = projectInitialBattle();
-    }
-
-    return {
-      init: reset,
-      doDiscoverMyceliumStepDash: () => {
-        const state = myceliumStepBattle();
-        const act = myceliumStepDashAct(state);
-        const selectedSourceUnitId = myceliumStepSourceUnitId(
-          act.subject.sourceUnitId,
-        );
-        recordSelectedUnitRuntimeBoundaryId(selectedSourceUnitId);
-        projection = projectBattleState(state, "discovered");
-      },
-      doDashAsBonusAction: () => {
-        const state = myceliumStepBattle();
-        const act = myceliumStepDashAct(state);
-        const selectedSourceUnitId = myceliumStepSourceUnitId(
-          act.subject.sourceUnitId,
-        );
-        recordSelectedUnitRuntimeBoundaryId(selectedSourceUnitId);
-        projection = projectBattleState(
-          requireResolved(
-            resolveBattleSubject({ state, subject: act.subject, fills: [] }),
-          ).state,
-          "dashed",
-        );
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
-}
-
-function expectedProjection(
-  overrides: Partial<MyceliumStepSelectedIdentityProjection> = {},
-): MyceliumStepSelectedIdentityProjection {
-  return {
-    bonusActionAvailable: true,
-    dashBonusFeet: 0,
-    lastResult: "init",
-    ...overrides,
-  };
-}
-
-function projectInitialBattle(): MyceliumStepSelectedIdentityProjection {
-  return projectBattleState(myceliumStepBattle(), "init");
-}
 
 function projectBattleState(
   state: BattleState,
-  lastResult: MyceliumStepSelectedIdentityLastResult,
-): MyceliumStepSelectedIdentityProjection {
+  lastResult: MyceliumStepLastResult,
+): MyceliumStepProjection {
   return {
     bonusActionAvailable: state.currentTurnResources.currentHasBonusAction,
     dashBonusFeet: Number(state.currentTurnResources.dashMovementBonusFeet),
@@ -321,6 +221,12 @@ function myceliumStepDashAct(state: BattleState): MyceliumStepDashAct {
   return act;
 }
 
+function assertMyceliumStepSourceUnitId(raw: string): void {
+  expect(raw, "Mycelium Step act must bind its Unit id").toBe(
+    myceliumStepUnitId,
+  );
+}
+
 function requireResolved(result: BattleResolutionResult): ResolvedBattleResult {
   if (result.tag !== "resolved") {
     throw new Error(`Expected resolved result, got ${result.tag}.`);
@@ -391,75 +297,3 @@ function isAlternateActionCostSupportProfile(
     profile.kind === "alternateActionCost"
   );
 }
-
-function resetSelectedUnitRuntimeBoundaryIds(): void {
-  selectedUnitRuntimeBoundaryIds.clear();
-}
-
-function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
-  unitId: UnitId,
-): UnitId {
-  selectedUnitRuntimeBoundaryIds.add(unitId);
-  return unitId;
-}
-
-function normalizeMyceliumStepSelectedIdentityQuintState(
-  raw: unknown,
-): MyceliumStepSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    dashBonusFeet: numberFromQuintInt(
-      state["qDashBonusFeet"],
-      "qDashBonusFeet",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function myceliumStepSourceUnitId(raw: string): typeof myceliumStepUnitId {
-  if (raw === myceliumStepUnitId) {
-    return raw;
-  }
-  throw new Error(`Unexpected source Unit id ${String(raw)}.`);
-}
-
-function mbtLastResult(raw: unknown): MyceliumStepSelectedIdentityLastResult {
-  if (raw === "init" || raw === "discovered" || raw === "dashed") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const myceliumStepSelectedIdentityStateCheck = stateCheck(
-  normalizeMyceliumStepSelectedIdentityQuintState,
-  (
-    spec: MyceliumStepSelectedIdentityProjection,
-    impl: MyceliumStepSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

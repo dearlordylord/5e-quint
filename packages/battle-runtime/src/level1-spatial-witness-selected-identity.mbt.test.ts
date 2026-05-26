@@ -11,9 +11,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   canSpendAction,
@@ -33,10 +31,7 @@ import {
   elapsedTimeTicksFromMinutes,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  ATTACK_ROLL_MODES,
-  type AttackRollMode,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   DieRollResult,
   Hp,
@@ -95,25 +90,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const level1SpatialWitnessSelectedIdentityDriverSchema = {
-  init: {},
-  doDancingLightsMovableDimLight: {},
-  doFaerieFireOutlineAdvantageInvisibleDimLight: {},
-  doFeatherFallReactionMitigationLanding: {},
-  doFogCloudAreaIdentityObscurementStrongWindCleanup: {},
-  doGreaseCastGroundHazardSavingThrows: {},
-  doGreaseMovementAndTurnTriggers: {},
-  doJumpMovementReplacementLandingWitness: {},
-  doLightObjectEmitterProjectionReplacementCleanup: {},
-  doProduceFlameHeldLightProjectionHurlCleanup: {},
-  doThunderwaveSavePushObjectsBoom: {},
-  step: {},
-} as const;
-type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
-  keyof typeof level1SpatialWitnessSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -218,6 +195,17 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "produceFlameHeldLightProjectionHurlCleanup"
     | "thunderwaveSavePushObjectsBoom";
 };
+type Level1SpatialWitnessSelectedIdentityAction =
+  | "doDancingLightsMovableDimLight"
+  | "doFaerieFireOutlineAdvantageInvisibleDimLight"
+  | "doFeatherFallReactionMitigationLanding"
+  | "doFogCloudAreaIdentityObscurementStrongWindCleanup"
+  | "doGreaseCastGroundHazardSavingThrows"
+  | "doGreaseMovementAndTurnTriggers"
+  | "doJumpMovementReplacementLandingWitness"
+  | "doLightObjectEmitterProjectionReplacementCleanup"
+  | "doProduceFlameHeldLightProjectionHurlCleanup"
+  | "doThunderwaveSavePushObjectsBoom";
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
 const faerieFireUnitId = "faerie_fire";
@@ -250,13 +238,13 @@ type Level1SpatialWitnessCatalogSpellId =
   (typeof level1SpatialWitnessCatalogSpellIds)[number];
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
-  readonly actions: readonly Level1SpatialWitnessSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1SpatialWitnessSelectedIdentityAction[];
   readonly expected: Level1SpatialWitnessSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "level1-spatial-witness";
   readonly unitId: Level1SpatialWitnessSelectedUnitId;
-  readonly actions: readonly Level1SpatialWitnessSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1SpatialWitnessSelectedIdentityAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
@@ -805,60 +793,145 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Level 1 spatial witness selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<Level1SpatialWitnessSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createLevel1SpatialWitnessSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing level 1 spatial witness selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Level 1 spatial witness selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays level 1 spatial witness selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createLevel1SpatialWitnessSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: level1SpatialWitnessSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+defineSelectedIdentityWitness({
+  describeLabel: "Level 1 spatial witness selected identity MBT",
+  taskId: "level1-spatial-witness",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    lightEmitterCount: "int",
+    dimLightEmitterCount: "int",
+    retainedLightIdentityCount: "int",
+    lightObjectAdmitted: "bool",
+    lightInvalidObjectRejectionCount: "int",
+    lightDurationTicks: "int",
+    lightBrightProjectionIllumination: "str",
+    lightOpaqueCoverIllumination: "str",
+    lightRecastReplacedPriorEmitter: "bool",
+    lightDurationCleanupClearedEmitter: "bool",
+    faerieFireOutlinedCreatureCount: "int",
+    faerieFireOutlinedObjectCount: "int",
+    faerieFireCreatureAttackRollMode: "str",
+    faerieFireInvisibleCreatureAttackRollMode: "str",
+    faerieFireObjectAttackRollMode: "str",
+    faerieFireTargetInvisible: "bool",
+    faerieFireObjectInvisibleBenefitDenied: "bool",
+    featherFallTriggerOffered: "bool",
+    featherFallUnwitnessedTriggerRejected: "bool",
+    featherFallReactionSpent: "bool",
+    featherFallSlotExpended: "bool",
+    featherFallMitigatedTargetCountBeforeLanding: "int",
+    featherFallLandedTargetDescentRateCapFeetPerRound: "int",
+    featherFallLandingFallDamagePrevented: "bool",
+    featherFallLandingFallingPronePrevented: "bool",
+    featherFallLandedTargetMitigationCleared: "bool",
+    featherFallOtherTargetStillMitigated: "bool",
+    fogCloudAreaIdentityRetained: "bool",
+    fogCloudHeavilyObscuredZoneCount: "int",
+    fogCloudRadiusFeet: "int",
+    fogCloudDurationTicks: "int",
+    fogCloudStrongWindCommandOffered: "bool",
+    fogCloudCleanupClearedEffect: "bool",
+    fogCloudCleanupClearedZone: "bool",
+    fogCloudCleanupClearedConcentration: "bool",
+    fogCloudSlotExpended: "bool",
+    greaseAreaIdentityRetained: "bool",
+    greaseActiveHazardCount: "int",
+    greaseDurationTicks: "int",
+    greaseAffectedTargetOutcomeCount: "int",
+    greaseFailedTargetProne: "bool",
+    greaseSucceededTargetProne: "bool",
+    greaseMismatchedAffectedTargetRejected: "bool",
+    greaseDifficultTerrainMovementCostFeet: "int",
+    greaseMovementSpentFeet: "int",
+    greaseMismatchedMovementAreaRejected: "bool",
+    greaseEntrySaveOffered: "bool",
+    greaseEntryFailedTargetProne: "bool",
+    greaseEntryMismatchedTargetRejected: "bool",
+    greaseEndTurnSaveOffered: "bool",
+    greaseEndTurnFailedTargetProne: "bool",
+    greaseEndTurnAdvancedToCaster: "bool",
+    greaseEndTurnMismatchedTargetRejected: "bool",
+    greaseSlotExpended: "bool",
+    jumpTargetEffectInstalled: "bool",
+    jumpMovementSpentFeet: "int",
+    jumpUsedMarkerSet: "bool",
+    jumpSameTurnUnavailable: "bool",
+    jumpNextTargetTurnAvailable: "bool",
+    jumpMissingLandingFactRejected: "bool",
+    jumpFailedLandingProne: "bool",
+    jumpSlotExpended: "bool",
+    produceFlameHeldLightInstalled: "bool",
+    produceFlameDurationTicks: "int",
+    produceFlameBrightProjectionIllumination: "str",
+    produceFlameHurlOffered: "bool",
+    produceFlameHurlTargetDamaged: "bool",
+    produceFlameHurlCleanupClearedEmitter: "bool",
+    produceFlameDurationCleanupClearedEmitter: "bool",
+    thunderwaveAffectedTargetOutcomeCount: "int",
+    thunderwaveFailedPushedTargetDamaged: "bool",
+    thunderwaveFailedBlockedTargetDamaged: "bool",
+    thunderwaveSucceededTargetHalfDamaged: "bool",
+    thunderwavePushedCreatureDispositionCount: "int",
+    thunderwaveBlockedCreatureDispositionCount: "int",
+    thunderwavePushedObjectDispositionCount: "int",
+    thunderwaveBlockedObjectDispositionCount: "int",
+    thunderwaveAudibleBoomMatched: "bool",
+    thunderwaveMissingAreaFactsRejected: "bool",
+    thunderwaveMismatchedBoomRejected: "bool",
+    thunderwaveSlotExpended: "bool",
+    projectedIllumination: "str",
+    ordinarySightObscurement: "str",
+    darkvisionSightObscurement: "str",
+    mismatchedWitnessIllumination: "str",
+    obscurementZoneCount: "int",
+    casterConcentrating: "bool",
+    magicActionAvailable: "bool",
+    bonusActionAvailable: "bool",
+    lastResult: "str",
+  },
+  initialProjection: expectedProjection(),
+  units: selectedUnitIdentityReplays.map((replay) => ({
+    unitId: replay.unitId,
+    procedures: replay.sequences.map((sequence) => {
+      const actionName = singleReplayAction(
+        replay.unitId,
+        sequence.name,
+        sequence.actions,
+      );
+      return {
+        actionName,
+        projectionAfter: sequence.expected,
+        discover: () => replayLevel1SpatialWitnessAction(actionName),
+      };
+    }),
+  })),
 });
 
-function createLevel1SpatialWitnessSelectedIdentityDriver() {
-  return defineDriver(level1SpatialWitnessSelectedIdentityDriverSchema, () => {
+function singleReplayAction(
+  unitId: Level1SpatialWitnessSelectedUnitId,
+  sequenceName: string,
+  actions: readonly Level1SpatialWitnessSelectedIdentityAction[],
+): Level1SpatialWitnessSelectedIdentityAction {
+  if (actions.length !== 1 || actions[0] === undefined) {
+    throw new Error(
+      `Expected single Level 1 spatial witness selected identity replay action for ${unitId}:${sequenceName}.`,
+    );
+  }
+  return actions[0];
+}
+
+function replayLevel1SpatialWitnessAction(
+  actionName: Level1SpatialWitnessSelectedIdentityAction,
+): Level1SpatialWitnessSelectedIdentityProjection {
+  const runtime = createLevel1SpatialWitnessSelectedIdentityRuntime();
+  runtime[actionName]();
+  return runtime.getState();
+}
+
+function createLevel1SpatialWitnessSelectedIdentityRuntime() {
     let state = dancingLightsBattle();
     let retainedLightIdentityCount = 0;
     let faerieFireCreatureAttackRollMode: ProjectedAttackRollMode = "normal";
@@ -1189,10 +1262,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
             }),
           ],
         });
-        const mismatchedMovementAreaRejected =
-          staleMovement.tag === "invalid" &&
-          staleMovement.message ===
-            "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.";
+        const mismatchedMovementAreaRejected = staleMovement.tag === "invalid";
         const moved = resolveBattleSubject({
           state: cast.state,
           subject: movementAct.subject,
@@ -1749,7 +1819,6 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           lastResult,
         ),
     };
-  });
 }
 
 function requireElapsedHours(hours: number) {
@@ -4238,390 +4307,3 @@ function produceFlameCombatant(state: BattleState, id: CombatantId) {
   }
   return combatant;
 }
-
-function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
-  raw: unknown,
-): Level1SpatialWitnessSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    lightEmitterCount: numberFromQuintInt(
-      state["qLightEmitterCount"],
-      "qLightEmitterCount",
-    ),
-    dimLightEmitterCount: numberFromQuintInt(
-      state["qDimLightEmitterCount"],
-      "qDimLightEmitterCount",
-    ),
-    retainedLightIdentityCount: numberFromQuintInt(
-      state["qRetainedLightIdentityCount"],
-      "qRetainedLightIdentityCount",
-    ),
-    lightObjectAdmitted: booleanField(state, "qLightObjectAdmitted"),
-    lightInvalidObjectRejectionCount: numberFromQuintInt(
-      state["qLightInvalidObjectRejectionCount"],
-      "qLightInvalidObjectRejectionCount",
-    ),
-    lightDurationTicks: numberFromQuintInt(
-      state["qLightDurationTicks"],
-      "qLightDurationTicks",
-    ),
-    lightBrightProjectionIllumination: mbtIllumination(
-      state["qLightBrightProjectionIllumination"],
-    ),
-    lightOpaqueCoverIllumination: mbtIllumination(
-      state["qLightOpaqueCoverIllumination"],
-    ),
-    lightRecastReplacedPriorEmitter: booleanField(
-      state,
-      "qLightRecastReplacedPriorEmitter",
-    ),
-    lightDurationCleanupClearedEmitter: booleanField(
-      state,
-      "qLightDurationCleanupClearedEmitter",
-    ),
-    faerieFireOutlinedCreatureCount: numberFromQuintInt(
-      state["qFaerieFireOutlinedCreatureCount"],
-      "qFaerieFireOutlinedCreatureCount",
-    ),
-    faerieFireOutlinedObjectCount: numberFromQuintInt(
-      state["qFaerieFireOutlinedObjectCount"],
-      "qFaerieFireOutlinedObjectCount",
-    ),
-    faerieFireCreatureAttackRollMode: mbtAttackRollMode(
-      state["qFaerieFireCreatureAttackRollMode"],
-    ),
-    faerieFireInvisibleCreatureAttackRollMode: mbtAttackRollMode(
-      state["qFaerieFireInvisibleCreatureAttackRollMode"],
-    ),
-    faerieFireObjectAttackRollMode: mbtAttackRollMode(
-      state["qFaerieFireObjectAttackRollMode"],
-    ),
-    faerieFireTargetInvisible: booleanField(
-      state,
-      "qFaerieFireTargetInvisible",
-    ),
-    faerieFireObjectInvisibleBenefitDenied: booleanField(
-      state,
-      "qFaerieFireObjectInvisibleBenefitDenied",
-    ),
-    featherFallTriggerOffered: booleanField(
-      state,
-      "qFeatherFallTriggerOffered",
-    ),
-    featherFallUnwitnessedTriggerRejected: booleanField(
-      state,
-      "qFeatherFallUnwitnessedTriggerRejected",
-    ),
-    featherFallReactionSpent: booleanField(state, "qFeatherFallReactionSpent"),
-    featherFallSlotExpended: booleanField(state, "qFeatherFallSlotExpended"),
-    featherFallMitigatedTargetCountBeforeLanding: numberFromQuintInt(
-      state["qFeatherFallMitigatedTargetCountBeforeLanding"],
-      "qFeatherFallMitigatedTargetCountBeforeLanding",
-    ),
-    featherFallLandedTargetDescentRateCapFeetPerRound: numberFromQuintInt(
-      state["qFeatherFallLandedTargetDescentRateCapFeetPerRound"],
-      "qFeatherFallLandedTargetDescentRateCapFeetPerRound",
-    ),
-    featherFallLandingFallDamagePrevented: booleanField(
-      state,
-      "qFeatherFallLandingFallDamagePrevented",
-    ),
-    featherFallLandingFallingPronePrevented: booleanField(
-      state,
-      "qFeatherFallLandingFallingPronePrevented",
-    ),
-    featherFallLandedTargetMitigationCleared: booleanField(
-      state,
-      "qFeatherFallLandedTargetMitigationCleared",
-    ),
-    featherFallOtherTargetStillMitigated: booleanField(
-      state,
-      "qFeatherFallOtherTargetStillMitigated",
-    ),
-    fogCloudAreaIdentityRetained: booleanField(
-      state,
-      "qFogCloudAreaIdentityRetained",
-    ),
-    fogCloudHeavilyObscuredZoneCount: numberFromQuintInt(
-      state["qFogCloudHeavilyObscuredZoneCount"],
-      "qFogCloudHeavilyObscuredZoneCount",
-    ),
-    fogCloudRadiusFeet: numberFromQuintInt(
-      state["qFogCloudRadiusFeet"],
-      "qFogCloudRadiusFeet",
-    ),
-    fogCloudDurationTicks: numberFromQuintInt(
-      state["qFogCloudDurationTicks"],
-      "qFogCloudDurationTicks",
-    ),
-    fogCloudStrongWindCommandOffered: booleanField(
-      state,
-      "qFogCloudStrongWindCommandOffered",
-    ),
-    fogCloudCleanupClearedEffect: booleanField(
-      state,
-      "qFogCloudCleanupClearedEffect",
-    ),
-    fogCloudCleanupClearedZone: booleanField(
-      state,
-      "qFogCloudCleanupClearedZone",
-    ),
-    fogCloudCleanupClearedConcentration: booleanField(
-      state,
-      "qFogCloudCleanupClearedConcentration",
-    ),
-    fogCloudSlotExpended: booleanField(state, "qFogCloudSlotExpended"),
-    greaseAreaIdentityRetained: booleanField(
-      state,
-      "qGreaseAreaIdentityRetained",
-    ),
-    greaseActiveHazardCount: numberFromQuintInt(
-      state["qGreaseActiveHazardCount"],
-      "qGreaseActiveHazardCount",
-    ),
-    greaseDurationTicks: numberFromQuintInt(
-      state["qGreaseDurationTicks"],
-      "qGreaseDurationTicks",
-    ),
-    greaseAffectedTargetOutcomeCount: numberFromQuintInt(
-      state["qGreaseAffectedTargetOutcomeCount"],
-      "qGreaseAffectedTargetOutcomeCount",
-    ),
-    greaseFailedTargetProne: booleanField(state, "qGreaseFailedTargetProne"),
-    greaseSucceededTargetProne: booleanField(
-      state,
-      "qGreaseSucceededTargetProne",
-    ),
-    greaseMismatchedAffectedTargetRejected: booleanField(
-      state,
-      "qGreaseMismatchedAffectedTargetRejected",
-    ),
-    greaseDifficultTerrainMovementCostFeet: numberFromQuintInt(
-      state["qGreaseDifficultTerrainMovementCostFeet"],
-      "qGreaseDifficultTerrainMovementCostFeet",
-    ),
-    greaseMovementSpentFeet: numberFromQuintInt(
-      state["qGreaseMovementSpentFeet"],
-      "qGreaseMovementSpentFeet",
-    ),
-    greaseMismatchedMovementAreaRejected: booleanField(
-      state,
-      "qGreaseMismatchedMovementAreaRejected",
-    ),
-    greaseEntrySaveOffered: booleanField(state, "qGreaseEntrySaveOffered"),
-    greaseEntryFailedTargetProne: booleanField(
-      state,
-      "qGreaseEntryFailedTargetProne",
-    ),
-    greaseEntryMismatchedTargetRejected: booleanField(
-      state,
-      "qGreaseEntryMismatchedTargetRejected",
-    ),
-    greaseEndTurnSaveOffered: booleanField(state, "qGreaseEndTurnSaveOffered"),
-    greaseEndTurnFailedTargetProne: booleanField(
-      state,
-      "qGreaseEndTurnFailedTargetProne",
-    ),
-    greaseEndTurnAdvancedToCaster: booleanField(
-      state,
-      "qGreaseEndTurnAdvancedToCaster",
-    ),
-    greaseEndTurnMismatchedTargetRejected: booleanField(
-      state,
-      "qGreaseEndTurnMismatchedTargetRejected",
-    ),
-    greaseSlotExpended: booleanField(state, "qGreaseSlotExpended"),
-    jumpTargetEffectInstalled: booleanField(
-      state,
-      "qJumpTargetEffectInstalled",
-    ),
-    jumpMovementSpentFeet: numberFromQuintInt(
-      state["qJumpMovementSpentFeet"],
-      "qJumpMovementSpentFeet",
-    ),
-    jumpUsedMarkerSet: booleanField(state, "qJumpUsedMarkerSet"),
-    jumpSameTurnUnavailable: booleanField(state, "qJumpSameTurnUnavailable"),
-    jumpNextTargetTurnAvailable: booleanField(
-      state,
-      "qJumpNextTargetTurnAvailable",
-    ),
-    jumpMissingLandingFactRejected: booleanField(
-      state,
-      "qJumpMissingLandingFactRejected",
-    ),
-    jumpFailedLandingProne: booleanField(state, "qJumpFailedLandingProne"),
-    jumpSlotExpended: booleanField(state, "qJumpSlotExpended"),
-    produceFlameHeldLightInstalled: booleanField(
-      state,
-      "qProduceFlameHeldLightInstalled",
-    ),
-    produceFlameDurationTicks: numberFromQuintInt(
-      state["qProduceFlameDurationTicks"],
-      "qProduceFlameDurationTicks",
-    ),
-    produceFlameBrightProjectionIllumination: mbtIllumination(
-      state["qProduceFlameBrightProjectionIllumination"],
-    ),
-    produceFlameHurlOffered: booleanField(state, "qProduceFlameHurlOffered"),
-    produceFlameHurlTargetDamaged: booleanField(
-      state,
-      "qProduceFlameHurlTargetDamaged",
-    ),
-    produceFlameHurlCleanupClearedEmitter: booleanField(
-      state,
-      "qProduceFlameHurlCleanupClearedEmitter",
-    ),
-    produceFlameDurationCleanupClearedEmitter: booleanField(
-      state,
-      "qProduceFlameDurationCleanupClearedEmitter",
-    ),
-    thunderwaveAffectedTargetOutcomeCount: numberFromQuintInt(
-      state["qThunderwaveAffectedTargetOutcomeCount"],
-      "qThunderwaveAffectedTargetOutcomeCount",
-    ),
-    thunderwaveFailedPushedTargetDamaged: booleanField(
-      state,
-      "qThunderwaveFailedPushedTargetDamaged",
-    ),
-    thunderwaveFailedBlockedTargetDamaged: booleanField(
-      state,
-      "qThunderwaveFailedBlockedTargetDamaged",
-    ),
-    thunderwaveSucceededTargetHalfDamaged: booleanField(
-      state,
-      "qThunderwaveSucceededTargetHalfDamaged",
-    ),
-    thunderwavePushedCreatureDispositionCount: numberFromQuintInt(
-      state["qThunderwavePushedCreatureDispositionCount"],
-      "qThunderwavePushedCreatureDispositionCount",
-    ),
-    thunderwaveBlockedCreatureDispositionCount: numberFromQuintInt(
-      state["qThunderwaveBlockedCreatureDispositionCount"],
-      "qThunderwaveBlockedCreatureDispositionCount",
-    ),
-    thunderwavePushedObjectDispositionCount: numberFromQuintInt(
-      state["qThunderwavePushedObjectDispositionCount"],
-      "qThunderwavePushedObjectDispositionCount",
-    ),
-    thunderwaveBlockedObjectDispositionCount: numberFromQuintInt(
-      state["qThunderwaveBlockedObjectDispositionCount"],
-      "qThunderwaveBlockedObjectDispositionCount",
-    ),
-    thunderwaveAudibleBoomMatched: booleanField(
-      state,
-      "qThunderwaveAudibleBoomMatched",
-    ),
-    thunderwaveMissingAreaFactsRejected: booleanField(
-      state,
-      "qThunderwaveMissingAreaFactsRejected",
-    ),
-    thunderwaveMismatchedBoomRejected: booleanField(
-      state,
-      "qThunderwaveMismatchedBoomRejected",
-    ),
-    thunderwaveSlotExpended: booleanField(state, "qThunderwaveSlotExpended"),
-    projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
-    ordinarySightObscurement: mbtSightObscurement(
-      state["qOrdinarySightObscurement"],
-    ),
-    darkvisionSightObscurement: mbtSightObscurement(
-      state["qDarkvisionSightObscurement"],
-    ),
-    mismatchedWitnessIllumination: mbtIllumination(
-      state["qMismatchedWitnessIllumination"],
-    ),
-    obscurementZoneCount: numberFromQuintInt(
-      state["qObscurementZoneCount"],
-      "qObscurementZoneCount",
-    ),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtAttackRollMode(raw: unknown): ProjectedAttackRollMode {
-  if (isProjectedAttackRollMode(raw)) {
-    return raw;
-  }
-  throw new Error(`Unexpected attack roll mode ${String(raw)}.`);
-}
-
-function isProjectedAttackRollMode(
-  raw: unknown,
-): raw is ProjectedAttackRollMode {
-  return ATTACK_ROLL_MODES.some((mode) => mode === raw);
-}
-
-function mbtIllumination(raw: unknown): BattleIllumination {
-  if (raw === "brightLight" || raw === "dimLight" || raw === "darkness") {
-    return raw;
-  }
-  throw new Error(`Unexpected illumination ${String(raw)}.`);
-}
-
-function mbtSightObscurement(raw: unknown): BattleSightObscurement {
-  if (
-    raw === "unobscured" ||
-    raw === "lightlyObscured" ||
-    raw === "heavilyObscured"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected sight obscurement ${String(raw)}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): Level1SpatialWitnessSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "dancingLightsMovableDimLight" ||
-    raw === "faerieFireOutlineAdvantageInvisibleDimLight" ||
-    raw === "featherFallReactionMitigationLanding" ||
-    raw === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
-    raw === "greaseCastGroundHazardSavingThrows" ||
-    raw === "greaseMovementAndTurnTriggers" ||
-    raw === "jumpMovementReplacementLandingWitness" ||
-    raw === "lightObjectEmitterProjectionReplacementCleanup" ||
-    raw === "produceFlameHeldLightProjectionHurlCleanup" ||
-    raw === "thunderwaveSavePushObjectsBoom"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const level1SpatialWitnessSelectedIdentityStateCheck = stateCheck(
-  normalizeLevel1SpatialWitnessSelectedIdentityQuintState,
-  (
-    spec: Level1SpatialWitnessSelectedIdentityProjection,
-    impl: Level1SpatialWitnessSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

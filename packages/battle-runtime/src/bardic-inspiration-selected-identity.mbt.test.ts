@@ -1,17 +1,14 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
 import * as path from "node:path";
-import { isDeepStrictEqual } from "node:util";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   abilityModifier,
   attackBonus,
-  DAMAGE_DIE_SIZES,
   Hp,
   movementFeet,
   type DamageDieSize,
@@ -36,37 +33,17 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
-const bardicInspirationSelectedIdentityDriverSchema = {
-  init: {},
-  doGrantBardicInspirationD12: {},
-  step: {},
-} as const;
-type BardicInspirationSelectedIdentityAction = Exclude<
-  keyof typeof bardicInspirationSelectedIdentityDriverSchema,
-  "init" | "step"
->;
-type BardicInspirationSelectedIdentityProjection = {
+type BardicInspirationProjection = {
   readonly bonusActionAvailable: boolean;
   readonly featureUsesRemaining: number;
   readonly targetBardicInspirationDieSize: DamageDieSize | 0;
   readonly lastResult: "init" | "resolved" | "invalid";
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly BardicInspirationSelectedIdentityAction[];
-  readonly expected: BardicInspirationSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1D2-BARDIC-INSPIRATION-SCALING";
-  readonly unitId: "bard_bardic_inspiration";
-  readonly actions: readonly BardicInspirationSelectedIdentityAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 const bardId = combatantId("bardic-inspiration-selected-identity-bard");
@@ -82,146 +59,40 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitRuntimeBoundaryIds = new Set<string>();
-
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "L1D2-BARDIC-INSPIRATION-SCALING",
-    unitId: "bard_bardic_inspiration",
-    actions: ["doGrantBardicInspirationD12"],
-    sequences: [
-      {
-        name: "level-15-grant",
-        actions: ["doGrantBardicInspirationD12"],
-        expected: {
-          bonusActionAvailable: false,
-          featureUsesRemaining: 0,
-          targetBardicInspirationDieSize: 12,
-          lastResult: "resolved",
-        },
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Bardic Inspiration selected identity MBT",
+  taskId: "L1D2-BARDIC-INSPIRATION-SCALING",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../bardic-inspiration-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    bonusActionAvailable: "bool",
+    featureUsesRemaining: "int",
+    targetBardicInspirationDieSize: "int",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-const bardicInspirationSelectedIdentityStateCheck = stateCheck(
-  normalizeBardicInspirationSelectedIdentityQuintState,
-  compareBardicInspirationSelectedIdentityState,
-);
-
-describe("Bardic Inspiration selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<BardicInspirationSelectedIdentityAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createBardicInspirationSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Bardic Inspiration selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Bardic Inspiration selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Bardic Inspiration selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../bardic-inspiration-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createBardicInspirationSelectedIdentityDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: bardicInspirationSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: initialProjection(),
+  units: [
+    {
+      unitId: "bard_bardic_inspiration",
+      procedures: [
+        {
+          actionName: "doGrantBardicInspirationD12",
+          projectionAfter: {
+            bonusActionAvailable: false,
+            featureUsesRemaining: 0,
+            targetBardicInspirationDieSize: 12,
+            lastResult: "resolved",
+          },
+          discover: () => grantBardicInspirationD12(),
+        },
+      ],
+    },
+  ],
 });
 
-function createBardicInspirationSelectedIdentityDriver() {
-  return defineDriver(bardicInspirationSelectedIdentityDriverSchema, () => {
-    let state = bardicInspirationBattle();
-    let projection = initialProjection();
-
-    function reset(): void {
-      state = bardicInspirationBattle();
-      projection = initialProjection();
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      if (result.tag === "resolved") {
-        state = result.state;
-        projection = {
-          bonusActionAvailable:
-            result.state.currentTurnResources.currentHasBonusAction,
-          featureUsesRemaining: resourceUsesRemaining(
-            result.state,
-            "bard_bardic_inspiration",
-          ),
-          targetBardicInspirationDieSize:
-            targetBardicInspirationDieSize(result.state),
-          lastResult: "resolved",
-        };
-        return;
-      }
-      projection = { ...projection, lastResult: "invalid" };
-    }
-
-    return {
-      init: reset,
-      doGrantBardicInspirationD12: () => {
-        state = bardicInspirationBattle();
-        projection = initialProjection();
-        const subject = bardicInspirationSubject(
-          recordSelectedUnitRuntimeBoundaryId("bard_bardic_inspiration"),
-        );
-        const target = findHole(
-          findAct(state, subject).initialHoles,
-          "targetChoice",
-        );
-        recordResult(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [bardicInspirationTargetFill(target)],
-          }),
-        );
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
-}
-
-function initialProjection(): BardicInspirationSelectedIdentityProjection {
+function initialProjection(): BardicInspirationProjection {
   return {
     bonusActionAvailable: true,
     featureUsesRemaining: 1,
@@ -230,15 +101,34 @@ function initialProjection(): BardicInspirationSelectedIdentityProjection {
   };
 }
 
-function resetSelectedUnitRuntimeBoundaryIds(): void {
-  selectedUnitRuntimeBoundaryIds.clear();
-}
-
-function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
-  unitId: UnitId,
-): UnitId {
-  selectedUnitRuntimeBoundaryIds.add(unitId);
-  return unitId;
+function grantBardicInspirationD12(): BardicInspirationProjection {
+  const state = bardicInspirationBattle();
+  const subject = bardicInspirationSubject("bard_bardic_inspiration");
+  if (subject.tag !== "unitFeature") {
+    throw new Error("Bardic Inspiration subject must be a unit feature.");
+  }
+  expect(subject.unitId, "Bardic Inspiration subject must bind unit id").toBe(
+    "bard_bardic_inspiration",
+  );
+  const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
+  const result = resolveBattleSubject({
+    state,
+    subject,
+    fills: [bardicInspirationTargetFill(target)],
+  });
+  if (result.tag !== "resolved") {
+    return { ...initialProjection(), lastResult: "invalid" };
+  }
+  return {
+    bonusActionAvailable:
+      result.state.currentTurnResources.currentHasBonusAction,
+    featureUsesRemaining: resourceUsesRemaining(
+      result.state,
+      "bard_bardic_inspiration",
+    ),
+    targetBardicInspirationDieSize: bardicInspirationDieSize(result.state),
+    lastResult: "resolved",
+  };
 }
 
 function bardicInspirationBattle(): BattleState {
@@ -365,9 +255,7 @@ function bardicInspirationTargetFill(
   };
 }
 
-function targetBardicInspirationDieSize(
-  state: BattleState,
-): DamageDieSize | 0 {
+function bardicInspirationDieSize(state: BattleState): DamageDieSize | 0 {
   const target = state.combatants.get(targetId);
   const effect = target?.activeEffects.find(
     (candidate) => candidate.kind === "bardicInspirationDie",
@@ -410,82 +298,4 @@ function findHole<Kind extends BattleHole["kind"]>(
     );
   }
   return hole;
-}
-
-function normalizeBardicInspirationSelectedIdentityQuintState(
-  raw: unknown,
-): BardicInspirationSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    featureUsesRemaining: numberFromQuintInt(
-      state["qFeatureUsesRemaining"],
-      "qFeatureUsesRemaining",
-    ),
-    targetBardicInspirationDieSize: dieSizeFromQuintInt(
-      state["qTargetBardicInspirationDieSize"],
-      "qTargetBardicInspirationDieSize",
-    ),
-    lastResult: resultField(state["qLastResult"]),
-  };
-}
-
-function compareBardicInspirationSelectedIdentityState(
-  quint: BardicInspirationSelectedIdentityProjection,
-  runtime: BardicInspirationSelectedIdentityProjection,
-): boolean {
-  return isDeepStrictEqual(runtime, quint);
-}
-
-function quintStateRecord(raw: unknown): Record<string, unknown> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Bardic Inspiration selected identity Quint state.");
-  }
-  // Cast justification: after the object guard above, the Quint state is a
-  // string-keyed record; every field is parsed before use below.
-  return raw as Record<string, unknown>;
-}
-
-function booleanField(
-  state: Record<string, unknown>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberFromQuintInt(value: unknown, field: string): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  if (value !== null && typeof value === "object" && "#bigint" in value) {
-    return Number((value as { readonly "#bigint": string })["#bigint"]);
-  }
-  throw new Error(`Expected integer Quint field ${field}.`);
-}
-
-function dieSizeFromQuintInt(
-  value: unknown,
-  field: string,
-): DamageDieSize | 0 {
-  const dieSize = numberFromQuintInt(value, field);
-  if (dieSize === 0 || isDamageDieSize(dieSize)) {
-    return dieSize;
-  }
-  throw new Error(`Expected Bardic Inspiration die-size Quint field ${field}.`);
-}
-
-function isDamageDieSize(dieSize: number): dieSize is DamageDieSize {
-  return DAMAGE_DIE_SIZES.some((candidate) => candidate === dieSize);
-}
-
-function resultField(
-  value: unknown,
-): BardicInspirationSelectedIdentityProjection["lastResult"] {
-  if (value === "init" || value === "resolved" || value === "invalid") {
-    return value;
-  }
-  throw new Error("Expected Bardic Inspiration selected identity result.");
 }

@@ -4,9 +4,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -43,20 +41,9 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
-const weaponMasterySelectedIdentityDriverSchema = {
-  init: {},
-  doResolveSapMasteryPropertyHit: {},
-  doResolveToppleMasteryPropertyFailedSavingThrow: {},
-  doResolveCleaveMasteryPropertySecondTargetHit: {},
-  step: {},
-} as const;
-type WeaponMasterySelectedIdentityDriverAction = Exclude<
-  keyof typeof weaponMasterySelectedIdentityDriverSchema,
-  "init" | "step"
->;
-
-type WeaponMasterySelectedIdentityProjection = {
+type WeaponMasteryProjection = {
   readonly primaryTargetHp: number;
   readonly secondTargetHp: number;
   readonly actionAvailable: boolean;
@@ -64,17 +51,6 @@ type WeaponMasterySelectedIdentityProjection = {
   readonly primaryTargetProne: boolean;
   readonly cleaveUsed: boolean;
   readonly lastResult: "init" | "needsHoles" | "resolved";
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly WeaponMasterySelectedIdentityDriverAction[];
-  readonly expected: WeaponMasterySelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "weapon-mastery-properties";
-  readonly unitId: WeaponMasteryPropertyUnitId;
-  readonly actions: readonly WeaponMasterySelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 const attackerId = combatantId("weapon-mastery-property-attacker");
@@ -113,280 +89,223 @@ const weaponMasteryPropertyScenarios = {
 } as const;
 type WeaponMasteryPropertyUnitId = keyof typeof weaponMasteryPropertyScenarios;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "weapon-mastery-properties",
-    unitId: "mastery_sap",
-    actions: ["doResolveSapMasteryPropertyHit"],
-    sequences: [
-      {
-        name: "sap-mastery-property-hit-installs-next-attack-disadvantage",
-        actions: ["doResolveSapMasteryPropertyHit"],
-        expected: expectedProjection({
-          primaryTargetHp: 9,
-          actionAvailable: false,
-          primaryTargetHasSapEffect: true,
-          lastResult: "resolved",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Weapon Mastery selected identity MBT",
+  taskId: "weapon-mastery-properties",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    primaryTargetHp: "int",
+    secondTargetHp: "int",
+    actionAvailable: "bool",
+    primaryTargetHasSapEffect: "bool",
+    primaryTargetProne: "bool",
+    cleaveUsed: "bool",
+    lastResult: "str",
   },
-  {
-    taskId: "weapon-mastery-properties",
-    unitId: "mastery_topple",
-    actions: ["doResolveToppleMasteryPropertyFailedSavingThrow"],
-    sequences: [
-      {
-        name: "topple-mastery-property-failed-saving-throw-applies-prone",
-        actions: ["doResolveToppleMasteryPropertyFailedSavingThrow"],
-        expected: expectedProjection({
-          primaryTargetProne: true,
-          lastResult: "needsHoles",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "weapon-mastery-properties",
-    unitId: "mastery_cleave",
-    actions: ["doResolveCleaveMasteryPropertySecondTargetHit"],
-    sequences: [
-      {
-        name: "cleave-mastery-property-second-target-hit",
-        actions: ["doResolveCleaveMasteryPropertySecondTargetHit"],
-        expected: expectedProjection({
-          primaryTargetHp: 9,
-          secondTargetHp: 9,
-          actionAvailable: false,
-          cleaveUsed: true,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Weapon Mastery selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<WeaponMasterySelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createWeaponMasterySelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Weapon Mastery selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Weapon Mastery selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Weapon Mastery selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createWeaponMasterySelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: weaponMasterySelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: initialProjection("mastery_sap"),
+  units: [
+    {
+      unitId: "mastery_sap",
+      procedures: [
+        {
+          actionName: "doResolveSapMasteryPropertyHit",
+          projectionAfter: {
+            primaryTargetHp: 9,
+            secondTargetHp: 13,
+            actionAvailable: false,
+            primaryTargetHasSapEffect: true,
+            primaryTargetProne: false,
+            cleaveUsed: false,
+            lastResult: "resolved",
+          },
+          discover: () => resolveSapMasteryPropertyHit(),
+        },
+      ],
+    },
+    {
+      unitId: "mastery_topple",
+      procedures: [
+        {
+          actionName: "doResolveToppleMasteryPropertyFailedSavingThrow",
+          projectionAfter: {
+            primaryTargetHp: 13,
+            secondTargetHp: 13,
+            actionAvailable: true,
+            primaryTargetHasSapEffect: false,
+            primaryTargetProne: true,
+            cleaveUsed: false,
+            lastResult: "needsHoles",
+          },
+          discover: () => resolveToppleMasteryPropertyFailedSavingThrow(),
+        },
+      ],
+    },
+    {
+      unitId: "mastery_cleave",
+      procedures: [
+        {
+          actionName: "doResolveCleaveMasteryPropertySecondTargetHit",
+          projectionAfter: {
+            primaryTargetHp: 9,
+            secondTargetHp: 9,
+            actionAvailable: false,
+            primaryTargetHasSapEffect: false,
+            primaryTargetProne: false,
+            cleaveUsed: true,
+            lastResult: "resolved",
+          },
+          discover: () => resolveCleaveMasteryPropertySecondTargetHit(),
+        },
+      ],
+    },
+  ],
 });
 
-function createWeaponMasterySelectedIdentityDriver() {
-  return defineDriver(weaponMasterySelectedIdentityDriverSchema, () => {
-    let state = weaponMasteryBattle("mastery_sap");
-    let lastResult: WeaponMasterySelectedIdentityProjection["lastResult"] =
-      "init";
-
-    function reset(): void {
-      state = weaponMasteryBattle("mastery_sap");
-      lastResult = "init";
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      if (result.tag === "resolved" || result.tag === "needsHoles") {
-        lastResult = result.tag;
-        state = result.state;
-        return;
-      }
-      throw new Error(`Unexpected Weapon Mastery resolution: ${result.reason}`);
-    }
-
-    return {
-      init: reset,
-      doResolveSapMasteryPropertyHit: () => {
-        state = weaponMasteryBattle("mastery_sap");
-        resolvePrimaryHit("mastery_sap");
-      },
-      doResolveToppleMasteryPropertyFailedSavingThrow: () => {
-        state = weaponMasteryBattle("mastery_topple");
-        const scenario = weaponMasteryPropertyScenarios.mastery_topple;
-        const subject = attackSubject(scenario.attackName);
-        const target = requireHole(
-          discoverAttackHoles(state, subject),
-          "targetChoice",
-        );
-        const targetChoice = targetFill({
-          hole: target,
-          targetId: primaryTargetId,
-          attackName: scenario.attackName,
-        });
-        const attackRoll = requireHole(
-          holesAfterFills(state, subject, [targetChoice]),
-          "attackRoll",
-        );
-        const savingThrow = requireHole(
-          holesAfterFills(state, subject, [
-            targetChoice,
-            attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
-          ]),
-          "savingThrowOutcome",
-        );
-        recordResult(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [
-              targetChoice,
-              attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
-              savingThrowOutcomeFill(savingThrow, primaryTargetId, false),
-            ],
-          }),
-        );
-      },
-      doResolveCleaveMasteryPropertySecondTargetHit: () => {
-        state = weaponMasteryBattle("mastery_cleave");
-        const scenario = weaponMasteryPropertyScenarios.mastery_cleave;
-        const subject = attackSubject(scenario.attackName);
-        const primaryFills = primaryHitFills({
-          state,
-          subject,
-          attackName: scenario.attackName,
-          damageRoll: 1,
-        });
-        const decision = requireHole(
-          resolveBattleSubject({ state, subject, fills: primaryFills }),
-          "unitFeatureDecision",
-        );
-        const secondTarget = requireHole(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
-          }),
-          "targetChoice",
-        );
-        const secondTargetFill = targetFill({
-          hole: secondTarget,
-          targetId: secondTargetId,
-          attackName: scenario.attackName,
-          spatialFacts: [
-            attackTargetInMeleeReachFact(secondTargetId, scenario.attackName),
-            {
-              kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
-              attackerId,
-              firstTargetId: primaryTargetId,
-              secondTargetId,
-            },
-          ],
-        });
-        const cleaveAttackRoll = requireHole(
-          holesAfterFills(state, subject, [
-            ...primaryFills,
-            unitFeatureDecisionFill(decision, "use"),
-            secondTargetFill,
-          ]),
-          "attackRoll",
-        );
-        const cleaveDamage = requireHole(
-          holesAfterFills(state, subject, [
-            ...primaryFills,
-            unitFeatureDecisionFill(decision, "use"),
-            secondTargetFill,
-            attackRollFill(cleaveAttackRoll, { total: 15, naturalD20: 10 }),
-          ]),
-          "rolledDice",
-        );
-        recordResult(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [
-              ...primaryFills,
-              unitFeatureDecisionFill(decision, "use"),
-              secondTargetFill,
-              attackRollFill(cleaveAttackRoll, { total: 15, naturalD20: 10 }),
-              damageRollFill(cleaveDamage, 4),
-            ],
-          }),
-        );
-      },
-      step: () => {},
-      getState: () =>
-        projectWeaponMasterySelectedIdentityState({
-          state,
-          lastResult,
-        }),
-    };
-
-    function resolvePrimaryHit(unitId: WeaponMasteryPropertyUnitId): void {
-      const scenario = weaponMasteryPropertyScenarios[unitId];
-      const subject = attackSubject(scenario.attackName);
-      recordResult(
-        resolveBattleSubject({
-          state,
-          subject,
-          fills: primaryHitFills({
-            state,
-            subject,
-            attackName: scenario.attackName,
-            damageRoll: 1,
-          }),
-        }),
-      );
-    }
+function initialProjection(
+  unitId: WeaponMasteryPropertyUnitId,
+): WeaponMasteryProjection {
+  return projectWeaponMasteryState({
+    state: weaponMasteryBattle(unitId),
+    lastResult: "init",
   });
 }
 
-function expectedProjection(
-  overrides: Partial<WeaponMasterySelectedIdentityProjection> = {},
-): WeaponMasterySelectedIdentityProjection {
-  return {
-    primaryTargetHp: 13,
-    secondTargetHp: 13,
-    actionAvailable: true,
-    primaryTargetHasSapEffect: false,
-    primaryTargetProne: false,
-    cleaveUsed: false,
-    lastResult: "init",
-    ...overrides,
-  };
+function resolveSapMasteryPropertyHit(): WeaponMasteryProjection {
+  const state = weaponMasteryBattle("mastery_sap");
+  const scenario = weaponMasteryPropertyScenarios.mastery_sap;
+  const subject = attackSubject(scenario.attackName);
+  return resultProjection(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: primaryHitFills({
+        state,
+        subject,
+        attackName: scenario.attackName,
+        damageRoll: 1,
+      }),
+    }),
+  );
+}
+
+function resolveToppleMasteryPropertyFailedSavingThrow(): WeaponMasteryProjection {
+  const state = weaponMasteryBattle("mastery_topple");
+  const scenario = weaponMasteryPropertyScenarios.mastery_topple;
+  const subject = attackSubject(scenario.attackName);
+  const target = requireHole(
+    discoverAttackHoles(state, subject),
+    "targetChoice",
+  );
+  const targetChoice = targetFill({
+    hole: target,
+    targetId: primaryTargetId,
+    attackName: scenario.attackName,
+  });
+  const attackRoll = requireHole(
+    holesAfterFills(state, subject, [targetChoice]),
+    "attackRoll",
+  );
+  const savingThrow = requireHole(
+    holesAfterFills(state, subject, [
+      targetChoice,
+      attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+    ]),
+    "savingThrowOutcome",
+  );
+  return resultProjection(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+        savingThrowOutcomeFill(savingThrow, primaryTargetId, false),
+      ],
+    }),
+  );
+}
+
+function resolveCleaveMasteryPropertySecondTargetHit(): WeaponMasteryProjection {
+  const state = weaponMasteryBattle("mastery_cleave");
+  const scenario = weaponMasteryPropertyScenarios.mastery_cleave;
+  const subject = attackSubject(scenario.attackName);
+  const primaryFills = primaryHitFills({
+    state,
+    subject,
+    attackName: scenario.attackName,
+    damageRoll: 1,
+  });
+  const decision = requireHole(
+    resolveBattleSubject({ state, subject, fills: primaryFills }),
+    "unitFeatureDecision",
+  );
+  const secondTarget = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+    }),
+    "targetChoice",
+  );
+  const secondTargetFill = targetFill({
+    hole: secondTarget,
+    targetId: secondTargetId,
+    attackName: scenario.attackName,
+    spatialFacts: [
+      attackTargetInMeleeReachFact(secondTargetId, scenario.attackName),
+      {
+        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
+        attackerId,
+        firstTargetId: primaryTargetId,
+        secondTargetId,
+      },
+    ],
+  });
+  const cleaveAttackRoll = requireHole(
+    holesAfterFills(state, subject, [
+      ...primaryFills,
+      unitFeatureDecisionFill(decision, "use"),
+      secondTargetFill,
+    ]),
+    "attackRoll",
+  );
+  const cleaveDamage = requireHole(
+    holesAfterFills(state, subject, [
+      ...primaryFills,
+      unitFeatureDecisionFill(decision, "use"),
+      secondTargetFill,
+      attackRollFill(cleaveAttackRoll, { total: 15, naturalD20: 10 }),
+    ]),
+    "rolledDice",
+  );
+  return resultProjection(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        secondTargetFill,
+        attackRollFill(cleaveAttackRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(cleaveDamage, 4),
+      ],
+    }),
+  );
+}
+
+function resultProjection(
+  result: BattleResolutionResult,
+): WeaponMasteryProjection {
+  if (result.tag !== "resolved" && result.tag !== "needsHoles") {
+    throw new Error(`Unexpected Weapon Mastery resolution: ${result.reason}`);
+  }
+  return projectWeaponMasteryState({
+    state: result.state,
+    lastResult: result.tag,
+  });
 }
 
 function primaryHitFills(input: {
@@ -689,10 +608,10 @@ function unitFeatureDecisionFill(
   };
 }
 
-function projectWeaponMasterySelectedIdentityState(input: {
+function projectWeaponMasteryState(input: {
   readonly state: BattleState;
-  readonly lastResult: WeaponMasterySelectedIdentityProjection["lastResult"];
-}): WeaponMasterySelectedIdentityProjection {
+  readonly lastResult: WeaponMasteryProjection["lastResult"];
+}): WeaponMasteryProjection {
   const snapshot = snapshotBattle(input.state);
   const primaryTarget = snapshot.combatants.find(
     (combatant) => combatant.combatantId === primaryTargetId,
@@ -729,61 +648,6 @@ function projectWeaponMasterySelectedIdentityState(input: {
   };
 }
 
-function normalizeWeaponMasterySelectedIdentityQuintState(
-  raw: unknown,
-): WeaponMasterySelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    primaryTargetHp: numberFromQuintInt(
-      state["qPrimaryTargetHp"],
-      "qPrimaryTargetHp",
-    ),
-    secondTargetHp: numberFromQuintInt(
-      state["qSecondTargetHp"],
-      "qSecondTargetHp",
-    ),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    primaryTargetHasSapEffect: booleanField(
-      state,
-      "qPrimaryTargetHasSapEffect",
-    ),
-    primaryTargetProne: booleanField(state, "qPrimaryTargetProne"),
-    cleaveUsed: booleanField(state, "qCleaveUsed"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): WeaponMasterySelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "needsHoles" || raw === "resolved") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
 function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
@@ -793,14 +657,3 @@ function startBattleRight(
   }
   return result.right;
 }
-
-const weaponMasterySelectedIdentityStateCheck = stateCheck(
-  normalizeWeaponMasterySelectedIdentityQuintState,
-  (
-    spec: WeaponMasterySelectedIdentityProjection,
-    impl: WeaponMasterySelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

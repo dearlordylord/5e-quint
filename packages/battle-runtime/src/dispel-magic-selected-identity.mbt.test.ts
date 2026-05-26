@@ -6,11 +6,11 @@ import * as path from "node:path";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, Round } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   continualFlameUnitId,
   dispelMagicUnitId,
@@ -71,158 +71,67 @@ const retainedActiveEffectId = battleSpellEffectOccurrenceId(
   `${spellTargetId}:${heatMetalUnitId}:${selectedObjectId}:retained`,
 );
 
-const driverSchema = {
-  init: {},
-  doEndObjectAttachedSpellLight: {},
-  doEndSelectedMagicalEffectActiveEffect: {},
-  doRejectOutOfRangeObjectTarget: {},
-  step: {},
-} as const;
-
-type DispelMagicReplayAction = Exclude<
-  keyof typeof driverSchema,
-  "init" | "step"
->;
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly DispelMagicReplayAction[];
-  readonly expected: DispelMagicSelectedIdentityState;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "B21-DISPEL-MAGIC-IDENTITY-WITNESS";
-  readonly unitId: "dispel_magic";
-  readonly actions: readonly DispelMagicReplayAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
-};
-
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
-    unitId: "dispel_magic",
-    actions: [
-      "doEndObjectAttachedSpellLight",
-      "doEndSelectedMagicalEffectActiveEffect",
-      "doRejectOutOfRangeObjectTarget",
-    ],
-    sequences: [
-      {
-        name: "selected-dispel-magic-ends-object-attached-spell-light",
-        actions: ["doEndObjectAttachedSpellLight"],
-        expected: {
-          magicActionAvailable: false,
-          thirdLevelSlotCommitted: true,
-          spellLightEmitterCount: 0,
-          selectedActiveEffectPresent: false,
-          retainedActiveEffectPresent: false,
-          lastResult: "objectSpellLightEnded",
-        },
-      },
-      {
-        name: "selected-dispel-magic-ends-only-selected-active-effect",
-        actions: ["doEndSelectedMagicalEffectActiveEffect"],
-        expected: {
-          magicActionAvailable: false,
-          thirdLevelSlotCommitted: true,
-          spellLightEmitterCount: 0,
-          selectedActiveEffectPresent: false,
-          retainedActiveEffectPresent: true,
-          lastResult: "selectedMagicalEffectEnded",
-        },
-      },
-      {
-        name: "selected-dispel-magic-rejects-out-of-range-object-target",
-        actions: ["doRejectOutOfRangeObjectTarget"],
-        expected: {
-          magicActionAvailable: true,
-          thirdLevelSlotCommitted: false,
-          spellLightEmitterCount: 1,
-          selectedActiveEffectPresent: false,
-          retainedActiveEffectPresent: false,
-          lastResult: "outOfRangeObjectRejected",
-        },
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Dispel Magic selected identity MBT",
+  taskId: "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-dispel-magic-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    magicActionAvailable: "bool",
+    thirdLevelSlotCommitted: "bool",
+    spellLightEmitterCount: "int",
+    selectedActiveEffectPresent: "bool",
+    retainedActiveEffectPresent: "bool",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-const dispelMagicStateCheck = stateCheck(
-  normalizeDispelMagicQuintState,
-  compareDispelMagicStates,
-);
-
-describe("Dispel Magic selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<DispelMagicReplayAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createDispelMagicSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Dispel Magic selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Dispel Magic selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Dispel Magic selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-dispel-magic-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDispelMagicSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: dispelMagicStateCheck,
-    });
-  }, 120_000);
+  initialProjection: dispelMagicProjection(initialRuntimeState()),
+  units: [
+    {
+      unitId: dispelMagicUnitId,
+      procedures: [
+        {
+          actionName: "doEndObjectAttachedSpellLight",
+          projectionAfter: {
+            magicActionAvailable: false,
+            thirdLevelSlotCommitted: true,
+            spellLightEmitterCount: 0,
+            selectedActiveEffectPresent: false,
+            retainedActiveEffectPresent: false,
+            lastResult: "objectSpellLightEnded",
+          },
+          discover: () => dispelMagicProjection(endObjectAttachedSpellLight()),
+        },
+        {
+          actionName: "doEndSelectedMagicalEffectActiveEffect",
+          projectionAfter: {
+            magicActionAvailable: false,
+            thirdLevelSlotCommitted: true,
+            spellLightEmitterCount: 0,
+            selectedActiveEffectPresent: false,
+            retainedActiveEffectPresent: true,
+            lastResult: "selectedMagicalEffectEnded",
+          },
+          discover: () =>
+            dispelMagicProjection(endSelectedMagicalEffectActiveEffect()),
+        },
+        {
+          actionName: "doRejectOutOfRangeObjectTarget",
+          projectionAfter: {
+            magicActionAvailable: true,
+            thirdLevelSlotCommitted: false,
+            spellLightEmitterCount: 1,
+            selectedActiveEffectPresent: false,
+            retainedActiveEffectPresent: false,
+            lastResult: "outOfRangeObjectRejected",
+          },
+          discover: () => dispelMagicProjection(rejectOutOfRangeObjectTarget()),
+        },
+      ],
+    },
+  ],
 });
-
-function createDispelMagicSelectedIdentityDriver() {
-  return defineDriver(driverSchema, () => {
-    let state = initialRuntimeState();
-
-    return {
-      init: () => {
-        state = initialRuntimeState();
-      },
-      doEndObjectAttachedSpellLight: () => {
-        state = endObjectAttachedSpellLight();
-      },
-      doEndSelectedMagicalEffectActiveEffect: () => {
-        state = endSelectedMagicalEffectActiveEffect();
-      },
-      doRejectOutOfRangeObjectTarget: () => {
-        state = rejectOutOfRangeObjectTarget();
-      },
-      step: () => {},
-      getState: () => dispelMagicProjection(state),
-    };
-  });
-}
 
 function initialRuntimeState(): DispelMagicRuntimeState {
   return {
@@ -565,83 +474,4 @@ function requireResolved(
     throw new Error(message);
   }
   return result;
-}
-
-function normalizeDispelMagicQuintState(
-  raw: unknown,
-): DispelMagicSelectedIdentityState {
-  const state = quintStateRecord(raw);
-  return {
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    thirdLevelSlotCommitted: booleanField(state, "qThirdLevelSlotCommitted"),
-    spellLightEmitterCount: numberFromQuintInt(
-      state["qSpellLightEmitterCount"],
-      "qSpellLightEmitterCount",
-    ),
-    selectedActiveEffectPresent: booleanField(
-      state,
-      "qSelectedActiveEffectPresent",
-    ),
-    retainedActiveEffectPresent: booleanField(
-      state,
-      "qRetainedActiveEffectPresent",
-    ),
-    lastResult: dispelMagicLastResult(state["qLastResult"]),
-  };
-}
-
-function compareDispelMagicStates(
-  runtime: DispelMagicSelectedIdentityState,
-  quint: DispelMagicSelectedIdentityState,
-): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
-  return true;
-}
-
-function dispelMagicLastResult(raw: unknown): DispelMagicLastResult {
-  if (
-    raw === "init" ||
-    raw === "objectSpellLightEnded" ||
-    raw === "selectedMagicalEffectEnded" ||
-    raw === "outOfRangeObjectRejected"
-  ) {
-    return raw;
-  }
-  throw new Error(
-    `Unknown Dispel Magic selected identity result ${String(raw)}.`,
-  );
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Dispel Magic selected identity Quint state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

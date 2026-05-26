@@ -2,9 +2,8 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
+import { expect } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -43,18 +42,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
-
-const innateSorcerySelectedIdentityDriverSchema = {
-  init: {},
-  doActivateInnateSorcery: {},
-  doProjectInnateSorcerySpellBenefits: {},
-  doExcludeInnateSorceryNonSorcererSpellBenefits: {},
-  step: {},
-} as const;
-type InnateSorcerySelectedIdentityDriverAction = Exclude<
-  keyof typeof innateSorcerySelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
 type InnateSorcerySelectedIdentityLastResult =
@@ -63,11 +51,8 @@ type InnateSorcerySelectedIdentityLastResult =
   | "spellBenefitsProjected"
   | "nonSorcererExcluded";
 type InnateSorceryOccurrenceProjection =
-  | { readonly tag: "inactive" }
-  | {
-      readonly tag: "active";
-      readonly expiresRound: number;
-    };
+  | "inactive"
+  | "activeUntilEndOfRound11";
 type InnateSorcerySelectedIdentityProjection = {
   readonly bonusActionAvailable: boolean;
   readonly featureUsesRemaining: number;
@@ -75,17 +60,6 @@ type InnateSorcerySelectedIdentityProjection = {
   readonly spellSaveDc: number;
   readonly spellAttackRollMode: InnateSorcerySpellAttackRollMode;
   readonly lastResult: InnateSorcerySelectedIdentityLastResult;
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly InnateSorcerySelectedIdentityDriverAction[];
-  readonly expected: InnateSorcerySelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1D2-SORCERER-INNATE-SORCERY";
-  readonly unitId: typeof innateSorceryUnitId;
-  readonly actions: readonly InnateSorcerySelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 type UnitFeatureAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "unitFeature" }>;
@@ -100,10 +74,7 @@ const rayOfFrostUnitId = "ray_of_frost";
 const baseSorcererSpellSaveDc = 13;
 const innateSorcerySpellSaveDc = 14;
 const innateSorceryExpiresRound = 11;
-const activeInnateSorceryOccurrence = {
-  tag: "active",
-  expiresRound: innateSorceryExpiresRound,
-} as const satisfies InnateSorceryOccurrenceProjection;
+const activeInnateSorceryOccurrence = "activeUntilEndOfRound11";
 const sorcererId = combatantId("innate-sorcery-selected-identity-sorcerer");
 const targetId = combatantId("innate-sorcery-selected-identity-target");
 const partySide = battleCombatantSide("party");
@@ -120,152 +91,96 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "L1D2-SORCERER-INNATE-SORCERY",
-    unitId: "sorcerer_innate_sorcery",
-    actions: [
-      "doActivateInnateSorcery",
-      "doProjectInnateSorcerySpellBenefits",
-      "doExcludeInnateSorceryNonSorcererSpellBenefits",
-    ],
-    sequences: [
-      {
-        name: "bonus-action-use-creates-one-minute-active-window",
-        actions: ["doActivateInnateSorcery"],
-        expected: expectedProjection({
-          bonusActionAvailable: false,
-          featureUsesRemaining: 1,
-          innateSorceryOccurrence: activeInnateSorceryOccurrence,
-          spellSaveDc: innateSorcerySpellSaveDc,
-          lastResult: "activated",
-        }),
-      },
-      {
-        name: "sorcerer-spell-benefits-project-from-active-profile",
-        actions: ["doProjectInnateSorcerySpellBenefits"],
-        expected: expectedProjection({
-          bonusActionAvailable: false,
-          featureUsesRemaining: 1,
-          innateSorceryOccurrence: activeInnateSorceryOccurrence,
-          spellSaveDc: innateSorcerySpellSaveDc,
-          spellAttackRollMode: "advantage",
-          lastResult: "spellBenefitsProjected",
-        }),
-      },
-      {
-        name: "non-sorcerer-spell-source-is-excluded",
-        actions: ["doExcludeInnateSorceryNonSorcererSpellBenefits"],
-        expected: expectedProjection({
-          bonusActionAvailable: false,
-          featureUsesRemaining: 1,
-          innateSorceryOccurrence: activeInnateSorceryOccurrence,
-          lastResult: "nonSorcererExcluded",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Innate Sorcery selected identity MBT",
+  taskId: "L1D2-SORCERER-INNATE-SORCERY",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-feature-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    bonusActionAvailable: "bool",
+    featureUsesRemaining: "int",
+    innateSorceryOccurrence: "str",
+    spellSaveDc: "int",
+    spellAttackRollMode: "str",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Innate Sorcery selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<InnateSorcerySelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createInnateSorcerySelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Innate Sorcery selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Innate Sorcery selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Innate Sorcery selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-feature-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createInnateSorcerySelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: innateSorcerySelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: innateSorceryUnitId,
+      procedures: [
+        {
+          actionName: "doActivateInnateSorcery",
+          projectionAfter: expectedProjection({
+            bonusActionAvailable: false,
+            featureUsesRemaining: 1,
+            innateSorceryOccurrence: activeInnateSorceryOccurrence,
+            spellSaveDc: innateSorcerySpellSaveDc,
+            lastResult: "activated",
+          }),
+          discover: () =>
+            withSelectedUnitBoundaryCheck("doActivateInnateSorcery", () =>
+              projectBattleState(
+                resolveInnateSorcery(innateSorceryBattle("sorcerer")).state,
+                "none",
+                "activated",
+              ),
+            ),
+        },
+        {
+          actionName: "doProjectInnateSorcerySpellBenefits",
+          projectionAfter: expectedProjection({
+            bonusActionAvailable: false,
+            featureUsesRemaining: 1,
+            innateSorceryOccurrence: activeInnateSorceryOccurrence,
+            spellSaveDc: innateSorcerySpellSaveDc,
+            spellAttackRollMode: "advantage",
+            lastResult: "spellBenefitsProjected",
+          }),
+          discover: () =>
+            withSelectedUnitBoundaryCheck(
+              "doProjectInnateSorcerySpellBenefits",
+              () => {
+                const activated = resolveInnateSorcery(
+                  innateSorceryBattle("sorcerer"),
+                ).state;
+                return projectBattleState(
+                  activated,
+                  spellAttackRollModeForRayOfFrost(activated),
+                  "spellBenefitsProjected",
+                );
+              },
+            ),
+        },
+        {
+          actionName: "doExcludeInnateSorceryNonSorcererSpellBenefits",
+          projectionAfter: expectedProjection({
+            bonusActionAvailable: false,
+            featureUsesRemaining: 1,
+            innateSorceryOccurrence: activeInnateSorceryOccurrence,
+            lastResult: "nonSorcererExcluded",
+          }),
+          discover: () =>
+            withSelectedUnitBoundaryCheck(
+              "doExcludeInnateSorceryNonSorcererSpellBenefits",
+              () => {
+                const activated = resolveInnateSorcery(
+                  innateSorceryBattle("wizard"),
+                ).state;
+                return projectBattleState(
+                  activated,
+                  spellAttackRollModeForRayOfFrost(activated),
+                  "nonSorcererExcluded",
+                );
+              },
+            ),
+        },
+      ],
+    },
+  ],
 });
-
-function createInnateSorcerySelectedIdentityDriver() {
-  return defineDriver(innateSorcerySelectedIdentityDriverSchema, () => {
-    let projection = projectInitialBattle();
-
-    function reset(): void {
-      projection = projectInitialBattle();
-    }
-
-    return {
-      init: reset,
-      doActivateInnateSorcery: () => {
-        projection = projectBattleState(
-          resolveInnateSorcery(innateSorceryBattle("sorcerer")).state,
-          "none",
-          "activated",
-        );
-      },
-      doProjectInnateSorcerySpellBenefits: () => {
-        const activated = resolveInnateSorcery(
-          innateSorceryBattle("sorcerer"),
-        ).state;
-        projection = projectBattleState(
-          activated,
-          spellAttackRollModeForRayOfFrost(activated),
-          "spellBenefitsProjected",
-        );
-      },
-      doExcludeInnateSorceryNonSorcererSpellBenefits: () => {
-        const activated = resolveInnateSorcery(
-          innateSorceryBattle("wizard"),
-        ).state;
-        projection = projectBattleState(
-          activated,
-          spellAttackRollModeForRayOfFrost(activated),
-          "nonSorcererExcluded",
-        );
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
-}
 
 function expectedProjection(
   overrides: Partial<InnateSorcerySelectedIdentityProjection> = {},
@@ -273,16 +188,12 @@ function expectedProjection(
   return {
     bonusActionAvailable: true,
     featureUsesRemaining: 2,
-    innateSorceryOccurrence: { tag: "inactive" },
+    innateSorceryOccurrence: "inactive",
     spellSaveDc: baseSorcererSpellSaveDc,
     spellAttackRollMode: "none",
     lastResult: "init",
     ...overrides,
   };
-}
-
-function projectInitialBattle(): InnateSorcerySelectedIdentityProjection {
-  return projectBattleState(innateSorceryBattle("sorcerer"), "none", "init");
 }
 
 function projectBattleState(
@@ -529,15 +440,16 @@ function innateSorceryOccurrenceProjection(
   occurrence: ActiveOngoingFeatureOccurrence | undefined,
 ): InnateSorceryOccurrenceProjection {
   if (occurrence === undefined) {
-    return { tag: "inactive" };
+    return "inactive";
   }
   if (
     occurrence.kind !== "fixedDuration" ||
-    occurrence.expiresAt.kind !== "endOfTurn"
+    occurrence.expiresAt.kind !== "endOfTurn" ||
+    occurrence.expiresAt.round !== innateSorceryExpiresRound
   ) {
     throw new Error("Expected fixed-duration Innate Sorcery occurrence.");
   }
-  return { tag: "active", expiresRound: occurrence.expiresAt.round };
+  return activeInnateSorceryOccurrence;
 }
 
 function requireSpellSaveDc(state: BattleState): number {
@@ -586,93 +498,22 @@ function resetSelectedUnitRuntimeBoundaryIds(): void {
   selectedUnitRuntimeBoundaryIds.clear();
 }
 
+function withSelectedUnitBoundaryCheck(
+  actionName: string,
+  discover: () => InnateSorcerySelectedIdentityProjection,
+): InnateSorcerySelectedIdentityProjection {
+  resetSelectedUnitRuntimeBoundaryIds();
+  const projection = discover();
+  expect(
+    selectedUnitRuntimeBoundaryIds.has(innateSorceryUnitId),
+    `${innateSorceryUnitId}:${actionName} must bind its Unit id`,
+  ).toBe(true);
+  return projection;
+}
+
 function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
   unitId: UnitId,
 ): UnitId {
   selectedUnitRuntimeBoundaryIds.add(unitId);
   return unitId;
 }
-
-function normalizeInnateSorcerySelectedIdentityQuintState(
-  raw: unknown,
-): InnateSorcerySelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    featureUsesRemaining: numberFromQuintInt(
-      state["qFeatureUsesRemaining"],
-      "qFeatureUsesRemaining",
-    ),
-    innateSorceryOccurrence: quintInnateSorceryOccurrence(state),
-    spellSaveDc: numberFromQuintInt(state["qSpellSaveDc"], "qSpellSaveDc"),
-    spellAttackRollMode: spellAttackRollMode(state["qSpellAttackRollMode"]),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintInnateSorceryOccurrence(
-  state: Readonly<Record<string, unknown>>,
-): InnateSorceryOccurrenceProjection {
-  const occurrence = state["qInnateSorceryOccurrence"];
-  if (occurrence === "inactive") {
-    return { tag: "inactive" };
-  }
-  if (occurrence === "activeUntilEndOfRound11") {
-    return activeInnateSorceryOccurrence;
-  }
-  throw new Error(
-    `Unexpected Innate Sorcery occurrence ${String(occurrence)}.`,
-  );
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function spellAttackRollMode(raw: unknown): InnateSorcerySpellAttackRollMode {
-  if (raw === "none" || raw === "advantage" || raw === "disadvantage") {
-    return raw;
-  }
-  throw new Error(`Unexpected spell attack roll mode ${String(raw)}.`);
-}
-
-function mbtLastResult(raw: unknown): InnateSorcerySelectedIdentityLastResult {
-  if (
-    raw === "init" ||
-    raw === "activated" ||
-    raw === "spellBenefitsProjected" ||
-    raw === "nonSorcererExcluded"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const innateSorcerySelectedIdentityStateCheck = stateCheck(
-  normalizeInnateSorcerySelectedIdentityQuintState,
-  (
-    spec: InnateSorcerySelectedIdentityProjection,
-    impl: InnateSorcerySelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
