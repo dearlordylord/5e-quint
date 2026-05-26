@@ -12,6 +12,7 @@ const {
   generatorReadinessBlockers,
   generatorReadinessScannerBlockers,
   generatorReadinessStatuses,
+  generatorSubsetObservedConstructAuditObligationIds,
   generatorSubsetConstructs,
   kernelIrBoundaryKinds,
   markerKinds,
@@ -229,7 +230,9 @@ function hasQntRecordConstruct(source) {
 
 function hasQntVariantConstruct(source) {
   return (
-    /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*\s*\()/m.test(source) ||
+    /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*(?:\s*\([^)]*\))?\s*\|)/m.test(
+      source,
+    ) ||
     /\b[A-Z]\w*\s*\(/.test(source)
   );
 }
@@ -290,7 +293,7 @@ function findQntGeneratorSubsetConstructs(text) {
   return constructs;
 }
 
-function findUnsupportedUnitFeatureGeneratorConstructs(text) {
+function findUnsupportedGeneratorConstructs(text) {
   const source = qntConstructScanSource(text);
   const unsupported = [];
   if (/^\s*action\s+\w+/m.test(source)) unsupported.push("action-def");
@@ -301,17 +304,30 @@ function findUnsupportedUnitFeatureGeneratorConstructs(text) {
   return unsupported;
 }
 
-function isUnitFeatureGeneratorSubsetAuditRow(readiness) {
+function isGeneratorSubsetObservedConstructAuditRow(
+  readiness,
+  auditObligationIds,
+) {
   const semanticCorePaths = stringArrayOrEmpty(readiness.semanticCore);
   return (
+    auditObligationIds.has(readiness.obligationId) ||
     (typeof readiness.obligationId === "string" &&
       readiness.obligationId.startsWith("BATTLE.FEATURE.")) ||
     semanticCorePaths.some((ownerPath) => ownerPath.includes("/unit-feature-"))
   );
 }
 
-function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
-  if (!isUnitFeatureGeneratorSubsetAuditRow(readiness)) return [];
+function validateGeneratorSubsetObservedConstructAudit(
+  readiness,
+  context,
+  rootPath,
+  auditObligationIds,
+) {
+  if (
+    !isGeneratorSubsetObservedConstructAuditRow(readiness, auditObligationIds)
+  ) {
+    return [];
+  }
   const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
   if (semanticCore.length === 0) return [];
   const issues = [];
@@ -324,7 +340,7 @@ function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
     for (const construct of findQntGeneratorSubsetConstructs(ownerText)) {
       observedConstructs.add(construct);
     }
-    const unsupported = findUnsupportedUnitFeatureGeneratorConstructs(ownerText);
+    const unsupported = findUnsupportedGeneratorConstructs(ownerText);
     if (unsupported.length > 0) {
       unsupportedByPath.push({ ownerPath, unsupported });
     }
@@ -343,22 +359,22 @@ function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
     .sort();
   if (undocumented.length > 0) {
     issues.push(
-      `${context}.generatorSubset scanner found undocumented unit-feature QNT construct(s): ${undocumented.join(", ")}.`,
+      `${context}.generatorSubset scanner found undocumented QNT construct(s): ${undocumented.join(", ")}.`,
     );
   }
   if (missing.length > 0) {
     issues.push(
-      `${context}.generatorSubset omits observed unit-feature QNT construct(s): ${missing.join(", ")}.`,
+      `${context}.generatorSubset omits observed QNT construct(s): ${missing.join(", ")}.`,
     );
   }
   if (extra.length > 0) {
     issues.push(
-      `${context}.generatorSubset claims unobserved unit-feature QNT construct(s): ${extra.join(", ")}.`,
+      `${context}.generatorSubset claims unobserved QNT construct(s): ${extra.join(", ")}.`,
     );
   }
   for (const finding of unsupportedByPath) {
     issues.push(
-      `${context}.semanticCore path ${finding.ownerPath} contains unsupported unit-feature generator construct(s): ${finding.unsupported.join(", ")}.`,
+      `${context}.semanticCore path ${finding.ownerPath} contains unsupported generator construct(s): ${finding.unsupported.join(", ")}.`,
     );
   }
   return issues;
@@ -1162,6 +1178,7 @@ function validateGeneratorReadiness(
   qntOwnerRolesByPath,
   semanticCoreRunBlocksByPath,
   knownRalphTaskIds,
+  generatorSubsetAuditObligationIds,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -1326,7 +1343,12 @@ function validateGeneratorReadiness(
     }
   }
   issues.push(
-    ...validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath),
+    ...validateGeneratorSubsetObservedConstructAudit(
+      readiness,
+      context,
+      rootPath,
+      generatorSubsetAuditObligationIds,
+    ),
   );
   if (readiness.dryRun !== undefined) {
     if (typeof readiness.dryRun !== "string" || readiness.dryRun.length === 0) {
@@ -2260,7 +2282,10 @@ function renderList(values) {
   return values.map((value) => `\`${value}\``).join(", ");
 }
 
-function buildKernelCoverage({ root: rootPath }) {
+function buildKernelCoverage({
+  root: rootPath,
+  generatorSubsetAuditObligationIds = generatorSubsetObservedConstructAuditObligationIds,
+}) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
@@ -2434,6 +2459,7 @@ function buildKernelCoverage({ root: rootPath }) {
         qntOwnerRolesByPath,
         semanticCoreRunBlocksByPath,
         knownRalphTaskIds,
+        generatorSubsetAuditObligationIds,
       ),
     );
   }

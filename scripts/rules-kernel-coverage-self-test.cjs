@@ -308,6 +308,43 @@ function runSelfTest() {
   );
   const sampleQntPath = path.join(root, "sample.qnt");
   const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
+  writeFile(
+    sampleQntPath,
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module sample {",
+      "  type SampleChoice = ChoiceA | ChoiceB",
+      "  pure def chooseValue(choice: SampleChoice): int =",
+      "    match choice {",
+      "      | ChoiceA => 1",
+      "      | ChoiceB => 2",
+      "    }",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
+      generatorSubset: ["pure-def", "int", "pattern-match"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const configuredGeneratorSubsetAuditResult = buildKernelCoverage({
+    root,
+    generatorSubsetAuditObligationIds: new Set(["BATTLE.SAMPLE"]),
+  });
+  assert.ok(
+    configuredGeneratorSubsetAuditResult.issues.includes(
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): variant.",
+    ),
+    `Expected configured generator subset audit issue, got ${JSON.stringify(configuredGeneratorSubsetAuditResult.issues)}`,
+  );
+  writeFile(sampleQntPath, initialSampleQntText);
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   const unitFeatureObligationsPath = path.join(
     root,
     "plans",
@@ -382,9 +419,42 @@ function runSelfTest() {
   const unitFeatureMissingSizeResult = buildKernelCoverage({ root });
   assert.ok(
     unitFeatureMissingSizeResult.issues.includes(
-      "generator-readiness row 1.generatorSubset omits observed unit-feature QNT construct(s): size.",
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): size.",
     ),
     `Expected unit-feature size construct issue, got ${JSON.stringify(unitFeatureMissingSizeResult.issues)}`,
+  );
+
+  writeFile(
+    path.join(root, unitFeatureOwnerPath),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module unitFeatureSample {",
+      "  type SampleChoice = ChoiceA | ChoiceB",
+      "  pure def chooseValue(choice: SampleChoice): int =",
+      "    match choice {",
+      "      | ChoiceA => 1",
+      "      | ChoiceB => 2",
+      "    }",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: [unitFeatureOwnerPath],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
+      generatorSubset: ["pure-def", "int", "pattern-match"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const unitFeatureNullaryVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unitFeatureNullaryVariantResult.issues.includes(
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): variant.",
+    ),
+    `Expected unit-feature nullary variant construct issue, got ${JSON.stringify(unitFeatureNullaryVariantResult.issues)}`,
   );
   writeFile(unitFeatureObligationsPath, initialUnitFeatureObligationsText);
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);

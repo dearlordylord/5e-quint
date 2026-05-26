@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "QNTGR-B09-GENERATOR-SUBSET-VOCAB-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit generator subset vocabulary for new rows"
     },
     {
@@ -260,7 +260,7 @@ row fails in self-test.
 
 ### Task 9 - QNTGR-B09-GENERATOR-SUBSET-VOCAB-AUDIT - Audit generator subset vocabulary for new rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: generator subset vocabulary and all rows touched by this lane.
 
