@@ -4,9 +4,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -46,20 +44,9 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
-const reactionSpellSelectedIdentityDriverSchema = {
-  init: {},
-  doResolveShieldReactionSpellHit: {},
-  doResolveHellishRebukeFailedSavingThrow: {},
-  doResolveCounterspellMagicMissileCast: {},
-  step: {},
-} as const;
-type ReactionSpellSelectedIdentityDriverAction = Exclude<
-  keyof typeof reactionSpellSelectedIdentityDriverSchema,
-  "init" | "step"
->;
-
-type ReactionSpellSelectedIdentityProjection = {
+type ReactionSpellProjection = {
   readonly reactorHp: number;
   readonly triggerCreatureHp: number;
   readonly reactorArmorClass: number;
@@ -69,17 +56,6 @@ type ReactionSpellSelectedIdentityProjection = {
   readonly secondLevelSlotsExpended: number;
   readonly thirdLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly ReactionSpellSelectedIdentityDriverAction[];
-  readonly expected: ReactionSpellSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "reaction-interruption";
-  readonly unitId: ReactionSpellUnitId;
-  readonly actions: readonly ReactionSpellSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
@@ -112,232 +88,172 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "reaction-interruption",
-    unitId: "shield",
-    actions: ["doResolveShieldReactionSpellHit"],
-    sequences: [
-      {
-        name: "attack-hit-casts-shield",
-        actions: ["doResolveShieldReactionSpellHit"],
-        expected: expectedProjection({
-          reactorArmorClass: 15,
-          reactorReactionAvailable: false,
-          firstLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Reaction spell selected identity MBT",
+  taskId: "reaction-interruption",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    reactorHp: "int",
+    triggerCreatureHp: "int",
+    reactorArmorClass: "int",
+    reactorReactionAvailable: "bool",
+    triggerCreatureFirstLevelSlotsExpended: "int",
+    firstLevelSlotsExpended: "int",
+    secondLevelSlotsExpended: "int",
+    thirdLevelSlotsExpended: "int",
+    lastResult: "str",
   },
-  {
-    taskId: "reaction-interruption",
-    unitId: "hellish_rebuke",
-    actions: ["doResolveHellishRebukeFailedSavingThrow"],
-    sequences: [
-      {
-        name: "after-damage-reaction-failed-saving-throw",
-        actions: ["doResolveHellishRebukeFailedSavingThrow"],
-        expected: expectedProjection({
-          reactorHp: 11,
-          triggerCreatureHp: 9,
-          reactorReactionAvailable: false,
-          secondLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "reaction-interruption",
-    unitId: "counterspell",
-    actions: ["doResolveCounterspellMagicMissileCast"],
-    sequences: [
-      {
-        name: "spell-cast-reaction-counters-magic-missile",
-        actions: ["doResolveCounterspellMagicMissileCast"],
-        expected: expectedProjection({
-          reactorReactionAvailable: false,
-          triggerCreatureFirstLevelSlotsExpended: 0,
-          thirdLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Reaction spell selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<ReactionSpellSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createReactionSpellSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Reaction spell selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Reaction spell selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Reaction spell selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-reaction-spell-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createReactionSpellSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: reactionSpellSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: projectReactionSpellState(
+    reactionSpellBattle(srdSpellRecord("shield")),
+    "init",
+  ),
+  units: [
+    {
+      unitId: "shield",
+      procedures: [
+        {
+          actionName: "doResolveShieldReactionSpellHit",
+          projectionAfter: {
+            reactorHp: 12,
+            triggerCreatureHp: 12,
+            reactorArmorClass: 15,
+            reactorReactionAvailable: false,
+            triggerCreatureFirstLevelSlotsExpended: 0,
+            firstLevelSlotsExpended: 1,
+            secondLevelSlotsExpended: 0,
+            thirdLevelSlotsExpended: 0,
+            lastResult: "resolved",
+          },
+          discover: () => resolveShieldReactionSpellHit(),
+        },
+      ],
+    },
+    {
+      unitId: "hellish_rebuke",
+      procedures: [
+        {
+          actionName: "doResolveHellishRebukeFailedSavingThrow",
+          projectionAfter: {
+            reactorHp: 11,
+            triggerCreatureHp: 9,
+            reactorArmorClass: 10,
+            reactorReactionAvailable: false,
+            triggerCreatureFirstLevelSlotsExpended: 0,
+            firstLevelSlotsExpended: 0,
+            secondLevelSlotsExpended: 1,
+            thirdLevelSlotsExpended: 0,
+            lastResult: "resolved",
+          },
+          discover: () => resolveHellishRebukeFailedSavingThrow(),
+        },
+      ],
+    },
+    {
+      unitId: "counterspell",
+      procedures: [
+        {
+          actionName: "doResolveCounterspellMagicMissileCast",
+          projectionAfter: {
+            reactorHp: 12,
+            triggerCreatureHp: 12,
+            reactorArmorClass: 10,
+            reactorReactionAvailable: false,
+            triggerCreatureFirstLevelSlotsExpended: 0,
+            firstLevelSlotsExpended: 0,
+            secondLevelSlotsExpended: 0,
+            thirdLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          },
+          discover: () => resolveCounterspellMagicMissileCast(),
+        },
+      ],
+    },
+  ],
 });
 
-function createReactionSpellSelectedIdentityDriver() {
-  return defineDriver(reactionSpellSelectedIdentityDriverSchema, () => {
-    let state = reactionSpellBattle(srdSpellRecord("shield"));
-    let lastResult: ReactionSpellSelectedIdentityProjection["lastResult"] =
-      "init";
-
-    function reset(): void {
-      state = reactionSpellBattle(srdSpellRecord("shield"));
-      lastResult = "init";
-    }
-
-    function recordResolvedResult(
-      result: ReturnType<typeof resolveBattleReaction>,
-    ): void {
-      if (result.tag !== "resolved") {
-        throw new Error(
-          `Expected Reaction spell to resolve, got ${result.tag}.`,
-        );
-      }
-      state = result.state;
-      lastResult = "resolved";
-    }
-
-    return {
-      init: reset,
-      doResolveShieldReactionSpellHit: () => {
-        state = reactionSpellBattle(srdSpellRecord("shield"));
-        const awaitingReaction = resolveAttackRollOnly({
-          state,
-          attackRollTotal: 14,
-          includeHellishRebukeTriggerFact: false,
-        });
-        if (awaitingReaction.tag !== "needsHoles") {
-          throw new Error("Expected Shield attack hit Reaction window.");
-        }
-        recordResolvedResult(resolveShieldReactionChoice(awaitingReaction));
-      },
-      doResolveHellishRebukeFailedSavingThrow: () => {
-        state = reactionSpellBattle(srdSpellRecord("hellish_rebuke"));
-        const awaitingReaction = resolveAttackRollOnly({
-          state,
-          attackRollTotal: 15,
-          includeHellishRebukeTriggerFact: true,
-        });
-        if (awaitingReaction.tag !== "needsHoles") {
-          throw new Error(
-            "Expected Hellish Rebuke after-damage Reaction window.",
-          );
-        }
-        const choice = requireHellishRebukeChoice(awaitingReaction);
-        const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-        const damage = requireHole(choice.initialHoles, "rolledDice");
-        recordResolvedResult(
-          resolveBattleReaction({
-            state: awaitingReaction.state,
-            fill: reactionDecisionFill(
-              requireHole(awaitingReaction.holes, "reactionDecision"),
-              {
-                kind: "resolve",
-                reactorId,
-                choice: {
-                  kind: "castTriggeredReactionSpell",
-                  invocation: choice.invocation,
-                  fills: [
-                    savingThrowOutcomeFill(save, [
-                      { targetId: triggerCreatureId, succeeded: false },
-                    ]),
-                    damageRollFillWithGroups(damage, [[1, 1, 1]]),
-                  ],
-                },
-              },
-            ),
-          }),
-        );
-      },
-      doResolveCounterspellMagicMissileCast: () => {
-        state = counterspellBattle();
-        const awaitingReaction = startMagicMissileWithCounterspell(state);
-        const choice = requireCounterspellChoice(awaitingReaction);
-        recordResolvedResult(
-          resolveBattleReaction({
-            state: awaitingReaction.state,
-            fill: reactionDecisionFill(
-              requireHole(awaitingReaction.holes, "reactionDecision"),
-              {
-                kind: "resolve",
-                reactorId,
-                choice: {
-                  kind: "castTriggeredReactionSpell",
-                  invocation: choice.invocation,
-                  fills: [],
-                },
-              },
-            ),
-          }),
-        );
-      },
-      step: () => {},
-      getState: () =>
-        projectReactionSpellSelectedIdentityState(state, lastResult),
-    };
+function resolveShieldReactionSpellHit(): ReactionSpellProjection {
+  const state = reactionSpellBattle(srdSpellRecord("shield"));
+  const awaitingReaction = resolveAttackRollOnly({
+    state,
+    attackRollTotal: 14,
+    includeHellishRebukeTriggerFact: false,
   });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Shield attack hit Reaction window.");
+  }
+  return projectResolvedReaction(resolveShieldReactionChoice(awaitingReaction));
 }
 
-function expectedProjection(
-  overrides: Partial<ReactionSpellSelectedIdentityProjection> = {},
-): ReactionSpellSelectedIdentityProjection {
-  return {
-    reactorHp: 12,
-    triggerCreatureHp: 12,
-    reactorArmorClass: 10,
-    reactorReactionAvailable: true,
-    triggerCreatureFirstLevelSlotsExpended: 0,
-    firstLevelSlotsExpended: 0,
-    secondLevelSlotsExpended: 0,
-    thirdLevelSlotsExpended: 0,
-    lastResult: "init",
-    ...overrides,
-  };
+function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
+  const state = reactionSpellBattle(srdSpellRecord("hellish_rebuke"));
+  const awaitingReaction = resolveAttackRollOnly({
+    state,
+    attackRollTotal: 15,
+    includeHellishRebukeTriggerFact: true,
+  });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+  }
+  const choice = requireHellishRebukeChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+  const damage = requireHole(choice.initialHoles, "rolledDice");
+  return projectResolvedReaction(
+    resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: choice.invocation,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: triggerCreatureId, succeeded: false },
+              ]),
+              damageRollFillWithGroups(damage, [[1, 1, 1]]),
+            ],
+          },
+        },
+      ),
+    }),
+  );
+}
+
+function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
+  const state = counterspellBattle();
+  const awaitingReaction = startMagicMissileWithCounterspell(state);
+  const choice = requireCounterspellChoice(awaitingReaction);
+  return projectResolvedReaction(
+    resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        requireHole(awaitingReaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: choice.invocation,
+            fills: [],
+          },
+        },
+      ),
+    }),
+  );
+}
+
+function projectResolvedReaction(
+  result: ReturnType<typeof resolveBattleReaction>,
+): ReactionSpellProjection {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected Reaction spell to resolve, got ${result.tag}.`);
+  }
+  return projectReactionSpellState(result.state, "resolved");
 }
 
 function srdSpellRecord(unitId: SrdSpellUnitId): SpellRecord {
@@ -788,10 +704,10 @@ function requireHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
-function projectReactionSpellSelectedIdentityState(
+function projectReactionSpellState(
   state: BattleState,
-  lastResult: ReactionSpellSelectedIdentityProjection["lastResult"],
-): ReactionSpellSelectedIdentityProjection {
+  lastResult: ReactionSpellProjection["lastResult"],
+): ReactionSpellProjection {
   const snapshot = snapshotBattle(state);
   const reactor = snapshot.combatants.find(
     (combatant) => combatant.combatantId === reactorId,
@@ -821,10 +737,10 @@ function projectReactionSpellSelectedIdentityState(
 
 function expendedSlotsForSpellLevel(
   state: BattleState,
-  combatantId: CombatantId,
+  candidateId: CombatantId,
   spellLevel: number,
 ): number {
-  const combatant = state.combatants.get(combatantId);
+  const combatant = state.combatants.get(candidateId);
   if (combatant?.origin.kind !== "character") {
     throw new Error("Expected Reaction spell caster character origin.");
   }
@@ -834,80 +750,3 @@ function expendedSlotsForSpellLevel(
     )?.expended ?? 0
   );
 }
-
-function normalizeReactionSpellSelectedIdentityQuintState(
-  raw: unknown,
-): ReactionSpellSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    reactorHp: numberFromQuintInt(state["qReactorHp"], "qReactorHp"),
-    triggerCreatureHp: numberFromQuintInt(
-      state["qTriggerCreatureHp"],
-      "qTriggerCreatureHp",
-    ),
-    reactorArmorClass: numberFromQuintInt(
-      state["qReactorArmorClass"],
-      "qReactorArmorClass",
-    ),
-    reactorReactionAvailable: booleanField(state, "qReactorReactionAvailable"),
-    triggerCreatureFirstLevelSlotsExpended: numberFromQuintInt(
-      state["qTriggerCreatureFirstLevelSlotsExpended"],
-      "qTriggerCreatureFirstLevelSlotsExpended",
-    ),
-    firstLevelSlotsExpended: numberFromQuintInt(
-      state["qFirstLevelSlotsExpended"],
-      "qFirstLevelSlotsExpended",
-    ),
-    secondLevelSlotsExpended: numberFromQuintInt(
-      state["qSecondLevelSlotsExpended"],
-      "qSecondLevelSlotsExpended",
-    ),
-    thirdLevelSlotsExpended: numberFromQuintInt(
-      state["qThirdLevelSlotsExpended"],
-      "qThirdLevelSlotsExpended",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): ReactionSpellSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "resolved") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const reactionSpellSelectedIdentityStateCheck = stateCheck(
-  normalizeReactionSpellSelectedIdentityQuintState,
-  (
-    spec: ReactionSpellSelectedIdentityProjection,
-    impl: ReactionSpellSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

@@ -3,9 +3,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   armorClass,
@@ -46,50 +44,27 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const beamSequenceSelectedIdentityDriverSchema = {
-  init: {},
-  doDiscoverLevelFiveBeamTargetHoles: {},
-  doResolveTwoCreatureBeamsSameTarget: {},
-  doResolveTwoCreatureBeamsSplitTargets: {},
-  doResolveCreatureAndObjectBeamTargets: {},
-  step: {},
-} as const;
-type BeamSequenceSelectedIdentityDriverAction = Exclude<
-  keyof typeof beamSequenceSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const eldritchBlastUnitId = "eldritch_blast";
 const initialSkeletonHp = 13;
 const initialZombieHp = 11;
 const initialObjectHp = 5;
 
-type BeamSequenceSelectedIdentityLastResult =
+type BeamSequenceLastResult =
   | "init"
   | "discovered"
   | "sameTargetResolved"
   | "splitTargetResolved"
   | "creatureObjectResolved";
-type BeamSequenceSelectedIdentityProjection = {
+type BeamSequenceProjection = {
   readonly initialCreatureTargetHoles: number;
   readonly initialObjectTargetHoles: number;
   readonly skeletonHp: number;
   readonly zombieHp: number;
   readonly objectHp: number;
   readonly actionAvailable: boolean;
-  readonly lastResult: BeamSequenceSelectedIdentityLastResult;
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly BeamSequenceSelectedIdentityDriverAction[];
-  readonly expected: BeamSequenceSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1H-ELDRITCH-BLAST";
-  readonly unitId: typeof eldritchBlastUnitId;
-  readonly actions: readonly BeamSequenceSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+  readonly lastResult: BeamSequenceLastResult;
 };
 
 type ActionSpellAct = AvailableBattleAct & {
@@ -138,183 +113,112 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "L1H-ELDRITCH-BLAST",
-    unitId: "eldritch_blast",
-    actions: [
-      "doDiscoverLevelFiveBeamTargetHoles",
-      "doResolveTwoCreatureBeamsSameTarget",
-      "doResolveTwoCreatureBeamsSplitTargets",
-      "doResolveCreatureAndObjectBeamTargets",
-    ],
-    sequences: [
-      {
-        name: "level-five-opens-two-creature-and-two-object-target-holes",
-        actions: ["doDiscoverLevelFiveBeamTargetHoles"],
-        expected: expectedProjection({ lastResult: "discovered" }),
-      },
-      {
-        name: "same-creature-target-allocation-keeps-beams-independent",
-        actions: ["doResolveTwoCreatureBeamsSameTarget"],
-        expected: expectedProjection({
-          skeletonHp: 9,
-          actionAvailable: false,
-          lastResult: "sameTargetResolved",
-        }),
-      },
-      {
-        name: "different-creature-target-allocation-resolves-each-beam",
-        actions: ["doResolveTwoCreatureBeamsSplitTargets"],
-        expected: expectedProjection({
-          skeletonHp: 9,
-          zombieHp: 7,
-          actionAvailable: false,
-          lastResult: "splitTargetResolved",
-        }),
-      },
-      {
-        name: "creature-and-object-target-allocation-resolves-each-beam",
-        actions: ["doResolveCreatureAndObjectBeamTargets"],
-        expected: expectedProjection({
-          skeletonHp: 9,
-          objectHp: 1,
-          actionAvailable: false,
-          lastResult: "creatureObjectResolved",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Beam sequence selected identity MBT",
+  taskId: "L1H-ELDRITCH-BLAST",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-beam-sequence-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    initialCreatureTargetHoles: "int",
+    initialObjectTargetHoles: "int",
+    skeletonHp: "int",
+    zombieHp: "int",
+    objectHp: "int",
+    actionAvailable: "bool",
+    lastResult: "str",
   },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Beam sequence selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<BeamSequenceSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createBeamSequenceSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Beam Sequence selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Beam Sequence selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Eldritch Blast beam sequence selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-beam-sequence-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createBeamSequenceSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: beamSequenceSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: projectInitialBattle("init"),
+  units: [
+    {
+      unitId: eldritchBlastUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverLevelFiveBeamTargetHoles",
+          projectionAfter: projectInitialBattle("discovered"),
+          discover: () => projectInitialBattle("discovered"),
+        },
+        {
+          actionName: "doResolveTwoCreatureBeamsSameTarget",
+          projectionAfter: projectResolvedBattle(
+            resolveEldritchBlastTwoBeamSequence({
+              targetFills: (holes) => [
+                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                spellTargetFill(beamCreatureTargetHole(holes, 1), skeletonId),
+              ],
+              outcomes: [hitForFour(), miss()],
+            }),
+            "sameTargetResolved",
+          ),
+          discover: () =>
+            projectResolvedBattle(
+              resolveEldritchBlastTwoBeamSequence({
+                targetFills: (holes) => [
+                  spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                  spellTargetFill(beamCreatureTargetHole(holes, 1), skeletonId),
+                ],
+                outcomes: [hitForFour(), miss()],
+              }),
+              "sameTargetResolved",
+            ),
+        },
+        {
+          actionName: "doResolveTwoCreatureBeamsSplitTargets",
+          projectionAfter: projectResolvedBattle(
+            resolveEldritchBlastTwoBeamSequence({
+              targetFills: (holes) => [
+                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                spellTargetFill(beamCreatureTargetHole(holes, 1), zombieId),
+              ],
+              outcomes: [hitForFour(), hitForFour()],
+            }),
+            "splitTargetResolved",
+          ),
+          discover: () =>
+            projectResolvedBattle(
+              resolveEldritchBlastTwoBeamSequence({
+                targetFills: (holes) => [
+                  spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                  spellTargetFill(beamCreatureTargetHole(holes, 1), zombieId),
+                ],
+                outcomes: [hitForFour(), hitForFour()],
+              }),
+              "splitTargetResolved",
+            ),
+        },
+        {
+          actionName: "doResolveCreatureAndObjectBeamTargets",
+          projectionAfter: projectResolvedBattle(
+            resolveEldritchBlastTwoBeamSequence({
+              targetFills: (holes) => [
+                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                spellObjectTargetFill(beamObjectTargetHole(holes, 1)),
+              ],
+              outcomes: [hitForFour(), hitForFour()],
+            }),
+            "creatureObjectResolved",
+          ),
+          discover: () =>
+            projectResolvedBattle(
+              resolveEldritchBlastTwoBeamSequence({
+                targetFills: (holes) => [
+                  spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
+                  spellObjectTargetFill(beamObjectTargetHole(holes, 1)),
+                ],
+                outcomes: [hitForFour(), hitForFour()],
+              }),
+              "creatureObjectResolved",
+            ),
+        },
+      ],
+    },
+  ],
 });
 
-function createBeamSequenceSelectedIdentityDriver() {
-  return defineDriver(beamSequenceSelectedIdentityDriverSchema, () => {
-    let projection = projectInitialBattle("init");
-
-    function reset(): void {
-      projection = projectInitialBattle("init");
-    }
-
-    return {
-      init: reset,
-      doDiscoverLevelFiveBeamTargetHoles: () => {
-        projection = projectInitialBattle("discovered");
-      },
-      doResolveTwoCreatureBeamsSameTarget: () => {
-        projection = projectResolvedBattle(
-          resolveEldritchBlastTwoBeamSequence({
-            targetFills: (holes) => [
-              spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-              spellTargetFill(beamCreatureTargetHole(holes, 1), skeletonId),
-            ],
-            outcomes: [hitForFour(), miss()],
-          }),
-          "sameTargetResolved",
-        );
-      },
-      doResolveTwoCreatureBeamsSplitTargets: () => {
-        projection = projectResolvedBattle(
-          resolveEldritchBlastTwoBeamSequence({
-            targetFills: (holes) => [
-              spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-              spellTargetFill(beamCreatureTargetHole(holes, 1), zombieId),
-            ],
-            outcomes: [hitForFour(), hitForFour()],
-          }),
-          "splitTargetResolved",
-        );
-      },
-      doResolveCreatureAndObjectBeamTargets: () => {
-        projection = projectResolvedBattle(
-          resolveEldritchBlastTwoBeamSequence({
-            targetFills: (holes) => [
-              spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-              spellObjectTargetFill(beamObjectTargetHole(holes, 1)),
-            ],
-            outcomes: [hitForFour(), hitForFour()],
-          }),
-          "creatureObjectResolved",
-        );
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
-}
-
-function expectedProjection(
-  overrides: Partial<BeamSequenceSelectedIdentityProjection> = {},
-): BeamSequenceSelectedIdentityProjection {
-  return {
-    initialCreatureTargetHoles: 2,
-    initialObjectTargetHoles: 2,
-    skeletonHp: initialSkeletonHp,
-    zombieHp: initialZombieHp,
-    objectHp: initialObjectHp,
-    actionAvailable: true,
-    lastResult: "init",
-    ...overrides,
-  };
-}
-
 function projectInitialBattle(
-  lastResult: Extract<
-    BeamSequenceSelectedIdentityLastResult,
-    "init" | "discovered"
-  >,
-): BeamSequenceSelectedIdentityProjection {
+  lastResult: Extract<BeamSequenceLastResult, "init" | "discovered">,
+): BeamSequenceProjection {
   const state = eldritchBlastBattle();
   const targetHoles = beamTargetHoles(eldritchBlastAct(state).initialHoles);
   return {
@@ -328,11 +232,8 @@ function projectInitialBattle(
 
 function projectResolvedBattle(
   result: ResolvedBattleResult,
-  lastResult: Exclude<
-    BeamSequenceSelectedIdentityLastResult,
-    "init" | "discovered"
-  >,
-): BeamSequenceSelectedIdentityProjection {
+  lastResult: Exclude<BeamSequenceLastResult, "init" | "discovered">,
+): BeamSequenceProjection {
   return {
     ...projectBattleState(result.state),
     initialCreatureTargetHoles: 2,
@@ -345,7 +246,7 @@ function projectResolvedBattle(
 function projectBattleState(
   state: BattleState,
 ): Omit<
-  BeamSequenceSelectedIdentityProjection,
+  BeamSequenceProjection,
   | "initialCreatureTargetHoles"
   | "initialObjectTargetHoles"
   | "objectHp"
@@ -453,7 +354,7 @@ function eldritchBlastBattle(): BattleState {
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(3),
           canCastSpells: true,
-          cantrips: [spellRecord()],
+          cantrips: [eldritchBlastSpellRecord()],
           preparedSpells: [],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
@@ -537,7 +438,7 @@ function battleCreature(input: {
   };
 }
 
-function spellRecord(): SpellRecord {
+function eldritchBlastSpellRecord(): SpellRecord {
   const unit = unitLibrary.requireUnit(eldritchBlastUnitId);
   if (unit.kind !== "spell") {
     throw new Error("Expected Eldritch Blast Unit to be a Spell.");
@@ -664,10 +565,7 @@ function damageRollFillWithGroups(
   groups: readonly (readonly number[])[],
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   const [firstGroup, ...restGroups] = groups;
-  if (
-    firstGroup === undefined ||
-    groups.some((group) => group.length === 0)
-  ) {
+  if (firstGroup === undefined || groups.some((group) => group.length === 0)) {
     throw new Error("Expected non-empty rolled damage groups.");
   }
 
@@ -740,72 +638,3 @@ function objectHpAfterResolution(result: ResolvedBattleResult): number {
     ? Number(damage.nextHitPoints)
     : initialObjectHp;
 }
-
-function normalizeBeamSequenceSelectedIdentityQuintState(
-  raw: unknown,
-): BeamSequenceSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    initialCreatureTargetHoles: numberFromQuintInt(
-      state["qInitialCreatureTargetHoles"],
-      "qInitialCreatureTargetHoles",
-    ),
-    initialObjectTargetHoles: numberFromQuintInt(
-      state["qInitialObjectTargetHoles"],
-      "qInitialObjectTargetHoles",
-    ),
-    skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
-    zombieHp: numberFromQuintInt(state["qZombieHp"], "qZombieHp"),
-    objectHp: numberFromQuintInt(state["qObjectHp"], "qObjectHp"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): BeamSequenceSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "discovered" ||
-    raw === "sameTargetResolved" ||
-    raw === "splitTargetResolved" ||
-    raw === "creatureObjectResolved"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const beamSequenceSelectedIdentityStateCheck = stateCheck(
-  normalizeBeamSequenceSelectedIdentityQuintState,
-  (
-    spec: BeamSequenceSelectedIdentityProjection,
-    impl: BeamSequenceSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
