@@ -72,6 +72,9 @@ Checked source-of-truth artifacts:
   runtime state.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` is the current
   manual Rust dry-run vertical.
+- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` is the
+  next planned manual dry-run vertical, scoped to Hit Point recovery without
+  adding parallel Character Sheet state.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.

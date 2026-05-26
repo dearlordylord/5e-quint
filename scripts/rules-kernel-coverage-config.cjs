@@ -84,7 +84,7 @@ const generatorSubsetVocabulary = {
   "pure-def": "Pure definitions intended as executable rule functions.",
   range: "Integer `.to(...)` ranges.",
   record: "Record types or record values.",
-  "record-update": "Record `.with(...)` update expressions.",
+  "record-update": "Record `.with(...)` or spread update expressions.",
   set: "`Set[...]` types or values.",
   "set-operators": "Set union or similar set algebra operators.",
   size: "Collection `.size()` cardinality queries.",
@@ -113,6 +113,14 @@ const generatorReadinessBlockerVocabulary = {
 const generatorSubsetConstructs = new Set(
   Object.keys(generatorSubsetVocabulary),
 );
+
+const generatorSubsetObservedConstructAuditObligationIds = new Set([
+  "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+  "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+  "BATTLE.ATTACK.MINIMAL_RESOLUTION",
+  "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+  "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+]);
 
 const generatorReadinessBlockers = new Set(
   Object.keys(generatorReadinessBlockerVocabulary),
@@ -215,6 +223,7 @@ module.exports = {
   generatorReadinessBlockers,
   generatorReadinessScannerBlockers,
   generatorReadinessStatuses,
+  generatorSubsetObservedConstructAuditObligationIds,
   generatorSubsetConstructs,
   kernelIrBoundaryKinds,
   markerKinds,

@@ -12,6 +12,7 @@ const {
   generatorReadinessBlockers,
   generatorReadinessScannerBlockers,
   generatorReadinessStatuses,
+  generatorSubsetObservedConstructAuditObligationIds,
   generatorSubsetConstructs,
   kernelIrBoundaryKinds,
   markerKinds,
@@ -229,7 +230,9 @@ function hasQntRecordConstruct(source) {
 
 function hasQntVariantConstruct(source) {
   return (
-    /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*\s*\()/m.test(source) ||
+    /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*(?:\s*\([^)]*\))?\s*\|)/m.test(
+      source,
+    ) ||
     /\b[A-Z]\w*\s*\(/.test(source)
   );
 }
@@ -290,7 +293,7 @@ function findQntGeneratorSubsetConstructs(text) {
   return constructs;
 }
 
-function findUnsupportedUnitFeatureGeneratorConstructs(text) {
+function findUnsupportedGeneratorConstructs(text) {
   const source = qntConstructScanSource(text);
   const unsupported = [];
   if (/^\s*action\s+\w+/m.test(source)) unsupported.push("action-def");
@@ -301,17 +304,30 @@ function findUnsupportedUnitFeatureGeneratorConstructs(text) {
   return unsupported;
 }
 
-function isUnitFeatureGeneratorSubsetAuditRow(readiness) {
+function isGeneratorSubsetObservedConstructAuditRow(
+  readiness,
+  auditObligationIds,
+) {
   const semanticCorePaths = stringArrayOrEmpty(readiness.semanticCore);
   return (
+    auditObligationIds.has(readiness.obligationId) ||
     (typeof readiness.obligationId === "string" &&
       readiness.obligationId.startsWith("BATTLE.FEATURE.")) ||
     semanticCorePaths.some((ownerPath) => ownerPath.includes("/unit-feature-"))
   );
 }
 
-function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
-  if (!isUnitFeatureGeneratorSubsetAuditRow(readiness)) return [];
+function validateGeneratorSubsetObservedConstructAudit(
+  readiness,
+  context,
+  rootPath,
+  auditObligationIds,
+) {
+  if (
+    !isGeneratorSubsetObservedConstructAuditRow(readiness, auditObligationIds)
+  ) {
+    return [];
+  }
   const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
   if (semanticCore.length === 0) return [];
   const issues = [];
@@ -324,7 +340,7 @@ function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
     for (const construct of findQntGeneratorSubsetConstructs(ownerText)) {
       observedConstructs.add(construct);
     }
-    const unsupported = findUnsupportedUnitFeatureGeneratorConstructs(ownerText);
+    const unsupported = findUnsupportedGeneratorConstructs(ownerText);
     if (unsupported.length > 0) {
       unsupportedByPath.push({ ownerPath, unsupported });
     }
@@ -343,22 +359,22 @@ function validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath) {
     .sort();
   if (undocumented.length > 0) {
     issues.push(
-      `${context}.generatorSubset scanner found undocumented unit-feature QNT construct(s): ${undocumented.join(", ")}.`,
+      `${context}.generatorSubset scanner found undocumented QNT construct(s): ${undocumented.join(", ")}.`,
     );
   }
   if (missing.length > 0) {
     issues.push(
-      `${context}.generatorSubset omits observed unit-feature QNT construct(s): ${missing.join(", ")}.`,
+      `${context}.generatorSubset omits observed QNT construct(s): ${missing.join(", ")}.`,
     );
   }
   if (extra.length > 0) {
     issues.push(
-      `${context}.generatorSubset claims unobserved unit-feature QNT construct(s): ${extra.join(", ")}.`,
+      `${context}.generatorSubset claims unobserved QNT construct(s): ${extra.join(", ")}.`,
     );
   }
   for (const finding of unsupportedByPath) {
     issues.push(
-      `${context}.semanticCore path ${finding.ownerPath} contains unsupported unit-feature generator construct(s): ${finding.unsupported.join(", ")}.`,
+      `${context}.semanticCore path ${finding.ownerPath} contains unsupported generator construct(s): ${finding.unsupported.join(", ")}.`,
     );
   }
   return issues;
@@ -1162,6 +1178,7 @@ function validateGeneratorReadiness(
   qntOwnerRolesByPath,
   semanticCoreRunBlocksByPath,
   knownRalphTaskIds,
+  generatorSubsetAuditObligationIds,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -1235,6 +1252,11 @@ function validateGeneratorReadiness(
     if (semanticCoreSet.has(ownerPath)) {
       issues.push(
         `${context}.${ownerPath} cannot be both semanticCore and proofOnly.`,
+      );
+    }
+    if (!qntOwnerRolesByPath.has(ownerPath)) {
+      issues.push(
+        `${context}.proofOnly path ${ownerPath} is missing a QNT owner role.`,
       );
     }
   }
@@ -1318,7 +1340,11 @@ function validateGeneratorReadiness(
         );
       }
       const ownerRole = qntOwnerRolesByPath.get(ownerPath);
-      if (ownerRole !== undefined && ownerRole !== "semantic-core") {
+      if (ownerRole === undefined) {
+        issues.push(
+          `${context}.semanticCore path ${ownerPath} is missing a QNT owner role.`,
+        );
+      } else if (ownerRole !== "semantic-core") {
         issues.push(
           `${context}.semanticCore path ${ownerPath} has QNT owner role ${ownerRole}; expected semantic-core.`,
         );
@@ -1326,7 +1352,12 @@ function validateGeneratorReadiness(
     }
   }
   issues.push(
-    ...validateUnitFeatureGeneratorSubsetAudit(readiness, context, rootPath),
+    ...validateGeneratorSubsetObservedConstructAudit(
+      readiness,
+      context,
+      rootPath,
+      generatorSubsetAuditObligationIds,
+    ),
   );
   if (readiness.dryRun !== undefined) {
     if (typeof readiness.dryRun !== "string" || readiness.dryRun.length === 0) {
@@ -1389,10 +1420,23 @@ function qntOwnerPaths(obligations) {
   return ownerPaths;
 }
 
+function generatorReadinessOwnerPaths(generatorReadiness) {
+  const ownerPaths = new Set();
+  for (const readiness of generatorReadiness) {
+    if (!isRecord(readiness) || readiness.status === "not-assessed") continue;
+    for (const field of ["semanticCore", "proofOnly"]) {
+      for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
+        ownerPaths.add(ownerPath);
+      }
+    }
+  }
+  return ownerPaths;
+}
+
 function generatorReadinessDenominatorGaps(
   obligations,
   qntOwnerRolesByPath,
-  readinessObligationIds,
+  readinessByObligationId,
 ) {
   const issues = [];
   for (const obligation of obligations) {
@@ -1400,12 +1444,17 @@ function generatorReadinessDenominatorGaps(
     const semanticCoreOwners = (obligation.qntOwners ?? []).filter(
       (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
     );
-    if (
-      semanticCoreOwners.length > 0 &&
-      !readinessObligationIds.has(obligation.id)
-    ) {
+    if (semanticCoreOwners.length === 0) continue;
+    const readiness = readinessByObligationId.get(obligation.id);
+    if (readiness === undefined) {
       issues.push(
         `generator-readiness is missing row for covered obligation ${obligation.id} with semantic-core QNT owner(s): ${semanticCoreOwners.join(", ")}.`,
+      );
+      continue;
+    }
+    if (readiness.status === "not-assessed") {
+      issues.push(
+        `generator-readiness row for covered obligation ${obligation.id} with semantic-core QNT owner(s) cannot remain not-assessed: ${semanticCoreOwners.join(", ")}.`,
       );
     }
   }
@@ -1421,7 +1470,7 @@ function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
   } else {
     if (!expectedQntOwnerPaths.has(row.ownerPath)) {
       issues.push(
-        `${context}.ownerPath ${row.ownerPath} is not a covered obligation QNT owner.`,
+        `${context}.ownerPath ${row.ownerPath} is not a covered obligation or assessed generator-readiness QNT owner.`,
       );
     }
     if (!fs.existsSync(path.join(rootPath, row.ownerPath))) {
@@ -1894,7 +1943,7 @@ function buildMatrix(rootPath) {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id, except BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS unit-feature profiles are reported under unitFeatureProfileOwnerRows so the broad obligation does not claim profile-scoped QNT ownership.",
       "qntOwnerRoles[].obligationIds":
-        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
+        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only, including assessed generator-readiness semanticCore/proofOnly paths.",
       "qntOwnerRoles[].profileScopes":
         "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS.",
     },
@@ -2255,7 +2304,10 @@ function renderList(values) {
   return values.map((value) => `\`${value}\``).join(", ");
 }
 
-function buildKernelCoverage({ root: rootPath }) {
+function buildKernelCoverage({
+  root: rootPath,
+  generatorSubsetAuditObligationIds = generatorSubsetObservedConstructAuditObligationIds,
+}) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
@@ -2383,6 +2435,9 @@ function buildKernelCoverage({ root: rootPath }) {
   }
 
   const expectedQntOwnerPaths = qntOwnerPaths(obligations);
+  for (const ownerPath of generatorReadinessOwnerPaths(generatorReadiness)) {
+    expectedQntOwnerPaths.add(ownerPath);
+  }
   const qntOwnerRolesByPath = new Map();
   for (const [index, row] of qntOwnerRoleRows.entries()) {
     if (isRecord(row) && typeof row.ownerPath === "string") {
@@ -2409,6 +2464,7 @@ function buildKernelCoverage({ root: rootPath }) {
 
   const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
+  const readinessByObligationId = new Map();
   for (const [index, readiness] of generatorReadiness.entries()) {
     if (isRecord(readiness) && typeof readiness.obligationId === "string") {
       if (readinessObligationIds.has(readiness.obligationId)) {
@@ -2417,6 +2473,7 @@ function buildKernelCoverage({ root: rootPath }) {
         );
       }
       readinessObligationIds.add(readiness.obligationId);
+      readinessByObligationId.set(readiness.obligationId, readiness);
     }
     issues.push(
       ...validateGeneratorReadiness(
@@ -2427,6 +2484,7 @@ function buildKernelCoverage({ root: rootPath }) {
         qntOwnerRolesByPath,
         semanticCoreRunBlocksByPath,
         knownRalphTaskIds,
+        generatorSubsetAuditObligationIds,
       ),
     );
   }
@@ -2434,7 +2492,7 @@ function buildKernelCoverage({ root: rootPath }) {
     ...generatorReadinessDenominatorGaps(
       obligations,
       qntOwnerRolesByPath,
-      readinessObligationIds,
+      readinessByObligationId,
     ),
   );
 

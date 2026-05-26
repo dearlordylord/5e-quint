@@ -199,6 +199,10 @@ function runSelfTest() {
     "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sampleExamples {}\n",
   );
   writeFile(
+    path.join(root, "readiness-proof-only.qnt"),
+    "module readinessProofOnly {}\n",
+  );
+  writeFile(
     path.join(root, "sample.ts"),
     "// KERNEL-COVERAGE: runtime-owner BATTLE.SAMPLE\nexport const sample = true;\n",
   );
@@ -269,6 +273,53 @@ function runSelfTest() {
     sampleQntOwnerRolesPath,
     "utf8",
   );
+  const sampleGeneratorReadinessPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "generator-readiness.jsonl",
+  );
+  const initialGeneratorReadinessText = fs.readFileSync(
+    sampleGeneratorReadinessPath,
+    "utf8",
+  );
+  const readinessOnlyProofRole =
+    JSON.stringify({
+      ownerPath: "readiness-proof-only.qnt",
+      role: "proof-only",
+      evidence:
+        "readiness-proof-only.qnt is proof-only generator-readiness evidence without being an obligation QNT owner.",
+    }) + "\n";
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [
+        "sample-inductive.qnt",
+        "sample-examples.qnt",
+        "readiness-proof-only.qnt",
+      ],
+      generatorSubset: ["record", "pure-def"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  writeFile(
+    sampleQntOwnerRolesPath,
+    initialQntOwnerRolesText + readinessOnlyProofRole,
+  );
+  const readinessOnlyProofOwnerRoleResult = buildKernelCoverage({ root });
+  assert.deepEqual(readinessOnlyProofOwnerRoleResult.issues, []);
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
+  const missingReadinessProofOwnerRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    missingReadinessProofOwnerRoleResult.issues.includes(
+      "qnt-owner-roles is missing QNT owner readiness-proof-only.qnt.",
+    ),
+    `Expected missing readiness proof-only owner role issue, got ${JSON.stringify(missingReadinessProofOwnerRoleResult.issues)}`,
+  );
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   writeFile(sampleQntOwnerRolesPath, "");
   const missingQntOwnerRoleResult = buildKernelCoverage({ root });
   assert.ok(
@@ -296,18 +347,45 @@ function runSelfTest() {
   }
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
 
-  const sampleGeneratorReadinessPath = path.join(
-    root,
-    "plans",
-    "rules-kernel-coverage",
-    "generator-readiness.jsonl",
-  );
-  const initialGeneratorReadinessText = fs.readFileSync(
-    sampleGeneratorReadinessPath,
-    "utf8",
-  );
   const sampleQntPath = path.join(root, "sample.qnt");
   const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
+  writeFile(
+    sampleQntPath,
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module sample {",
+      "  type SampleChoice = ChoiceA | ChoiceB",
+      "  pure def chooseValue(choice: SampleChoice): int =",
+      "    match choice {",
+      "      | ChoiceA => 1",
+      "      | ChoiceB => 2",
+      "    }",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
+      generatorSubset: ["pure-def", "int", "pattern-match"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const configuredGeneratorSubsetAuditResult = buildKernelCoverage({
+    root,
+    generatorSubsetAuditObligationIds: new Set(["BATTLE.SAMPLE"]),
+  });
+  assert.ok(
+    configuredGeneratorSubsetAuditResult.issues.includes(
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): variant.",
+    ),
+    `Expected configured generator subset audit issue, got ${JSON.stringify(configuredGeneratorSubsetAuditResult.issues)}`,
+  );
+  writeFile(sampleQntPath, initialSampleQntText);
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   const unitFeatureObligationsPath = path.join(
     root,
     "plans",
@@ -382,9 +460,42 @@ function runSelfTest() {
   const unitFeatureMissingSizeResult = buildKernelCoverage({ root });
   assert.ok(
     unitFeatureMissingSizeResult.issues.includes(
-      "generator-readiness row 1.generatorSubset omits observed unit-feature QNT construct(s): size.",
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): size.",
     ),
     `Expected unit-feature size construct issue, got ${JSON.stringify(unitFeatureMissingSizeResult.issues)}`,
+  );
+
+  writeFile(
+    path.join(root, unitFeatureOwnerPath),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module unitFeatureSample {",
+      "  type SampleChoice = ChoiceA | ChoiceB",
+      "  pure def chooseValue(choice: SampleChoice): int =",
+      "    match choice {",
+      "      | ChoiceA => 1",
+      "      | ChoiceB => 2",
+      "    }",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: [unitFeatureOwnerPath],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
+      generatorSubset: ["pure-def", "int", "pattern-match"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const unitFeatureNullaryVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unitFeatureNullaryVariantResult.issues.includes(
+      "generator-readiness row 1.generatorSubset omits observed QNT construct(s): variant.",
+    ),
+    `Expected unit-feature nullary variant construct issue, got ${JSON.stringify(unitFeatureNullaryVariantResult.issues)}`,
   );
   writeFile(unitFeatureObligationsPath, initialUnitFeatureObligationsText);
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
@@ -505,16 +616,47 @@ function runSelfTest() {
     ),
     `Expected missing generator-readiness issue, got ${JSON.stringify(missingGeneratorReadinessResult.issues)}`,
   );
-  assert.deepEqual(missingGeneratorReadinessResult.matrix.generatorReadinessBacklog, [
-    {
-      obligationId: "BATTLE.SAMPLE",
-      ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
-      status: "missing",
-    },
-  ]);
+  assert.deepEqual(
+    missingGeneratorReadinessResult.matrix.generatorReadinessBacklog,
+    [
+      {
+        obligationId: "BATTLE.SAMPLE",
+        ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
+        status: "missing",
+      },
+    ],
+  );
   assert.match(
     missingGeneratorReadinessResult.report,
     /\| `BATTLE\.SAMPLE` \| missing \| `sample\.qnt` \| `sample\.qnt`: semantic-core \|/,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "not-assessed",
+      semanticCore: [],
+      proofOnly: [],
+      generatorSubset: [],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const notAssessedGeneratorReadinessResult = buildKernelCoverage({ root });
+  assert.ok(
+    notAssessedGeneratorReadinessResult.issues.includes(
+      "generator-readiness row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s) cannot remain not-assessed: sample.qnt.",
+    ),
+    `Expected not-assessed generator-readiness issue, got ${JSON.stringify(notAssessedGeneratorReadinessResult.issues)}`,
+  );
+  assert.deepEqual(
+    notAssessedGeneratorReadinessResult.matrix.generatorReadinessBacklog,
+    [
+      {
+        obligationId: "BATTLE.SAMPLE",
+        ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
+        status: "not-assessed",
+      },
+    ],
   );
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
 
@@ -770,10 +912,10 @@ function runSelfTest() {
     initialGeneratorReadinessText +
       JSON.stringify({
         obligationId: "BATTLE.MULTI",
-        status: "not-assessed",
-        semanticCore: [],
+        status: "semantic-core-candidate",
+        semanticCore: ["multi.qnt"],
         proofOnly: [],
-        generatorSubset: [],
+        generatorSubset: ["record"],
         blockedBy: [],
       }) +
       "\n",
@@ -796,16 +938,9 @@ function runSelfTest() {
   );
   const multiRuntimeWitnessResult = buildKernelCoverage({ root });
   assert.deepEqual(multiRuntimeWitnessResult.issues, []);
-  assert.deepEqual(multiRuntimeWitnessResult.matrix.generatorReadinessBacklog, [
-    {
-      obligationId: "BATTLE.MULTI",
-      ownerRoles: [{ ownerPath: "multi.qnt", role: "semantic-core" }],
-      status: "not-assessed",
-    },
-  ]);
-  assert.match(
-    multiRuntimeWitnessResult.report,
-    /\| `BATTLE\.MULTI` \| not-assessed \| `multi\.qnt` \| `multi\.qnt`: semantic-core \|/,
+  assert.deepEqual(
+    multiRuntimeWitnessResult.matrix.generatorReadinessBacklog,
+    [],
   );
   writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
