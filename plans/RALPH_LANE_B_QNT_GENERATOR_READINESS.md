@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Harden run-block scanner expectations"
     },
     {
@@ -310,7 +310,7 @@ Acceptance: future Ralph work can start without rereading historical lanes.
 
 ### Task 13 - QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING - Harden run-block scanner expectations
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: REPORT run-block section and checker scanner code.
 
