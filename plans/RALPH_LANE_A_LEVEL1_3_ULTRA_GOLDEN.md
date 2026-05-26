@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit level 1-3 follow-up splits for claim-gate correctness"
     },
     {
@@ -263,7 +263,7 @@ claim gate in the self-test shape.
 
 ### Task 7 - L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT - Audit level 1-3 follow-up splits for claim-gate correctness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: six current `blocked-follow-up-split` rows in
 `LEVEL1_3_FULL_SUPPORT.md`.
