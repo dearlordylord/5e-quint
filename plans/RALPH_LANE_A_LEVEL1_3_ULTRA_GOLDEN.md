@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add regression coverage for deferred selected-identity disposition"
     },
     {
@@ -250,7 +250,7 @@ with a concrete missing scenario.
 
 ### Task 6 - L13UG-A06-MIND-SPIKE-REGRESSION-GATE - Add regression coverage for deferred selected-identity disposition
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: checker code and self-tests around selected-identity dispositions.
 
