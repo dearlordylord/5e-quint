@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "QNTGR-B06-CREATION-CHOICE-CARDINALITY-ASSESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess creation choice discovery cardinality readiness"
     },
     {
@@ -223,7 +223,7 @@ Acceptance: no `not-assessed` row remains for fill-batch slice replay.
 
 ### Task 6 - QNTGR-B06-CREATION-CHOICE-CARDINALITY-ASSESS - Assess creation choice discovery cardinality readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `CREATION.CHOICE_DISCOVERY_CARDINALITY`,
 character creation slice QNT, owner-role rows, and current run-block outcome.
