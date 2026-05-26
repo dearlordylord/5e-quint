@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "QNTGR-B08-NOT-ASSESSED-ZERO-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add or verify zero not-assessed gate"
     },
     {
@@ -246,7 +246,7 @@ remaining blocker rows.
 
 ### Task 8 - QNTGR-B08-NOT-ASSESSED-ZERO-GATE - Add or verify zero not-assessed gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: checker logic and self-tests.
 
