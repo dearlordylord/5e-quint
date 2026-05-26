@@ -275,6 +275,14 @@ MBT/parity evidence, and MCP scenario evidence. The checker does not publish a
 blended ultra-golden percentage; every layer must pass explicitly before the
 aggregate can pass.
 
+Full-support reports deliberately separate gate facts from diagnostic
+product-readiness accounting. A support-completeness claim blocks on open strict
+rows, selected-identity blockers, and SRD-authored product-readiness blockers.
+The broader product-readiness percentage is a source-row planning diagnostic;
+it can be below 100% while the strict claim passes when those blocker counts are
+zero. Turning a diagnostic status into a blocker requires an explicit checker
+gate change and self-test coverage.
+
 ## Done-State Gate
 
 Any task that adds or changes `UNIT-IDENTITY-EVIDENCE`, `unit-claims.jsonl`,
@@ -293,6 +301,12 @@ When a Unit supports only an executable subset of the SRD text, use
 `profile-subset-supported` and list both `supportedMechanics` and
 `deferredMechanics` with follow-up task ids. Do not hide omitted SRD clauses
 behind a full `supported-profile` claim just because catalog admission passes.
+
+The rules-kernel join includes profiles that have a rules-kernel profile kind
+and either QNT owners or an explicit `profile-obligations.jsonl` mapping.
+Projection-only Character Creation and Character Sheet profiles with runtime
+tests but no QNT owner stay in the Unit/profile evidence lane until a task adds
+an actual QNT-connected obligation.
 
 The generated report includes a `Metric Semantics` section, and
 `unit-matrix.json` includes the same definitions under `metricSemantics`.

@@ -15,6 +15,7 @@
         "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
         "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+        "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
         "srd521:classes/barbarian:level-3:subclass-selection:barbarian_subclass",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -131,6 +132,7 @@
         "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
+        "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
         "srd521:classes/sorcerer:level-3:subclass-selection:sorcerer_subclass",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
@@ -162,6 +164,7 @@
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
         "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
         "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells",
         "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
@@ -177,8 +180,10 @@
         "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing",
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
+        "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
+        "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
         "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells",
         "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
         "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells",
@@ -225,24 +230,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 577,
-      "percent": "95.1%",
+      "numerator": 580,
+      "percent": "95.6%",
       "rowsByStatus": {
-        "accepted": 416,
+        "accepted": 419,
         "accepted-no-battle-effect": 161,
-        "owner-evidence-required": 18,
+        "owner-evidence-required": 15,
         "partial-battle-runtime": 11,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 35,
-      "percent": "68.6%",
+      "numerator": 38,
+      "percent": "74.5%",
       "rowsByStatus": {
-        "accepted": 21,
-        "owner-evidence-required": 16,
-        "accepted-no-battle-effect": 14
+        "accepted": 24,
+        "accepted-no-battle-effect": 14,
+        "owner-evidence-required": 13
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -269,10 +274,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 21,
-      "level-3-follow-up-required": 15,
+      "catalog-installed-owner-evidence-present": 24,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
+      "level-3-follow-up-required": 12,
       "catalog-installed-owner-evidence-required": 1
     },
     "levelThreeClassRowsByCategory": {
@@ -282,14 +287,14 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 452,
+      "catalog-installed-owner-evidence-present": 455,
       "non-runtime": 36,
-      "level-3-follow-up-required": 15,
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-authored-executable-follow-up": 5,
+      "level-3-follow-up-required": 12,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -4177,16 +4182,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "barbarian_primal_knowledge",
+        "sourceRecordPath": "packages/surface/content/barbarian_primal_knowledge.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_primal_knowledge"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_primal_knowledge is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L13UG-A15 Character Creation class-feature source fact and proficiency choice projection; Barbarian Primal Knowledge is retained from the level-3 Barbarian class feature grant. Character Creation discovers the one-skill proficiency choice from the installed Surface grant_proficiency fact over the Barbarian level-1 skill list and finalizes the selected skill through the existing proficiency choice projection without duplicating skill state.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-3:class-table-summary:barbarian_level_3_feature_table_row",
@@ -22132,16 +22151,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_second_story_work",
+        "sourceRecordPath": "packages/surface/content/rogue_second_story_work.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_second_story_work"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_second_story_work is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L13UG-A15 Character Sheet linked-Speed and jump-distance projections; Rogue Second-Story Work is read from the selected Thief subclass feature grants and projected by Character Sheet as a Climb Speed linked to walk Speed plus an optional Dexterity-for-Strength jump-distance ability substitution. The linked Speed remains a source link rather than a copied numeric Speed.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
@@ -22963,16 +22996,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_draconic_resilience",
+        "sourceRecordPath": "packages/surface/content/sorcerer_draconic_resilience.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_draconic_resilience"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Draconic Resilience as durable Character Sheet facts: Hit Point Maximum increases by 3 at acquisition and by 1 for each later Sorcerer level, and unarmored base Armor Class equals 10 plus Dexterity and Charisma modifiers with the existing explicit base-formula selection boundary.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_draconic_resilience is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L13UG-A15 Character Creation Hit Point maximum projection; Sorcerer Draconic Resilience is retained only from the selected level-3 Draconic Sorcery subclass feature grants. Character Creation derives the Hit Point maximum bonus from the installed Surface modify_max_hp class-level scaling fact and the existing Sorcerer class level, without storing a parallel Hit Point table.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:level-3:class-table-summary:sorcerer_level_3_feature_table_row",

@@ -21,6 +21,10 @@
     {
       "level": 1,
       "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "level": 3,
+      "unitId": "barbarian_primal_knowledge"
     }
   ],
   "hitPointDie": 12,

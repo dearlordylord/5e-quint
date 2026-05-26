@@ -3,7 +3,9 @@ let draconicSorcery =
       , description =
           "The Draconic Sorcery Sorcerer subclass choice. Subclass feature Units are modeled separately from the choice boundary."
       , featureGrants =
-          [ { level = 3, unitId = "sorcerer_draconic_spells" } ]
+          [ { level = 3, unitId = "sorcerer_draconic_resilience" }
+          , { level = 3, unitId = "sorcerer_draconic_spells" }
+          ]
       , id = "subclass_sorcerer_draconic_sorcery"
       , kind = "subclass"
       , name = "Draconic Sorcery"

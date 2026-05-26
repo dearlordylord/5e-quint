@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 577/607 (95.1%)
+- Accepted: 580/607 (95.6%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 416
+- accepted: 419
 - accepted-no-battle-effect: 161
 - battle-runtime-required: 1
-- owner-evidence-required: 18
+- owner-evidence-required: 15
 - partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 35/51 (68.6%)
+- Accepted: 38/51 (74.5%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 21
+- accepted: 24
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 16
+- owner-evidence-required: 13
 
 ### Spell-Level-3 Battle Readiness
 
@@ -95,10 +95,10 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 21
+- catalog-installed-owner-evidence-present: 24
 - catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 2
-- level-3-follow-up-required: 15
+- level-3-follow-up-required: 12
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Category
@@ -429,7 +429,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 | Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 |Barbarian Frenzy|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:178|
-|Barbarian Primal Knowledge|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.|.references/srd-5.2.1/Classes/Barbarian.md:102|
+|Barbarian Primal Knowledge|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:102|
 |Barbarian level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:37|
 |Barbarian Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:98|
 |Bard Bonus Proficiencies|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: character-creation-runtime proficiency-choice projection and future subclass progression admission||The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.|.references/srd-5.2.1/Classes/Bard.md:328|
@@ -463,11 +463,11 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Ranger level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:37|
 |Ranger Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:102|
 |Rogue Fast Hands|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Fast Hands as a split between a Bonus Action action-economy permission, runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action support, and Magic Item Magic Action support that reuses item-owned activation facts instead of adding Thief-specific item execution state.|.references/srd-5.2.1/Classes/Rogue.md:159|
-|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.|.references/srd-5.2.1/Classes/Rogue.md:167|
+|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:167|
 |Rogue Steady Aim|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.|.references/srd-5.2.1/Classes/Rogue.md:89|
 |Rogue level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:38|
 |Rogue Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:85|
-|Sorcerer Draconic Resilience|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Draconic Resilience as durable Character Sheet facts: Hit Point Maximum increases by 3 at acquisition and by 1 for each later Sorcerer level, and unarmored base Armor Class equals 10 plus Dexterity and Charisma modifiers with the existing explicit base-formula selection boundary.|.references/srd-5.2.1/Classes/Sorcerer.md:413|
+|Sorcerer Draconic Resilience|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:413|
 |Sorcerer level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:37|
 |Sorcerer Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:119|
 |Sorcerer Draconic Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future subclass Spell Access progression owner|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:419|

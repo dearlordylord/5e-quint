@@ -3034,7 +3034,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 121,
+      "count": 124,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3045,6 +3045,7 @@
         "bane",
         "barbarian_danger_sense",
         "barbarian_frenzy",
+        "barbarian_primal_knowledge",
         "barbarian_rage",
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
@@ -3129,6 +3130,7 @@
         "resistance",
         "rogue_cunning_action",
         "rogue_expertise",
+        "rogue_second_story_work",
         "rogue_sneak_attack",
         "rogue_weapon_mastery",
         "sacred_flame",
@@ -3143,6 +3145,7 @@
         "shining_smite",
         "shocking_grasp",
         "sleep",
+        "sorcerer_draconic_resilience",
         "sorcerer_innate_sorcery",
         "sorcerous_burst",
         "spare_the_dying",
@@ -3268,13 +3271,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 577,
-      "percent": "95.1%",
+      "numerator": 580,
+      "percent": "95.6%",
       "rowsByStatus": {
-        "accepted": 416,
+        "accepted": 419,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 18,
+        "owner-evidence-required": 15,
         "partial-battle-runtime": 11
       }
     },
@@ -3289,18 +3292,18 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 123,
+      "numerator": 123,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 182,
-      "numerator": 121,
-      "percent": "66.5%"
+      "denominator": 185,
+      "numerator": 124,
+      "percent": "67%"
     },
     "strictTargetClosure": {
-      "denominator": 182,
-      "numerator": 182,
+      "denominator": 185,
+      "numerator": 185,
       "percent": "100%"
     }
   },
@@ -3328,25 +3331,7 @@
     ],
     "noMatrixSrdPressure": [
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Barbarian Primal Knowledge",
-            "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 107,
-              "lineStart": 102,
-              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
-          }
-        ],
-        "unitId": "barbarian_primal_knowledge"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3364,7 +3349,7 @@
         "unitId": "cleric_disciple_of_life"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3383,7 +3368,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3414,7 +3399,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3456,7 +3441,7 @@
         "unitId": "disguise_self"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3475,7 +3460,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3494,7 +3479,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3536,7 +3521,7 @@
         "unitId": "elementalism"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3555,7 +3540,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3574,7 +3559,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3605,7 +3590,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3648,7 +3633,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3703,7 +3688,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3770,7 +3755,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3824,7 +3809,7 @@
         "unitId": "message"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3842,7 +3827,7 @@
         "unitId": "monk_open_hand_technique"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3860,7 +3845,7 @@
         "unitId": "paladin_channel_divinity"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3879,7 +3864,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3934,7 +3919,7 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3976,7 +3961,7 @@
         "unitId": "purify_food_and_drink"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3994,7 +3979,7 @@
         "unitId": "ranger_hunters_lore"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4012,7 +3997,7 @@
         "unitId": "ranger_hunters_prey"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4030,25 +4015,7 @@
         "unitId": "rogue_fast_hands"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Rogue Second-Story Work",
-            "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 174,
-              "lineStart": 167,
-              "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
-          }
-        ],
-        "unitId": "rogue_second_story_work"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4066,26 +4033,8 @@
         "unitId": "rogue_steady_aim"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Sorcerer Draconic Resilience",
-            "id": "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 418,
-              "lineStart": 413,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          }
-        ],
-        "unitId": "sorcerer_draconic_resilience"
-      },
-      {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
-        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4127,7 +4076,7 @@
         "unitId": "unseen_servant"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4145,7 +4094,7 @@
         "unitId": "warlock_dark_ones_blessing"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -6282,8 +6231,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 121,
-        "numerator": 121,
+        "denominator": 123,
+        "numerator": 123,
         "percent": "100%"
       }
     },
@@ -6471,6 +6420,26 @@
           }
         ],
         "unitId": "barbarian_frenzy"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+              }
+            ],
+            "profileId": "character-creation.class-feature-source-fact-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "barbarian_primal_knowledge"
       },
       {
         "joinStatus": "covered",
@@ -9337,6 +9306,26 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+              }
+            ],
+            "profileId": "character-sheet.armor-class-base-formula",
+            "profileKind": "character-sheet",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "sorcerer_draconic_resilience"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -9754,14 +9743,16 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 152,
-      "numerator": 152,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "readyRowsByStatus": {
+      "not-applicable": 3,
       "witness-present": 152
     },
     "rowsByStatus": {
+      "not-applicable": 3,
       "not-required": 30,
       "witness-present": 152
     }
@@ -10164,8 +10155,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 3",
         "metrics": {
-          "denominator": 43,
-          "numerator": 43,
+          "denominator": 44,
+          "numerator": 44,
           "percent": "100%"
         },
         "rows": [
@@ -10195,6 +10186,15 @@
             "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
             "status": "installed",
             "unitId": "barbarian_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-3",
+            "sourceRecordPath": "packages/surface/content/barbarian_primal_knowledge.json",
+            "status": "installed",
+            "unitId": "barbarian_primal_knowledge"
           },
           {
             "kind": "class_feature",
@@ -10558,7 +10558,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 43
+          "installed": 44
         }
       },
       {
@@ -10635,8 +10635,8 @@
       }
     ],
     "metrics": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -10645,7 +10645,7 @@
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
       "profile-subset-supported": 31,
-      "supported-profile": 121,
+      "supported-profile": 124,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
@@ -10655,9 +10655,9 @@
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 5,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 121
+      "supported-profile": 124
     },
     "nonSupportedFrontier": 61,
-    "strictDenominator": 182
+    "strictDenominator": 185
   }
 }

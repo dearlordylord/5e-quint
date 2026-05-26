@@ -1,0 +1,54 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "sorcerer",
+  "description": "Your Hit Point maximum increases by 3, and it increases by 1 again whenever you gain another Sorcerer level. While you aren't wearing armor, your base Armor Class equals 10 plus your Dexterity and Charisma modifiers.",
+  "id": "sorcerer_draconic_resilience",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "axis": "class",
+              "base": {
+                "dice": 0,
+                "dieSize": 1,
+                "flat": 3
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "flat": 1
+              },
+              "startingAtLevel": 3
+            },
+            "direction": "increase",
+            "kind": "modify_max_hp"
+          }
+        ]
+      },
+      {
+        "condition": {
+          "kind": "unarmored"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "formula": {
+              "base": 10,
+              "kind": "base_plus_dex_cha"
+            },
+            "kind": "modify_ac_set_base"
+          }
+        ]
+      }
+    ]
+  },
+  "name": "Draconic Resilience",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Sorcerer#Draconic Resilience"
+  }
+}

@@ -14,27 +14,29 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 121/182 (66.5%) |
-| Strict target closure | 182/182 (100%) |
-| Selected identity readiness | 152/152 (100%) |
-| Product readiness | 577/607 (95.1%) |
-| SRD authored product readiness | 76/76 (100%) |
+| Strict runtime/profile support | 124/185 (67%) |
+| Strict target closure | 185/185 (100%) |
+| Selected identity readiness | 155/155 (100%) |
+| Diagnostic product readiness | 580/607 (95.6%) |
+| SRD authored product readiness | 77/77 (100%) |
 | Rules-kernel profile join | 94/94 (100%) |
 | Rules-kernel covered profile join | 94/94 (100%) |
-| Supported Unit rules-kernel chain | 121/121 (100%) |
+| Supported Unit rules-kernel chain | 123/123 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-### Product Readiness Accounting
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 580/607 (95.6%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
-Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+### Diagnostic Product Readiness Accounting
+
+Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 416 |
+| accepted | 419 |
 | accepted-no-battle-effect | 161 |
 | battle-runtime-required | 1 |
-| owner-evidence-required | 18 |
+| owner-evidence-required | 15 |
 | partial-battle-runtime | 11 |
 
 ### Selected Identity Replay Accounting
@@ -43,6 +45,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
+| not-applicable | 3 |
 | not-required | 30 |
 | witness-present | 152 |
 
@@ -56,11 +59,11 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
-| Strict runtime/profile closure | pass | 182/182 (100%) | _none_ |
-| Selected identity readiness | pass | 152/152 (100%) | _none_ |
-| SRD authored product readiness | pass | 76/76 (100%) | _none_ |
+| Strict runtime/profile closure | pass | 185/185 (100%) | _none_ |
+| Selected identity readiness | pass | 155/155 (100%) | _none_ |
+| SRD authored product readiness | pass | 77/77 (100%) | _none_ |
 
-Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
+Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
 ## SRD-Authored Product Readiness
 
@@ -73,7 +76,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 3 | complete | 43/43 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 3 | complete | 44/44 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -95,16 +98,16 @@ This gate checks authored records and retained Unit references that must resolve
 | --- | ---: |
 | Candidate Unit ids before exclusions | 224 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 29 |
+| SRD pressure with no Unit matrix row | 26 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 182 |
+| Strict executable denominator | 185 |
 | Non-supported frontier | 61 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 121 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 124 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 34 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `comprehend_languages`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `pass_without_trace`, `rope_trick`, `silence`, `silent_image`, `speak_with_animals`, `spike_growth`, `suggestion`, `thaumaturgy`, `zone_of_truth` |
 | closed-later-level-only | 11 | `barbarian_weapon_mastery`, `bard_expertise`, `cleric_life_domain_spells`, `fighter_weapon_mastery`, `paladin_fighting_style`, `paladin_oath_of_devotion_spells`, `ranger_favored_enemy`, `ranger_fighting_style`, `sorcerer_draconic_spells`, `warlock_fiend_spells`, `wizard_evocation_savant` |
 | blocked-follow-up-split | 6 | `acid_arrow`, `darkness`, `druid_wild_shape`, `enhance_ability`, `moonbeam`, `sorcerer_metamagic` |
@@ -221,32 +224,29 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Source rows | Reason | Adopted decision artifact | Concepts |
 | --- | ---: | --- | --- | --- |
-| `barbarian_primal_knowledge` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Barbarian Primal Knowledge |
-| `cleric_disciple_of_life` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric Disciple of Life |
-| `cleric_preserve_life` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric Preserve Life |
-| `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
-| `disguise_self` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
-| `druid_lands_aid` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Land's Aid |
-| `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
-| `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `fighter_remarkable_athlete` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Fighter Remarkable Athlete |
-| `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
-| `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
-| `illusory_script` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `mage_hand` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
-| `mending` | 5 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
-| `message` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
-| `monk_open_hand_technique` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Monk Open Hand Technique |
-| `paladin_channel_divinity` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Paladin Channel Divinity |
-| `paladin_sacred_weapon` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Paladin Sacred Weapon |
-| `prestidigitation` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
-| `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
-| `ranger_hunters_lore` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Ranger Hunter's Lore |
-| `ranger_hunters_prey` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Ranger Hunter's Prey |
-| `rogue_fast_hands` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Rogue Fast Hands |
-| `rogue_second_story_work` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Rogue Second-Story Work |
-| `rogue_steady_aim` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Rogue Steady Aim |
-| `sorcerer_draconic_resilience` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer Draconic Resilience |
-| `unseen_servant` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
-| `warlock_dark_ones_blessing` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Warlock Dark One's Blessing |
-| `wizard_potent_cantrip` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Wizard Potent Cantrip |
+| `cleric_disciple_of_life` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Cleric Disciple of Life |
+| `cleric_preserve_life` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Cleric Preserve Life |
+| `create_or_destroy_water` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
+| `disguise_self` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
+| `druid_lands_aid` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Druid Land's Aid |
+| `druidcraft` | 1 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
+| `elementalism` | 3 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
+| `fighter_remarkable_athlete` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Fighter Remarkable Athlete |
+| `floating_disk` | 1 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
+| `goodberry` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
+| `illusory_script` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
+| `mage_hand` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
+| `mending` | 5 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
+| `message` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
+| `monk_open_hand_technique` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Monk Open Hand Technique |
+| `paladin_channel_divinity` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Paladin Channel Divinity |
+| `paladin_sacred_weapon` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Paladin Sacred Weapon |
+| `prestidigitation` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
+| `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
+| `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Ranger Hunter's Lore |
+| `ranger_hunters_prey` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Ranger Hunter's Prey |
+| `rogue_fast_hands` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Rogue Fast Hands |
+| `rogue_steady_aim` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Rogue Steady Aim |
+| `unseen_servant` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
+| `warlock_dark_ones_blessing` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Warlock Dark One's Blessing |
+| `wizard_potent_cantrip` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Wizard Potent Cantrip |

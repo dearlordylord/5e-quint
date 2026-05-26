@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -22,11 +23,14 @@ import type {
   Ability,
   ArmorTrainingCategory,
   ClassFeatureRecord,
+  DiceExpr,
+  DiceExprDelta,
   ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
   EffectAtom,
+  PassiveMechanics,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
@@ -35,6 +39,7 @@ import {
 } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
+  classUnitId,
   classLevelForUnit,
   progressionClassUnitIds,
   progressionClassLevels,
@@ -203,6 +208,10 @@ type BackgroundAbilityScoreIncreaseDelta = {
 
 type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
 type FinalizationIssues = NonEmptyReadonlyArray<CreationFinalizationIssue>;
+type HitPointMaximumDelta = Extract<
+  EffectAtom,
+  { readonly kind: "modify_max_hp" }
+>["delta"];
 
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
@@ -825,7 +834,7 @@ function fixedHitPointsAfterLevelOne(
 }
 
 export function characterBuildHitPoints(
-  build: Pick<CharacterBuild, "progression" | "abilityScores">,
+  build: Pick<CharacterBuild, "progression" | "abilityScores" | "features">,
   unitLibrary: UnitCatalog,
 ): Either.Either<CharacterBuildHitPoints, FinalizationIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
@@ -847,6 +856,14 @@ export function characterBuildHitPoints(
     ]);
   }
 
+  const classFeatureMaximumBonus = classFeatureHitPointMaximumBonus(
+    build,
+    unitLibrary,
+  );
+  if (Either.isLeft(classFeatureMaximumBonus)) {
+    return Either.left(classFeatureMaximumBonus.left);
+  }
+
   const maximum =
     startingClassFacts.hitPointDie +
     abilityModifier(build.abilityScores.con) +
@@ -859,7 +876,8 @@ export function characterBuildHitPoints(
               facts.hitPointDie,
               build.abilityScores.con,
             );
-    }, 0);
+    }, 0) +
+    classFeatureMaximumBonus.right;
 
   return Either.right({
     maximum: hp(maximum),
@@ -876,6 +894,99 @@ export function characterBuildHitPoints(
           ];
     }),
   });
+}
+
+function classFeatureHitPointMaximumBonus(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+): Either.Either<number, FinalizationIssues> {
+  let total = 0;
+  const issues: CreationFinalizationIssue[] = [];
+
+  for (const featureUnitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = unitLibrary.getUnit(featureUnitId);
+    if (Option.isNone(unit)) {
+      issues.push(
+        illegalFinalizationIssue(
+          `Cannot derive hit point maximum bonus without class-feature Unit: ${featureUnitId}.`,
+        ),
+      );
+      continue;
+    }
+    if (unit.value.kind !== "class_feature") continue;
+    const classUnit = classUnitId(`class_${unit.value.className}`);
+    const classLevel = classLevelForUnit(build.progression, classUnit);
+    const components: PassiveMechanics[] =
+      unit.value.mechanics.family === "composite"
+        ? unit.value.mechanics.parts.filter(
+            (part): part is PassiveMechanics => part.family === "passive",
+          )
+        : unit.value.mechanics.family === "passive"
+          ? [unit.value.mechanics]
+          : [];
+
+    for (const component of components) {
+      for (const grant of component.grants) {
+        if (grant.kind !== "modify_max_hp" || grant.direction !== "increase") {
+          continue;
+        }
+        const bonus = deterministicHitPointMaximumDelta(
+          grant.delta,
+          classLevel,
+        );
+        if (bonus === undefined) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Class-feature Hit Point maximum bonus on Unit ${featureUnitId} must be a deterministic flat amount.`,
+            ),
+          );
+          continue;
+        }
+        total += bonus;
+      }
+    }
+  }
+
+  const collectedIssues = nonEmptyReadonlyArray(issues);
+  return collectedIssues === undefined
+    ? Either.right(total)
+    : Either.left(collectedIssues);
+}
+
+function deterministicHitPointMaximumDelta(
+  delta: HitPointMaximumDelta,
+  classLevel: number,
+): number | undefined {
+  return Match.value(delta).pipe(
+    Match.when({ kind: "fixed" }, (fixed) =>
+      deterministicFlatDiceExpr(fixed.expr),
+    ),
+    Match.when({ kind: "linear_per_level" }, (linear) => {
+      if (linear.axis !== "class") return undefined;
+      const base = deterministicFlatDiceExpr(linear.base);
+      const perLevel = deterministicFlatDiceDelta(linear.perLevel);
+      if (base === undefined || perLevel === undefined) return undefined;
+      return (
+        base +
+        Math.max(0, classLevel - linear.startingAtLevel) * perLevel
+      );
+    }),
+    Match.when({ kind: "threshold_tiers" }, () => undefined),
+    Match.when({ kind: "threshold_tiers_exploding_max_die" }, () => undefined),
+    Match.when({ kind: "resource_spent" }, () => undefined),
+    Match.when({ kind: "proficiency_bonus" }, () => undefined),
+    Match.when({ kind: "resource_spent_linear" }, () => undefined),
+    Match.when({ kind: "linked" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function deterministicFlatDiceExpr(amount: DiceExpr): number | undefined {
+  return amount.dice === 0 ? (amount.flat ?? 0) : undefined;
+}
+
+function deterministicFlatDiceDelta(amount: DiceExprDelta): number | undefined {
+  return (amount.dice ?? 0) === 0 ? (amount.flat ?? 0) : undefined;
 }
 
 export function characterBuildProficiencies(
@@ -1512,6 +1623,10 @@ function supportedFinalizationChoiceHoles(input: {
         ownedSkillProficiencies: selectedSkillProficiencies(
           input.selections,
           input.unitLibrary,
+          (selection) =>
+            selection.kind === "unitChoice" &&
+            selection.source.unitId === grant.unitId &&
+            selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         ),
       }),
     )
@@ -1694,6 +1809,11 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
             ownedSkillProficiencies: selectedSkillProficiencies(
               input.selections,
               input.unitLibrary,
+              (selection) =>
+                selection.kind === "unitChoice" &&
+                selection.source.unitId === grant.unitId &&
+                selection.source.choiceKey ===
+                  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
             ),
           }),
         )
@@ -3021,6 +3141,9 @@ function expertiseSubjectsForSelection(
 function selectedSkillProficiencies(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
 ): readonly Skill[] {
   const backgroundSkills = backgroundSkillProficiencies(
     selections.background,
@@ -3029,8 +3152,9 @@ function selectedSkillProficiencies(
   const selectedSkills = skillProficienciesFromChoiceSelections(
     selections.choices,
     (selection) =>
-      selection.kind === "unitChoice" &&
-      isGrantExpertiseSelection(selection, unitLibrary),
+      shouldIgnoreSelection(selection) ||
+      (selection.kind === "unitChoice" &&
+        isGrantExpertiseSelection(selection, unitLibrary)),
   );
 
   return uniqueValues([...backgroundSkills, ...selectedSkills]);

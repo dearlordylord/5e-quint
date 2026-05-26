@@ -55,6 +55,8 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "grant_bonus_action_attack"
       | "replace_damage_die"
       | "substitute_ability_for_rolls"
+      | "offer_ability_substitution_for_ability_checks"
+      | "offer_ability_substitution_for_jump_distance"
       | "grant_magic_weapon_enhancement"
       | "grant_condition_immunity"
       | "suppress_condition_benefit"
@@ -456,6 +458,31 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "substitute_ability_for_rolls",
         label: `substitute_ability_for_rolls\n${e.use} for ${e.replaces}\n${e.on.join(", ")}\n${e.scope}`,
+      });
+      return id;
+    }
+    case "offer_ability_substitution_for_ability_checks": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "offer_ability_substitution_for_ability_checks",
+        label:
+          `offer_ability_substitution_for_ability_checks\nuse ${e.use}` +
+          `\n${e.skillFilter.skills.join(", ")}` +
+          (e.requiredActiveFeature === undefined
+            ? ""
+            : `\nrequires active ${e.requiredActiveFeature.unitId}`),
+      });
+      return id;
+    }
+    case "offer_ability_substitution_for_jump_distance": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "offer_ability_substitution_for_jump_distance",
+        label: `offer_ability_substitution_for_jump_distance\n${e.use} for ${e.replaces}`,
       });
       return id;
     }

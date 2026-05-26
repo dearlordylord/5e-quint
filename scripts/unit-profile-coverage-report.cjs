@@ -45,6 +45,10 @@ function stable(value) {
   return value;
 }
 
+function md(value) {
+  return String(value).replace(/\|/g, "\\|").replace(/\n/g, "<br>");
+}
+
 function percent(numerator, denominator) {
   if (denominator === 0) return "n/a";
   return `${Math.round((numerator / denominator) * 1000) / 10}%`;
@@ -140,29 +144,29 @@ const metricDefinitions = [
     label: "Rules-kernel profile join coverage",
     kind: "coverage",
     planningQuestion:
-      "Do reducer-owned mechanics profiles point to rules-kernel semantic obligations?",
+      "Do rules-kernel-admitted mechanics profiles point to rules-kernel semantic obligations?",
     numerator:
       "rules-kernel-applicable profile records with at least one profile-obligation mapping",
     denominator:
-      "profile records whose kind carries reducer-owned semantics",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
   },
   {
     key: "rulesKernelCoveredProfileCoverage",
     label: "Rules-kernel covered profile coverage",
     kind: "coverage",
     planningQuestion:
-      "Do reducer-owned mechanics profiles point to covered rules-kernel obligations?",
+      "Do rules-kernel-admitted mechanics profiles point to covered rules-kernel obligations?",
     numerator:
       "rules-kernel-applicable profile records whose mapped obligations are all covered",
     denominator:
-      "profile records whose kind carries reducer-owned semantics",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
   },
   {
     key: "rulesKernelSupportedUnitCoverage",
     label: "Supported Unit rules-kernel chain coverage",
     kind: "coverage",
     planningQuestion:
-      "Do supported Unit identities have every reducer-owned profile connected to covered rules-kernel obligations?",
+      "Do supported Unit identities have every rules-kernel-admitted profile connected to covered rules-kernel obligations?",
     numerator:
       "supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations",
     denominator:
@@ -1125,7 +1129,7 @@ function renderReport(
     "",
     "## Rules-Kernel Join",
     "",
-    "The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join from supported mechanics profiles to QNT-connected rules-kernel obligations.",
+    "The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join from rules-kernel-admitted mechanics profiles to QNT-connected rules-kernel obligations. Projection-only Character Creation and Character Sheet profiles with no QNT owner and no explicit profile-obligation mapping remain covered by their profile runtime evidence rather than this rules-kernel chain.",
     "",
     "| Join status | Profile count | Profiles |",
     "| --- | ---: | --- |",

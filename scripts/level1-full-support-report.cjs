@@ -962,14 +962,31 @@ function noMatrixDecisionArtifactPath(unitId, root) {
   return artifactPath;
 }
 
+function noMatrixPressureSourceDescription(sourceRows) {
+  const rowKinds = new Set(sourceRows.map((row) => row.rowKind));
+  const levelBands = Array.from(
+    new Set(sourceRows.map((row) => row.levelBand)),
+  ).sort();
+  const levelBandLabel = levelBands.join("/");
+
+  if (rowKinds.size === 1 && rowKinds.has("spell-unit-pressure")) {
+    return `${levelBandLabel} spell-list Unit pressure`;
+  }
+  if (rowKinds.size === 1 && rowKinds.has("class-feature-grant")) {
+    return `${levelBandLabel} class-feature pressure`;
+  }
+  return `${levelBandLabel} SRD pressure`;
+}
+
 function noMatrixSrdPressureRow(unitId, sourceRows, root) {
   const decisionArtifact = noMatrixDecisionArtifactPath(unitId, root);
+  const pressureSource = noMatrixPressureSourceDescription(sourceRows);
   return outsideRow(unitId, sourceRows, {
     ...(decisionArtifact === undefined ? {} : { decisionArtifact }),
     reason:
       decisionArtifact === undefined
-        ? "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet."
-        : "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+        ? `The SRD row has ${pressureSource}, but no Unit matrix row exists yet.`
+        : `The SRD row has ${pressureSource} and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.`,
   });
 }
 
@@ -1320,6 +1337,10 @@ function renderSelectedIdentityBlockerRows(rows) {
       );
 }
 
+function renderClaimDiagnosticSeparation(report) {
+  return `The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the claim gate reports **${report.claimGate.status}** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.`;
+}
+
 function renderStrictFullSupport(report, scope) {
   return `${[
     `# ${scope.outputTitle}`,
@@ -1341,7 +1362,7 @@ function renderStrictFullSupport(report, scope) {
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
     `| Selected identity readiness | ${renderMetric(report.selectedIdentityReadiness.metrics)} |`,
-    `| Product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
+    `| Diagnostic product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
     `| SRD authored product readiness | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} |`,
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
@@ -1349,9 +1370,11 @@ function renderStrictFullSupport(report, scope) {
     "",
     "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
     "",
-    "### Product Readiness Accounting",
+    renderClaimDiagnosticSeparation(report),
     "",
-    "Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.",
+    "### Diagnostic Product Readiness Accounting",
+    "",
+    "Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.",
     "",
     "| Status | Rows |",
     "| --- | ---: |",
@@ -1381,7 +1404,7 @@ function renderStrictFullSupport(report, scope) {
     "| --- | --- | ---: | --- |",
     ...renderFullSupportGateRows(report),
     "",
-    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.",
+    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.",
     "",
     "## SRD-Authored Product Readiness",
     "",

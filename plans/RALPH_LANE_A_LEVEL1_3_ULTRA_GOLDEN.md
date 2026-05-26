@@ -55,48 +55,78 @@
     {
       "number": 9,
       "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Tighten claim-gate wording around diagnostics"
     },
     {
       "number": 10,
       "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify generated report consistency after scope admission"
     },
     {
       "number": 11,
       "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit supported Unit to rules-kernel join for level 1-3"
     },
     {
       "number": 12,
       "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit SRD pressure rows with no Unit matrix row"
     },
     {
       "number": 13,
       "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "RAW audit closed runtime-detached dispositions in level 1-3"
     },
     {
       "number": 14,
       "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extend checker self-tests for level 1-3 ultra-golden failures"
     },
     {
       "number": 15,
-      "id": "L13UG-A15-LEVEL13-CLOSEOUT",
+      "id": "L13UG-A15-L3-DURABLE-ABILITY-UNITS",
+      "status": "done",
+      "title": "Admit missing durable and ability-check level-3 feature Units"
+    },
+    {
+      "number": 16,
+      "id": "L13UG-A16-L3-HEAL-DAMAGE-UNITS",
+      "status": "ready-for-research",
+      "title": "Admit missing heal and damage level-3 feature Units"
+    },
+    {
+      "number": 17,
+      "id": "L13UG-A17-L3-RESOURCE-ACTION-UNITS",
+      "status": "ready-for-research",
+      "title": "Admit missing resource and action level-3 feature Units"
+    },
+    {
+      "number": 18,
+      "id": "L13UG-A18-L3-ATTACK-MOVEMENT-UNITS",
+      "status": "ready-for-research",
+      "title": "Admit missing attack and movement level-3 feature Units"
+    },
+    {
+      "number": 19,
+      "id": "L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Promote or block Suggestion Charmed lifecycle subset"
+    },
+    {
+      "number": 20,
+      "id": "L13UG-A20-LEVEL13-CLOSEOUT",
       "status": "ready-for-research",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
-      "number": 16,
-      "id": "L13UG-A16-RECURSIVE-NEXT-BATCH",
+      "number": 21,
+      "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
       "status": "ready-for-research",
       "title": "Plan the next level-support batch if this lane drains"
     }
@@ -289,7 +319,7 @@ Acceptance: no diagnostic status is left ambiguous as a hidden blocker.
 
 ### Task 9 - L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING - Tighten claim-gate wording around diagnostics
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: findings from Tasks 7 and 8.
 
@@ -301,7 +331,7 @@ coexist with a passing full-support claim.
 
 ### Task 10 - L13UG-A10-LEVEL13-REPORT-CONSISTENCY - Verify generated report consistency after scope admission
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: generated markdown/json reports after Tasks 2-9.
 
@@ -313,7 +343,7 @@ JSON agree on blockers and layer statuses.
 
 ### Task 11 - L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT - Audit supported Unit to rules-kernel join for level 1-3
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `level1-3-full-support.json`, `unit-matrix.json`, and
 `rules-kernel-coverage/profile-obligations.jsonl`.
@@ -326,7 +356,7 @@ supported reducer Unit.
 
 ### Task 12 - L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT - Audit SRD pressure rows with no Unit matrix row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `LEVEL1_3_FULL_SUPPORT.md` SRD pressure with no Unit matrix row section.
 
@@ -338,7 +368,7 @@ Acceptance: no level 1-3 SRD pressure gap is hidden outside the Unit matrix.
 
 ### Task 13 - L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT - RAW audit closed runtime-detached dispositions in level 1-3
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: closed runtime-detached rows in level 1-3 and local SRD passages.
 
@@ -350,7 +380,7 @@ document the sampled evidence and why the closure vocabulary holds.
 
 ### Task 14 - L13UG-A14-LEVEL13-CHECKER-SELFTESTS - Extend checker self-tests for level 1-3 ultra-golden failures
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: unit-profile coverage checker self-tests.
 
@@ -360,11 +390,100 @@ one blocked layer and success when all four layers are present.
 Acceptance: checker behavior protects the new aggregate scope from silent
 regression.
 
-### Task 15 - L13UG-A15-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
+### Task 15 - L13UG-A15-L3-DURABLE-ABILITY-UNITS - Admit missing durable and ability-check level-3 feature Units
+
+Status: `done`
+
+Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
+`barbarian_primal_knowledge`, `rogue_second_story_work`, and
+`sorcerer_draconic_resilience`, and the local SRD passages cited by the audit.
+
+Output: authored Surface records, Unit matrix rows, owner evidence, and focused
+tests for the durable facts and Ability Check or Armor Class projections.
+
+Acceptance: the three real missing durable/ability level-3 class-feature rows
+no longer appear as no-matrix SRD pressure, and their Character Creation or
+Character Sheet owners derive from source facts without duplicated state.
+
+### Task 16 - L13UG-A16-L3-HEAL-DAMAGE-UNITS - Admit missing heal and damage level-3 feature Units
 
 Status: `ready-for-research`
 
-Input: results from Tasks 1-14.
+Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
+`cleric_disciple_of_life`, `cleric_preserve_life`, `druid_lands_aid`, and
+`warlock_dark_ones_blessing`, and the local SRD passages cited by the audit.
+
+Output: authored Surface records, Unit claims, deterministic
+admission/projection evidence, focused runtime tests, and promoted Quint parity
+where reducer behavior changes.
+
+Acceptance: the four real missing heal/damage level-3 class-feature rows no
+longer appear as no-matrix SRD pressure, and each promoted behavior has typed
+runtime support rather than authored-identity dispatch.
+
+### Task 17 - L13UG-A17-L3-RESOURCE-ACTION-UNITS - Admit missing resource and action level-3 feature Units
+
+Status: `ready-for-research`
+
+Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
+`paladin_channel_divinity` and `rogue_fast_hands`, and the local SRD passages
+cited by the audit.
+
+Output: Paladin Channel Divinity resource ownership without duplicating Divine
+Sense table knowledge, plus Fast Hands action-economy support that delegates
+lock/trap/pocket, Utilize, and magic-item execution to their existing owners.
+
+Acceptance: the two real missing resource/action level-3 class-feature rows no
+longer appear as no-matrix SRD pressure, and each owner split has checker-visible
+evidence or concrete residual follow-up.
+
+### Task 18 - L13UG-A18-L3-ATTACK-MOVEMENT-UNITS - Admit missing attack and movement level-3 feature Units
+
+Status: `ready-for-research`
+
+Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
+`fighter_remarkable_athlete`, `monk_open_hand_technique`,
+`paladin_sacred_weapon`, `ranger_hunters_prey`, `rogue_steady_aim`, and
+`wizard_potent_cantrip`, and the local SRD passages cited by the audit.
+
+Output: authored Surface records, Unit claims, deterministic
+admission/projection evidence, focused runtime tests, and promoted Quint parity
+for attack, movement, rider, and cantrip-damage behavior.
+
+Acceptance: the six real missing attack/movement level-3 class-feature rows no
+longer appear as no-matrix SRD pressure, and each promoted behavior is admitted
+through typed procedure facts and runtime state rather than authored identity.
+
+### Task 19 - L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE - Promote or block Suggestion Charmed lifecycle subset
+
+Status: `ready-for-research`
+
+Input: Task 13 closed-disposition RAW audit, local SRD Suggestion text, current
+Suggestion Surface record and Unit claim/evidence rows, Charm Person Charmed
+lifecycle implementation patterns, and package-local battle-runtime Quint
+parity files.
+
+Output: promote or explicitly block Suggestion's executable battle subset:
+Magic Action and level-2 Spell Slot spend, one visible creature target supplied
+by caller facts, Wisdom Saving Throw against the caster Spell Save DC,
+failed-save spell-owned Charmed condition for Concentration up to 8 hours,
+cleanup on Concentration or duration end, and cleanup when the caster or allies
+damage the target. Keep hearing/understanding, suggested activity text,
+achievable/not-obviously-damaging judgment, target pursuit, and
+activity-completion ending runtime-detached under the table/social owner.
+
+Acceptance: Suggestion has either a `profile-subset-supported` Unit claim for
+the save-gated Charmed lifecycle with deterministic admission/projection
+evidence, focused runtime tests, selected-identity evidence if promoted, and
+promoted Quint/runtime parity without authored-identity dispatch; or a concrete
+blocked-follow-up claim explaining the missing typed owner and preserving the
+table/social split.
+
+### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
+
+Status: `ready-for-research`
+
+Input: results from Tasks 1-19.
 
 Output: concise closeout section in this plan or generated summary identifying
 whether level 1-3 is now ultra-golden, what remains non-blocking, and what the
@@ -373,11 +492,11 @@ next frontier is.
 Acceptance: no active task remains in this lane except recursive planning if
 new work is discovered.
 
-### Task 16 - L13UG-A16-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
+### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
 Status: `ready-for-research`
 
-Input: current generated reports after Task 15.
+Input: current generated reports after Task 20.
 
 Output: if level 1-3 is closed, create the next coherent level-support lane
 plan with 10-20 atomic tasks and context-budget rules. If level 1-3 is not

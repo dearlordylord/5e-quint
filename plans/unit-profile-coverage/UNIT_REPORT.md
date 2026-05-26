@@ -8,25 +8,25 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 257 Units |
+| Installed collection inventory count | 260 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 256/492 | 52% |
-| Authored Surface executable catalog admission | 211/407 | 51.8% |
-| Installed Unit profile classification coverage | 257/257 | 100% |
-| Supported executable Unit coverage | 144/212 | 67.9% |
+| Authored Surface Unit catalog admission | 259/495 | 52.3% |
+| Authored Surface executable catalog admission | 214/410 | 52.2% |
+| Installed Unit profile classification coverage | 260/260 | 100% |
+| Supported executable Unit coverage | 147/215 | 68.4% |
 | QNT profile modeling coverage | 96/96 | 100% |
 | QNT proof coverage | 96/96 | 100% |
 | Runtime mapping coverage | 96/96 | 100% |
 | Runtime parity coverage | 96/96 | 100% |
 | Rules-kernel profile join coverage | 132/132 | 100% |
 | Rules-kernel covered profile coverage | 132/132 | 100% |
-| Supported Unit rules-kernel chain coverage | 144/144 | 100% |
-| Deterministic admission/projection coverage | 144/144 | 100% |
-| Selected identity replay coverage | 144/144 | 100% |
+| Supported Unit rules-kernel chain coverage | 146/146 | 100% |
+| Deterministic admission/projection coverage | 147/147 | 100% |
+| Selected identity replay coverage | 144/147 | 98% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -44,9 +44,9 @@ Coverage rows are denominator-specific gates, not weighted completion scores. Un
 | QNT proof coverage | Do supported executable profiles have proof evidence? | executable profile records with qnt-proof verification owners | profile records whose kind requires executable evidence |
 | Runtime mapping coverage | Do supported executable profiles have production runtime owners? | executable profile records with runtime owners | profile records whose kind requires executable evidence |
 | Runtime parity coverage | Do supported executable profiles have focused MBT or runtime-test parity evidence? | executable profile records with focused-mbt or runtime-test verification owners | profile records whose kind requires executable evidence |
-| Rules-kernel profile join coverage | Do reducer-owned mechanics profiles point to rules-kernel semantic obligations? | rules-kernel-applicable profile records with at least one profile-obligation mapping | profile records whose kind carries reducer-owned semantics |
-| Rules-kernel covered profile coverage | Do reducer-owned mechanics profiles point to covered rules-kernel obligations? | rules-kernel-applicable profile records whose mapped obligations are all covered | profile records whose kind carries reducer-owned semantics |
-| Supported Unit rules-kernel chain coverage | Do supported Unit identities have every reducer-owned profile connected to covered rules-kernel obligations? | supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations | installed Units with supported-profile claims and at least one rules-kernel-applicable profile |
+| Rules-kernel profile join coverage | Do rules-kernel-admitted mechanics profiles point to rules-kernel semantic obligations? | rules-kernel-applicable profile records with at least one profile-obligation mapping | profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings |
+| Rules-kernel covered profile coverage | Do rules-kernel-admitted mechanics profiles point to covered rules-kernel obligations? | rules-kernel-applicable profile records whose mapped obligations are all covered | profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings |
+| Supported Unit rules-kernel chain coverage | Do supported Unit identities have every rules-kernel-admitted profile connected to covered rules-kernel obligations? | supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations | installed Units with supported-profile claims and at least one rules-kernel-applicable profile |
 | Deterministic admission/projection coverage | Which supported Unit identities have deterministic production catalog/support/projection evidence? | supported Unit ids with deterministic-admission-projection evidence | installed Units with supported-profile claims |
 | Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids with selected-identity-mbt evidence | installed Units with supported-profile claims |
 | Classic non-SRD expression gate | Did every installed Classic non-SRD mechanics-only Unit pass the public-expression gate? | installed Classic non-SRD records passing validation | installed Classic non-SRD records |
@@ -59,8 +59,8 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 | 0 |
-| Spell Units | 126 | 126 | 88 | 20 | 18 | 131 | 107/108 | 0 | 1 |
-| Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 | 0 |
+| Spell Units | 126 | 126 | 88 | 20 | 18 | 131 | 108/108 | 0 | 0 |
+| Class-feature Units | 66 | 66 | 48 | 16 | 2 | 91 | 61/61 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
@@ -73,7 +73,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 
 ## Rules-Kernel Join
 
-The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join from supported mechanics profiles to QNT-connected rules-kernel obligations.
+The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join from rules-kernel-admitted mechanics profiles to QNT-connected rules-kernel obligations. Projection-only Character Creation and Character Sheet profiles with no QNT owner and no explicit profile-obligation mapping remain covered by their profile runtime evidence rather than this rules-kernel chain.
 
 | Join status | Profile count | Profiles |
 | --- | ---: | --- |
@@ -81,7 +81,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 
 | Supported Unit join status | Unit count | Units |
 | --- | ---: | --- |
-| covered | 144 | `acid_splash`, `aid`, `alert`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_savage_attacker`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `warlock_pact_magic`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| covered | 146 | `acid_splash`, `aid`, `alert`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_savage_attacker`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `warlock_pact_magic`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 
 ### Rules-Kernel Profile Join Gaps
 
@@ -111,6 +111,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_danger_sense` | srd-5.2.1 | `unit-feature.passive-saving-throw-roll-mode` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
+| `barbarian_primal_knowledge` | srd-5.2.1 | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` |
 | `bard_bardic_inspiration` | srd-5.2.1 | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` |
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `bard_jack_of_all_trades` | srd-5.2.1 | `character-sheet.ability-check-proficiency-bonus` |
@@ -128,8 +129,10 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
 | `rogue_uncanny_dodge` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `rogue_expertise` | srd-5.2.1 | `character-creation.skill-expertise-choice` |
+| `rogue_second_story_work` | srd-5.2.1 | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `sorcerer_innate_sorcery` | srd-5.2.1 | `unit-feature.innate-sorcery-activation` |
+| `sorcerer_draconic_resilience` | srd-5.2.1 | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` |
 | `warlock_eldritch_invocations` | srd-5.2.1 | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` |
 | `warlock_pact_magic` | srd-5.2.1 | `character-creation.warlock-pact-magic-advancement` |
 | `warlock_magical_cunning` | srd-5.2.1 | `character-sheet.pact-slot-recovery` |
@@ -805,6 +808,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | L12G-CLASS-BARBARIAN-DANGER-SENSE | `packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
+| `barbarian_primal_knowledge` | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` | L13UG-A15 | `packages/character-creation-runtime/src/index.test.ts` |
+| `barbarian_primal_knowledge` | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` | L13UG-A15 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
@@ -826,9 +831,12 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | AT-L1-07 | `packages/character-creation-runtime/src/index.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
+| `rogue_second_story_work` | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` | L13UG-A15 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
+| `sorcerer_draconic_resilience` | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` | L13UG-A15 | `packages/character-creation-runtime/src/index.test.ts` |
+| `sorcerer_draconic_resilience` | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` | L13UG-A15 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `warlock_pact_magic` | `character-creation.warlock-pact-magic-advancement` | L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT | `packages/character-creation-runtime/src/index.test.ts` |
 | `warlock_magical_cunning` | `character-sheet.pact-slot-recovery` | L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING | `packages/character-sheet-runtime/src/index.test.ts` |
@@ -1156,7 +1164,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 
 | Unit | Claim | Selected identity | Owner | Reason | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | runtime-detached table/perception/knowledge owner | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Unsupported And Widening Pressure
 
@@ -1652,6 +1660,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT | completed-runtime-parity | `character-creation.wizard-spellbook-learning-choice` |
 | L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME | qnt-proof | `unit-feature.initiative-proficiency-and-swap` |
 | L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME | completed-runtime-parity | `unit-feature.initiative-proficiency-and-swap` |
+| L13UG-A15 | completed-runtime-parity | `character-sheet.ability-check-ability-substitution`, `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution`, `character-creation.hit-point-maximum-projection` |
 
 ## Supported Profiles Lacking Runtime Parity
 

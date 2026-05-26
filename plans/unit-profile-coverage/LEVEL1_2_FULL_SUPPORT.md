@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 91/115 (79.1%) |
 | Strict target closure | 115/115 (100%) |
 | Selected identity readiness | 104/104 (100%) |
-| Product readiness | 397/400 (99.3%) |
+| Diagnostic product readiness | 397/400 (99.3%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 70/70 (100%) |
 | Rules-kernel covered profile join | 70/70 (100%) |
@@ -25,9 +25,11 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-### Product Readiness Accounting
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 397/400 (99.3%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
-Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+### Diagnostic Product Readiness Accounting
+
+Diagnostic product readiness keeps lower-layer planning pressure visible. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers. If a diagnostic status should become a blocker, promote that rule into the checker gate with self-test coverage instead of inferring it from this percentage.
 
 | Status | Rows |
 | --- | ---: |
@@ -59,7 +61,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Selected identity readiness | pass | 104/104 (100%) | _none_ |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
-Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
+Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
 ## SRD-Authored Product Readiness
 
@@ -182,16 +184,16 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Source rows | Reason | Adopted decision artifact | Concepts |
 | --- | ---: | --- | --- | --- |
-| `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
-| `disguise_self` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
-| `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
-| `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
-| `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
-| `illusory_script` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `mage_hand` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
-| `mending` | 5 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
-| `message` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
-| `prestidigitation` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
-| `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
-| `unseen_servant` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
+| `create_or_destroy_water` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
+| `disguise_self` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
+| `druidcraft` | 1 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
+| `elementalism` | 3 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
+| `floating_disk` | 1 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
+| `goodberry` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
+| `illusory_script` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
+| `mage_hand` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
+| `mending` | 5 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
+| `message` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
+| `prestidigitation` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
+| `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
+| `unseen_servant` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |

@@ -21,6 +21,7 @@ let barbarian =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }
         , { level = 1, unitId = "barbarian_weapon_mastery" }
+        , { level = 3, unitId = "barbarian_primal_knowledge" }
         ]
       , hitPointDie = 12
       , id = "class_barbarian"

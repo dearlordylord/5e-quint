@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 407,
-      "numerator": 211,
-      "percent": "51.8%"
+      "denominator": 410,
+      "numerator": 214,
+      "percent": "52.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 492,
-      "numerator": 256,
-      "percent": "52%"
+      "denominator": 495,
+      "numerator": 259,
+      "percent": "52.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 257
+      "value": 260
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 144,
-      "numerator": 144,
+      "denominator": 147,
+      "numerator": 147,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 257,
-      "numerator": 257,
+      "denominator": 260,
+      "numerator": 260,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 144,
-      "numerator": 144,
+      "denominator": 146,
+      "numerator": 146,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 144,
+      "denominator": 147,
       "numerator": 144,
-      "percent": "100%"
+      "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 212,
-      "numerator": 144,
-      "percent": "67.9%"
+      "denominator": 215,
+      "numerator": 147,
+      "percent": "68.4%"
     }
   },
   "metricSemantics": [
@@ -191,20 +191,20 @@
       "planningQuestion": "Do supported executable profiles have focused MBT or runtime-test parity evidence?"
     },
     {
-      "denominator": "profile records whose kind carries reducer-owned semantics",
+      "denominator": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
       "key": "rulesKernelProfileJoinCoverage",
       "kind": "coverage",
       "label": "Rules-kernel profile join coverage",
       "numerator": "rules-kernel-applicable profile records with at least one profile-obligation mapping",
-      "planningQuestion": "Do reducer-owned mechanics profiles point to rules-kernel semantic obligations?"
+      "planningQuestion": "Do rules-kernel-admitted mechanics profiles point to rules-kernel semantic obligations?"
     },
     {
-      "denominator": "profile records whose kind carries reducer-owned semantics",
+      "denominator": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
       "key": "rulesKernelCoveredProfileCoverage",
       "kind": "coverage",
       "label": "Rules-kernel covered profile coverage",
       "numerator": "rules-kernel-applicable profile records whose mapped obligations are all covered",
-      "planningQuestion": "Do reducer-owned mechanics profiles point to covered rules-kernel obligations?"
+      "planningQuestion": "Do rules-kernel-admitted mechanics profiles point to covered rules-kernel obligations?"
     },
     {
       "denominator": "installed Units with supported-profile claims and at least one rules-kernel-applicable profile",
@@ -212,7 +212,7 @@
       "kind": "coverage",
       "label": "Supported Unit rules-kernel chain coverage",
       "numerator": "supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations",
-      "planningQuestion": "Do supported Unit identities have every reducer-owned profile connected to covered rules-kernel obligations?"
+      "planningQuestion": "Do supported Unit identities have every rules-kernel-admitted profile connected to covered rules-kernel obligations?"
     },
     {
       "denominator": "installed Units with supported-profile claims",
@@ -3893,10 +3893,86 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.ability-check-ability-substitution",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, installed Surface class-feature grants, a caller-supplied skill Ability Check witness, and caller-supplied active feature witnesses. It derives optional substitutions available for that check while preserving the default Ability and without storing duplicate skill proficiency or active-feature state.",
+      "taskRefs": [
+        "L13UG-A15"
+      ],
+      "title": "Character Sheet projects skill-scoped optional Ability Check ability substitutions from retained class features",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.jump-distance-ability-substitution",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, selected subclass feature grants, and installed Surface class-feature jump-distance substitution grants to derive optional jump-distance Ability substitutions from source facts rather than storing a parallel movement rule.",
+      "taskRefs": [
+        "L13UG-A15"
+      ],
+      "title": "Character Sheet projects optional jump-distance ability substitutions from retained class features",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.linked-speed-grant-projection",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes retained class-feature grant_speed facts, including selected subclass feature grants, and preserves linked-speed projections such as Climb Speed equal to Speed as a link to the walk Speed source, not as a copied numeric Speed.",
+      "taskRefs": [
+        "L13UG-A15"
+      ],
+      "title": "Character Sheet projects linked special Speeds from retained class features",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.hit-point-maximum-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes CharacterBuild class progression, installed Surface class-feature modify_max_hp grants, and class-level scaling facts to derive durable Hit Point maximum bonuses without storing a second HP progression table.",
+      "taskRefs": [
+        "L13UG-A15"
+      ],
+      "title": "Character Creation derives Hit Point maximum bonuses from retained class features",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
-    "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
+    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
@@ -6147,8 +6223,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 144,
-          "numerator": 144,
+          "denominator": 146,
+          "numerator": 146,
           "percent": "100%"
         }
       },
@@ -6380,6 +6456,26 @@
             }
           ],
           "unitId": "barbarian_frenzy"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+                }
+              ],
+              "profileId": "character-creation.class-feature-source-fact-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "barbarian_primal_knowledge"
         },
         {
           "joinStatus": "covered",
@@ -9710,6 +9806,26 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+                }
+              ],
+              "profileId": "character-sheet.armor-class-base-formula",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "sorcerer_draconic_resilience"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -10137,26 +10253,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "deferredNonApplicableRows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "owner": "runtime-detached table/perception/knowledge owner",
-          "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-          "status": "missing-witness-deferred-not-applicable"
-        },
-        "sourceRecordPath": "packages/surface/content/mind_spike.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-damage-save-or-attack"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "mind_spike"
-      }
-    ],
+    "deferredNonApplicableRows": [],
     "rowCount": 0,
     "rows": []
   },
@@ -12768,6 +12865,17 @@
         "unit-feature.initiative-proficiency-and-swap"
       ],
       "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation and Character Sheet tests cover Barbarian Primal Knowledge durable skill choice and Rage-active optional Ability Check ability substitution, Rogue Second-Story Work selected-subclass linked Climb Speed and optional jump-distance ability substitution, and Sorcerer Draconic Resilience selected-subclass Hit Point maximum and Armor Class projections from authored Surface facts. Existing class-feature source-link and Armor Class base-formula profiles provide reused owner boundaries.",
+      "profileIds": [
+        "character-sheet.ability-check-ability-substitution",
+        "character-sheet.linked-speed-grant-projection",
+        "character-sheet.jump-distance-ability-substitution",
+        "character-creation.hit-point-maximum-projection"
+      ],
+      "taskId": "L13UG-A15"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -12828,25 +12936,25 @@
         "label": "Spell Units",
         "profileFactDenominator": 131,
         "profileSubsetSupportedUnits": 20,
-        "selectedIdentityDeferredNonApplicableUnits": 1,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 108,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 107,
+        "selectedIdentityReplayWitnessUnits": 108,
         "supportedProfileUnits": 88,
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 63,
-        "installedUnitDenominator": 63,
+        "executableUnitDenominator": 66,
+        "installedUnitDenominator": 66,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 85,
+        "profileFactDenominator": 91,
         "profileSubsetSupportedUnits": 16,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 61,
-        "supportedProfileUnits": 45,
+        "supportedProfileUnits": 48,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -14305,6 +14413,88 @@
       ],
       "sourceRecordPath": "packages/surface/content/barbarian_fast_movement.json",
       "unitId": "barbarian_fast_movement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.class-feature-source-fact-projection",
+          "character-sheet.ability-check-ability-substitution"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation and character-sheet deterministic projection owners",
+          "reason": "Primal Knowledge support is a retained CharacterBuild source fact plus Character Sheet Ability Check option projection. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Character Creation admits Barbarian level-3 progression, retains the Primal Knowledge class-feature Unit from the Surface class record, and discovers the one-skill proficiency choice over the Barbarian level-1 skill list from the authored grant_proficiency fact",
+          "Character Sheet derives the Rage-active optional Strength substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival Ability Checks from the installed Surface offer_ability_substitution_for_ability_checks fact, requiring caller-supplied active Rage evidence and without duplicating skill proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A15"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A15"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-source-fact-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "taskRefs": [
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.ability-check-ability-substitution",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, installed Surface class-feature grants, a caller-supplied skill Ability Check witness, and caller-supplied active feature witnesses. It derives optional substitutions available for that check while preserving the default Ability and without storing duplicate skill proficiency or active-feature state.",
+          "taskRefs": [
+            "L13UG-A15"
+          ],
+          "title": "Character Sheet projects skill-scoped optional Ability Check ability substitutions from retained class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_primal_knowledge.json",
+      "unitId": "barbarian_primal_knowledge"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -16322,6 +16512,82 @@
       },
       "claim": {
         "profileIds": [
+          "character-sheet.linked-speed-grant-projection",
+          "character-sheet.jump-distance-ability-substitution"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet deterministic projection owner",
+          "reason": "Second-Story Work support is selected-subclass Character Sheet projection for linked Speed and optional jump-distance Ability choice. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Character Sheet derives Rogue level-3 Second-Story Work ownership from the selected Thief subclass feature grants and projects the Climb Speed as a linked walk_speed grant instead of copying a numeric Speed",
+          "Character Sheet derives the optional Dexterity-for-Strength jump-distance substitution from the authored Surface fact without adding authored-identity dispatch"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A15"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.linked-speed-grant-projection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes retained class-feature grant_speed facts, including selected subclass feature grants, and preserves linked-speed projections such as Climb Speed equal to Speed as a link to the walk Speed source, not as a copied numeric Speed.",
+          "taskRefs": [
+            "L13UG-A15"
+          ],
+          "title": "Character Sheet projects linked special Speeds from retained class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.jump-distance-ability-substitution",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, selected subclass feature grants, and installed Surface class-feature jump-distance substitution grants to derive optional jump-distance Ability substitutions from source facts rather than storing a parallel movement rule.",
+          "taskRefs": [
+            "L13UG-A15"
+          ],
+          "title": "Character Sheet projects optional jump-distance ability substitutions from retained class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_second_story_work.json",
+      "unitId": "rogue_second_story_work"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "unit-feature.attack-damage-rider"
         ],
         "rawRequirementIds": [
@@ -16871,6 +17137,87 @@
       ],
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "unitId": "sorcerer_metamagic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.hit-point-maximum-projection",
+          "character-sheet.armor-class-base-formula"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation and character-sheet deterministic projection owners",
+          "reason": "Draconic Resilience support is selected-subclass Character Creation Hit Point Maximum projection plus Character Sheet Armor Class formula projection. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Character Creation derives Draconic Resilience Hit Point maximum increases from the selected Draconic Sorcery subclass feature grants, the retained Surface modify_max_hp class-level scaling fact, and Sorcerer class level without a duplicate HP progression table",
+          "Character Sheet derives the unarmored Dexterity plus Charisma Armor Class base formula from the selected Draconic Sorcery subclass feature grants, the retained Surface modify_ac_set_base fact, and existing equipment predicates"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A15"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A15"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.hit-point-maximum-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes CharacterBuild class progression, installed Surface class-feature modify_max_hp grants, and class-level scaling facts to derive durable Hit Point maximum bonuses without storing a second HP progression table.",
+          "taskRefs": [
+            "L13UG-A15"
+          ],
+          "title": "Character Creation derives Hit Point maximum bonuses from retained class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.armor-class-base-formula",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
+          "taskRefs": [
+            "SRDINV23"
+          ],
+          "title": "Character Sheet projects exactly one active Armor Class base formula from build, equipment, and class features",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/sorcerer_draconic_resilience.json",
+      "unitId": "sorcerer_draconic_resilience"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -26427,6 +26774,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-MIND-SPIKE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY"
         }
       ],
       "executableMechanics": true,

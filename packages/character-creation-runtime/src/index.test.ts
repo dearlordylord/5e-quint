@@ -160,6 +160,8 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge sorcerer_draconic_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT warlock_pact_magic
@@ -7203,6 +7205,94 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("derives Primal Knowledge proficiency choice from the level-3 Barbarian feature grant", () => {
+    const featureHoles = classFeatureGrantChoiceHoles(
+      "barbarian_primal_knowledge",
+      unitLibrary,
+      {
+        classLevel: 3,
+        ownedSkillProficiencies: ["athletics", "intimidation"],
+      },
+    );
+
+    expect(featureHoles).toHaveLength(1);
+    expect(featureHoles[0]).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: expect.arrayContaining([
+        expect.objectContaining({ optionId: "animal_handling" }),
+        expect.objectContaining({ optionId: "nature" }),
+        expect.objectContaining({ optionId: "perception" }),
+        expect.objectContaining({ optionId: "survival" }),
+      ]),
+    });
+    expect(featureHoles[0]?.options).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ optionId: "athletics" }),
+        expect.objectContaining({ optionId: "intimidation" }),
+      ]),
+    );
+
+    const build = {
+      progression: testProgression("class_barbarian", 3),
+      background: "background_soldier",
+      proficiencyChoices: [
+        { kind: "skill", skill: "athletics" },
+        { kind: "skill", skill: "intimidation" },
+        { kind: "skill", skill: "nature" },
+      ],
+      features: [],
+    } as const;
+
+    expect(characterBuildFeatureUnitIds(build, unitLibrary)).toContain(
+      "barbarian_primal_knowledge",
+    );
+    expect(
+      expectRight(characterBuildProficiencies(build, unitLibrary)).skills,
+    ).toEqual(expect.arrayContaining(["athletics", "intimidation", "nature"]));
+  });
+
+  test("adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature", () => {
+    const baseBuild = {
+      progression: testProgression("class_sorcerer", 3),
+      abilityScores: testAbilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 10,
+        cha: 15,
+      }),
+      features: [],
+    } as const;
+    const build = {
+      ...baseBuild,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_sorcerer",
+          unitId: "subclass_sorcerer_draconic_sorcery",
+        },
+      ],
+    } as const;
+
+    expect(characterBuildFeatureUnitIds(baseBuild, unitLibrary)).not.toContain(
+      "sorcerer_draconic_resilience",
+    );
+    expect(expectRight(characterBuildHitPoints(baseBuild, unitLibrary))).toEqual({
+      maximum: 17,
+      hitDice: [{ classUnitId: "class_sorcerer", dieSize: 6, total: 3 }],
+    });
+
+    expect(characterBuildFeatureUnitIds(build, unitLibrary)).toContain(
+      "sorcerer_draconic_resilience",
+    );
+    expect(expectRight(characterBuildHitPoints(build, unitLibrary))).toEqual({
+      maximum: 20,
+      hitDice: [{ classUnitId: "class_sorcerer", dieSize: 6, total: 3 }],
+    });
+  });
+
   test("represents mixed class-feature proficiency grant subjects without narrowing to skills", () => {
     const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
       unitOptionIdsByChoiceKey: Record<string, CreationChoiceOptionId[]>;
@@ -7517,6 +7607,12 @@ function manifestFixtureOptionIds(source: {
       creationChoiceOptionId("gust_of_wind"),
       creationChoiceOptionId("shatter"),
     ];
+  }
+  if (
+    source.unitId === "barbarian_primal_knowledge" &&
+    source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+  ) {
+    return [creationChoiceOptionId("nature")];
   }
 
   return soldierBackgroundFixtureOptionIds(source);

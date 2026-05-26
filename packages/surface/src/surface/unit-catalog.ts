@@ -20,6 +20,7 @@ import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import bardExpertiseInput from "../../content/bard_expertise.json";
 import bardJackOfAllTradesInput from "../../content/bard_jack_of_all_trades.json";
 import barbarianFrenzyInput from "../../content/barbarian_frenzy.json";
+import barbarianPrimalKnowledgeInput from "../../content/barbarian_primal_knowledge.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
@@ -205,6 +206,7 @@ import rayOfSicknessInput from "../../content/ray_of_sickness.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
+import rogueSecondStoryWorkInput from "../../content/rogue_second_story_work.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
@@ -227,6 +229,7 @@ import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import suggestionInput from "../../content/suggestion.json";
 import sorcererDraconicSpellsInput from "../../content/sorcerer_draconic_spells.json";
+import sorcererDraconicResilienceInput from "../../content/sorcerer_draconic_resilience.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -417,6 +420,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRecklessAttackInput,
     barbarianDangerSenseInput,
     barbarianFastMovementInput,
+    barbarianPrimalKnowledgeInput,
     barbarianWeaponMasteryInput,
     bardBardicInspirationInput,
     bardCuttingWordsInput,
@@ -443,11 +447,13 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rogueEvasionInput,
     rogueUncannyDodgeInput,
     rogueExpertiseInput,
+    rogueSecondStoryWorkInput,
     rogueSneakAttackInput,
     rogueThievesCantInput,
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
+    sorcererDraconicResilienceInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,
     warlockPactMagicInput,

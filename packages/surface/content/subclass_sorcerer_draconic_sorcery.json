@@ -4,6 +4,10 @@
   "featureGrants": [
     {
       "level": 3,
+      "unitId": "sorcerer_draconic_resilience"
+    },
+    {
+      "level": 3,
       "unitId": "sorcerer_draconic_spells"
     }
   ],

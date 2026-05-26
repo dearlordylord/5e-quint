@@ -1,0 +1,29 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "rogue",
+  "description": "You have a Climb Speed equal to your Speed. In addition, you can use Dexterity instead of Strength to determine the distance you jump.",
+  "id": "rogue_second_story_work",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "feet": {
+          "kind": "walk_speed"
+        },
+        "kind": "grant_speed",
+        "speedKind": "climb"
+      },
+      {
+        "kind": "offer_ability_substitution_for_jump_distance",
+        "replaces": "str",
+        "use": "dex"
+      }
+    ]
+  },
+  "name": "Second-Story Work",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Second-Story Work"
+  }
+}

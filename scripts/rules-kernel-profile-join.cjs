@@ -27,8 +27,19 @@ function countCoverage(numerator, denominator) {
   };
 }
 
-function isRulesKernelProfile(profile) {
+function hasQntOwner(profile) {
+  return (profile.qntOwners ?? []).length > 0;
+}
+
+function isRulesKernelProfileKind(profile) {
   return rulesKernelProfileKinds.has(profile.profileKind);
+}
+
+function isRulesKernelProfile(profile, profileObligationMap = new Map()) {
+  return (
+    isRulesKernelProfileKind(profile) &&
+    (hasQntOwner(profile) || profileObligationMap.has(profile.id))
+  );
 }
 
 function uniqueSorted(values) {
@@ -67,38 +78,38 @@ function buildRulesKernelProfileJoin({
     obligations.map((obligation) => [obligation.id, obligation]),
   );
   const obligationIdsByProfile = buildProfileObligationMap(profileObligations);
-  const rows = profiles.filter(isRulesKernelProfile).map((profile) => {
-    const mapping = obligationIdsByProfile.get(profile.id) ?? {
-      followUpTaskIds: [],
-      obligationIds: [],
-    };
-    const obligationIds = uniqueSorted(
-      mapping.obligationIds,
-    );
-    const obligationRows = obligationIds.map((obligationId) => {
-      const obligation = obligationsById.get(obligationId);
-      return {
-        obligationId,
-        ...((obligation?.followUpTaskIds ?? []).length > 0
-          ? { followUpTaskIds: obligation.followUpTaskIds }
-          : {}),
-        runtime: obligation?.runtime ?? "unknown",
-        status: obligation?.status ?? "unknown",
-        title: obligation?.title ?? "unknown obligation",
+  const rows = profiles
+    .filter((profile) => isRulesKernelProfile(profile, obligationIdsByProfile))
+    .map((profile) => {
+      const mapping = obligationIdsByProfile.get(profile.id) ?? {
+        followUpTaskIds: [],
+        obligationIds: [],
       };
+      const obligationIds = uniqueSorted(mapping.obligationIds);
+      const obligationRows = obligationIds.map((obligationId) => {
+        const obligation = obligationsById.get(obligationId);
+        return {
+          obligationId,
+          ...((obligation?.followUpTaskIds ?? []).length > 0
+            ? { followUpTaskIds: obligation.followUpTaskIds }
+            : {}),
+          runtime: obligation?.runtime ?? "unknown",
+          status: obligation?.status ?? "unknown",
+          title: obligation?.title ?? "unknown obligation",
+        };
+      });
+      return stable({
+        profileId: profile.id,
+        profileKind: profile.profileKind,
+        qntOwners: uniqueSorted(profile.qntOwners ?? []),
+        ...(mapping.followUpTaskIds.length > 0
+          ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
+          : {}),
+        ...(mapping.reason !== undefined ? { gapReason: mapping.reason } : {}),
+        joinStatus: profileJoinStatus(obligationIds, obligationsById),
+        obligations: obligationRows,
+      });
     });
-    return stable({
-      profileId: profile.id,
-      profileKind: profile.profileKind,
-      qntOwners: uniqueSorted(profile.qntOwners ?? []),
-      ...(mapping.followUpTaskIds.length > 0
-        ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
-        : {}),
-      ...(mapping.reason !== undefined ? { gapReason: mapping.reason } : {}),
-      joinStatus: profileJoinStatus(obligationIds, obligationsById),
-      obligations: obligationRows,
-    });
-  });
   const mapped = rows.filter((row) => row.joinStatus !== "unmapped");
   const covered = rows.filter((row) => row.joinStatus === "covered");
   return stable({
@@ -108,7 +119,7 @@ function buildRulesKernelProfileJoin({
         "plans/rules-kernel-coverage/profile-obligations.jsonl",
     },
     denominatorRule:
-      "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     profileKinds: Array.from(rulesKernelProfileKinds).sort(),
     metrics: {
       rulesKernelProfileJoinCoverage: countCoverage(mapped.length, rows.length),
@@ -133,18 +144,8 @@ function rulesKernelJoinByProfileId(rulesKernelProfileJoin) {
 function rulesKernelUnitJoin(unit, rulesKernelProfileJoin) {
   const joinByProfileId = rulesKernelJoinByProfileId(rulesKernelProfileJoin);
   const profileRows = (unit.profiles ?? [])
-    .filter(isRulesKernelProfile)
-    .map((profile) => {
-      const join = joinByProfileId.get(profile.id);
-      return (
-        join ?? {
-          profileId: profile.id,
-          profileKind: profile.profileKind,
-          joinStatus: "unmapped",
-          obligations: [],
-        }
-      );
-    });
+    .map((profile) => joinByProfileId.get(profile.id))
+    .filter((join) => join !== undefined);
   const joinStatus =
     profileRows.length === 0
       ? "no-rules-kernel-profile"
@@ -184,5 +185,6 @@ module.exports = {
   buildRulesKernelProfileJoin,
   buildRulesKernelSupportedUnitJoin,
   isRulesKernelProfile,
+  isRulesKernelProfileKind,
   rulesKernelUnitJoin,
 };

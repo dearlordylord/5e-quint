@@ -45,6 +45,7 @@ import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
+  characterSheetAbilityCheckAbility,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
   characterSheetCurrentHp,
@@ -52,6 +53,8 @@ import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
   characterSheetHitPointMaximum,
+  characterSheetJumpDistanceAbility,
+  characterSheetLinkedSpeedGrants,
   characterSheetLongRestCalendarGate,
   characterSheetMonkUncannyMetabolismUseState,
   characterSheetMonksFocusSaveDc,
@@ -104,7 +107,11 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spell-rest-benefit-application
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.druid-circle-land-spell-access
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-ability-substitution
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.jump-distance-ability-substitution
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.linked-speed-grant-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge rogue_second_story_work sorcerer_draconic_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING warlock_magical_cunning
@@ -193,6 +200,12 @@ const druidCircleLandSpellcastingSourceGateTestName =
   "rejects Circle of the Land selected land without Druid spellcasting source";
 const druidCircleLandSpellAccessBookOfShadowsDuplicateTestName =
   "Circle of the Land prepared Spell Access blocks duplicate Book of Shadows selections";
+const draconicResilienceArmorClassProjectionTestName =
+  "derives Draconic Resilience Armor Class from Dexterity and Charisma while unarmored";
+const secondStoryWorkProjectionTestName =
+  "derives Second-Story Work linked Climb Speed and jump-distance ability";
+const primalKnowledgeAbilitySubstitutionProjectionTestName =
+  "Primal Knowledge offers Strength for listed Ability Checks only while Rage is active";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -1422,6 +1435,59 @@ describe("Character Sheet runtime", () => {
     expect(currentArmorClass(state)).toBe(15);
   });
 
+  test(draconicResilienceArmorClassProjectionTestName, () => {
+    const baseSorcererBuild = {
+      ...armorClassBuild({
+        startingClass: "class_sorcerer",
+        advancements: ["class_sorcerer", "class_sorcerer"],
+      }),
+      abilityScores: expectRight(
+        abilityScoreAssignment({
+          str: 8,
+          dex: 14,
+          con: 12,
+          int: 10,
+          wis: 10,
+          cha: 16,
+        }),
+      ),
+    };
+    expect(
+      currentArmorClass(
+        requireRight(
+          characterSheetArmorClassState({
+            build: baseSorcererBuild,
+            unitLibrary,
+          }),
+        ),
+      ),
+    ).toBe(12);
+
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: {
+          ...baseSorcererBuild,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_sorcerer",
+              unitId: "subclass_sorcerer_draconic_sorcery",
+            },
+          ],
+        },
+        unitLibrary,
+      }),
+    );
+
+    expect(state.base).toMatchObject({
+      kind: "ability_sum",
+      source: "class_feature_base_plus_ability",
+      sourceUnitId: "sorcerer_draconic_resilience",
+      abilityModifiers: ["dex", "cha"],
+    });
+    expect(currentArmorClass(state)).toBe(15);
+  });
+
   test("suppresses Monk Unarmored Defense while wielding a Shield", () => {
     const state = requireRight(
       characterSheetArmorClassState({
@@ -1528,6 +1594,55 @@ describe("Character Sheet runtime", () => {
     expect(currentArmorClass(state)).toBe(16);
   });
 
+  test(secondStoryWorkProjectionTestName, () => {
+    const baseRogueBuild = armorClassBuild({
+      startingClass: "class_rogue",
+      advancements: ["class_rogue", "class_rogue"],
+    });
+    const rogueBuild = {
+      ...baseRogueBuild,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_rogue",
+          unitId: "subclass_rogue_thief",
+        },
+      ],
+    } as const;
+
+    expect(
+      requireRight(characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary)),
+    ).toEqual([]);
+
+    expect(
+      requireRight(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
+    ).toEqual([
+      {
+        sourceUnitId: "rogue_second_story_work",
+        speedKind: "climb",
+        feet: { kind: "walk_speed" },
+      },
+    ]);
+    expect(
+      requireRight(
+        characterSheetJumpDistanceAbility({
+          build: rogueBuild,
+          unitLibrary,
+          defaultAbility: "str",
+        }),
+      ),
+    ).toEqual({
+      defaultAbility: "str",
+      optionalSubstitutions: [
+        {
+          ability: "dex",
+          replaces: "str",
+          sourceUnitId: "rogue_second_story_work",
+        },
+      ],
+    });
+  });
+
   test(jackOfAllTradesAddsHalfProficiencyBonusTestName, () => {
     const result = requireRight(
       characterSheetAbilityCheckProficiencyBonus({
@@ -1617,6 +1732,56 @@ describe("Character Sheet runtime", () => {
     );
 
     expect(result).toEqual({ tag: "none", bonus: 0 });
+  });
+
+  test(primalKnowledgeAbilitySubstitutionProjectionTestName, () => {
+    const barbarianBuild = armorClassBuild({
+      startingClass: "class_barbarian",
+      advancements: ["class_barbarian", "class_barbarian"],
+    });
+
+    expect(
+      requireRight(
+        characterSheetAbilityCheckAbility({
+          build: barbarianBuild,
+          unitLibrary,
+          skill: "stealth",
+          defaultAbility: "dex",
+          activeFeatureUnitIds: [],
+        }),
+      ),
+    ).toEqual({ defaultAbility: "dex", optionalSubstitutions: [] });
+    expect(
+      requireRight(
+        characterSheetAbilityCheckAbility({
+          build: barbarianBuild,
+          unitLibrary,
+          skill: "stealth",
+          defaultAbility: "dex",
+          activeFeatureUnitIds: ["barbarian_rage"],
+        }),
+      ),
+    ).toEqual({
+      defaultAbility: "dex",
+      optionalSubstitutions: [
+        {
+          ability: "str",
+          sourceUnitId: "barbarian_primal_knowledge",
+          requiredActiveFeatureUnitId: "barbarian_rage",
+        },
+      ],
+    });
+    expect(
+      requireRight(
+        characterSheetAbilityCheckAbility({
+          build: barbarianBuild,
+          unitLibrary,
+          skill: "athletics",
+          defaultAbility: "str",
+          activeFeatureUnitIds: ["barbarian_rage"],
+        }),
+      ),
+    ).toEqual({ defaultAbility: "str", optionalSubstitutions: [] });
   });
 
   test("rest start gates keep calendar wait separate from rest benefits", () => {
@@ -4415,6 +4580,7 @@ function armorClassBuild(input: {
   readonly advancements?: readonly string[];
   readonly armor?: string;
   readonly shield?: boolean;
+  readonly features?: CharacterBuild["features"];
 }): CharacterBuild {
   const armorItemId =
     input.armor === undefined
@@ -4454,7 +4620,7 @@ function armorClassBuild(input: {
       }),
     ),
     proficiencyChoices: [],
-    features: [],
+    features: input.features ?? [],
     equipment: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined

@@ -34,10 +34,11 @@ closed for those reports:
 The next generated frontier is character levels 1-3, not spell-level-3:
 
 - Character levels 1-3 strict target closure: `182/182 (100%)`.
-- Character levels 1-3 selected identity readiness: `150/152 (98.7%)`;
-  blockers: `mind_spike`, `shining_smite`.
+- Character levels 1-3 selected identity readiness: `152/152 (100%)`;
+  blockers: none.
 - Character levels 1-3 SRD authored product readiness: `76/76 (100%)`.
-- Character levels 1-3 product readiness diagnostic: `573/607 (94.4%)`.
+- Character levels 1-3 product readiness diagnostic: `577/607 (95.1%)`.
+- Character levels 1-3 full-support claim gate: pass.
 
 ## Active Backlog
 
