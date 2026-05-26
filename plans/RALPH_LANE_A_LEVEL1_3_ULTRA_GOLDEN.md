@@ -4,22 +4,22 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY", "status": "todo", "title": "Close Mind Spike selected-identity witness" },
-    { "number": 2, "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH", "status": "todo", "title": "Refresh level 1-3 full-support claim artifacts" },
-    { "number": 3, "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION", "status": "todo", "title": "Admit level 1-3 into aggregate ultra-golden gate" },
-    { "number": 4, "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT", "status": "todo", "title": "Audit MCP scenario evidence for level 1-3 scope" },
-    { "number": 5, "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED", "status": "todo", "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap" },
-    { "number": 6, "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE", "status": "todo", "title": "Add regression coverage for deferred selected-identity disposition" },
-    { "number": 7, "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT", "status": "todo", "title": "Audit level 1-3 follow-up splits for claim-gate correctness" },
-    { "number": 8, "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT", "status": "todo", "title": "Audit non-blocking product-readiness diagnostics" },
-    { "number": 9, "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING", "status": "todo", "title": "Tighten claim-gate wording around diagnostics" },
-    { "number": 10, "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY", "status": "todo", "title": "Verify generated report consistency after scope admission" },
-    { "number": 11, "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT", "status": "todo", "title": "Audit supported Unit to rules-kernel join for level 1-3" },
-    { "number": 12, "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT", "status": "todo", "title": "Audit SRD pressure rows with no Unit matrix row" },
-    { "number": 13, "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT", "status": "todo", "title": "RAW audit closed runtime-detached dispositions in level 1-3" },
-    { "number": 14, "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS", "status": "todo", "title": "Extend checker self-tests for level 1-3 ultra-golden failures" },
-    { "number": 15, "id": "L13UG-A15-LEVEL13-CLOSEOUT", "status": "todo", "title": "Close out level 1-3 ultra-golden lane" },
-    { "number": 16, "id": "L13UG-A16-RECURSIVE-NEXT-BATCH", "status": "todo", "title": "Plan the next level-support batch if this lane drains" }
+    { "number": 1, "id": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY", "status": "ready-for-research", "title": "Close Mind Spike selected-identity witness" },
+    { "number": 2, "id": "L13UG-A02-LEVEL13-CLAIM-REFRESH", "status": "ready-for-research", "title": "Refresh level 1-3 full-support claim artifacts" },
+    { "number": 3, "id": "L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION", "status": "ready-for-research", "title": "Admit level 1-3 into aggregate ultra-golden gate" },
+    { "number": 4, "id": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT", "status": "ready-for-research", "title": "Audit MCP scenario evidence for level 1-3 scope" },
+    { "number": 5, "id": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED", "status": "ready-for-research", "title": "Add level 1-3 MCP scenario evidence only if the audit finds a real gap" },
+    { "number": 6, "id": "L13UG-A06-MIND-SPIKE-REGRESSION-GATE", "status": "ready-for-research", "title": "Add regression coverage for deferred selected-identity disposition" },
+    { "number": 7, "id": "L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT", "status": "ready-for-research", "title": "Audit level 1-3 follow-up splits for claim-gate correctness" },
+    { "number": 8, "id": "L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT", "status": "ready-for-research", "title": "Audit non-blocking product-readiness diagnostics" },
+    { "number": 9, "id": "L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING", "status": "ready-for-research", "title": "Tighten claim-gate wording around diagnostics" },
+    { "number": 10, "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY", "status": "ready-for-research", "title": "Verify generated report consistency after scope admission" },
+    { "number": 11, "id": "L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported Unit to rules-kernel join for level 1-3" },
+    { "number": 12, "id": "L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT", "status": "ready-for-research", "title": "Audit SRD pressure rows with no Unit matrix row" },
+    { "number": 13, "id": "L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT", "status": "ready-for-research", "title": "RAW audit closed runtime-detached dispositions in level 1-3" },
+    { "number": 14, "id": "L13UG-A14-LEVEL13-CHECKER-SELFTESTS", "status": "ready-for-research", "title": "Extend checker self-tests for level 1-3 ultra-golden failures" },
+    { "number": 15, "id": "L13UG-A15-LEVEL13-CLOSEOUT", "status": "ready-for-research", "title": "Close out level 1-3 ultra-golden lane" },
+    { "number": 16, "id": "L13UG-A16-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Plan the next level-support batch if this lane drains" }
   ]
 }
 -->
@@ -81,7 +81,7 @@ artifact changes:
 
 ### Task 1 - L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY - Close Mind Spike selected-identity witness
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: current Mind Spike Unit claim/evidence rows, local SRD Mind Spike text,
 and existing selected-identity MBT patterns for save-damage spells.
@@ -98,7 +98,7 @@ mechanics remain explicitly runtime-detached.
 
 ### Task 2 - L13UG-A02-LEVEL13-CLAIM-REFRESH - Refresh level 1-3 full-support claim artifacts
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: Task 1 output and generated coverage artifacts.
 
@@ -111,7 +111,7 @@ Mind Spike row.
 
 ### Task 3 - L13UG-A03-ULTRA-GOLDEN-SCOPE-ADMISSION - Admit level 1-3 into aggregate ultra-golden gate
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: passing level 1-3 full-support claim and current ultra-golden checker
 scope.
@@ -125,7 +125,7 @@ pass; otherwise it reports the precise blocked layer.
 
 ### Task 4 - L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT - Audit MCP scenario evidence for level 1-3 scope
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: MCP scenario evidence manifest and level 1-3 required user-facing flows.
 
@@ -137,7 +137,7 @@ level 1-3 requirements, or Task 5 remains necessary with exact inputs.
 
 ### Task 5 - L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED - Add level 1-3 MCP scenario evidence only if the audit finds a real gap
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: Task 4 audit.
 
@@ -151,7 +151,7 @@ with a concrete missing scenario.
 
 ### Task 6 - L13UG-A06-MIND-SPIKE-REGRESSION-GATE - Add regression coverage for deferred selected-identity disposition
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: checker code and self-tests around selected-identity dispositions.
 
@@ -164,7 +164,7 @@ claim gate in the self-test shape.
 
 ### Task 7 - L13UG-A07-LEVEL13-FOLLOWUP-SPLIT-AUDIT - Audit level 1-3 follow-up splits for claim-gate correctness
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: six current `blocked-follow-up-split` rows in
 `LEVEL1_3_FULL_SUPPORT.md`.
@@ -177,7 +177,7 @@ gap.
 
 ### Task 8 - L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT - Audit non-blocking product-readiness diagnostics
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: level 1-3 product readiness diagnostic rows with
 `battle-runtime-required`, `owner-evidence-required`, and
@@ -190,7 +190,7 @@ Acceptance: no diagnostic status is left ambiguous as a hidden blocker.
 
 ### Task 9 - L13UG-A09-CLAIM-VS-DIAGNOSTIC-DOC-TIGHTENING - Tighten claim-gate wording around diagnostics
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: findings from Tasks 7 and 8.
 
@@ -202,7 +202,7 @@ coexist with a passing full-support claim.
 
 ### Task 10 - L13UG-A10-LEVEL13-REPORT-CONSISTENCY - Verify generated report consistency after scope admission
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: generated markdown/json reports after Tasks 2-9.
 
@@ -214,7 +214,7 @@ JSON agree on blockers and layer statuses.
 
 ### Task 11 - L13UG-A11-LEVEL13-UNIT-JOIN-AUDIT - Audit supported Unit to rules-kernel join for level 1-3
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: `level1-3-full-support.json`, `unit-matrix.json`, and
 `rules-kernel-coverage/profile-obligations.jsonl`.
@@ -227,7 +227,7 @@ supported reducer Unit.
 
 ### Task 12 - L13UG-A12-LEVEL13-SRD-PRESSURE-AUDIT - Audit SRD pressure rows with no Unit matrix row
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: `LEVEL1_3_FULL_SUPPORT.md` SRD pressure with no Unit matrix row section.
 
@@ -239,7 +239,7 @@ Acceptance: no level 1-3 SRD pressure gap is hidden outside the Unit matrix.
 
 ### Task 13 - L13UG-A13-LEVEL13-CLOSED-DISPOSITION-RAW-AUDIT - RAW audit closed runtime-detached dispositions in level 1-3
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: closed runtime-detached rows in level 1-3 and local SRD passages.
 
@@ -251,7 +251,7 @@ document the sampled evidence and why the closure vocabulary holds.
 
 ### Task 14 - L13UG-A14-LEVEL13-CHECKER-SELFTESTS - Extend checker self-tests for level 1-3 ultra-golden failures
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: unit-profile coverage checker self-tests.
 
@@ -263,7 +263,7 @@ regression.
 
 ### Task 15 - L13UG-A15-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: results from Tasks 1-14.
 
@@ -276,7 +276,7 @@ new work is discovered.
 
 ### Task 16 - L13UG-A16-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
-Status: `todo`
+Status: `ready-for-research`
 
 Input: current generated reports after Task 15.
 
