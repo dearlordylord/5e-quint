@@ -199,6 +199,10 @@ function runSelfTest() {
     "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sampleExamples {}\n",
   );
   writeFile(
+    path.join(root, "readiness-proof-only.qnt"),
+    "module readinessProofOnly {}\n",
+  );
+  writeFile(
     path.join(root, "sample.ts"),
     "// KERNEL-COVERAGE: runtime-owner BATTLE.SAMPLE\nexport const sample = true;\n",
   );
@@ -269,6 +273,53 @@ function runSelfTest() {
     sampleQntOwnerRolesPath,
     "utf8",
   );
+  const sampleGeneratorReadinessPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "generator-readiness.jsonl",
+  );
+  const initialGeneratorReadinessText = fs.readFileSync(
+    sampleGeneratorReadinessPath,
+    "utf8",
+  );
+  const readinessOnlyProofRole =
+    JSON.stringify({
+      ownerPath: "readiness-proof-only.qnt",
+      role: "proof-only",
+      evidence:
+        "readiness-proof-only.qnt is proof-only generator-readiness evidence without being an obligation QNT owner.",
+    }) + "\n";
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [
+        "sample-inductive.qnt",
+        "sample-examples.qnt",
+        "readiness-proof-only.qnt",
+      ],
+      generatorSubset: ["record", "pure-def"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  writeFile(
+    sampleQntOwnerRolesPath,
+    initialQntOwnerRolesText + readinessOnlyProofRole,
+  );
+  const readinessOnlyProofOwnerRoleResult = buildKernelCoverage({ root });
+  assert.deepEqual(readinessOnlyProofOwnerRoleResult.issues, []);
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
+  const missingReadinessProofOwnerRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    missingReadinessProofOwnerRoleResult.issues.includes(
+      "qnt-owner-roles is missing QNT owner readiness-proof-only.qnt.",
+    ),
+    `Expected missing readiness proof-only owner role issue, got ${JSON.stringify(missingReadinessProofOwnerRoleResult.issues)}`,
+  );
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   writeFile(sampleQntOwnerRolesPath, "");
   const missingQntOwnerRoleResult = buildKernelCoverage({ root });
   assert.ok(
@@ -296,16 +347,6 @@ function runSelfTest() {
   }
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
 
-  const sampleGeneratorReadinessPath = path.join(
-    root,
-    "plans",
-    "rules-kernel-coverage",
-    "generator-readiness.jsonl",
-  );
-  const initialGeneratorReadinessText = fs.readFileSync(
-    sampleGeneratorReadinessPath,
-    "utf8",
-  );
   const sampleQntPath = path.join(root, "sample.qnt");
   const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
   writeFile(

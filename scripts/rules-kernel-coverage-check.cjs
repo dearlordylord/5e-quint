@@ -1254,6 +1254,11 @@ function validateGeneratorReadiness(
         `${context}.${ownerPath} cannot be both semanticCore and proofOnly.`,
       );
     }
+    if (!qntOwnerRolesByPath.has(ownerPath)) {
+      issues.push(
+        `${context}.proofOnly path ${ownerPath} is missing a QNT owner role.`,
+      );
+    }
   }
   if (readiness.status === "not-assessed") {
     for (const field of generatorReadinessArrayFields) {
@@ -1335,7 +1340,11 @@ function validateGeneratorReadiness(
         );
       }
       const ownerRole = qntOwnerRolesByPath.get(ownerPath);
-      if (ownerRole !== undefined && ownerRole !== "semantic-core") {
+      if (ownerRole === undefined) {
+        issues.push(
+          `${context}.semanticCore path ${ownerPath} is missing a QNT owner role.`,
+        );
+      } else if (ownerRole !== "semantic-core") {
         issues.push(
           `${context}.semanticCore path ${ownerPath} has QNT owner role ${ownerRole}; expected semantic-core.`,
         );
@@ -1411,6 +1420,19 @@ function qntOwnerPaths(obligations) {
   return ownerPaths;
 }
 
+function generatorReadinessOwnerPaths(generatorReadiness) {
+  const ownerPaths = new Set();
+  for (const readiness of generatorReadiness) {
+    if (!isRecord(readiness) || readiness.status === "not-assessed") continue;
+    for (const field of ["semanticCore", "proofOnly"]) {
+      for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
+        ownerPaths.add(ownerPath);
+      }
+    }
+  }
+  return ownerPaths;
+}
+
 function generatorReadinessDenominatorGaps(
   obligations,
   qntOwnerRolesByPath,
@@ -1448,7 +1470,7 @@ function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
   } else {
     if (!expectedQntOwnerPaths.has(row.ownerPath)) {
       issues.push(
-        `${context}.ownerPath ${row.ownerPath} is not a covered obligation QNT owner.`,
+        `${context}.ownerPath ${row.ownerPath} is not a covered obligation or assessed generator-readiness QNT owner.`,
       );
     }
     if (!fs.existsSync(path.join(rootPath, row.ownerPath))) {
@@ -1921,7 +1943,7 @@ function buildMatrix(rootPath) {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id, except BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS unit-feature profiles are reported under unitFeatureProfileOwnerRows so the broad obligation does not claim profile-scoped QNT ownership.",
       "qntOwnerRoles[].obligationIds":
-        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
+        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only, including assessed generator-readiness semanticCore/proofOnly paths.",
       "qntOwnerRoles[].profileScopes":
         "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS.",
     },
@@ -2413,6 +2435,9 @@ function buildKernelCoverage({
   }
 
   const expectedQntOwnerPaths = qntOwnerPaths(obligations);
+  for (const ownerPath of generatorReadinessOwnerPaths(generatorReadiness)) {
+    expectedQntOwnerPaths.add(ownerPath);
+  }
   const qntOwnerRolesByPath = new Map();
   for (const [index, row] of qntOwnerRoleRows.entries()) {
     if (isRecord(row) && typeof row.ownerPath === "string") {

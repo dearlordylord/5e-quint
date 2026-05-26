@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "QNTGR-B10-QNT-OWNER-ROLE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit QNT owner roles for assessed rows"
     },
     {
@@ -271,7 +271,7 @@ Acceptance: checker green and new rows use only documented vocabulary.
 
 ### Task 10 - QNTGR-B10-QNT-OWNER-ROLE-AUDIT - Audit QNT owner roles for assessed rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `qnt-owner-roles.jsonl` and owners touched by this lane.
 

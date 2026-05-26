@@ -79,12 +79,15 @@ listed boundary kind: command, fill, result, state, active-effect,
 support-profile, resource, and handoff.
 
 `qnt-owner-roles.jsonl` records the C-lane role classification for every QNT
-owner path cited by a covered obligation. Rows classify only the owner path;
-the obligation list for each owner is derived from `obligations.jsonl` so the
-owner-to-obligation join has one source of truth. The checker fails if a
-covered QNT owner is missing a role row, if a role row points at a non-owner,
-or if a generator-readiness `semanticCore` path is classified as anything other
-than `semantic-core`.
+owner path cited by a covered obligation or by an assessed generator-readiness
+`semanticCore`/`proofOnly` list. Rows classify only the owner path; the
+obligation list for each owner is derived from `obligations.jsonl` so the
+owner-to-obligation join has one source of truth. The checker fails if a covered
+or assessed-readiness QNT owner is missing a role row, if a role row points at
+a non-owner, or if a generator-readiness `semanticCore` path is classified as
+anything other than `semantic-core`. A globally semantic-core owner may still
+appear in a row's `proofOnly` list when that row uses it as supporting proof
+evidence rather than as its own generator input.
 
 ## Generator Readiness Source Of Truth
 

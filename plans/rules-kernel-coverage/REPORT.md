@@ -377,6 +377,44 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` | semantic-core | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`<br>profile-scoped: `unit-feature.zero-hit-point-replacement` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/creature-attack.qnt` | semantic-core | `BATTLE.ATTACK.MINIMAL_RESOLUTION` |
 | `packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
+| `packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-metamagic-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-monk-focus-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-self-transformation-tests.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/creature-attack.mbt.qnt` | mbt-fixture | _none_ |
+| `packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt` | mbt-fixture | _none_ |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt` | mbt-fixture | _none_ |
+| `packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/hit-point-recovery-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/hit-point-recovery-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/shove-outcome-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt` | proof-only | _none_ |
 
 ## Unit Feature Profile QNT Owners
 
