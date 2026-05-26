@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close out generator readiness closure state"
     },
     {
@@ -335,7 +335,7 @@ artifacts and no deleted plan names.
 
 ### Task 15 - QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT - Close out generator readiness closure state
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: results from Tasks 1-14.
 
