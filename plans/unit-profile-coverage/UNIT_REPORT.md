@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 | 0 |
-| Spell Units | 126 | 126 | 88 | 20 | 18 | 131 | 107/108 | 0 | 1 |
+| Spell Units | 126 | 126 | 88 | 20 | 18 | 131 | 108/108 | 0 | 0 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 | 0 |
 
 | Denominator | Rule |
@@ -1156,7 +1156,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 
 | Unit | Claim | Selected identity | Owner | Reason | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | runtime-detached table/perception/knowledge owner | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Unsupported And Widening Pressure
 

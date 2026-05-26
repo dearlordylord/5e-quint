@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L13UG-A10-LEVEL13-REPORT-CONSISTENCY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify generated report consistency after scope admission"
     },
     {
@@ -301,7 +301,7 @@ coexist with a passing full-support claim.
 
 ### Task 10 - L13UG-A10-LEVEL13-REPORT-CONSISTENCY - Verify generated report consistency after scope admission
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: generated markdown/json reports after Tasks 2-9.
 

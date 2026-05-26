@@ -10137,26 +10137,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "deferredNonApplicableRows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "owner": "runtime-detached table/perception/knowledge owner",
-          "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-          "status": "missing-witness-deferred-not-applicable"
-        },
-        "sourceRecordPath": "packages/surface/content/mind_spike.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-damage-save-or-attack"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "mind_spike"
-      }
-    ],
+    "deferredNonApplicableRows": [],
     "rowCount": 0,
     "rows": []
   },
@@ -12828,10 +12809,10 @@
         "label": "Spell Units",
         "profileFactDenominator": 131,
         "profileSubsetSupportedUnits": 20,
-        "selectedIdentityDeferredNonApplicableUnits": 1,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 108,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 107,
+        "selectedIdentityReplayWitnessUnits": 108,
         "supportedProfileUnits": 88,
         "unsupportedOrOtherUnits": 18
       },
@@ -26427,6 +26408,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-MIND-SPIKE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY"
         }
       ],
       "executableMechanics": true,
