@@ -104,8 +104,10 @@ real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
 `generatorSubset`, and `blockedBy`; omitted arrays are invalid because empty and
 unknown are different states. If present, `dryRun` points at a checked manual
 dry-run artifact. The checker requires a row for every covered obligation with
-at least one QNT owner role classified as `semantic-core`; use `not-assessed`
-with empty arrays until the C-lane classification is known.
+at least one QNT owner role classified as `semantic-core`, and it fails if that
+row is omitted or still `not-assessed`. `not-assessed` is only a transient
+inventory value before an obligation enters the covered semantic-core checker
+scope.
 
 - `semanticCore`: QNT owner files intended to supply executable rule semantics
   for the obligation. Every path must also be declared by the obligation's QNT
@@ -143,7 +145,8 @@ scanner blocker requires adding its catalog description in the same file.
 
 Generator-readiness statuses are:
 
-- `not-assessed`: the obligation has no C-lane classification claim yet.
+- `not-assessed`: the obligation has no C-lane classification claim yet. This
+  status is invalid for covered obligations with a `semantic-core` QNT owner.
 - `semantic-core-candidate`: semantic-core files and their observed subset are
   identified, but the row is not yet certified generation-subset-clean.
 - `generation-subset-clean`: semantic-core files are identified, the subset is

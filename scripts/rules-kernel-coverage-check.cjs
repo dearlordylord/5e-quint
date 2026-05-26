@@ -1392,7 +1392,7 @@ function qntOwnerPaths(obligations) {
 function generatorReadinessDenominatorGaps(
   obligations,
   qntOwnerRolesByPath,
-  readinessObligationIds,
+  readinessByObligationId,
 ) {
   const issues = [];
   for (const obligation of obligations) {
@@ -1400,12 +1400,17 @@ function generatorReadinessDenominatorGaps(
     const semanticCoreOwners = (obligation.qntOwners ?? []).filter(
       (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
     );
-    if (
-      semanticCoreOwners.length > 0 &&
-      !readinessObligationIds.has(obligation.id)
-    ) {
+    if (semanticCoreOwners.length === 0) continue;
+    const readiness = readinessByObligationId.get(obligation.id);
+    if (readiness === undefined) {
       issues.push(
         `generator-readiness is missing row for covered obligation ${obligation.id} with semantic-core QNT owner(s): ${semanticCoreOwners.join(", ")}.`,
+      );
+      continue;
+    }
+    if (readiness.status === "not-assessed") {
+      issues.push(
+        `generator-readiness row for covered obligation ${obligation.id} with semantic-core QNT owner(s) cannot remain not-assessed: ${semanticCoreOwners.join(", ")}.`,
       );
     }
   }
@@ -2409,6 +2414,7 @@ function buildKernelCoverage({ root: rootPath }) {
 
   const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
+  const readinessByObligationId = new Map();
   for (const [index, readiness] of generatorReadiness.entries()) {
     if (isRecord(readiness) && typeof readiness.obligationId === "string") {
       if (readinessObligationIds.has(readiness.obligationId)) {
@@ -2417,6 +2423,7 @@ function buildKernelCoverage({ root: rootPath }) {
         );
       }
       readinessObligationIds.add(readiness.obligationId);
+      readinessByObligationId.set(readiness.obligationId, readiness);
     }
     issues.push(
       ...validateGeneratorReadiness(
@@ -2434,7 +2441,7 @@ function buildKernelCoverage({ root: rootPath }) {
     ...generatorReadinessDenominatorGaps(
       obligations,
       qntOwnerRolesByPath,
-      readinessObligationIds,
+      readinessByObligationId,
     ),
   );
 
