@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "QNTGR-B02-MIRROR-IMAGE-ASSESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess Mirror Image generator readiness"
     },
     {
