@@ -9174,6 +9174,7 @@
     },
     {
       "blockedBy": [],
+      "dryRun": "plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md",
       "generatorSubset": [
         "import",
         "variant",
