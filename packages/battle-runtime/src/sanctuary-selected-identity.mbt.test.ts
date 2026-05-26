@@ -3,9 +3,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -44,24 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const sanctuarySelectedIdentityDriverSchema = {
-  init: {},
-  doCastSanctuaryWardCreation: {},
-  doInterdictDirectAttackFailedSaveLoss: {},
-  doInterdictDirectSpellSuccessfulSavePassThrough: {},
-  doRetargetDirectAttackToLegalReplacement: {},
-  doRejectIllegalReplacementTarget: {},
-  doExcludeAreaEffectFromInterdiction: {},
-  doEndWardOnWardedAttackRoll: {},
-  doEndWardOnWardedSpellCast: {},
-  doEndWardOnWardedDamageDealt: {},
-  step: {},
-} as const;
-type SanctuarySelectedIdentityDriverAction = Exclude<
-  keyof typeof sanctuarySelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type SanctuarySelectedIdentityLastResult =
   | "init"
@@ -86,15 +67,25 @@ type SanctuarySelectedIdentityProjection = {
   readonly wardedHp: number;
   readonly lastResult: SanctuarySelectedIdentityLastResult;
 };
+type SanctuarySelectedIdentityAction =
+  | "doCastSanctuaryWardCreation"
+  | "doInterdictDirectAttackFailedSaveLoss"
+  | "doInterdictDirectSpellSuccessfulSavePassThrough"
+  | "doRetargetDirectAttackToLegalReplacement"
+  | "doRejectIllegalReplacementTarget"
+  | "doExcludeAreaEffectFromInterdiction"
+  | "doEndWardOnWardedAttackRoll"
+  | "doEndWardOnWardedSpellCast"
+  | "doEndWardOnWardedDamageDealt";
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
-  readonly actions: readonly SanctuarySelectedIdentityDriverAction[];
+  readonly actions: readonly SanctuarySelectedIdentityAction[];
   readonly expected: SanctuarySelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "L1H-SANCTUARY";
   readonly unitId: typeof sanctuaryUnitId;
-  readonly actions: readonly SanctuarySelectedIdentityDriverAction[];
+  readonly actions: readonly SanctuarySelectedIdentityAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
@@ -253,98 +244,70 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Sanctuary selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<SanctuarySelectedIdentityDriverAction>();
+const sanctuaryDiscoveries = {
+  doCastSanctuaryWardCreation: projectWardCreation,
+  doInterdictDirectAttackFailedSaveLoss: projectDirectAttackLost,
+  doInterdictDirectSpellSuccessfulSavePassThrough:
+    projectDirectSpellSuccessfulSave,
+  doRetargetDirectAttackToLegalReplacement: projectLegalReplacementTarget,
+  doRejectIllegalReplacementTarget: projectIllegalReplacementTarget,
+  doExcludeAreaEffectFromInterdiction: projectAreaEffectExclusion,
+  doEndWardOnWardedAttackRoll: projectAttackRollEarlyEnd,
+  doEndWardOnWardedSpellCast: projectSpellCastEarlyEnd,
+  doEndWardOnWardedDamageDealt: projectDamageEarlyEnd,
+} as const satisfies Record<
+  SanctuarySelectedIdentityAction,
+  () => SanctuarySelectedIdentityProjection
+>;
 
-      for (const sequence of replay.sequences) {
-        const driver = createSanctuarySelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Sanctuary selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Sanctuary selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Sanctuary selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-sanctuary-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSanctuarySelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: sanctuarySelectedIdentityStateCheck,
-    });
-  }, 120_000);
+defineSelectedIdentityWitness({
+  describeLabel: "Sanctuary selected identity MBT",
+  taskId: "sanctuary-selected-identity",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-sanctuary-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    wardPresent: "bool",
+    wardSourceIsSanctuary: "bool",
+    wisdomSaveRequested: "bool",
+    attackOrSpellLost: "bool",
+    successfulSavePassThrough: "bool",
+    legalReplacementPassThrough: "bool",
+    illegalReplacementRejected: "bool",
+    areaEffectBypassedInterdiction: "bool",
+    wardedHp: "int",
+    lastResult: "str",
+  },
+  initialProjection: projectInitialBattle(),
+  units: selectedUnitIdentityReplays.map((replay) => ({
+    unitId: replay.unitId,
+    procedures: replay.sequences.map((sequence) => {
+      const actionName = singleReplayAction(
+        replay.unitId,
+        sequence.name,
+        sequence.actions,
+      );
+      return {
+        actionName,
+        projectionAfter: sequence.expected,
+        discover: sanctuaryDiscoveries[actionName],
+      };
+    }),
+  })),
 });
 
-function createSanctuarySelectedIdentityDriver() {
-  return defineDriver(sanctuarySelectedIdentityDriverSchema, () => {
-    let projection = projectInitialBattle();
-
-    function reset(): void {
-      projection = projectInitialBattle();
-    }
-
-    return {
-      init: reset,
-      doCastSanctuaryWardCreation: () => {
-        projection = projectWardCreation();
-      },
-      doInterdictDirectAttackFailedSaveLoss: () => {
-        projection = projectDirectAttackLost();
-      },
-      doInterdictDirectSpellSuccessfulSavePassThrough: () => {
-        projection = projectDirectSpellSuccessfulSave();
-      },
-      doRetargetDirectAttackToLegalReplacement: () => {
-        projection = projectLegalReplacementTarget();
-      },
-      doRejectIllegalReplacementTarget: () => {
-        projection = projectIllegalReplacementTarget();
-      },
-      doExcludeAreaEffectFromInterdiction: () => {
-        projection = projectAreaEffectExclusion();
-      },
-      doEndWardOnWardedAttackRoll: () => {
-        projection = projectAttackRollEarlyEnd();
-      },
-      doEndWardOnWardedSpellCast: () => {
-        projection = projectSpellCastEarlyEnd();
-      },
-      doEndWardOnWardedDamageDealt: () => {
-        projection = projectDamageEarlyEnd();
-      },
-      step: () => {},
-      getState: () => projection,
-    };
-  });
+function singleReplayAction(
+  unitId: typeof sanctuaryUnitId,
+  sequenceName: string,
+  actions: readonly SanctuarySelectedIdentityAction[],
+): SanctuarySelectedIdentityAction {
+  if (actions.length !== 1 || actions[0] === undefined) {
+    throw new Error(
+      `Expected single Sanctuary selected identity replay action for ${unitId}:${sequenceName}.`,
+    );
+  }
+  return actions[0];
 }
 
 function expectedProjection(
@@ -1027,86 +990,3 @@ function sanctuaryWard(
     (effect): effect is SanctuaryWardEffect => effect.kind === "sanctuaryWard",
   );
 }
-
-function normalizeSanctuarySelectedIdentityQuintState(
-  raw: unknown,
-): SanctuarySelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    wardPresent: booleanField(state, "qWardPresent"),
-    wardSourceIsSanctuary: booleanField(state, "qWardSourceIsSanctuary"),
-    wisdomSaveRequested: booleanField(state, "qWisdomSaveRequested"),
-    attackOrSpellLost: booleanField(state, "qAttackOrSpellLost"),
-    successfulSavePassThrough: booleanField(
-      state,
-      "qSuccessfulSavePassThrough",
-    ),
-    legalReplacementPassThrough: booleanField(
-      state,
-      "qLegalReplacementPassThrough",
-    ),
-    illegalReplacementRejected: booleanField(
-      state,
-      "qIllegalReplacementRejected",
-    ),
-    areaEffectBypassedInterdiction: booleanField(
-      state,
-      "qAreaEffectBypassedInterdiction",
-    ),
-    wardedHp: numberFromQuintInt(state["qWardedHp"], "qWardedHp"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): SanctuarySelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "wardCreated" ||
-    raw === "attackLost" ||
-    raw === "spellSaveSucceeded" ||
-    raw === "replacementAdmitted" ||
-    raw === "replacementRejected" ||
-    raw === "areaEffectExcluded" ||
-    raw === "attackRollEndedWard" ||
-    raw === "spellCastEndedWard" ||
-    raw === "damageEndedWard"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const sanctuarySelectedIdentityStateCheck = stateCheck(
-  normalizeSanctuarySelectedIdentityQuintState,
-  (
-    spec: SanctuarySelectedIdentityProjection,
-    impl: SanctuarySelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

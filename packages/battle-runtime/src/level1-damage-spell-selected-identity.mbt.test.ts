@@ -10,9 +10,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import {
   armorClass,
@@ -61,26 +59,7 @@ import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
-
-const level1DamageSpellSelectedIdentityDriverSchema = {
-  init: {},
-  doResolveBurningHandsMixedConeSavingThrows: {},
-  doResolveChromaticOrbDuplicateDamageLeap: {},
-  doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: {},
-  doResolveIceKnifeMissBurstSavingThrows: {},
-  doResolvePoisonSpraySpellAttackDamage: {},
-  doResolveRayOfSicknessSpellAttackDamageAndPoisoned: {},
-  doResolveSacredFlameDexteritySavingThrowRadiantDamage: {},
-  doResolveSorcerousBurstSpellAttackDamage: {},
-  doResolveStarryWispObjectSpellAttackDamageAndDimLight: {},
-  doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
-    {},
-  step: {},
-} as const;
-type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
-  keyof typeof level1DamageSpellSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const level1DamageSpellUnitIds = [
   "burning_hands",
@@ -120,15 +99,26 @@ type Level1DamageSpellSelectedIdentityProjection = {
   readonly secondaryTargetHp: number;
   readonly lastResult: Level1DamageSpellSelectedIdentityResult;
 };
+type Level1DamageSpellSelectedIdentityAction =
+  | "doResolveBurningHandsMixedConeSavingThrows"
+  | "doResolveChromaticOrbDuplicateDamageLeap"
+  | "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows"
+  | "doResolveIceKnifeMissBurstSavingThrows"
+  | "doResolvePoisonSpraySpellAttackDamage"
+  | "doResolveRayOfSicknessSpellAttackDamageAndPoisoned"
+  | "doResolveSacredFlameDexteritySavingThrowRadiantDamage"
+  | "doResolveSorcerousBurstSpellAttackDamage"
+  | "doResolveStarryWispObjectSpellAttackDamageAndDimLight"
+  | "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage";
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
-  readonly actions: readonly Level1DamageSpellSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1DamageSpellSelectedIdentityAction[];
   readonly expected: Level1DamageSpellSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "level1-damage-spell-selected-identity";
   readonly unitId: Level1DamageSpellUnitId;
-  readonly actions: readonly Level1DamageSpellSelectedIdentityDriverAction[];
+  readonly actions: readonly Level1DamageSpellSelectedIdentityAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
@@ -467,165 +457,136 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Level 1 damage spell selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<Level1DamageSpellSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createLevel1DamageSpellSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Level 1 damage spell selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Level 1 damage spell selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Level 1 damage spell selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+const level1DamageSpellDiscoveries = {
+  doResolveBurningHandsMixedConeSavingThrows: () =>
+    resolvedProjection(
+      "burning_hands",
+      resolveBurningHandsMixedConeSavingThrows,
+      "burningHandsMixedConeSavingThrows",
+    ),
+  doResolveChromaticOrbDuplicateDamageLeap: () =>
+    resolvedProjection(
+      "chromatic_orb",
+      resolveChromaticOrbDuplicateDamageLeap,
+      "chromaticOrbDuplicateDamageLeap",
+    ),
+  doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: () =>
+    resolvedProjection(
+      "ice_knife",
+      resolveIceKnifeHitAttackDamageAndBurstSavingThrows,
+      "iceKnifeHitAttackDamageAndBurstSavingThrows",
+    ),
+  doResolveIceKnifeMissBurstSavingThrows: () =>
+    resolvedProjection(
+      "ice_knife",
+      resolveIceKnifeMissBurstSavingThrows,
+      "iceKnifeMissBurstSavingThrows",
+    ),
+  doResolvePoisonSpraySpellAttackDamage: () =>
+    resolvedProjection(
+      "poison_spray",
+      resolvePoisonSpraySpellAttackDamage,
+      "poisonSpraySpellAttackDamage",
+    ),
+  doResolveRayOfSicknessSpellAttackDamageAndPoisoned: () =>
+    resolvedProjection(
+      "ray_of_sickness",
+      resolveRayOfSicknessSpellAttackDamageAndPoisoned,
+      "rayOfSicknessSpellAttackDamageAndPoisoned",
+    ),
+  doResolveSacredFlameDexteritySavingThrowRadiantDamage: () =>
+    resolvedProjection(
+      "sacred_flame",
+      resolveSacredFlameDexteritySavingThrowRadiantDamage,
+      "sacredFlameDexteritySavingThrowRadiantDamage",
+    ),
+  doResolveSorcerousBurstSpellAttackDamage: () =>
+    resolvedProjection(
+      "sorcerous_burst",
+      resolveSorcerousBurstSpellAttackDamage,
+      "sorcerousBurstSpellAttackDamage",
+    ),
+  doResolveStarryWispObjectSpellAttackDamageAndDimLight: () =>
+    resolvedProjection(
+      "starry_wisp",
+      resolveStarryWispObjectSpellAttackDamageAndDimLight,
+      "starryWispObjectSpellAttackDamageAndDimLight",
+    ),
+  doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
+    () =>
+      resolvedProjection(
+        "vicious_mockery",
+        resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage,
+        "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
       ),
-      init: "init",
-      step: "step",
-      driver: createLevel1DamageSpellSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: level1DamageSpellSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+} as const satisfies Record<
+  Level1DamageSpellSelectedIdentityAction,
+  () => Level1DamageSpellSelectedIdentityProjection
+>;
+
+defineSelectedIdentityWitness({
+  describeLabel: "Level 1 damage spell selected identity MBT",
+  taskId: "level1-damage-spell-selected-identity",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    actionAvailable: "bool",
+    spellSlotSpentThisTurn: "bool",
+    level1SlotsRemaining: "int",
+    primaryTargetHp: "int",
+    primaryTargetPoisoned: "bool",
+    primaryTargetNextAttackRollDisadvantage: "bool",
+    secondaryTargetHp: "int",
+    lastResult: "str",
+  },
+  initialProjection: expectedProjection(),
+  units: selectedUnitIdentityReplays.map((replay) => ({
+    unitId: replay.unitId,
+    procedures: replay.sequences.map((sequence) => {
+      const actionName = singleReplayAction(
+        replay.unitId,
+        sequence.name,
+        sequence.actions,
+      );
+      return {
+        actionName,
+        projectionAfter: sequence.expected,
+        discover: level1DamageSpellDiscoveries[actionName],
+      };
+    }),
+  })),
 });
 
-function createLevel1DamageSpellSelectedIdentityDriver() {
-  return defineDriver(level1DamageSpellSelectedIdentityDriverSchema, () => {
-    let state = level1DamageSpellBattle(srdSpellRecord("burning_hands"));
-    let lastResult: Level1DamageSpellSelectedIdentityProjection["lastResult"] =
-      "init";
+function singleReplayAction(
+  unitId: Level1DamageSpellUnitId,
+  sequenceName: string,
+  actions: readonly Level1DamageSpellSelectedIdentityAction[],
+): Level1DamageSpellSelectedIdentityAction {
+  if (actions.length !== 1 || actions[0] === undefined) {
+    throw new Error(
+      `Expected single Level 1 damage spell selected identity replay action for ${unitId}:${sequenceName}.`,
+    );
+  }
+  return actions[0];
+}
 
-    function reset(): void {
-      state = level1DamageSpellBattle(srdSpellRecord("burning_hands"));
-      lastResult = "init";
-    }
-
-    function recordResolvedResult(
-      result: BattleResolutionResult,
-      resultKind: Exclude<
-        Level1DamageSpellSelectedIdentityProjection["lastResult"],
-        "init"
-      >,
-    ): void {
-      if (result.tag !== "resolved") {
-        throw new Error(
-          `Expected Level 1 damage spell action to resolve, got ${result.tag}.`,
-        );
-      }
-      state = result.state;
-      lastResult = resultKind;
-    }
-
-    return {
-      init: reset,
-      doResolveBurningHandsMixedConeSavingThrows: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("burning_hands"));
-        recordResolvedResult(
-          resolveBurningHandsMixedConeSavingThrows(state),
-          "burningHandsMixedConeSavingThrows",
-        );
-      },
-      doResolveChromaticOrbDuplicateDamageLeap: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("chromatic_orb"));
-        recordResolvedResult(
-          resolveChromaticOrbDuplicateDamageLeap(state),
-          "chromaticOrbDuplicateDamageLeap",
-        );
-      },
-      doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("ice_knife"));
-        recordResolvedResult(
-          resolveIceKnifeHitAttackDamageAndBurstSavingThrows(state),
-          "iceKnifeHitAttackDamageAndBurstSavingThrows",
-        );
-      },
-      doResolveIceKnifeMissBurstSavingThrows: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("ice_knife"));
-        recordResolvedResult(
-          resolveIceKnifeMissBurstSavingThrows(state),
-          "iceKnifeMissBurstSavingThrows",
-        );
-      },
-      doResolvePoisonSpraySpellAttackDamage: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("poison_spray"));
-        recordResolvedResult(
-          resolvePoisonSpraySpellAttackDamage(state),
-          "poisonSpraySpellAttackDamage",
-        );
-      },
-      doResolveRayOfSicknessSpellAttackDamageAndPoisoned: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("ray_of_sickness"));
-        recordResolvedResult(
-          resolveRayOfSicknessSpellAttackDamageAndPoisoned(state),
-          "rayOfSicknessSpellAttackDamageAndPoisoned",
-        );
-      },
-      doResolveSacredFlameDexteritySavingThrowRadiantDamage: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("sacred_flame"));
-        recordResolvedResult(
-          resolveSacredFlameDexteritySavingThrowRadiantDamage(state),
-          "sacredFlameDexteritySavingThrowRadiantDamage",
-        );
-      },
-      doResolveSorcerousBurstSpellAttackDamage: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("sorcerous_burst"));
-        recordResolvedResult(
-          resolveSorcerousBurstSpellAttackDamage(state),
-          "sorcerousBurstSpellAttackDamage",
-        );
-      },
-      doResolveStarryWispObjectSpellAttackDamageAndDimLight: () => {
-        state = level1DamageSpellBattle(srdSpellRecord("starry_wisp"));
-        recordResolvedResult(
-          resolveStarryWispObjectSpellAttackDamageAndDimLight(state),
-          "starryWispObjectSpellAttackDamageAndDimLight",
-        );
-      },
-      doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
-        () => {
-          state = level1DamageSpellBattle(srdSpellRecord("vicious_mockery"));
-          recordResolvedResult(
-            resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage(
-              state,
-            ),
-            "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-          );
-        },
-      step: () => {},
-      getState: () =>
-        projectLevel1DamageSpellSelectedIdentityState(state, lastResult),
-    };
-  });
+function resolvedProjection(
+  unitId: Level1DamageSpellUnitId,
+  resolve: (state: BattleState) => BattleResolutionResult,
+  lastResult: Exclude<Level1DamageSpellSelectedIdentityResult, "init">,
+): Level1DamageSpellSelectedIdentityProjection {
+  const result = resolve(level1DamageSpellBattle(srdSpellRecord(unitId)));
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected Level 1 damage spell action to resolve, got ${result.tag}.`,
+    );
+  }
+  return projectLevel1DamageSpellSelectedIdentityState(
+    result.state,
+    lastResult,
+  );
 }
 
 function expectedProjection(
@@ -2125,82 +2086,3 @@ function level1SlotsRemaining(
   );
   return slot === undefined ? 0 : Number(slot.count) - Number(slot.expended);
 }
-
-function normalizeLevel1DamageSpellSelectedIdentityQuintState(
-  raw: unknown,
-): Level1DamageSpellSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
-    level1SlotsRemaining: numberFromQuintInt(
-      state["qLevel1SlotsRemaining"],
-      "qLevel1SlotsRemaining",
-    ),
-    primaryTargetHp: numberFromQuintInt(
-      state["qPrimaryTargetHp"],
-      "qPrimaryTargetHp",
-    ),
-    primaryTargetPoisoned: booleanField(state, "qPrimaryTargetPoisoned"),
-    primaryTargetNextAttackRollDisadvantage: booleanField(
-      state,
-      "qPrimaryTargetNextAttackRollDisadvantage",
-    ),
-    secondaryTargetHp: numberFromQuintInt(
-      state["qSecondaryTargetHp"],
-      "qSecondaryTargetHp",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): Level1DamageSpellSelectedIdentityProjection["lastResult"] {
-  if (isLevel1DamageSpellSelectedIdentityResult(raw)) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-function isLevel1DamageSpellSelectedIdentityResult(
-  raw: unknown,
-): raw is Level1DamageSpellSelectedIdentityResult {
-  return (
-    typeof raw === "string" &&
-    level1DamageSpellSelectedIdentityResults.some((result) => result === raw)
-  );
-}
-
-const level1DamageSpellSelectedIdentityStateCheck = stateCheck(
-  normalizeLevel1DamageSpellSelectedIdentityQuintState,
-  (
-    spec: Level1DamageSpellSelectedIdentityProjection,
-    impl: Level1DamageSpellSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

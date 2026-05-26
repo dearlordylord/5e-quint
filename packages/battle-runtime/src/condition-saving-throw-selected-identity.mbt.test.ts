@@ -8,9 +8,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -48,24 +46,8 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
-
-const conditionSavingThrowSelectedIdentityDriverSchema = {
-  init: {},
-  doResolveBlindnessDeafnessBlindedSavingThrow: {},
-  doResolveBlindnessDeafnessDeafenedSavingThrow: {},
-  doResolveColorSprayFailedSavingThrow: {},
-  doResolveEntangleFailedSavingThrow: {},
-  doResolveHoldPersonFailedSavingThrow: {},
-  doResolveHoldPersonRepeatSavingThrowSuccess: {},
-  doResolveHideousLaughterRepeatSavingThrowSuccess: {},
-  doResolveSleepRepeatSavingThrowFailure: {},
-  step: {},
-} as const;
-type ConditionSavingThrowSelectedIdentityDriverAction = Exclude<
-  keyof typeof conditionSavingThrowSelectedIdentityDriverSchema,
-  "init" | "step"
->;
 
 type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetBlinded: boolean;
@@ -81,18 +63,6 @@ type ConditionSavingThrowSelectedIdentityProjection = {
   readonly secondLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly ConditionSavingThrowSelectedIdentityDriverAction[];
-  readonly expected: ConditionSavingThrowSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "condition-saving-throw-lifecycle";
-  readonly unitId: ConditionSavingThrowSpellUnitId;
-  readonly actions: readonly ConditionSavingThrowSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
-};
-
 const conditionSavingThrowSpellUnitIds = [
   "blindness_deafness",
   "color_spray",
@@ -132,450 +102,373 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "blindness_deafness",
-    actions: [
-      "doResolveBlindnessDeafnessBlindedSavingThrow",
-      "doResolveBlindnessDeafnessDeafenedSavingThrow",
-    ],
-    sequences: [
-      {
-        name: "failed-constitution-saving-throw-applies-chosen-blinded-condition",
-        actions: ["doResolveBlindnessDeafnessBlindedSavingThrow"],
-        expected: expectedProjection({
-          targetBlinded: true,
-          actionAvailable: false,
-          secondLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-      {
-        name: "failed-constitution-saving-throw-applies-chosen-deafened-condition",
-        actions: ["doResolveBlindnessDeafnessDeafenedSavingThrow"],
-        expected: expectedProjection({
-          targetDeafened: true,
-          actionAvailable: false,
-          secondLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Condition Saving Throw selected identity MBT",
+  taskId: "condition-saving-throw-lifecycle",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    targetBlinded: "bool",
+    targetDeafened: "bool",
+    targetRestrained: "bool",
+    targetParalyzed: "bool",
+    targetIncapacitated: "bool",
+    targetUnconscious: "bool",
+    targetProne: "bool",
+    casterConcentrating: "bool",
+    actionAvailable: "bool",
+    firstLevelSlotsExpended: "int",
+    secondLevelSlotsExpended: "int",
+    lastResult: "str",
   },
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "color_spray",
-    actions: ["doResolveColorSprayFailedSavingThrow"],
-    sequences: [
-      {
-        name: "failed-constitution-saving-throw-applies-blinded",
-        actions: ["doResolveColorSprayFailedSavingThrow"],
-        expected: expectedProjection({
-          targetBlinded: true,
-          actionAvailable: false,
-          firstLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "entangle",
-    actions: ["doResolveEntangleFailedSavingThrow"],
-    sequences: [
-      {
-        name: "failed-strength-saving-throw-applies-restrained",
-        actions: ["doResolveEntangleFailedSavingThrow"],
-        expected: expectedProjection({
-          targetRestrained: true,
-          casterConcentrating: true,
-          actionAvailable: false,
-          firstLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "hideous_laughter",
-    actions: ["doResolveHideousLaughterRepeatSavingThrowSuccess"],
-    sequences: [
-      {
-        name: "repeat-wisdom-saving-throw-success-clears-prone-incapacitated",
-        actions: ["doResolveHideousLaughterRepeatSavingThrowSuccess"],
-        expected: expectedProjection({
-          actionAvailable: true,
-          firstLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "hold_person",
-    actions: [
-      "doResolveHoldPersonFailedSavingThrow",
-      "doResolveHoldPersonRepeatSavingThrowSuccess",
-    ],
-    sequences: [
-      {
-        name: "failed-wisdom-saving-throw-applies-paralyzed-concentration",
-        actions: ["doResolveHoldPersonFailedSavingThrow"],
-        expected: expectedProjection({
-          targetParalyzed: true,
-          targetIncapacitated: true,
-          casterConcentrating: true,
-          actionAvailable: false,
-          secondLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-      {
-        name: "repeat-wisdom-saving-throw-success-clears-paralyzed-concentration",
-        actions: ["doResolveHoldPersonRepeatSavingThrowSuccess"],
-        expected: expectedProjection({
-          actionAvailable: true,
-          secondLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "condition-saving-throw-lifecycle",
-    unitId: "sleep",
-    actions: ["doResolveSleepRepeatSavingThrowFailure"],
-    sequences: [
-      {
-        name: "repeat-wisdom-saving-throw-failure-escalates-to-unconscious",
-        actions: ["doResolveSleepRepeatSavingThrowFailure"],
-        expected: expectedProjection({
-          targetIncapacitated: true,
-          targetUnconscious: true,
-          targetProne: true,
-          casterConcentrating: true,
-          actionAvailable: true,
-          firstLevelSlotsExpended: 1,
-          lastResult: "resolved",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Condition Saving Throw selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<ConditionSavingThrowSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createConditionSavingThrowSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Condition Saving Throw selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Condition Saving Throw selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Condition Saving Throw selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createConditionSavingThrowSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: conditionSavingThrowSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: "blindness_deafness",
+      procedures: [
+        {
+          actionName: "doResolveBlindnessDeafnessBlindedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetBlinded: true,
+            actionAvailable: false,
+            secondLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(
+              resolveBlindnessDeafnessFailedSavingThrow("blinded"),
+            ),
+        },
+        {
+          actionName: "doResolveBlindnessDeafnessDeafenedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetDeafened: true,
+            actionAvailable: false,
+            secondLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(
+              resolveBlindnessDeafnessFailedSavingThrow("deafened"),
+            ),
+        },
+      ],
+    },
+    {
+      unitId: "color_spray",
+      procedures: [
+        {
+          actionName: "doResolveColorSprayFailedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetBlinded: true,
+            actionAvailable: false,
+            firstLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(
+              resolveAreaSavingThrowSpell(
+                conditionSpellBattle(srdSpellRecord("color_spray"), "wizard"),
+                "color_spray",
+              ),
+            ),
+        },
+      ],
+    },
+    {
+      unitId: "entangle",
+      procedures: [
+        {
+          actionName: "doResolveEntangleFailedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetRestrained: true,
+            casterConcentrating: true,
+            actionAvailable: false,
+            firstLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(
+              resolveAreaSavingThrowSpell(
+                conditionSpellBattle(srdSpellRecord("entangle"), "druid"),
+                "entangle",
+              ),
+            ),
+        },
+      ],
+    },
+    {
+      unitId: "hideous_laughter",
+      procedures: [
+        {
+          actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
+          projectionAfter: expectedProjection({
+            actionAvailable: true,
+            firstLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(
+              resolveHideousLaughterRepeatSavingThrowSuccess(),
+            ),
+        },
+      ],
+    },
+    {
+      unitId: "hold_person",
+      procedures: [
+        {
+          actionName: "doResolveHoldPersonFailedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetParalyzed: true,
+            targetIncapacitated: true,
+            casterConcentrating: true,
+            actionAvailable: false,
+            secondLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () => resolvedProjection(resolveHoldPersonFailedSavingThrow()),
+        },
+        {
+          actionName: "doResolveHoldPersonRepeatSavingThrowSuccess",
+          projectionAfter: expectedProjection({
+            actionAvailable: true,
+            secondLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(resolveHoldPersonRepeatSavingThrowSuccess()),
+        },
+      ],
+    },
+    {
+      unitId: "sleep",
+      procedures: [
+        {
+          actionName: "doResolveSleepRepeatSavingThrowFailure",
+          projectionAfter: expectedProjection({
+            targetIncapacitated: true,
+            targetUnconscious: true,
+            targetProne: true,
+            casterConcentrating: true,
+            actionAvailable: true,
+            firstLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(resolveSleepRepeatSavingThrowFailure()),
+        },
+      ],
+    },
+  ],
 });
 
-function createConditionSavingThrowSelectedIdentityDriver() {
-  return defineDriver(conditionSavingThrowSelectedIdentityDriverSchema, () => {
-    let state = conditionSpellBattle(srdSpellRecord("color_spray"), "wizard");
-    let lastResult: ConditionSavingThrowSelectedIdentityProjection["lastResult"] =
-      "init";
+function resolvedProjection(
+  result: BattleResolutionResult,
+): ConditionSavingThrowSelectedIdentityProjection {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected Condition Saving Throw spell to resolve, got ${result.tag}.`,
+    );
+  }
+  return projectConditionSavingThrowSelectedIdentityState(
+    result.state,
+    "resolved",
+  );
+}
 
-    function reset(): void {
-      state = conditionSpellBattle(srdSpellRecord("color_spray"), "wizard");
-      lastResult = "init";
-    }
+function resolveAreaSavingThrowSpell(
+  state: BattleState,
+  spellId: Extract<ConditionSavingThrowSpellUnitId, "color_spray" | "entangle">,
+): BattleResolutionResult {
+  const act = spellAct({ state, spellId, slotLevel: 1 });
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+    ],
+  });
+}
 
-    function recordResolvedResult(result: BattleResolutionResult): void {
-      if (result.tag !== "resolved") {
-        throw new Error(
-          `Expected Condition Saving Throw spell to resolve, got ${result.tag}.`,
-        );
-      }
-      state = result.state;
-      lastResult = "resolved";
-    }
+function resolveBlindnessDeafnessFailedSavingThrow(
+  selectedCondition: "blinded" | "deafened",
+): BattleResolutionResult {
+  const state = conditionSpellBattle(
+    srdSpellRecord("blindness_deafness"),
+    "wizard",
+  );
+  const act = spellAct({
+    state,
+    spellId: "blindness_deafness",
+    slotLevel: 2,
+  });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
+  const targetFill = spellTargetListFill(target, "blindness_deafness", [
+    targetId,
+  ]);
+  const conditionChoiceFill = spellConditionChoiceFill(
+    conditionChoice,
+    selectedCondition,
+  );
+  const initialSave = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, conditionChoiceFill],
+    }),
+    "savingThrowOutcome",
+  );
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      conditionChoiceFill,
+      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+    ],
+  });
+}
 
-    return {
-      init: reset,
-      doResolveBlindnessDeafnessBlindedSavingThrow: () => {
-        state = conditionSpellBattle(
-          srdSpellRecord("blindness_deafness"),
-          "wizard",
-        );
-        recordResolvedResult(
-          resolveBlindnessDeafnessFailedSavingThrow("blinded"),
-        );
-      },
-      doResolveBlindnessDeafnessDeafenedSavingThrow: () => {
-        state = conditionSpellBattle(
-          srdSpellRecord("blindness_deafness"),
-          "wizard",
-        );
-        recordResolvedResult(
-          resolveBlindnessDeafnessFailedSavingThrow("deafened"),
-        );
-      },
-      doResolveColorSprayFailedSavingThrow: () => {
-        state = conditionSpellBattle(srdSpellRecord("color_spray"), "wizard");
-        recordResolvedResult(resolveAreaSavingThrowSpell("color_spray"));
-      },
-      doResolveEntangleFailedSavingThrow: () => {
-        state = conditionSpellBattle(srdSpellRecord("entangle"), "druid");
-        recordResolvedResult(resolveAreaSavingThrowSpell("entangle"));
-      },
-      doResolveHoldPersonFailedSavingThrow: () => {
-        state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
-        recordResolvedResult(resolveHoldPersonFailedSavingThrow());
-      },
-      doResolveHoldPersonRepeatSavingThrowSuccess: () => {
-        state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
-        recordResolvedResult(resolveHoldPersonRepeatSavingThrowSuccess());
-      },
-      doResolveHideousLaughterRepeatSavingThrowSuccess: () => {
-        state = conditionSpellBattle(
-          srdSpellRecord("hideous_laughter"),
-          "wizard",
-        );
-        recordResolvedResult(resolveHideousLaughterRepeatSavingThrowSuccess());
-      },
-      doResolveSleepRepeatSavingThrowFailure: () => {
-        state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
-        recordResolvedResult(resolveSleepRepeatSavingThrowFailure());
-      },
-      step: () => {},
-      getState: () =>
-        projectConditionSavingThrowSelectedIdentityState(state, lastResult),
-    };
+function resolveHoldPersonFailedSavingThrow(): BattleResolutionResult {
+  const state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
+  const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
+  const initialSave = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+    ],
+  });
+}
 
-    function resolveAreaSavingThrowSpell(
-      spellId: Extract<
-        ConditionSavingThrowSpellUnitId,
-        "color_spray" | "entangle"
-      >,
-    ): BattleResolutionResult {
-      const act = spellAct({ state, spellId, slotLevel: 1 });
-      const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
-      return resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
-        ],
-      });
-    }
+function resolveHoldPersonRepeatSavingThrowSuccess(): BattleResolutionResult {
+  const cast = resolveHoldPersonFailedSavingThrow();
+  if (cast.tag !== "resolved") {
+    throw new Error("Expected Hold Person cast to resolve.");
+  }
+  const targetTurn = endTurn({ state: cast.state, actorId: casterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn to resolve.");
+  }
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = resolveBattleSubject({
+    state: targetTurn.state,
+    subject,
+    fills: [],
+  });
+  const repeatResult = requireNeedsHolesResult(repeat);
+  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  return resolveBattleSubject({
+    state: repeatResult.state,
+    subject,
+    fills: [
+      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+    ],
+  });
+}
 
-    function resolveBlindnessDeafnessFailedSavingThrow(
-      selectedCondition: "blinded" | "deafened",
-    ): BattleResolutionResult {
-      const act = spellAct({
-        state,
-        spellId: "blindness_deafness",
-        slotLevel: 2,
-      });
-      const target = requireHole(act.initialHoles, "spellTargetList");
-      const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
-      const targetFill = spellTargetListFill(target, "blindness_deafness", [
-        targetId,
-      ]);
-      const conditionChoiceFill = spellConditionChoiceFill(
-        conditionChoice,
-        selectedCondition,
-      );
-      const initialSave = requireResultHole(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [targetFill, conditionChoiceFill],
-        }),
-        "savingThrowOutcome",
-      );
-      return resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          targetFill,
-          conditionChoiceFill,
-          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
-        ],
-      });
-    }
+function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResult {
+  const state = conditionSpellBattle(
+    srdSpellRecord("hideous_laughter"),
+    "wizard",
+  );
+  const act = spellAct({
+    state,
+    spellId: "hideous_laughter",
+    slotLevel: 1,
+  });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(target, "hideous_laughter", [
+    targetId,
+  ]);
+  const initialSave = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+    ],
+  });
+  if (cast.tag !== "resolved") {
+    throw new Error("Expected Hideous Laughter cast to resolve.");
+  }
+  const targetTurn = endTurn({ state: cast.state, actorId: casterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn to resolve.");
+  }
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = resolveBattleSubject({
+    state: targetTurn.state,
+    subject,
+    fills: [],
+  });
+  const repeatResult = requireNeedsHolesResult(repeat);
+  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  return resolveBattleSubject({
+    state: repeatResult.state,
+    subject,
+    fills: [
+      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+    ],
+  });
+}
 
-    function resolveHoldPersonFailedSavingThrow(): BattleResolutionResult {
-      const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
-      const target = requireHole(act.initialHoles, "spellTargetList");
-      const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
-      const initialSave = requireResultHole(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [targetFill],
-        }),
-        "savingThrowOutcome",
-      );
-      return resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          targetFill,
-          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
-        ],
-      });
-    }
-
-    function resolveHoldPersonRepeatSavingThrowSuccess(): BattleResolutionResult {
-      const cast = resolveHoldPersonFailedSavingThrow();
-      if (cast.tag !== "resolved") {
-        throw new Error("Expected Hold Person cast to resolve.");
-      }
-      const targetTurn = endTurn({ state: cast.state, actorId: casterId });
-      if (targetTurn.tag !== "resolved") {
-        throw new Error("Expected caster End Turn to resolve.");
-      }
-      const subject = endTurnSubjectFor(targetId);
-      const repeat = resolveBattleSubject({
-        state: targetTurn.state,
-        subject,
-        fills: [],
-      });
-      const repeatResult = requireNeedsHolesResult(repeat);
-      const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
-      return resolveBattleSubject({
-        state: repeatResult.state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
-        ],
-      });
-    }
-
-    function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResult {
-      const act = spellAct({
-        state,
-        spellId: "hideous_laughter",
-        slotLevel: 1,
-      });
-      const target = requireHole(act.initialHoles, "spellTargetList");
-      const targetFill = spellTargetListFill(target, "hideous_laughter", [
-        targetId,
-      ]);
-      const initialSave = requireResultHole(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [targetFill],
-        }),
-        "savingThrowOutcome",
-      );
-      const cast = resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          targetFill,
-          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
-        ],
-      });
-      if (cast.tag !== "resolved") {
-        throw new Error("Expected Hideous Laughter cast to resolve.");
-      }
-      const targetTurn = endTurn({ state: cast.state, actorId: casterId });
-      if (targetTurn.tag !== "resolved") {
-        throw new Error("Expected caster End Turn to resolve.");
-      }
-      const subject = endTurnSubjectFor(targetId);
-      const repeat = resolveBattleSubject({
-        state: targetTurn.state,
-        subject,
-        fills: [],
-      });
-      const repeatResult = requireNeedsHolesResult(repeat);
-      const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
-      return resolveBattleSubject({
-        state: repeatResult.state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
-        ],
-      });
-    }
-
-    function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
-      const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
-      const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
-      const cast = resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
-        ],
-      });
-      if (cast.tag !== "resolved") {
-        throw new Error("Expected Sleep cast to resolve.");
-      }
-      const targetTurn = endTurn({ state: cast.state, actorId: casterId });
-      if (targetTurn.tag !== "resolved") {
-        throw new Error("Expected caster End Turn to resolve.");
-      }
-      const subject = endTurnSubjectFor(targetId);
-      const repeat = resolveBattleSubject({
-        state: targetTurn.state,
-        subject,
-        fills: [],
-      });
-      const repeatResult = requireNeedsHolesResult(repeat);
-      const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
-      return resolveBattleSubject({
-        state: repeatResult.state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
-        ],
-      });
-    }
+function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
+  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+    ],
+  });
+  if (cast.tag !== "resolved") {
+    throw new Error("Expected Sleep cast to resolve.");
+  }
+  const targetTurn = endTurn({ state: cast.state, actorId: casterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn to resolve.");
+  }
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = resolveBattleSubject({
+    state: targetTurn.state,
+    subject,
+    fills: [],
+  });
+  const repeatResult = requireNeedsHolesResult(repeat);
+  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  return resolveBattleSubject({
+    state: repeatResult.state,
+    subject,
+    fills: [
+      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
+    ],
   });
 }
 
@@ -856,71 +749,3 @@ function expendedSlotsForSpellLevel(
     )?.expended ?? 0
   );
 }
-
-function normalizeConditionSavingThrowSelectedIdentityQuintState(
-  raw: unknown,
-): ConditionSavingThrowSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    targetBlinded: booleanField(state, "qTargetBlinded"),
-    targetDeafened: booleanField(state, "qTargetDeafened"),
-    targetRestrained: booleanField(state, "qTargetRestrained"),
-    targetParalyzed: booleanField(state, "qTargetParalyzed"),
-    targetIncapacitated: booleanField(state, "qTargetIncapacitated"),
-    targetUnconscious: booleanField(state, "qTargetUnconscious"),
-    targetProne: booleanField(state, "qTargetProne"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    firstLevelSlotsExpended: numberFromQuintInt(
-      state["qFirstLevelSlotsExpended"],
-      "qFirstLevelSlotsExpended",
-    ),
-    secondLevelSlotsExpended: numberFromQuintInt(
-      state["qSecondLevelSlotsExpended"],
-      "qSecondLevelSlotsExpended",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): ConditionSavingThrowSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "resolved") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const conditionSavingThrowSelectedIdentityStateCheck = stateCheck(
-  normalizeConditionSavingThrowSelectedIdentityQuintState,
-  (
-    spec: ConditionSavingThrowSelectedIdentityProjection,
-    impl: ConditionSavingThrowSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

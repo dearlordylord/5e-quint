@@ -4,9 +4,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { describe, expect, it } from "vitest";
-
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
 import {
@@ -38,25 +36,6 @@ import {
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
 
-const conditionRemovalProtectionSelectedIdentityDriverSchema = {
-  init: {},
-  doResolveLesserRestorationChoice: {},
-  doResolveLesserRestorationConcentrationCleanup: {},
-  doResolveProtectionFromPoison: {},
-  step: {},
-} as const;
-type ConditionRemovalProtectionSelectedIdentityDriverAction = Exclude<
-  keyof typeof conditionRemovalProtectionSelectedIdentityDriverSchema,
-  "init" | "step"
->;
-
-const conditionRemovalProtectionUnitIds = [
-  "lesser_restoration",
-  "protection_from_poison",
-] as const;
-type ConditionRemovalProtectionUnitId =
-  (typeof conditionRemovalProtectionUnitIds)[number];
-
 type ConditionRemovalProtectionSelectedIdentityProjection = {
   readonly targetParalyzed: boolean;
   readonly targetPoisoned: boolean;
@@ -73,19 +52,6 @@ type ConditionRemovalProtectionSelectedIdentityProjection = {
     | "lesserRestorationConcentration"
     | "protectionFromPoison";
 };
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions:
-    readonly ConditionRemovalProtectionSelectedIdentityDriverAction[];
-  readonly expected: ConditionRemovalProtectionSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY";
-  readonly unitId: ConditionRemovalProtectionUnitId;
-  readonly actions:
-    readonly ConditionRemovalProtectionSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
-};
 
 type DamageResistanceEffect = Extract<
   BattleActiveEffect,
@@ -96,157 +62,83 @@ type ConditionSavingThrowRollModeEffect = Extract<
   { readonly kind: "conditionSavingThrowRollMode" }
 >;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
-    unitId: "lesser_restoration",
-    actions: [
-      "doResolveLesserRestorationChoice",
-      "doResolveLesserRestorationConcentrationCleanup",
-    ],
-    sequences: [
-      {
-        name: "chosen-condition-removal-preserves-unchosen-poisoned-source",
-        actions: ["doResolveLesserRestorationChoice"],
-        expected: expectedProjection({
-          targetPoisoned: true,
-          targetEffectCount: 1,
-          secondLevelSlotsExpended: 1,
-          bonusActionAvailable: false,
-          lastResult: "lesserRestorationChoice",
-        }),
-      },
-      {
-        name: "removing-last-concentration-condition-clears-caster-lock",
-        actions: ["doResolveLesserRestorationConcentrationCleanup"],
-        expected: expectedProjection({
-          secondLevelSlotsExpended: 1,
-          bonusActionAvailable: false,
-          lastResult: "lesserRestorationConcentration",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Condition removal and protection selected identity MBT",
+  taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    targetParalyzed: "bool",
+    targetPoisoned: "bool",
+    targetEffectCount: "int",
+    casterConcentrating: "bool",
+    targetHasPoisonResistance: "bool",
+    targetHasPoisonSaveAdvantage: "bool",
+    secondLevelSlotsExpended: "int",
+    actionAvailable: "bool",
+    bonusActionAvailable: "bool",
+    lastResult: "str",
   },
-  {
-    taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
-    unitId: "protection_from_poison",
-    actions: ["doResolveProtectionFromPoison"],
-    sequences: [
-      {
-        name: "poisoned-removal-plus-poison-protection-effects",
-        actions: ["doResolveProtectionFromPoison"],
-        expected: expectedProjection({
-          targetEffectCount: 2,
-          targetHasPoisonResistance: true,
-          targetHasPoisonSaveAdvantage: true,
-          secondLevelSlotsExpended: 1,
-          actionAvailable: false,
-          lastResult: "protectionFromPoison",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Condition removal and protection selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<ConditionRemovalProtectionSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver =
-          createConditionRemovalProtectionSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing condition removal/protection driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Condition removal/protection selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createConditionRemovalProtectionSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: conditionRemovalProtectionSelectedIdentityStateCheck,
-    });
-  }, 120_000);
-});
-
-function createConditionRemovalProtectionSelectedIdentityDriver() {
-  return defineDriver(
-    conditionRemovalProtectionSelectedIdentityDriverSchema,
-    () => {
-      let state = spellBattle({ spellSlots: [] });
-      let lastResult: ConditionRemovalProtectionSelectedIdentityProjection["lastResult"] =
-        "init";
-
-      function reset(): void {
-        state = spellBattle({ spellSlots: [] });
-        lastResult = "init";
-      }
-
-      function recordResolvedResult(
-        nextState: BattleState,
-        result: ConditionRemovalProtectionSelectedIdentityProjection["lastResult"],
-      ): void {
-        state = nextState;
-        lastResult = result;
-      }
-
-      return {
-        init: reset,
-        doResolveLesserRestorationChoice: () => {
-          const resolved = resolveLesserRestorationChoiceBattle();
-          recordResolvedResult(resolved, "lesserRestorationChoice");
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: lesserRestorationUnitId,
+      procedures: [
+        {
+          actionName: "doResolveLesserRestorationChoice",
+          projectionAfter: expectedProjection({
+            targetPoisoned: true,
+            targetEffectCount: 1,
+            secondLevelSlotsExpended: 1,
+            bonusActionAvailable: false,
+            lastResult: "lesserRestorationChoice",
+          }),
+          discover: () =>
+            projectConditionRemovalProtectionSelectedIdentityState(
+              resolveLesserRestorationChoiceBattle(),
+              "lesserRestorationChoice",
+            ),
         },
-        doResolveLesserRestorationConcentrationCleanup: () => {
-          const resolved =
-            resolveLesserRestorationConcentrationCleanupBattle();
-          recordResolvedResult(resolved, "lesserRestorationConcentration");
+        {
+          actionName: "doResolveLesserRestorationConcentrationCleanup",
+          projectionAfter: expectedProjection({
+            secondLevelSlotsExpended: 1,
+            bonusActionAvailable: false,
+            lastResult: "lesserRestorationConcentration",
+          }),
+          discover: () =>
+            projectConditionRemovalProtectionSelectedIdentityState(
+              resolveLesserRestorationConcentrationCleanupBattle(),
+              "lesserRestorationConcentration",
+            ),
         },
-        doResolveProtectionFromPoison: () => {
-          const resolved = resolveProtectionFromPoisonBattle();
-          recordResolvedResult(resolved, "protectionFromPoison");
-        },
-        step: () => {},
-        getState: () =>
-          projectConditionRemovalProtectionSelectedIdentityState(
-            state,
-            lastResult,
-          ),
-      };
+      ],
     },
-  );
-}
+    {
+      unitId: protectionFromPoisonUnitId,
+      procedures: [
+        {
+          actionName: "doResolveProtectionFromPoison",
+          projectionAfter: expectedProjection({
+            targetEffectCount: 2,
+            targetHasPoisonResistance: true,
+            targetHasPoisonSaveAdvantage: true,
+            secondLevelSlotsExpended: 1,
+            actionAvailable: false,
+            lastResult: "protectionFromPoison",
+          }),
+          discover: () =>
+            projectConditionRemovalProtectionSelectedIdentityState(
+              resolveProtectionFromPoisonBattle(),
+              "protectionFromPoison",
+            ),
+        },
+      ],
+    },
+  ],
+});
 
 function expectedProjection(
   overrides: Partial<ConditionRemovalProtectionSelectedIdentityProjection> = {},
@@ -537,80 +429,3 @@ function isProtectionFromPoisonSaveAdvantage(
     effect.mode === "advantage"
   );
 }
-
-function normalizeConditionRemovalProtectionSelectedIdentityQuintState(
-  raw: unknown,
-): ConditionRemovalProtectionSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    targetParalyzed: booleanField(state, "qTargetParalyzed"),
-    targetPoisoned: booleanField(state, "qTargetPoisoned"),
-    targetEffectCount: numberFromQuintInt(
-      state["qTargetEffectCount"],
-      "qTargetEffectCount",
-    ),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    targetHasPoisonResistance: booleanField(
-      state,
-      "qTargetHasPoisonResistance",
-    ),
-    targetHasPoisonSaveAdvantage: booleanField(
-      state,
-      "qTargetHasPoisonSaveAdvantage",
-    ),
-    secondLevelSlotsExpended: numberFromQuintInt(
-      state["qSecondLevelSlotsExpended"],
-      "qSecondLevelSlotsExpended",
-    ),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): ConditionRemovalProtectionSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "lesserRestorationChoice" ||
-    raw === "lesserRestorationConcentration" ||
-    raw === "protectionFromPoison"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const conditionRemovalProtectionSelectedIdentityStateCheck = stateCheck(
-  normalizeConditionRemovalProtectionSelectedIdentityQuintState,
-  (
-    spec: ConditionRemovalProtectionSelectedIdentityProjection,
-    impl: ConditionRemovalProtectionSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

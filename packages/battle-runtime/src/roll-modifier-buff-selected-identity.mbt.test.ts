@@ -7,9 +7,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -49,20 +47,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const rollModifierBuffSelectedIdentityDriverSchema = {
-  init: {},
-  doBlessAttackAndSaveModifier: {},
-  doBaneFailedSavePenalty: {},
-  doGuidanceSkillAbilityCheckModifier: {},
-  doResistanceReducesMatchingDamage: {},
-  doShieldOfFaithArmorClassBonus: {},
-  step: {},
-} as const;
-type RollModifierBuffSelectedIdentityDriverAction = Exclude<
-  keyof typeof rollModifierBuffSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const rollModifierBuffSpellIds = [
   "bless",
@@ -96,17 +81,6 @@ type RollModifierBuffSelectedIdentityProjection = {
     | "guidance"
     | "resistance"
     | "shieldOfFaith";
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly RollModifierBuffSelectedIdentityDriverAction[];
-  readonly expected: RollModifierBuffSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId: "roll-modifier-buff";
-  readonly unitId: RollModifierBuffSpellId;
-  readonly actions: readonly RollModifierBuffSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 type ActionSpellAct = AvailableBattleAct & {
@@ -143,374 +117,310 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "roll-modifier-buff",
-    unitId: "bless",
-    actions: ["doBlessAttackAndSaveModifier"],
-    sequences: [
-      {
-        name: "attack-and-saving-throw-bonus-on-two-targets",
-        actions: ["doBlessAttackAndSaveModifier"],
-        expected: expectedProjection({
-          casterConcentrating: true,
-          primaryTargetEffectCount: 1,
-          secondaryTargetEffectCount: 1,
-          d20ModifierSign: "+",
-          d20ModifierAttackRoll: true,
-          d20ModifierSavingThrow: true,
-          lastResult: "bless",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Roll modifier buff selected identity MBT",
+  taskId: "roll-modifier-buff",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    casterConcentrating: "bool",
+    casterHp: "int",
+    casterEffectCount: "int",
+    primaryTargetEffectCount: "int",
+    secondaryTargetEffectCount: "int",
+    primaryTargetArmorClass: "int",
+    primaryTargetHp: "int",
+    d20ModifierSign: "str",
+    d20ModifierAttackRoll: "bool",
+    d20ModifierSavingThrow: "bool",
+    d20ModifierAbilityCheck: "bool",
+    d20ModifierSkill: "str",
+    invalidTargetRejected: "bool",
+    damageReductionType: "str",
+    damageReductionUsed: "bool",
+    lastResult: "str",
   },
-  {
-    taskId: "roll-modifier-buff",
-    unitId: "bane",
-    actions: ["doBaneFailedSavePenalty"],
-    sequences: [
-      {
-        name: "failed-save-target-gets-attack-and-save-penalty",
-        actions: ["doBaneFailedSavePenalty"],
-        expected: expectedProjection({
-          casterConcentrating: true,
-          primaryTargetEffectCount: 1,
-          d20ModifierSign: "-",
-          d20ModifierAttackRoll: true,
-          d20ModifierSavingThrow: true,
-          lastResult: "bane",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "roll-modifier-buff",
-    unitId: "guidance",
-    actions: ["doGuidanceSkillAbilityCheckModifier"],
-    sequences: [
-      {
-        name: "self-skill-choice-produces-ability-check-bonus",
-        actions: ["doGuidanceSkillAbilityCheckModifier"],
-        expected: expectedProjection({
-          casterConcentrating: true,
-          casterEffectCount: 1,
-          d20ModifierSign: "+",
-          d20ModifierAbilityCheck: true,
-          d20ModifierSkill: "stealth",
-          invalidTargetRejected: true,
-          lastResult: "guidance",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "roll-modifier-buff",
-    unitId: "resistance",
-    actions: ["doResistanceReducesMatchingDamage"],
-    sequences: [
-      {
-        name: "chosen-damage-type-reduces-matching-attack-once",
-        actions: ["doResistanceReducesMatchingDamage"],
-        expected: expectedProjection({
-          casterConcentrating: true,
-          casterEffectCount: 1,
-          damageReductionType: "bludgeoning",
-          damageReductionUsed: true,
-          lastResult: "resistance",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "roll-modifier-buff",
-    unitId: "shield_of_faith",
-    actions: ["doShieldOfFaithArmorClassBonus"],
-    sequences: [
-      {
-        name: "bonus-action-concentration-armor-class-bonus",
-        actions: ["doShieldOfFaithArmorClassBonus"],
-        expected: expectedProjection({
-          casterConcentrating: true,
-          primaryTargetEffectCount: 1,
-          primaryTargetArmorClass: 12,
-          lastResult: "shieldOfFaith",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Roll modifier buff selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<RollModifierBuffSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createRollModifierBuffSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing roll modifier buff selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Roll modifier buff selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays roll modifier buff selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createRollModifierBuffSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: rollModifierBuffSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: "bless",
+      procedures: [
+        {
+          actionName: "doBlessAttackAndSaveModifier",
+          projectionAfter: expectedProjection({
+            casterConcentrating: true,
+            primaryTargetEffectCount: 1,
+            secondaryTargetEffectCount: 1,
+            d20ModifierSign: "+",
+            d20ModifierAttackRoll: true,
+            d20ModifierSavingThrow: true,
+            lastResult: "bless",
+          }),
+          discover: blessAttackAndSaveModifier,
+        },
+      ],
+    },
+    {
+      unitId: "bane",
+      procedures: [
+        {
+          actionName: "doBaneFailedSavePenalty",
+          projectionAfter: expectedProjection({
+            casterConcentrating: true,
+            primaryTargetEffectCount: 1,
+            d20ModifierSign: "-",
+            d20ModifierAttackRoll: true,
+            d20ModifierSavingThrow: true,
+            lastResult: "bane",
+          }),
+          discover: baneFailedSavePenalty,
+        },
+      ],
+    },
+    {
+      unitId: "guidance",
+      procedures: [
+        {
+          actionName: "doGuidanceSkillAbilityCheckModifier",
+          projectionAfter: expectedProjection({
+            casterConcentrating: true,
+            casterEffectCount: 1,
+            d20ModifierSign: "+",
+            d20ModifierAbilityCheck: true,
+            d20ModifierSkill: "stealth",
+            invalidTargetRejected: true,
+            lastResult: "guidance",
+          }),
+          discover: guidanceSkillAbilityCheckModifier,
+        },
+      ],
+    },
+    {
+      unitId: "resistance",
+      procedures: [
+        {
+          actionName: "doResistanceReducesMatchingDamage",
+          projectionAfter: expectedProjection({
+            casterConcentrating: true,
+            casterEffectCount: 1,
+            damageReductionType: "bludgeoning",
+            damageReductionUsed: true,
+            lastResult: "resistance",
+          }),
+          discover: resistanceReducesMatchingDamage,
+        },
+      ],
+    },
+    {
+      unitId: "shield_of_faith",
+      procedures: [
+        {
+          actionName: "doShieldOfFaithArmorClassBonus",
+          projectionAfter: expectedProjection({
+            casterConcentrating: true,
+            primaryTargetEffectCount: 1,
+            primaryTargetArmorClass: 12,
+            lastResult: "shieldOfFaith",
+          }),
+          discover: shieldOfFaithArmorClassBonus,
+        },
+      ],
+    },
+  ],
 });
 
-function createRollModifierBuffSelectedIdentityDriver() {
-  return defineDriver(rollModifierBuffSelectedIdentityDriverSchema, () => {
-    let state = rollModifierBuffBattle();
-    let invalidTargetRejected = false;
-    let lastResult: RollModifierBuffSelectedIdentityProjection["lastResult"] =
-      "init";
-
-    function reset(): void {
-      state = rollModifierBuffBattle();
-      invalidTargetRejected = false;
-      lastResult = "init";
-    }
-
-    function recordResolvedResult(
-      result: BattleResolutionResult,
-      resultKind: Exclude<
-        RollModifierBuffSelectedIdentityProjection["lastResult"],
-        "init"
-      >,
-    ): void {
-      if (result.tag !== "resolved") {
-        throw new Error(
-          `Expected roll modifier buff action to resolve, got ${result.tag}.`,
-        );
-      }
-      state = result.state;
-      lastResult = resultKind;
-    }
-
-    return {
-      init: reset,
-      doBlessAttackAndSaveModifier: () => {
-        state = rollModifierBuffBattle({
-          preparedSpells: [spellRecord("bless")],
-          includeSecondaryTarget: true,
-        });
-        invalidTargetRejected = false;
-        const act = actionSpellAct(state, "bless");
-        const targetList = requireHoleFromList(
-          act.initialHoles,
-          "spellTargetList",
-        );
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              spellTargetListFill(targetList, "bless", [
-                primaryTargetId,
-                secondaryTargetId,
-              ]),
-            ],
-          }),
-          "bless",
-        );
-      },
-      doBaneFailedSavePenalty: () => {
-        state = rollModifierBuffBattle({
-          preparedSpells: [spellRecord("bane")],
-          includeSecondaryTarget: true,
-        });
-        invalidTargetRejected = false;
-        const act = actionSpellAct(state, "bane");
-        const targetList = requireHoleFromList(
-          act.initialHoles,
-          "spellTargetList",
-        );
-        const targetFill = spellTargetListFill(targetList, "bane", [
+function blessAttackAndSaveModifier(): RollModifierBuffSelectedIdentityProjection {
+  const state = rollModifierBuffBattle({
+    preparedSpells: [spellRecord("bless")],
+    includeSecondaryTarget: true,
+  });
+  const act = actionSpellAct(state, "bless");
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+  return resolvedProjection(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetList, "bless", [
           primaryTargetId,
           secondaryTargetId,
-        ]);
-        const save = requireResultHole(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [targetFill],
-          }),
-          "savingThrowOutcome",
-        );
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              targetFill,
-              savingThrowOutcomeFill(save, [
-                { targetId: primaryTargetId, succeeded: false },
-                { targetId: secondaryTargetId, succeeded: true },
-              ]),
-            ],
-          }),
-          "bane",
-        );
-      },
-      doGuidanceSkillAbilityCheckModifier: () => {
-        state = rollModifierBuffBattle({
-          cantrips: [spellRecord("guidance")],
-          spellSlots: [],
-        });
-        invalidTargetRejected = false;
-        const act = actionSpellAct(state, "guidance");
-        const target = requireHoleFromList(act.initialHoles, "targetChoice");
-        const skill = requireHoleFromList(act.initialHoles, "skillChoice");
-        const invalidTarget = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            spellTargetFill(target, "guidance", primaryTargetId),
-            skillChoiceFill(skill, "stealth"),
-          ],
-        });
-        invalidTargetRejected =
-          invalidTarget.tag === "invalid" &&
-          invalidTarget.reason === "invalidFill";
-        if (!invalidTargetRejected) {
-          throw new Error("Expected Guidance to reject an unwilling target.");
-        }
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              spellTargetFill(target, "guidance", casterId),
-              skillChoiceFill(skill, "stealth"),
-            ],
-          }),
-          "guidance",
-        );
-      },
-      doResistanceReducesMatchingDamage: () => {
-        state = rollModifierBuffBattle({
-          cantrips: [spellRecord("resistance")],
-          spellSlots: [],
-        });
-        invalidTargetRejected = false;
-        const act = actionSpellAct(state, "resistance");
-        const target = requireHoleFromList(act.initialHoles, "targetChoice");
-        const damageType = requireHoleFromList(
-          act.initialHoles,
-          "damageTypeChoice",
-        );
-        const cast = requireResolved(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              spellTargetFill(target, "resistance", casterId),
-              damageTypeChoiceFill(damageType, "bludgeoning"),
-            ],
-          }),
-        );
-        const nextTurn = requireResolved(
-          endTurn({ state: cast.state, actorId: casterId }),
-        );
-        state = nextTurn.state;
-        const subject = unarmedStrikeSubject(primaryTargetId);
-        const attackTarget = requireResultHole(
-          resolveBattleSubject({ state, subject, fills: [] }),
-          "targetChoice",
-        );
-        const targetFill = attackTargetFill(
-          attackTarget,
-          primaryTargetId,
-          casterId,
-        );
-        const attack = requireResultHole(
-          resolveBattleSubject({ state, subject, fills: [targetFill] }),
-          "attackRoll",
-        );
-        const attackFill = attackRollFill(attack, {
-          total: 18,
-          naturalD20: 12,
-        });
-        const needsReduction = resolveBattleSubject({
-          state,
-          subject,
-          fills: [targetFill, attackFill],
-        });
-        const reduction = requireSpellDamageReductionHole(needsReduction);
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [
-              targetFill,
-              attackFill,
-              damageRollFillWithGroups(reduction, [[1]]),
-            ],
-          }),
-          "resistance",
-        );
-      },
-      doShieldOfFaithArmorClassBonus: () => {
-        state = rollModifierBuffBattle({
-          preparedSpells: [spellRecord("shield_of_faith")],
-        });
-        invalidTargetRejected = false;
-        const act = bonusActionSpellAct(state, "shield_of_faith");
-        const target = requireHoleFromList(act.initialHoles, "targetChoice");
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              spellTargetFill(target, "shield_of_faith", primaryTargetId),
-            ],
-          }),
-          "shieldOfFaith",
-        );
-      },
-      step: () => {},
-      getState: () =>
-        projectRollModifierBuffSelectedIdentityState(
-          state,
-          invalidTargetRejected,
-          lastResult,
-        ),
-    };
+        ]),
+      ],
+    }),
+    false,
+    "bless",
+  );
+}
+
+function baneFailedSavePenalty(): RollModifierBuffSelectedIdentityProjection {
+  const state = rollModifierBuffBattle({
+    preparedSpells: [spellRecord("bane")],
+    includeSecondaryTarget: true,
   });
+  const act = actionSpellAct(state, "bane");
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(targetList, "bane", [
+    primaryTargetId,
+    secondaryTargetId,
+  ]);
+  const save = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+  return resolvedProjection(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: primaryTargetId, succeeded: false },
+          { targetId: secondaryTargetId, succeeded: true },
+        ]),
+      ],
+    }),
+    false,
+    "bane",
+  );
+}
+
+function guidanceSkillAbilityCheckModifier(): RollModifierBuffSelectedIdentityProjection {
+  const state = rollModifierBuffBattle({
+    cantrips: [spellRecord("guidance")],
+    spellSlots: [],
+  });
+  const act = actionSpellAct(state, "guidance");
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const skill = requireHoleFromList(act.initialHoles, "skillChoice");
+  const invalidTarget = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      spellTargetFill(target, "guidance", primaryTargetId),
+      skillChoiceFill(skill, "stealth"),
+    ],
+  });
+  const invalidTargetRejected =
+    invalidTarget.tag === "invalid" && invalidTarget.reason === "invalidFill";
+  if (!invalidTargetRejected) {
+    throw new Error("Expected Guidance to reject an unwilling target.");
+  }
+  return resolvedProjection(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, "guidance", casterId),
+        skillChoiceFill(skill, "stealth"),
+      ],
+    }),
+    invalidTargetRejected,
+    "guidance",
+  );
+}
+
+function resistanceReducesMatchingDamage(): RollModifierBuffSelectedIdentityProjection {
+  const state = rollModifierBuffBattle({
+    cantrips: [spellRecord("resistance")],
+    spellSlots: [],
+  });
+  const act = actionSpellAct(state, "resistance");
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const damageType = requireHoleFromList(
+    act.initialHoles,
+    "damageTypeChoice",
+  );
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, "resistance", casterId),
+        damageTypeChoiceFill(damageType, "bludgeoning"),
+      ],
+    }),
+  );
+  const nextTurn = requireResolved(
+    endTurn({ state: cast.state, actorId: casterId }),
+  );
+  const postTurnState = nextTurn.state;
+  const subject = unarmedStrikeSubject(primaryTargetId);
+  const attackTarget = requireResultHole(
+    resolveBattleSubject({ state: postTurnState, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    attackTarget,
+    primaryTargetId,
+    casterId,
+  );
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state: postTurnState,
+      subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+  const attackFill = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const needsReduction = resolveBattleSubject({
+    state: postTurnState,
+    subject,
+    fills: [targetFill, attackFill],
+  });
+  const reduction = requireSpellDamageReductionHole(needsReduction);
+  return resolvedProjection(
+    resolveBattleSubject({
+      state: postTurnState,
+      subject,
+      fills: [targetFill, attackFill, damageRollFillWithGroups(reduction, [[1]])],
+    }),
+    false,
+    "resistance",
+  );
+}
+
+function shieldOfFaithArmorClassBonus(): RollModifierBuffSelectedIdentityProjection {
+  const state = rollModifierBuffBattle({
+    preparedSpells: [spellRecord("shield_of_faith")],
+  });
+  const act = bonusActionSpellAct(state, "shield_of_faith");
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  return resolvedProjection(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [spellTargetFill(target, "shield_of_faith", primaryTargetId)],
+    }),
+    false,
+    "shieldOfFaith",
+  );
+}
+
+function resolvedProjection(
+  result: BattleResolutionResult,
+  invalidTargetRejected: boolean,
+  lastResult: Exclude<RollModifierBuffSelectedIdentityProjection["lastResult"], "init">,
+): RollModifierBuffSelectedIdentityProjection {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected roll modifier buff action to resolve, got ${result.tag}.`,
+    );
+  }
+  return projectRollModifierBuffSelectedIdentityState(
+    result.state,
+    invalidTargetRejected,
+    lastResult,
+  );
 }
 
 function expectedProjection(
@@ -990,118 +900,3 @@ function isTrackedSpellEffect(
     )
   );
 }
-
-function normalizeRollModifierBuffSelectedIdentityQuintState(
-  raw: unknown,
-): RollModifierBuffSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
-    casterEffectCount: numberFromQuintInt(
-      state["qCasterEffectCount"],
-      "qCasterEffectCount",
-    ),
-    primaryTargetEffectCount: numberFromQuintInt(
-      state["qPrimaryTargetEffectCount"],
-      "qPrimaryTargetEffectCount",
-    ),
-    secondaryTargetEffectCount: numberFromQuintInt(
-      state["qSecondaryTargetEffectCount"],
-      "qSecondaryTargetEffectCount",
-    ),
-    primaryTargetArmorClass: numberFromQuintInt(
-      state["qPrimaryTargetArmorClass"],
-      "qPrimaryTargetArmorClass",
-    ),
-    primaryTargetHp: numberFromQuintInt(
-      state["qPrimaryTargetHp"],
-      "qPrimaryTargetHp",
-    ),
-    d20ModifierSign: d20ModifierSign(state["qD20ModifierSign"]),
-    d20ModifierAttackRoll: booleanField(state, "qD20ModifierAttackRoll"),
-    d20ModifierSavingThrow: booleanField(state, "qD20ModifierSavingThrow"),
-    d20ModifierAbilityCheck: booleanField(state, "qD20ModifierAbilityCheck"),
-    d20ModifierSkill: d20ModifierSkill(state["qD20ModifierSkill"]),
-    invalidTargetRejected: booleanField(state, "qInvalidTargetRejected"),
-    damageReductionType: damageReductionType(state["qDamageReductionType"]),
-    damageReductionUsed: booleanField(state, "qDamageReductionUsed"),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function d20ModifierSign(
-  raw: unknown,
-): RollModifierBuffSelectedIdentityProjection["d20ModifierSign"] {
-  if (raw === "+" || raw === "-" || raw === "none") {
-    return raw;
-  }
-  throw new Error(`Unexpected d20 modifier sign ${String(raw)}.`);
-}
-
-function d20ModifierSkill(
-  raw: unknown,
-): RollModifierBuffSelectedIdentityProjection["d20ModifierSkill"] {
-  if (raw === "stealth" || raw === "none") {
-    return raw;
-  }
-  throw new Error(`Unexpected d20 modifier skill ${String(raw)}.`);
-}
-
-function damageReductionType(
-  raw: unknown,
-): RollModifierBuffSelectedIdentityProjection["damageReductionType"] {
-  if (raw === "bludgeoning" || raw === "none") {
-    return raw;
-  }
-  throw new Error(`Unexpected damage reduction type ${String(raw)}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): RollModifierBuffSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "bless" ||
-    raw === "bane" ||
-    raw === "guidance" ||
-    raw === "resistance" ||
-    raw === "shieldOfFaith"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const rollModifierBuffSelectedIdentityStateCheck = stateCheck(
-  normalizeRollModifierBuffSelectedIdentityQuintState,
-  (
-    spec: RollModifierBuffSelectedIdentityProjection,
-    impl: RollModifierBuffSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

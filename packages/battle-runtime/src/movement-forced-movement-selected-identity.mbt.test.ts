@@ -9,9 +9,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -53,21 +51,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-
-const movementForcedMovementSelectedIdentityDriverSchema = {
-  init: {},
-  doDissonantWhispersForcedReactionMovement: {},
-  doCommandFleeTargetTurn: {},
-  doExpeditiousRetreatImmediateDash: {},
-  doRangerRovingClimbSwimMovement: {},
-  doBarbarianFastMovementDash: {},
-  doMonkUnarmoredMovementDash: {},
-  step: {},
-} as const;
-type MovementForcedMovementSelectedIdentityDriverAction = Exclude<
-  keyof typeof movementForcedMovementSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const movementForcedMovementSpellIds = [
   "dissonant_whispers",
@@ -83,9 +67,6 @@ const movementForcedMovementFeatureIds = [
 ] as const;
 type MovementForcedMovementFeatureId =
   (typeof movementForcedMovementFeatureIds)[number];
-type MovementForcedMovementUnitId =
-  | MovementForcedMovementSpellId
-  | MovementForcedMovementFeatureId;
 
 type MovementForcedMovementSelectedIdentityProjection = {
   readonly casterSpeedFeet: number;
@@ -113,19 +94,6 @@ type MovementForcedMovementSelectedIdentityProjection = {
     | "rangerRoving"
     | "barbarianFastMovement"
     | "monkUnarmoredMovement";
-};
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly MovementForcedMovementSelectedIdentityDriverAction[];
-  readonly expected: MovementForcedMovementSelectedIdentityProjection;
-};
-type SelectedUnitIdentityReplay = {
-  readonly taskId:
-    | "movement-forced-movement"
-    | "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
-  readonly unitId: MovementForcedMovementUnitId;
-  readonly actions: readonly MovementForcedMovementSelectedIdentityDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
 type ActionSpellAct = AvailableBattleAct & {
@@ -165,286 +133,234 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-const selectedUnitIdentityReplays = [
-  {
-    taskId: "movement-forced-movement",
-    unitId: "dissonant_whispers",
-    actions: ["doDissonantWhispersForcedReactionMovement"],
-    sequences: [
-      {
-        name: "failed-save-damage-then-forced-reaction-movement",
-        actions: ["doDissonantWhispersForcedReactionMovement"],
-        expected: expectedProjection({
-          spellSlotSpentThisTurn: true,
-          level1SlotsRemaining: 1,
-          targetHp: 18,
-          targetReactionAvailable: false,
-          dissonantMovementFillRequired: true,
-          lastResult: "dissonantWhispers",
-        }),
-      },
-    ],
+defineSelectedIdentityWitness({
+  describeLabel: "Movement and forced movement selected identity MBT",
+  taskId: "movement-forced-movement",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    casterSpeedFeet: "int",
+    casterRemainingFeet: "int",
+    casterDashBonusFeet: "int",
+    casterBonusActionAvailable: "bool",
+    casterConcentrating: "bool",
+    spellSlotSpentThisTurn: "bool",
+    level1SlotsRemaining: "int",
+    spellDashBonusActionEffectCount: "int",
+    targetHp: "int",
+    targetReactionAvailable: "bool",
+    dissonantMovementFillRequired: "bool",
+    targetMovementSpentFeet: "int",
+    commandMovementFillRequired: "bool",
+    commandPendingEffectObserved: "bool",
+    commandPendingEffectCount: "int",
+    climbSpeedFeet: "int",
+    swimSpeedFeet: "int",
+    lastResult: "str",
   },
-  {
-    taskId: "movement-forced-movement",
-    unitId: "command",
-    actions: ["doCommandFleeTargetTurn"],
-    sequences: [
-      {
-        name: "failed-save-pending-effect-forces-target-turn-flee-route",
-        actions: ["doCommandFleeTargetTurn"],
-        expected: expectedProjection({
-          level1SlotsRemaining: 1,
-          targetMovementSpentFeet: 30,
-          commandMovementFillRequired: true,
-          commandPendingEffectObserved: true,
-          lastResult: "commandFlee",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "movement-forced-movement",
-    unitId: "expeditious_retreat",
-    actions: ["doExpeditiousRetreatImmediateDash"],
-    sequences: [
-      {
-        name: "bonus-action-cast-dashes-and-stores-dash-permission",
-        actions: ["doExpeditiousRetreatImmediateDash"],
-        expected: expectedProjection({
-          casterRemainingFeet: 60,
-          casterDashBonusFeet: 30,
-          casterBonusActionAvailable: false,
-          casterConcentrating: true,
-          spellSlotSpentThisTurn: true,
-          level1SlotsRemaining: 1,
-          spellDashBonusActionEffectCount: 1,
-          lastResult: "expeditiousRetreat",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "movement-forced-movement",
-    unitId: "ranger_roving",
-    actions: ["doRangerRovingClimbSwimMovement"],
-    sequences: [
-      {
-        name: "effective-speed-grants-climb-and-swim-movement-budget",
-        actions: ["doRangerRovingClimbSwimMovement"],
-        expected: expectedProjection({
-          casterSpeedFeet: 40,
-          casterRemainingFeet: 0,
-          level1SlotsRemaining: 0,
-          climbSpeedFeet: 40,
-          swimSpeedFeet: 40,
-          lastResult: "rangerRoving",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "movement-forced-movement",
-    unitId: "barbarian_fast_movement",
-    actions: ["doBarbarianFastMovementDash"],
-    sequences: [
-      {
-        name: "passive-speed-bonus-increases-dash-movement-budget",
-        actions: ["doBarbarianFastMovementDash"],
-        expected: expectedProjection({
-          casterSpeedFeet: 40,
-          casterRemainingFeet: 80,
-          casterDashBonusFeet: 40,
-          level1SlotsRemaining: 0,
-          lastResult: "barbarianFastMovement",
-        }),
-      },
-    ],
-  },
-  {
-    taskId: "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
-    unitId: "monk_unarmored_movement",
-    actions: ["doMonkUnarmoredMovementDash"],
-    sequences: [
-      {
-        name: "passive-unarmored-movement-increases-dash-movement-budget",
-        actions: ["doMonkUnarmoredMovementDash"],
-        expected: expectedProjection({
-          casterSpeedFeet: 40,
-          casterRemainingFeet: 80,
-          casterDashBonusFeet: 40,
-          level1SlotsRemaining: 0,
-          lastResult: "monkUnarmoredMovement",
-        }),
-      },
-    ],
-  },
-] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
-
-describe("Movement and forced movement selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<MovementForcedMovementSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createMovementForcedMovementSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing movement and forced movement selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Movement and forced movement selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays movement and forced movement selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMovementForcedMovementSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: movementForcedMovementSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+  initialProjection: expectedProjection(),
+  units: [
+    {
+      unitId: "dissonant_whispers",
+      procedures: [
+        {
+          actionName: "doDissonantWhispersForcedReactionMovement",
+          projectionAfter: expectedProjection({
+            spellSlotSpentThisTurn: true,
+            level1SlotsRemaining: 1,
+            targetHp: 18,
+            targetReactionAvailable: false,
+            dissonantMovementFillRequired: true,
+            lastResult: "dissonantWhispers",
+          }),
+          discover: dissonantWhispersForcedReactionMovement,
+        },
+      ],
+    },
+    {
+      unitId: "command",
+      procedures: [
+        {
+          actionName: "doCommandFleeTargetTurn",
+          projectionAfter: expectedProjection({
+            level1SlotsRemaining: 1,
+            targetMovementSpentFeet: 30,
+            commandMovementFillRequired: true,
+            commandPendingEffectObserved: true,
+            lastResult: "commandFlee",
+          }),
+          discover: commandFleeTargetTurn,
+        },
+      ],
+    },
+    {
+      unitId: "expeditious_retreat",
+      procedures: [
+        {
+          actionName: "doExpeditiousRetreatImmediateDash",
+          projectionAfter: expectedProjection({
+            casterRemainingFeet: 60,
+            casterDashBonusFeet: 30,
+            casterBonusActionAvailable: false,
+            casterConcentrating: true,
+            spellSlotSpentThisTurn: true,
+            level1SlotsRemaining: 1,
+            spellDashBonusActionEffectCount: 1,
+            lastResult: "expeditiousRetreat",
+          }),
+          discover: expeditiousRetreatImmediateDash,
+        },
+      ],
+    },
+    {
+      unitId: "ranger_roving",
+      procedures: [
+        {
+          actionName: "doRangerRovingClimbSwimMovement",
+          projectionAfter: expectedProjection({
+            casterSpeedFeet: 40,
+            casterRemainingFeet: 0,
+            level1SlotsRemaining: 0,
+            climbSpeedFeet: 40,
+            swimSpeedFeet: 40,
+            lastResult: "rangerRoving",
+          }),
+          discover: rangerRovingClimbSwimMovement,
+        },
+      ],
+    },
+    {
+      unitId: "barbarian_fast_movement",
+      procedures: [
+        {
+          actionName: "doBarbarianFastMovementDash",
+          projectionAfter: expectedProjection({
+            casterSpeedFeet: 40,
+            casterRemainingFeet: 80,
+            casterDashBonusFeet: 40,
+            level1SlotsRemaining: 0,
+            lastResult: "barbarianFastMovement",
+          }),
+          discover: barbarianFastMovementDash,
+        },
+      ],
+    },
+    {
+      unitId: "monk_unarmored_movement",
+      procedures: [
+        {
+          actionName: "doMonkUnarmoredMovementDash",
+          projectionAfter: expectedProjection({
+            casterSpeedFeet: 40,
+            casterRemainingFeet: 80,
+            casterDashBonusFeet: 40,
+            level1SlotsRemaining: 0,
+            lastResult: "monkUnarmoredMovement",
+          }),
+          discover: monkUnarmoredMovementDash,
+        },
+      ],
+    },
+  ],
 });
 
-function createMovementForcedMovementSelectedIdentityDriver() {
-  return defineDriver(
-    movementForcedMovementSelectedIdentityDriverSchema,
-    () => {
-      let state = movementForcedMovementSpellBattle();
-      let lastResult: MovementForcedMovementSelectedIdentityProjection["lastResult"] =
-        "init";
-      let dissonantMovementFillRequired = false;
-      let commandMovementFillRequired = false;
-      let commandPendingEffectObserved = false;
+function resolvedProjection(
+  result: BattleResolutionResult,
+  flags: {
+    readonly lastResult: Exclude<
+      MovementForcedMovementSelectedIdentityProjection["lastResult"],
+      "init"
+    >;
+    readonly dissonantMovementFillRequired?: boolean;
+    readonly commandMovementFillRequired?: boolean;
+    readonly commandPendingEffectObserved?: boolean;
+  },
+): MovementForcedMovementSelectedIdentityProjection {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected movement and forced movement action to resolve, got ${result.tag}: ${
+        "reason" in result ? result.reason : "unknown"
+      } ${"message" in result ? result.message : ""}`,
+    );
+  }
+  return projectMovementForcedMovementSelectedIdentityState(result.state, {
+    lastResult: flags.lastResult,
+    dissonantMovementFillRequired:
+      flags.dissonantMovementFillRequired ?? false,
+    commandMovementFillRequired: flags.commandMovementFillRequired ?? false,
+    commandPendingEffectObserved: flags.commandPendingEffectObserved ?? false,
+  });
+}
 
-      function reset(): void {
-        state = movementForcedMovementSpellBattle();
-        lastResult = "init";
-        dissonantMovementFillRequired = false;
-        commandMovementFillRequired = false;
-        commandPendingEffectObserved = false;
-      }
+function dissonantWhispersForcedReactionMovement(): MovementForcedMovementSelectedIdentityProjection {
+  let dissonantMovementFillRequired = false;
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "bard",
+    preparedSpells: [spellRecord("dissonant_whispers")],
+    targetHp: 30,
+    targetMaxHp: 30,
+  });
+  return resolvedProjection(
+    resolveDissonantWhispersForcedReactionMovement(state, () => {
+      dissonantMovementFillRequired = true;
+    }),
+    { lastResult: "dissonantWhispers", dissonantMovementFillRequired },
+  );
+}
 
-      function recordResolvedResult(
-        result: BattleResolutionResult,
-        resultKind: Exclude<
-          MovementForcedMovementSelectedIdentityProjection["lastResult"],
-          "init"
-        >,
-      ): void {
-        if (result.tag !== "resolved") {
-          throw new Error(
-            `Expected movement and forced movement action to resolve, got ${result.tag}: ${
-              "reason" in result ? result.reason : "unknown"
-            } ${"message" in result ? result.message : ""}`,
-          );
-        }
-        state = result.state;
-        lastResult = resultKind;
-      }
-
-      return {
-        init: reset,
-        doDissonantWhispersForcedReactionMovement: () => {
-          state = movementForcedMovementSpellBattle({
-            sourceClassName: "bard",
-            preparedSpells: [spellRecord("dissonant_whispers")],
-            targetHp: 30,
-            targetMaxHp: 30,
-          });
-          const resolved = resolveDissonantWhispersForcedReactionMovement(
-            state,
-            () => {
-              dissonantMovementFillRequired = true;
-            },
-          );
-          recordResolvedResult(resolved, "dissonantWhispers");
-        },
-        doCommandFleeTargetTurn: () => {
-          state = movementForcedMovementSpellBattle({
-            sourceClassName: "cleric",
-            preparedSpells: [spellRecord("command")],
-          });
-          const resolved = resolveCommandFleeTargetTurn(
-            state,
-            (castState) => {
-              commandPendingEffectObserved =
-                commandPendingEffectCount(castState) === 1;
-            },
-            () => {
-              commandMovementFillRequired = true;
-            },
-          );
-          recordResolvedResult(resolved, "commandFlee");
-        },
-        doExpeditiousRetreatImmediateDash: () => {
-          state = movementForcedMovementSpellBattle({
-            sourceClassName: "wizard",
-            preparedSpells: [spellRecord("expeditious_retreat")],
-          });
-          recordResolvedResult(
-            resolveExpeditiousRetreatImmediateDash(state),
-            "expeditiousRetreat",
-          );
-        },
-        doRangerRovingClimbSwimMovement: () => {
-          state = rovingBattle();
-          recordResolvedResult(
-            resolveRovingClimbSwimMovement(state),
-            "rangerRoving",
-          );
-        },
-        doBarbarianFastMovementDash: () => {
-          state = fastMovementBattle();
-          recordResolvedResult(
-            resolveBarbarianFastMovementDash(state),
-            "barbarianFastMovement",
-          );
-        },
-        doMonkUnarmoredMovementDash: () => {
-          state = monkUnarmoredMovementBattle();
-          recordResolvedResult(
-            resolveMonkUnarmoredMovementDash(state),
-            "monkUnarmoredMovement",
-          );
-        },
-        step: () => {},
-        getState: () =>
-          projectMovementForcedMovementSelectedIdentityState(state, {
-            lastResult,
-            dissonantMovementFillRequired,
-            commandMovementFillRequired,
-            commandPendingEffectObserved,
-          }),
-      };
+function commandFleeTargetTurn(): MovementForcedMovementSelectedIdentityProjection {
+  let commandPendingEffectObserved = false;
+  let commandMovementFillRequired = false;
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "cleric",
+    preparedSpells: [spellRecord("command")],
+  });
+  return resolvedProjection(
+    resolveCommandFleeTargetTurn(
+      state,
+      (castState) => {
+        commandPendingEffectObserved = commandPendingEffectCount(castState) === 1;
+      },
+      () => {
+        commandMovementFillRequired = true;
+      },
+    ),
+    {
+      lastResult: "commandFlee",
+      commandMovementFillRequired,
+      commandPendingEffectObserved,
     },
+  );
+}
+
+function expeditiousRetreatImmediateDash(): MovementForcedMovementSelectedIdentityProjection {
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "wizard",
+    preparedSpells: [spellRecord("expeditious_retreat")],
+  });
+  return resolvedProjection(resolveExpeditiousRetreatImmediateDash(state), {
+    lastResult: "expeditiousRetreat",
+  });
+}
+
+function rangerRovingClimbSwimMovement(): MovementForcedMovementSelectedIdentityProjection {
+  return resolvedProjection(resolveRovingClimbSwimMovement(rovingBattle()), {
+    lastResult: "rangerRoving",
+  });
+}
+
+function barbarianFastMovementDash(): MovementForcedMovementSelectedIdentityProjection {
+  return resolvedProjection(resolveBarbarianFastMovementDash(fastMovementBattle()), {
+    lastResult: "barbarianFastMovement",
+  });
+}
+
+function monkUnarmoredMovementDash(): MovementForcedMovementSelectedIdentityProjection {
+  return resolvedProjection(
+    resolveMonkUnarmoredMovementDash(monkUnarmoredMovementBattle()),
+    { lastResult: "monkUnarmoredMovement" },
   );
 }
 
@@ -1186,118 +1102,3 @@ function level1SlotsRemaining(
   );
   return slot === undefined ? 0 : Number(slot.count) - Number(slot.expended);
 }
-
-function normalizeMovementForcedMovementSelectedIdentityQuintState(
-  raw: unknown,
-): MovementForcedMovementSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    casterSpeedFeet: numberFromQuintInt(
-      state["qCasterSpeedFeet"],
-      "qCasterSpeedFeet",
-    ),
-    casterRemainingFeet: numberFromQuintInt(
-      state["qCasterRemainingFeet"],
-      "qCasterRemainingFeet",
-    ),
-    casterDashBonusFeet: numberFromQuintInt(
-      state["qCasterDashBonusFeet"],
-      "qCasterDashBonusFeet",
-    ),
-    casterBonusActionAvailable: booleanField(
-      state,
-      "qCasterBonusActionAvailable",
-    ),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
-    level1SlotsRemaining: numberFromQuintInt(
-      state["qLevel1SlotsRemaining"],
-      "qLevel1SlotsRemaining",
-    ),
-    spellDashBonusActionEffectCount: numberFromQuintInt(
-      state["qSpellDashBonusActionEffectCount"],
-      "qSpellDashBonusActionEffectCount",
-    ),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    targetReactionAvailable: booleanField(state, "qTargetReactionAvailable"),
-    dissonantMovementFillRequired: booleanField(
-      state,
-      "qDissonantMovementFillRequired",
-    ),
-    targetMovementSpentFeet: numberFromQuintInt(
-      state["qTargetMovementSpentFeet"],
-      "qTargetMovementSpentFeet",
-    ),
-    commandMovementFillRequired: booleanField(
-      state,
-      "qCommandMovementFillRequired",
-    ),
-    commandPendingEffectObserved: booleanField(
-      state,
-      "qCommandPendingEffectObserved",
-    ),
-    commandPendingEffectCount: numberFromQuintInt(
-      state["qCommandPendingEffectCount"],
-      "qCommandPendingEffectCount",
-    ),
-    climbSpeedFeet: numberFromQuintInt(
-      state["qClimbSpeedFeet"],
-      "qClimbSpeedFeet",
-    ),
-    swimSpeedFeet: numberFromQuintInt(
-      state["qSwimSpeedFeet"],
-      "qSwimSpeedFeet",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): MovementForcedMovementSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "dissonantWhispers" ||
-    raw === "commandFlee" ||
-    raw === "expeditiousRetreat" ||
-    raw === "rangerRoving" ||
-    raw === "barbarianFastMovement" ||
-    raw === "monkUnarmoredMovement"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const movementForcedMovementSelectedIdentityStateCheck = stateCheck(
-  normalizeMovementForcedMovementSelectedIdentityQuintState,
-  (
-    spec: MovementForcedMovementSelectedIdentityProjection,
-    impl: MovementForcedMovementSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

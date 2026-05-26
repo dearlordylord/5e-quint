@@ -5,9 +5,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import * as path from "node:path";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -61,22 +59,7 @@ import {
   selectFailedSaveConditionEffect,
 } from "./battle-reducer/spells-active-effects.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
-
-const creatureTypeProtectionAndCharmSelectedIdentityDriverSchema = {
-  init: {},
-  doDiscoverAnimalFriendshipBeastTargetAdmission: {},
-  doResolveAnimalFriendshipFailedSaveCharmed: {},
-  doResolveAnimalFriendshipCasterDamageBreak: {},
-  doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: {},
-  doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: {},
-  doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: {},
-  doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: {},
-  step: {},
-} as const;
-type CreatureTypeProtectionAndCharmSelectedIdentityDriverAction = Exclude<
-  keyof typeof creatureTypeProtectionAndCharmSelectedIdentityDriverSchema,
-  "init" | "step"
->;
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -124,15 +107,23 @@ type CreatureTypeProtectionAndCharmSelectedIdentityProjection = {
   readonly firstLevelSlotsExpended: number;
   readonly lastResult: CreatureTypeProtectionAndCharmSelectedIdentityLastResult;
 };
+type CreatureTypeProtectionAndCharmSelectedIdentityAction =
+  | "doDiscoverAnimalFriendshipBeastTargetAdmission"
+  | "doResolveAnimalFriendshipFailedSaveCharmed"
+  | "doResolveAnimalFriendshipCasterDamageBreak"
+  | "doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection"
+  | "doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage"
+  | "doPreventProtectionFromEvilAndGoodScopedCharmAndPossession"
+  | "doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage";
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
-  readonly actions: readonly CreatureTypeProtectionAndCharmSelectedIdentityDriverAction[];
+  readonly actions: readonly CreatureTypeProtectionAndCharmSelectedIdentityAction[];
   readonly expected: CreatureTypeProtectionAndCharmSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "L1H-ANIMAL-FRIENDSHIP" | "L1H-PROTECTION-EVIL-GOOD";
   readonly unitId: SelectedCreatureTypeProtectionAndCharmSpellUnitId;
-  readonly actions: readonly CreatureTypeProtectionAndCharmSelectedIdentityDriverAction[];
+  readonly actions: readonly CreatureTypeProtectionAndCharmSelectedIdentityAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
@@ -320,142 +311,134 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Creature Type Protection and Charm selected identity MBT", () => {
-  it("replays selected Unit identities deterministically", async () => {
-    for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<CreatureTypeProtectionAndCharmSelectedIdentityDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver =
-          createCreatureTypeProtectionAndCharmSelectedIdentityDriver()();
-
-        for (const actionName of sequence.actions) {
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing Creature Type Protection and Charm selected identity driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error(
-            "Creature Type Protection and Charm selected identity driver must expose getState.",
-          );
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
-    }
-  });
-
-  it("replays Creature Type Protection and Charm selected identity parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+const creatureTypeProtectionAndCharmDiscoveries = {
+  doDiscoverAnimalFriendshipBeastTargetAdmission: () => {
+    const state = animalFriendshipBattle();
+    return projectCreatureTypeProtectionAndCharmSelectedIdentityState(
+      state,
+      animalFriendshipTargetAdmission(state),
+      emptyProtectionFromEvilAndGoodEvidence(),
+      "discovered",
+    );
+  },
+  doResolveAnimalFriendshipFailedSaveCharmed: () => {
+    const state = animalFriendshipBattle();
+    return projectCreatureTypeProtectionAndCharmSelectedIdentityState(
+      resolveAnimalFriendshipFailedSave(state),
+      animalFriendshipTargetAdmission(state),
+      emptyProtectionFromEvilAndGoodEvidence(),
+      "resolved",
+    );
+  },
+  doResolveAnimalFriendshipCasterDamageBreak: () => {
+    const state = animalFriendshipBattle();
+    return projectCreatureTypeProtectionAndCharmSelectedIdentityState(
+      applyPreparedSlotSpellDamage(
+        resolveAnimalFriendshipFailedSave(state),
+        beastTargetId,
+        1,
+        { damageSourceId: casterId },
       ),
-      init: "init",
-      step: "step",
-      driver: createCreatureTypeProtectionAndCharmSelectedIdentityDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: creatureTypeProtectionAndCharmSelectedIdentityStateCheck,
-    });
-  }, 120_000);
+      animalFriendshipTargetAdmission(state),
+      emptyProtectionFromEvilAndGoodEvidence(),
+      "damageBreakResolved",
+    );
+  },
+  doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () =>
+    protectionProjection(resolveProtectionFromEvilAndGood(), "protectionResolved"),
+  doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () =>
+    protectionProjection(
+      projectProtectionFromEvilAndGoodAttackRollModes(),
+      "protectionAttackProjected",
+    ),
+  doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: () =>
+    protectionProjection(
+      projectProtectionFromEvilAndGoodCharmBoundary(),
+      "protectionCharmPrevented",
+    ),
+  doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: () =>
+    protectionProjection(
+      resolveProtectionFromEvilAndGoodRelevantCharmSave(),
+      "protectionRelevantSaveResolved",
+    ),
+} as const satisfies Record<
+  CreatureTypeProtectionAndCharmSelectedIdentityAction,
+  () => CreatureTypeProtectionAndCharmSelectedIdentityProjection
+>;
+
+defineSelectedIdentityWitness({
+  describeLabel: "Creature Type Protection and Charm selected identity MBT",
+  taskId: "creature-type-protection-and-charm-selected-identity",
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+  ),
+  projectionSchema: {
+    beastTargetAdmitted: "bool",
+    humanoidTargetAdmitted: "bool",
+    knownWillingProtectionTargetAdmitted: "bool",
+    plainProtectionTargetRejected: "bool",
+    protectionEffectPresent: "bool",
+    scopedAttackRollDisadvantage: "bool",
+    unscopedAttackRollNormal: "bool",
+    scopedCharmPrevented: "bool",
+    unscopedCharmApplied: "bool",
+    scopedPossessionPrevented: "bool",
+    unscopedPossessionUnprevented: "bool",
+    relevantCharmSaveHasAdvantage: "bool",
+    relevantCharmSaveCleared: "bool",
+    targetCharmed: "bool",
+    animalFriendshipEffectPresent: "bool",
+    actionAvailable: "bool",
+    firstLevelSlotsExpended: "int",
+    lastResult: "str",
+  },
+  initialProjection: expectedProjection(),
+  units: selectedUnitIdentityReplays.map((replay) => ({
+    unitId: replay.unitId,
+    procedures: replay.sequences.map((sequence) => {
+      const actionName = singleReplayAction(
+        replay.unitId,
+        sequence.name,
+        sequence.actions,
+      );
+      return {
+        actionName,
+        projectionAfter: sequence.expected,
+        discover: creatureTypeProtectionAndCharmDiscoveries[actionName],
+      };
+    }),
+  })),
 });
 
-function createCreatureTypeProtectionAndCharmSelectedIdentityDriver() {
-  return defineDriver(
-    creatureTypeProtectionAndCharmSelectedIdentityDriverSchema,
-    () => {
-      let state = animalFriendshipBattle();
-      let targetAdmission = emptyAnimalFriendshipTargetAdmission();
-      let protectionEvidence = emptyProtectionFromEvilAndGoodEvidence();
-      let lastResult: CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
-        "init";
+function singleReplayAction(
+  unitId: SelectedCreatureTypeProtectionAndCharmSpellUnitId,
+  sequenceName: string,
+  actions: readonly CreatureTypeProtectionAndCharmSelectedIdentityAction[],
+): CreatureTypeProtectionAndCharmSelectedIdentityAction {
+  if (actions.length !== 1 || actions[0] === undefined) {
+    throw new Error(
+      `Expected single Creature Type Protection and Charm selected identity replay action for ${unitId}:${sequenceName}.`,
+    );
+  }
+  return actions[0];
+}
 
-      function reset(): void {
-        state = animalFriendshipBattle();
-        targetAdmission = emptyAnimalFriendshipTargetAdmission();
-        protectionEvidence = emptyProtectionFromEvilAndGoodEvidence();
-        lastResult = "init";
-      }
-
-      function recordAdmission(): void {
-        targetAdmission = animalFriendshipTargetAdmission(state);
-      }
-
-      return {
-        init: reset,
-        doDiscoverAnimalFriendshipBeastTargetAdmission: () => {
-          state = animalFriendshipBattle();
-          recordAdmission();
-          lastResult = "discovered";
-        },
-        doResolveAnimalFriendshipFailedSaveCharmed: () => {
-          state = animalFriendshipBattle();
-          recordAdmission();
-          state = resolveAnimalFriendshipFailedSave(state);
-          lastResult = "resolved";
-        },
-        doResolveAnimalFriendshipCasterDamageBreak: () => {
-          state = animalFriendshipBattle();
-          recordAdmission();
-          state = applyPreparedSlotSpellDamage(
-            resolveAnimalFriendshipFailedSave(state),
-            beastTargetId,
-            1,
-            { damageSourceId: casterId },
-          );
-          lastResult = "damageBreakResolved";
-        },
-        doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () => {
-          const result = resolveProtectionFromEvilAndGood();
-          state = result.state;
-          targetAdmission = emptyAnimalFriendshipTargetAdmission();
-          protectionEvidence = result.evidence;
-          lastResult = "protectionResolved";
-        },
-        doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () => {
-          const result = projectProtectionFromEvilAndGoodAttackRollModes();
-          state = result.state;
-          targetAdmission = emptyAnimalFriendshipTargetAdmission();
-          protectionEvidence = result.evidence;
-          lastResult = "protectionAttackProjected";
-        },
-        doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: () => {
-          const result = projectProtectionFromEvilAndGoodCharmBoundary();
-          state = result.state;
-          targetAdmission = emptyAnimalFriendshipTargetAdmission();
-          protectionEvidence = result.evidence;
-          lastResult = "protectionCharmPrevented";
-        },
-        doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: () => {
-          const result = resolveProtectionFromEvilAndGoodRelevantCharmSave();
-          state = result.state;
-          targetAdmission = emptyAnimalFriendshipTargetAdmission();
-          protectionEvidence = result.evidence;
-          lastResult = "protectionRelevantSaveResolved";
-        },
-        step: () => {},
-        getState: () =>
-          projectCreatureTypeProtectionAndCharmSelectedIdentityState(
-            state,
-            targetAdmission,
-            protectionEvidence,
-            lastResult,
-          ),
-      };
-    },
+function protectionProjection(
+  result: {
+    readonly state: BattleState;
+    readonly evidence: ProtectionFromEvilAndGoodEvidence;
+  },
+  lastResult: Exclude<
+    CreatureTypeProtectionAndCharmSelectedIdentityLastResult,
+    "init" | "discovered" | "resolved" | "damageBreakResolved"
+  >,
+): CreatureTypeProtectionAndCharmSelectedIdentityProjection {
+  return projectCreatureTypeProtectionAndCharmSelectedIdentityState(
+    result.state,
+    emptyAnimalFriendshipTargetAdmission(),
+    result.evidence,
+    lastResult,
   );
 }
 
@@ -1368,110 +1351,3 @@ function expendedSlotsForSpellLevel(
     )?.expended ?? 0
   );
 }
-
-function normalizeCreatureTypeProtectionAndCharmSelectedIdentityQuintState(
-  raw: unknown,
-): CreatureTypeProtectionAndCharmSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  return {
-    beastTargetAdmitted: booleanField(state, "qBeastTargetAdmitted"),
-    humanoidTargetAdmitted: booleanField(state, "qHumanoidTargetAdmitted"),
-    knownWillingProtectionTargetAdmitted: booleanField(
-      state,
-      "qKnownWillingProtectionTargetAdmitted",
-    ),
-    plainProtectionTargetRejected: booleanField(
-      state,
-      "qPlainProtectionTargetRejected",
-    ),
-    protectionEffectPresent: booleanField(state, "qProtectionEffectPresent"),
-    scopedAttackRollDisadvantage: booleanField(
-      state,
-      "qScopedAttackRollDisadvantage",
-    ),
-    unscopedAttackRollNormal: booleanField(
-      state,
-      "qUnscopedAttackRollNormal",
-    ),
-    scopedCharmPrevented: booleanField(state, "qScopedCharmPrevented"),
-    unscopedCharmApplied: booleanField(state, "qUnscopedCharmApplied"),
-    scopedPossessionPrevented: booleanField(
-      state,
-      "qScopedPossessionPrevented",
-    ),
-    unscopedPossessionUnprevented: booleanField(
-      state,
-      "qUnscopedPossessionUnprevented",
-    ),
-    relevantCharmSaveHasAdvantage: booleanField(
-      state,
-      "qRelevantCharmSaveHasAdvantage",
-    ),
-    relevantCharmSaveCleared: booleanField(
-      state,
-      "qRelevantCharmSaveCleared",
-    ),
-    targetCharmed: booleanField(state, "qTargetCharmed"),
-    animalFriendshipEffectPresent: booleanField(
-      state,
-      "qAnimalFriendshipEffectPresent",
-    ),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    firstLevelSlotsExpended: numberFromQuintInt(
-      state["qFirstLevelSlotsExpended"],
-      "qFirstLevelSlotsExpended",
-    ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-  };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): CreatureTypeProtectionAndCharmSelectedIdentityLastResult {
-  if (
-    raw === "init" ||
-    raw === "discovered" ||
-    raw === "resolved" ||
-    raw === "damageBreakResolved" ||
-    raw === "protectionResolved" ||
-    raw === "protectionAttackProjected" ||
-    raw === "protectionCharmPrevented" ||
-    raw === "protectionRelevantSaveResolved"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-const creatureTypeProtectionAndCharmSelectedIdentityStateCheck = stateCheck(
-  normalizeCreatureTypeProtectionAndCharmSelectedIdentityQuintState,
-  (
-    spec: CreatureTypeProtectionAndCharmSelectedIdentityProjection,
-    impl: CreatureTypeProtectionAndCharmSelectedIdentityProjection,
-  ) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);

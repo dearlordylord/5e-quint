@@ -51,7 +51,7 @@ which are out of this plan's scope:
 - Raise `mbtParityTimeoutMs` to 300_000ms for this one driver if
   the slow path is acceptable.
 
-## Remaining tranche 2 drivers (eleven)
+## Tranche 2 drivers (completed in follow-up)
 
 Sized by current TS LoC before migration:
 
@@ -69,16 +69,12 @@ Sized by current TS LoC before migration:
 | `condition-saving-throw` | 926 | 6 spells, 8 procedures |
 | `roll-modifier-buff` | 1107 | largest; multi-unit |
 
-For each: lift the existing `createXxxDriver` body into
-`discover` lambdas (one per procedure), hand the projection
-schema to the witness, supply the static `projectionAfter` per
-procedure, and delete the per-driver normalizer + stateCheck
-helpers. Run each through `pnpm --filter @dnd/battle-runtime
-exec vitest run src/<name>.mbt.test.ts` after migration. Expect
-some drivers to share bardic-inspiration's 120s-MBT flake when
-their per-driver QNT spec imports broad `battleRuntime`.
+All eleven tranche 2 drivers above now use
+`defineSelectedIdentityWitness`. Their per-file `defineDriver`,
+`run`, and `stateCheck` harnesses were removed, with procedure
+evidence retained in discover functions.
 
-## Remaining tranche 3 drivers (six)
+## Tranche 3 drivers (completed in follow-up)
 
 Sized by per-driver QNT (`*.mbt.qnt`) LoC, the threshold the
 plan uses to classify these as large:
@@ -92,17 +88,59 @@ plan uses to classify these as large:
 | `level1-spatial-witness` | 518 | 4627 |
 | `level1-buff-mark-smite` | 690 | 4166 |
 
-Same migration shape; expect some of the very large TS files to
-shed a much smaller percentage because their bulk is reducer
-fixture setup that lives in the discover lambdas regardless.
+All six tranche 3 drivers above now use
+`defineSelectedIdentityWitness`. The two very large drivers keep
+their reducer fixture/action evidence in plain runtime replay
+objects behind the witness. `level1-buff-mark-smite` retains a
+custom Quint-state projection hook because its runtime projection
+has nested domain-shaped evidence for Searing Smite, Shillelagh,
+and True Strike while the shared witness schema is otherwise flat.
 
-## Final reviewer-loop convergence
+## Final reviewer-loop convergence (completed in follow-up)
 
-Once tranches 2 and 3 ship, run the project's reviewer loop
-(RAW + ubiquitous-language + architecture/connascence +
-code-review) until no reasonable findings remain. Rejected
-findings should be recorded inline with the reason they were
-rejected.
+Verification completed after tranches 2 and 3:
+
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit`
+- Deterministic replay sweep:
+  `pnpm exec vitest run src/*selected-identity.mbt.test.ts --testNamePattern 'deterministically'`
+- Focused MBT for every migrated tranche 2 and tranche 3 driver.
+- Flat witness smoke MBT after the nested-projection witness hook:
+  `pnpm --filter @dnd/battle-runtime exec vitest run src/level1-damage-spell-selected-identity.mbt.test.ts`
+- Canonical QNT self-tests:
+  `pnpm exec quint test --backend typescript ./battle-runtime-self-tests.qnt --match test_`
+  with 437 passing.
+- `git diff --check`
+
+Reviewer-loop notes:
+
+- RAW/ubiquitous-language: no modeled SRD rules were changed; the
+  work moved MBT harness/projection plumbing while preserving the
+  existing reducer fixture evidence and package-local QNT
+  projections.
+- Architecture/connascence: `selected-identity-witness.ts` now
+  owns shared replay, MBT invocation, flat Quint state parsing, and
+  optional nested projection normalization. A brittle Grease
+  witness check that depended on an exact invalid-message string
+  was weakened to the executable invariant that the mismatched
+  movement fill is rejected.
+- Code review round 1:
+  - Finding: the nested-projection witness extension allowed a
+    non-flat projection to omit `normalizeQuintState`, which would
+    compile but force the flat schema parser to masquerade as the
+    nested projection type. Fix: split the witness API into flat
+    and custom-normalized variants so custom projection shapes must
+    provide a normalizer.
+  - Finding: the flat parser's `as` cast lacked the required local
+    justification. Fix: add a cast note tying the mapped type to
+    the runtime schema derived from the same flat projection schema.
+- Code review round 2:
+  - Finding: custom-normalized witnesses still constructed a flat
+    runtime schema unnecessarily. Fix: build the runtime schema
+    only for flat witnesses and keep the custom path entirely on
+    the supplied normalizer.
+- Convergence: no remaining reasonable findings after the second
+  pass. The remaining custom normalizer is intentional for nested
+  domain-shaped projection data.
 
 ## Resume protocol
 

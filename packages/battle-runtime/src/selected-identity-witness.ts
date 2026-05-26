@@ -19,36 +19,69 @@ export type ProjectionOf<S extends ProjectionSchema> = Readonly<{
         : never;
 }>;
 
-export type SelectedIdentityProcedure<P> = {
+type ProjectionRecord = Readonly<Record<string, unknown>>;
+
+export type SelectedIdentityProcedure<P extends ProjectionRecord> = {
   readonly actionName: `do${string}`;
   readonly projectionAfter: P;
   readonly discover: () => P | void | Promise<P | void>;
 };
 
-export type SelectedIdentityUnit<P> = {
+export type SelectedIdentityUnit<P extends ProjectionRecord> = {
   readonly unitId: string;
   readonly procedures: ReadonlyArray<SelectedIdentityProcedure<P>>;
 };
 
-export type SelectedIdentityWitness<S extends ProjectionSchema> = {
+type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly describeLabel: string;
   readonly taskId: string;
   readonly specFile: string;
-  readonly projectionSchema: S;
-  readonly initialProjection: ProjectionOf<S>;
-  readonly units: ReadonlyArray<SelectedIdentityUnit<ProjectionOf<S>>>;
+  readonly initialProjection: P;
+  readonly units: ReadonlyArray<SelectedIdentityUnit<P>>;
   readonly mbtParityTimeoutMs?: number;
 };
+
+export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
+  SelectedIdentityWitnessBase<ProjectionOf<S>> & {
+    readonly projectionSchema: S;
+    readonly normalizeQuintState?: undefined;
+  };
+
+export type CustomSelectedIdentityWitness<
+  S extends ProjectionSchema,
+  P extends ProjectionRecord,
+> = SelectedIdentityWitnessBase<P> & {
+  readonly projectionSchema: S;
+  readonly normalizeQuintState: (raw: unknown) => P;
+};
+
+export type SelectedIdentityWitness<
+  S extends ProjectionSchema,
+  P extends ProjectionRecord = ProjectionOf<S>,
+> = FlatSelectedIdentityWitness<S> | CustomSelectedIdentityWitness<S, P>;
 
 const byKind = Match.type<ProjectionFieldKind>();
 
 export function defineSelectedIdentityWitness<S extends ProjectionSchema>(
-  witness: SelectedIdentityWitness<S>,
-): void {
-  type P = ProjectionOf<S>;
+  witness: FlatSelectedIdentityWitness<S>,
+): void;
+export function defineSelectedIdentityWitness<
+  S extends ProjectionSchema,
+  P extends ProjectionRecord,
+>(witness: CustomSelectedIdentityWitness<S, P>): void;
+export function defineSelectedIdentityWitness<
+  S extends ProjectionSchema,
+  P extends ProjectionRecord,
+>(witness: SelectedIdentityWitness<S, P>): void {
+  const runtimeSchema =
+    witness.normalizeQuintState === undefined
+      ? projectionRuntimeSchema(witness)
+      : undefined;
 
-  const createDriver = (): SimpleDriver<P, SimpleActionMap> => {
-    let projection: P = witness.initialProjection;
+  type WitnessProjection = (typeof witness)["initialProjection"];
+
+  const createDriver = (): SimpleDriver<WitnessProjection, SimpleActionMap> => {
+    let projection: WitnessProjection = witness.initialProjection;
     const actions: Record<
       string,
       { readonly picks: Record<string, never>; readonly handler: () => void | Promise<void> }
@@ -80,8 +113,20 @@ export function defineSelectedIdentityWitness<S extends ProjectionSchema>(
   };
 
   const witnessStateCheck = stateCheck(
-    (raw: unknown): P => normalizeQuintState(raw, witness.projectionSchema),
-    (spec: P, impl: P): boolean => {
+    (raw: unknown): WitnessProjection => {
+      if (witness.normalizeQuintState !== undefined) {
+        return witness.normalizeQuintState(raw);
+      }
+      if (runtimeSchema === undefined) {
+        throw new Error("Expected selected identity flat projection schema.");
+      }
+      const normalized = normalizeQuintState(raw, runtimeSchema);
+      // The runtime schema is derived from the same projection schema that
+      // defines the flat witness type, so every decoded field has the mapped
+      // bool/int/string type required by ProjectionOf<S>.
+      return normalized as WitnessProjection;
+    },
+    (spec: WitnessProjection, impl: WitnessProjection): boolean => {
       expect(impl).toEqual(spec);
       return true;
     },
@@ -135,20 +180,69 @@ export function defineSelectedIdentityWitness<S extends ProjectionSchema>(
   });
 }
 
-function normalizeQuintState<S extends ProjectionSchema>(
+type RuntimeProjectionField = {
+  readonly kind: ProjectionFieldKind;
+  readonly allowedStrings: ReadonlySet<string>;
+};
+type RuntimeProjectionSchema = Readonly<Record<string, RuntimeProjectionField>>;
+
+function projectionRuntimeSchema<S extends ProjectionSchema>(
+  witness: Pick<
+    SelectedIdentityWitness<S, ProjectionRecord>,
+    "projectionSchema" | "initialProjection" | "units"
+  >,
+): RuntimeProjectionSchema {
+  const stringValues = new Map<string, Set<string>>();
+  const recordStringValues = (projection: unknown): void => {
+    if (projection === null || typeof projection !== "object") {
+      return;
+    }
+    for (const [field, value] of Object.entries(projection)) {
+      if (witness.projectionSchema[field] === "str") {
+        if (typeof value !== "string") {
+          throw new Error(
+            `Expected selected identity projection field ${field} to declare a string value.`,
+          );
+        }
+        const values = stringValues.get(field) ?? new Set<string>();
+        values.add(value);
+        stringValues.set(field, values);
+      }
+    }
+  };
+
+  recordStringValues(witness.initialProjection);
+  for (const unit of witness.units) {
+    for (const procedure of unit.procedures) {
+      recordStringValues(procedure.projectionAfter);
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(witness.projectionSchema).map(([field, kind]) => [
+      field,
+      {
+        kind,
+        allowedStrings: stringValues.get(field) ?? new Set<string>(),
+      },
+    ]),
+  );
+}
+
+function normalizeQuintState(
   raw: unknown,
-  schema: S,
-): ProjectionOf<S> {
+  schema: RuntimeProjectionSchema,
+): Readonly<Record<string, boolean | number | string>> {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint state record.");
   }
   const state = raw as Record<string, unknown>;
   const result: Record<string, boolean | number | string> = {};
-  for (const [field, kind] of Object.entries(schema)) {
+  for (const [field, spec] of Object.entries(schema)) {
     const qKey = quintFieldName(field);
-    result[field] = parseQuintField(state[qKey], kind, qKey);
+    result[field] = parseQuintField(state[qKey], spec, qKey);
   }
-  return result as ProjectionOf<S>;
+  return result;
 }
 
 function quintFieldName(field: string): string {
@@ -157,15 +251,15 @@ function quintFieldName(field: string): string {
 
 function parseQuintField(
   value: unknown,
-  kind: ProjectionFieldKind,
+  spec: RuntimeProjectionField,
   qKey: string,
 ): boolean | number | string {
   return byKind.pipe(
     Match.when("bool", () => parseBool(value, qKey)),
     Match.when("int", () => parseInt(value, qKey)),
-    Match.when("str", () => parseStr(value, qKey)),
+    Match.when("str", () => parseStr(value, spec.allowedStrings, qKey)),
     Match.exhaustive,
-  )(kind);
+  )(spec.kind);
 }
 
 function parseBool(value: unknown, qKey: string): boolean {
@@ -179,7 +273,18 @@ function parseInt(value: unknown, qKey: string): number {
   throw new Error(`Expected integer Quint field ${qKey}, got ${String(value)}.`);
 }
 
-function parseStr(value: unknown, qKey: string): string {
-  if (typeof value === "string") return value;
-  throw new Error(`Expected string Quint field ${qKey}, got ${String(value)}.`);
+function parseStr(
+  value: unknown,
+  allowedValues: ReadonlySet<string>,
+  qKey: string,
+): string {
+  if (typeof value !== "string") {
+    throw new Error(`Expected string Quint field ${qKey}, got ${String(value)}.`);
+  }
+  if (!allowedValues.has(value)) {
+    throw new Error(
+      `Unexpected Quint field ${qKey} value ${value}; expected one of ${[...allowedValues].join(", ")}.`,
+    );
+  }
+  return value;
 }
