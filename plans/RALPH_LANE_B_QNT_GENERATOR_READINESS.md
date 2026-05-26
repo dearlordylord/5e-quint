@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "QNTGR-B04-CREATION-SLICE-RUN-BLOCK-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split character creation slice run blocks"
     },
     {
@@ -197,7 +197,7 @@ Acceptance: no `not-assessed` row remains for minimal attack.
 
 ### Task 4 - QNTGR-B04-CREATION-SLICE-RUN-BLOCK-SPLIT - Split character creation slice run blocks
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
 and REPORT run-block findings.
