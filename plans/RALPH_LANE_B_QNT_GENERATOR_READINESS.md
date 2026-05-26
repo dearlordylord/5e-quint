@@ -97,16 +97,17 @@
     {
       "number": 16,
       "id": "QNTGR-B16-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan the next QNT deepening batch if this lane drains"
     }
   ]
 }
 -->
 
-This is the active Ralph lane for QNT generator-readiness deepening. Its first
-target is the five current `not-assessed` rows in
-`plans/rules-kernel-coverage/generator-readiness.jsonl`.
+This Ralph lane for QNT generator-readiness deepening is closed. Its first
+target was the five `not-assessed` rows in
+`plans/rules-kernel-coverage/generator-readiness.jsonl`; the checked readiness
+queue now has zero missing or `not-assessed` rows.
 
 ## Context Budget
 
@@ -346,13 +347,19 @@ Acceptance: no one has to infer closure state from raw JSON alone.
 
 ### Task 16 - QNTGR-B16-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current generated reports after Task 15.
 
 Output: if generator readiness is closed, create the next QNT deepening lane
 with 10-20 atomic tasks. If not closed, append exact repair tasks here instead
 of ending the run.
+
+Result: generator readiness is closed, so
+`plans/RALPH_LANE_C_QNT_DEEPENING.md` is the next runnable lane. It contains
+12 atomic tasks covering the Hit Point recovery manual Rust dry run, focused
+composite-slice MBT promotion for the highest-value battle obligations, closeout,
+and recursive follow-up planning.
 
 Acceptance: Ralph must not end merely because the initial list is done. It
 either leaves a closed lane with a clear next plan committed, or appends new

@@ -37,6 +37,8 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` —
   current manual Rust dry-run evidence and the next scoped dry-run plan.
+- `plans/RALPH_LANE_C_QNT_DEEPENING.md` — next runnable QNT deepening lane,
+  combining the recovery dry run with focused composite-slice MBT promotion.
 - `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
   background rationale for B coverage closure versus C generator readiness. Do
   not read this by default for ordinary slice tasks.
@@ -102,6 +104,10 @@ Active generator and Rust queues:
 - Optional battle composite-slice deepening candidates are listed in
   `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
   generator-readiness blockers.
+- The next runnable deepening batch is
+  `plans/RALPH_LANE_C_QNT_DEEPENING.md`. It starts from the recovery dry-run
+  plan and `QCP-CS1` through `QCP-CS8` without reopening generator-readiness
+  blocker cleanup.
 - Parked non-runnable ideas remain in
   `plans/QNT_GENERATOR_READINESS_BACKLOG.md`. Reopen them only by carving a
   small coherent batch into a fresh lane plan with current checker-owned inputs.
