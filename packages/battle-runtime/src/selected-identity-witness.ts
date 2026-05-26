@@ -37,6 +37,7 @@ export type SelectedIdentityWitness<S extends ProjectionSchema> = {
   readonly projectionSchema: S;
   readonly initialProjection: ProjectionOf<S>;
   readonly units: ReadonlyArray<SelectedIdentityUnit<ProjectionOf<S>>>;
+  readonly mbtParityTimeoutMs?: number;
 };
 
 const byKind = Match.type<ProjectionFieldKind>();
@@ -114,19 +115,23 @@ export function defineSelectedIdentityWitness<S extends ProjectionSchema>(
       }
     });
 
-    it("replays MBT parity", async () => {
-      await run({
-        spec: witness.specFile,
-        init: "init",
-        step: "step",
-        driver: createDriver,
-        backend: "typescript",
-        seed: process.env["QUINT_SEED"],
-        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-        maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-        stateCheck: witnessStateCheck,
-      });
-    }, 120_000);
+    it(
+      "replays MBT parity",
+      async () => {
+        await run({
+          spec: witness.specFile,
+          init: "init",
+          step: "step",
+          driver: createDriver,
+          backend: "typescript",
+          seed: process.env["QUINT_SEED"],
+          nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+          maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
+          stateCheck: witnessStateCheck,
+        });
+      },
+      witness.mbtParityTimeoutMs ?? 120_000,
+    );
   });
 }
 
