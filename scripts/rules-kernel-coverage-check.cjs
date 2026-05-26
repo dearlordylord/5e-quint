@@ -186,6 +186,16 @@ function scanSemanticCoreRunBlocks(rootPath, qntOwnerRoleRows) {
   return runBlocksByPath;
 }
 
+function formatRunBlockLocations(ownerPaths, runBlocksByPath) {
+  return ownerPaths
+    .flatMap((ownerPath) =>
+      (runBlocksByPath.get(ownerPath) ?? []).map(
+        (line) => `${ownerPath}:${line}`,
+      ),
+    )
+    .join(", ");
+}
+
 function stripStringLiteralsPreserveLines(text) {
   let output = "";
   let quote = null;
@@ -1311,8 +1321,12 @@ function validateGeneratorReadiness(
     semanticCoreWithRunBlocks.length > 0 &&
     !generatorReadinessBlockerStatuses.has(readiness.status)
   ) {
+    const runBlockLocations = formatRunBlockLocations(
+      semanticCoreWithRunBlocks,
+      semanticCoreRunBlocksByPath,
+    );
     issues.push(
-      `${context}.${readiness.status} cannot include semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}); split the run blocks out or classify with ${semanticCoreRunBlockBlocker}.`,
+      `${context}.${readiness.status} cannot include semanticCore run block(s) at ${runBlockLocations}; split the run blocks out or classify with ${semanticCoreRunBlockBlocker}.`,
     );
   }
   if (
@@ -1320,8 +1334,12 @@ function validateGeneratorReadiness(
     generatorReadinessBlockerStatuses.has(readiness.status) &&
     !blockedBy.includes(semanticCoreRunBlockBlocker)
   ) {
+    const runBlockLocations = formatRunBlockLocations(
+      semanticCoreWithRunBlocks,
+      semanticCoreRunBlocksByPath,
+    );
     issues.push(
-      `${context}.${readiness.status} has semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}) and must include blockedBy ${semanticCoreRunBlockBlocker}.`,
+      `${context}.${readiness.status} has semanticCore run block(s) at ${runBlockLocations} and must include blockedBy ${semanticCoreRunBlockBlocker}.`,
     );
   }
   for (const field of ["semanticCore", "proofOnly"]) {
@@ -2176,7 +2194,9 @@ function renderReport(matrix, issues) {
       const owners = finding.owners
         .map(
           (owner) =>
-            `\`${owner.ownerPath}\`: lines ${owner.lines.map((line) => `\`${line}\``).join(", ")}`,
+            owner.lines
+              .map((line) => `\`${owner.ownerPath}:${line}\``)
+              .join(", "),
         )
         .join("<br>");
       const followUp =

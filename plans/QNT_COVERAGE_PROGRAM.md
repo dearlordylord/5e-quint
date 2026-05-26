@@ -5,11 +5,11 @@
   "schema": "ralph-plan.v1",
   "tasks": [
     { "number": 0, "id": "QCP-PILOT-SLICE", "status": "done", "title": "Pilot slice (creature-attack) end-to-end" },
-    { "number": 1, "id": "QCP-SEMCORE-EXTRACTION", "status": "todo", "title": "Semantic-core extraction (run blocks out of rule-core .qnt)" },
-    { "number": 2, "id": "QCP-MISSING-ATOMICS", "status": "todo", "title": "Author missing atomic semantic-core rules" },
-    { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "todo", "title": "Author per-composite slice MBT" },
+    { "number": 1, "id": "QCP-SEMCORE-EXTRACTION", "status": "done", "title": "Semantic-core extraction (run blocks out of rule-core .qnt)" },
+    { "number": 2, "id": "QCP-MISSING-ATOMICS", "status": "done", "title": "Author missing atomic semantic-core rules" },
+    { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "done", "title": "Author per-composite slice MBT" },
     { "number": 4, "id": "QCP-NON-SEMANTIC-AUDIT", "status": "done", "title": "Confirm boundary and unsupported obligations are non-transitional" },
-    { "number": 5, "id": "QCP-UNIT-IDENTITY-GATE", "status": "todo", "title": "Per-Unit selected-identity test as hard gate" },
+    { "number": 5, "id": "QCP-UNIT-IDENTITY-GATE", "status": "done", "title": "Per-Unit selected-identity test as hard gate" },
     { "number": 6, "id": "QCP-INTEGRATION-MBT-PATTERNS", "status": "todo", "title": "Maintain integration MBT for high-value cross-slice sequencing" },
     { "number": 7, "id": "QCP-LANG-PARITY-MARKER", "status": "blocked", "title": "Language-target parity marker enforced per covered obligation" }
   ]
@@ -25,11 +25,20 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
   task changes architecture.
 - `plans/rules-kernel-coverage/README.md` — obligation/profile/marker/witness vocabulary.
 - `plans/rules-kernel-coverage/obligations.jsonl` — the obligation registry
-  (93 today; 87 covered, 6 boundary/unsupported).
+  (97 today; 91 covered, 6 boundary/unsupported).
+- `plans/rules-kernel-coverage/REPORT.md` — generated rollup of current
+  rules-kernel coverage, generator readiness, semantic-core run-block findings,
+  and checker issues.
 - `plans/rules-kernel-coverage/generator-readiness.jsonl` — semantic-core status per obligation.
 - `plans/unit-profile-coverage/` — per-Unit support and selected-identity tracking.
-- `plans/rules-kernel-coverage/GENERATOR_READINESS_CLOSURE_REPORT.md` —
-  concise closeout for the deleted historical Rust-readiness Ralph lane.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` — optional
+  witness-shape deepening candidates after the current coverage and generator
+  readiness gates closed.
+- `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
+  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` —
+  current manual Rust dry-run evidence and the next scoped dry-run plan.
+- `plans/RALPH_LANE_C_QNT_DEEPENING.md` — next runnable QNT deepening lane,
+  combining the recovery dry run with focused composite-slice MBT promotion.
 - `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
   background rationale for B coverage closure versus C generator readiness. Do
   not read this by default for ordinary slice tasks.
@@ -44,18 +53,18 @@ for the current task:
   the relevant rows in `obligations.jsonl`, `generator-readiness.jsonl`,
   `qnt-owner-roles.jsonl`, and `kernel-ir-boundaries.jsonl`.
 - For a new slice, read the pilot source files listed in the handoff prompt
-  below, not the deleted pilot lane transcript.
+  below, not historical lane transcripts.
 - Read the PRD or ADR only when changing the shape of the program, vocabulary,
   checker contract, or architecture.
-- Never use deleted closed Ralph lanes as context. Their durable output has
-  been merged into checker-owned artifacts and the closure report.
+- Do not use closed Ralph lanes as context. Their durable output has been
+  merged into checker-owned artifacts and the current planning artifacts listed
+  above.
 
 ## Rust / Generator Readiness Entrypoints
 
 Use this section as the compact queue map for future Rust migration and
 generator-readiness work. Do not start from historical QMBT or closed Ralph
-plans; they now redirect here because their durable output is represented in
-checked artifacts.
+plans; durable output is represented in checked artifacts.
 
 Checked source-of-truth artifacts:
 
@@ -75,16 +84,33 @@ Checked source-of-truth artifacts:
 - `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` is the
   next planned manual dry-run vertical, scoped to Hit Point recovery without
   adding parallel Character Sheet state.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the next
+  optional battle composite-slice candidates. It also records that current
+  coverage and generator-readiness gates are closed enough for the next phase;
+  the remaining candidates are witness-shape deepening, not blocker cleanup.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
 - `plans/QNT_GENERATOR_READINESS_BACKLOG.md` parks drained lane work that is not
   currently runnable.
 
-Active runnable queues:
+Active generator and Rust queues:
 
-- None. Reopen parked work by carving a small coherent batch out of
-  `plans/QNT_GENERATOR_READINESS_BACKLOG.md` into a fresh Ralph lane plan.
+- No active generator-readiness blocker queue. `generator-readiness.jsonl`
+  currently has 69 rows, all `generation-subset-clean`, with no `blockedBy` or
+  `followUpTaskIds` entries.
+- The next scoped manual Rust planning artifact is
+  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md`.
+- Optional battle composite-slice deepening candidates are listed in
+  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
+  generator-readiness blockers.
+- The next runnable deepening batch is
+  `plans/RALPH_LANE_C_QNT_DEEPENING.md`. It starts from the recovery dry-run
+  plan and `QCP-CS1` through `QCP-CS8` without reopening generator-readiness
+  blocker cleanup.
+- Parked non-runnable ideas remain in
+  `plans/QNT_GENERATOR_READINESS_BACKLOG.md`. Reopen them only by carving a
+  small coherent batch into a fresh lane plan with current checker-owned inputs.
 
 ## Working Discipline
 
@@ -97,7 +123,9 @@ Active runnable queues:
 
 - Do not modify ADR-0001 or other architecture decisions without explicit user approval.
 - Do not introduce production reducer wiring inside a slice task — slice composites stand alone; production integration is separate work.
-- Do not add a new obligation whose QNT owner is still `fixture-bound`; resolve the blocker under Task 1 first.
+- Do not add a new obligation whose QNT owner is still `fixture-bound`; resolve
+  the blocker in the same focused task or carve a fresh follow-up before
+  claiming generator readiness.
 - Add the `qnt-owner-roles.jsonl` row in the same commit as any new QNT owner — the checker fails on a missing row.
 - Add the `test:mbt:<slice-name>` script in `packages/<runtime>/package.json` in the same commit as a new slice.
 - If a composite slice would exceed ~50 lines of pure def, split into sub-slices.
@@ -118,8 +146,9 @@ For Task 5 (per-Unit gate): `pnpm unit-profile-coverage:check -- --write` then `
 ## Ordering and Parallelism
 
 - Task 0 (pilot): done — template for slice-shaped work.
-- Tasks 1, 2, 5, 6: independent — can run in parallel worktrees.
-- Task 3: per-slice dependency on Task 1 (the atomic the composite imports must be semantic-core) and Task 2 (the atomic must exist).
+- Tasks 1, 2, 3, and 5 are closed for the current rules-kernel denominator.
+- Task 6 remains independent maintenance work for future high-value
+  cross-slice sequencing patterns.
 - Task 7: blocked on first non-TS language target arriving.
 
 ## Pilot Slice — Task 0 (QCP-PILOT-SLICE)
@@ -142,13 +171,13 @@ Output:
 
 Acceptance: `pnpm rules-kernel-coverage:check` green; new parity test green; existing parity tests stay green.
 
-After pilot: Tasks 1, 3 continue mechanically using the pilot as template.
+After pilot: future optional slice work should use the pilot as template.
 
 ## Tasks
 
 ### Task 1 - QCP-SEMCORE-EXTRACTION
 
-Status: `todo`
+Status: `done`
 
 Input: rule-core `.qnt` files with `run` test blocks mixed in (every row in `generator-readiness.jsonl` with `blockedBy: run-block-coupled`).
 
@@ -156,9 +185,12 @@ Output: `run` blocks moved out to TS unit tests next to the TS mirror (default) 
 
 Acceptance: checker green; no `run-block-coupled` rows remain.
 
+Current source-of-truth check: `REPORT.md` reports no semantic-core QNT owners
+with `run` blocks.
+
 ### Task 2 - QCP-MISSING-ATOMICS
 
-Status: `todo`
+Status: `done`
 
 Input: composite obligations whose semantics require atomic rules not yet broken out as standalone files (initial gap list: `spell-save-gate`, `slot-expenditure` — identified during this plan's grilling; more discovered during composite authoring).
 
@@ -166,15 +198,24 @@ Output: new atomic `.qnt` files in `packages/shared-algebras/proofs/rule-core/`,
 
 Acceptance: each new atomic referenced by at least one composite slice; checker green.
 
+Current source-of-truth check: `obligations.jsonl` has 91 covered obligations
+and no open transitional rows; future missing atomics should enter through a new
+obligation or composite-slice task rather than this closed bootstrap task.
+
 ### Task 3 - QCP-COMPOSITE-SLICES
 
-Status: `in-progress` (pilot slice covers the first instance)
+Status: `done`
 
 Input: profile-level obligations not yet witnessed by a slice-style MBT (composite `.qnt` + `.mbt.qnt` + TS mirror + parity test, per the pilot template).
 
 Output: one composite slice per missing profile, following the pilot template. State per slice kept bounded; variability via per-action `nondet`/fills.
 
 Acceptance: new obligation row per slice; parity test green; checker green.
+
+Current source-of-truth check:
+`plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the
+remaining battle slice candidates as optional witness-shape deepening, not
+coverage or generator-readiness blocker cleanup.
 
 ### Task 4 - QCP-NON-SEMANTIC-AUDIT
 
@@ -190,13 +231,17 @@ Acceptance: checker reports 0 transitional.
 
 ### Task 5 - QCP-UNIT-IDENTITY-GATE
 
-Status: `todo`
+Status: `done`
 
 Input: every Unit claimed as supported in `unit-profile-coverage/`.
 
 Output: each supported Unit has at least one selected-identity test that proves admission + entrypoint reachability. `unit-profile-coverage:check` fails if a supported Unit lacks one. Template the test where the procedure shape is uniform.
 
 Acceptance: gate enabled; check green.
+
+Current source-of-truth check:
+`plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` reports zero missing
+selected-identity join rows across the admitted scopes.
 
 ### Task 6 - QCP-INTEGRATION-MBT-PATTERNS
 

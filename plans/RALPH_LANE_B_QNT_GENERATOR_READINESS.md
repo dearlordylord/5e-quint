@@ -73,40 +73,41 @@
     {
       "number": 12,
       "id": "QNTGR-B12-COMPOSITE-SLICE-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next composite slice candidates"
     },
     {
       "number": 13,
       "id": "QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Harden run-block scanner expectations"
     },
     {
       "number": 14,
       "id": "QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Update QNT coverage program rollup"
     },
     {
       "number": 15,
       "id": "QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close out generator readiness closure state"
     },
     {
       "number": 16,
       "id": "QNTGR-B16-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan the next QNT deepening batch if this lane drains"
     }
   ]
 }
 -->
 
-This is the active Ralph lane for QNT generator-readiness deepening. Its first
-target is the five current `not-assessed` rows in
-`plans/rules-kernel-coverage/generator-readiness.jsonl`.
+This Ralph lane for QNT generator-readiness deepening is closed. Its first
+target was the five `not-assessed` rows in
+`plans/rules-kernel-coverage/generator-readiness.jsonl`; the checked readiness
+queue now has zero missing or `not-assessed` rows.
 
 ## Context Budget
 
@@ -295,7 +296,7 @@ runtime state.
 
 ### Task 12 - QNTGR-B12-COMPOSITE-SLICE-CANDIDATES - Mine next composite slice candidates
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QNT_COVERAGE_PROGRAM.md`, profile obligations, and readiness rows.
 
@@ -303,11 +304,14 @@ Output: 5-10 candidate composite slice tasks with precise inputs/outputs, if
 real gaps remain. If not, record why the current composite slice layer is
 closed enough for the next phase.
 
+Result: `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records
+the candidate queue and the current non-blocking gate status.
+
 Acceptance: future Ralph work can start without rereading historical lanes.
 
 ### Task 13 - QNTGR-B13-RUN-BLOCK-SCANNER-HARDENING - Harden run-block scanner expectations
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: REPORT run-block section and checker scanner code.
 
@@ -319,7 +323,7 @@ proof-only exemption.
 
 ### Task 14 - QNTGR-B14-QNT-PROGRAM-ROLLUP-UPDATE - Update QNT coverage program rollup
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: this lane's closure state and `plans/QNT_COVERAGE_PROGRAM.md`.
 
@@ -332,7 +336,7 @@ artifacts and no deleted plan names.
 
 ### Task 15 - QNTGR-B15-GENERATOR-CLOSURE-CLOSEOUT - Close out generator readiness closure state
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: results from Tasks 1-14.
 
@@ -343,13 +347,19 @@ Acceptance: no one has to infer closure state from raw JSON alone.
 
 ### Task 16 - QNTGR-B16-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: current generated reports after Task 15.
 
 Output: if generator readiness is closed, create the next QNT deepening lane
 with 10-20 atomic tasks. If not closed, append exact repair tasks here instead
 of ending the run.
+
+Result: generator readiness is closed, so
+`plans/RALPH_LANE_C_QNT_DEEPENING.md` is the next runnable lane. It contains
+12 atomic tasks covering the Hit Point recovery manual Rust dry run, focused
+composite-slice MBT promotion for the highest-value battle obligations, closeout,
+and recursive follow-up planning.
 
 Acceptance: Ralph must not end merely because the initial list is done. It
 either leaves a closed lane with a clear next plan committed, or appends new
