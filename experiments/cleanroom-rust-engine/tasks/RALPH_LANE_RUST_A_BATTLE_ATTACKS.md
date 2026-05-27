@@ -77,7 +77,7 @@ cargo test
 cargo clippy --all-targets -- -D warnings
 ```
 
-## Task 1 - CR-A-01-INDEPENDENT-ATTACK-SEQUENCE - Implement independent spell attack sequence
+### Task 1 - CR-A-01-INDEPENDENT-ATTACK-SEQUENCE - Implement independent spell attack sequence
 
 Status: `ready-for-research`.
 
@@ -95,7 +95,7 @@ Expected output:
 - Tests in `engine/tests/battle_spell_sequences.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 2 - CR-A-02-CHAINED-ATTACK-SEQUENCE - Implement chained spell attack sequence
+### Task 2 - CR-A-02-CHAINED-ATTACK-SEQUENCE - Implement chained spell attack sequence
 
 Status: `ready-for-research`.
 
@@ -113,7 +113,7 @@ Expected output:
 - Extensions to `engine/tests/battle_spell_sequences.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 3 - CR-A-03-WEAPON-HOSTED-ATTACK-RIDERS - Implement weapon-hosted attack and rider projections
+### Task 3 - CR-A-03-WEAPON-HOSTED-ATTACK-RIDERS - Implement weapon-hosted attack and rider projections
 
 Status: `ready-for-research`.
 
@@ -131,7 +131,7 @@ Expected output:
 - Tests in `engine/tests/battle_spell_riders.rs` or a focused companion test.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 4 - CR-A-04-MARKED-DAMAGE-RIDER - Implement marked damage rider transfer
+### Task 4 - CR-A-04-MARKED-DAMAGE-RIDER - Implement marked damage rider transfer
 
 Status: `ready-for-research`.
 
@@ -148,7 +148,7 @@ Expected output:
 - Tests in `engine/tests/battle_spell_riders.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 5 - CR-A-05-DEEPEN-AFTER-HIT-RIDERS - Deepen after-hit damage rider coverage beyond Divine Smite
+### Task 5 - CR-A-05-DEEPEN-AFTER-HIT-RIDERS - Deepen after-hit damage rider coverage beyond Divine Smite
 
 Status: `ready-for-research`.
 
@@ -165,7 +165,7 @@ Expected output:
 - Tests covering at least one non-Divine-Smite after-hit branch.
 - Clear blocker notes for any missing source contract instead of invented rules.
 
-## Task 6 - CR-A-99-RECURSIVE-NEXT-TASKS - Add next cleanroom Rust tasks from remaining attack/rider gaps
+### Task 6 - CR-A-99-RECURSIVE-NEXT-TASKS - Add next cleanroom Rust tasks from remaining attack/rider gaps
 
 Status: `ready-for-research`.
 

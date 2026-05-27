@@ -79,7 +79,7 @@ cargo test
 cargo clippy --all-targets -- -D warnings
 ```
 
-## Task 1 - CR-B-01-CREATURE-TYPE-PROTECTION - Implement creature type protection and condition prevention
+### Task 1 - CR-B-01-CREATURE-TYPE-PROTECTION - Implement creature type protection and condition prevention
 
 Status: `ready-for-research`.
 
@@ -96,7 +96,7 @@ Expected output:
 - Tests in `engine/tests/battle_protection_modifiers.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 2 - CR-B-02-CONDITION-IMMUNITY-THP - Implement condition immunity and turn-start temporary hit points
+### Task 2 - CR-B-02-CONDITION-IMMUNITY-THP - Implement condition immunity and turn-start temporary hit points
 
 Status: `ready-for-research`.
 
@@ -114,7 +114,7 @@ Expected output:
   `engine/tests/battle_active_effects.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 3 - CR-B-03-LIGHT-EMITTERS - Implement held, object, and dancing light emitter lifecycles
+### Task 3 - CR-B-03-LIGHT-EMITTERS - Implement held, object, and dancing light emitter lifecycles
 
 Status: `ready-for-research`.
 
@@ -131,7 +131,7 @@ Expected output:
 - Tests in `engine/tests/battle_light_area.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 4 - CR-B-04-AREA-HAZARDS - Implement fog cloud, grease, and sleep area lifecycles
+### Task 4 - CR-B-04-AREA-HAZARDS - Implement fog cloud, grease, and sleep area lifecycles
 
 Status: `ready-for-research`.
 
@@ -149,7 +149,7 @@ Expected output:
   `engine/tests/battle_active_effects.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 5 - CR-B-05-SPELL-MOVEMENT - Implement feather fall and jump movement spell lifecycles
+### Task 5 - CR-B-05-SPELL-MOVEMENT - Implement feather fall and jump movement spell lifecycles
 
 Status: `ready-for-research`.
 
@@ -167,7 +167,7 @@ Expected output:
 - Tests in `engine/tests/battle_movement.rs`.
 - Research-log entry and conservative coverage report/queue updates.
 
-## Task 6 - CR-B-99-RECURSIVE-NEXT-TASKS - Add next cleanroom Rust tasks from remaining area/effect gaps
+### Task 6 - CR-B-99-RECURSIVE-NEXT-TASKS - Add next cleanroom Rust tasks from remaining area/effect gaps
 
 Status: `ready-for-research`.
 
