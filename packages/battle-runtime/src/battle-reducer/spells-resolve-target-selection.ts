@@ -45,12 +45,6 @@ export type RollModifierSpellTargetSelection =
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
-export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection =
-
-    | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-    | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-    | { readonly tag: "invalid"; readonly message: string };
-
 export type RollModifierSpellEffectSelection =
   | {
       readonly tag: "ok";
@@ -218,75 +212,6 @@ export function scalarBuffSpellTargetSelection(input: {
     return {
       tag: "invalid",
       message: "Multi-target scalar buff spells require a target list.",
-    };
-  }
-  if (input.fillSet.targetList === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetListHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-      ),
-    };
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  return validation === null
-    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
-    : { tag: "invalid", message: validation };
-}
-
-export function conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection {
-  if (input.invocation.targeting.maxTargets === 1) {
-    if (input.fillSet.targetList !== undefined) {
-      return {
-        tag: "invalid",
-        message: "Single-target Heroism requires one target choice.",
-      };
-    }
-    if (input.fillSet.targetId === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(
-          input.input.state,
-          input.actorId,
-          input.invocation,
-        ),
-      };
-    }
-    return spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-      : {
-          tag: "invalid",
-          message:
-            "Heroism target must be a combatant within the selected spell's supported range.",
-        };
-  }
-
-  if (input.fillSet.targetId !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Multi-target Heroism requires a target list.",
     };
   }
   if (input.fillSet.targetList === undefined) {

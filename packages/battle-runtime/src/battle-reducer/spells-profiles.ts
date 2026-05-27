@@ -158,6 +158,7 @@ import {
   persistentArmorEffectProfile,
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -165,7 +166,6 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import {
-  supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
@@ -494,12 +494,11 @@ export function supportedSpellActs(
       supportedSpellCreatedHeldObjectActiveEffectProfile(actor, spell),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-      ),
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(

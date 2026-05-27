@@ -10,6 +10,7 @@
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
@@ -40,6 +41,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   creatureTypeProtectionProfile,
   conditionRemovalProtectionProfile,
   directConditionRemovalProfile,
+  conditionImmunityAndTurnStartTemporaryHitPointsProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

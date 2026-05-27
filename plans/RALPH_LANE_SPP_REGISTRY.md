@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "SPP-W2-13-COND-IMMUNITY-TURN-START-THP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate conditionImmunityAndTurnStartTemporaryHitPoints (no focused MBT)"
     },
     {
@@ -830,7 +830,7 @@ No focused MBT. Same as above.
 
 ### Task 14 - SPP-W2-13-COND-IMMUNITY-TURN-START-THP - Migrate conditionImmunityAndTurnStartTemporaryHitPoints
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Same as above. This profile has a complex
 `activeEffects` shape (two elements); follow the template, file-local

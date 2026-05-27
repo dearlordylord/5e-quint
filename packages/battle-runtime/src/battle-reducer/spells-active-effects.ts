@@ -16,7 +16,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
@@ -3318,54 +3317,6 @@ export function applyMirrorImageHitInterceptionSpellEffect(
       battleCreatureWithSpellActiveEffects(actor, activeEffects),
     ),
   };
-}
-
-export function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
-  state: BattleState,
-  actorId: CombatantId,
-  targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
-  >,
-): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const nextEffects = invocation.activeEffects.map((effect) =>
-      effect.kind === "conditionImmunity"
-        ? {
-            ...effect,
-            sourceCombatantId: actorId,
-            conditionHadNonSpellSource:
-              conditionHadNonSpellSourceBeforeSpellEffect(
-                target,
-                effect.condition,
-              ),
-          }
-        : { ...effect, sourceCombatantId: actorId },
-    );
-    const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            (effect.kind === "conditionImmunity" ||
-              effect.kind === "turnStartTemporaryHitPoints") &&
-            effect.sourceSpellId === invocation.spell.id
-          ),
-      ),
-      ...nextEffects,
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(
-        targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
-      ),
-    };
-  }, state);
 }
 
 export function applyShieldReactionSpellActiveEffect(

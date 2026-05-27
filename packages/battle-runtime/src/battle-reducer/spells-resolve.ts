@@ -95,6 +95,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
@@ -240,7 +241,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
@@ -253,13 +253,11 @@ export {
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
-  conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
-  type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
   type RollModifierSpellEffectSelection,
@@ -268,7 +266,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
@@ -1014,7 +1011,7 @@ function resolveSpellActInternal(
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
-    return resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct({
+    return conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

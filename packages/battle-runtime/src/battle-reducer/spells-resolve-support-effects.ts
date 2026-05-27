@@ -4,8 +4,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
-// Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
-// and condition-immunity/temporary-hit-point procedures.
+// Covers healing, scalar buffs, roll modifiers, protection, and damage
+// reduction procedures.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
@@ -14,7 +14,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 
 import {
@@ -38,7 +37,6 @@ import { invalidResult } from "./result-helpers.ts";
 import { spellHealingAmount } from "./spell-effects.ts";
 import {
   applyDirectConditionSpellEffects,
-  applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
   applyCreatureSizeChangeSpellEffect,
   applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
@@ -71,7 +69,6 @@ import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { levitateInitialRiseHole } from "./levitate-creature.ts";
 
 import {
-  conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   healingSpellTargetSelection,
   scalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
@@ -1344,88 +1341,4 @@ function validateSelfTeleportDestination(
     return `${invocation.spell.name} destination must be within ${invocation.maxDistanceFeet} feet.`;
   }
   return null;
-}
-
-export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Heroism uses target fills only.",
-    );
-  }
-  const targetSelection =
-    conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = breakBattleConcentration(
-    input.input.state,
-    input.actorId,
-  );
-  const effected = applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }

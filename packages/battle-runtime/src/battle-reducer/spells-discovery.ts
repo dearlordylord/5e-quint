@@ -74,6 +74,7 @@ import {
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
@@ -1036,26 +1037,11 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {
-        const targetHole = targetListSpellUsesTargetListHole(invocation)
-          ? spellTargetListHole(state, actorId, invocation)
-          : spellTargetHole(state, actorId, invocation);
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: invocation.spell.name,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [targetHole],
-                },
-              ];
-        return castActs;
+        return conditionImmunityAndTurnStartTemporaryHitPointsProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (
         (invocation.procedure === "heldLightHurl" ||
@@ -1437,7 +1423,9 @@ export function spellInvocationCastSummary(
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return conditionImmunityAndTurnStartTemporaryHitPointsProfile.castSummary(
+      invocation,
+    );
   }
   if (invocation.procedure === "weaponDamageRider") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

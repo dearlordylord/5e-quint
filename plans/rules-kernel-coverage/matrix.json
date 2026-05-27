@@ -1497,8 +1497,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
       "status": "covered",

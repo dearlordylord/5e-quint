@@ -13,6 +13,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
@@ -463,12 +464,10 @@ export function supportedSpellInvocationRef(
     ),
     Match.when(
       { procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" },
-      (heroism) => ({
-        tag: "spellSlot" as const,
-        spellId: spellId(heroism.spell.id),
-        slotLevel: heroism.resource.slotLevel,
-        procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" as const,
-      }),
+      (heroism) =>
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.invocationRef(
+          heroism,
+        ),
     ),
     Match.when({ procedure: "weaponDamageRider" }, (riderSpell) => ({
       tag: "spellSlot" as const,
