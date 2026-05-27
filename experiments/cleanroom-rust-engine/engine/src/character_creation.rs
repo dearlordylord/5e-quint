@@ -231,6 +231,116 @@ fn ability_check_proficiency_bonus_projection(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArmorClassBaseSource {
+    DefaultUnarmored,
+    UnarmoredDefense,
+}
+
+impl ArmorClassBaseSource {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DefaultUnarmored => "default_unarmored",
+            Self::UnarmoredDefense => "unarmored_defense",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArmorClassSourceUnit {
+    BarbarianUnarmoredDefense,
+    MonkUnarmoredDefense,
+}
+
+impl ArmorClassSourceUnit {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::BarbarianUnarmoredDefense => "barbarian_unarmored_defense",
+            Self::MonkUnarmoredDefense => "monk_unarmored_defense",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArmorClassFormulaInput {
+    DefaultUnarmored {
+        dexterity_modifier: i16,
+        shield_bonus: i16,
+    },
+    BarbarianUnarmoredDefense {
+        dexterity_modifier: i16,
+        constitution_modifier: i16,
+        shield_bonus: i16,
+    },
+    MonkUnarmoredDefense {
+        dexterity_modifier: i16,
+        wisdom_modifier: i16,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ArmorClassBaseFormulaProjection {
+    pub source_unit: Option<ArmorClassSourceUnit>,
+    pub base_source: ArmorClassBaseSource,
+    pub base_armor_class: i16,
+    pub uses_dexterity: bool,
+    pub uses_constitution: bool,
+    pub uses_wisdom: bool,
+    pub shield_bonus: i16,
+    pub armor_class: i16,
+}
+
+pub fn project_armor_class_base_formula(
+    input: ArmorClassFormulaInput,
+) -> ArmorClassBaseFormulaProjection {
+    let base_armor_class = 10;
+    match input {
+        ArmorClassFormulaInput::DefaultUnarmored {
+            dexterity_modifier,
+            shield_bonus,
+        } => ArmorClassBaseFormulaProjection {
+            source_unit: None,
+            base_source: ArmorClassBaseSource::DefaultUnarmored,
+            base_armor_class,
+            uses_dexterity: true,
+            uses_constitution: false,
+            uses_wisdom: false,
+            shield_bonus,
+            armor_class: base_armor_class + dexterity_modifier + shield_bonus,
+        },
+        ArmorClassFormulaInput::BarbarianUnarmoredDefense {
+            dexterity_modifier,
+            constitution_modifier,
+            shield_bonus,
+        } => ArmorClassBaseFormulaProjection {
+            source_unit: Some(ArmorClassSourceUnit::BarbarianUnarmoredDefense),
+            base_source: ArmorClassBaseSource::UnarmoredDefense,
+            base_armor_class,
+            uses_dexterity: true,
+            uses_constitution: true,
+            uses_wisdom: false,
+            shield_bonus,
+            armor_class: base_armor_class
+                + dexterity_modifier
+                + constitution_modifier
+                + shield_bonus,
+        },
+        ArmorClassFormulaInput::MonkUnarmoredDefense {
+            dexterity_modifier,
+            wisdom_modifier,
+        } => ArmorClassBaseFormulaProjection {
+            source_unit: Some(ArmorClassSourceUnit::MonkUnarmoredDefense),
+            base_source: ArmorClassBaseSource::UnarmoredDefense,
+            base_armor_class,
+            uses_dexterity: true,
+            uses_constitution: false,
+            uses_wisdom: true,
+            shield_bonus: 0,
+            armor_class: base_armor_class + dexterity_modifier + wisdom_modifier,
+        },
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum HoleId {
     Progression,

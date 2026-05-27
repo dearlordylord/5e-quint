@@ -876,6 +876,468 @@ pub fn resolve_spare_the_dying(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellDefinitionProfile {
+    MagicMissile,
+    RayOfFrost,
+    AcidSplash,
+    HealingWord,
+    CureWounds,
+    MassCureWounds,
+    MassHealingWord,
+    MageArmor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellSlotLedger {
+    pub slot_level: i32,
+    pub slots_remaining: i32,
+}
+
+impl SpellSlotLedger {
+    pub fn initial() -> Self {
+        Self {
+            slot_level: 1,
+            slots_remaining: 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellSlotExpenditureState {
+    pub slot_ledger: SpellSlotLedger,
+    pub slot_spell_cast_this_turn: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSlotExpenditureRequest {
+    SpellSlotExpenditureNotRequired,
+    SpellSlotExpenditureRequired { slot_level: i32 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSlotExpenditureResult {
+    SpellSlotExpenditureRejected,
+    SpellSlotExpenditureAcceptedSlotless,
+    SpellSlotExpended { state: SpellSlotExpenditureState },
+}
+
+pub fn legal_spell_slot_ledger(ledger: SpellSlotLedger) -> bool {
+    ledger.slot_level >= 1
+        && ledger.slot_level <= 9
+        && ledger.slots_remaining >= 0
+        && ledger.slots_remaining <= 6
+}
+
+pub fn legal_spell_slot_expenditure_state(state: SpellSlotExpenditureState) -> bool {
+    legal_spell_slot_ledger(state.slot_ledger)
+}
+
+pub fn legal_spell_slot_expenditure_request(request: SpellSlotExpenditureRequest) -> bool {
+    match request {
+        SpellSlotExpenditureRequest::SpellSlotExpenditureNotRequired => true,
+        SpellSlotExpenditureRequest::SpellSlotExpenditureRequired { slot_level } => {
+            (1..=9).contains(&slot_level)
+        }
+    }
+}
+
+pub fn can_expend_spell_slot(
+    state: SpellSlotExpenditureState,
+    request: SpellSlotExpenditureRequest,
+) -> bool {
+    if !legal_spell_slot_expenditure_state(state) || !legal_spell_slot_expenditure_request(request)
+    {
+        return false;
+    }
+
+    match request {
+        SpellSlotExpenditureRequest::SpellSlotExpenditureNotRequired => true,
+        SpellSlotExpenditureRequest::SpellSlotExpenditureRequired { slot_level } => {
+            !state.slot_spell_cast_this_turn
+                && slot_level == state.slot_ledger.slot_level
+                && state.slot_ledger.slots_remaining > 0
+        }
+    }
+}
+
+pub fn apply_spell_slot_expenditure(
+    state: SpellSlotExpenditureState,
+    request: SpellSlotExpenditureRequest,
+) -> SpellSlotExpenditureResult {
+    if !can_expend_spell_slot(state, request) {
+        SpellSlotExpenditureResult::SpellSlotExpenditureRejected
+    } else {
+        match request {
+            SpellSlotExpenditureRequest::SpellSlotExpenditureNotRequired => {
+                SpellSlotExpenditureResult::SpellSlotExpenditureAcceptedSlotless
+            }
+            SpellSlotExpenditureRequest::SpellSlotExpenditureRequired { .. } => {
+                SpellSlotExpenditureResult::SpellSlotExpended {
+                    state: SpellSlotExpenditureState {
+                        slot_ledger: SpellSlotLedger {
+                            slots_remaining: state.slot_ledger.slots_remaining - 1,
+                            ..state.slot_ledger
+                        },
+                        slot_spell_cast_this_turn: true,
+                    },
+                }
+            }
+        }
+    }
+}
+
+pub fn spell_slot_expenditure_result_state(
+    prior_state: SpellSlotExpenditureState,
+    result: SpellSlotExpenditureResult,
+) -> SpellSlotExpenditureState {
+    match result {
+        SpellSlotExpenditureResult::SpellSlotExpenditureRejected
+        | SpellSlotExpenditureResult::SpellSlotExpenditureAcceptedSlotless => prior_state,
+        SpellSlotExpenditureResult::SpellSlotExpended { state } => state,
+    }
+}
+
+pub fn spell_slot_expenditure_accepted(result: SpellSlotExpenditureResult) -> bool {
+    result != SpellSlotExpenditureResult::SpellSlotExpenditureRejected
+}
+
+pub fn spell_slot_was_expended(result: SpellSlotExpenditureResult) -> bool {
+    matches!(result, SpellSlotExpenditureResult::SpellSlotExpended { .. })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellInvocationAction {
+    ActionTimeSpellInvocation,
+    BonusActionSpellInvocation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellInvocationSlotSpend {
+    SpellInvocationWithoutSlot,
+    SpellInvocationWithSlot { minimum_slot_level: i32 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellInvocationTargetCardinality {
+    SpellInvocationBoundedTargets {
+        minimum_target_count: i32,
+        maximum_target_count: i32,
+    },
+    SpellInvocationOpenUpperTargets {
+        minimum_target_count: i32,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellInvocationResourceFacts {
+    pub invocation_action: SpellInvocationAction,
+    pub has_spell_access: bool,
+    pub slot_spend: SpellInvocationSlotSpend,
+    pub selected_slot_level: i32,
+    pub target_count: i32,
+    pub target_cardinality: SpellInvocationTargetCardinality,
+    pub targets_are_valid: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellcastingProcedureState {
+    pub turn: TurnProcedureState,
+    pub slot_ledger: SpellSlotLedger,
+    pub slot_spell_cast_this_turn: bool,
+}
+
+impl SpellcastingProcedureState {
+    pub fn initial() -> Self {
+        Self {
+            turn: TurnProcedureState::initial(),
+            slot_ledger: SpellSlotLedger::initial(),
+            slot_spell_cast_this_turn: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellInvocationResult {
+    pub state: SpellcastingProcedureState,
+    pub admitted: bool,
+    pub slot_expended: bool,
+}
+
+pub fn spell_action_cost(invocation_action: SpellInvocationAction) -> ActionCost {
+    match invocation_action {
+        SpellInvocationAction::BonusActionSpellInvocation => ActionCost::BonusActionCost,
+        SpellInvocationAction::ActionTimeSpellInvocation => {
+            ActionCost::StandardActionCost(StandardAction::Magic)
+        }
+    }
+}
+
+pub fn legal_spellcasting_procedure_state(state: SpellcastingProcedureState) -> bool {
+    legal_turn_procedure_state(state.turn) && legal_spell_slot_ledger(state.slot_ledger)
+}
+
+pub fn legal_spell_invocation_slot_spend(
+    slot_spend: SpellInvocationSlotSpend,
+    selected_slot_level: i32,
+) -> bool {
+    match slot_spend {
+        SpellInvocationSlotSpend::SpellInvocationWithoutSlot => selected_slot_level == 0,
+        SpellInvocationSlotSpend::SpellInvocationWithSlot { minimum_slot_level } => {
+            (1..=9).contains(&minimum_slot_level)
+                && selected_slot_level >= minimum_slot_level
+                && selected_slot_level <= 9
+        }
+    }
+}
+
+pub fn spell_invocation_slot_spend_requires_slot(slot_spend: SpellInvocationSlotSpend) -> bool {
+    matches!(
+        slot_spend,
+        SpellInvocationSlotSpend::SpellInvocationWithSlot { .. }
+    )
+}
+
+pub fn spell_invocation_resource_requires_slot(facts: SpellInvocationResourceFacts) -> bool {
+    spell_invocation_slot_spend_requires_slot(facts.slot_spend)
+}
+
+pub fn spell_invocation_expenditure_request(
+    facts: SpellInvocationResourceFacts,
+) -> SpellSlotExpenditureRequest {
+    match facts.slot_spend {
+        SpellInvocationSlotSpend::SpellInvocationWithoutSlot => {
+            SpellSlotExpenditureRequest::SpellSlotExpenditureNotRequired
+        }
+        SpellInvocationSlotSpend::SpellInvocationWithSlot { .. } => {
+            SpellSlotExpenditureRequest::SpellSlotExpenditureRequired {
+                slot_level: facts.selected_slot_level,
+            }
+        }
+    }
+}
+
+pub fn spell_invocation_expenditure_state(
+    state: SpellcastingProcedureState,
+) -> SpellSlotExpenditureState {
+    SpellSlotExpenditureState {
+        slot_ledger: state.slot_ledger,
+        slot_spell_cast_this_turn: state.slot_spell_cast_this_turn,
+    }
+}
+
+pub fn legal_spell_invocation_target_cardinality(
+    target_cardinality: SpellInvocationTargetCardinality,
+    target_count: i32,
+) -> bool {
+    match target_cardinality {
+        SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+            minimum_target_count,
+            maximum_target_count,
+        } => {
+            minimum_target_count >= 1
+                && maximum_target_count >= minimum_target_count
+                && target_count >= minimum_target_count
+                && target_count <= maximum_target_count
+        }
+        SpellInvocationTargetCardinality::SpellInvocationOpenUpperTargets {
+            minimum_target_count,
+        } => minimum_target_count >= 1 && target_count >= minimum_target_count,
+    }
+}
+
+pub fn legal_spell_invocation_resource_facts(facts: SpellInvocationResourceFacts) -> bool {
+    legal_spell_invocation_slot_spend(facts.slot_spend, facts.selected_slot_level)
+        && legal_spell_invocation_target_cardinality(facts.target_cardinality, facts.target_count)
+}
+
+pub fn resolve_spell_invocation_resource_with_action_cost(
+    state: SpellcastingProcedureState,
+    facts: SpellInvocationResourceFacts,
+    action_cost: ActionCost,
+) -> SpellInvocationResult {
+    let spent_turn = spend_action_cost(state.turn, action_cost);
+    let slot_expenditure_state = spell_invocation_expenditure_state(state);
+    let slot_expenditure = apply_spell_slot_expenditure(
+        slot_expenditure_state,
+        spell_invocation_expenditure_request(facts),
+    );
+    let admitted = facts.has_spell_access
+        && legal_spell_invocation_resource_facts(facts)
+        && legal_spellcasting_procedure_state(state)
+        && spent_turn != state.turn
+        && spell_slot_expenditure_accepted(slot_expenditure);
+    let slot_expended = admitted && spell_slot_was_expended(slot_expenditure);
+    let next_slot_expenditure_state =
+        spell_slot_expenditure_result_state(slot_expenditure_state, slot_expenditure);
+
+    SpellInvocationResult {
+        state: if !admitted {
+            state
+        } else {
+            SpellcastingProcedureState {
+                turn: spent_turn,
+                slot_ledger: next_slot_expenditure_state.slot_ledger,
+                slot_spell_cast_this_turn: next_slot_expenditure_state.slot_spell_cast_this_turn,
+            }
+        },
+        admitted,
+        slot_expended,
+    }
+}
+
+pub fn resolve_spell_invocation_resource(
+    state: SpellcastingProcedureState,
+    facts: SpellInvocationResourceFacts,
+) -> SpellInvocationResult {
+    resolve_spell_invocation_resource_with_action_cost(
+        state,
+        facts,
+        spell_action_cost(facts.invocation_action),
+    )
+}
+
+pub fn spell_invocation_resource_can_affect_targets(
+    invocation: SpellInvocationResult,
+    facts: SpellInvocationResourceFacts,
+) -> bool {
+    invocation.admitted && facts.targets_are_valid
+}
+
+pub fn magic_missile_dart_count(slot_level: i32) -> i32 {
+    3 + (slot_level - 1)
+}
+
+pub fn spell_invocation_target_cardinality(
+    profile: SpellDefinitionProfile,
+    slot_level: i32,
+) -> SpellInvocationTargetCardinality {
+    match profile {
+        SpellDefinitionProfile::AcidSplash => {
+            SpellInvocationTargetCardinality::SpellInvocationOpenUpperTargets {
+                minimum_target_count: 1,
+            }
+        }
+        SpellDefinitionProfile::MagicMissile => {
+            SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+                minimum_target_count: 1,
+                maximum_target_count: magic_missile_dart_count(slot_level),
+            }
+        }
+        SpellDefinitionProfile::MassHealingWord | SpellDefinitionProfile::MassCureWounds => {
+            SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+                minimum_target_count: 1,
+                maximum_target_count: 6,
+            }
+        }
+        SpellDefinitionProfile::RayOfFrost
+        | SpellDefinitionProfile::HealingWord
+        | SpellDefinitionProfile::CureWounds
+        | SpellDefinitionProfile::MageArmor => {
+            SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+                minimum_target_count: 1,
+                maximum_target_count: 1,
+            }
+        }
+    }
+}
+
+pub fn legal_spell_invocation_target_count(
+    profile: SpellDefinitionProfile,
+    slot_level: i32,
+    target_count: i32,
+) -> bool {
+    legal_spell_invocation_target_cardinality(
+        spell_invocation_target_cardinality(profile, slot_level),
+        target_count,
+    )
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellInvocationFacts {
+    pub profile: SpellDefinitionProfile,
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub target_count: i32,
+    pub targets_are_valid: bool,
+}
+
+pub fn spell_profile_action(profile: SpellDefinitionProfile) -> SpellInvocationAction {
+    match profile {
+        SpellDefinitionProfile::HealingWord | SpellDefinitionProfile::MassHealingWord => {
+            SpellInvocationAction::BonusActionSpellInvocation
+        }
+        SpellDefinitionProfile::MagicMissile
+        | SpellDefinitionProfile::RayOfFrost
+        | SpellDefinitionProfile::AcidSplash
+        | SpellDefinitionProfile::CureWounds
+        | SpellDefinitionProfile::MassCureWounds
+        | SpellDefinitionProfile::MageArmor => SpellInvocationAction::ActionTimeSpellInvocation,
+    }
+}
+
+pub fn spell_profile_minimum_slot_level(profile: SpellDefinitionProfile) -> i32 {
+    match profile {
+        SpellDefinitionProfile::RayOfFrost | SpellDefinitionProfile::AcidSplash => 0,
+        SpellDefinitionProfile::MassHealingWord => 3,
+        SpellDefinitionProfile::MassCureWounds => 5,
+        SpellDefinitionProfile::MagicMissile
+        | SpellDefinitionProfile::HealingWord
+        | SpellDefinitionProfile::CureWounds
+        | SpellDefinitionProfile::MageArmor => 1,
+    }
+}
+
+pub fn spell_profile_slot_spend(profile: SpellDefinitionProfile) -> SpellInvocationSlotSpend {
+    let minimum_slot = spell_profile_minimum_slot_level(profile);
+    if minimum_slot == 0 {
+        SpellInvocationSlotSpend::SpellInvocationWithoutSlot
+    } else {
+        SpellInvocationSlotSpend::SpellInvocationWithSlot {
+            minimum_slot_level: minimum_slot,
+        }
+    }
+}
+
+pub fn spell_profile_requires_slot(profile: SpellDefinitionProfile) -> bool {
+    spell_invocation_slot_spend_requires_slot(spell_profile_slot_spend(profile))
+}
+
+pub fn spell_invocation_resource_facts(
+    facts: SpellInvocationFacts,
+) -> SpellInvocationResourceFacts {
+    SpellInvocationResourceFacts {
+        invocation_action: spell_profile_action(facts.profile),
+        has_spell_access: facts.has_spell_access,
+        slot_spend: spell_profile_slot_spend(facts.profile),
+        selected_slot_level: facts.selected_slot_level,
+        target_count: facts.target_count,
+        target_cardinality: spell_invocation_target_cardinality(
+            facts.profile,
+            facts.selected_slot_level,
+        ),
+        targets_are_valid: facts.targets_are_valid,
+    }
+}
+
+pub fn legal_spell_invocation_facts(facts: SpellInvocationFacts) -> bool {
+    legal_spell_invocation_resource_facts(spell_invocation_resource_facts(facts))
+}
+
+pub fn resolve_spell_invocation(
+    state: SpellcastingProcedureState,
+    facts: SpellInvocationFacts,
+) -> SpellInvocationResult {
+    resolve_spell_invocation_resource(state, spell_invocation_resource_facts(facts))
+}
+
+pub fn spell_invocation_can_affect_targets(
+    invocation: SpellInvocationResult,
+    facts: SpellInvocationFacts,
+) -> bool {
+    spell_invocation_resource_can_affect_targets(invocation, spell_invocation_resource_facts(facts))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DamageType {
     Acid,

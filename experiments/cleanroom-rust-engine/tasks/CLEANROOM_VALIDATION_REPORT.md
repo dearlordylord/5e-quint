@@ -1,6 +1,6 @@
 # Cleanroom Validation Report
 
-Status: obligation-to-Rust coverage map refreshed after wave 3 additions.
+Status: obligation-to-Rust coverage map refreshed after wave 4 additions.
 
 ## Sources Inspected
 
@@ -28,8 +28,8 @@ source-system QNT/MBT parity percentages.
 ## Rust Coverage Summary
 
 - Implemented scoped obligations: 2/47 = 4.3%
-- Partially implemented scoped obligations: 11/47 = 23.4%
-- Not attempted scoped obligations: 34/47 = 72.3%
+- Partially implemented scoped obligations: 13/47 = 27.7%
+- Not attempted scoped obligations: 32/47 = 68.1%
 - Blocked by source gap: 0/47 = 0.0%
 
 Only `BATTLE.REACTION.OFFER_DECLINE_RESUME` and
@@ -68,10 +68,12 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | `battle.rs` has standard and bonus-action Dash resource spend; `engine/tests/battle_actions.rs` covers dash costs. | Spell slot spend, immediate spell cast, concentration-owned later permission, and cleanup are not modeled. |
 | `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | `battle.rs` has reaction windows, bounded continuation ordering, readied reaction movement spend, movement spend admission, and Opportunity Attack interruption facts; `engine/tests/battle_reactions.rs` covers these generic pieces. | Failed-save forced movement, no-movement fallback, spell-specific movement fill admission, and Dissonant Whispers lifecycle are not modeled. |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | `battle.rs` has direct hit-point restoration profiles, dice count, die size, area profile for Mass Cure Wounds, healing, and zero-HP recovery interaction; `engine/tests/battle_hit_points.rs` covers direct restoration. | Target-selection holes and multi-target healing projection are not modeled. |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `battle.rs` has spell slot ledger/expenditure, one slot-spell-per-turn gating, slotless cantrip admission, action-time versus Bonus Action spell costs, target cardinality profiles, invalid-target resource expenditure, and a small cleanroom spell definition profile set. `engine/tests/battle_spell_profiles.rs` covers Magic Missile slot-scaled targets, Ray of Frost slotless casting, Healing Word Bonus Action cost, Mass Healing Word slot/target gates, invalid targets, missing access, wrong slot, bad target count, and slot result helper behavior. | The scoped obligation's source matrix spans many spell procedure profiles and semantic cores, including spell damage projections, defensive effects, scalar buffs, damage riders, chained/independent attack sequences, turn hooks, object damage, repeat-save lifecycles, and readied spell response. Current Rust covers only the generic resource/action/slot/cardinality slice. |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | `battle.rs` has reaction windows for damage interruption/readied spell kinds, generic reaction spend, bounded interruption/resume, and damage-triggered interruption; `engine/tests/battle_reactions.rs` covers the generic protocol. | Spell-cast and after-damage spell triggers, Spell Slot ledger, and concrete reaction spell resolution are not modeled. |
 | `CREATION.CLASS_FEATURE_OPTION.PROJECTION` | `character_creation.rs` has draft holes and fills for Fighter Fighting Style and related class-feature choices; `engine/tests/character_creation_draft.rs` covers acceptance/rejection. | Final CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus fact projections are not modeled. |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | `character_creation.rs` has a Fighter Weapon Mastery draft hole, selected weapon refs on finalized Fighter builds, class/feature Unit refs, and string projections; `engine/tests/character_creation_draft.rs` covers the manifest path and finalized refs. | The join rows for this scoped obligation are Paladin/Ranger/Rogue weapon mastery choices, so the current Fighter-only finalization is not full scoped coverage. |
 | `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` | `character_creation.rs` has an ability-check proficiency projection helper for Performance with Jack of All Trades, skill proficiency, Expertise, and no-other-Proficiency-Bonus rejection branches; `engine/tests/character_creation_sheet_projections.rs` covers the copied replay cases. | The Rust surface is a narrow Performance fixture projection rather than a broader character-sheet ability-check projection over the full skill/check domain. |
+| `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | `character_creation.rs` has `project_armor_class_base_formula` for default unarmored AC, Barbarian Unarmored Defense with optional Shield bonus, and Monk Unarmored Defense without Shield. `engine/tests/character_sheet_armor_class.rs` covers the copied selected-identity/default formula cases. | The broader obligation title includes selection from CharacterBuild, loadout, and class-feature facts. Current Rust receives the selected formula and Shield bonus as explicit inputs rather than deriving the selected base formula from full build/loadout state and competing AC sources. |
 
 ## Not Attempted
 
@@ -90,7 +92,6 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 - `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE`
 - `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`
 - `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE`
-- `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`
 - `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`
 - `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`
 - `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`
@@ -104,7 +105,6 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 - `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`
 - `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION`
 - `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
-- `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`
 - `SHEET.FEATURE_RESOURCES.TRANSITIONS`
 - `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`
 - `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`
@@ -123,5 +123,5 @@ implementation and Rust test coverage gaps, not missing cleanroom source facts.
 ```text
 Command: cd engine && cargo test
 Result: pass
-Tests: 68 passed; 0 failed; 0 ignored; 0 doc tests
+Tests: 80 passed; 0 failed; 0 ignored; 0 doc tests
 ```

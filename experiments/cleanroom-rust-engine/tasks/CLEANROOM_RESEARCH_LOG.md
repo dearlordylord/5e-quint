@@ -230,3 +230,93 @@ TypeScript runtime files.
 - Conservative count: 2 fully implemented, 11 partially implemented, 34 not
   attempted, 0 blocked by source gap.
 - `cd engine && cargo test` passed: 68 tests passed, 0 failed.
+
+## 2026-05-27 - Lane C wave 4 support queue refinement
+
+- Refined `tasks/CLEANROOM_NEXT_QUEUE.md` against the latest committed Lane C
+  status: 2 fully implemented, 11 partial, 34 not attempted, and 0 blocked by
+  source gap.
+- Removed `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` from the active queue because
+  the current cleanroom report marks it fully implemented.
+- Marked the best short next slices for A/B as
+  `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`,
+  `BATTLE.SPELL.REACTION_CASTING_TIME`,
+  `BATTLE.SPELL.HIT_POINT_RESTORATION`,
+  `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION`, and
+  `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, with Sanctuary as a backup Lane B
+  slice.
+- Noted active concurrent Lane A armor-class and Lane B spell-profile work in
+  the shared log; the queue now tells implementers to treat those as Lane C
+  refresh inputs if they land before the next slice is picked.
+- No Rust files were edited and no tests were run; this was a documentation-only
+  planning update.
+
+## 2026-05-27 - Lane A wave 4 armor-class base formula projection
+
+- Used Wave 4 from `tasks/CLEANROOM_NEXT_QUEUE.md` and targeted
+  `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `character-sheet-armor-class-base-selected-identity.mbt.qnt`, Barbarian and
+  Monk SRD RAW for Unarmored Defense, Character Creation AC RAW, Equipment
+  Shield RAW, ubiquitous language, and scoped obligation metadata.
+- Implemented `project_armor_class_base_formula` in
+  `engine/src/character_creation.rs` for default unarmored AC, Barbarian
+  Unarmored Defense with optional Shield bonus, and Monk Unarmored Defense
+  without Shield.
+- Added `engine/tests/character_sheet_armor_class.rs` with four tests mirroring
+  the QNT default and selected-identity cases.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets` all passed.
+- Obligation status: partial. The scalar formula projections in the copied QNT
+  fixture are covered, but the broader obligation title includes selection from
+  build/loadout/class-feature facts; Rust still receives the selected formula
+  and Shield bonus as explicit inputs rather than deriving them from a full
+  CharacterBuild/loadout state.
+- Source gap: no source gap for the scoped scalar fixture. A full claim needs a
+  machine-readable build/loadout AC admission contract or QNT that models the
+  selector from armor, Shield, and competing class-feature formulas.
+
+## 2026-05-27 - Lane B wave 4 spell procedure resource profile
+
+- Used Wave 2 from `tasks/CLEANROOM_NEXT_QUEUE.md` and targeted
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `spell-slot-expenditure.qnt`, `spell-invocation-resource-core.qnt`,
+  `spell-invocation-target-cardinality-core.qnt`,
+  `spell-invocation-action-slot-core.qnt`, `spell-definition-profiles.qnt`,
+  `spell-procedure-profiles-examples.qnt`, `rule-core-spells.mbt.qnt`,
+  SRD 5.2.1 spell slots/casting time/targets RAW, and ubiquitous language.
+- Implemented spell slot ledger/expenditure, one slot-spell per turn gating,
+  slotless cantrip admission, action-time vs Bonus Action spell costs, target
+  cardinality profiles, invalid-target resource expenditure, and the small
+  cleanroom spell definition profile set used by the QNT resource core.
+- Added `engine/tests/battle_spell_profiles.rs` with eight tests covering
+  Magic Missile slot-scaled target cardinality, Ray of Frost slotless casting,
+  Healing Word Bonus Action cost, Mass Healing Word slot/target gates, invalid
+  targets, rejected missing access/wrong slot/bad target count, and slot result
+  helper behavior.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status in this cleanroom Rust engine: partial for
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`. This covers the generic
+  resource/action/slot/cardinality reducer core, but not every listed spell
+  procedure profile, reaction spell, readied spell, rider, or sequence owner in
+  the broad scoped obligation.
+- Source gap: no source gap for the implemented resource profile slice.
+
+## 2026-05-27 - Lane C wave 4 coverage refresh
+
+- Read current local Rust APIs/tests plus cleanroom manifest, generator-readiness
+  rows, and level 1-2 QNT/MBT join metadata; no production TypeScript was read.
+- Accounted for `engine/tests/battle_spell_profiles.rs` and
+  `engine/tests/character_sheet_armor_class.rs`.
+- Moved `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` from not-attempted to
+  partial: current Rust covers resource/action/slot/cardinality behavior for a
+  small profile set, while the scoped obligation spans the broader spell
+  procedure matrix.
+- Moved `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` from not-attempted to partial:
+  current Rust covers selected formula projection cases, but not derivation of
+  the selected formula from full CharacterBuild/loadout/class-feature facts.
+- Conservative count: 2 fully implemented, 13 partially implemented, 32 not
+  attempted, 0 blocked by source gap.
+- `cd engine && cargo test` passed: 80 tests passed, 0 failed.
