@@ -9,6 +9,7 @@
 // back to their existing dispatch.
 
 import { damageReductionProfile } from "./damage-reduction.ts";
+import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { objectLightProfile } from "./object-light.ts";
@@ -24,6 +25,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   heldLightProfile,
   objectLightProfile,
   thaumaturgyBoomingVoiceProfile,
+  blurAttackRollDefenseProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

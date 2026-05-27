@@ -151,6 +151,7 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import {
   heldLightProfile,
   isProduceFlameOngoingEffectSpell,
@@ -165,7 +166,6 @@ import {
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
-  supportedPreparedBlurAttackRollDefenseSpellProfile,
   supportedPreparedConditionRemovalProtectionSpellProfile,
   supportedPreparedCreatureSizeChangeSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
@@ -445,11 +445,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedBlurAttackRollDefenseSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      blurAttackRollDefenseProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSeeInvisibleObserverSightSpellProfile(

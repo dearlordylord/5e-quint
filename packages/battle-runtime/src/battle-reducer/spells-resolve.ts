@@ -94,6 +94,7 @@ import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -235,7 +236,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveBlurAttackRollDefenseSpellAct,
   resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
@@ -275,7 +275,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveBlurAttackRollDefenseSpellAct,
   resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
@@ -969,7 +968,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "blurAttackRollDefense") {
-    return resolveBlurAttackRollDefenseSpellAct({
+    return blurAttackRollDefenseProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -217,11 +217,6 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
   { readonly procedure: "saveGatedAttackRollAdvantage" }
 >;
 
-export type BlurAttackRollDefenseInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "blurAttackRollDefense" }
->;
-
 export type SeeInvisibleObserverSightInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "seeInvisibleObserverSight" }
@@ -3461,39 +3456,6 @@ export function applyDragonsBreathInitialSpellEffect(
       ...target,
       activeEffects,
     }),
-  };
-}
-
-export function applyBlurAttackRollDefenseSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BlurAttackRollDefenseInvocation,
-): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "blurred" &&
-          effect.sourceSpellId === invocation.spell.id &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
   };
 }
 

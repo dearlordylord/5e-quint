@@ -41,7 +41,6 @@ import { Either, Match, Schema } from "effect";
 import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,
-  type BlurAttackRollDefenseSpellInvocation,
   type SeeInvisibleObserverSightSpellInvocation,
   type MirrorImageHitInterceptionSpellInvocation,
   type BattleActiveEffectExpiration,
@@ -1500,31 +1499,6 @@ export function supportedPreparedCreatureTypeProtectionSpellProfile(
   );
 }
 
-export function supportedPreparedBlurAttackRollDefenseSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = blurAttackRollDefenseSpellProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "blurAttackRollDefense",
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          },
-        ],
-  );
-}
-
 export function supportedPreparedSeeInvisibleObserverSightSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -1598,52 +1572,6 @@ export function supportedPreparedConditionRemovalProtectionSpellProfile(
           },
         ],
   );
-}
-
-function blurAttackRollDefenseSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const effect = effects[0];
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
-  );
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    effects.length !== 1 ||
-    effect?.kind !== "modify_roll_advantage" ||
-    effect.mode !== "disadvantage" ||
-    (effect.affects ?? "rolls_against_self") !== "rolls_against_self" ||
-    !sameStringSet(effect.on, ["attack_roll"]) ||
-    effect.attackerTypeFilter !== undefined ||
-    expiresAt?.kind !== "concentration"
-  ) {
-    return null;
-  }
-  return {
-    activeEffect: {
-      kind: "blurred",
-      sourceSpellId: spell.id,
-      sourceCombatantId: actorId,
-      expiresAt,
-    },
-  };
 }
 
 function seeInvisibleObserverSightSpellProjection(
