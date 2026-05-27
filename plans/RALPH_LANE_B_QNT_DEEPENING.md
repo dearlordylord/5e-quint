@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Levitate creature lifecycle focused MBT"
     },
     {
@@ -165,7 +165,7 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 | 1 | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | done | none | Starts the manual Rust dry-run path. |
 | 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | done | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
 | 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | done | none | Independent focused MBT promotion. |
-| 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | done | none | Independent focused MBT promotion. |
 | 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 6 | QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 7 | QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
@@ -255,7 +255,7 @@ Acceptance:
 
 ### Task 4 - QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QCP-CS2` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
