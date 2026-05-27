@@ -74,6 +74,7 @@ import {
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -594,6 +595,13 @@ export function discoverSupportedSpellInvocations(
       }
       if (invocation.procedure === "persistentArmorEffect") {
         return persistentArmorEffectProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
+      if (invocation.procedure === "conditionRemovalProtection") {
+        return conditionRemovalProtectionProfile.discoverCastAct(
           state,
           actorId,
           invocation,
@@ -1422,7 +1430,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "conditionRemovalProtection") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return conditionRemovalProtectionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "directConditionRemoval") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

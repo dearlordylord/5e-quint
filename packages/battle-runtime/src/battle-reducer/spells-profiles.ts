@@ -157,6 +157,7 @@ import {
   admitPersistentArmorEffectInvocationSpellAccess,
   persistentArmorEffectProfile,
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
+import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
@@ -168,7 +169,6 @@ import {
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
-  supportedPreparedConditionRemovalProtectionSpellProfile,
   supportedPreparedCreatureSizeChangeSpellProfile,
   supportedPreparedDragonsBreathInitialSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
@@ -464,11 +464,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedConditionRemovalProtectionSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      conditionRemovalProtectionProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       objectLightProfile.admit(spell, {

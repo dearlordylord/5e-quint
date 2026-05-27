@@ -73,8 +73,8 @@
     {
       "number": 12,
       "id": "SPP-W2-11-CONDITION-REMOVAL-PROTECTION",
-      "status": "ready-for-research",
-      "title": "Migrate conditionRemovalProtection profile (no focused MBT)"
+      "status": "done",
+      "title": "Migrate conditionRemovalProtection profile"
     },
     {
       "number": 13,
@@ -818,10 +818,9 @@ Focused MBT: `creature-type-protection-and-charm-selected-identity.mbt.test.ts`.
 
 ### Task 12 - SPP-W2-11-CONDITION-REMOVAL-PROTECTION - Migrate conditionRemovalProtection
 
-Status: `ready-for-research`
+Status: `done`
 
-No focused MBT. Verification: `battle-runtime.mbt.test.ts`. Flag follow-up
-to author a focused test.
+Focused MBT: `condition-removal-protection-selected-identity.mbt.test.ts`.
 
 ### Task 13 - SPP-W2-12-DIRECT-CONDITION-REMOVAL - Migrate directConditionRemoval
 

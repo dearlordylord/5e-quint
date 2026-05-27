@@ -13,6 +13,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -396,12 +397,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "conditionRemovalProtection") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "conditionRemovalProtection",
-    };
+    return conditionRemovalProtectionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "saveGatedConditionImmunity") {
     return {

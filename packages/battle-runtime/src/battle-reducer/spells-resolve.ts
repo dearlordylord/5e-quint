@@ -95,6 +95,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -238,7 +239,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
@@ -253,7 +253,6 @@ export {
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
-  conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
@@ -261,7 +260,6 @@ export {
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
-  type ConditionRemovalProtectionSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type DirectConditionRemovalSpellTargetSelection,
   type HealingSpellTargetSelection,
@@ -272,7 +270,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
@@ -994,7 +991,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "conditionRemovalProtection") {
-    return resolveConditionRemovalProtectionSpellAct({
+    return conditionRemovalProtectionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

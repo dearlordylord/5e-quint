@@ -10,6 +10,7 @@
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
+import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { makeStableProfile } from "./make-stable.ts";
@@ -36,6 +37,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   magicWeaponEnhancementProfile,
   wardingBondProfile,
   creatureTypeProtectionProfile,
+  conditionRemovalProtectionProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles
