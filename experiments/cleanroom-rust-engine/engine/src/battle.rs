@@ -796,6 +796,136 @@ pub fn resolve_direct_hit_point_restoration_effect(
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DirectHitPointRestorationTargetWitness {
+    pub selected_by_caster: bool,
+    pub spell_spatial_requirements_satisfied: bool,
+}
+
+impl DirectHitPointRestorationTargetWitness {
+    pub fn valid() -> Self {
+        Self {
+            selected_by_caster: true,
+            spell_spatial_requirements_satisfied: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DirectHitPointRestorationTarget {
+    pub vitals: CreatureVitals,
+    pub death_saving_throws: DeathSavingThrowLifecycle,
+    pub positive_hit_point_unconscious_recovery: PositiveHitPointUnconsciousRecovery,
+    pub witness: DirectHitPointRestorationTargetWitness,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DirectHitPointRestorationSpellFacts {
+    pub has_spell_access: bool,
+    pub effect: DirectHitPointRestorationEffectFacts,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DirectHitPointRestorationSpellResult {
+    pub invocation: SpellInvocationResult,
+    pub targets: Vec<HitPointRecoveryResult>,
+}
+
+pub fn direct_hit_point_restoration_spell_definition_profile(
+    profile: DirectHitPointRestorationProfile,
+) -> SpellDefinitionProfile {
+    match profile {
+        DirectHitPointRestorationProfile::CureWounds => SpellDefinitionProfile::CureWounds,
+        DirectHitPointRestorationProfile::HealingWord => SpellDefinitionProfile::HealingWord,
+        DirectHitPointRestorationProfile::MassCureWounds => SpellDefinitionProfile::MassCureWounds,
+        DirectHitPointRestorationProfile::MassHealingWord => {
+            SpellDefinitionProfile::MassHealingWord
+        }
+    }
+}
+
+pub fn direct_hit_point_restoration_target_count(
+    targets: &[DirectHitPointRestorationTarget],
+) -> i32 {
+    if targets.len() > i32::MAX as usize {
+        i32::MAX
+    } else {
+        targets.len() as i32
+    }
+}
+
+pub fn direct_hit_point_restoration_targets_are_valid(
+    targets: &[DirectHitPointRestorationTarget],
+) -> bool {
+    targets.iter().all(|target| {
+        target.witness.selected_by_caster && target.witness.spell_spatial_requirements_satisfied
+    })
+}
+
+pub fn direct_hit_point_restoration_spell_invocation_facts(
+    facts: DirectHitPointRestorationSpellFacts,
+    targets: &[DirectHitPointRestorationTarget],
+) -> SpellInvocationFacts {
+    SpellInvocationFacts {
+        profile: direct_hit_point_restoration_spell_definition_profile(facts.effect.profile),
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.effect.slot_level,
+        target_count: direct_hit_point_restoration_target_count(targets),
+        targets_are_valid: direct_hit_point_restoration_targets_are_valid(targets),
+    }
+}
+
+fn unchanged_hit_point_restoration_target(
+    target: DirectHitPointRestorationTarget,
+) -> HitPointRecoveryResult {
+    HitPointRecoveryResult {
+        vitals: target.vitals,
+        death_saving_throws: target.death_saving_throws,
+        positive_hit_point_unconscious_recovery: target.positive_hit_point_unconscious_recovery,
+        hit_points_regained: 0,
+    }
+}
+
+pub fn resolve_direct_hit_point_restoration_spell(
+    state: SpellcastingProcedureState,
+    targets: &[DirectHitPointRestorationTarget],
+    facts: DirectHitPointRestorationSpellFacts,
+) -> DirectHitPointRestorationSpellResult {
+    let effect_facts_are_legal = legal_direct_hit_point_restoration_effect_facts(facts.effect);
+    let invocation_facts = direct_hit_point_restoration_spell_invocation_facts(facts, targets);
+    let invocation = if effect_facts_are_legal {
+        resolve_spell_invocation(state, invocation_facts)
+    } else {
+        SpellInvocationResult {
+            state,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let can_apply_effect =
+        effect_facts_are_legal && spell_invocation_can_affect_targets(invocation, invocation_facts);
+    let targets = targets
+        .iter()
+        .map(|target| {
+            if can_apply_effect {
+                resolve_direct_hit_point_restoration_effect(
+                    target.vitals,
+                    target.death_saving_throws,
+                    target.positive_hit_point_unconscious_recovery,
+                    facts.effect,
+                )
+            } else {
+                unchanged_hit_point_restoration_target(*target)
+            }
+        })
+        .collect();
+
+    DirectHitPointRestorationSpellResult {
+        invocation,
+        targets,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SpareTheDyingInvocationFacts {
     pub character_level: i32,
     pub has_spell_access: bool,

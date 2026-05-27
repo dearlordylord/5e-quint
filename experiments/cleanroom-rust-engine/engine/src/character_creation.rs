@@ -5,7 +5,12 @@
 //! - `input/.references/srd-5.2.1/Character-Creation.md`
 //! - `input/.references/srd-5.2.1/Character-Origins.md`
 //! - `input/.references/srd-5.2.1/Classes/Fighter.md`
+//! - `input/.references/srd-5.2.1/Classes/Warlock.md`
+//! - `input/.references/srd-5.2.1/Classes/Wizard.md`
 //! - `input/.references/srd-5.2.1/Equipment.md`
+//! - `input/.references/srd-5.2.1/Rules-Glossary.md`
+//! - `input/.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+//! - `input/packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt`
 
 use std::collections::BTreeSet;
 
@@ -339,6 +344,251 @@ pub fn project_armor_class_base_formula(
             armor_class: base_armor_class + dexterity_modifier + wisdom_modifier,
         },
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OrdinarySpellSlotFacts {
+    pub level1_capacity: i16,
+    pub level1_expended: i16,
+    pub level2_capacity: i16,
+    pub level2_expended: i16,
+    pub created_level1_capacity: i16,
+    pub created_level1_expended: i16,
+}
+
+impl OrdinarySpellSlotFacts {
+    pub const fn none() -> Self {
+        Self {
+            level1_capacity: 0,
+            level1_expended: 0,
+            level2_capacity: 0,
+            level2_expended: 0,
+            created_level1_capacity: 0,
+            created_level1_expended: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PactSlotFacts {
+    pub slot_level: i16,
+    pub capacity: i16,
+    pub expended: i16,
+}
+
+impl PactSlotFacts {
+    pub const fn none() -> Self {
+        Self {
+            slot_level: 0,
+            capacity: 0,
+            expended: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SheetSlotFacts {
+    pub ordinary: OrdinarySpellSlotFacts,
+    pub pact: PactSlotFacts,
+    pub arcane_recovery_used_since_long_rest: bool,
+    pub magical_cunning_used_since_long_rest: bool,
+}
+
+impl SheetSlotFacts {
+    pub const fn empty() -> Self {
+        Self {
+            ordinary: OrdinarySpellSlotFacts::none(),
+            pact: PactSlotFacts::none(),
+            arcane_recovery_used_since_long_rest: false,
+            magical_cunning_used_since_long_rest: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SheetSlotExpectedCapacities {
+    pub ordinary_level1_capacity: i16,
+    pub pact_slot_level: i16,
+    pub pact_capacity: i16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SheetSlotTransitionIssue {
+    OrdinarySpellSlotCapacityMismatchForLevel1,
+    PactSlotStateDoesNotMatchPactMagicBuildCapacity,
+    MagicalCunningMustRecoverExpendedPactSlots,
+    ArcaneRecoveryCannotRefundMoreSpellSlotsThanExpended,
+}
+
+impl SheetSlotTransitionIssue {
+    pub fn message(self) -> &'static str {
+        match self {
+            Self::OrdinarySpellSlotCapacityMismatchForLevel1 => {
+                "Spell Slot state does not match build capacity for level 1."
+            }
+            Self::PactSlotStateDoesNotMatchPactMagicBuildCapacity => {
+                "Pact Slot state must match Pact Magic build capacity."
+            }
+            Self::MagicalCunningMustRecoverExpendedPactSlots => {
+                "Magical Cunning must recover expended Pact Slots."
+            }
+            Self::ArcaneRecoveryCannotRefundMoreSpellSlotsThanExpended => {
+                "Arcane Recovery cannot refund more Spell Slots than are expended."
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SheetSlotTransitionResult {
+    Accepted {
+        sheet: SheetSlotFacts,
+    },
+    Rejected {
+        sheet: SheetSlotFacts,
+        issue: SheetSlotTransitionIssue,
+    },
+}
+
+impl SheetSlotTransitionResult {
+    pub fn accepted_sheet(self) -> Option<SheetSlotFacts> {
+        match self {
+            Self::Accepted { sheet } => Some(sheet),
+            Self::Rejected { .. } => None,
+        }
+    }
+
+    pub fn rejected_issue(self) -> Option<SheetSlotTransitionIssue> {
+        match self {
+            Self::Accepted { .. } => None,
+            Self::Rejected { issue, .. } => Some(issue),
+        }
+    }
+}
+
+pub fn admit_sheet_slot_facts(
+    sheet: SheetSlotFacts,
+    expected: SheetSlotExpectedCapacities,
+) -> SheetSlotTransitionResult {
+    if sheet.ordinary.level1_capacity != expected.ordinary_level1_capacity {
+        return reject_slot_transition(
+            sheet,
+            SheetSlotTransitionIssue::OrdinarySpellSlotCapacityMismatchForLevel1,
+        );
+    }
+
+    if sheet.pact.slot_level != expected.pact_slot_level
+        || sheet.pact.capacity != expected.pact_capacity
+        || sheet.pact.expended > sheet.pact.capacity
+    {
+        return reject_slot_transition(
+            sheet,
+            SheetSlotTransitionIssue::PactSlotStateDoesNotMatchPactMagicBuildCapacity,
+        );
+    }
+
+    accept_slot_transition(sheet)
+}
+
+pub fn recover_pact_slots(sheet: SheetSlotFacts) -> SheetSlotFacts {
+    SheetSlotFacts {
+        pact: PactSlotFacts {
+            expended: 0,
+            ..sheet.pact
+        },
+        ..sheet
+    }
+}
+
+pub fn complete_long_rest_slot_benefits(sheet: SheetSlotFacts) -> SheetSlotFacts {
+    SheetSlotFacts {
+        ordinary: OrdinarySpellSlotFacts {
+            level1_expended: 0,
+            level2_expended: 0,
+            created_level1_capacity: 0,
+            created_level1_expended: 0,
+            ..sheet.ordinary
+        },
+        pact: PactSlotFacts {
+            expended: 0,
+            ..sheet.pact
+        },
+        arcane_recovery_used_since_long_rest: false,
+        magical_cunning_used_since_long_rest: false,
+    }
+}
+
+pub fn complete_short_rest_slot_benefits(sheet: SheetSlotFacts) -> SheetSlotFacts {
+    recover_pact_slots(sheet)
+}
+
+pub fn complete_short_rest_with_arcane_recovery_level2(
+    sheet: SheetSlotFacts,
+) -> SheetSlotTransitionResult {
+    apply_arcane_recovery_level2(recover_pact_slots(sheet))
+}
+
+pub fn apply_arcane_recovery_level2(sheet: SheetSlotFacts) -> SheetSlotTransitionResult {
+    if sheet.ordinary.level2_expended <= 0 {
+        return reject_slot_transition(
+            sheet,
+            SheetSlotTransitionIssue::ArcaneRecoveryCannotRefundMoreSpellSlotsThanExpended,
+        );
+    }
+
+    accept_slot_transition(SheetSlotFacts {
+        ordinary: OrdinarySpellSlotFacts {
+            level2_expended: sheet.ordinary.level2_expended - 1,
+            ..sheet.ordinary
+        },
+        arcane_recovery_used_since_long_rest: true,
+        ..sheet
+    })
+}
+
+pub fn interrupted_short_rest_slot_benefits(sheet: SheetSlotFacts) -> SheetSlotFacts {
+    sheet
+}
+
+pub fn interrupted_long_rest_slot_benefits(
+    sheet: SheetSlotFacts,
+    rested_at_least_one_hour: bool,
+) -> SheetSlotFacts {
+    if rested_at_least_one_hour {
+        recover_pact_slots(sheet)
+    } else {
+        sheet
+    }
+}
+
+pub fn apply_magical_cunning(sheet: SheetSlotFacts) -> SheetSlotTransitionResult {
+    if sheet.pact.expended <= 0 {
+        return reject_slot_transition(
+            sheet,
+            SheetSlotTransitionIssue::MagicalCunningMustRecoverExpendedPactSlots,
+        );
+    }
+
+    let recovered = (sheet.pact.capacity + 1) / 2;
+    accept_slot_transition(SheetSlotFacts {
+        pact: PactSlotFacts {
+            expended: (sheet.pact.expended - recovered).max(0),
+            ..sheet.pact
+        },
+        magical_cunning_used_since_long_rest: true,
+        ..sheet
+    })
+}
+
+fn accept_slot_transition(sheet: SheetSlotFacts) -> SheetSlotTransitionResult {
+    SheetSlotTransitionResult::Accepted { sheet }
+}
+
+fn reject_slot_transition(
+    sheet: SheetSlotFacts,
+    issue: SheetSlotTransitionIssue,
+) -> SheetSlotTransitionResult {
+    SheetSlotTransitionResult::Rejected { sheet, issue }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

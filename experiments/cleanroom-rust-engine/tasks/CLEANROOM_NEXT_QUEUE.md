@@ -1,7 +1,7 @@
 # Cleanroom Next Queue
 
 Purpose: keep Lane A/B implementation moving from the latest Lane C coverage
-map. Current cleanroom status is 2 fully implemented, 11 partial, 34 not
+map. Current cleanroom status is 2 fully implemented, 13 partial, 32 not
 attempted, and 0 blocked by source gap. Coverage claims should stay
 conservative until Lane C refreshes counts after implementation.
 
@@ -14,23 +14,25 @@ Already full; do not schedule unless regressions appear:
 
 These are the best first picks after A/B wave 4 work because each has local
 source evidence, a narrow expected Rust test surface, and a clear coverage gain.
-The status basis is the latest committed Lane C map. If the active Lane A armor
-class work lands first, treat rank 1 as a Lane C refresh item and start
-implementation at ranks 2-5.
+The status basis is the latest Lane C wave 4 map. Newly partial wave 4 items are
+kept out of these top slots unless A/B explicitly chooses to deepen them.
 
 | Rank | Lane | Obligation | Why it is a good next slice | Likely source files | Expected Rust tests |
 | --- | --- | --- | --- | --- | --- |
-| 1 | A | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | Best from the committed baseline: not attempted, deterministic scalar projection, no battle reducer dependency. Skip as implementation work if Lane A's active AC slice has already landed. | `input/packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt` | Add or validate `engine/tests/character_sheet_projection.rs` / `engine/tests/character_sheet_armor_class.rs` cases for Barbarian/Monk/class-feature/loadout AC base formula selected refs. |
-| 2 | B | `BATTLE.SPELL.REACTION_CASTING_TIME` (partial) | Builds directly on the finished reaction/continuation vertical and can close concrete reaction-spell trigger/slot-ledger behavior. | `input/packages/battle-runtime/battle-runtime-reaction-window.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt`, `input/packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt` | Extend `engine/tests/battle_reactions.rs` or add `engine/tests/battle_reaction_spells.rs` for spell-cast and after-damage triggers, Reaction spend, slot spend, interruption, and resume. |
-| 3 | B | `BATTLE.SPELL.HIT_POINT_RESTORATION` (partial) | Existing healing core is close; remaining gap is target-selection holes and multi-target projection. | `input/packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt`, `input/packages/battle-runtime/rule-core-spells.mbt.qnt` | Extend `engine/tests/battle_hit_points.rs` or add `engine/tests/battle_spell_restoration.rs` for healing-roll holes, zero-HP recovery, and multi-target healing. |
-| 4 | A | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (partial) | Current Rust covers Fighter refs, but scoped rows require Paladin/Ranger/Rogue selected CharacterBuild class-choice refs. | `input/packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt` | Extend `engine/tests/character_creation_draft.rs` or add `engine/tests/character_creation_projection.rs` for the scoped class containers. |
-| 5 | B | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | Generation-subset clean and standalone enough to add command option effects without pulling in the larger spell profile matrix. | `input/packages/battle-runtime/battle-runtime-command-choice.qnt`, `input/packages/battle-runtime/battle-runtime-ground-command.qnt` | Add `engine/tests/battle_command.rs` for Halt/Grovel/Flee/Drop-style option effects and next-turn consequences. |
+| 1 | B | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | Not attempted, generation-subset clean, and standalone enough to add command option effects without pulling in the larger spell profile matrix. | `input/packages/battle-runtime/battle-runtime-command-choice.qnt`, `input/packages/battle-runtime/battle-runtime-ground-command.qnt` | Add `engine/tests/battle_command.rs` for Halt/Grovel/Flee/Drop-style option effects and next-turn consequences. |
+| 2 | B | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | Not attempted, single active-effect targeting rule, and a compact bridge from spell invocation into target replacement/early-end behavior. | `input/packages/battle-runtime/battle-runtime-sanctuary.qnt` | Add `engine/tests/battle_sanctuary.rs` for ward creation, direct-target interdiction, replacement target selection, area-effect exclusion, and early end. |
+| 3 | A | `SHEET.WEAPON_MASTERY.RESELECTION` | Not attempted and close to the existing selected-identity projection work without needing battle reducer changes. | `input/packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | Add `engine/tests/character_sheet_projection.rs` cases for weapon mastery reselection containers and selected refs. |
+| 4 | B | `BATTLE.SPELL.REACTION_CASTING_TIME` (partial) | Builds directly on the finished reaction/continuation vertical and can close concrete reaction-spell trigger/slot-ledger behavior. | `input/packages/battle-runtime/battle-runtime-reaction-window.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt`, `input/packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt` | Extend `engine/tests/battle_reactions.rs` or add `engine/tests/battle_reaction_spells.rs` for spell-cast and after-damage triggers, Reaction spend, slot spend, interruption, and resume. |
+| 5 | B | `BATTLE.SPELL.HIT_POINT_RESTORATION` (partial) | Existing healing core is close; remaining gap is target-selection holes and multi-target projection. | `input/packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt`, `input/packages/battle-runtime/rule-core-spells.mbt.qnt` | Extend `engine/tests/battle_hit_points.rs` or add `engine/tests/battle_spell_restoration.rs` for healing-roll holes, zero-HP recovery, and multi-target healing. |
 
-Backup short slice if Lane B wants an active-effect target rule instead of
-Command: `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, using
-`input/packages/battle-runtime/battle-runtime-sanctuary.qnt` and focused tests
-for ward creation, direct-target interdiction, replacement target selection,
-area-effect exclusion, and early end.
+Recently moved to partial; keep out of the top slots until A/B chooses a
+specific deepening slice:
+
+- `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`: selected formula projection is
+  covered; full scope still needs derivation from CharacterBuild, loadout, and
+  class-feature facts.
+- `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`: resource/action/slot/cardinality
+  core is covered; full scope still needs the broader procedure matrix.
 
 ## Wave 1 - Short Projection And Reaction Closure
 
@@ -39,7 +41,7 @@ starting the larger spell-profile matrix.
 
 Obligations:
 
-- `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`
+- `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` (partial)
 - `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` (partial)
 - `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (partial)
 - `SHEET.WEAPON_MASTERY.RESELECTION`
@@ -64,8 +66,10 @@ Likely source files:
 
 Expected Rust tests:
 
-- `engine/tests/character_sheet_projection.rs` for AC base formula, broader
-  ability-check proficiency projection, and weapon mastery reselection.
+- `engine/tests/character_sheet_projection.rs` for broader ability-check
+  proficiency projection and weapon mastery reselection; extend
+  `engine/tests/character_sheet_armor_class.rs` only if deepening AC beyond the
+  current selected formula projection.
 - `engine/tests/character_creation_projection.rs` for Paladin/Ranger/Rogue
   weapon mastery finalization.
 - `engine/tests/battle_reaction_spells.rs`, `engine/tests/battle_command.rs`,
@@ -100,15 +104,12 @@ Expected Rust tests:
 
 ## Wave 3 - Spell Procedure, Damage, And Riders
 
-Goal: promote existing attack/damage helpers into spell/profile-level reducers
-for slots, target cardinality, attack/save branches, and riders.
-If Lane B's active spell resource/profile slice lands first, treat
-`BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` as a Lane C partial-refresh item and
-start new implementation at the damage branches, sequences, and riders below.
+Goal: extend the existing spell resource/profile foundation into
+profile-level reducers for attack/save damage branches, sequences, and riders.
 
 Obligations:
 
-- `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`
+- `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` (partial)
 - `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` (partial)
 - `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` (partial)
 - `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`

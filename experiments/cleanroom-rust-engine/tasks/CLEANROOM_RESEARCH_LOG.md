@@ -320,3 +320,95 @@ TypeScript runtime files.
 - Conservative count: 2 fully implemented, 13 partially implemented, 32 not
   attempted, 0 blocked by source gap.
 - `cd engine && cargo test` passed: 80 tests passed, 0 failed.
+
+## 2026-05-27 - Lane C wave 5 support queue refresh
+
+- Refined `tasks/CLEANROOM_NEXT_QUEUE.md` against the wave 4 Lane C status:
+  2 fully implemented, 13 partial, 32 not attempted, and 0 blocked by source
+  gap.
+- Removed newly partial `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` from the ranked
+  top slots and marked it as a deepening-only follow-up unless A/B chooses to
+  model full build/loadout/class-feature formula selection.
+- Marked `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` as partial in the spell
+  procedure wave and reframed that wave around remaining damage branches,
+  sequences, and riders.
+- Current top queue is `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`,
+  `BATTLE.SANCTUARY.TARGETING_INTERDICTION`,
+  `SHEET.WEAPON_MASTERY.RESELECTION`,
+  `BATTLE.SPELL.REACTION_CASTING_TIME`, and
+  `BATTLE.SPELL.HIT_POINT_RESTORATION`.
+- No Rust files were edited and no tests were run; this was a documentation-only
+  planning update.
+
+## 2026-05-27 - Lane A wave 5 spell slot and Pact Slot transitions
+
+- Targeted `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` from the Wave 4 queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt`,
+  `input/.references/srd-5.2.1/Spells/Gaining-and-Casting.md`,
+  `input/.references/srd-5.2.1/Rules-Glossary.md`,
+  `input/.references/srd-5.2.1/Classes/Wizard.md`,
+  `input/.references/srd-5.2.1/Classes/Warlock.md`,
+  Sorcerer RAW for created Spell Slot expiry, ubiquitous language, and scoped
+  obligation metadata.
+- Implemented fixture-supported slot facts and transitions in
+  `engine/src/character_creation.rs`: sheet slot state admission, Short Rest
+  Pact Slot recovery, Arcane Recovery level 2 refund, Long Rest ordinary/Pact
+  restoration with created level 1 slot expiry, interrupted-rest outcomes, and
+  Magical Cunning Pact Slot recovery.
+- Added `engine/tests/character_sheet_resources.rs` with eleven tests mirroring
+  the deterministic QNT replay cases and exact rejection messages.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial. The copied QNT owner is explicitly fixture-bound,
+  and Rust now covers those transition fixtures, but this is not yet a full
+  arbitrary character-sheet resource engine.
+- Source gaps: full coverage still needs a machine-readable contract deriving
+  expected Spell Slot and Pact Slot capacities from complete build/class facts,
+  a generic Arcane Recovery choice model beyond the level 2 fixture, and created
+  Spell Slot state for levels beyond the copied level 1 fixture.
+
+## 2026-05-27 - Lane B wave 5 spell Hit Point restoration
+
+- Targeted `BATTLE.SPELL.HIT_POINT_RESTORATION` from the queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `spell-hit-point-restoration-core.qnt`, `rule-core-spells.mbt.qnt`, SRD
+  5.2.1 Cure Wounds, Healing Word, Mass Cure Wounds, Mass Healing Word, healing
+  and zero-Hit-Point RAW, and ubiquitous language for Hit Points and Death.
+- Added spell-level direct Hit Point restoration projection on top of the
+  existing spell invocation and direct healing reducers. The new projection
+  derives spell target count and target validity from explicit per-target
+  witness facts for caster selection and spatial requirements.
+- Added `engine/tests/battle_spell_hit_point_restoration.rs` covering Healing
+  Word wounded and zero-Hit-Point targets, Mass Healing Word and Mass Cure
+  Wounds multi-target projection, invalid explicit spatial witness resource
+  spending without healing, and missing target / illegal healing-roll rejection
+  without spending.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.HIT_POINT_RESTORATION`. The Rust
+  engine now covers slot/action/target-cardinality gating, explicit target
+  witness validity, healing roll legality, zero-Hit-Point recovery, and
+  multi-target healing projection for the cleanroom profiles. It still does not
+  model a full battle command hole frontier or authored target picker; callers
+  supply target witness facts directly.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane C wave 5 coverage refresh
+
+- Read current local Rust APIs/tests plus cleanroom manifest, generator-readiness
+  rows, and level 1-2 QNT/MBT join metadata; no production TypeScript was read.
+- Accounted for `engine/tests/battle_spell_hit_point_restoration.rs` and
+  `engine/tests/character_sheet_resources.rs`.
+- Kept `BATTLE.SPELL.HIT_POINT_RESTORATION` partial: the Rust engine now covers
+  spell invocation integration, target cardinality, target witness validity,
+  healing-roll legality, zero-Hit-Point recovery, and multi-target projection,
+  but not full command target-selection holes or authored target-picking
+  frontier behavior.
+- Moved `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` from not-attempted to
+  partial: Rust covers the copied sheet slot/Pact Slot transition fixtures, but
+  not a generic character-sheet resource engine derived from complete
+  build/class facts.
+- Conservative count: 2 fully implemented, 14 partially implemented, 31 not
+  attempted, 0 blocked by source gap.
+- `cd engine && cargo test` passed: 97 tests passed, 0 failed.
