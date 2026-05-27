@@ -9,7 +9,7 @@
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -29,7 +29,6 @@ import {
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
-  Ability,
   DamageType,
   SpellRecord,
 } from "@dnd/surface/surface/types";
@@ -53,7 +52,6 @@ import {
   removeSpellConditionEffect,
 } from "./spell-condition-effects-helpers.ts";
 import {
-  type MarkedDamageRiderTransferState,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleCommandOption,
@@ -2936,92 +2934,6 @@ export function applyWeaponAttackOverrideSpellEffect(
       ],
     }),
   };
-}
-
-export function applyMarkedDamageRiderSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider" }
-  >,
-  selectedAbility?: Ability,
-): BattleState {
-  const caster = state.combatants.get(actorId);
-  if (caster === undefined) {
-    return state;
-  }
-  const existingExpiresAt =
-    invocation.action === "transfer"
-      ? invocation.activeEffect.expiresAt
-      : invocation.expiresAt;
-  const transfer: MarkedDamageRiderTransferState = {
-    kind: "awaitingTargetDrop",
-    retargetTiming:
-      invocation.action === "transfer"
-        ? invocation.activeEffect.transfer.retargetTiming
-        : invocation.retargetTiming,
-  };
-  const activeEffects = [
-    ...caster.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellMarkedDamageRider" &&
-          effect.sourceSpellId === invocation.spell.id &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    {
-      kind: "spellMarkedDamageRider" as const,
-      sourceSpellId: invocation.spell.id,
-      sourceCombatantId: actorId,
-      targetCombatantId: targetId,
-      transfer,
-      abilityCheckBehavior:
-        invocation.action === "transfer"
-          ? invocation.activeEffect.abilityCheckBehavior
-          : markedDamageRiderActiveAbilityCheckBehavior(
-              invocation.abilityCheckBehavior,
-              selectedAbility,
-            ),
-      damage: invocation.damage,
-      expiresAt: existingExpiresAt,
-    },
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
-      activeEffects,
-    }),
-  };
-}
-
-function markedDamageRiderActiveAbilityCheckBehavior(
-  behavior: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-  >["abilityCheckBehavior"],
-  selectedAbility: Ability | undefined,
-): Extract<
-  BattleActiveEffect,
-  { readonly kind: "spellMarkedDamageRider" }
->["abilityCheckBehavior"] {
-  return Match.value(behavior).pipe(
-    Match.when({ kind: "none" }, () => ({ kind: "none" as const })),
-    Match.when({ kind: "findingAdvantage" }, (findingAdvantage) => ({
-      kind: "findingAdvantage" as const,
-      ability: findingAdvantage.ability,
-      skills: findingAdvantage.skills,
-    })),
-    Match.when({ kind: "chosenAbilityDisadvantage" }, () =>
-      selectedAbility === undefined
-        ? { kind: "none" as const }
-        : { kind: "abilityDisadvantage" as const, ability: selectedAbility },
-    ),
-    Match.exhaustive,
-  );
 }
 
 export function applyDragonsBreathInitialSpellEffect(

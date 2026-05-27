@@ -57,11 +57,11 @@ function admitCreatureTypeProtection(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly CreatureTypeProtectionSpellInvocation[] {
-  const projection = creatureTypeProtectionSpellProjection(ctx.actorId, spell);
+  const projection = creatureTypeProtectionSpellProjection(ctx.actor.combatantId, spell);
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly CreatureTypeProtectionSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

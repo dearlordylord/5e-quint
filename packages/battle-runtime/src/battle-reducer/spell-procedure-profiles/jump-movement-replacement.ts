@@ -61,13 +61,13 @@ function admitJumpMovementReplacement(
   ctx: SpellAdmissionContext,
 ): readonly JumpMovementReplacementInvocation[] {
   const projection = jumpMovementReplacementSpellProjection(
-    ctx.actorId,
+    ctx.actor.combatantId,
     spell,
   );
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly JumpMovementReplacementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];

@@ -292,7 +292,7 @@ function admitObjectLight(
 ): readonly ObjectLightInvocation[] {
   return [
     ...admitCantripObjectLight(spell),
-    ...admitPreparedObjectLight(spell, ctx.spellcasting.spellSlots),
+    ...admitPreparedObjectLight(spell, ctx.actor.origin.spellcasting.spellSlots),
   ];
 }
 

@@ -199,6 +199,8 @@ import {
   releasePendingSpellSlotUseThisTurn,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
+} from "./spell-turn-resources.ts";
+import {
   supportedSpellActs,
 } from "./spells-profiles.ts";
 

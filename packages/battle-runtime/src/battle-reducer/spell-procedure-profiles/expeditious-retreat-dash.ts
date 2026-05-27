@@ -43,7 +43,7 @@ import {
   markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
-} from "../spells-profiles.ts";
+} from "../spell-turn-resources.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import type {
   SpellAdmissionContext,
@@ -64,11 +64,11 @@ function admitExpeditiousRetreatDash(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly ExpeditiousRetreatDashInvocation[] {
-  const activeEffect = expeditiousRetreatDashActiveEffect(ctx.actorId, spell);
+  const activeEffect = expeditiousRetreatDashActiveEffect(ctx.actor.combatantId, spell);
   if (activeEffect === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly ExpeditiousRetreatDashInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

@@ -67,7 +67,7 @@ function admitMagicWeaponEnhancement(
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly MagicWeaponEnhancementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];

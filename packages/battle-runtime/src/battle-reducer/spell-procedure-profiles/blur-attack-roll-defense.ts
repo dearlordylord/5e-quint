@@ -105,11 +105,11 @@ function admitBlurAttackRollDefense(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly BlurAttackRollDefenseSpellInvocation[] {
-  const shape = blurAttackRollDefenseShape(ctx.actorId, spell);
+  const shape = blurAttackRollDefenseShape(ctx.actor.combatantId, spell);
   if (shape === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly BlurAttackRollDefenseSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

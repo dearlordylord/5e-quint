@@ -42,7 +42,6 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
@@ -52,7 +51,6 @@ import {
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
 import {
-  activeMarkedDamageRiderEffect,
   activeMarkedDamageRiders,
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
@@ -67,7 +65,6 @@ import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
   applySpellCreatedHeldObjectEffect,
-  applyMarkedDamageRiderSpellEffect,
   setSpellCreatedHeldObjectState,
   spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
@@ -76,7 +73,6 @@ import {
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
-  spellAbilityChoiceHole,
   spellAttackRollHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
@@ -84,7 +80,7 @@ import {
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
 import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
@@ -92,10 +88,7 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 import {
-  spendClassFeatureFreeCastResource,
   spendSpellCastResources,
-  startSpellEffectConcentration,
-  type SpellCastResourceSpendResult,
 } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
@@ -870,247 +863,6 @@ export function resolveWeaponDamageRiderSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
-}
-
-export function resolveMarkedDamageRiderSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Marked damage rider spells use one target fill.",
-    );
-  }
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Marked spell target must be a combatant within the selected spell's supported range.",
-    );
-  }
-  if (input.invocation.action === "transfer") {
-    const activeMark = activeMarkedDamageRiderEffect(
-      input.input.state.combatants.get(input.actorId),
-      input.invocation.spell.id,
-    );
-    if (
-      activeMark === null ||
-      !markedDamageRiderTransferIsAvailable(input.input.state, activeMark)
-    ) {
-      return invalidResult(
-        input.input.state,
-        "staleSubject",
-        "Marked damage rider spells can move only after the marked target drops to 0 Hit Points and any later-turn timing is satisfied.",
-      );
-    }
-  }
-  if (
-    input.invocation.action === "cast" &&
-    input.invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
-  ) {
-    if (input.fillSet.abilityChoice === undefined) {
-      return needsHolesResult(input.input.state, input.input.subject, [
-        spellAbilityChoiceHole(input.invocation),
-      ]);
-    }
-  } else if (input.fillSet.abilityChoice !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "This marked damage rider spell does not choose an ability.",
-    );
-  }
-  if (input.invocation.action === "cast") {
-    const spellCastReactionWindow = maybeOpenReactionWindow(
-      input.input.state,
-      spellCastReactionFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [input.fillSet.targetId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "bonusAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.suppressedReactionTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const spent = spendActivationResource(
-    input.input.state.currentTurnResources,
-    {
-      kind: "bonusAction",
-    },
-  );
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
-    );
-  }
-  if (input.invocation.action === "transfer") {
-    const nextState = applyMarkedDamageRiderSpellEffect(
-      {
-        ...input.input.state,
-        currentTurnResources:
-          clearPendingAttackRollMissToHitReplacementSelection(
-            spent.right,
-            input.actorId,
-          ),
-      },
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.abilityChoice,
-    );
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
-  }
-  const concentrationBase = breakBattleConcentration(
-    input.input.state,
-    input.actorId,
-  );
-  const turnResources = clearPendingAttackRollMissToHitReplacementSelection(
-    spent.right,
-    input.actorId,
-  );
-  const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
-      ? spendClassFeatureFreeCastResource(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.resourceUnitId,
-          input.invocation,
-          input.input.state,
-        )
-      : spendMarkedDamageRiderSpellSlot(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.slotLevel,
-          input.input.state,
-        );
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const effected = applyMarkedDamageRiderSpellEffect(
-    resourced.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.abilityChoice,
-  );
-  const nextState = startSpellEffectConcentration(
-    effected,
-    input.actorId,
-    input.invocation,
-  );
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
-}
-
-function spendMarkedDamageRiderSpellSlot(
-  state: BattleState,
-  actorId: CombatantId,
-  slotLevel: Extract<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-    >["resource"],
-    { readonly tag: "spellSlot" }
-  >["slotLevel"],
-  errorState: BattleState,
-): SpellCastResourceSpendResult {
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    state,
-    actorId,
-  );
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spellCastState.currentTurnResources,
-    actorId,
-  );
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      errorState,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  return {
-    tag: "resolved",
-    state: expendSpellSlot(
-      {
-        ...spellCastState,
-        currentTurnResources: slotTurnResources.right,
-      },
-      actorId,
-      slotLevel,
-    ),
-  };
-}
-
-function markedDamageRiderTransferIsAvailable(
-  state: BattleState,
-  activeMark: SpellMarkedDamageRider,
-): boolean {
-  if (activeMark.transfer.kind === "available") {
-    return true;
-  }
-  if (activeMark.transfer.kind === "awaitingTargetDrop") {
-    return false;
-  }
-  return (
-    currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
-    state.initiative.round !== activeMark.transfer.droppedOnTurn.round
-  );
 }
 
 export function resolveReadySpellAct(

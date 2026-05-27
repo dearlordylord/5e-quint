@@ -58,7 +58,7 @@ function admitDirectConditionRemoval(
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly DirectConditionRemovalSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

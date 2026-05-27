@@ -119,7 +119,7 @@ function admitScalarBuff(
     return [];
   }
 
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly ScalarBuffInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -130,7 +130,7 @@ function admitScalarBuff(
         slot.spellLevel,
       );
       const scalarEffect = scalarBuffSpellEffect(
-        ctx.actorId,
+        ctx.actor.combatantId,
         spell,
         projection.effect,
         projection.duration,

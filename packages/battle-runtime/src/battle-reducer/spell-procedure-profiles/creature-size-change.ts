@@ -72,11 +72,11 @@ function admitCreatureSizeChange(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly CreatureSizeChangeInvocation[] {
-  const projections = creatureSizeChangeSpellProjection(ctx.actorId, spell);
+  const projections = creatureSizeChangeSpellProjection(ctx.actor.combatantId, spell);
   if (projections.length === 0) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly CreatureSizeChangeInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

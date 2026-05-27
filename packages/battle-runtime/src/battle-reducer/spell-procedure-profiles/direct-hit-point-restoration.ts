@@ -89,7 +89,7 @@ function admitDirectHitPointRestoration(
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly DirectHitPointRestorationInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -98,7 +98,7 @@ function admitDirectHitPointRestoration(
         projection.amount,
         spell.mechanics.level,
         slot.spellLevel,
-        ctx.spellcasting.spellcastingAbilityModifier,
+        ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
       );
       return healingExpr === null
         ? []

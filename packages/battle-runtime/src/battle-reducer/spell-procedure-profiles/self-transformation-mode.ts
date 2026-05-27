@@ -86,15 +86,15 @@ function admitSelfTransformationMode(
   ctx: SpellAdmissionContext,
 ): readonly SelfTransformationModeInvocation[] {
   const projection = selfTransformationModeSpellProjection({
-    actorId: ctx.actorId,
+    actorId: ctx.actor.combatantId,
     spell,
-    spellcastingAbilityModifier: ctx.spellcasting.spellcastingAbilityModifier,
-    proficiencyBonus: ctx.spellcasting.proficiencyBonus,
+    spellcastingAbilityModifier: ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
+    proficiencyBonus: ctx.actor.origin.spellcasting.proficiencyBonus,
   });
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly SelfTransformationModeInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

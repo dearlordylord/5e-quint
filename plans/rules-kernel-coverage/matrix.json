@@ -1750,8 +1750,7 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/marked-damage-rider.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

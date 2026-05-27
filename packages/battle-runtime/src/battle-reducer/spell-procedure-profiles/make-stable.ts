@@ -51,6 +51,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
 
 type MakeStableInvocation = Extract<
   SupportedSpellInvocation,
@@ -101,7 +102,7 @@ function admitMakeStable(
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
   const rangeFeet = spareTheDyingRangeFeet(
     spell.mechanics.range,
-    ctx.characterLevel,
+    spellAdmissionCharacterLevel(ctx),
   );
   const stateFilter =
     targetSelection !== null &&

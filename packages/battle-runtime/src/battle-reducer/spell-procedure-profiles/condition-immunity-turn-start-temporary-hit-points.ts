@@ -58,14 +58,14 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
 ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] {
   const projection =
     conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
-      ctx.actorId,
+      ctx.actor.combatantId,
       spell,
-      ctx.spellcasting.spellcastingAbilityModifier,
+      ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
     );
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (
       slot,
     ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] => {

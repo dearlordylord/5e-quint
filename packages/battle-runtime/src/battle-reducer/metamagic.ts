@@ -23,7 +23,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   combatantHasLevelOnePlusSpellCastThisTurn,
   spellInvocationIsLevelOnePlus,
-} from "./spells-profiles.ts";
+} from "./spell-turn-resources.ts";
 
 export const QUICKENED_METAMAGIC_EFFECT_KIND =
   "action_casting_time_to_bonus_action_with_spell_turn_limit" satisfies CharacterBattleMetamagicEffectKind;

@@ -98,11 +98,11 @@ function admitSeeInvisibleObserverSight(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly SeeInvisibleObserverSightSpellInvocation[] {
-  const shape = seeInvisibleObserverSightShape(ctx.actorId, spell);
+  const shape = seeInvisibleObserverSightShape(ctx.actor.combatantId, spell);
   if (shape === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly SeeInvisibleObserverSightSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

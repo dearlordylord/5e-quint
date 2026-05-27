@@ -34,6 +34,7 @@ export * from "./spell-condition-effects-helpers.ts";
 export * from "./spells-active-effects.ts";
 export * from "./spells-damage-fills.ts";
 export * from "./spell-effects.ts";
+export * from "./spell-turn-resources.ts";
 export * from "./spells-discovery.ts";
 export * from "./spells-holes-fills.ts";
 export * from "./spells-invocation-ref.ts";

@@ -54,11 +54,11 @@ function admitWardingBond(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly WardingBondSpellInvocation[] {
-  const projection = wardingBondSpellProjection(ctx.actorId, spell);
+  const projection = wardingBondSpellProjection(ctx.actor.combatantId, spell);
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly WardingBondSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

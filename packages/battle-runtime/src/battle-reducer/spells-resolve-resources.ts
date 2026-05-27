@@ -35,7 +35,7 @@ import {
   markQuickenedLevelOnePlusSpellCastThisTurn,
   markSpellSlotExpendedThisTurn,
   spellInvocationIsLevelOnePlus,
-} from "./spells-profiles.ts";
+} from "./spell-turn-resources.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 export type SpellCastResourceSpendResult =

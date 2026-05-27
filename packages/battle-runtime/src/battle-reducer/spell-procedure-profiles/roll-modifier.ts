@@ -98,7 +98,7 @@ function admitRollModifier(
   const out: RollModifierInvocation[] = [];
   if (spell.mechanics.level === 0) {
     const projection = rollModifierSpellProjection(
-      ctx.actorId,
+      ctx.actor.combatantId,
       spell,
       spellSlotLevel(0),
     );
@@ -114,12 +114,12 @@ function admitRollModifier(
     }
   }
   if (spell.mechanics.level >= 1) {
-    for (const slot of ctx.spellcasting.spellSlots) {
+    for (const slot of ctx.actor.origin.spellcasting.spellSlots) {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         continue;
       }
       const projection = rollModifierSpellProjection(
-        ctx.actorId,
+        ctx.actor.combatantId,
         spell,
         slot.spellLevel,
       );

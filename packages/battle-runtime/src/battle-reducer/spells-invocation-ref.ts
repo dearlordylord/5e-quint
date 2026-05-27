@@ -27,6 +27,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
@@ -447,24 +448,7 @@ export function supportedSpellInvocationRef(
       procedure: "weaponDamageRider" as const,
     })),
     Match.when({ procedure: "markedDamageRider" }, (riderSpell) =>
-      riderSpell.action === "transfer"
-        ? spellEffectInvocationRef(
-            riderSpell.spell.id,
-            riderSpell.activeEffect.sourceCombatantId,
-            "markedDamageRiderTransfer",
-          )
-        : riderSpell.resource.tag === "classFeatureFreeCast"
-          ? classFeatureFreeCastSpellInvocationRef(
-              riderSpell.spell.id,
-              riderSpell.resource.resourceUnitId,
-              "markedDamageRider",
-            )
-          : {
-              tag: "spellSlot" as const,
-              spellId: spellId(riderSpell.spell.id),
-              slotLevel: riderSpell.resource.slotLevel,
-              procedure: "markedDamageRider" as const,
-            },
+      markedDamageRiderProfile.invocationRef(riderSpell),
     ),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) =>
       persistentArmorEffectProfile.invocationRef(persistent),

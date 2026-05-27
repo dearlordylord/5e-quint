@@ -9,9 +9,11 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
   combatantHasSpellSlotUseThisTurn,
+  spellHasAvailableSpend,
+} from "./spell-turn-resources.ts";
+import {
   reactionTriggerIncludesHitByAttackRoll,
   reactionTriggerNamedSpellIds,
-  spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
 import {

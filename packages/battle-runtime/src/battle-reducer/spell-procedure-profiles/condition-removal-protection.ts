@@ -52,13 +52,13 @@ function admitConditionRemovalProtection(
   ctx: SpellAdmissionContext,
 ): readonly ConditionRemovalProtectionSpellInvocation[] {
   const projection = conditionRemovalProtectionSpellProjection(
-    ctx.actorId,
+    ctx.actor.combatantId,
     spell,
   );
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly ConditionRemovalProtectionSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

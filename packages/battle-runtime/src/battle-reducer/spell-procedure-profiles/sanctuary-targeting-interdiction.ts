@@ -64,13 +64,13 @@ function admitSanctuaryTargetingInterdiction(
   ctx: SpellAdmissionContext,
 ): readonly SanctuaryTargetingInterdictionInvocation[] {
   const projection = sanctuaryTargetingInterdictionProjection(
-    ctx.actorId,
+    ctx.actor.combatantId,
     spell,
   );
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly SanctuaryTargetingInterdictionInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

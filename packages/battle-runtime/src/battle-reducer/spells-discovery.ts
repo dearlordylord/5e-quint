@@ -36,6 +36,8 @@ import {
   spellInvocationIsSpellcasting,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
+} from "./spell-turn-resources.ts";
+import {
   supportedSpellActs,
 } from "./spells-profiles.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
@@ -44,7 +46,6 @@ import {
   commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
   saveGatedConditionHasConditionChoice,
-  spellAbilityChoiceHole,
   spellConditionChoiceHole,
   spellDamageTypeChoiceHole,
   spellAttackSequencePartObjectTargetHole,
@@ -83,6 +84,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -792,27 +794,11 @@ export function discoverSupportedSpellInvocations(
         return [];
       }
       if (invocation.procedure === "markedDamageRider") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        const initialHoles =
-          invocation.action === "cast" &&
-          invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
-            ? [targetHole, spellAbilityChoiceHole(invocation)]
-            : [targetHole];
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles,
-              },
-            ];
+        return markedDamageRiderProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "expeditiousRetreatDash") {
         return expeditiousRetreatDashProfile.discoverCastAct(
@@ -1355,12 +1341,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
   if (invocation.procedure === "markedDamageRider") {
-    if (invocation.action === "transfer") {
-      return `Move ${invocation.spell.name} to a new target.`;
-    }
-    return invocation.resource.tag === "classFeatureFreeCast"
-      ? `Cast ${invocation.spell.name} using Favored Enemy.`
-      : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return markedDamageRiderProfile.castSummary(invocation);
   }
   if (invocation.procedure === "expeditiousRetreatDash") {
     return expeditiousRetreatDashProfile.castSummary(invocation);

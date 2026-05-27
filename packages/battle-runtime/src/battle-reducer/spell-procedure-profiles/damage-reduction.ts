@@ -174,7 +174,7 @@ function admitDamageReduction(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly DamageReductionSpellInvocation[] {
-  const shape = damageReductionShape(ctx.actorId, spell);
+  const shape = damageReductionShape(ctx.actor.combatantId, spell);
   if (shape === null) {
     return [];
   }

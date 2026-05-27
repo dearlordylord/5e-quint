@@ -63,7 +63,7 @@ function admitThaumaturgyBoomingVoice(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly ThaumaturgyBoomingVoiceInvocation[] {
-  const projection = thaumaturgyBoomingVoiceProjection(ctx.actorId, spell);
+  const projection = thaumaturgyBoomingVoiceProjection(ctx.actor.combatantId, spell);
   return projection === null
     ? []
     : [

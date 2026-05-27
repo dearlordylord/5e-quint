@@ -105,6 +105,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
@@ -121,7 +122,6 @@ import {
 import {
   isReadiedSpellInvocation,
   spellInvocationCasterPrerequisiteIsMet,
-  spellInvocationIsSpellcasting,
   spellRequiresVerbal,
 } from "./spells-discovery.ts";
 import {
@@ -148,8 +148,11 @@ import {
 } from "./spells-holes-fills.ts";
 import {
   spellActTurnResourceAvailable,
-  spellAttackKindForRedirect,
   spellHasAvailableSpend,
+  spellInvocationIsSpellcasting,
+} from "./spell-turn-resources.ts";
+import {
+  spellAttackKindForRedirect,
   supportedSpellActs,
 } from "./spells-profiles.ts";
 import {
@@ -293,7 +296,6 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   resolveDancingLightsCastSpellAct,
   resolveDancingLightsRepositionSpellAct,
-  resolveMarkedDamageRiderSpellAct,
   resolveSpellCreatedHeldObjectReEvokeSpellAct,
   resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
@@ -2855,7 +2857,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "markedDamageRider") {
-    return resolveMarkedDamageRiderSpellAct({
+    return markedDamageRiderProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -57,11 +57,11 @@ function admitLevitatedCreature(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly LevitatedCreatureInvocation[] {
-  const projection = levitatedCreatureSpellProjection(ctx.actorId, spell);
+  const projection = levitatedCreatureSpellProjection(ctx.actor.combatantId, spell);
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly LevitatedCreatureInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

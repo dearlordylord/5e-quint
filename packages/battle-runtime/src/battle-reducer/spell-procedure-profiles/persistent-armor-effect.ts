@@ -150,7 +150,7 @@ function admitPersistentArmorEffect(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly PersistentArmorInvocation[] {
-  return buildPersistentArmorEffectInvocation(ctx.actorId, spell, {
+  return buildPersistentArmorEffectInvocation(ctx.actor.combatantId, spell, {
     access: { tag: "prepared" },
     resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
   });

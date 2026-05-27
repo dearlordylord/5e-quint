@@ -24,6 +24,7 @@ import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
+import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { objectLightProfile } from "./object-light.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
@@ -64,6 +65,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   selfTransformationModeProfile,
   dragonsBreathInitialProfile,
   sanctuaryTargetingInterdictionProfile,
+  markedDamageRiderProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

@@ -60,7 +60,7 @@ import {
   validateSpellDamageFill,
   validateSpellTargetAllocation,
 } from "./spells-holes-fills.ts";
-import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";

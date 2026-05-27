@@ -10,10 +10,12 @@
 // a new profile is one file; changing how an existing profile behaves opens
 // exactly that file.
 
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type {
   ActionSpellBattleResolutionInput,
   AvailableBattleAct,
+  BattleCreatureState,
   BattleResolutionResult,
   BattleState,
   SupportedSpellInvocation,
@@ -24,12 +26,64 @@ import type { CharacterBattleSpellcastingState } from "../../character-battle-re
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
-// need; future profiles that key off other actor facts may widen this.
-export type SpellAdmissionContext = {
-  readonly actorId: CombatantId;
-  readonly spellcasting: CharacterBattleSpellcastingState;
-  readonly characterLevel: number;
+// need, with character actor facts kept canonical on `actor`.
+export type SpellAdmissionActor = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  > & {
+    readonly spellcasting: CharacterBattleSpellcastingState & {
+      readonly canCastSpells: true;
+    };
+  };
 };
+export type SpellAdmissionBattleTurn = {
+  readonly currentActorId: CombatantId;
+  readonly round: BattleState["initiative"]["round"];
+};
+
+export type SpellAdmissionContext = {
+  readonly actor: SpellAdmissionActor;
+  readonly battleTurn: SpellAdmissionBattleTurn | undefined;
+};
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState,
+): actor is SpellAdmissionActor {
+  return (
+    actor.origin.kind === "character" &&
+    actor.origin.spellcasting !== undefined &&
+    actor.origin.spellcasting.canCastSpells
+  );
+}
+
+export function spellAdmissionContextFor(
+  actor: BattleCreatureState,
+  state: BattleState | undefined,
+): SpellAdmissionContext | null {
+  if (!isSpellAdmissionActor(actor)) {
+    return null;
+  }
+  return {
+    actor,
+    battleTurn:
+      state === undefined
+        ? undefined
+        : {
+            currentActorId: currentActing(state.initiative),
+            round: state.initiative.round,
+          },
+  };
+}
+
+export function spellAdmissionCharacterLevel(
+  ctx: SpellAdmissionContext,
+): number {
+  return ctx.actor.origin.classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+}
 
 // Currently lives as a string literal table in metamagic.ts. Mirrored here so
 // each profile carries its own metamagic classification.

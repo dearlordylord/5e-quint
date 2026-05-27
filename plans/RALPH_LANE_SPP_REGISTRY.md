@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "SPP-W3-09-MARKED-DAMAGE-RIDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate markedDamageRider profile (no focused MBT)"
     },
     {
@@ -528,16 +528,18 @@ grep recipe in the template).
   "Fresh worktree battle MBT module resolution").
 - **Type discipline.** The profile interface is the contract. Implementations
   must use `SpellAdmissionContext` for the admit `ctx`, even if they only
-  read one field. Match the `damage-reduction.ts` / `roll-modifier.ts`
-  patterns.
+  read one field. `SpellAdmissionContext` carries the narrowed character
+  `actor` plus optional `battleTurn` facts; derive character level with
+  `spellAdmissionCharacterLevel(ctx)` when a profile needs it. Match the
+  `damage-reduction.ts` / `roll-modifier.ts` patterns.
 - **Cast discipline.** Only use the `as RollModifierInvocation`-style cast
   when discriminated narrowing fails for a union-shape reason. Document
   why at the cast site, matching `roll-modifier.ts`'s comment block.
 - **Shared helper movement is opt-in.** If a helper is used only by the
   profile being migrated, move it into the profile file. If it is shared
   with another profile or with infrastructure, leave it where it is and
-  import it back. Note remaining shared touchpoints in the profile file's
-  header comment.
+  import it back. Spell turn-resource helpers are shared infrastructure
+  in `spell-turn-resources.ts`, not `spells-profiles.ts`.
 - **Don't touch cross-cutting infrastructure mid-migration.** The codec,
   metamagic table, negative-list classification, and dispatch switches are
   Wave 9 work, not per-profile work. Per-profile tasks only delegate to
@@ -668,7 +670,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
 Replace each touchpoint with a call into the profile. Patterns:
 
 - `spells-resolve.ts`: `return resolveXSpellAct({...})` → `return <procedure>Profile.resolve({...})`
-- `spells-profiles.ts`: `supportedXProfile(...)` → `<procedure>Profile.admit(spell, { actorId, spellcasting, characterLevel })`
+- `spells-profiles.ts`: `supportedXProfile(...)` → `<procedure>Profile.admit(spell, admissionContext)`
 - `spells-discovery.ts` cast-act branch: replace body with `return <procedure>Profile.discoverCastAct(state, actorId, invocation)`
 - `spells-discovery.ts` summary branch: `return <procedure>Profile.castSummary(invocation)`
 - `spells-invocation-ref.ts` Match case: `(inv) => <procedure>Profile.invocationRef(inv)`
@@ -918,7 +920,7 @@ Focused MBT: `sanctuary-selected-identity.mbt.test.ts`.
 
 ### Task 26 - SPP-W3-09-MARKED-DAMAGE-RIDER - Migrate markedDamageRider
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

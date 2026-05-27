@@ -1,6 +1,6 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -38,7 +38,6 @@ import {
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
   type BattleSpecialSpeedKind,
-  type BattleState,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
   type AbilityCheckRollModeSpellEffect,
@@ -46,8 +45,6 @@ import {
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type D20RollModifierSpellEffect,
   type HealingSpellActionCost,
-  type MarkedDamageRiderCastAbilityCheckBehavior,
-  type MarkedDamageRiderRetargetTiming,
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
@@ -57,16 +54,12 @@ import {
 } from "../battle-reducer.ts";
 import {
   characterResourceIsClassFeatureFreeCastForSpell,
-  characterResourceIsFavoredEnemyFreeCast,
   resourceHasUsesRemaining,
   type CharacterBattleSpellcastingState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
-import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  HUNTERS_MARK_FINDING_SKILLS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_INITIAL_DUPLICATES,
@@ -1028,328 +1021,6 @@ export function afterHitDamageSpellProjection(spell: SpellRecord): {
     conditionalBonusExpr: conditionalBonus.amount.expr,
     conditionalBonusDamageType: "radiant",
   };
-}
-
-export function supportedPreparedMarkedDamageRiderSpellProfile(
-  actor: BattleCreatureState,
-  state: BattleState | undefined,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = markedDamageRiderSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
-    projection;
-  const activeMark = activeMarkedDamageRiderEffect(actor, spell.id);
-  if (activeMark !== null) {
-    // TODO: Allow an ordinary recast while the current mark is still active.
-    // RAW permits replacing Concentration by casting the spell again and
-    // choosing a new quarry; this branch currently exposes only the slotless
-    // Bonus Action transfer after the marked target drops to 0 Hit Points.
-    return markedDamageRiderTransferIsDiscoverable(activeMark, state)
-      ? [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "none" },
-            procedure: "markedDamageRider",
-            action: "transfer",
-            spell,
-            actionCost: "bonusAction",
-            targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType },
-            rangeFeet,
-            activeEffect: activeMark,
-          },
-        ]
-      : [];
-  }
-  const favoredEnemyResource =
-    actor.origin.kind === "character"
-      ? actor.origin.resources.find(
-          (resource) =>
-            characterResourceIsFavoredEnemyFreeCast(resource) &&
-            resourceHasUsesRemaining(resource),
-        )
-      : undefined;
-  const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
-    actor.combatantId,
-    spell,
-    spellSlotLevel(1),
-  );
-  const freeCastInvocations: readonly SupportedSpellInvocation[] =
-    favoredEnemyResource === undefined || favoredEnemyExpiresAt === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: {
-              tag: "classFeatureFreeCast",
-              resourceUnitId: favoredEnemyResource.unit.id,
-            },
-            procedure: "markedDamageRider",
-            action: "cast",
-            spell,
-            actionCost: "bonusAction",
-            targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType },
-            abilityCheckBehavior,
-            retargetTiming,
-            rangeFeet,
-            expiresAt: favoredEnemyExpiresAt,
-          },
-        ];
-  const slotInvocations = spellSlots.flatMap(
-    (slot): readonly SupportedSpellInvocation[] => {
-      const expiresAt = markedDamageRiderConcentrationExpirationForSlot(
-        actor.combatantId,
-        spell,
-        slot.spellLevel,
-      );
-      return Number(slot.spellLevel) < spell.mechanics.level ||
-        expiresAt === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              procedure: "markedDamageRider",
-              action: "cast",
-              spell,
-              actionCost: "bonusAction",
-              targeting: { kind: "singleCombatant" },
-              damage: { expr, damageType },
-              abilityCheckBehavior,
-              retargetTiming,
-              rangeFeet,
-              expiresAt,
-            },
-          ];
-    },
-  );
-  return [...freeCastInvocations, ...slotInvocations];
-}
-
-function markedDamageRiderTransferIsDiscoverable(
-  activeMark: Extract<
-    BattleCreatureState["activeEffects"][number],
-    { readonly kind: "spellMarkedDamageRider" }
-  >,
-  state: BattleState | undefined,
-): boolean {
-  if (activeMark.transfer.kind === "available") {
-    return true;
-  }
-  if (activeMark.transfer.kind === "awaitingTargetDrop") {
-    return false;
-  }
-  return (
-    state !== undefined &&
-    (currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
-      state.initiative.round !== activeMark.transfer.droppedOnTurn.round)
-  );
-}
-
-function markedDamageRiderSpellProjection(spell: SpellRecord): {
-  readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
-  readonly damageType: DamageType;
-  readonly expr: DiceExpr;
-  readonly rangeFeet: MovementFeet;
-  readonly retargetTiming: MarkedDamageRiderRetargetTiming;
-} | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 90 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "mark" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.duration.kind !== "concentration"
-  ) {
-    return null;
-  }
-
-  if (spell.mechanics.operations.length === 1) {
-    return markedDamageRiderDamageProjection(
-      spell,
-      "force",
-      {
-        kind: "findingAdvantage",
-        ability: "wis",
-        skills: HUNTERS_MARK_FINDING_SKILLS,
-      },
-      "sameTurn",
-    );
-  }
-
-  if (spell.mechanics.operations.length === 2) {
-    const passive = spell.mechanics.operations[1];
-    const abilityChoices = hexAbilityChoices(passive?.effect);
-    return abilityChoices === null
-      ? null
-      : markedDamageRiderDamageProjection(
-          spell,
-          "necrotic",
-          { kind: "chosenAbilityDisadvantage", choices: abilityChoices },
-          "laterTurn",
-        );
-  }
-
-  return null;
-}
-
-function markedDamageRiderDamageProjection(
-  spell: SpellRecord,
-  damageType: DamageType,
-  abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior,
-  retargetTiming: MarkedDamageRiderRetargetTiming,
-): {
-  readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
-  readonly damageType: DamageType;
-  readonly expr: DiceExpr;
-  readonly rangeFeet: MovementFeet;
-  readonly retargetTiming: MarkedDamageRiderRetargetTiming;
-} | null {
-  const mechanics = spell.mechanics;
-  if (
-    mechanics.family !== "ongoing_effect" ||
-    mechanics.range.kind !== "point" ||
-    typeof mechanics.range.feet !== "number"
-  ) {
-    return null;
-  }
-  const operation = mechanics.operations[0];
-  if (
-    operation?.trigger.kind !== "on_caster_attack_hit" ||
-    operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== damageType ||
-    operation.effect.amount === undefined
-  ) {
-    return null;
-  }
-  const expr = supportedDamageAmountExpr({ amount: operation.effect.amount });
-  return expr === null
-    ? null
-    : {
-        abilityCheckBehavior,
-        damageType,
-        expr,
-        rangeFeet: movementFeet(mechanics.range.feet),
-        retargetTiming,
-      };
-}
-
-function hexAbilityChoices(effect: unknown): readonly Ability[] | null {
-  const candidate =
-    typeof effect === "object" && effect !== null
-      ? (effect as Partial<
-          Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>
-        >)
-      : null;
-  const abilityFilter = candidate?.abilityFilter as unknown;
-  if (
-    candidate?.kind !== "modify_roll_advantage" ||
-    candidate.mode !== "disadvantage" ||
-    (candidate.affects ?? "self_roll") !== "self_roll" ||
-    candidate.on === undefined ||
-    !sameStringSet(candidate.on, ["ability_check"]) ||
-    abilityFilter === undefined ||
-    Array.isArray(abilityFilter) ||
-    typeof abilityFilter !== "object" ||
-    abilityFilter === null
-  ) {
-    return null;
-  }
-  const filter = abilityFilter as {
-    readonly kind?: unknown;
-    readonly value?: {
-      readonly kind?: unknown;
-      readonly options?: readonly Ability[];
-    };
-  };
-  if (filter.kind !== "hole" || filter.value?.kind !== "choice") {
-    return null;
-  }
-  const options = filter.value.options;
-  if (options === undefined) {
-    return null;
-  }
-  return sameStringSet(options, ["str", "dex", "con", "int", "wis", "cha"])
-    ? options
-    : null;
-}
-
-function markedDamageRiderConcentrationExpirationForSlot(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  slotLevel: SpellSlotLevel,
-): Extract<
-  BattleActiveEffectExpiration,
-  { readonly kind: "concentration" }
-> | null {
-  if (
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    !hasSupportedMarkedDamageRiderDurationTiers(spell.mechanics.duration.upTo)
-  ) {
-    return null;
-  }
-  const upTo = spell.mechanics.duration.upTo;
-  const amount =
-    upTo.upcastTiers?.reduce(
-      (currentAmount, tier) =>
-        Number(slotLevel) >= tier.atSlot ? tier.amount : currentAmount,
-      upTo.amount,
-    ) ?? upTo.amount;
-  const ticks = elapsedTimeTicksFromTimeSpanDuration({
-    unit: upTo.unit,
-    amount,
-  });
-  return Either.isLeft(ticks)
-    ? null
-    : {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: ticks.right,
-      };
-}
-
-function hasSupportedMarkedDamageRiderDurationTiers(
-  upTo: Extract<
-    SpellRecord["mechanics"]["duration"],
-    { readonly kind: "concentration" }
-  >["upTo"],
-): boolean {
-  const tiers = upTo.upcastTiers ?? [];
-  return (
-    durationTiersEqual(tiers, [
-      { atSlot: 3, amount: 8 },
-      { atSlot: 5, amount: 24 },
-    ]) ||
-    durationTiersEqual(tiers, [
-      { atSlot: 2, amount: 4 },
-      { atSlot: 3, amount: 8 },
-      { atSlot: 5, amount: 24 },
-    ])
-  );
-}
-
-function durationTiersEqual(
-  tiers: readonly { readonly atSlot: number; readonly amount: number }[],
-  expected: readonly { readonly atSlot: number; readonly amount: number }[],
-): boolean {
-  return (
-    tiers.length === expected.length &&
-    tiers.every(
-      (tier, index) =>
-        tier.atSlot === expected[index]?.atSlot &&
-        tier.amount === expected[index]?.amount,
-    )
-  );
 }
 
 export function thaumaturgyBoomingVoiceProjection(

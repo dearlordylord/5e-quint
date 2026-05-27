@@ -64,7 +64,7 @@ function admitSelfTeleport(
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly SelfTeleportInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

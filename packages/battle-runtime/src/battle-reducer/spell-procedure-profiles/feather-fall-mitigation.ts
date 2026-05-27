@@ -45,7 +45,7 @@ import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
-import { markSpellSlotExpendedThisTurn } from "../spells-profiles.ts";
+import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spellTargetListHole,
   validateSpellTargetList,
@@ -83,11 +83,11 @@ function admitFeatherFallMitigation(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly FeatherFallMitigationInvocation[] {
-  const projection = featherFallMitigationSpellProjection(ctx.actorId, spell);
+  const projection = featherFallMitigationSpellProjection(ctx.actor.combatantId, spell);
   if (projection === null) {
     return [];
   }
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly FeatherFallMitigationInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []

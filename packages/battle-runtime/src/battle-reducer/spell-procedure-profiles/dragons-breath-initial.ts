@@ -64,13 +64,13 @@ function admitDragonsBreathInitial(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly DragonsBreathInitialInvocation[] {
-  return ctx.spellcasting.spellSlots.flatMap(
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly DragonsBreathInitialInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
       const projection = dragonsBreathInitialSpellProjection(
-        ctx.actorId,
+        ctx.actor.combatantId,
         spell,
         slot.spellLevel,
       );
