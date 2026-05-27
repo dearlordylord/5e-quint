@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate magicWeaponEnhancement profile"
     },
     {
