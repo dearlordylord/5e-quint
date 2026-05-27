@@ -70,7 +70,6 @@ import {
   applyDancingLightsSpellEffect,
   applySpellCreatedHeldObjectEffect,
   applyMarkedDamageRiderSpellEffect,
-  applyObjectLightSpellEffect,
   setSpellCreatedHeldObjectState,
   spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
@@ -83,8 +82,6 @@ import {
   spellAttackRollHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
-  spellObjectLightTargetFact,
-  spellObjectTargetHole,
   spellTargetHole,
   spellTargetIsLegal,
   validateSpellDamageFill,
@@ -772,107 +769,6 @@ export function resolveWeaponAttackOverrideSpellAct(input: {
   const effected = applyWeaponAttackOverrideSpellEffect(
     input.input.state,
     input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveObjectLightSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "objectLight" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Object light spells use only an object target fill.",
-    );
-  }
-  if (input.fillSet.objectTarget === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellObjectTargetHole(input.invocation),
-    ]);
-  }
-  const objectTarget = input.fillSet.objectTarget;
-  const lightFact = spellObjectLightTargetFact(
-    objectTarget.spatialFacts.filter(
-      (
-        fact,
-      ): fact is Extract<
-        (typeof objectTarget.spatialFacts)[number],
-        {
-          readonly kind:
-            | "spellObjectLightTarget"
-            | "spellTouchedObjectTarget";
-        }
-      > =>
-        fact.kind === "spellObjectLightTarget" ||
-        fact.kind === "spellTouchedObjectTarget",
-    ),
-    input.actorId,
-    objectTarget.objectId,
-    input.invocation,
-  );
-  if (lightFact === null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Object light target does not satisfy the selected spell's object targeting requirements.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyObjectLightSpellEffect(
-    input.input.state,
-    input.actorId,
-    objectTarget.objectId,
     input.invocation,
   );
   const resourced = spendSpellCastResources({

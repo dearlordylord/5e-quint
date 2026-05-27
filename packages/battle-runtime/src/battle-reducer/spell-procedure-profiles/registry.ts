@@ -11,6 +11,7 @@
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { makeStableProfile } from "./make-stable.ts";
+import { objectLightProfile } from "./object-light.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
@@ -20,6 +21,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   rollModifierProfile,
   makeStableProfile,
   heldLightProfile,
+  objectLightProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

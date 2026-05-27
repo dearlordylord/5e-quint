@@ -329,7 +329,6 @@ import {
   resolveDancingLightsCastSpellAct,
   resolveDancingLightsRepositionSpellAct,
   resolveMarkedDamageRiderSpellAct,
-  resolveObjectLightSpellAct,
   resolveSpellCreatedHeldObjectReEvokeSpellAct,
   resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
@@ -337,6 +336,7 @@ import {
   resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
+import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -699,7 +699,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "objectLight") {
-    return resolveObjectLightSpellAct({
+    return objectLightProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

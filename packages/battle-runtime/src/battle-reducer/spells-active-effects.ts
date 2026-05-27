@@ -116,7 +116,6 @@ import {
   type SupportedSpellInvocation,
   type BattleWebRestraintTrigger,
 } from "../battle-reducer.ts";
-import type { BattleObjectId } from "../identity.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   isTrackedOngoingSpellLightEmitter,
@@ -3021,77 +3020,6 @@ export function applyWeaponAttackOverrideSpellEffect(
       ],
     }),
   };
-}
-
-export function applyObjectLightSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  objectId: BattleObjectId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "objectLight" }
-  >,
-): BattleState {
-  const retainedEmitters =
-    invocation.targeting.object.kind === "lightCantripObject"
-      ? state.lightEmitters.filter(
-          (emitter) =>
-            !(
-              emitter.sourceSpellId === invocation.spell.id &&
-              emitter.sourceCombatantId === actorId
-            ),
-        )
-      : state.lightEmitters;
-  return {
-    ...state,
-    lightEmitters: [
-      ...retainedEmitters,
-      {
-        kind: "spellLightEmitter",
-        sourceSpellId: invocation.spell.id,
-        sourceCombatantId: actorId,
-        sourceEffectId: objectLightSpellEffectOccurrenceId(
-          state,
-          actorId,
-          objectId,
-          invocation,
-        ),
-        sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
-        attachment: { kind: "object", objectId },
-        emission: invocation.light,
-        opaqueCoverInteraction: { kind: "blocksEmission" },
-        expiresAt: invocation.expiresAt,
-      },
-    ],
-  };
-}
-
-function objectLightSpellEffectOccurrenceId(
-  state: BattleState,
-  actorId: CombatantId,
-  objectId: BattleObjectId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "objectLight" }
-  >,
-) {
-  const prefix = `${actorId}:${invocation.spell.id}:${objectId}:object-light:`;
-  const nextOrdinal =
-    Math.max(
-      0,
-      ...state.lightEmitters.flatMap((emitter) => {
-        if (
-          emitter.kind !== "spellLightEmitter" ||
-          !("sourceEffectId" in emitter) ||
-          !emitter.sourceEffectId.startsWith(prefix)
-        ) {
-          return [];
-        }
-        const ordinal = Number(emitter.sourceEffectId.slice(prefix.length));
-        return Number.isInteger(ordinal) && ordinal > 0 ? [ordinal] : [];
-      }),
-    ) + 1;
-  return battleSpellEffectOccurrenceId(`${prefix}${nextOrdinal}`);
 }
 
 export function applyMarkedDamageRiderSpellEffect(

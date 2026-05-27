@@ -16,6 +16,7 @@ import {
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 
 export function supportedSpellInvocationRef(
@@ -342,19 +343,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "objectLight") {
-    if (invocation.resource.tag === "spellSlot") {
-      return {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "objectLight",
-      };
-    }
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "objectLight",
-    };
+    return objectLightProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "ongoingSpellEnd") {
     return {

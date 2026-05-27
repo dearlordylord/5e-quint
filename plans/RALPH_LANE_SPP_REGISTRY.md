@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "SPP-W2-03-OBJECT-LIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate objectLight profile (cantrip template)"
     },
     {
@@ -771,6 +771,7 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 4 - SPP-W2-03-OBJECT-LIGHT - Migrate objectLight profile
 
+Status: `done`.
 Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts` or
 `level1-spatial-witness-selected-identity.mbt.test.ts` (both cover it).
 

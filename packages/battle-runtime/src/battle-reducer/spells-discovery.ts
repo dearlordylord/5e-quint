@@ -78,6 +78,7 @@ import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.t
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
   dancingLightsFromEffect,
@@ -763,19 +764,7 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "objectLight") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [spellObjectTargetHole(invocation)],
-          },
-        ];
+        return objectLightProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "ongoingSpellEnd") {
         return [
@@ -1403,9 +1392,7 @@ export function spellInvocationCastSummary(
     return `Move ${invocation.spell.name} with a Bonus Action.`;
   }
   if (invocation.procedure === "objectLight") {
-    return invocation.resource.tag === "spellSlot"
-      ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-      : `Cast ${invocation.spell.name} as a cantrip.`;
+    return objectLightProfile.castSummary(invocation);
   }
   if (invocation.procedure === "ongoingSpellEnd") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
