@@ -37,9 +37,7 @@ import {
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import {
-  supportedSpellActs,
-} from "./spells-profiles.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -95,6 +93,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
@@ -763,20 +762,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "weaponAttackOverride") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-              componentWeaponItemId: invocation.attachedWeapon.itemId,
-            },
-            label: `${invocation.spell.name} (${invocation.attachedWeapon.attack.weapon.name})`,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return weaponAttackOverrideProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (
         invocation.procedure === "afterHitDamage" ||
@@ -1301,7 +1291,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
   }
   if (invocation.procedure === "weaponAttackOverride") {
-    return `Cast ${invocation.spell.name} as a cantrip on ${invocation.attachedWeapon.attack.weapon.name}.`;
+    return weaponAttackOverrideProfile.castSummary(invocation);
   }
   if (
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"

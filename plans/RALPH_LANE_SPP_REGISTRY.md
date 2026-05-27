@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "SPP-W3-11-WEAPON-ATTACK-OVERRIDE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate weaponAttackOverride profile (no focused MBT)"
     },
     {
@@ -934,7 +934,7 @@ trigger a shared-helper extraction follow-up.
 
 ### Task 28 - SPP-W3-11-WEAPON-ATTACK-OVERRIDE - Migrate weaponAttackOverride
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

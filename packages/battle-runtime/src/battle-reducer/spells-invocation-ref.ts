@@ -39,6 +39,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 
 export function supportedSpellInvocationRef(
@@ -97,11 +98,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "weaponAttackOverride") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "weaponAttackOverride",
-    };
+    return weaponAttackOverrideProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "wardingBond") {
     return wardingBondProfile.invocationRef(invocation);

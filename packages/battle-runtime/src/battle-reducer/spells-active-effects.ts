@@ -28,10 +28,7 @@ import {
   type DifficultyClass,
   type Round as RoundType,
 } from "@dnd/shared/types";
-import type {
-  DamageType,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleDancingLightId,
   battleSpellEffectOccurrenceId,
@@ -2901,37 +2898,6 @@ export function endHeldLightSpellEffect(
             effect.sourceCombatantId === actorId
           ),
       ),
-    }),
-  };
-}
-
-export function applyWeaponAttackOverrideSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "weaponAttackOverride" }
-  >,
-): BattleState {
-  const caster = state.combatants.get(actorId);
-  if (caster === undefined) {
-    return state;
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
-      activeEffects: [
-        ...caster.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "spellWeaponAttackOverride" &&
-              effect.sourceSpellId === invocation.spell.id &&
-              effect.sourceCombatantId === actorId
-            ),
-        ),
-        invocation.activeEffect,
-      ],
     }),
   };
 }

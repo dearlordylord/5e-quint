@@ -69,7 +69,6 @@ import {
   spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
   dancingLightsFromEffect,
-  applyWeaponAttackOverrideSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
@@ -87,9 +86,7 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
-import {
-  spendSpellCastResources,
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
@@ -101,12 +98,8 @@ import {
   type SpellFillSet,
 } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import {
-  spellDancingLightsPlacementHole,
-} from "./spells-targeting.ts";
-import {
-  spellCreatedHeldObjectHasFreeHand,
-} from "./spell-created-held-object.ts";
+import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 
 export function resolveSpellCreatedHeldObjectSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
@@ -209,16 +202,22 @@ export function resolveSpellCreatedHeldObjectReEvokeSpellAct(input: {
     input.invocation.activeEffect.sourceCombatantId,
     input.invocation.spell.id,
   );
-  if (activeEffect === undefined || activeEffect.objectState.kind !== "notHeld") {
+  if (
+    activeEffect === undefined ||
+    activeEffect.objectState.kind !== "notHeld"
+  ) {
     return invalidResult(
       input.input.state,
       "staleSubject",
       "Spell-created held object can no longer be re-evoked.",
     );
   }
-  const spent = spendActivationResource(input.input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
+  const spent = spendActivationResource(
+    input.input.state.currentTurnResources,
+    {
+      kind: "bonusAction",
+    },
+  );
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -297,12 +296,10 @@ function spellCreatedHeldObjectHandStateError(
     readonly allowSpellCastReactionFacts: boolean;
     readonly unrelatedFillsMessage: string;
   },
-):
-  | {
-      readonly reason: "invalidFill" | "staleSubject";
-      readonly message: string;
-    }
-  | null {
+): {
+  readonly reason: "invalidFill" | "staleSubject";
+  readonly message: string;
+} | null {
   if (
     spellCreatedHeldObjectHasUnrelatedFills(fillSet) ||
     (!options.allowSpellCastReactionFacts &&
@@ -696,86 +693,6 @@ function dancingLightsSeparatePlacementError(
   return null;
 }
 
-export function resolveWeaponAttackOverrideSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "weaponAttackOverride" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Weapon attack override spells do not use target, roll, damage, or save fills.",
-    );
-  }
-  if (
-    input.input.subject.componentWeaponItemId !==
-    input.invocation.attachedWeapon.itemId
-  ) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Weapon attack override spell no longer matches the selected held weapon.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyWeaponAttackOverrideSpellEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
 export function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: ReadiedSpellInvocation,
@@ -1141,13 +1058,12 @@ export function resolveSpellRelease(
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      fillSet.sourceDamageRollPenaltyRolls,
-      damageSource,
-      spellDamageByType,
-      fillSet.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    fillSet.sourceDamageRollPenaltyRolls,
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     spellDamageByType,
@@ -1191,14 +1107,13 @@ export function resolveSpellRelease(
           concentrationLifecycleFills,
           concentrationSave,
         );
-  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
-    {
+  const concentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
       state: input.state,
       target,
       damageAmount: spellDamageAmount,
       fills: fillSet.concentrationSavingThrows,
-    },
-  );
+    });
   if (concentrationSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...concentrationSaveCheck.holes,

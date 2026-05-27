@@ -81,12 +81,12 @@ import { sameStringSet } from "./spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackProfile,
   supportedCantripSpellHostedWeaponAttackProfile,
-  supportedCantripWeaponAttackOverrideProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
   supportedPreparedSpellAttackSequenceProfile,
   supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
+import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 export * from "./spells-profiles-attack-damage.ts";
 
 const DISPEL_MAGIC_TARGET_KINDS = [
@@ -575,13 +575,7 @@ export function supportedSpellActs(
       ),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripWeaponAttackOverrideProfile(
-        actor,
-        spell,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-        characterLevel,
-      ),
+      weaponAttackOverrideProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripSpellAttackProfile(

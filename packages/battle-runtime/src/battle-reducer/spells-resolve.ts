@@ -300,11 +300,11 @@ import {
   resolveSpellCreatedHeldObjectReEvokeSpellAct,
   resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
-  resolveWeaponAttackOverrideSpellAct,
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
+import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -2849,7 +2849,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "weaponAttackOverride") {
-    return resolveWeaponAttackOverrideSpellAct({
+    return weaponAttackOverrideProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
