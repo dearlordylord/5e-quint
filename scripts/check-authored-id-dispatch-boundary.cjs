@@ -50,6 +50,10 @@ const ALLOWLIST_PATH_RULES = [
     pattern:
       /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
+  {
+    reason: "battle-runtime-unit-feature-support-profile-boundary",
+    pattern: /^packages\/battle-runtime\/src\/unit-feature-support\.ts$/,
+  },
 ];
 
 function escapeForRegExp(text) {

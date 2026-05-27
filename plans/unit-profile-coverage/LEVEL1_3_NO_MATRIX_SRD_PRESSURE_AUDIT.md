@@ -97,18 +97,12 @@ new Task 12 follow-up:
 | `cleric_disciple_of_life` | `level-3-follow-up-required` | Real missing Unit row: slot-spell Hit Point restoration modifier. | Add to L3 healing/damage Unit admission task. |
 | `cleric_preserve_life` | `level-3-follow-up-required` | Real missing Unit row: Magic Action, Channel Divinity spend, bounded healing pool. | Add to L3 healing/damage Unit admission task. |
 | `druid_lands_aid` | `level-3-follow-up-required` | Real missing Unit row: Magic Action, Wild Shape spend, Constitution save damage plus one target heal. | Add to L3 healing/damage Unit admission task. |
-| `fighter_remarkable_athlete` | `level-3-follow-up-required` | Real missing Unit row: Initiative and Athletics Advantage plus post-Critical-Hit movement release. | Add to L3 attack/movement Unit admission task. |
-| `monk_open_hand_technique` | `level-3-follow-up-required` | Real missing Unit row: Flurry of Blows hit rider choices. | Add to L3 attack/movement Unit admission task. |
 | `paladin_channel_divinity` | `level-3-follow-up-required` | Real missing Unit row: Paladin Channel Divinity resource plus runtime-detached Divine Sense split. | Add to L3 resource/action Unit admission task. |
-| `paladin_sacred_weapon` | `level-3-follow-up-required` | Real missing Unit row: Attack-action Channel Divinity spend, weapon-bound attack bonus, damage-type choice, and light effect. | Add to L3 attack/movement Unit admission task. |
 | `ranger_hunters_lore` | `catalog-only/dead-for-now` | Legitimately non-executable: table/stat-block knowledge disclosure of existing Immunity, Resistance, and Vulnerability facts. | None. |
-| `ranger_hunters_prey` | `level-3-follow-up-required` | Real missing Unit row: rest-replaceable option plus Colossus Slayer or Horde Breaker attack riders. | Add to L3 attack/movement Unit admission task. |
 | `rogue_fast_hands` | `level-3-follow-up-required` | Real missing Unit row: Bonus Action permission split across table-owned Sleight of Hand, Utilize, and magic-item Magic Action ownership. | Add to L3 resource/action Unit admission task. |
 | `rogue_second_story_work` | `level-3-follow-up-required` | Real missing Unit row: Climb Speed projection and Dexterity-based jump-distance substitution. | Add to L3 durable/ability-check Unit admission task. |
-| `rogue_steady_aim` | `level-3-follow-up-required` | Real missing Unit row: Bonus Action, same-turn attack Advantage, no-prior-movement gate, and Speed 0 until turn end. | Add to L3 attack/movement Unit admission task. |
 | `sorcerer_draconic_resilience` | `level-3-follow-up-required` | Real missing Unit row: Hit Point Maximum increase and unarmored Armor Class formula. | Add to L3 durable/ability-check Unit admission task. |
 | `warlock_dark_ones_blessing` | `level-3-follow-up-required` | Real missing Unit row: enemy-to-0-HP trigger and Temporary Hit Point grant. | Add to L3 healing/damage Unit admission task. |
-| `wizard_potent_cantrip` | `level-3-follow-up-required` | Real missing Unit row: damaging-cantrip miss or successful-save half damage with no additional effect. | Add to L3 attack/movement Unit admission task. |
 
 ## Follow-Up Tasks
 
@@ -132,13 +126,6 @@ Add only these follow-ups for real missing Unit rows:
   Divine Sense table knowledge, plus Fast Hands action-economy support that
   delegates lock/trap/pocket, Utilize, and magic-item execution to their
   existing owners.
-- `L13UG-A18-L3-ATTACK-MOVEMENT-UNITS`: author/admit Unit rows and runtime
-  profiles for `fighter_remarkable_athlete`, `monk_open_hand_technique`,
-  `paladin_sacred_weapon`, `ranger_hunters_prey`, `rogue_steady_aim`, and
-  `wizard_potent_cantrip`. Required output: Surface authored records, Unit
-  claims, deterministic admission/projection evidence, focused runtime tests,
-  and promoted Quint parity for attack, movement, rider, and cantrip-damage
-  behavior.
 
 Do not add follow-up tasks for the 13 adopted spell frontier rows or
 `ranger_hunters_lore` from this audit.

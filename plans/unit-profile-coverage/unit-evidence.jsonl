@@ -382,3 +382,9 @@
 {"unitId":"warlock_dark_ones_blessing","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
 {"unitId":"paladin_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"rogue_fast_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts"}}
+{"unitId":"fighter_remarkable_athlete","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"monk_open_hand_technique","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"paladin_sacred_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"ranger_hunters_prey","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"rogue_steady_aim","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"wizard_potent_cantrip","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}

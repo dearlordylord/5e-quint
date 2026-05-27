@@ -3,7 +3,9 @@ let evoker =
       , description =
           "The Evoker Wizard subclass choice. Subclass feature Units are modeled separately from the choice boundary."
       , featureGrants =
-        [ { level = 3, unitId = "wizard_evocation_savant" } ]
+        [ { level = 3, unitId = "wizard_evocation_savant" }
+        , { level = 3, unitId = "wizard_potent_cantrip" }
+        ]
           : List { level : Natural, unitId : Text }
       , id = "subclass_wizard_evoker"
       , kind = "subclass"

@@ -96,6 +96,14 @@ obligation's QNT owner can act as a future implementation source. It does not
 change B-lane coverage, does not prove additional TS parity, and does not imply
 generated Rust exists.
 
+The project-level "golden generator readiness" target is this checked readiness
+state, not implementation of a generator: every in-scope covered semantic-core
+obligation has a `generator-readiness.jsonl` row, every row is
+`generation-subset-clean`, every `blockedBy` and `followUpTaskIds` array is
+empty, every QNT owner role is classified, and the kernel IR boundary inventory
+is complete. Building an emitter or committing generated Rust is outside this
+readiness gate.
+
 For runnable Rust migration or generator-readiness queue selection, start from
 `plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`. This
 README owns the row contract and vocabulary; it is not a historical task queue.

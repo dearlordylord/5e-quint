@@ -1413,7 +1413,7 @@ function renderLevel12UltraGoldenSummary({
     `| Unique QNT-owned obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueQntOwnedObligations)} |`,
     `| Unique parity-witnessed obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueParityWitnessedObligations)} |`,
     "",
-    "Generator readiness is the incomplete layer.",
+    "Generator readiness passes when every scoped semantic-core obligation is generation-subset-clean and has no blocker or follow-up rows. It does not require a generator implementation or committed generated Rust.",
     "",
     "| Generator readiness status | Blocking rows |",
     "| --- | ---: |",

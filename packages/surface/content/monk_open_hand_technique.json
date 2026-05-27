@@ -1,0 +1,55 @@
+{
+  "kind": "class_feature",
+  "id": "monk_open_hand_technique",
+  "name": "Open Hand Technique",
+  "className": "monk",
+  "acquiredAtLevel": 3,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk.md:192-202"
+  },
+  "description": "Whenever you hit a creature with an attack granted by Flurry of Blows, you can Addle, Push, or Topple the target.",
+  "mechanics": {
+    "family": "open_hand_technique",
+    "trigger": {
+      "kind": "hit_with_attack_granted_by",
+      "resourceOptionUnitId": "monk_monks_focus",
+      "optionId": "flurry_of_blows"
+    },
+    "optional": true,
+    "effectSaveDc": {
+      "kind": "class_feature_ability_save_dc",
+      "base": 8,
+      "ability": "wis"
+    },
+    "choices": [
+      {
+        "id": "addle",
+        "effect": {
+          "kind": "deny_opportunity_attacks",
+          "expires": "start_of_target_next_turn"
+        }
+      },
+      {
+        "id": "push",
+        "save": {
+          "ability": "str"
+        },
+        "onFail": {
+          "kind": "push_away",
+          "distanceFeet": 15
+        }
+      },
+      {
+        "id": "topple",
+        "save": {
+          "ability": "dex"
+        },
+        "onFail": {
+          "kind": "apply_condition",
+          "condition": "prone"
+        }
+      }
+    ]
+  }
+}
