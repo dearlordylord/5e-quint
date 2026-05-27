@@ -115,59 +115,63 @@
     {
       "number": 19,
       "id": "L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote or block Suggestion Charmed lifecycle subset"
     },
     {
       "number": 20,
       "id": "L13UG-A20-LEVEL13-CLOSEOUT",
-      "status": "blocked-needs-design",
+      "status": "deferred",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
       "number": 21,
       "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
-      "status": "blocked-needs-design",
+      "status": "deferred",
       "title": "Plan the next level-support batch if this lane drains"
     },
     {
       "number": 22,
       "id": "L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote Disciple of Life healing modifier runtime"
     },
     {
       "number": 23,
       "id": "L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote Preserve Life healing pool runtime"
     },
     {
       "number": 24,
       "id": "L13UG-A24-DRUID-LANDS-AID-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote Land's Aid level-3 runtime"
     },
     {
       "number": 25,
       "id": "L13UG-A25-DRUID-LANDS-AID-SCALING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote Land's Aid later-level scaling"
     },
     {
       "number": 26,
       "id": "L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote Dark One's Blessing runtime"
     }
   ]
 }
 -->
 
-This is the active Ralph lane for opening the character levels 1-3
-ultra-golden gate. Character level and spell level are separate axes:
-character levels 1-3 include spell-level-2 pressure, not spell-level-3
-pressure.
+This lane is being parked after the in-flight Task 18 work. Character level and
+spell level are separate axes: character levels 1-3 include spell-level-2
+pressure, not spell-level-3 pressure.
+
+Post-Task-18 level-support breadth tasks are deferred because the current
+priority is generator operation, not more level-frontier expansion. Do not
+launch this lane for new work unless the owner explicitly reopens the
+level-support frontier.
 
 ## Context Budget
 
@@ -486,7 +490,10 @@ through typed procedure facts and runtime state rather than authored identity.
 
 ### Task 19 - L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE - Promote or block Suggestion Charmed lifecycle subset
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. Reopen only
+after the owner explicitly resumes level-support breadth.
 
 Input: Task 13 closed-disposition RAW audit, local SRD Suggestion text, current
 Suggestion Surface record and Unit claim/evidence rows, Charm Person Charmed
@@ -511,7 +518,10 @@ table/social split.
 
 ### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
 
-Status: `blocked-needs-design`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. Reopen only
+after Task 18 is merged and the owner explicitly resumes level-support breadth.
 
 Input: results from Tasks 1-19 and the appended Task 16 runtime follow-ups
 (`L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME`,
@@ -529,7 +539,10 @@ new work is discovered.
 
 ### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
-Status: `blocked-needs-design`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. Recursive
+level-support planning must not run while generator operation is the priority.
 
 Input: current generated reports after Task 20.
 
@@ -543,7 +556,10 @@ new runnable tasks discovered from current generated artifacts.
 
 ### Task 22 - L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME - Promote Disciple of Life healing modifier runtime
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. This remains
+valid level-support work, but it is not part of the current generator lane.
 
 Input: Task 16 admitted `unit-feature.spell-slot-healing-modifier` profile for
 `cleric_disciple_of_life`, local SRD Cleric Disciple of Life text, supported
@@ -562,7 +578,10 @@ Unit identity flow where the reducer boundary consumes the profile.
 
 ### Task 23 - L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME - Promote Preserve Life healing pool runtime
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. This remains
+valid level-support work, but it is not part of the current generator lane.
 
 Input: Task 16 admitted `unit-feature.magic-action-healing-pool` profile for
 `cleric_preserve_life`, local SRD Cleric Preserve Life text, Channel Divinity
@@ -580,7 +599,10 @@ and no authored-identity dispatch.
 
 ### Task 24 - L13UG-A24-DRUID-LANDS-AID-RUNTIME - Promote Land's Aid level-3 runtime
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. This remains
+valid level-support work, but it is not part of the current generator lane.
 
 Input: Task 16 admitted `unit-feature.magic-action-area-save-damage-healing`
 profile for `druid_lands_aid`, local SRD Druid Land's Aid text, Wild Shape
@@ -599,7 +621,11 @@ and no authored-identity dispatch.
 
 ### Task 25 - L13UG-A25-DRUID-LANDS-AID-SCALING - Promote Land's Aid later-level scaling
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. This remains
+valid later-level scaling work, but it is not part of the current generator
+lane.
 
 Input: Task 24 Land's Aid runtime owner, local SRD Druid Land's Aid level 10 and
 14 scaling text, current Surface mechanics, and package-local battle-runtime
@@ -617,7 +643,10 @@ level-threshold dice scaling for damage and healing while preserving the Task
 
 ### Task 26 - L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME - Promote Dark One's Blessing runtime
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator operation. This remains
+valid level-support work, but it is not part of the current generator lane.
 
 Input: Task 16 admitted
 `unit-feature.enemy-zero-hit-point-temporary-hit-points` profile for
