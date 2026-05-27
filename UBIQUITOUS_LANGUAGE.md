@@ -254,28 +254,6 @@ Ownership guideline:
 - spell invocations are runtime-owned
 - spell effects are battle/execution-owned
 
-### Spell Procedure Profiles
-
-Engine vocabulary, not SRD vocabulary. A **Spell Procedure Profile** is one
-class of spell behavior the battle runtime knows how to handle end-to-end:
-admission of a Spell Definition into a Spell Invocation, discovery of the
-cast act and its initial holes, dispatch into a resolver, application of the
-resulting Spell Effect, and the codec/classification metadata that lets the
-rest of the runtime address it.
-
-| Term                          | Definition                                                                                                                                                                                                  | Aliases to avoid                                                |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **Spell Procedure Profile**   | The runtime declaration of one class of spell behavior: its admission predicate, runtime shape, dispatch entry, effect application, and classification metadata. Lives in `spell-procedure-profiles/`.      | Procedure (too broad), spell handler                            |
-| **Procedure (discriminator)** | The string tag used to identify which Spell Procedure Profile a Spell Invocation belongs to (e.g. `damageReduction`, `rollModifier`, `saveGatedDamage`). Carried on `SupportedSpellInvocation`.              | Profile id (collides with Unit Feature Profile), invocation tag |
-| **Admit** (verb)              | The discovery-time step where a Spell Procedure Profile inspects a Spell Definition for a given actor context and returns the list of Spell Invocations that profile contributes (or `[]` if it does not).  | Discover (used for the cast-act step), classify                 |
-| **Profile Registry**          | The typed table of registered Spell Procedure Profiles. Lookup by procedure returns the profile or `null`. During the migration to a registry-driven dispatch, unregistered profiles fall back to old code. | —                                                               |
-
-A profile is the engine seam, not an SRD concept. Multiple unrelated SRD
-spells can share one profile (Bless, Bane, Guidance, Resistance and Shield
-of Faith all use `rollModifier`); one SRD spell can be split across profiles
-(a spell with both an action-time effect and a reaction window may have
-parts handled by different profiles).
-
 ### Hand Occupancy Terminology
 
 Use SRD terms in rules-facing prose:
