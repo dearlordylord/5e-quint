@@ -40,19 +40,23 @@ export type SpellProcedureMetamagicCompatibility =
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
-export type SpellProcedureProfileResolveInput<I> = {
-  readonly input: ActionSpellBattleResolutionInput;
+export type SpellProcedureProfileResolveInput<
+  I,
+  Input = ActionSpellBattleResolutionInput,
+> = {
+  readonly input: Input;
   readonly actorId: CombatantId;
   readonly invocation: I;
   readonly fillSet: OkSpellFillSet;
 };
 
 // One profile per spell-procedure variant. Generic in the procedure literal
-// and the narrowed invocation type so admit/resolve/codec stay type-checked
-// against the right shape.
+// and the narrowed invocation/input types so admit/resolve/codec stay
+// type-checked against the right shape.
 export type SpellProcedureProfile<
   P extends SupportedSpellInvocation["procedure"],
   I extends Extract<SupportedSpellInvocation, { readonly procedure: P }>,
+  Input = ActionSpellBattleResolutionInput,
 > = {
   readonly procedure: P;
 
@@ -87,7 +91,7 @@ export type SpellProcedureProfile<
 
   // Dispatch entry: consume a fill set, produce a resolution result.
   readonly resolve: (
-    input: SpellProcedureProfileResolveInput<I>,
+    input: SpellProcedureProfileResolveInput<I, Input>,
   ) => BattleResolutionResult;
 
   // TODO(spell-procedure-profile-registry): own the invocation Schema here too,
@@ -105,6 +109,7 @@ export type SpellProcedureProfile<
 export type AnySpellProcedureProfile = {
   readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureProfile<
     P,
-    Extract<SupportedSpellInvocation, { readonly procedure: P }>
+    Extract<SupportedSpellInvocation, { readonly procedure: P }>,
+    never
   >;
 }[SupportedSpellInvocation["procedure"]];

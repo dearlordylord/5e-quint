@@ -9,10 +9,7 @@
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
-import type {
-  AnySpellProcedureProfile,
-  SpellProcedureProfile,
-} from "./profile.ts";
+import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
 export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
@@ -41,12 +38,13 @@ export function registeredSpellProcedureProfile(
 }
 
 // Typed lookup for callers that have already narrowed by procedure literal.
-// Returns the profile with its concrete I and P types preserved.
+// Returns the profile with its concrete procedure, invocation, and resolve
+// input types preserved.
 export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
   procedure: P,
-): SpellProcedureProfile<
-  P,
-  Extract<SupportedSpellInvocation, { readonly procedure: P }>
+): Extract<
+  (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number],
+  { readonly procedure: P }
 > {
   const found = REGISTRY_BY_PROCEDURE.get(procedure);
   if (found === undefined) {
@@ -54,8 +52,8 @@ export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
       `spellProcedureProfileFor: procedure ${procedure} is in RegisteredSpellProcedure but missing from registry map`,
     );
   }
-  return found as unknown as SpellProcedureProfile<
-    P,
-    Extract<SupportedSpellInvocation, { readonly procedure: P }>
+  return found as unknown as Extract<
+    (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number],
+    { readonly procedure: P }
   >;
 }
