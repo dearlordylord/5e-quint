@@ -341,7 +341,7 @@ Before any non-action-time profile (Wave 3 bonus-action and Wave 5
 reaction profiles) can migrate, the profile interface needs to admit a
 wider `input` type than `ActionSpellBattleResolutionInput`.
 
-#### Task 1 - SPP-W1-01-WIDEN-RESOLVE-INPUT - Widen SpellProcedureProfileResolveInput
+### Task 1 - SPP-W1-01-WIDEN-RESOLVE-INPUT - Widen SpellProcedureProfileResolveInput
 
 Status: `ready-for-research`
 Depends on: none
@@ -366,70 +366,70 @@ Each task: follow the template. Replace `<MBT>` with the focused test
 name; for entries marked "no focused MBT", verification falls back to
 `battle-runtime.mbt.test.ts` (integration).
 
-#### Task 2 - SPP-W2-01-MAKE-STABLE - Migrate makeStable profile
+### Task 2 - SPP-W2-01-MAKE-STABLE - Migrate makeStable profile
 
 Status: `blocked` until SPP-W1-01 lands (optional dependency — makeStable
 is cantrip-action-time and could go without W1, but ordering avoids
 churn).
 Focused MBT: `healing-stabilization-selected-identity.mbt.test.ts`.
 
-#### Task 3 - SPP-W2-02-HELD-LIGHT - Migrate heldLight profile
+### Task 3 - SPP-W2-02-HELD-LIGHT - Migrate heldLight profile
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 4 - SPP-W2-03-OBJECT-LIGHT - Migrate objectLight profile
+### Task 4 - SPP-W2-03-OBJECT-LIGHT - Migrate objectLight profile
 
 Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts` or
 `level1-spatial-witness-selected-identity.mbt.test.ts` (both cover it).
 
-#### Task 5 - SPP-W2-04-THAUMATURGY-BOOMING-VOICE - Migrate thaumaturgyBoomingVoice
+### Task 5 - SPP-W2-04-THAUMATURGY-BOOMING-VOICE - Migrate thaumaturgyBoomingVoice
 
 Focused MBT: `thaumaturgy-selected-identity.mbt.test.ts`. Note:
 `rollModifierSkillFilter` is shared with this profile (already documented
 in `roll-modifier.ts`). After migration, the shared helper remains in
 `spells-profiles-support.ts`.
 
-#### Task 6 - SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE - Migrate blurAttackRollDefense
+### Task 6 - SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE - Migrate blurAttackRollDefense
 
 Focused MBT: `blur-attack-roll-defense-lifecycle.mbt.test.ts`.
 
-#### Task 7 - SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT - Migrate seeInvisibleObserverSight
+### Task 7 - SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT - Migrate seeInvisibleObserverSight
 
 Focused MBT: `see-invisibility-observer-sight.mbt.test.ts` (verify
 exists — likely the test file lacks the keyword grep but exists by name).
 
-#### Task 8 - SPP-W2-07-PERSISTENT-ARMOR-EFFECT - Migrate persistentArmorEffect
+### Task 8 - SPP-W2-07-PERSISTENT-ARMOR-EFFECT - Migrate persistentArmorEffect
 
 Focused MBT: `mage-armor-selected-identity.mbt.test.ts`.
 
-#### Task 9 - SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT - Migrate magicWeaponEnhancement
+### Task 9 - SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT - Migrate magicWeaponEnhancement
 
 Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts`.
 
-#### Task 10 - SPP-W2-09-WARDING-BOND - Migrate wardingBond
+### Task 10 - SPP-W2-09-WARDING-BOND - Migrate wardingBond
 
 Focused MBT: `warding-bond-damage-sharing.mbt.test.ts`.
 
-#### Task 11 - SPP-W2-10-CREATURE-TYPE-PROTECTION - Migrate creatureTypeProtection
+### Task 11 - SPP-W2-10-CREATURE-TYPE-PROTECTION - Migrate creatureTypeProtection
 
 Focused MBT: `creature-type-protection-and-charm-selected-identity.mbt.test.ts`.
 
-#### Task 12 - SPP-W2-11-CONDITION-REMOVAL-PROTECTION - Migrate conditionRemovalProtection
+### Task 12 - SPP-W2-11-CONDITION-REMOVAL-PROTECTION - Migrate conditionRemovalProtection
 
 No focused MBT. Verification: `battle-runtime.mbt.test.ts`. Flag follow-up
 to author a focused test.
 
-#### Task 13 - SPP-W2-12-DIRECT-CONDITION-REMOVAL - Migrate directConditionRemoval
+### Task 13 - SPP-W2-12-DIRECT-CONDITION-REMOVAL - Migrate directConditionRemoval
 
 No focused MBT. Same as above.
 
-#### Task 14 - SPP-W2-13-COND-IMMUNITY-TURN-START-THP - Migrate conditionImmunityAndTurnStartTemporaryHitPoints
+### Task 14 - SPP-W2-13-COND-IMMUNITY-TURN-START-THP - Migrate conditionImmunityAndTurnStartTemporaryHitPoints
 
 No focused MBT. Same as above. This profile has a complex
 `activeEffects` shape (two elements); follow the template, file-local
 applyEffect needs to write both.
 
-#### Task 15 - SPP-W2-14-CREATURE-SIZE-CHANGE - Migrate creatureSizeIncrease/Decrease combined
+### Task 15 - SPP-W2-14-CREATURE-SIZE-CHANGE - Migrate creatureSizeIncrease/Decrease combined
 
 Single profile, two procedure literals. The invocation type is
 `{procedure: "creatureSizeIncrease" | "creatureSizeDecrease"}`. The
@@ -437,11 +437,11 @@ profile registers under one of the two; the resolve dispatches both.
 Verify the existential type still admits this.
 Focused MBT: `creature-size-change-lifecycle.mbt.test.ts`.
 
-#### Task 16 - SPP-W2-15-LEVITATED-CREATURE - Migrate levitatedCreature
+### Task 16 - SPP-W2-15-LEVITATED-CREATURE - Migrate levitatedCreature
 
 Focused MBT: `levitated-creature-lifecycle.mbt.test.ts`.
 
-#### Task 17 - SPP-W2-16-SCALAR-BUFF - Migrate scalarBuff
+### Task 17 - SPP-W2-16-SCALAR-BUFF - Migrate scalarBuff
 
 Multi-shape (target-list or self targeting, several effect kinds). Use
 `roll-modifier.ts` as template. Focused MBT:
@@ -451,57 +451,57 @@ Multi-shape (target-list or self targeting, several effect kinds). Use
 
 Each task depends on SPP-W1-01.
 
-#### Task 18 - SPP-W3-01-DIRECT-HP-RESTORATION - Migrate directHitPointRestoration
+### Task 18 - SPP-W3-01-DIRECT-HP-RESTORATION - Migrate directHitPointRestoration
 
 Focused MBT: `quickened-spell-governor.mbt.test.ts` (covers
 directHitPointRestoration via Healing Word). May also need scope from
 `rule-core-spells.mbt.test.ts`.
 
-#### Task 19 - SPP-W3-02-EXPEDITIOUS-RETREAT-DASH - Migrate expeditiousRetreatDash
+### Task 19 - SPP-W3-02-EXPEDITIOUS-RETREAT-DASH - Migrate expeditiousRetreatDash
 
 No focused MBT. Falls back to integration.
 
-#### Task 20 - SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT - Migrate jumpMovementReplacement
+### Task 20 - SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT - Migrate jumpMovementReplacement
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 21 - SPP-W3-04-FEATHER-FALL-MITIGATION - Migrate featherFallMitigation
+### Task 21 - SPP-W3-04-FEATHER-FALL-MITIGATION - Migrate featherFallMitigation
 
 Reaction-triggered (Featherfall is a Reaction spell). Treat as a Wave 3
 case (uses bonus-action-time machinery via the trigger). Focused MBT:
 `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 22 - SPP-W3-05-SELF-TELEPORT - Migrate selfTeleport
+### Task 22 - SPP-W3-05-SELF-TELEPORT - Migrate selfTeleport
 
 Focused MBT: `self-teleport-lifecycle.mbt.test.ts`.
 
-#### Task 23 - SPP-W3-06-SELF-TRANSFORMATION-MODE - Migrate selfTransformationMode
+### Task 23 - SPP-W3-06-SELF-TRANSFORMATION-MODE - Migrate selfTransformationMode
 
 Focused MBT: `self-transformation-mode-lifecycle.mbt.test.ts`.
 
-#### Task 24 - SPP-W3-07-DRAGONS-BREATH-INITIAL - Migrate dragonsBreathInitial
+### Task 24 - SPP-W3-07-DRAGONS-BREATH-INITIAL - Migrate dragonsBreathInitial
 
 Focused MBT: `dragons-breath-initial-effect.mbt.test.ts`.
 
-#### Task 25 - SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION - Migrate sanctuaryTargetingInterdiction
+### Task 25 - SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION - Migrate sanctuaryTargetingInterdiction
 
 Focused MBT: `sanctuary-selected-identity.mbt.test.ts`.
 
-#### Task 26 - SPP-W3-09-MARKED-DAMAGE-RIDER - Migrate markedDamageRider
+### Task 26 - SPP-W3-09-MARKED-DAMAGE-RIDER - Migrate markedDamageRider
 
 No focused MBT. Falls back to integration.
 
-#### Task 27 - SPP-W3-10-WEAPON-DAMAGE-RIDER - Migrate weaponDamageRider
+### Task 27 - SPP-W3-10-WEAPON-DAMAGE-RIDER - Migrate weaponDamageRider
 
 No focused MBT. Falls back to integration. Note: weaponDamageRider is
 similar in shape to afterHitDamage; the migration of both together can
 trigger a shared-helper extraction follow-up.
 
-#### Task 28 - SPP-W3-11-WEAPON-ATTACK-OVERRIDE - Migrate weaponAttackOverride
+### Task 28 - SPP-W3-11-WEAPON-ATTACK-OVERRIDE - Migrate weaponAttackOverride
 
 No focused MBT. Falls back to integration.
 
-#### Task 29 - SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK - Migrate spellHostedWeaponAttack
+### Task 29 - SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK - Migrate spellHostedWeaponAttack
 
 Focused MBT: `level1-buff-mark-smite-selected-identity.mbt.test.ts`.
 
@@ -512,49 +512,49 @@ Tasks 30–39 share the projection / fill-set helpers in
 admit + resolve + applyEffect; SPP-W4-11 then sweeps the shared helpers
 into a `save-gate-helpers.ts` shared module.
 
-#### Task 30 - SPP-W4-01-DIRECT-CONDITION - Migrate directCondition
+### Task 30 - SPP-W4-01-DIRECT-CONDITION - Migrate directCondition
 
 Focused MBT: `direct-condition-lifecycle.mbt.test.ts`.
 
-#### Task 31 - SPP-W4-02-SAVE-GATED-DAMAGE - Migrate saveGatedDamage
+### Task 31 - SPP-W4-02-SAVE-GATED-DAMAGE - Migrate saveGatedDamage
 
 Anchor of family. Focused MBT:
 `level2-damage-spell-selected-identity.mbt.test.ts`.
 
-#### Task 32 - SPP-W4-03-SAVE-GATED-CONDITION - Migrate saveGatedCondition
+### Task 32 - SPP-W4-03-SAVE-GATED-CONDITION - Migrate saveGatedCondition
 
 Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 
-#### Task 33 - SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY - Migrate saveGatedConditionImmunity
+### Task 33 - SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY - Migrate saveGatedConditionImmunity
 
 Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 
-#### Task 34 - SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE - Migrate saveGatedAttackRollAdvantage
+### Task 34 - SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE - Migrate saveGatedAttackRollAdvantage
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 35 - SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE - Migrate abilityD20TestRollModeSaveGate
+### Task 35 - SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE - Migrate abilityD20TestRollModeSaveGate
 
 No focused MBT. Falls back to integration.
 
-#### Task 36 - SPP-W4-07-SLEEP-TARGET-ADMISSION - Migrate sleepTargetAdmission
+### Task 36 - SPP-W4-07-SLEEP-TARGET-ADMISSION - Migrate sleepTargetAdmission
 
 Focused MBT: `battle-runtime.mbt.test.ts` (integration only).
 
-#### Task 37 - SPP-W4-08-HIDEOUS-LAUGHTER - Migrate hideousLaughter
+### Task 37 - SPP-W4-08-HIDEOUS-LAUGHTER - Migrate hideousLaughter
 
 No focused MBT. Falls back to integration.
 
-#### Task 38 - SPP-W4-09-GREASE-GROUND-HAZARD - Migrate greaseGroundHazard
+### Task 38 - SPP-W4-09-GREASE-GROUND-HAZARD - Migrate greaseGroundHazard
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 39 - SPP-W4-10-COMMAND - Migrate command
+### Task 39 - SPP-W4-10-COMMAND - Migrate command
 
 Focused MBT: `rule-core-ability-skill-command.mbt.test.ts` and
 `movement-forced-movement-selected-identity.mbt.test.ts`.
 
-#### Task 40 - SPP-W4-11-SAVE-GATED-HELPERS-SWEEP - Relocate save-gate shared helpers
+### Task 40 - SPP-W4-11-SAVE-GATED-HELPERS-SWEEP - Relocate save-gate shared helpers
 
 Status: `blocked` on Tasks 30–39 all complete.
 
@@ -569,43 +569,43 @@ Acceptance: typecheck clean, save-gated profile MBTs still pass.
 
 ### Wave 5 — Reaction profiles (require Wave 1)
 
-#### Task 41 - SPP-W5-01-COUNTERSPELL - Migrate counterspell
+### Task 41 - SPP-W5-01-COUNTERSPELL - Migrate counterspell
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts` and
 `reaction-casting-time.mbt.test.ts`. The profile.resolve uses the
 reaction-time resolve input.
 
-#### Task 42 - SPP-W5-02-SHIELD-REACTION - Migrate shieldReaction
+### Task 42 - SPP-W5-02-SHIELD-REACTION - Migrate shieldReaction
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts`.
 
 ### Wave 6 — Attack-spell family
 
-#### Task 43 - SPP-W6-01-SPELL-ATTACK-DAMAGE - Migrate spellAttackDamage
+### Task 43 - SPP-W6-01-SPELL-ATTACK-DAMAGE - Migrate spellAttackDamage
 
 Anchor. Focused MBT:
 `level1-damage-spell-selected-identity.mbt.test.ts`. Also covered by
 `rule-core-spells.mbt.test.ts` and `feature-selected-identity.mbt.test.ts`.
 
-#### Task 44 - SPP-W6-02-SPELL-ATTACK-SEQUENCE - Migrate spellAttackSequence
+### Task 44 - SPP-W6-02-SPELL-ATTACK-SEQUENCE - Migrate spellAttackSequence
 
 Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts`.
 
-#### Task 45 - SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE - Migrate chainedSpellAttackDamage
+### Task 45 - SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE - Migrate chainedSpellAttackDamage
 
 Focused MBT: `chained-attack-sequence.mbt.test.ts`.
 
-#### Task 46 - SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE - Migrate attackBurstSaveDamage
+### Task 46 - SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE - Migrate attackBurstSaveDamage
 
 Focused MBT: `level1-damage-spell-selected-identity.mbt.test.ts`.
 
-#### Task 47 - SPP-W6-05-REPEATED-DAMAGE-ALLOCATION - Migrate repeatedDamageAllocation
+### Task 47 - SPP-W6-05-REPEATED-DAMAGE-ALLOCATION - Migrate repeatedDamageAllocation
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts` and
 `reaction-casting-time.mbt.test.ts`. Note: this is a continuation-style
 procedure; the resolver wraps an inner spell-attack flow.
 
-#### Task 48 - SPP-W6-06-HELD-LIGHT-HURL - Migrate heldLightHurl
+### Task 48 - SPP-W6-06-HELD-LIGHT-HURL - Migrate heldLightHurl
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 Paired with heldLight; the projection helper may be shared.
@@ -615,19 +615,19 @@ Paired with heldLight; the projection helper may be shared.
 All four are no-focused-MBT or thin focused coverage. Verification falls
 back to `battle-runtime.mbt.test.ts` plus authored unit tests.
 
-#### Task 49 - SPP-W7-01-AFTER-HIT-DAMAGE - Migrate afterHitDamage
+### Task 49 - SPP-W7-01-AFTER-HIT-DAMAGE - Migrate afterHitDamage
 
 No focused MBT. Falls back to integration.
 
-#### Task 50 - SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION - Migrate afterHitDamageAndIllumination
+### Task 50 - SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION - Migrate afterHitDamageAndIllumination
 
 Focused MBT: `shining-smite-selected-identity.mbt.test.ts`.
 
-#### Task 51 - SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION - Migrate afterHitSaveGatedCondition
+### Task 51 - SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION - Migrate afterHitSaveGatedCondition
 
 No focused MBT. Falls back to integration.
 
-#### Task 52 - SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE - Migrate afterHitTimedDamageAndSave
+### Task 52 - SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE - Migrate afterHitTimedDamageAndSave
 
 No focused MBT. Falls back to integration.
 
@@ -636,7 +636,7 @@ No focused MBT. Falls back to integration.
 Each task migrates one PROFILE FAMILY (multiple closely-related procedure
 literals that share state) into ONE file.
 
-#### Task 53 - SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY - Migrate spellCreatedHeldObject + Attack + ReEvoke
+### Task 53 - SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY - Migrate spellCreatedHeldObject + Attack + ReEvoke
 
 Three procedure literals, one shared lifecycle. Focused MBT:
 `spell-created-held-object-lifecycle.mbt.test.ts`. The profile file
@@ -644,60 +644,60 @@ registers three procedures from one module; the registry's existential
 type accepts this because each registration is its own narrow profile
 instance — but verify with typecheck.
 
-#### Task 54 - SPP-W8-02-SPIRITUAL-WEAPON-FAMILY - Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack
+### Task 54 - SPP-W8-02-SPIRITUAL-WEAPON-FAMILY - Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack
 
 Focused MBT: `battle-runtime.mbt.test.ts` and
 `level2-damage-spell-selected-identity.mbt.test.ts`.
 
-#### Task 55 - SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY - Migrate objectContactDamage + objectContactDamageRepeat
+### Task 55 - SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY - Migrate objectContactDamage + objectContactDamageRepeat
 
 Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts` and
 `heat-metal-object-contact.mbt.test.ts`.
 
-#### Task 56 - SPP-W8-04-DANCING-LIGHTS-FAMILY - Migrate dancingLightsCombinedCast + Reposition + SeparateCast
+### Task 56 - SPP-W8-04-DANCING-LIGHTS-FAMILY - Migrate dancingLightsCombinedCast + Reposition + SeparateCast
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 57 - SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION - Migrate mirrorImageHitInterception
+### Task 57 - SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION - Migrate mirrorImageHitInterception
 
 Focused MBT: `mirror-image-hit-interception.mbt.test.ts`.
 
-#### Task 58 - SPP-W8-06-FLAMING-SPHERE - Migrate flamingSphere
+### Task 58 - SPP-W8-06-FLAMING-SPHERE - Migrate flamingSphere
 
 Focused MBT: `flaming-sphere-hazard-ram.mbt.test.ts`.
 
-#### Task 59 - SPP-W8-07-MOONBEAM - Migrate moonbeam
+### Task 59 - SPP-W8-07-MOONBEAM - Migrate moonbeam
 
 Focused MBT: `moonbeam-movable-zone.mbt.test.ts`.
 
-#### Task 60 - SPP-W8-08-FOG-CLOUD-OBSCUREMENT - Migrate fogCloudObscurement
+### Task 60 - SPP-W8-08-FOG-CLOUD-OBSCUREMENT - Migrate fogCloudObscurement
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
-#### Task 61 - SPP-W8-09-GUST-OF-WIND-LINE - Migrate gustOfWindLine
+### Task 61 - SPP-W8-09-GUST-OF-WIND-LINE - Migrate gustOfWindLine
 
 Focused MBT: `gust-of-wind-line-lifecycle.mbt.test.ts`.
 
-#### Task 62 - SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD - Migrate spikeGrowthMovementHazard
+### Task 62 - SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD - Migrate spikeGrowthMovementHazard
 
 Focused MBT: `spike-growth-movement-hazard.mbt.test.ts`.
 
-#### Task 63 - SPP-W8-11-WEB-RESTRAINT-HAZARD - Migrate webRestraintHazard
+### Task 63 - SPP-W8-11-WEB-RESTRAINT-HAZARD - Migrate webRestraintHazard
 
 Focused MBT: `web-restraint-hazard.mbt.test.ts`.
 
-#### Task 64 - SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN - Migrate magicalDarknessPointOrigin
+### Task 64 - SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN - Migrate magicalDarknessPointOrigin
 
 Focused MBT: `magical-darkness-point-origin-lifecycle.mbt.test.ts`.
 
-#### Task 65 - SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION - Migrate antimagicFieldOngoingSpellSuppression
+### Task 65 - SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION - Migrate antimagicFieldOngoingSpellSuppression
 
 Focused MBT: `antimagic-field-ongoing-suppression.mbt.test.ts`. Note:
 this procedure touches the `antimagic-field-suppression.ts` module
 which several other profiles consult. Leave that module alone; only the
 admit/resolve/applyEffect specific to this procedure move.
 
-#### Task 66 - SPP-W8-14-ONGOING-SPELL-END - Migrate ongoingSpellEnd
+### Task 66 - SPP-W8-14-ONGOING-SPELL-END - Migrate ongoingSpellEnd
 
 Focused MBT: `dispel-magic-selected-identity.mbt.test.ts` and
 `dispel-magic-ongoing-spell-ending.mbt.test.ts`.
@@ -710,7 +710,7 @@ data. Each task should run the full focused MBT subset that was
 exercised by the per-profile tasks (parallel runs of the seven
 selected-identity MBTs is reasonable here).
 
-#### Task 67 - SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS - Export Schema building-blocks from battle-codecs.ts
+### Task 67 - SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS - Export Schema building-blocks from battle-codecs.ts
 
 Status: `blocked` on all per-profile tasks complete.
 
@@ -725,7 +725,7 @@ Output: those schemas are `export`-ed (or moved to a sibling
 
 Acceptance: typecheck clean. No behavior change.
 
-#### Task 68 - SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD - Add invocationSchema field to SpellProcedureProfile
+### Task 68 - SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD - Add invocationSchema field to SpellProcedureProfile
 
 Status: `blocked` on Task 67.
 
@@ -738,7 +738,7 @@ battle-codecs.ts in this task) so the type still compiles.
 Acceptance: typecheck clean. damage-reduction and roll-modifier carry
 their own schema.
 
-#### Task 69 - SPP-W9-03-MIGRATE-CODEC-BRANCHES - Move per-profile Schema branches into each profile file
+### Task 69 - SPP-W9-03-MIGRATE-CODEC-BRANCHES - Move per-profile Schema branches into each profile file
 
 Status: `blocked` on Task 68.
 
@@ -757,7 +757,7 @@ Battle-codecs.ts shrinks dramatically.
 Acceptance: typecheck clean. Snapshot codec parity holds (run the full
 MBT subset — at least the 5 selected-identity tests).
 
-#### Task 70 - SPP-W9-04-DERIVE-METAMAGIC-TABLE - Derive metamagic compatibility table from registry
+### Task 70 - SPP-W9-04-DERIVE-METAMAGIC-TABLE - Derive metamagic compatibility table from registry
 
 Status: `blocked` on all per-profile tasks complete.
 
@@ -770,7 +770,7 @@ The hand-maintained table deletes.
 Acceptance: typecheck clean. `quickened-spell-governor.mbt.test.ts` passes
 (it exercises the metamagic dispatch).
 
-#### Task 71 - SPP-W9-05-INVERT-TARGET-LIST-PREDICATE - Invert isTargetListSpellInvocation
+### Task 71 - SPP-W9-05-INVERT-TARGET-LIST-PREDICATE - Invert isTargetListSpellInvocation
 
 Input: `spells-invocation-guards.ts:51` (`isTargetListSpellInvocation`)
 — the 26-clause OR-chain.
@@ -787,12 +787,12 @@ exhaustive throw on an unrecognised procedure).
 
 Acceptance: typecheck clean. Same full MBT subset as task 69.
 
-#### Task 72 - SPP-W9-06-INVERT-READIED-SPELL-LIST - Invert readiedSpellAct list
+### Task 72 - SPP-W9-06-INVERT-READIED-SPELL-LIST - Invert readiedSpellAct list
 
 Same pattern as Task 71 for the
 `readiedSpellAct` procedure list in `spells-discovery.ts:1880`.
 
-#### Task 73 - SPP-W9-07-INVERT-WILLING-TARGET-LISTS - Invert KNOWN_WILLING_TARGET_* consultations
+### Task 73 - SPP-W9-07-INVERT-WILLING-TARGET-LISTS - Invert KNOWN_WILLING_TARGET_* consultations
 
 Input: `spells-targeting.ts:1065,1069` consultations of
 `KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS` and
@@ -802,7 +802,7 @@ Output: replace with
 `registeredSpellProcedureProfile(inv.procedure)?.knownWillingTargetSpellIds.includes(inv.spell.id)`.
 Delete the hand-maintained constants if no other consumers.
 
-#### Task 74 - SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS - Invert spells-resolve-fill-set.ts negative lists
+### Task 74 - SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS - Invert spells-resolve-fill-set.ts negative lists
 
 Input: `spells-resolve-fill-set.ts:787, 959, 971, 988, 1213` — the
 negative-list `invocation.procedure !== "X"` chains.
@@ -812,7 +812,7 @@ own fill set (the negative checks at the top of `resolveDamageReduction`
 and `resolveRollModifier` already do this). If the lists carried
 additional logic, fold into the relevant profile's resolve.
 
-#### Task 75 - SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH - Replace spells-resolve.ts procedure switch with registry iteration
+### Task 75 - SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH - Replace spells-resolve.ts procedure switch with registry iteration
 
 Input: `spells-resolve.ts` — the giant `if (invocation.procedure === "X")
 return resolveX(...)` ladder.
@@ -826,7 +826,7 @@ spells-resolve.ts shrinks dramatically.
 
 Acceptance: typecheck clean, full MBT subset passes.
 
-#### Task 76 - SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH - Replace spells-discovery.ts switches
+### Task 76 - SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH - Replace spells-discovery.ts switches
 
 Input: `spells-discovery.ts` `discoverBattleActs` per-procedure branches,
 and `spellInvocationCastSummary` per-procedure branches.
@@ -834,7 +834,7 @@ and `spellInvocationCastSummary` per-procedure branches.
 Output: each replaced with
 `profile.discoverCastAct(...)` / `profile.castSummary(...)`.
 
-#### Task 77 - SPP-W9-11-CONSOLIDATE-INVOCATION-REF - Replace spells-invocation-ref.ts Match cascade
+### Task 77 - SPP-W9-11-CONSOLIDATE-INVOCATION-REF - Replace spells-invocation-ref.ts Match cascade
 
 Input: `spells-invocation-ref.ts:supportedSpellInvocationRef`.
 
@@ -843,7 +843,7 @@ Output: replace the Match cascade with
 
 ### Wave 10 — Verify and close
 
-#### Task 78 - SPP-W10-01-FULL-SUITE-PARITY-RUN - Run full MBT suite
+### Task 78 - SPP-W10-01-FULL-SUITE-PARITY-RUN - Run full MBT suite
 
 Run every `*.mbt.test.ts` (sequentially per CLAUDE.md "one MBT at a time"
 rule, or in carefully isolated batches). Total budget ~70 tests × ~90s
@@ -853,7 +853,7 @@ report durations.
 Acceptance: 100% pass. If any fails, file as a Wave 9 follow-up before
 declaring done.
 
-#### Task 79 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
+### Task 79 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
 
 Input: `spells-resolve-support-effects.ts`,
 `spells-active-effects.ts` (rollModifier and damageReduction-shaped
@@ -865,7 +865,7 @@ become a thin re-export gets folded into the importer.
 
 Acceptance: typecheck clean. No imports point at deleted files.
 
-#### Task 80 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
+### Task 80 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
 
 Input: registry state at end of Wave 9; original ADR-0001 (forest of QNT
 slices); the directory README.
