@@ -22,6 +22,7 @@ import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./object-light.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
+import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
@@ -46,6 +47,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   conditionImmunityAndTurnStartTemporaryHitPointsProfile,
   creatureSizeChangeProfile,
   levitatedCreatureProfile,
+  scalarBuffProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

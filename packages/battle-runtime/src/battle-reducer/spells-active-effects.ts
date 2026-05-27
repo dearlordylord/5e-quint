@@ -45,16 +45,7 @@ import type {
 } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
-import {
-  applyHitPointMaximumIncrease,
-  applyTemporaryHitPoints,
-  breakBattleConcentration,
-} from "./damage-apply.ts";
-import {
-  battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "./fly-speed-grant-end-fall-cleanup.ts";
-import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
+import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -70,7 +61,6 @@ import {
   type BattleDancingLight,
   type BattleDancingLightList,
   type BattleDancingLightsPlacementValue,
-  type BattleFill,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleIllumination,
   type BattleLightEmitter,
@@ -3032,73 +3022,6 @@ function markedDamageRiderActiveAbilityCheckBehavior(
     ),
     Match.exhaustive,
   );
-}
-
-export function applyScalarBuffSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
-  >,
-  temporaryHitPointsRoll:
-    | Extract<BattleFill, { readonly kind: "rolledDice" }>
-    | undefined,
-): BattleState {
-  const scalarEffect = invocation.effect;
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    if (scalarEffect.kind === "temporaryHitPoints") {
-      const nextTarget =
-        temporaryHitPointsRoll === undefined
-          ? target
-          : applyTemporaryHitPoints(
-              target,
-              scalarBuffTemporaryHitPointsAmount(
-                invocation,
-                temporaryHitPointsRoll,
-              ),
-            );
-      return {
-        ...nextState,
-        combatants: new Map(nextState.combatants).set(targetId, nextTarget),
-      };
-    }
-    if (scalarEffect.kind === "hitPointMaximumIncrease") {
-      const nextTarget = applyHitPointMaximumIncrease(target, {
-        ...scalarEffect.activeEffect,
-        sourceCombatantId: actorId,
-      });
-      return {
-        ...nextState,
-        combatants: new Map(nextState.combatants).set(targetId, nextTarget),
-      };
-    }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === scalarEffect.activeEffect.kind &&
-        effect.sourceSpellId === invocation.spell.id,
-    );
-    const nextTarget = battleCreatureWithSpellActiveEffects(target, [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        ...scalarEffect.activeEffect,
-        sourceCombatantId: actorId,
-      },
-    ]);
-    const applied = {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, nextTarget),
-    };
-    return battleStateWithFlySpeedGrantEndFallCleanupFrames(
-      applied,
-      flySpeedGrantEndFallCleanupFramesForExpiredEffects(targetId, replacing),
-    );
-  }, state);
 }
 
 export function applyJumpMovementReplacementSpellEffect(

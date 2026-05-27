@@ -21,7 +21,6 @@ import type { CharacterBattleMetamagicOptionFact } from "../character-battle-res
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
-  isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
   reactionTriggerLabel,
   type BattleActiveEffect,
@@ -43,7 +42,6 @@ import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   carefulSpellProtectedTargetsHole,
-  scalarBuffInitialHoles,
   commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
   saveGatedConditionHasConditionChoice,
@@ -86,6 +84,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -985,49 +984,8 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
-      if (
-        invocation.procedure === "scalarBuff" &&
-        invocation.targeting.kind === "self"
-      ) {
-        const castActs = [
-          {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: scalarBuffInitialHoles(invocation),
-          },
-        ];
-        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-      }
       if (invocation.procedure === "scalarBuff") {
-        if (!isScalarBuffTargetListInvocation(invocation)) {
-          return [];
-        }
-        const targetHole = targetListSpellUsesTargetListHole(invocation)
-          ? spellTargetListHole(state, actorId, invocation)
-          : spellTargetHole(state, actorId, invocation);
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: spellSubjectTagForInvocation(invocation),
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: invocation.spell.name,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [targetHole],
-                },
-              ];
-        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+        return scalarBuffProfile.discoverCastAct(state, actorId, invocation);
       }
       if (
         invocation.procedure ===
@@ -1358,7 +1316,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "scalarBuff") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return scalarBuffProfile.castSummary(invocation);
   }
   if (invocation.procedure === "selfTransformationMode") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and choose ${invocation.modeChoices.map(selfTransformationModeLabel).join(" or ")}.`;

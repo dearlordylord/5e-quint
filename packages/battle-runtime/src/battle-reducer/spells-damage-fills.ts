@@ -68,7 +68,6 @@ import {
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
   type BattleFill,
-  type BattleHole,
   type BattleHoleId,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
@@ -834,17 +833,6 @@ export function thaumaturgyActiveOneMinuteEffectCountHole(
     maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
     requiresTableSpellEffectCount: true,
   };
-}
-
-export function scalarBuffInitialHoles(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
-  >,
-): readonly BattleHole[] {
-  return invocation.effect.kind === "temporaryHitPoints"
-    ? [spellScalarBuffRollHole(invocation)]
-    : [];
 }
 
 export function spellSavingThrowOutcomeHoleId(

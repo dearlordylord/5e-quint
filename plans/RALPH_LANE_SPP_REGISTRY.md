@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "SPP-W2-16-SCALAR-BUFF",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate scalarBuff profile (multi-shape)"
     },
     {
@@ -854,7 +854,7 @@ Focused MBT: `levitated-creature-lifecycle.mbt.test.ts`.
 
 ### Task 17 - SPP-W2-16-SCALAR-BUFF - Migrate scalarBuff
 
-Status: `ready-for-research`
+Status: `done`
 
 Multi-shape (target-list or self targeting, several effect kinds). Use
 `roll-modifier.ts` as template. Focused MBT:

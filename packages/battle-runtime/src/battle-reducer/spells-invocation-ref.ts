@@ -26,6 +26,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -450,12 +451,9 @@ export function supportedSpellInvocationRef(
         procedure: "saveGatedAttackRollAdvantage" as const,
       }),
     ),
-    Match.when({ procedure: "scalarBuff" }, (buffSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(buffSpell.spell.id),
-      slotLevel: buffSpell.resource.slotLevel,
-      procedure: "scalarBuff" as const,
-    })),
+    Match.when({ procedure: "scalarBuff" }, (buffSpell) =>
+      scalarBuffProfile.invocationRef(buffSpell),
+    ),
     Match.when({ procedure: "rollModifier" }, (modifierSpell) =>
       rollModifierProfile.invocationRef(modifierSpell),
     ),

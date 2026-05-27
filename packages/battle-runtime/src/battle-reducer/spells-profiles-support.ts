@@ -17,7 +17,6 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import { isEffectAtom } from "@dnd/surface/surface/types";
 import type {
   Ability,
   Attachment,
@@ -613,50 +612,6 @@ function expeditiousRetreatDashActiveEffect(
   };
 }
 
-export function supportedPreparedScalarBuffSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = scalarBuffSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const targeting = scalarBuffSpellTargeting(
-      projection.attachment,
-      spell.mechanics.level,
-      slot.spellLevel,
-    );
-    const scalarEffect = scalarBuffSpellEffect(
-      actorId,
-      spell,
-      projection.effect,
-      projection.duration,
-      spell.mechanics.level,
-      slot.spellLevel,
-    );
-    return targeting === null || scalarEffect === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "scalarBuff",
-            spell,
-            actionCost: projection.actionCost,
-            targeting,
-            effect: scalarEffect,
-            rangeFeet: projection.rangeFeet,
-          },
-        ];
-  });
-}
-
 export function supportedPreparedSelfTransformationModeSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -878,59 +833,6 @@ function uniqueDamageTypeChoices(
   }
   const [first, ...rest] = unique;
   return first === undefined ? null : [first, ...rest];
-}
-
-function scalarBuffSpellProjection(spell: SpellRecord): {
-  readonly actionCost: HealingSpellActionCost;
-  readonly rangeFeet: MovementFeet;
-  readonly attachment: Attachment;
-  readonly duration: SpellRecord["mechanics"]["duration"];
-  readonly effect: EffectAtom | OngoingEffect;
-} | null {
-  const actionCost = scalarBuffSpellActionCost(spell.mechanics.castingTime);
-  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
-  if (actionCost === null || rangeFeet === null) {
-    return null;
-  }
-
-  if (spell.mechanics.family === "activation") {
-    const phase = spell.mechanics.phases[0];
-    const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-    return spell.mechanics.phases.length !== 1 ||
-      phase?.kind !== "direct" ||
-      phase.effects?.length !== 1 ||
-      effect === undefined ||
-      !isEffectAtom(effect)
-      ? null
-      : {
-          actionCost,
-          rangeFeet,
-          attachment: phase.attachment,
-          duration: spell.mechanics.duration,
-          effect,
-        };
-  }
-
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-
-  const operation = spell.mechanics.operations[0];
-  return spell.mechanics.initialPhase !== undefined ||
-    spell.mechanics.operations.length !== 1 ||
-    operation === undefined ||
-    operation.trigger.kind !== "passive" ||
-    operation.predicate !== undefined ||
-    operation.targetLimit !== undefined ||
-    operation.usageLimit !== undefined
-    ? null
-    : {
-        actionCost,
-        rangeFeet,
-        attachment: spell.mechanics.attachment,
-        duration: spell.mechanics.duration,
-        effect: operation.effect,
-      };
 }
 
 export function supportedPreparedMirrorImageHitInterceptionSpellProfile(

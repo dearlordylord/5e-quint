@@ -2,11 +2,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
-// Covers healing, scalar buffs, roll modifiers, protection, and damage
-// reduction procedures.
+// Covers healing and remaining support-effect procedures not yet migrated into
+// spell-procedure-profiles.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -38,17 +37,14 @@ import {
   applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
-  applyScalarBuffSpellEffect,
   applySelfTransformationModeEffect,
   spellDamageTypeChoiceHole,
   spellHealingRollHole,
-  spellScalarBuffRollHole,
   selfTransformationModeChoiceHole,
   spellTargetListHole,
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
   validateSpellTargetList,
-  validateScalarBuffTemporaryHitPointsFill,
   validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
 import { spellSaveDcForCaster } from "./attack-resolution.ts";
@@ -58,10 +54,7 @@ import {
 } from "./spells-resolve-resources.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-import {
-  healingSpellTargetSelection,
-  scalarBuffSpellTargetSelection,
-} from "./spells-resolve-target-selection.ts";
+import { healingSpellTargetSelection } from "./spells-resolve-target-selection.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -170,123 +163,6 @@ export function resolvePreparedHealingSpellAct(input: {
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
-}
-
-export function resolveScalarBuffSpellAct(input: {
-  readonly input:
-    | ActionSpellBattleResolutionInput
-    | BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Scalar buff spells use target fills and optional scalar dice roll.",
-    );
-  }
-  const targetSelection = scalarBuffSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  if (
-    input.invocation.effect.kind === "temporaryHitPoints" &&
-    input.fillSet.healingRoll == null
-  ) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellScalarBuffRollHole(input.invocation),
-    ]);
-  }
-  if (
-    input.invocation.effect.kind === "temporaryHitPoints" &&
-    input.fillSet.healingRoll !== undefined
-  ) {
-    const validation = validateScalarBuffTemporaryHitPointsFill(
-      input.fillSet.healingRoll,
-      input.invocation,
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
-    }
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyScalarBuffSpellEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-    input.fillSet.healingRoll,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 export function resolveSelfTransformationModeSpellAct(input: {

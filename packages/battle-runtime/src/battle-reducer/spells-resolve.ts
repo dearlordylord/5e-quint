@@ -248,7 +248,6 @@ export {
   resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
-  resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -271,7 +270,6 @@ import {
   resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
-  resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -318,6 +316,7 @@ import {
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -884,7 +883,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "scalarBuff") {
-    return resolveScalarBuffSpellAct({
+    return scalarBuffProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2836,7 +2835,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "scalarBuff") {
-    return resolveScalarBuffSpellAct({
+    return scalarBuffProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
