@@ -31,7 +31,8 @@ scope:
   [`HIT_POINT_DAMAGE_RUST_DRY_RUN.md`](HIT_POINT_DAMAGE_RUST_DRY_RUN.md).
 
 No `fixture-bound`, `blocked`, or `not-assessed` rows remain in the checked
-generator-readiness queue. This lane still stops before real Rust generation.
+generator-readiness queue. This lane still stops before generator
+implementation or committed generated Rust.
 
 ## Generator-Ready Inputs
 
@@ -58,20 +59,21 @@ bounded replay or trace protocol, selected-identity traces prove authored
 Surface identity reaches runtime admission, and proof-only files support
 algebraic proof rather than implementation semantics.
 
-## Next Lane Needed
+## Next Readiness Work
 
-Before real Rust generation, use the active queue map in
+For generator-readiness maintenance, use the active queue map in
 [`../QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`](../QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints).
-The next concrete Rust step is the scoped manual recovery vertical in
+The next concrete readiness artifact is the scoped manual recovery vertical in
 [`HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md`](HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md):
 map the pure `applyHitPointHealing` transition from
 `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` to a manual
 Rust dry-run artifact while projecting from existing Character Sheet state.
 
-After that dry run is concrete, the generator lane should define the generator
-IR and ABI from `kernel-ir-boundaries.jsonl`, select a single clean vertical,
-and produce generated Rust while keeping TS parity through the existing
-rules-kernel coverage gate.
+This report does not open work to implement a generator, emitter, or committed
+generated Rust. If a future non-readiness effort needs those, it must create a
+separate architecture decision and task plan. The readiness lane stops at
+checked semantic-core rows, blocker-free generator-subset facts, manual dry-run
+evidence where useful, and the existing `kernel-ir-boundaries.jsonl` inventory.
 
 Authored catalog breadth remains out of scope for generator readiness. Future
 work should continue to use support profiles and typed procedure facts rather

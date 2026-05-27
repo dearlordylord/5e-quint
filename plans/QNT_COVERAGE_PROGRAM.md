@@ -99,6 +99,10 @@ Active generator and Rust queues:
 - No active generator-readiness blocker queue. `generator-readiness.jsonl`
   currently has 69 rows, all `generation-subset-clean`, with no `blockedBy` or
   `followUpTaskIds` entries.
+- Generator implementation is not an active project concern in this plan. A
+  golden generator-readiness state means the checked QNT inputs are classified,
+  blocker-free, and boundary-mapped for a future consumer; it does not require
+  implementing an emitter or committing generated Rust.
 - The current scoped manual Rust recovery evidence is
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`.
 - Optional battle composite-slice deepening candidates are listed in
