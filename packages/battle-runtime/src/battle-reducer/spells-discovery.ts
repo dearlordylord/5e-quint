@@ -77,6 +77,7 @@ import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/co
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
+import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -987,6 +988,13 @@ export function discoverSupportedSpellInvocations(
       if (invocation.procedure === "scalarBuff") {
         return scalarBuffProfile.discoverCastAct(state, actorId, invocation);
       }
+      if (invocation.procedure === "directHitPointRestoration") {
+        return directHitPointRestorationProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
         invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints"
@@ -1029,10 +1037,7 @@ export function discoverSupportedSpellInvocations(
       const targetHole =
         invocation.procedure === "repeatedDamageAllocation"
           ? spellTargetAllocationHole(state, actorId, invocation)
-          : invocation.procedure === "directHitPointRestoration" &&
-              targetListSpellUsesTargetListHole(invocation)
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+          : spellTargetHole(state, actorId, invocation);
       const turnResourceAvailableForActionCast =
         naturalTurnResourceAvailable || quickenedTurnResourceAvailable;
       const castActs =
@@ -1313,7 +1318,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
   if (invocation.procedure === "directHitPointRestoration") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return directHitPointRestorationProfile.castSummary(invocation);
   }
   if (invocation.procedure === "scalarBuff") {
     return scalarBuffProfile.castSummary(invocation);

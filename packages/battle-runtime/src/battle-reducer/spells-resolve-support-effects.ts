@@ -2,9 +2,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
-// Covers healing and remaining support-effect procedures not yet migrated into
+// Covers remaining support-effect procedures not yet migrated into
 // spell-procedure-profiles.
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
@@ -26,12 +25,10 @@ import {
   type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
-import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
+import { breakBattleConcentration } from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { spellHealingAmount } from "./spell-effects.ts";
 import {
   applyDirectConditionSpellEffects,
   applyDragonsBreathInitialSpellEffect,
@@ -39,13 +36,11 @@ import {
   applyMirrorImageHitInterceptionSpellEffect,
   applySelfTransformationModeEffect,
   spellDamageTypeChoiceHole,
-  spellHealingRollHole,
   selfTransformationModeChoiceHole,
   spellTargetListHole,
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
   validateSpellTargetList,
-  validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
 import { spellSaveDcForCaster } from "./attack-resolution.ts";
 import {
@@ -54,116 +49,7 @@ import {
 } from "./spells-resolve-resources.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-import { healingSpellTargetSelection } from "./spells-resolve-target-selection.ts";
-
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
-
-export function resolvePreparedHealingSpellAct(input: {
-  readonly input:
-    | ActionSpellBattleResolutionInput
-    | BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directHitPointRestoration" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Hit Point restoration spells use target fills and one healing roll.",
-    );
-  }
-  const targetSelection = healingSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  if (input.fillSet.healingRoll == null) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellHealingRollHole(input.invocation),
-    ]);
-  }
-  const healingValidation = validateSpellHealingFill(
-    input.fillSet.healingRoll,
-    input.invocation,
-  );
-  if (healingValidation !== null) {
-    return invalidResult(input.input.state, "invalidFill", healingValidation);
-  }
-  const healingAmount = spellHealingAmount(
-    input.invocation,
-    input.fillSet.healingRoll,
-  );
-  const healed = targetSelection.targetIds.reduce((state, targetId) => {
-    const target = state.combatants.get(targetId);
-    return target === undefined
-      ? state
-      : {
-          ...state,
-          combatants: new Map(state.combatants).set(
-            targetId,
-            applyHpHealing(target, healingAmount),
-          ),
-        };
-  }, input.input.state);
-  return spendSpellCastResources({
-    state: healed,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
-}
 
 export function resolveSelfTransformationModeSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;

@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "SPP-W3-01-DIRECT-HP-RESTORATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate directHitPointRestoration profile (bonus-action)"
     },
     {
@@ -866,7 +866,7 @@ Each task depends on SPP-W1-01.
 
 ### Task 18 - SPP-W3-01-DIRECT-HP-RESTORATION - Migrate directHitPointRestoration
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `quickened-spell-governor.mbt.test.ts` (covers
 directHitPointRestoration via Healing Word). May also need scope from

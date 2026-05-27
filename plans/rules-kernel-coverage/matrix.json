@@ -235,7 +235,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],

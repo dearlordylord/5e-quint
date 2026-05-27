@@ -108,7 +108,6 @@ Discovers what acts a subject can take. Anchor:
 - 16953 `resolveHeldLightSpellAct` (67)
 - 17020 `resolveWeaponDamageRiderSpellAct` (88)
 - 17108 `resolveMarkedDamageRiderSpellAct` (154)
-- 17262 `resolvePreparedHealingSpellAct` (125)
 - 17387 `resolveScalarBuffSpellAct` (131)
 - 17518 `resolveRollModifierSpellAct` (111)
 - 17629 `resolveCreatureTypeProtectionSpellAct` (84)

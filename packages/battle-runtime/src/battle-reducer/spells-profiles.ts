@@ -162,6 +162,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
+import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
@@ -177,7 +178,6 @@ import {
   supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedFeatherFallMitigationSpellProfile,
   supportedPreparedJumpMovementReplacementSpellProfile,
-  supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
@@ -615,11 +615,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedHealingSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-      ),
+      directHitPointRestorationProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedShieldReactionSpellProfile(

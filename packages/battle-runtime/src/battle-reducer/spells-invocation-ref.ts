@@ -18,6 +18,7 @@ import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/co
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
+import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -502,12 +503,9 @@ export function supportedSpellInvocationRef(
       slotLevel: reactionSpell.resource.slotLevel,
       procedure: "shieldReaction" as const,
     })),
-    Match.when({ procedure: "directHitPointRestoration" }, (healing) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(healing.spell.id),
-      slotLevel: healing.resource.slotLevel,
-      procedure: "directHitPointRestoration" as const,
-    })),
+    Match.when({ procedure: "directHitPointRestoration" }, (healing) =>
+      directHitPointRestorationProfile.invocationRef(healing),
+    ),
     Match.exhaustive,
   );
 }

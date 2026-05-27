@@ -100,6 +100,7 @@ import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/co
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
+import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -247,7 +248,6 @@ export {
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
-  resolvePreparedHealingSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -269,7 +269,6 @@ import {
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
-  resolvePreparedHealingSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -874,7 +873,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "directHitPointRestoration") {
-    return resolvePreparedHealingSpellAct({
+    return directHitPointRestorationProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2916,7 +2915,7 @@ export function resolveBonusActionSpellAct(
       fillSet,
     });
   }
-  return resolvePreparedHealingSpellAct({
+  return directHitPointRestorationProfile.resolve({
     input: { ...input, state: castingState },
     actorId: subject.actorId,
     invocation,
