@@ -98,6 +98,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
@@ -236,7 +237,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
@@ -275,7 +275,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
@@ -976,7 +975,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "seeInvisibleObserverSight") {
-    return resolveSeeInvisibleObserverSightSpellAct({
+    return seeInvisibleObserverSightProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

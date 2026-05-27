@@ -357,8 +357,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/see-invisible-observer-sight.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],

@@ -80,6 +80,7 @@ import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import {
   dancingLightsFromEffect,
@@ -593,19 +594,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "seeInvisibleObserverSight") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return seeInvisibleObserverSightProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "mirrorImageHitInterception") {
         return [
@@ -1432,7 +1425,7 @@ export function spellInvocationCastSummary(
     return blurAttackRollDefenseProfile.castSummary(invocation);
   }
   if (invocation.procedure === "seeInvisibleObserverSight") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return seeInvisibleObserverSightProfile.castSummary(invocation);
   }
   if (invocation.procedure === "mirrorImageHitInterception") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

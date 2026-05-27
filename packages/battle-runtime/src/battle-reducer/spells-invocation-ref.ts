@@ -19,6 +19,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 
 export function supportedSpellInvocationRef(
@@ -386,12 +387,7 @@ export function supportedSpellInvocationRef(
     return blurAttackRollDefenseProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "seeInvisibleObserverSight") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "seeInvisibleObserverSight",
-    };
+    return seeInvisibleObserverSightProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "mirrorImageHitInterception") {
     return {

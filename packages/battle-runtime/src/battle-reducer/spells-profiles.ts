@@ -159,6 +159,7 @@ import {
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import {
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
@@ -179,7 +180,6 @@ import {
   supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
-  supportedPreparedSeeInvisibleObserverSightSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
@@ -452,11 +452,11 @@ export function supportedSpellActs(
       }),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSeeInvisibleObserverSightSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      seeInvisibleObserverSightProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMirrorImageHitInterceptionSpellProfile(

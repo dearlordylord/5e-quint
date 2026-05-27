@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate seeInvisibleObserverSight profile (prepared template)"
     },
     {
