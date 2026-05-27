@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 414,
-      "numerator": 218,
-      "percent": "52.7%"
+      "denominator": 416,
+      "numerator": 220,
+      "percent": "52.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 499,
-      "numerator": 263,
-      "percent": "52.7%"
+      "denominator": 501,
+      "numerator": 265,
+      "percent": "52.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 264
+      "value": 266
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 264,
-      "numerator": 264,
+      "denominator": 266,
+      "numerator": 266,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 146,
-      "numerator": 146,
+      "denominator": 147,
+      "numerator": 147,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 147,
+      "denominator": 148,
       "numerator": 144,
-      "percent": "98%"
+      "percent": "97.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 219,
-      "numerator": 147,
-      "percent": "67.1%"
+      "denominator": 221,
+      "numerator": 148,
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -2733,7 +2733,8 @@
         "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
         "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
         "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-        "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+        "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+        "L13UG-A17"
       ],
       "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
       "verificationOwners": [
@@ -4024,6 +4025,20 @@
         "L13UG-A16"
       ],
       "title": "Unit feature projects Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.bonus-action-delegated-standard-actions",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+      "taskRefs": [
+        "L13UG-A17"
+      ],
+      "title": "Unit feature admits delegated Bonus Action standard-action permissions",
       "verificationOwners": []
     }
   ],
@@ -6279,8 +6294,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 146,
-          "numerator": 146,
+          "denominator": 147,
+          "numerator": 147,
           "percent": "100%"
         }
       },
@@ -8843,6 +8858,26 @@
             }
           ],
           "unitId": "orc_relentless_endurance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+                }
+              ],
+              "profileId": "character-creation.class-feature-resource-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_channel_divinity"
         },
         {
           "joinStatus": "covered",
@@ -12943,6 +12978,15 @@
         "unit-feature.enemy-zero-hit-point-temporary-hit-points"
       ],
       "taskId": "L13UG-A16"
+    },
+    {
+      "claimKind": "admission-projection",
+      "note": "Focused Surface, Character Creation, and battle-runtime admission tests cover Paladin Channel Divinity as a retained level-3 class resource projection and Rogue Fast Hands as a delegated Bonus Action action-economy support profile. Divine Sense execution, Sleight of Hand checks, Utilize effects, and magic-item activation remain delegated to their existing owners rather than completed runtime parity.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection",
+        "unit-feature.bonus-action-delegated-standard-actions"
+      ],
+      "taskId": "L13UG-A17"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13011,17 +13055,17 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 70,
-        "installedUnitDenominator": 70,
+        "executableUnitDenominator": 72,
+        "installedUnitDenominator": 72,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 95,
-        "profileSubsetSupportedUnits": 20,
+        "profileFactDenominator": 97,
+        "profileSubsetSupportedUnits": 21,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 61,
-        "supportedProfileUnits": 48,
+        "supportedProfileUnits": 49,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -15007,7 +15051,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -15591,7 +15636,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -15902,7 +15948,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -16796,6 +16843,86 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "table/tool-check owner",
+              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile."
+            },
+            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, and success/failure consequences."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "Utilize action owner",
+              "reason": "Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary."
+            },
+            "mechanic": "Execute the object interaction effects of the Utilize action."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "magic-item activation owner",
+              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
+            },
+            "mechanic": "Activate magic items that require a Magic action."
+          }
+        ],
+        "profileIds": [
+          "unit-feature.bonus-action-delegated-standard-actions"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
+          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
+          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A17"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.bonus-action-delegated-standard-actions",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+          "taskRefs": [
+            "L13UG-A17"
+          ],
+          "title": "Unit feature admits delegated Bonus Action standard-action permissions",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
+      "unitId": "rogue_fast_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "character-sheet.linked-speed-grant-projection",
           "character-sheet.jump-distance-ability-substitution"
@@ -17094,7 +17221,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -18537,6 +18665,79 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Paladin later-level resource scaling owner",
+              "reason": "Task L13UG-A17 promotes only the level-3 two-use resource facts; the remaining Channel Divinity use increase occurs after level 3."
+            },
+            "mechanic": "Paladin level 11 Channel Divinity use scaling to three uses."
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-resource-projection"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic projection owner",
+          "reason": "Paladin Channel Divinity support is a retained CharacterBuild resource projection. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface resource facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Paladin Channel Divinity is installed as a level-3 Surface class-feature grant on class_paladin",
+          "Surface resource_container represents the shared Channel Divinity use-count pool with a fixed level-3 cap of 2 uses",
+          "Surface resetCadence represents regaining one expended use on a Short Rest and all expended uses on a Long Rest",
+          "Surface optionSet records Divine Sense as the initial resource-use option and records that option saving throws use this class's Spellcasting spell save DC",
+          "Character Creation admits supported Paladin level-3 progression and projects the Channel Divinity resource into CharacterBuild resources without duplicating class progression, Divine Sense option execution state, or class table facts"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A17"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container and resource-pool records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option, shape-shifted form, Sorcery Point conversion, and Metamagic execution remain owned by selected option or narrower runtime profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json",
+      "unitId": "paladin_channel_divinity"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

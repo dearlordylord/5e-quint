@@ -5198,6 +5198,89 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("installs Paladin Channel Divinity as a level-3 resource container", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_paladin")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 3, unitId: "paladin_channel_divinity" },
+      ]),
+      kind: "class",
+    });
+    expect(result.catalog.requireUnit("paladin_channel_divinity")).toMatchObject(
+      {
+        acquiredAtLevel: 3,
+        className: "paladin",
+        kind: "class_feature",
+        mechanics: {
+          effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
+          family: "resource_container",
+          optionSet: {
+            choiceKey: "paladin_channel_divinity_effect",
+            initialOptions: [
+              { id: "paladin_divine_sense", displayName: "Divine Sense" },
+            ],
+            timing: "resource_use",
+          },
+          resetCadence: {
+            kind: "partial_short_full_long",
+            shortRestRefill: 1,
+          },
+          resource: {
+            cap: {
+              kind: "fixed",
+              uses: 2,
+            },
+            kind: "use_count",
+          },
+        },
+      },
+    );
+  });
+
+  test("installs Rogue Fast Hands as delegated Bonus Action options", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("subclass_rogue_thief")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 3, unitId: "rogue_fast_hands" },
+      ]),
+      kind: "subclass",
+    });
+    expect(result.catalog.requireUnit("rogue_fast_hands")).toMatchObject({
+      acquiredAtLevel: 3,
+      className: "rogue",
+      kind: "class_feature",
+      mechanics: {
+        activationCost: { kind: "bonus_action" },
+        family: "bonus_action_delegated_standard_actions",
+        objectUse: {
+          actions: [
+            { action: "utilize" },
+            {
+              action: "magic",
+              restrictedTo: "magic_item_requires_magic_action",
+            },
+          ],
+        },
+        sleightOfHand: {
+          abilityCheck: { ability: "dex", skill: "sleight_of_hand" },
+          operations: [
+            "pick_lock_with_thieves_tools",
+            "disarm_trap_with_thieves_tools",
+            "pick_pocket",
+          ],
+        },
+      },
+    });
+  });
+
   test("installs Ranger Deft Explorer as level-2 Expertise and language choices", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

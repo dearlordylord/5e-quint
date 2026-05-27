@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L13UG-A17-L3-RESOURCE-ACTION-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing resource and action level-3 feature Units"
     },
     {
@@ -453,7 +453,7 @@ runtime support rather than authored-identity dispatch.
 
 ### Task 17 - L13UG-A17-L3-RESOURCE-ACTION-UNITS - Admit missing resource and action level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `paladin_channel_divinity` and `rogue_fast_hands`, and the local SRD passages

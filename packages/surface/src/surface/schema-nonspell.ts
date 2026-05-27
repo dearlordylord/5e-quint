@@ -1108,6 +1108,35 @@ export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema = strictStruct({
   }),
 });
 
+export const BonusActionDelegatedStandardActionsMechanicsSchema = strictStruct({
+  family: Schema.Literal("bonus_action_delegated_standard_actions"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+  sleightOfHand: strictStruct({
+    abilityCheck: strictStruct({
+      ability: Schema.Literal("dex"),
+      skill: Schema.Literal("sleight_of_hand"),
+    }),
+    operations: Schema.Tuple(
+      Schema.Literal("pick_lock_with_thieves_tools"),
+      Schema.Literal("disarm_trap_with_thieves_tools"),
+      Schema.Literal("pick_pocket"),
+    ),
+  }),
+  objectUse: strictStruct({
+    actions: Schema.Tuple(
+      strictStruct({
+        action: Schema.Literal("utilize"),
+      }),
+      strictStruct({
+        action: Schema.Literal("magic"),
+        restrictedTo: Schema.Literal("magic_item_requires_magic_action"),
+      }),
+    ),
+  }),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -1150,6 +1179,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   MagicActionHealingPoolMechanicsSchema,
   MagicActionAreaSaveDamageHealingMechanicsSchema,
   EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
+  BonusActionDelegatedStandardActionsMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -1159,6 +1189,7 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureResourceContainerMechanicsSchema,
   ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
+  BonusActionDelegatedStandardActionsMechanicsSchema,
 );
 
 export const ClericClassFeatureMechanicsSchema = Schema.Union(

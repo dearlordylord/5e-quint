@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -96,6 +96,8 @@ export const MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE =
   "magicActionAreaSaveDamageHealing";
 export const ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "enemyZeroHitPointTemporaryHitPoints";
+export const BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE =
+  "bonusActionDelegatedStandardActions";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
@@ -163,6 +165,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -394,6 +397,32 @@ export type BattleAlternateActionCostSupportProfile = {
   };
   readonly to: { readonly kind: "bonusAction" };
 };
+export type BattleBonusActionDelegatedStandardActionsSupportProfile = {
+  readonly kind: typeof BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE;
+  readonly activationCost: { readonly kind: "bonusAction" };
+  readonly sleightOfHand: {
+    readonly abilityCheck: {
+      readonly ability: "dex";
+      readonly skill: "sleight_of_hand";
+    };
+    readonly operations: readonly [
+      "pick_lock_with_thieves_tools",
+      "disarm_trap_with_thieves_tools",
+      "pick_pocket",
+    ];
+  };
+  readonly objectUse: {
+    readonly actions: readonly [
+      {
+        readonly action: "utilize";
+      },
+      {
+        readonly action: "magic";
+        readonly restrictedTo: "magicItemRequiresMagicAction";
+      },
+    ];
+  };
+};
 export type BattleMonkFocusBattleOptionsSupportProfile = {
   readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
   readonly flurryOfBlows: {
@@ -434,6 +463,7 @@ export type SupportedDruidWildShapeKnownFormProfile =
   };
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
+  | BattleBonusActionDelegatedStandardActionsSupportProfile
   | BattleMonkFocusBattleOptionsSupportProfile
   | BattlePassiveRangedAttackRollBonusSupportProfile
   | BattleInitiativeProficiencyAndSwapSupportProfile
@@ -452,6 +482,7 @@ export type BattleUnitSupportProfile =
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
+      | "bonusActionDelegatedStandardActions"
       | "monkFocusBattleOptions"
       | "passiveRangedAttackRollBonus"
       | "initiativeProficiencyAndSwap"
@@ -515,6 +546,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (bonusActionStandardActionSupport !== null) {
     supportProfiles.push(bonusActionStandardActionSupport);
+  }
+
+  const bonusActionDelegatedStandardActionsSupport =
+    battleBonusActionDelegatedStandardActionsSupportForUnit(input.unit);
+  if (bonusActionDelegatedStandardActionsSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Bonus Action delegated standard-action Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (bonusActionDelegatedStandardActionsSupport !== null) {
+    supportProfiles.push(bonusActionDelegatedStandardActionsSupport);
   }
 
   if (isClassicNonSrdMechanicsUnit(input.unit)) {
@@ -1361,6 +1403,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "enemyZeroHitPointTemporaryHitPoints";
       readonly unit: UnitRecord;
       readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
+    }
+  | {
+      readonly kind: "bonusActionDelegatedStandardActions";
+      readonly unit: UnitRecord;
+      readonly actionEconomy: BattleBonusActionDelegatedStandardActionsSupportProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -1451,6 +1498,75 @@ export function battleBonusActionStandardActionSupportForUnit(
     },
     to: { kind: "bonusAction" },
   };
+}
+
+type BattleBonusActionDelegatedStandardActionsSupport =
+  | BattleBonusActionDelegatedStandardActionsSupportProfile
+  | "unsupported"
+  | null;
+
+export function battleBonusActionDelegatedStandardActionsSupportForUnit(
+  unit: BattleUnitSupportSource,
+): BattleBonusActionDelegatedStandardActionsSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "bonus_action_delegated_standard_actions"
+  ) {
+    return null;
+  }
+
+  const { sleightOfHand, objectUse } = unit.mechanics;
+  if (
+    unit.mechanics.activationCost.kind !== "bonus_action" ||
+    sleightOfHand.abilityCheck.ability !== "dex" ||
+    sleightOfHand.abilityCheck.skill !== "sleight_of_hand" ||
+    !tuple3Matches(sleightOfHand.operations, [
+      "pick_lock_with_thieves_tools",
+      "disarm_trap_with_thieves_tools",
+      "pick_pocket",
+    ]) ||
+    !delegatedObjectUseActionsMatch(objectUse.actions)
+  ) {
+    return "unsupported";
+  }
+
+  return {
+    kind: BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
+    activationCost: { kind: "bonusAction" },
+    sleightOfHand: {
+      abilityCheck: { ability: "dex", skill: "sleight_of_hand" },
+      operations: [
+        "pick_lock_with_thieves_tools",
+        "disarm_trap_with_thieves_tools",
+        "pick_pocket",
+      ],
+    },
+    objectUse: {
+      actions: [
+        { action: "utilize" },
+        {
+          action: "magic",
+          restrictedTo: "magicItemRequiresMagicAction",
+        },
+      ],
+    },
+  };
+}
+
+function delegatedObjectUseActionsMatch(
+  actions: readonly {
+    readonly action: StandardActionKind;
+    readonly restrictedTo?: string;
+  }[],
+): boolean {
+  const [utilize, magic, ...extra] = actions;
+  return (
+    extra.length === 0 &&
+    utilize?.action === "utilize" &&
+    utilize.restrictedTo === undefined &&
+    magic?.action === "magic" &&
+    magic.restrictedTo === "magic_item_requires_magic_action"
+  );
 }
 
 function alternateActionCostActions(
@@ -1623,6 +1739,19 @@ function tupleMatches<T extends readonly [string, string]>(
     actual.length === 2 &&
     actual[0] === expected[0] &&
     actual[1] === expected[1]
+  );
+}
+
+function tuple3Matches<T extends readonly [string, string, string]>(
+  actual: unknown,
+  expected: T,
+): actual is T {
+  return (
+    Array.isArray(actual) &&
+    actual.length === 3 &&
+    actual[0] === expected[0] &&
+    actual[1] === expected[1] &&
+    actual[2] === expected[2]
   );
 }
 
@@ -3337,8 +3466,22 @@ export function parseSupportedUnitFeatureProfile(
     spellSlotHealingModifierProfileForUnit(unit) ??
     magicActionHealingPoolProfileForUnit(unit) ??
     magicActionAreaSaveDamageHealingProfileForUnit(unit) ??
-    enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit)
+    enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit) ??
+    bonusActionDelegatedStandardActionsProfileForUnit(unit)
   );
+}
+
+function bonusActionDelegatedStandardActionsProfileForUnit(
+  unit: UnitRecord,
+): SupportedUnitFeatureProfile | null {
+  const support = battleBonusActionDelegatedStandardActionsSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : {
+        kind: BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
+        unit,
+        actionEconomy: support,
+      };
 }
 
 export function battleBardicInspirationGrantSupportForUnit(

@@ -230,6 +230,19 @@ export function traceClassFeatureMechanics(
       });
       return [tempHpId];
     }
+    case "bonus_action_delegated_standard_actions": {
+      const actionId = ids("delegated-bonus-actions");
+      nodes.push({
+        id: actionId,
+        category: "procedure",
+        atomKind: "bonus_action_delegated_standard_actions",
+        label:
+          `bonus_action_delegated_standard_actions\n${m.activationCost.kind}\n` +
+          `${m.sleightOfHand.abilityCheck.ability} ${m.sleightOfHand.abilityCheck.skill}\n` +
+          `${m.objectUse.actions.map((action) => action.action).join(" | ")}`,
+      });
+      return [actionId];
+    }
     case "initiative_focus_recovery":
       return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
     case "composite":

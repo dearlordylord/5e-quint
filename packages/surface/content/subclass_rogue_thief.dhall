@@ -3,7 +3,9 @@ let thief =
       , description =
           "The Thief Rogue subclass choice. Subclass feature Units are modeled separately from the choice boundary."
       , featureGrants =
-          [ { level = 3, unitId = "rogue_second_story_work" } ]
+          [ { level = 3, unitId = "rogue_fast_hands" }
+          , { level = 3, unitId = "rogue_second_story_work" }
+          ]
       , id = "subclass_rogue_thief"
       , kind = "subclass"
       , name = "Thief"

@@ -158,6 +158,7 @@ import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import elfDarkvisionInput from "../../content/darkvision_elf.json";
+import paladinChannelDivinityInput from "../../content/paladin_channel_divinity.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinFightingStyleInput from "../../content/paladin_fighting_style.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
@@ -209,6 +210,7 @@ import rayOfSicknessInput from "../../content/ray_of_sickness.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
+import rogueFastHandsInput from "../../content/rogue_fast_hands.json";
 import rogueSecondStoryWorkInput from "../../content/rogue_second_story_work.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
@@ -454,6 +456,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rogueEvasionInput,
     rogueUncannyDodgeInput,
     rogueExpertiseInput,
+    rogueFastHandsInput,
     rogueSecondStoryWorkInput,
     rogueSneakAttackInput,
     rogueThievesCantInput,
@@ -479,6 +482,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featMagicInitiateClericInput,
     featMagicInitiateWizardInput,
     featSavageAttackerInput,
+    paladinChannelDivinityInput,
     paladinLayOnHandsInput,
     paladinFightingStyleInput,
     paladinPaladinsSmiteInput,

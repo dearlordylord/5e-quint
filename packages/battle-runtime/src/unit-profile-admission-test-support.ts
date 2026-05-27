@@ -162,6 +162,7 @@ import {
 } from "./index.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
+  battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit,
   battleFailedAbilityCheckResourceBoostSupportForUnit,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
@@ -170,6 +171,7 @@ import {
   battleMonkFocusBattleOptionsSupportForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   battleSpellSlotHealingModifierSupportForUnit,
+  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -206,6 +208,7 @@ export {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleAreaId,
   battleBardicInspirationGrantSupportForUnit,
+  battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleCombatantSide,
   battleCreatureCanBreatheUnderwater,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -232,6 +235,7 @@ export {
   battleUnitRefWithSupportProfiles,
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
+  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   breakBattleConcentration,

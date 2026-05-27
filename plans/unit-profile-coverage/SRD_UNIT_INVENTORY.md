@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 580/607 (95.6%)
+- Accepted: 582/607 (95.9%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 419
+- accepted: 421
 - accepted-no-battle-effect: 161
 - battle-runtime-required: 1
-- owner-evidence-required: 15
+- owner-evidence-required: 13
 - partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 38/51 (74.5%)
+- Accepted: 40/51 (78.4%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 24
+- accepted: 26
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 13
+- owner-evidence-required: 11
 
 ### Spell-Level-3 Battle Readiness
 
@@ -95,10 +95,10 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 24
+- catalog-installed-owner-evidence-present: 26
 - catalog-installed-owner-evidence-required: 5
 - catalog-only/dead-for-now: 2
-- level-3-follow-up-required: 8
+- level-3-follow-up-required: 6
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Category
@@ -453,7 +453,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Monk Open Hand Technique|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.|.references/srd-5.2.1/Classes/Monk.md:192|
 |Monk level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:34|
 |Monk Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:108|
-|Paladin Channel Divinity|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Paladin Channel Divinity as a split between a two-use Short Rest/Long Rest resource that later Paladin effects spend, with Paladin level 11 use scaling deferred as later-level work, and a Divine Sense detection closure for creature-type, consecrated-place, and desecrated-object knowledge outside promoted battle state.|.references/srd-5.2.1/Classes/Paladin.md:100|
+|Paladin Channel Divinity|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:100|
 |Paladin Sacred Weapon|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.|.references/srd-5.2.1/Classes/Paladin.md:263|
 |Paladin level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:37|
 |Paladin Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:118|
@@ -462,7 +462,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Ranger Hunter's Prey|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.|.references/srd-5.2.1/Classes/Ranger.md:243|
 |Ranger level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:37|
 |Ranger Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:102|
-|Rogue Fast Hands|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Fast Hands as a split between a Bonus Action action-economy permission, runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action support, and Magic Item Magic Action support that reuses item-owned activation facts instead of adding Thief-specific item execution state.|.references/srd-5.2.1/Classes/Rogue.md:159|
+|Rogue Fast Hands|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: table/tool-check owner; Utilize action owner; magic-item activation owner|Unit catalog/admission: catalog evidence; battle-runtime admission plus closed delegated owners: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:159|
 |Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:167|
 |Rogue Steady Aim|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.|.references/srd-5.2.1/Classes/Rogue.md:89|
 |Rogue level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:38|

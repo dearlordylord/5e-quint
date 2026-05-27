@@ -2506,6 +2506,40 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Rogue Fast Hands",
+          "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 166,
+            "lineStart": 159,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
+      "unitId": "rogue_fast_hands"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "character-fact-and-runtime-detached-split"
@@ -3170,7 +3204,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 124,
+      "count": 125,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3251,6 +3285,7 @@
         "monk_unarmored_defense",
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
+        "paladin_channel_divinity",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
@@ -3377,7 +3412,7 @@
       ]
     },
     {
-      "count": 5,
+      "count": 6,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3385,7 +3420,8 @@
         "continual_flame",
         "enlarge_reduce",
         "levitate",
-        "prayer_of_healing"
+        "prayer_of_healing",
+        "rogue_fast_hands"
       ]
     },
     {
@@ -3411,13 +3447,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 580,
-      "percent": "95.6%",
+      "numerator": 582,
+      "percent": "95.9%",
       "rowsByStatus": {
-        "accepted": 419,
+        "accepted": 421,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 15,
+        "owner-evidence-required": 13,
         "partial-battle-runtime": 11
       }
     },
@@ -3432,18 +3468,18 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 123,
-      "numerator": 123,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 189,
-      "numerator": 124,
-      "percent": "65.6%"
+      "denominator": 191,
+      "numerator": 125,
+      "percent": "65.4%"
     },
     "strictTargetClosure": {
-      "denominator": 189,
-      "numerator": 189,
+      "denominator": 191,
+      "numerator": 191,
       "percent": "100%"
     }
   },
@@ -3917,24 +3953,6 @@
         "sourceRows": [
           {
             "category": "class feature",
-            "concept": "Paladin Channel Divinity",
-            "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 117,
-              "lineStart": 100,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          }
-        ],
-        "unitId": "paladin_channel_divinity"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
             "concept": "Paladin Sacred Weapon",
             "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
             "levelBand": "level-3",
@@ -4081,24 +4099,6 @@
           }
         ],
         "unitId": "ranger_hunters_prey"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Rogue Fast Hands",
-            "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 166,
-              "lineStart": 159,
-              "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
-          }
-        ],
-        "unitId": "rogue_fast_hands"
       },
       {
         "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
@@ -6299,8 +6299,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 123,
-        "numerator": 123,
+        "denominator": 124,
+        "numerator": 124,
         "percent": "100%"
       }
     },
@@ -8482,6 +8482,26 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+              }
+            ],
+            "profileId": "character-creation.class-feature-resource-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "paladin_channel_divinity"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -9811,16 +9831,16 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 161,
+      "numerator": 161,
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 7,
+      "not-applicable": 9,
       "witness-present": 152
     },
     "rowsByStatus": {
-      "not-applicable": 7,
+      "not-applicable": 9,
       "not-required": 30,
       "witness-present": 152
     }
@@ -10223,8 +10243,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 3",
         "metrics": {
-          "denominator": 44,
-          "numerator": 44,
+          "denominator": 45,
+          "numerator": 45,
           "percent": "100%"
         },
         "rows": [
@@ -10473,6 +10493,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-3",
+            "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json",
+            "status": "installed",
+            "unitId": "paladin_channel_divinity"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_ranger",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -10626,7 +10655,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 44
+          "installed": 45
         }
       },
       {
@@ -10703,8 +10732,8 @@
       }
     ],
     "metrics": {
-      "denominator": 77,
-      "numerator": 77,
+      "denominator": 78,
+      "numerator": 78,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -10712,8 +10741,8 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 35,
-      "supported-profile": 124,
+      "profile-subset-supported": 36,
+      "supported-profile": 125,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
@@ -10721,11 +10750,11 @@
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
-      "closed-outside-battle-runtime-boundary": 5,
+      "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 124
+      "supported-profile": 125
     },
-    "nonSupportedFrontier": 65,
-    "strictDenominator": 189
+    "nonSupportedFrontier": 66,
+    "strictDenominator": 191
   }
 }

@@ -87,6 +87,12 @@ export const clericPreserveLifeUnitId = "cleric_preserve_life";
 
 export const subclassClericLifeDomainUnitId = "subclass_cleric_life_domain";
 
+export const paladinChannelDivinityUnitId = "paladin_channel_divinity";
+
+export const rogueFastHandsUnitId = "rogue_fast_hands";
+
+export const subclassRogueThiefUnitId = "subclass_rogue_thief";
+
 export const druidLandsAidUnitId = "druid_lands_aid";
 
 export const subclassDruidCircleOfTheLandUnitId =
