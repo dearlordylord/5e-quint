@@ -14,6 +14,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 
@@ -443,11 +444,9 @@ export function supportedSpellInvocationRef(
     };
   }
   return Match.value(invocation).pipe(
-    Match.when({ procedure: "heldLight" }, (cantrip) => ({
-      tag: "cantrip" as const,
-      spellId: spellId(cantrip.spell.id),
-      procedure: "heldLight" as const,
-    })),
+    Match.when({ procedure: "heldLight" }, (cantrip) =>
+      heldLightProfile.invocationRef(cantrip),
+    ),
     Match.when({ procedure: "damageReduction" }, (cantrip) =>
       damageReductionProfile.invocationRef(cantrip),
     ),

@@ -2964,44 +2964,6 @@ export function applyPersistentSpellActiveEffect(
   };
 }
 
-export function applyHeldLightSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "heldLight" }
-  >,
-): BattleState {
-  const caster = state.combatants.get(actorId);
-  if (caster === undefined) {
-    return state;
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...caster,
-      activeEffects: [
-        ...caster.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "heldLight" &&
-              effect.sourceSpellId === invocation.spell.id &&
-              effect.sourceCombatantId === actorId
-            ),
-        ),
-        {
-          kind: "heldLight",
-          sourceSpellId: invocation.spell.id,
-          sourceCombatantId: actorId,
-          brightRadiusFeet: invocation.light.brightRadiusFeet,
-          dimAdditionalFeet: invocation.light.dimAdditionalFeet,
-          expiresAt: invocation.expiresAt,
-        },
-      ],
-    }),
-  };
-}
-
 export function endHeldLightSpellEffect(
   state: BattleState,
   actorId: CombatantId,

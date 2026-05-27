@@ -94,6 +94,7 @@ import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
@@ -327,7 +328,6 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   resolveDancingLightsCastSpellAct,
   resolveDancingLightsRepositionSpellAct,
-  resolveHeldLightSpellAct,
   resolveMarkedDamageRiderSpellAct,
   resolveObjectLightSpellAct,
   resolveSpellCreatedHeldObjectReEvokeSpellAct,
@@ -2820,7 +2820,7 @@ export function resolveBonusActionSpellAct(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   if (invocation.procedure === "heldLight") {
-    return resolveHeldLightSpellAct({
+    return heldLightProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

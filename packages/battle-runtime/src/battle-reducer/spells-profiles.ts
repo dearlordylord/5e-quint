@@ -151,6 +151,10 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import {
+  heldLightProfile,
+  isProduceFlameOngoingEffectSpell,
+} from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
@@ -658,7 +662,11 @@ export function supportedSpellActs(
       ),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripHeldLightSpellProfile(spell),
+      heldLightProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripDancingLightsSpellProfile(actor.combatantId, spell),
@@ -731,52 +739,6 @@ export function supportedSpellActs(
       }),
     ),
   ];
-}
-
-export function supportedCantripHeldLightSpellProfile(
-  spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
-  if (!isProduceFlameOngoingEffectSpell(spell)) {
-    return [];
-  }
-  const lightOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
-  );
-  if (
-    lightOperation === undefined ||
-    lightOperation.effect.kind !== "emit_light" ||
-    lightOperation.effect.brightRadiusFeet !== 20 ||
-    lightOperation.effect.dimAdditionalFeet !== 20
-  ) {
-    return [];
-  }
-  const duration = spell.mechanics.duration;
-  if (duration.kind !== "timed") {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  return Either.isLeft(durationTicks)
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "heldLight",
-          spell,
-          actionCost: "bonusAction",
-          light: {
-            brightRadiusFeet: movementFeet(
-              lightOperation.effect.brightRadiusFeet,
-            ),
-            dimAdditionalFeet: movementFeet(
-              lightOperation.effect.dimAdditionalFeet,
-            ),
-          },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-        },
-      ];
 }
 
 export function supportedCantripDancingLightsSpellProfile(
@@ -2762,31 +2724,6 @@ export function isContinualFlameObjectSpell(
   );
 }
 
-export function isProduceFlameOngoingEffectSpell(
-  spell: SpellRecord,
-): spell is SpellRecord & {
-  readonly mechanics: Extract<
-    SpellRecord["mechanics"],
-    { family: "ongoing_effect" }
-  >;
-} {
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  return (
-    spell.mechanics.family === "ongoing_effect" &&
-    spell.mechanics.level === 0 &&
-    spell.mechanics.castingTime.kind === "bonus_action" &&
-    spell.mechanics.range.kind === "self" &&
-    spell.mechanics.attachment.kind === "self" &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "minute" &&
-    spell.mechanics.duration.value.amount === 10 &&
-    earlyEnd.length === 1 &&
-    earlyEnd[0]?.kind === "caster_recasts_spell"
-  );
-}
 
 export function supportedPreparedShieldReactionSpellProfile(
   spell: SpellRecord,

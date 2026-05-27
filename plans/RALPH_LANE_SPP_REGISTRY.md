@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "SPP-W2-02-HELD-LIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate heldLight profile (cantrip template)"
     },
     {
@@ -766,6 +766,7 @@ Focused MBT: `healing-stabilization-selected-identity.mbt.test.ts`.
 
 ### Task 3 - SPP-W2-02-HELD-LIGHT - Migrate heldLight profile
 
+Status: `done`.
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 4 - SPP-W2-03-OBJECT-LIGHT - Migrate objectLight profile

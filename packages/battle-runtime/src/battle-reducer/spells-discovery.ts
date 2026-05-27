@@ -76,6 +76,7 @@ import {
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
@@ -648,19 +649,7 @@ export function discoverSupportedSpellInvocations(
         return makeStableProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "heldLight") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return heldLightProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "spellCreatedHeldObject") {
         if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
@@ -1402,7 +1391,7 @@ export function spellInvocationCastSummary(
   invocation: SupportedSpellInvocation,
 ): string {
   if (invocation.procedure === "heldLight") {
-    return `Cast ${invocation.spell.name} as a cantrip.`;
+    return heldLightProfile.castSummary(invocation);
   }
   if (
     invocation.procedure === "dancingLightsSeparateCast" ||
