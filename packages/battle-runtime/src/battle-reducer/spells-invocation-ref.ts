@@ -13,6 +13,7 @@ import {
   isPreparedDamageSpellSource,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
@@ -449,11 +450,9 @@ export function supportedSpellInvocationRef(
       spellId: spellId(cantrip.spell.id),
       procedure: "heldLight" as const,
     })),
-    Match.when({ procedure: "damageReduction" }, (cantrip) => ({
-      tag: "cantrip" as const,
-      spellId: spellId(cantrip.spell.id),
-      procedure: "damageReduction" as const,
-    })),
+    Match.when({ procedure: "damageReduction" }, (cantrip) =>
+      damageReductionProfile.invocationRef(cantrip),
+    ),
     Match.when({ procedure: "repeatedDamageAllocation" }, (slotSpell) => ({
       tag: "spellSlot" as const,
       spellId: spellId(slotSpell.spell.id),

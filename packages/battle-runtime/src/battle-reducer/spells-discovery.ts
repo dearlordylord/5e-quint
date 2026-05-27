@@ -79,6 +79,7 @@ import {
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
+import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import {
   dancingLightsFromEffect,
   selfTransformationModeLabel,
@@ -672,27 +673,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "damageReduction") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: invocation.spell.name,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [
-                    targetHole,
-                    spellDamageTypeChoiceHole(invocation),
-                  ],
-                },
-              ];
-        return castActs;
+        return damageReductionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "heldLight") {
         return [
@@ -1534,7 +1519,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "damageReduction") {
-    return `Cast ${invocation.spell.name} as a cantrip.`;
+    return damageReductionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "makeStable") {
     return `Cast ${invocation.spell.name} as a cantrip.`;

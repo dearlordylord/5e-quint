@@ -93,6 +93,7 @@ import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -236,7 +237,6 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveCreatureTypeProtectionSpellAct,
-  resolveDamageReductionSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
@@ -280,7 +280,6 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveCreatureTypeProtectionSpellAct,
-  resolveDamageReductionSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
@@ -1005,7 +1004,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "damageReduction") {
-    return resolveDamageReductionSpellAct({
+    return damageReductionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

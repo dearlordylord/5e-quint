@@ -57,7 +57,6 @@ import {
   type CreatureSizeChangeSpellInvocation,
   type ConditionRemovalProtectionSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
-  type DamageReductionSpellInvocation,
   type DragonsBreathInitialSpellInvocation,
   type D20RollModifierSpellEffect,
   type JumpMovementReplacementSpellInvocation,
@@ -3506,25 +3505,6 @@ export function thaumaturgyBoomingVoiceProjection(
   };
 }
 
-export function supportedCantripDamageReductionSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
-  const projection = damageReductionSpellProjection(actorId, spell);
-  return projection === null
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "damageReduction",
-          spell,
-          actionCost: "magicAction",
-          ...projection,
-        },
-      ];
-}
-
 export function scalarBuffSpellActionCost(
   castingTime: SpellRecord["mechanics"]["castingTime"],
 ): HealingSpellActionCost | null {
@@ -4013,68 +3993,6 @@ function rollModifierAbilityChoiceFilter(
     return null;
   }
   return abilityFilter;
-}
-
-export function damageReductionSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<
-  DamageReductionSpellInvocation,
-  "amount" | "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
-> | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "target" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const effect = operation?.effect;
-  const damageType =
-    effect?.kind === "reduce_damage_taken" ? effect.damageType : undefined;
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
-  );
-  if (
-    operation?.trigger.kind !== "passive" ||
-    effect?.kind !== "reduce_damage_taken" ||
-    effect.amount.kind !== "fixed" ||
-    effect.amount.expr.dice !== 1 ||
-    effect.amount.expr.dieSize !== 4 ||
-    (effect.amount.expr.flat ?? 0) !== 0 ||
-    typeof damageType !== "object" ||
-    damageType?.kind !== "hole" ||
-    expiresAt === null
-  ) {
-    return null;
-  }
-  const choiceValue = damageType.value;
-  if (typeof choiceValue !== "object" || choiceValue.kind !== "choice") {
-    return null;
-  }
-  const choices = choiceValue.options.filter((option): option is DamageType =>
-    Schema.is(DamageTypeSchema)(option),
-  );
-  if (choices.length !== choiceValue.options.length) {
-    return null;
-  }
-  return {
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    damageTypeChoices: choices,
-    amount: { dice: 1, dieSize: 4 },
-    expiresAt,
-    rangeFeet: movementFeet(5),
-  };
 }
 
 export function rollModifierDelta(

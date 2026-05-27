@@ -3590,48 +3590,6 @@ export function applyDirectConditionRemovalSpellEffect(
   }, state);
 }
 
-export function applyDamageReductionSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-  damageType: DamageType,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "damageReduction" }
-  >,
-): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    kind: "spellDamageReduction" as const,
-    sourceSpellId: invocation.spell.id,
-    sourceCombatantId: actorId,
-    damageType,
-    amount: invocation.amount,
-    usedThisTurn: false,
-    expiresAt: invocation.expiresAt,
-  };
-  const activeEffects = [
-    ...target.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellDamageReduction" &&
-          effect.sourceSpellId === invocation.spell.id
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
-}
-
 export function applyJumpMovementReplacementSpellEffect(
   state: BattleState,
   actorId: CombatantId,

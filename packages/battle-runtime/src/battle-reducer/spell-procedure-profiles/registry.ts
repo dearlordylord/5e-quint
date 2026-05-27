@@ -1,0 +1,59 @@
+// Central registry of Spell Procedure Profiles. Today only damageReduction
+// has been migrated; other profiles continue to use scattered dispatch sites
+// in spells-resolve.ts, spells-discovery.ts, etc. As profiles migrate, they
+// are added here and the corresponding scattered code is removed.
+//
+// Lookup is partial during migration: registeredSpellProcedureProfile()
+// returns null for procedures that have not been migrated, and callers fall
+// back to their existing dispatch.
+
+import { damageReductionProfile } from "./damage-reduction.ts";
+import type {
+  AnySpellProcedureProfile,
+  SpellProcedureProfile,
+} from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+
+export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
+  damageReductionProfile,
+] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
+
+// Procedure literal type derived from the registry. As more profiles
+// migrate, this widens automatically without a hand-maintained union.
+export type RegisteredSpellProcedure =
+  (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number]["procedure"];
+
+const REGISTRY_BY_PROCEDURE: ReadonlyMap<
+  SupportedSpellInvocation["procedure"],
+  AnySpellProcedureProfile
+> = new Map(
+  REGISTERED_SPELL_PROCEDURE_PROFILES.map(
+    (p) => [p.procedure, p as AnySpellProcedureProfile] as const,
+  ),
+);
+
+export function registeredSpellProcedureProfile(
+  procedure: SupportedSpellInvocation["procedure"],
+): AnySpellProcedureProfile | null {
+  return REGISTRY_BY_PROCEDURE.get(procedure) ?? null;
+}
+
+// Typed lookup for callers that have already narrowed by procedure literal.
+// Returns the profile with its concrete I and P types preserved.
+export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
+  procedure: P,
+): SpellProcedureProfile<
+  P,
+  Extract<SupportedSpellInvocation, { readonly procedure: P }>
+> {
+  const found = REGISTRY_BY_PROCEDURE.get(procedure);
+  if (found === undefined) {
+    throw new Error(
+      `spellProcedureProfileFor: procedure ${procedure} is in RegisteredSpellProcedure but missing from registry map`,
+    );
+  }
+  return found as unknown as SpellProcedureProfile<
+    P,
+    Extract<SupportedSpellInvocation, { readonly procedure: P }>
+  >;
+}

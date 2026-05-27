@@ -50,7 +50,6 @@ import {
   applySeeInvisibleObserverSightSpellEffect,
   applyCreatureSizeChangeSpellEffect,
   applyCreatureTypeProtectionSpellEffect,
-  applyDamageReductionSpellEffect,
   applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
   applyLevitatedCreatureSpellEffect,
@@ -1848,121 +1847,6 @@ export function resolveDirectConditionRemovalSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
-}
-
-export function resolveDamageReductionSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "damageReduction" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Damage-reduction spells use one target fill and one damage type choice.",
-    );
-  }
-
-  const targetHole = spellTargetHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetHole,
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Spell target must be a combatant within the selected spell's supported range.",
-    );
-  }
-  if (input.fillSet.damageTypeChoice === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageTypeChoiceHole(input.invocation),
-    ]);
-  }
-  if (
-    !input.invocation.damageTypeChoices.includes(
-      input.fillSet.damageTypeChoice.value,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Damage-reduction spell damage type must be one of the selected spell's choices.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.fillSet.targetId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyDamageReductionSpellEffect(
-    concentrationBase,
-    input.actorId,
-    input.fillSet.targetId,
-    input.fillSet.damageTypeChoice.value,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 export function resolveJumpMovementReplacementSpellAct(input: {

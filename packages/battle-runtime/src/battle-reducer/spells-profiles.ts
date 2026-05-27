@@ -150,8 +150,8 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
     { readonly kind: "apply_condition_while_in_area_or_until_escape" }
   >;
 };
+import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import {
-  supportedCantripDamageReductionSpellProfile,
   supportedCantripRollModifierSpellProfile,
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
@@ -713,7 +713,11 @@ export function supportedSpellActs(
       ),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),
+      damageReductionProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripMakeStableSpellProfile(spell, characterLevel),
