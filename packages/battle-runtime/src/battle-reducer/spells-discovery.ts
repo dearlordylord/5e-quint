@@ -82,6 +82,7 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
+import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import {
   dancingLightsFromEffect,
   selfTransformationModeLabel,
@@ -565,6 +566,9 @@ export function discoverSupportedSpellInvocations(
           actorId,
           invocation,
         );
+      }
+      if (invocation.procedure === "wardingBond") {
+        return wardingBondProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "creatureTypeProtection") {
         const targetHole = spellTargetHole(state, actorId, invocation);
@@ -1457,6 +1461,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
     return magicWeaponEnhancementProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "wardingBond") {
+    return wardingBondProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitDamage") {
     return invocation.resource.tag === "classFeatureFreeCast"

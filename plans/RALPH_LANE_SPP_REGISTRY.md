@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "SPP-W2-09-WARDING-BOND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate wardingBond profile"
     },
     {
@@ -806,7 +806,7 @@ Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts`.
 
 ### Task 10 - SPP-W2-09-WARDING-BOND - Migrate wardingBond
 
-Status: `ready-for-research`
+Status: `done`.
 
 Focused MBT: `warding-bond-damage-sharing.mbt.test.ts`.
 

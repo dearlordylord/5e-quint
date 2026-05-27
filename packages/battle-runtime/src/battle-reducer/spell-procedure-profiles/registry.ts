@@ -18,6 +18,7 @@ import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
+import { wardingBondProfile } from "./warding-bond.ts";
 import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
@@ -32,6 +33,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   seeInvisibleObserverSightProfile,
   persistentArmorEffectProfile,
   magicWeaponEnhancementProfile,
+  wardingBondProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

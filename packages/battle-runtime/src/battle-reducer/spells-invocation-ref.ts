@@ -22,6 +22,7 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
+import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
@@ -88,12 +89,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "wardingBond") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "wardingBond",
-    };
+    return wardingBondProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "sleepTargetAdmission") {
     return {

@@ -1,7 +1,6 @@
 // Support-effect spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
@@ -12,7 +11,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -68,10 +66,6 @@ import {
   validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
 import { spellSaveDcForCaster } from "./attack-resolution.ts";
-import {
-  applyWardingBondSpellEffect,
-  wardingBondCastFactsAreSatisfied,
-} from "./warding-bond.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -475,124 +469,6 @@ function selfTransformationModeEffectPayload(
       naturalWeaponDamageType: selectedDamageType,
     },
   };
-}
-
-export function resolveWardingBondSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "wardingBond" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Warding Bond uses one willing target with paired worn rings and connection range facts.",
-    );
-  }
-
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    ) ||
-    !spellTargetIsKnownWilling(
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    ) ||
-    !wardingBondCastFactsAreSatisfied({
-      casterId: input.actorId,
-      targetId: target.combatantId,
-      invocation: input.invocation,
-      facts: input.fillSet.targetSpatialFacts,
-    })
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Warding Bond target must be another willing creature with paired worn platinum rings within 60 feet.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyWardingBondSpellEffect(
-    input.input.state,
-    input.actorId,
-    target.combatantId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 export function resolveMirrorImageHitInterceptionSpellAct(input: {

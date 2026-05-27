@@ -102,6 +102,7 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
+import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -250,7 +251,6 @@ export {
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
-  resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
   conditionRemovalProtectionSpellTargetSelection,
@@ -288,7 +288,6 @@ import {
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
-  resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
@@ -942,7 +941,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "wardingBond") {
-    return resolveWardingBondSpellAct({
+    return wardingBondProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2085,7 +2084,8 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
 }): boolean {
   return (
     input.actorId !== input.invocation.activeEffect.startedOn.actorId ||
-    input.state.initiative.round !== input.invocation.activeEffect.startedOn.round
+    input.state.initiative.round !==
+      input.invocation.activeEffect.startedOn.round
   );
 }
 
@@ -2575,7 +2575,11 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   let invocation =
     actor?.origin.kind === "character"
-      ? supportedBonusActionSpellInvocationForSubject(actor, input.state, subject)
+      ? supportedBonusActionSpellInvocationForSubject(
+          actor,
+          input.state,
+          subject,
+        )
       : undefined;
   if (actor?.origin.kind === "character" && invocation == null) {
     invocation = antimagicSuppressedInvocationForStaleSubject(
@@ -3016,8 +3020,7 @@ function stateForAntimagicSuppressedRepeatLookup(
         {
           ...combatant,
           activeEffects: combatant.activeEffects.filter(
-            (effect) =>
-              effect.kind !== "antimagicFieldOngoingSpellSuppression",
+            (effect) => effect.kind !== "antimagicFieldOngoingSpellSuppression",
           ),
         },
       ]),
