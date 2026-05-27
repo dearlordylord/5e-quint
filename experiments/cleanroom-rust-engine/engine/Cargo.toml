@@ -1,0 +1,11 @@
+[package]
+name = "dnd-cleanroom-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "dnd_cleanroom_engine"
+path = "src/lib.rs"
+
+[dependencies]
