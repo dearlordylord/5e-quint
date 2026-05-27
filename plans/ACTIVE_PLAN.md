@@ -1,20 +1,24 @@
 # Active Plan
 
-Status: closed for the default empty task index; the next QNT deepening lane is
-ready for explicit launch. The level-1 battle-runtime frontier queue completed
-at SRDINV91D (product readiness 367/367, deterministic admission 85/85, QNT
-proof 62/62, selected-identity MBT 17/85). Per-task history lives in git.
+Status: closed for the default empty task index; the next QNT/Rust generator
+pilot lane is ready for explicit launch. The level-1 battle-runtime frontier
+queue completed at SRDINV91D (product readiness 367/367, deterministic
+admission 85/85, QNT proof 62/62, selected-identity MBT 17/85). Per-task
+history lives in git.
 
 ## Active Ralph Queues
 
-The next runnable QNT deepening lane is:
+The next runnable QNT/Rust generator pilot lane is:
 
-- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — focused QNT witness deepening plus the
-  next manual Rust dry-run vertical after generator readiness closure.
+- `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md` — the next batch after Lane B
+  closure, turning the existing Hit Point dry runs into a Rust pilot and minimal
+  generator target without production reducer wiring.
 
 The current durable planning entrypoints are:
 
 - `plans/QNT_COVERAGE_PROGRAM.md` — top-level program rollup against ADR-0001.
+- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — closed focused QNT witness deepening
+  lane.
 - `plans/QNT_GENERATOR_READINESS_BACKLOG.md` — parked, non-runnable QNT
   generator readiness tasks from drained lanes.
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` — character levels 1–2 full-support
