@@ -785,10 +785,12 @@ in `roll-modifier.ts`). After migration, the shared helper remains in
 
 ### Task 6 - SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE - Migrate blurAttackRollDefense
 
+Status: `done`.
 Focused MBT: `blur-attack-roll-defense-lifecycle.mbt.test.ts`.
 
 ### Task 7 - SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT - Migrate seeInvisibleObserverSight
 
+Status: `done`.
 Focused MBT: `see-invisibility-observer-sight.mbt.test.ts` (verify
 exists — likely the test file lacks the keyword grep but exists by name).
 
@@ -799,6 +801,7 @@ Focused MBT: `mage-armor-selected-identity.mbt.test.ts`.
 
 ### Task 9 - SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT - Migrate magicWeaponEnhancement
 
+Status: `done`.
 Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts`.
 
 ### Task 10 - SPP-W2-09-WARDING-BOND - Migrate wardingBond
