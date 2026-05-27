@@ -1142,7 +1142,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/expeditious-retreat-dash.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

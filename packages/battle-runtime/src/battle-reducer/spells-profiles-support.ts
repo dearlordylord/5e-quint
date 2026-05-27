@@ -131,31 +131,6 @@ export function isD20RollModifierSpellProjection(
   return projection.effect.kind === "d20RollModifier";
 }
 
-export function supportedPreparedExpeditiousRetreatDashSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const activeEffect = expeditiousRetreatDashActiveEffect(actorId, spell);
-  if (activeEffect === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "expeditiousRetreatDash",
-            spell,
-            actionCost: "bonusAction",
-            activeEffect,
-          },
-        ],
-  );
-}
-
 export function supportedPreparedJumpMovementReplacementSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -556,59 +531,6 @@ function jumpMovementReplacementTargetCount(
     spell.mechanics.level,
     slotLevel,
   );
-}
-
-function expeditiousRetreatDashActiveEffect(
-  actorId: CombatantId,
-  spell: SpellRecord,
-):
-  | Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "expeditiousRetreatDash" }
-    >["activeEffect"]
-  | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  const initialPhase = mechanics.initialPhase;
-  const operation = mechanics.operations[0];
-  if (
-    mechanics.level !== 1 ||
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.range.kind !== "self" ||
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== 10 ||
-    mechanics.attachment.kind !== "self" ||
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "self" ||
-    initialPhase.effects?.length !== 1 ||
-    mechanics.operations.length !== 1 ||
-    operation === undefined
-  ) {
-    return null;
-  }
-  const initialEffect = initialPhase.effects[0];
-  if (
-    initialEffect?.kind !== "take_standard_action" ||
-    initialEffect.action !== "dash" ||
-    initialEffect.cost !== "included_in_effect" ||
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "grant_alternate_action_cost" ||
-    operation.effect.from.kind !== "standard_action" ||
-    operation.effect.from.actions.length !== 1 ||
-    operation.effect.from.actions[0] !== "dash" ||
-    operation.effect.to.kind !== "bonus_action"
-  ) {
-    return null;
-  }
-  return {
-    kind: "spellDashBonusAction",
-    sourceSpellId: spell.id,
-    sourceCombatantId: actorId,
-    expiresAt: { kind: "concentration", combatantId: actorId },
-  };
 }
 
 export function supportedPreparedSelfTransformationModeSpellProfile(

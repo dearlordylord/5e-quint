@@ -39,7 +39,6 @@ import {
   supportedSpellActs,
 } from "./spells-profiles.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
-import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   carefulSpellProtectedTargetsHole,
   commandOptionChoiceHole,
@@ -78,6 +77,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -834,18 +834,11 @@ export function discoverSupportedSpellInvocations(
             ];
       }
       if (invocation.procedure === "expeditiousRetreatDash") {
-        return representedMovementSpeedKinds(actor).map((speedKind) => ({
-          subject: {
-            tag: "bonusActionDashSpell" as const,
-            actorId,
-            invocation: supportedSpellInvocationRef(invocation),
-            mode: { tag: "cast" as const },
-            speedKind,
-          },
-          label: invocation.spell.name,
-          summary: spellInvocationCastSummary(invocation),
-          initialHoles: [],
-        }));
+        return expeditiousRetreatDashProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "dragonsBreathInitial") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
@@ -1410,7 +1403,7 @@ export function spellInvocationCastSummary(
       : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "expeditiousRetreatDash") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, immediately Dash, and keep Dash available as a Bonus Action while Concentration lasts.`;
+    return expeditiousRetreatDashProfile.castSummary(invocation);
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

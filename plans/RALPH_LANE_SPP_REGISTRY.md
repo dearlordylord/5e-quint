@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "SPP-W3-02-EXPEDITIOUS-RETREAT-DASH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate expeditiousRetreatDash profile (bonus-action, no focused MBT)"
     },
     {
@@ -874,7 +874,7 @@ directHitPointRestoration via Healing Word). May also need scope from
 
 ### Task 19 - SPP-W3-02-EXPEDITIOUS-RETREAT-DASH - Migrate expeditiousRetreatDash
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

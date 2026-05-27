@@ -74,7 +74,6 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
-  breakBattleConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
@@ -90,7 +89,6 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
-import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
@@ -110,7 +108,7 @@ import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
-import { expendSpellSlot } from "./spell-effects.ts";
+import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
   repositionSpiritualWeaponAttackProxyEffect,
@@ -145,13 +143,11 @@ import {
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import {
-  markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
   spellAttackKindForRedirect,
   spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
-import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -298,7 +294,6 @@ import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
 import {
   spellFillSet,
-  spellFillSetContainsOnlySpellCastReactionFacts,
   type SpellFillSet,
 } from "./spells-resolve-fill-set.ts";
 
@@ -3050,137 +3045,12 @@ export function resolveBonusActionDashSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
-    );
-  }
-  if (!spellHasAvailableSpend(actor, invocation)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat no longer has its required runtime spell resource.",
-    );
-  }
-  if (
-    !spellActTurnResourceAvailable(
-      input.state.currentTurnResources,
-      input.subject.actorId,
-      invocation,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  if (!representedMovementSpeedKinds(actor).includes(subject.speedKind)) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Expeditious Retreat Dash speed kind is not represented for this combatant.",
-    );
-  }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat is unavailable while an active ongoing feature prevents spellcasting.",
-    );
-  }
-
-  const castingState = spellRequiresVerbal(invocation.spell)
-    ? revealHidden(input.state, subject.actorId)
-    : input.state;
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    castingState,
-    spellCastReactionFrame({
-      casterId: subject.actorId,
-      invocation,
-      targetIds: [subject.actorId],
-      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.subject,
-        fills: input.fills,
-      },
-    }),
-    input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    castingState,
-    subject.actorId,
-  );
-  const spent = spendActivationResource(spellCastState.currentTurnResources, {
-    kind: "bonusAction",
+  return expeditiousRetreatDashProfile.resolve({
+    input,
+    actorId: subject.actorId,
+    invocation,
+    fillSet,
   });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat Bonus Action is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.right,
-    input.subject.actorId,
-  );
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const afterPriorConcentration = breakBattleConcentration(
-    spellCastState,
-    subject.actorId,
-  );
-  const slotted = expendSpellSlot(
-    afterPriorConcentration,
-    subject.actorId,
-    invocation.resource.slotLevel,
-  );
-  const effectHost = slotted.combatants.get(subject.actorId);
-  if (effectHost === undefined) {
-    return invalidResult(
-      input.state,
-      "missingCombatant",
-      "Expeditious Retreat caster is not in this battle.",
-    );
-  }
-  const effectedActor = {
-    ...effectHost,
-    concentration: {
-      sourceSpellId: invocation.spell.id,
-      effectKind: "spellEffect" as const,
-    },
-    activeEffects: [...effectHost.activeEffects, invocation.activeEffect],
-  };
-  const effected = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
-  };
-  const dashed = applyDashToActor(
-    effected,
-    effectedActor,
-    subject.speedKind,
-    effected.currentTurnResources,
-  );
-  return {
-    tag: "resolved",
-    state: dashed,
-    snapshot: snapshotBattle(dashed),
-  };
 }
 
 function resolveSanctuaryTargetingInterdictionSpellAct(input: {

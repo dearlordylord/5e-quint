@@ -19,6 +19,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -269,12 +270,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "expeditiousRetreatDash") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "expeditiousRetreatDash",
-    };
+    return expeditiousRetreatDashProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "selfTransformationMode") {
     return {
