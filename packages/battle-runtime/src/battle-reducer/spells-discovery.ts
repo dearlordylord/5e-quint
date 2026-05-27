@@ -76,6 +76,7 @@ import {
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
   dancingLightsFromEffect,
@@ -642,6 +643,9 @@ export function discoverSupportedSpellInvocations(
           actorId,
           invocation,
         );
+      }
+      if (invocation.procedure === "makeStable") {
+        return makeStableProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "heldLight") {
         return [
@@ -1484,7 +1488,7 @@ export function spellInvocationCastSummary(
     return damageReductionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "makeStable") {
-    return `Cast ${invocation.spell.name} as a cantrip.`;
+    return makeStableProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;

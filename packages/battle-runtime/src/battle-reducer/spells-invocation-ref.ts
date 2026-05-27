@@ -14,6 +14,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 
 export function supportedSpellInvocationRef(
@@ -384,11 +385,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "makeStable") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "makeStable",
-    };
+    return makeStableProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
     return {

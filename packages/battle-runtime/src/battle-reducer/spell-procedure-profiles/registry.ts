@@ -1,13 +1,15 @@
-// Central registry of Spell Procedure Profiles. Today only damageReduction
-// has been migrated; other profiles continue to use scattered dispatch sites
-// in spells-resolve.ts, spells-discovery.ts, etc. As profiles migrate, they
-// are added here and the corresponding scattered code is removed.
+// Central registry of Spell Procedure Profiles. During migration, registered
+// profiles live here while unmigrated profiles continue to use scattered
+// dispatch sites in spells-resolve.ts, spells-discovery.ts, etc. As profiles
+// migrate, they are added here and the corresponding scattered code is
+// removed.
 //
 // Lookup is partial during migration: registeredSpellProcedureProfile()
 // returns null for procedures that have not been migrated, and callers fall
 // back to their existing dispatch.
 
 import { damageReductionProfile } from "./damage-reduction.ts";
+import { makeStableProfile } from "./make-stable.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
@@ -15,6 +17,7 @@ import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   damageReductionProfile,
   rollModifierProfile,
+  makeStableProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

@@ -1353,7 +1353,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/make-stable.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

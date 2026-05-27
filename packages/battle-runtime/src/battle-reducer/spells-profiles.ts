@@ -151,6 +151,7 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
@@ -723,7 +724,11 @@ export function supportedSpellActs(
       }),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripMakeStableSpellProfile(spell, characterLevel),
+      makeStableProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
   ];
 }
@@ -1100,61 +1105,6 @@ function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
     isOngoingSpellEndTargetAttachment(attachment)
     ? attachment.holeId
     : null;
-}
-
-export function supportedCantripMakeStableSpellProfile(
-  spell: SpellRecord,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  const targetSelection =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : null;
-  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const rangeFeet = spareTheDyingRangeFeet(
-    spell.mechanics.range,
-    characterLevel,
-  );
-  const stateFilter =
-    targetSelection !== null &&
-    "stateFilter" in targetSelection &&
-    Array.isArray(targetSelection.stateFilter)
-      ? targetSelection.stateFilter
-      : [];
-  if (
-    targetSelection === null ||
-    targetSelection.mode !== "one" ||
-    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
-    !sameStringSet(stateFilter, ["zero_hp_not_dead"]) ||
-    phase?.kind !== "direct" ||
-    phase.effects?.length !== 1 ||
-    effect?.kind !== "make_stable" ||
-    rangeFeet === null
-  ) {
-    return [];
-  }
-  return [
-    {
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      procedure: "makeStable",
-      spell,
-      actionCost: "magicAction",
-      rangeFeet,
-    },
-  ];
 }
 
 export function supportedPreparedFogCloudObscurementProfile(
@@ -2693,27 +2643,6 @@ function isFlamingSphereSaveEffect(
     amount.base.dieSize === 6 &&
     amount.perLevel.dice === 1 &&
     amount.perLevel.dieSize === 6
-  );
-}
-
-function spareTheDyingRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
-  characterLevel: number,
-): MovementFeet | null {
-  if (
-    range.kind !== "point" ||
-    typeof range.feet !== "object" ||
-    range.feet.kind !== "threshold_tiers" ||
-    range.feet.axis !== "character"
-  ) {
-    return null;
-  }
-  return movementFeet(
-    range.feet.tiers.reduce(
-      (current, tier) =>
-        characterLevel >= tier.atLevel ? tier.value : current,
-      range.feet.base,
-    ),
   );
 }
 

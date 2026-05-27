@@ -94,6 +94,7 @@ import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
@@ -243,7 +244,6 @@ export {
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveLevitatedCreatureSpellAct,
-  resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveScalarBuffSpellAct,
@@ -285,7 +285,6 @@ import {
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveLevitatedCreatureSpellAct,
-  resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveScalarBuffSpellAct,
@@ -1011,7 +1010,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "makeStable") {
-    return resolveMakeStableSpellAct({
+    return makeStableProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
