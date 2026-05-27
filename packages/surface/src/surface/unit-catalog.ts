@@ -50,8 +50,10 @@ import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericChannelDivinityInput from "../../content/cleric_channel_divinity.json";
+import clericDiscipleOfLifeInput from "../../content/cleric_disciple_of_life.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import clericLifeDomainSpellsInput from "../../content/cleric_life_domain_spells.json";
+import clericPreserveLifeInput from "../../content/cleric_preserve_life.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
 import continualFlameInput from "../../content/continual_flame.json";
@@ -66,6 +68,7 @@ import divineSmiteInput from "../../content/divine_smite.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import druidCircleOfTheLandSpellsInput from "../../content/druid_circle_of_the_land_spells.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
+import druidLandsAidInput from "../../content/druid_lands_aid.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import druidWildCompanionInput from "../../content/druid_wild_companion.json";
 import druidWildShapeInput from "../../content/druid_wild_shape.json";
@@ -240,6 +243,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import warlockDarkOnesBlessingInput from "../../content/warlock_dark_ones_blessing.json";
 import warlockFiendSpellsInput from "../../content/warlock_fiend_spells.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import warlockPactMagicInput from "../../content/warlock_pact_magic.json";
@@ -427,10 +431,13 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardExpertiseInput,
     bardJackOfAllTradesInput,
     clericChannelDivinityInput,
+    clericDiscipleOfLifeInput,
     clericDivineOrderInput,
     clericLifeDomainSpellsInput,
+    clericPreserveLifeInput,
     druidCircleOfTheLandSpellsInput,
     druidDruidicInput,
+    druidLandsAidInput,
     druidPrimalOrderInput,
     druidWildShapeInput,
     druidWildCompanionInput,
@@ -456,6 +463,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererDraconicResilienceInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,
+    warlockDarkOnesBlessingInput,
     warlockPactMagicInput,
     warlockMagicalCunningInput,
     warlockFiendSpellsInput,

@@ -81,8 +81,9 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
     className,
   ): className is Exclude<
     ClassName,
-    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+    "cleric" | "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
   > =>
+    className !== "cleric" &&
     className !== "druid" &&
     className !== "fighter" &&
     className !== "monk" &&
@@ -95,12 +96,18 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
 ) as unknown as readonly [
   Exclude<
     ClassName,
-    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+    "cleric" | "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
   >,
   ...Array<
     Exclude<
       ClassName,
-      "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+      | "cleric"
+      | "druid"
+      | "fighter"
+      | "monk"
+      | "sorcerer"
+      | "wizard"
+      | "warlock"
     >
   >,
 ];
@@ -1006,6 +1013,101 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
 
+const ReferencedResourceSpendSchema = strictStruct({
+  resourceUnitId: NonEmptyStringSchema,
+  amount: PositiveIntegerSchema,
+});
+
+export const SpellSlotHealingModifierMechanicsSchema = strictStruct({
+  family: Schema.Literal("spell_slot_healing_modifier"),
+  trigger: strictStruct({
+    kind: Schema.Literal("caster_spell_slot_restores_hit_points"),
+    timing: Schema.Literal("turn_spell_is_cast"),
+  }),
+  appliesTo: Schema.Literal("each_creature_healed_by_spell"),
+  bonus: strictStruct({
+    kind: Schema.Literal("flat_plus_spell_slot_level"),
+    flat: Schema.Literal(2),
+  }),
+});
+
+export const MagicActionHealingPoolMechanicsSchema = strictStruct({
+  family: Schema.Literal("magic_action_healing_pool"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("magic"),
+  }),
+  spends: ReferencedResourceSpendSchema,
+  range: strictStruct({
+    kind: Schema.Literal("point"),
+    feet: Schema.Literal(30),
+  }),
+  targetSelection: strictStruct({
+    mode: Schema.Literal("any_number"),
+    targetKinds: Schema.Tuple(Schema.Literal("creature")),
+    stateFilter: Schema.Tuple(Schema.Literal("bloodied")),
+    includesSelf: Schema.Literal(true),
+  }),
+  pool: strictStruct({
+    kind: Schema.Literal("class_level_multiplier"),
+    multiplier: Schema.Literal(5),
+  }),
+  perTargetCap: Schema.Literal("half_hit_point_maximum"),
+});
+
+export const MagicActionAreaSaveDamageHealingMechanicsSchema = strictStruct({
+  family: Schema.Literal("magic_action_area_save_damage_healing"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("magic"),
+  }),
+  spends: ReferencedResourceSpendSchema,
+  area: strictStruct({
+    origin: strictStruct({
+      kind: Schema.Literal("point_within_range"),
+      rangeFeet: Schema.Literal(60),
+    }),
+    shape: strictStruct({
+      kind: Schema.Literal("sphere"),
+      radiusFeet: Schema.Literal(10),
+    }),
+  }),
+  save: strictStruct({
+    ability: Schema.Literal("con"),
+    dc: strictStruct({
+      kind: Schema.Literal("class_spellcasting_spell_save_dc"),
+    }),
+  }),
+  damage: strictStruct({
+    targetSelection: strictStruct({
+      mode: Schema.Literal("creatures_of_your_choice_in_area"),
+    }),
+    damageType: Schema.Literal("necrotic"),
+    amount: DiceAmountSchema,
+    onSuccess: Schema.Literal("half_damage"),
+  }),
+  healing: strictStruct({
+    targetSelection: strictStruct({
+      mode: Schema.Literal("one_creature_of_your_choice_in_area"),
+    }),
+    amount: DiceAmountSchema,
+  }),
+});
+
+export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema = strictStruct({
+  family: Schema.Literal("enemy_zero_hit_point_temporary_hit_points"),
+  trigger: strictStruct({
+    kind: Schema.Literal("enemy_reduced_to_zero_hit_points"),
+    bySelf: Schema.Literal(true),
+    byOtherWithinFeet: Schema.Literal(10),
+  }),
+  amount: strictStruct({
+    kind: Schema.Literal("ability_modifier_plus_class_level"),
+    ability: Schema.Literal("cha"),
+    minimum: Schema.Literal(1),
+  }),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -1044,6 +1146,10 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
+  SpellSlotHealingModifierMechanicsSchema,
+  MagicActionHealingPoolMechanicsSchema,
+  MagicActionAreaSaveDamageHealingMechanicsSchema,
+  EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -1055,9 +1161,16 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   WeaponMasteryChoiceMechanicsSchema,
 );
 
+export const ClericClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  SpellSlotHealingModifierMechanicsSchema,
+  MagicActionHealingPoolMechanicsSchema,
+);
+
 export const DruidClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
+  MagicActionAreaSaveDamageHealingMechanicsSchema,
 );
 
 export const WizardClassFeatureMechanicsSchema = Schema.Union(
@@ -1084,6 +1197,7 @@ export const WarlockClassFeatureMechanicsSchema = Schema.Union(
   FeatureChoiceMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
+  EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
 );
 
 export const MasteryTriggerSchema = Schema.Union(
@@ -1103,7 +1217,9 @@ export const SneakAttackDamageRiderTriggerSchema = strictStruct({
 export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
   attackFilter: Schema.Literal("strength_weapon_or_unarmed_strike"),
-  prerequisite: Schema.Literal("rage_active_and_reckless_attack_used_this_turn"),
+  prerequisite: Schema.Literal(
+    "rage_active_and_reckless_attack_used_this_turn",
+  ),
   hitLimit: Schema.Literal("first_target_hit_this_turn"),
 });
 
@@ -2958,6 +3074,12 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   ),
 });
 
+export const ClericClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("cleric"),
+  mechanics: ClericClassFeatureMechanicsSchema,
+});
+
 export const DruidClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("druid"),
@@ -2991,6 +3113,7 @@ export const OtherClassFeatureRecordSchema = Schema.Struct({
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  ClericClassFeatureRecordSchema,
   DruidClassFeatureRecordSchema,
   MonkClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,

@@ -1,0 +1,65 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "druid",
+  "description": "As a Magic Action, you can expend a use of your Wild Shape and choose a point within 60 feet of yourself. Vitality-giving flowers and life-draining thorns appear for a moment in a 10-foot-radius Sphere centered on that point. Each creature of your choice in the Sphere must make a Constitution saving throw against your spell save DC, taking 2d6 Necrotic damage on a failed save or half as much damage on a successful one. One creature of your choice in that area regains 2d6 Hit Points.",
+  "id": "druid_lands_aid",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "area": {
+      "origin": {
+        "kind": "point_within_range",
+        "rangeFeet": 60
+      },
+      "shape": {
+        "kind": "sphere",
+        "radiusFeet": 10
+      }
+    },
+    "damage": {
+      "amount": {
+        "expr": {
+          "dice": 2,
+          "dieSize": 6
+        },
+        "kind": "fixed"
+      },
+      "damageType": "necrotic",
+      "onSuccess": "half_damage",
+      "targetSelection": {
+        "mode": "creatures_of_your_choice_in_area"
+      }
+    },
+    "family": "magic_action_area_save_damage_healing",
+    "healing": {
+      "amount": {
+        "expr": {
+          "dice": 2,
+          "dieSize": 6
+        },
+        "kind": "fixed"
+      },
+      "targetSelection": {
+        "mode": "one_creature_of_your_choice_in_area"
+      }
+    },
+    "save": {
+      "ability": "con",
+      "dc": {
+        "kind": "class_spellcasting_spell_save_dc"
+      }
+    },
+    "spends": {
+      "amount": 1,
+      "resourceUnitId": "druid_wild_shape"
+    }
+  },
+  "name": "Land's Aid",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid#Level 3: Land's Aid"
+  }
+}

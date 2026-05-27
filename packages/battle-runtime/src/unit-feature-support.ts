@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -88,11 +88,23 @@ export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
   "monkFocusBattleOptions";
 export const DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE =
   "druidWildShapeKnownForm";
+export const SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE =
+  "spellSlotHealingModifier";
+export const MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE =
+  "magicActionHealingPool";
+export const MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE =
+  "magicActionAreaSaveDamageHealing";
+export const ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
+  "enemyZeroHitPointTemporaryHitPoints";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
+const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
+  "cleric_channel_divinity" as const satisfies UnitRecord["id"];
+const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID =
+  "druid_wild_shape" as const satisfies UnitRecord["id"];
 const MONK_FOCUS_RESOURCE_UNIT_ID =
   "monk_monks_focus" as const satisfies UnitRecord["id"];
 const BARDIC_INSPIRATION_DIE_TIERS = [
@@ -147,6 +159,10 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+  SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
+  MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+  MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
+  ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -241,6 +257,108 @@ export type BattleFailedAbilityCheckResourceBoostSupportProfile = {
   readonly kind: typeof FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE;
   readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
 };
+export type SpellSlotHealingModifierProfile = {
+  readonly trigger: {
+    readonly kind: "casterSpellSlotRestoresHitPoints";
+    readonly timing: "turnSpellIsCast";
+  };
+  readonly appliesTo: "eachCreatureHealedBySpell";
+  readonly bonus: {
+    readonly kind: "flatPlusSpellSlotLevel";
+    readonly flat: 2;
+  };
+};
+export type BattleSpellSlotHealingModifierSupportProfile = {
+  readonly kind: typeof SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE;
+  readonly healingModifier: SpellSlotHealingModifierProfile;
+};
+export type MagicActionHealingPoolProfile = {
+  readonly activationCost: {
+    readonly kind: "standardAction";
+    readonly action: "magic";
+  };
+  readonly spends: {
+    readonly resourceUnitId: UnitRecord["id"];
+    readonly amount: 1;
+  };
+  readonly rangeFeet: MovementFeet;
+  readonly targetSelection: {
+    readonly mode: "anyNumber";
+    readonly targetKinds: readonly ["creature"];
+    readonly stateFilter: readonly ["bloodied"];
+    readonly includesSelf: true;
+  };
+  readonly pool: {
+    readonly kind: "classLevelMultiplier";
+    readonly multiplier: 5;
+  };
+  readonly perTargetCap: "halfHitPointMaximum";
+};
+export type BattleMagicActionHealingPoolSupportProfile = {
+  readonly kind: typeof MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE;
+  readonly healingPool: MagicActionHealingPoolProfile;
+};
+export type FixedTwoD6AmountProfile = {
+  readonly kind: "fixed";
+  readonly expr: {
+    readonly dice: 2;
+    readonly dieSize: 6;
+  };
+};
+export type MagicActionAreaSaveDamageHealingProfile = {
+  readonly activationCost: {
+    readonly kind: "standardAction";
+    readonly action: "magic";
+  };
+  readonly spends: {
+    readonly resourceUnitId: UnitRecord["id"];
+    readonly amount: 1;
+  };
+  readonly area: {
+    readonly origin: {
+      readonly kind: "pointWithinRange";
+      readonly rangeFeet: MovementFeet;
+    };
+    readonly shape: {
+      readonly kind: "sphere";
+      readonly radiusFeet: MovementFeet;
+    };
+  };
+  readonly save: {
+    readonly ability: "con";
+    readonly dc: "classSpellcastingSpellSaveDc";
+  };
+  readonly damage: {
+    readonly targetSelection: "creaturesOfYourChoiceInArea";
+    readonly amount: FixedTwoD6AmountProfile;
+    readonly damageType: "necrotic";
+    readonly onSuccess: "halfDamage";
+  };
+  readonly healing: {
+    readonly targetSelection: "oneCreatureOfYourChoiceInArea";
+    readonly amount: FixedTwoD6AmountProfile;
+  };
+};
+export type BattleMagicActionAreaSaveDamageHealingSupportProfile = {
+  readonly kind: typeof MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE;
+  readonly damageHealing: MagicActionAreaSaveDamageHealingProfile;
+};
+export type EnemyZeroHitPointTemporaryHitPointsProfile = {
+  readonly trigger: {
+    readonly kind: "enemyReducedToZeroHitPoints";
+    readonly bySelf: true;
+    readonly byOtherWithinFeet: MovementFeet;
+  };
+  readonly amount: {
+    readonly kind: "abilityModifierPlusClassLevel";
+    readonly ability: "cha";
+    readonly minimum: 1;
+  };
+};
+export type BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile = {
+  readonly kind: typeof ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE;
+  readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
+};
 export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
   "climb",
   "swim",
@@ -326,6 +444,10 @@ export type BattleUnitSupportProfile =
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | BattleSpellSlotHealingModifierSupportProfile
+  | BattleMagicActionHealingPoolSupportProfile
+  | BattleMagicActionAreaSaveDamageHealingSupportProfile
+  | BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile
   | BattleDruidWildShapeKnownFormSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
@@ -340,6 +462,10 @@ export type BattleUnitSupportProfile =
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
       | "failedAbilityCheckResourceBoost"
+      | "spellSlotHealingModifier"
+      | "magicActionHealingPool"
+      | "magicActionAreaSaveDamageHealing"
+      | "enemyZeroHitPointTemporaryHitPoints"
       | "druidWildShapeKnownForm"
     >;
 
@@ -603,6 +729,50 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (failedAbilityCheckResourceBoostSupport !== null) {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
+  }
+
+  const spellSlotHealingModifierSupport =
+    battleSpellSlotHealingModifierSupportForUnit(input.unit);
+  if (spellSlotHealingModifierSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Spell Slot healing modifier Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (spellSlotHealingModifierSupport !== null) {
+    supportProfiles.push(spellSlotHealingModifierSupport);
+  }
+
+  const magicActionHealingPoolSupport =
+    battleMagicActionHealingPoolSupportForUnit(input.unit);
+  if (magicActionHealingPoolSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Magic Action healing pool Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (magicActionHealingPoolSupport !== null) {
+    supportProfiles.push(magicActionHealingPoolSupport);
+  }
+
+  const magicActionAreaSaveDamageHealingSupport =
+    battleMagicActionAreaSaveDamageHealingSupportForUnit(input.unit);
+  if (magicActionAreaSaveDamageHealingSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Magic Action area save damage/healing Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (magicActionAreaSaveDamageHealingSupport !== null) {
+    supportProfiles.push(magicActionAreaSaveDamageHealingSupport);
+  }
+
+  const enemyZeroHitPointTemporaryHitPointsSupport =
+    battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(input.unit);
+  if (enemyZeroHitPointTemporaryHitPointsSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle enemy zero-Hit-Point Temporary Hit Points Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (enemyZeroHitPointTemporaryHitPointsSupport !== null) {
+    supportProfiles.push(enemyZeroHitPointTemporaryHitPointsSupport);
   }
 
   const bardicInspirationGrantSupport =
@@ -1171,6 +1341,26 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "failedAbilityCheckResourceBoost";
       readonly unit: UnitRecord;
       readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
+    }
+  | {
+      readonly kind: "spellSlotHealingModifier";
+      readonly unit: UnitRecord;
+      readonly healingModifier: SpellSlotHealingModifierProfile;
+    }
+  | {
+      readonly kind: "magicActionHealingPool";
+      readonly unit: UnitRecord;
+      readonly healingPool: MagicActionHealingPoolProfile;
+    }
+  | {
+      readonly kind: "magicActionAreaSaveDamageHealing";
+      readonly unit: UnitRecord;
+      readonly damageHealing: MagicActionAreaSaveDamageHealingProfile;
+    }
+  | {
+      readonly kind: "enemyZeroHitPointTemporaryHitPoints";
+      readonly unit: UnitRecord;
+      readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -1185,6 +1375,22 @@ export type BattleWeaponOrUnarmedCriticalRange19Support =
 
 export type BattleBonusActionStandardActionSupport =
   | BattleAlternateActionCostSupportProfile
+  | "unsupported"
+  | null;
+export type BattleSpellSlotHealingModifierSupport =
+  | BattleSpellSlotHealingModifierSupportProfile
+  | "unsupported"
+  | null;
+export type BattleMagicActionHealingPoolSupport =
+  | BattleMagicActionHealingPoolSupportProfile
+  | "unsupported"
+  | null;
+export type BattleMagicActionAreaSaveDamageHealingSupport =
+  | BattleMagicActionAreaSaveDamageHealingSupportProfile
+  | "unsupported"
+  | null;
+export type BattleEnemyZeroHitPointTemporaryHitPointsSupport =
+  | BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile
   | "unsupported"
   | null;
 export type BattleMonkFocusBattleOptionsSupport =
@@ -1351,8 +1557,8 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
       focusPointCost: stepOfTheWind.battleExecution.focusPointCost,
       focusActions: stepOfTheWind.battleExecution.focusActions,
       jumpDistanceMultiplier: {
-        multiplier: stepOfTheWind.battleExecution.jumpDistanceMultiplier
-          .multiplier,
+        multiplier:
+          stepOfTheWind.battleExecution.jumpDistanceMultiplier.multiplier,
       },
     },
   };
@@ -1462,25 +1668,27 @@ export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(
     : "unsupported";
 }
 
-type AttackDamageRiderMechanicsProjection = Omit<
-  Extract<
-    SupportedUnitFeatureProfile,
-    {
-      readonly kind: "attackDamageRider";
-      readonly trigger: "finesseOrRangedAttackWithAdvantageOrAlly";
-    }
-  >,
-  "kind" | "unit" | "usageLimit" | "classLevel"
-> | Omit<
-  Extract<
-    SupportedUnitFeatureProfile,
-    {
-      readonly kind: "attackDamageRider";
-      readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
-    }
-  >,
-  "kind" | "unit" | "usageLimit" | "classLevel"
->;
+type AttackDamageRiderMechanicsProjection =
+  | Omit<
+      Extract<
+        SupportedUnitFeatureProfile,
+        {
+          readonly kind: "attackDamageRider";
+          readonly trigger: "finesseOrRangedAttackWithAdvantageOrAlly";
+        }
+      >,
+      "kind" | "unit" | "usageLimit" | "classLevel"
+    >
+  | Omit<
+      Extract<
+        SupportedUnitFeatureProfile,
+        {
+          readonly kind: "attackDamageRider";
+          readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
+        }
+      >,
+      "kind" | "unit" | "usageLimit" | "classLevel"
+    >;
 
 export function battleAttackDamageRiderSupportForUnit(
   unit: UnitRecord,
@@ -1899,6 +2107,66 @@ export function battleFailedAbilityCheckResourceBoostSupportForUnit(
       };
 }
 
+export function battleSpellSlotHealingModifierSupportForUnit(
+  unit: UnitRecord,
+): BattleSpellSlotHealingModifierSupport {
+  if (!hasSpellSlotHealingModifierMechanics(unit)) {
+    return null;
+  }
+  const profile = spellSlotHealingModifierProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
+        healingModifier: profile.healingModifier,
+      };
+}
+
+export function battleMagicActionHealingPoolSupportForUnit(
+  unit: UnitRecord,
+): BattleMagicActionHealingPoolSupport {
+  if (!hasMagicActionHealingPoolMechanics(unit)) {
+    return null;
+  }
+  const profile = magicActionHealingPoolProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+        healingPool: profile.healingPool,
+      };
+}
+
+export function battleMagicActionAreaSaveDamageHealingSupportForUnit(
+  unit: UnitRecord,
+): BattleMagicActionAreaSaveDamageHealingSupport {
+  if (!hasMagicActionAreaSaveDamageHealingMechanics(unit)) {
+    return null;
+  }
+  const profile = magicActionAreaSaveDamageHealingProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
+        damageHealing: profile.damageHealing,
+      };
+}
+
+export function battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(
+  unit: UnitRecord,
+): BattleEnemyZeroHitPointTemporaryHitPointsSupport {
+  if (!hasEnemyZeroHitPointTemporaryHitPointsMechanics(unit)) {
+    return null;
+  }
+  const profile = enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+        temporaryHitPoints: profile.temporaryHitPoints,
+      };
+}
+
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -2038,6 +2306,38 @@ function hasFailedAbilityCheckResourceBoostMechanics(
   );
 }
 
+function hasSpellSlotHealingModifierMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "spell_slot_healing_modifier"
+  );
+}
+
+function hasMagicActionHealingPoolMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "magic_action_healing_pool"
+  );
+}
+
+function hasMagicActionAreaSaveDamageHealingMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "magic_action_area_save_damage_healing"
+  );
+}
+
+function hasEnemyZeroHitPointTemporaryHitPointsMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "enemy_zero_hit_point_temporary_hit_points"
+  );
+}
+
 export function zeroHitPointReplacementProfileForUnit(
   unit: UnitRecord,
 ): Extract<
@@ -2133,6 +2433,212 @@ export function failedAbilityCheckResourceBoostProfileForUnit(
       refundSpendOnStillFailed: true,
     },
   };
+}
+
+export function spellSlotHealingModifierProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "spellSlotHealingModifier" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "spell_slot_healing_modifier"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "caster_spell_slot_restores_hit_points" ||
+    mechanics.trigger.timing !== "turn_spell_is_cast" ||
+    mechanics.appliesTo !== "each_creature_healed_by_spell" ||
+    mechanics.bonus.kind !== "flat_plus_spell_slot_level" ||
+    mechanics.bonus.flat !== 2
+  ) {
+    return null;
+  }
+  return {
+    kind: "spellSlotHealingModifier",
+    unit,
+    healingModifier: {
+      trigger: {
+        kind: "casterSpellSlotRestoresHitPoints",
+        timing: "turnSpellIsCast",
+      },
+      appliesTo: "eachCreatureHealedBySpell",
+      bonus: { kind: "flatPlusSpellSlotLevel", flat: 2 },
+    },
+  };
+}
+
+export function magicActionHealingPoolProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "magicActionHealingPool" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "magic_action_healing_pool"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.activationCost.kind !== "standard_action" ||
+    mechanics.activationCost.action !== "magic" ||
+    mechanics.spends.resourceUnitId !==
+      CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
+    mechanics.spends.amount !== 1 ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 30 ||
+    mechanics.targetSelection.mode !== "any_number" ||
+    !sameStringSet(mechanics.targetSelection.targetKinds, ["creature"]) ||
+    !sameStringSet(mechanics.targetSelection.stateFilter, ["bloodied"]) ||
+    mechanics.targetSelection.includesSelf !== true ||
+    mechanics.pool.kind !== "class_level_multiplier" ||
+    mechanics.pool.multiplier !== 5 ||
+    mechanics.perTargetCap !== "half_hit_point_maximum"
+  ) {
+    return null;
+  }
+  return {
+    kind: "magicActionHealingPool",
+    unit,
+    healingPool: {
+      activationCost: { kind: "standardAction", action: "magic" },
+      spends: {
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: 1,
+      },
+      rangeFeet: movementFeet(30),
+      targetSelection: {
+        mode: "anyNumber",
+        targetKinds: ["creature"],
+        stateFilter: ["bloodied"],
+        includesSelf: true,
+      },
+      pool: { kind: "classLevelMultiplier", multiplier: 5 },
+      perTargetCap: "halfHitPointMaximum",
+    },
+  };
+}
+
+export function magicActionAreaSaveDamageHealingProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "magicActionAreaSaveDamageHealing" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "magic_action_area_save_damage_healing"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.activationCost.kind !== "standard_action" ||
+    mechanics.activationCost.action !== "magic" ||
+    mechanics.spends.resourceUnitId !== DRUID_WILD_SHAPE_RESOURCE_UNIT_ID ||
+    mechanics.spends.amount !== 1 ||
+    mechanics.area.origin.kind !== "point_within_range" ||
+    mechanics.area.origin.rangeFeet !== 60 ||
+    mechanics.area.shape.kind !== "sphere" ||
+    mechanics.area.shape.radiusFeet !== 10 ||
+    mechanics.save.ability !== "con" ||
+    mechanics.save.dc.kind !== "class_spellcasting_spell_save_dc" ||
+    mechanics.damage.targetSelection.mode !==
+      "creatures_of_your_choice_in_area" ||
+    !fixedTwoD6AmountMatches(mechanics.damage.amount) ||
+    mechanics.damage.damageType !== "necrotic" ||
+    mechanics.damage.onSuccess !== "half_damage" ||
+    mechanics.healing.targetSelection.mode !==
+      "one_creature_of_your_choice_in_area" ||
+    !fixedTwoD6AmountMatches(mechanics.healing.amount)
+  ) {
+    return null;
+  }
+  const amount = fixedTwoD6AmountProfile();
+  return {
+    kind: "magicActionAreaSaveDamageHealing",
+    unit,
+    damageHealing: {
+      activationCost: { kind: "standardAction", action: "magic" },
+      spends: {
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: 1,
+      },
+      area: {
+        origin: { kind: "pointWithinRange", rangeFeet: movementFeet(60) },
+        shape: { kind: "sphere", radiusFeet: movementFeet(10) },
+      },
+      save: { ability: "con", dc: "classSpellcastingSpellSaveDc" },
+      damage: {
+        targetSelection: "creaturesOfYourChoiceInArea",
+        amount,
+        damageType: "necrotic",
+        onSuccess: "halfDamage",
+      },
+      healing: {
+        targetSelection: "oneCreatureOfYourChoiceInArea",
+        amount,
+      },
+    },
+  };
+}
+
+export function enemyZeroHitPointTemporaryHitPointsProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "enemy_zero_hit_point_temporary_hit_points"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "enemy_reduced_to_zero_hit_points" ||
+    mechanics.trigger.bySelf !== true ||
+    mechanics.trigger.byOtherWithinFeet !== 10 ||
+    mechanics.amount.kind !== "ability_modifier_plus_class_level" ||
+    mechanics.amount.ability !== "cha" ||
+    mechanics.amount.minimum !== 1
+  ) {
+    return null;
+  }
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPoints",
+    unit,
+    temporaryHitPoints: {
+      trigger: {
+        kind: "enemyReducedToZeroHitPoints",
+        bySelf: true,
+        byOtherWithinFeet: movementFeet(10),
+      },
+      amount: {
+        kind: "abilityModifierPlusClassLevel",
+        ability: "cha",
+        minimum: 1,
+      },
+    },
+  };
+}
+
+function fixedTwoD6AmountProfile(): FixedTwoD6AmountProfile {
+  return { kind: "fixed", expr: { dice: 2, dieSize: 6 } };
+}
+
+function fixedTwoD6AmountMatches(amount: DiceAmount): boolean {
+  return (
+    amount.kind === "fixed" &&
+    amount.expr.dice === 2 &&
+    amount.expr.dieSize === 6
+  );
 }
 
 export function attackActionAttackCountScalingProfileForUnit(
@@ -2827,7 +3333,11 @@ export function parseSupportedUnitFeatureProfile(
     attackActionAttackCountScalingProfileForUnit(unit) ??
     zeroHitPointReplacementProfileForUnit(unit) ??
     bonusActionDashTemporaryHitPointsProfileForUnit(unit) ??
-    failedAbilityCheckResourceBoostProfileForUnit(unit)
+    failedAbilityCheckResourceBoostProfileForUnit(unit) ??
+    spellSlotHealingModifierProfileForUnit(unit) ??
+    magicActionHealingPoolProfileForUnit(unit) ??
+    magicActionAreaSaveDamageHealingProfileForUnit(unit) ??
+    enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit)
   );
 }
 

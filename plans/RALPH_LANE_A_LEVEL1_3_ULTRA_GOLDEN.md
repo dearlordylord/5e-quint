@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L13UG-A16-L3-HEAL-DAMAGE-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing heal and damage level-3 feature Units"
     },
     {
@@ -121,14 +121,44 @@
     {
       "number": 20,
       "id": "L13UG-A20-LEVEL13-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "blocked-needs-design",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
       "number": 21,
       "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "blocked-needs-design",
       "title": "Plan the next level-support batch if this lane drains"
+    },
+    {
+      "number": 22,
+      "id": "L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Disciple of Life healing modifier runtime"
+    },
+    {
+      "number": 23,
+      "id": "L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Preserve Life healing pool runtime"
+    },
+    {
+      "number": 24,
+      "id": "L13UG-A24-DRUID-LANDS-AID-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Land's Aid level-3 runtime"
+    },
+    {
+      "number": 25,
+      "id": "L13UG-A25-DRUID-LANDS-AID-SCALING",
+      "status": "ready-for-research",
+      "title": "Promote Land's Aid later-level scaling"
+    },
+    {
+      "number": 26,
+      "id": "L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Dark One's Blessing runtime"
     }
   ]
 }
@@ -407,7 +437,7 @@ Character Sheet owners derive from source facts without duplicated state.
 
 ### Task 16 - L13UG-A16-L3-HEAL-DAMAGE-UNITS - Admit missing heal and damage level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `cleric_disciple_of_life`, `cleric_preserve_life`, `druid_lands_aid`, and
@@ -481,9 +511,14 @@ table/social split.
 
 ### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
 
-Status: `ready-for-research`
+Status: `blocked-needs-design`
 
-Input: results from Tasks 1-19.
+Input: results from Tasks 1-19 and the appended Task 16 runtime follow-ups
+(`L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME`,
+`L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME`,
+`L13UG-A24-DRUID-LANDS-AID-RUNTIME`,
+`L13UG-A25-DRUID-LANDS-AID-SCALING`, and
+`L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME`).
 
 Output: concise closeout section in this plan or generated summary identifying
 whether level 1-3 is now ultra-golden, what remains non-blocking, and what the
@@ -494,7 +529,7 @@ new work is discovered.
 
 ### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
-Status: `ready-for-research`
+Status: `blocked-needs-design`
 
 Input: current generated reports after Task 20.
 
@@ -505,3 +540,97 @@ closed, add exact repair tasks here instead of ending the run.
 Acceptance: Ralph must not end merely because the initial list is done. It
 either leaves a closed lane with a clear next plan committed, or it appends
 new runnable tasks discovered from current generated artifacts.
+
+### Task 22 - L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME - Promote Disciple of Life healing modifier runtime
+
+Status: `ready-for-research`
+
+Input: Task 16 admitted `unit-feature.spell-slot-healing-modifier` profile for
+`cleric_disciple_of_life`, local SRD Cleric Disciple of Life text, supported
+spell Hit Point restoration reducers, and package-local battle-runtime Quint
+parity files.
+
+Output: runtime consumption of the admitted support profile during supported
+spell healing resolution. Detect Spell Slot casts on the turn the spell is
+cast, add 2 plus the spent Spell Slot level to each affected creature's Hit
+Point restoration, reject non-slot casts, and keep all dispatch on typed
+profile facts rather than Cleric or feature authored identity.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover slot
+healing bonus application, each-creature scope, non-slot exclusion, and selected
+Unit identity flow where the reducer boundary consumes the profile.
+
+### Task 23 - L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME - Promote Preserve Life healing pool runtime
+
+Status: `ready-for-research`
+
+Input: Task 16 admitted `unit-feature.magic-action-healing-pool` profile for
+`cleric_preserve_life`, local SRD Cleric Preserve Life text, Channel Divinity
+resource ownership, and package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted support profile as a Magic Action
+that spends one Channel Divinity use, accepts caller-chosen Bloodied creatures
+within 30 feet including self, distributes a pool equal to five times Cleric
+level, and caps each target at half Hit Point Maximum without duplicating
+Channel Divinity state.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover resource
+spend, target validation, pool distribution, cap enforcement, rejection cases,
+and no authored-identity dispatch.
+
+### Task 24 - L13UG-A24-DRUID-LANDS-AID-RUNTIME - Promote Land's Aid level-3 runtime
+
+Status: `ready-for-research`
+
+Input: Task 16 admitted `unit-feature.magic-action-area-save-damage-healing`
+profile for `druid_lands_aid`, local SRD Druid Land's Aid text, Wild Shape
+resource ownership, area-membership caller facts, and package-local
+battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted level-3 support profile as a Magic
+Action that spends one Wild Shape use, validates caller-supplied 10-foot-radius
+Sphere membership within 60 feet, resolves Constitution saves against the class
+Spell Save DC, deals 2d6 Necrotic damage with half damage on success, and heals
+one chosen creature in the area for 2d6 Hit Points.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover resource
+spend, area membership fills, save outcomes, damage, healing, rejection cases,
+and no authored-identity dispatch.
+
+### Task 25 - L13UG-A25-DRUID-LANDS-AID-SCALING - Promote Land's Aid later-level scaling
+
+Status: `ready-for-research`
+
+Input: Task 24 Land's Aid runtime owner, local SRD Druid Land's Aid level 10 and
+14 scaling text, current Surface mechanics, and package-local battle-runtime
+Quint parity files.
+
+Output: represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid
+damage and healing scaling after the level-3 runtime owner exists. Update the
+Surface mechanics, support-profile projection, generated matrix artifacts, and
+runtime/QNT behavior without storing derived dice facts beside their source
+level thresholds.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover the
+level-threshold dice scaling for damage and healing while preserving the Task
+24 level-3 behavior.
+
+### Task 26 - L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME - Promote Dark One's Blessing runtime
+
+Status: `ready-for-research`
+
+Input: Task 16 admitted
+`unit-feature.enemy-zero-hit-point-temporary-hit-points` profile for
+`warlock_dark_ones_blessing`, local SRD Warlock Dark One's Blessing text,
+zero-Hit-Point damage resolution hooks, and package-local battle-runtime Quint
+parity files.
+
+Output: runtime consumption of the admitted support profile when an enemy is
+reduced to 0 Hit Points by the Warlock or by another creature within 10 feet,
+granting Temporary Hit Points equal to Charisma modifier plus Warlock level with
+a minimum of 1. Use caller-visible enemy and range facts without authored
+identity dispatch.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover self
+kill, nearby other kill, enemy/range rejection, Temporary Hit Points application,
+and selected Unit identity flow where the reducer boundary consumes the profile.
