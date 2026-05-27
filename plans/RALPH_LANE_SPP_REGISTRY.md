@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate blurAttackRollDefense profile (prepared template)"
     },
     {
@@ -1106,7 +1106,7 @@ selected-identity MBTs is reasonable here).
 
 ### Task 67 - SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS - Export Schema building-blocks from battle-codecs.ts
 
-Status: `blocked` on all per-profile tasks complete.
+Status: `done` on all per-profile tasks complete.
 
 Input: `battle-codecs.ts:602` (`ClassCantripSpellAccessSchema`),
 `battle-codecs.ts:620` (`NoSpellInvocationResourceSchema`),
