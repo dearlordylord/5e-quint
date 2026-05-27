@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "SPP-W2-14-CREATURE-SIZE-CHANGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate creatureSizeIncrease/Decrease combined profile"
     },
     {
@@ -838,7 +838,7 @@ applyEffect needs to write both.
 
 ### Task 15 - SPP-W2-14-CREATURE-SIZE-CHANGE - Migrate creatureSizeIncrease/Decrease combined
 
-Status: `ready-for-research`
+Status: `done`
 
 Single profile, two procedure literals. The invocation type is
 `{procedure: "creatureSizeIncrease" | "creatureSizeDecrease"}`. The

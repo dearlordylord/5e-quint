@@ -15,6 +15,7 @@ import {
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -31,7 +32,10 @@ import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
-  if (isCreatureSizeChangeOrLevitateSpellInvocation(invocation)) {
+  if (isCreatureSizeChangeSpellInvocation(invocation)) {
+    return creatureSizeChangeProfile.invocationRef(invocation);
+  }
+  if (isLevitatedCreatureSpellInvocation(invocation)) {
     return {
       tag: "spellSlot",
       spellId: spellId(invocation.spell.id),
@@ -514,22 +518,25 @@ export function supportedSpellInvocationRef(
   );
 }
 
-function isCreatureSizeChangeOrLevitateSpellInvocation(
+function isCreatureSizeChangeSpellInvocation(
   invocation: SupportedSpellInvocation,
 ): invocation is Extract<
   SupportedSpellInvocation,
-  {
-    readonly procedure:
-      | "creatureSizeIncrease"
-      | "creatureSizeDecrease"
-      | "levitatedCreature";
-  }
+  { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
 > {
   return (
     invocation.procedure === "creatureSizeIncrease" ||
-    invocation.procedure === "creatureSizeDecrease" ||
-    invocation.procedure === "levitatedCreature"
+    invocation.procedure === "creatureSizeDecrease"
   );
+}
+
+function isLevitatedCreatureSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "levitatedCreature" }
+> {
+  return invocation.procedure === "levitatedCreature";
 }
 
 export function damageSpellInvocationRef(

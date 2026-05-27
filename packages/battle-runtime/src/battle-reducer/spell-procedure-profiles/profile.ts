@@ -50,12 +50,22 @@ export type SpellProcedureProfileResolveInput<
   readonly fillSet: OkSpellFillSet;
 };
 
-// One profile per spell-procedure variant. Generic in the procedure literal
-// and the narrowed invocation/input types so admit/resolve/codec stay
-// type-checked against the right shape.
+export type SpellInvocationAdmittedByRegisteredProcedure<
+  P extends SupportedSpellInvocation["procedure"],
+> = {
+  readonly [I in SupportedSpellInvocation as I["procedure"]]: P extends I["procedure"]
+    ? I
+    : never;
+}[SupportedSpellInvocation["procedure"]];
+
+// One profile per spell-procedure registration. Generic in the registered
+// procedure literal and the narrowed invocation/input types so admit/resolve
+// stay type-checked against the right shape. Most profiles register the same
+// literal their invocation carries; a combined profile may register one literal
+// while accepting an invocation whose procedure field admits that literal.
 export type SpellProcedureProfile<
   P extends SupportedSpellInvocation["procedure"],
-  I extends Extract<SupportedSpellInvocation, { readonly procedure: P }>,
+  I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Input = ActionSpellBattleResolutionInput,
 > = {
   readonly procedure: P;
@@ -109,7 +119,7 @@ export type SpellProcedureProfile<
 export type AnySpellProcedureProfile = {
   readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureProfile<
     P,
-    Extract<SupportedSpellInvocation, { readonly procedure: P }>,
+    SpellInvocationAdmittedByRegisteredProcedure<P>,
     never
   >;
 }[SupportedSpellInvocation["procedure"]];

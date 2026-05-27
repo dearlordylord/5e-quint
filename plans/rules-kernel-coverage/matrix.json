@@ -633,7 +633,7 @@
         "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
         "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",

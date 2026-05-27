@@ -76,6 +76,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -545,24 +546,11 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "creatureSizeIncrease" ||
         invocation.procedure === "creatureSizeDecrease"
       ) {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)})`,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [targetHole],
-                },
-              ];
-        return castActs;
+        return creatureSizeChangeProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "thaumaturgyBoomingVoice") {
         return thaumaturgyBoomingVoiceProfile.discoverCastAct(
@@ -1313,17 +1301,6 @@ function spellCastInitialHoles(
     : holes;
 }
 
-function creatureSizeChangeLabel(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
-  >,
-): string {
-  return invocation.procedure === "creatureSizeIncrease"
-    ? "increase size"
-    : "decrease size";
-}
-
 export function spellInvocationCastSummary(
   invocation: SupportedSpellInvocation,
 ): string {
@@ -1385,7 +1362,7 @@ export function spellInvocationCastSummary(
     invocation.procedure === "creatureSizeIncrease" ||
     invocation.procedure === "creatureSizeDecrease"
   ) {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot to ${creatureSizeChangeLabel(invocation)}.`;
+    return creatureSizeChangeProfile.castSummary(invocation);
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
     return thaumaturgyBoomingVoiceProfile.castSummary(invocation);

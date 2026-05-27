@@ -97,6 +97,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -241,7 +242,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
@@ -266,7 +266,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
@@ -913,7 +912,7 @@ function resolveSpellActInternal(
     invocation.procedure === "creatureSizeIncrease" ||
     invocation.procedure === "creatureSizeDecrease"
   ) {
-    return resolveCreatureSizeChangeSpellAct({
+    return creatureSizeChangeProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
