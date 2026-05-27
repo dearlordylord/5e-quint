@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "SPP-W2-12-DIRECT-CONDITION-REMOVAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate directConditionRemoval profile (no focused MBT)"
     },
     {
@@ -824,7 +824,7 @@ Focused MBT: `condition-removal-protection-selected-identity.mbt.test.ts`.
 
 ### Task 13 - SPP-W2-12-DIRECT-CONDITION-REMOVAL - Migrate directConditionRemoval
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Same as above.
 

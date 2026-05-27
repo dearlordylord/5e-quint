@@ -51,11 +51,6 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection 
     | { readonly tag: "needsHoles"; readonly hole: BattleHole }
     | { readonly tag: "invalid"; readonly message: string };
 
-export type DirectConditionRemovalSpellTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
-
 export type RollModifierSpellEffectSelection =
   | {
       readonly tag: "ok";
@@ -387,42 +382,6 @@ export function rollModifierSpellTargetSelection(input: {
   return validation === null
     ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
     : { tag: "invalid", message: validation };
-}
-
-export function directConditionRemovalSpellTargetSelection(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directConditionRemoval" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): DirectConditionRemovalSpellTargetSelection {
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Direct condition-removal spells require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Direct condition-removal spell target must be a combatant within the selected spell's supported range.",
-      };
 }
 
 export function rollModifierSpellEffectSelection(input: {

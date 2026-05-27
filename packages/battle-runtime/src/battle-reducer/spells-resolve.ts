@@ -97,6 +97,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -242,7 +243,6 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
-  resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveLevitatedCreatureSpellAct,
@@ -254,14 +254,12 @@ export {
 } from "./spells-resolve-support-effects.ts";
 export {
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  type DirectConditionRemovalSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
   type RollModifierSpellEffectSelection,
@@ -273,7 +271,6 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
   resolveDragonsBreathInitialSpellAct,
-  resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveLevitatedCreatureSpellAct,
@@ -2918,7 +2915,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "directConditionRemoval") {
-    return resolveDirectConditionRemovalSpellAct({
+    return directConditionRemovalProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

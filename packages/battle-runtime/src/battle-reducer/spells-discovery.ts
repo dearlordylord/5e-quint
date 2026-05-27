@@ -76,6 +76,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -892,25 +893,11 @@ export function discoverSupportedSpellInvocations(
             ];
       }
       if (invocation.procedure === "directConditionRemoval") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [
-                  targetHole,
-                  spellConditionChoiceHole(invocation),
-                ],
-              },
-            ];
+        return directConditionRemovalProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "directCondition") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
@@ -1433,7 +1420,7 @@ export function spellInvocationCastSummary(
     return conditionRemovalProtectionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "directConditionRemoval") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return directConditionRemovalProfile.castSummary(invocation);
   }
   if (invocation.procedure === "damageReduction") {
     return damageReductionProfile.castSummary(invocation);

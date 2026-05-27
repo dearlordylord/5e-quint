@@ -159,6 +159,7 @@ import {
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -188,10 +189,7 @@ import {
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
-import {
-  supportedPreparedDirectConditionRemovalSpellProfile,
-  supportedPreparedDirectConditionSpellProfile,
-} from "./spells-profiles-direct-condition.ts";
+import { supportedPreparedDirectConditionSpellProfile } from "./spells-profiles-direct-condition.ts";
 export * from "./spells-profiles-direct-condition.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -591,10 +589,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedDirectConditionRemovalSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      directConditionRemovalProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedFeatherFallMitigationSpellProfile(
