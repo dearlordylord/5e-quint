@@ -60,6 +60,7 @@ import {
 } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
+  SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
@@ -171,7 +172,7 @@ function applyDamageReductionEffect(
 
 function admitDamageReduction(
   spell: SpellRecord,
-  ctx: { readonly actorId: CombatantId },
+  ctx: SpellAdmissionContext,
 ): readonly DamageReductionSpellInvocation[] {
   const shape = damageReductionShape(ctx.actorId, spell);
   if (shape === null) {
@@ -347,7 +348,7 @@ export const damageReductionProfile: SpellProcedureProfile<
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
-  admit: (spell, ctx) => admitDamageReduction(spell, ctx),
+  admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
   castSummary: damageReductionCastSummary,
   invocationRef: damageReductionInvocationRef,

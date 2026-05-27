@@ -50,7 +50,6 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenReactionWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -82,6 +81,7 @@ import {
 } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
+  SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
@@ -93,10 +93,7 @@ type RollModifierInvocation = Extract<
 
 function admitRollModifier(
   spell: SpellRecord,
-  ctx: {
-    readonly actorId: CombatantId;
-    readonly spellcasting: CharacterBattleSpellcastingState;
-  },
+  ctx: SpellAdmissionContext,
 ): readonly RollModifierInvocation[] {
   const out: RollModifierInvocation[] = [];
   if (spell.mechanics.level === 0) {
@@ -141,6 +138,15 @@ function admitRollModifier(
   return out;
 }
 
+// The casts below are warranted: RollModifierInvocation is a union whose
+// branches are discriminated by which of `skillChoices`/`abilityChoices` is
+// non-null and whether `abilityChoiceApplication` is present, rather than by a
+// single tag field. TypeScript cannot narrow the spread of `base` plus
+// variant-specific fields against that union, so we assert at the point where
+// `isD20RollModifierSpellProjection(projection)` has already discriminated
+// the projection variant. Matches the original branching in the deleted
+// supportedCantripRollModifierSpellProfile / supportedPreparedRollModifier
+// SpellProfile predicates one-for-one.
 function buildRollModifierInvocation(
   spell: SpellRecord,
   access: RollModifierInvocation["access"],
@@ -406,6 +412,7 @@ export const rollModifierProfile: SpellProcedureProfile<
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   admit: admitRollModifier,
+
   discoverCastAct: discoverRollModifierCastAct,
   castSummary: rollModifierCastSummary,
   invocationRef: rollModifierInvocationRef,
