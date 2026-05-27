@@ -3110,45 +3110,6 @@ export function applyScalarBuffSpellEffect(
   }, state);
 }
 
-export function applyCreatureTypeProtectionSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "creatureTypeProtection" }
-  >,
-): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const nextEffect = {
-      ...invocation.activeEffect,
-      sourceCombatantId: actorId,
-    };
-    const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === "creatureTypeProtection" &&
-            effect.sourceSpellId === invocation.spell.id &&
-            effect.sourceCombatantId === actorId
-          ),
-      ),
-      nextEffect,
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects,
-      }),
-    };
-  }, state);
-}
-
 export function applyCreatureSizeChangeSpellEffect(
   state: BattleState,
   actorId: CombatantId,

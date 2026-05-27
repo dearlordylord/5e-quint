@@ -13,6 +13,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -465,12 +466,9 @@ export function supportedSpellInvocationRef(
     Match.when({ procedure: "rollModifier" }, (modifierSpell) =>
       rollModifierProfile.invocationRef(modifierSpell),
     ),
-    Match.when({ procedure: "creatureTypeProtection" }, (protectionSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(protectionSpell.spell.id),
-      slotLevel: protectionSpell.resource.slotLevel,
-      procedure: "creatureTypeProtection" as const,
-    })),
+    Match.when({ procedure: "creatureTypeProtection" }, (protectionSpell) =>
+      creatureTypeProtectionProfile.invocationRef(protectionSpell),
+    ),
     Match.when(
       { procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" },
       (heroism) => ({

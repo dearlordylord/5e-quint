@@ -157,6 +157,7 @@ import {
   admitPersistentArmorEffectInvocationSpellAccess,
   persistentArmorEffectProfile,
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
+import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -169,7 +170,6 @@ import {
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedConditionRemovalProtectionSpellProfile,
   supportedPreparedCreatureSizeChangeSpellProfile,
-  supportedPreparedCreatureTypeProtectionSpellProfile,
   supportedPreparedDragonsBreathInitialSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedFeatherFallMitigationSpellProfile,
@@ -436,11 +436,11 @@ export function supportedSpellActs(
       }),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedCreatureTypeProtectionSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      creatureTypeProtectionProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       blurAttackRollDefenseProfile.admit(spell, {

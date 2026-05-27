@@ -95,6 +95,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -240,7 +241,6 @@ export {
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
-  resolveCreatureTypeProtectionSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
@@ -255,7 +255,6 @@ export {
 export {
   conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  creatureTypeProtectionSpellTargetSelection,
   directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
@@ -264,7 +263,6 @@ export {
   scalarBuffSpellTargetSelection,
   type ConditionRemovalProtectionSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  type CreatureTypeProtectionSpellTargetSelection,
   type DirectConditionRemovalSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
@@ -277,7 +275,6 @@ import {
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureSizeChangeSpellAct,
-  resolveCreatureTypeProtectionSpellAct,
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
@@ -957,7 +954,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "creatureTypeProtection") {
-    return resolveCreatureTypeProtectionSpellAct({
+    return creatureTypeProtectionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

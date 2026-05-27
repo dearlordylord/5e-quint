@@ -74,6 +74,7 @@ import {
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -571,24 +572,11 @@ export function discoverSupportedSpellInvocations(
         return wardingBondProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "creatureTypeProtection") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: invocation.spell.name,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [targetHole],
-                },
-              ];
-        return castActs;
+        return creatureTypeProtectionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "blurAttackRollDefense") {
         return blurAttackRollDefenseProfile.discoverCastAct(
@@ -1422,7 +1410,7 @@ export function spellInvocationCastSummary(
     return thaumaturgyBoomingVoiceProfile.castSummary(invocation);
   }
   if (invocation.procedure === "creatureTypeProtection") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return creatureTypeProtectionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "blurAttackRollDefense") {
     return blurAttackRollDefenseProfile.castSummary(invocation);

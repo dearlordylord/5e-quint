@@ -52,7 +52,6 @@ import {
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
   type CreatureSizeChangeSpellInvocation,
   type ConditionRemovalProtectionSpellInvocation,
-  type CreatureTypeProtectionSpellInvocation,
   type DragonsBreathInitialSpellInvocation,
   type D20RollModifierSpellEffect,
   type JumpMovementReplacementSpellInvocation,
@@ -92,8 +91,6 @@ import {
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_INITIAL_DUPLICATES,
   MIRROR_IMAGE_UNAFFECTED_BY,
-  PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
-  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SELF_TRANSFORMATION_MODE_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
@@ -1263,31 +1260,6 @@ function creatureSizeChangeActiveEffect(
   };
 }
 
-export function supportedPreparedCreatureTypeProtectionSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = creatureTypeProtectionSpellProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "creatureTypeProtection",
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          },
-        ],
-  );
-}
-
 export function supportedPreparedMirrorImageHitInterceptionSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -1477,72 +1449,6 @@ export function conditionRemovalProtectionSpellProjection(
         damageType: "poison",
         expiresAt,
       },
-    },
-    rangeFeet: movementFeet(5),
-  };
-}
-
-export function creatureTypeProtectionSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<
-  CreatureTypeProtectionSpellInvocation,
-  "activeEffect" | "rangeFeet" | "targeting"
-> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 10 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const effect = effects[0];
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
-  );
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    effects.length !== 1 ||
-    effect?.kind !== "modify_roll_advantage" ||
-    effect.mode !== "disadvantage" ||
-    effect.on.length !== 1 ||
-    effect.on[0] !== "attack_roll" ||
-    effect.attackerTypeFilter === undefined ||
-    !sameCreatureTypeSet(
-      effect.attackerTypeFilter,
-      PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
-    ) ||
-    expiresAt === null
-  ) {
-    return null;
-  }
-
-  return {
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    activeEffect: {
-      kind: "creatureTypeProtection",
-      sourceSpellId: spell.id,
-      sourceCombatantId: actorId,
-      attackRollMode: "disadvantage",
-      protectedAgainstCreatureTypes: [
-        ...PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
-      ],
-      preventedConditions: [
-        ...PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
-      ],
-      preventsPossession: true,
-      expiresAt,
     },
     rangeFeet: movementFeet(5),
   };

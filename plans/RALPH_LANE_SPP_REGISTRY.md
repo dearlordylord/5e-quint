@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "SPP-W2-10-CREATURE-TYPE-PROTECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate creatureTypeProtection profile"
     },
     {
@@ -812,7 +812,7 @@ Focused MBT: `warding-bond-damage-sharing.mbt.test.ts`.
 
 ### Task 11 - SPP-W2-10-CREATURE-TYPE-PROTECTION - Migrate creatureTypeProtection
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `creature-type-protection-and-charm-selected-identity.mbt.test.ts`.
 

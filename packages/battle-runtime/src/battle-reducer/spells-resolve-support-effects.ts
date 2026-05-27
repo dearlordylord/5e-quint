@@ -42,7 +42,6 @@ import {
   applyDirectConditionSpellEffects,
   applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
   applyCreatureSizeChangeSpellEffect,
-  applyCreatureTypeProtectionSpellEffect,
   applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
   applyLevitatedCreatureSpellEffect,
@@ -77,7 +76,6 @@ import { levitateInitialRiseHole } from "./levitate-creature.ts";
 import {
   conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  creatureTypeProtectionSpellTargetSelection,
   directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   scalarBuffSpellTargetSelection,
@@ -537,91 +535,6 @@ export function resolveMirrorImageHitInterceptionSpellAct(input: {
   const effected = applyMirrorImageHitInterceptionSpellEffect(
     input.input.state,
     input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveCreatureTypeProtectionSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "creatureTypeProtection" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Creature-type protection spells use one target fill.",
-    );
-  }
-
-  const targetSelection = creatureTypeProtectionSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyCreatureTypeProtectionSpellEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
     input.invocation,
   );
   const resourced = spendSpellCastResources({
