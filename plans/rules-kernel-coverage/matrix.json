@@ -1373,6 +1373,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -1394,6 +1400,7 @@
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane",
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enthrall",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance",
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace",
         ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy"
@@ -9174,6 +9181,7 @@
     },
     {
       "blockedBy": [],
+      "dryRun": "plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md",
       "generatorSubset": [
         "import",
         "variant",
