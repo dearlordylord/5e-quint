@@ -1,11 +1,9 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-dragons-breath-initial spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
@@ -52,7 +50,6 @@ import {
   type D20RollModifierSpellEffect,
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
-  type LevitatedCreatureSpellInvocation,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
   type RollModifierSpellTargeting,
@@ -85,10 +82,6 @@ import {
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
-import {
-  LEVITATE_ALTITUDE_CONTROL_FEET,
-  LEVITATE_INITIAL_RISE_FEET,
-} from "./levitate-creature.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
   sameStringSet,
@@ -938,117 +931,6 @@ function scalarBuffSpellProjection(spell: SpellRecord): {
         duration: spell.mechanics.duration,
         effect: operation.effect,
       };
-}
-
-export function supportedPreparedLevitatedCreatureSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = levitatedCreatureSpellProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          },
-        ],
-  );
-}
-
-function levitatedCreatureSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Omit<
-  LevitatedCreatureSpellInvocation,
-  "access" | "resource" | "spell" | "actionCost"
-> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 10 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    phase?.kind !== "save_gate" ||
-    phase.ability !== "con" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.saveAppliesIf !== "unwilling_creature_target" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.onFail.kind !== "levitate_target"
-  ) {
-    return null;
-  }
-  const selection = phase.attachment.value.selection;
-  const objectFilter =
-    "objectFilter" in selection ? selection.objectFilter : undefined;
-  const effect = phase.onFail;
-  if (
-    selection.mode !== "one" ||
-    selection.targetKinds === undefined ||
-    !sameStringSet(selection.targetKinds, ["creature", "object"]) ||
-    objectFilter?.targetRelation !== "loose" ||
-    objectFilter?.maxWeightPounds !== 500 ||
-    effect.initialRiseMaxFeet !== 20 ||
-    effect.suspension !== "spell_duration" ||
-    effect.targetMovement.allowedBy !==
-      "push_or_pull_fixed_object_or_surface_within_reach" ||
-    effect.targetMovement.movementMode !== "as_if_climbing" ||
-    effect.casterAltitudeControl.maxDistanceFeet !== 20 ||
-    effect.casterAltitudeControl.direction !== "up_or_down" ||
-    effect.casterAltitudeControl.cost !== "magic_action_on_caster_turn" ||
-    effect.casterAltitudeControl.targetMustRemainWithinSpellRange !== true ||
-    effect.selfAltitudeControl.maxDistanceFeet !== 20 ||
-    effect.selfAltitudeControl.direction !== "up_or_down" ||
-    effect.selfAltitudeControl.cost !== "part_of_move" ||
-    effect.ending !== "float_gently_to_ground_if_aloft"
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  if (Either.isLeft(durationTicks)) {
-    return null;
-  }
-  return {
-    procedure: "levitatedCreature",
-    ability: "con",
-    dc: phase.dc,
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    rangeFeet: movementFeet(60),
-    maxInitialRiseFeet: LEVITATE_INITIAL_RISE_FEET,
-    activeEffect: {
-      kind: "spellLevitatedCreature",
-      sourceSpellId: spell.id,
-      sourceCombatantId: actorId,
-      maxAltitudeChangeFeet: LEVITATE_ALTITUDE_CONTROL_FEET,
-      rangeFeet: movementFeet(60),
-      expiresAt: {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: durationTicks.right,
-      },
-    },
-  };
 }
 
 export function supportedPreparedMirrorImageHitInterceptionSpellProfile(

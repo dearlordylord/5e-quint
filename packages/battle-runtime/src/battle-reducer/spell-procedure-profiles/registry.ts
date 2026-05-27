@@ -16,6 +16,7 @@ import { creatureSizeChangeProfile } from "./creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { heldLightProfile } from "./held-light.ts";
+import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./object-light.ts";
@@ -44,6 +45,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   directConditionRemovalProfile,
   conditionImmunityAndTurnStartTemporaryHitPointsProfile,
   creatureSizeChangeProfile,
+  levitatedCreatureProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

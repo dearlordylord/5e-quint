@@ -19,6 +19,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
@@ -36,12 +37,7 @@ export function supportedSpellInvocationRef(
     return creatureSizeChangeProfile.invocationRef(invocation);
   }
   if (isLevitatedCreatureSpellInvocation(invocation)) {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: invocation.procedure,
-    };
+    return levitatedCreatureProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitDamage") {
     if (invocation.resource.tag === "classFeatureFreeCast") {

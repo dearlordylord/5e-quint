@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "SPP-W2-15-LEVITATED-CREATURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate levitatedCreature profile"
     },
     {
@@ -848,7 +848,7 @@ Focused MBT: `creature-size-change-lifecycle.mbt.test.ts`.
 
 ### Task 16 - SPP-W2-15-LEVITATED-CREATURE - Migrate levitatedCreature
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `levitated-creature-lifecycle.mbt.test.ts`.
 

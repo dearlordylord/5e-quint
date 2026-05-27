@@ -162,6 +162,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
+import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -176,7 +177,6 @@ import {
   supportedPreparedFeatherFallMitigationSpellProfile,
   supportedPreparedJumpMovementReplacementSpellProfile,
   supportedPreparedHealingSpellProfile,
-  supportedPreparedLevitatedCreatureSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
@@ -420,11 +420,11 @@ export function supportedSpellActs(
       }),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedLevitatedCreatureSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      levitatedCreatureProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       wardingBondProfile.admit(spell, {

@@ -80,6 +80,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
@@ -547,6 +548,13 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "creatureSizeDecrease"
       ) {
         return creatureSizeChangeProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
+      if (invocation.procedure === "levitatedCreature") {
+        return levitatedCreatureProfile.discoverCastAct(
           state,
           actorId,
           invocation,
@@ -1363,6 +1371,9 @@ export function spellInvocationCastSummary(
     invocation.procedure === "creatureSizeDecrease"
   ) {
     return creatureSizeChangeProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "levitatedCreature") {
+    return levitatedCreatureProfile.castSummary(invocation);
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
     return thaumaturgyBoomingVoiceProfile.castSummary(invocation);

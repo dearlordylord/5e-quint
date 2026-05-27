@@ -101,6 +101,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
@@ -245,7 +246,6 @@ export {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
-  resolveLevitatedCreatureSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveScalarBuffSpellAct,
@@ -269,7 +269,6 @@ import {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
-  resolveLevitatedCreatureSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveScalarBuffSpellAct,
@@ -920,7 +919,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "levitatedCreature") {
-    return resolveLevitatedCreatureSpellAct({
+    return levitatedCreatureProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

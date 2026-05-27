@@ -670,10 +670,9 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
