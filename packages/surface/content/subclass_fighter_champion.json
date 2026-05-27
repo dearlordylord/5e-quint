@@ -5,6 +5,10 @@
     {
       "level": 3,
       "unitId": "fighter_improved_critical"
+    },
+    {
+      "level": 3,
+      "unitId": "fighter_remarkable_athlete"
     }
   ],
   "id": "subclass_fighter_champion",

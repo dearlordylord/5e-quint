@@ -278,8 +278,7 @@
       "catalog-installed-owner-evidence-present": 26,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 5,
-      "level-3-follow-up-required": 6
+      "catalog-installed-owner-evidence-required": 11
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -290,12 +289,11 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 457,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 6,
+      "catalog-installed-owner-evidence-required": 12,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-authored-executable-follow-up": 5,
-      "level-3-follow-up-required": 6,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -15621,14 +15619,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "fighter_remarkable_athlete",
+        "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fighter_remarkable_athlete"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_remarkable_athlete is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime initiative, Athletics, and critical-hit movement owner",
+          "evidence": "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -16573,14 +16585,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_open_hand_technique",
+        "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_open_hand_technique"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_open_hand_technique is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime Flurry of Blows hit-rider owner",
+          "evidence": "Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -17467,14 +17493,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "paladin_sacred_weapon",
+        "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_sacred_weapon"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_sacred_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime Channel Divinity weapon-imbue owner",
+          "evidence": "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -19650,14 +19690,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_hunters_prey",
+        "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_hunters_prey"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_hunters_prey is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet option selection plus battle-runtime weapon-hit owner",
+          "evidence": "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -22271,14 +22325,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_steady_aim",
+        "sourceRecordPath": "packages/surface/content/rogue_steady_aim.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_steady_aim"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_steady_aim is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime turn movement and attack-roll Advantage owner",
+          "evidence": "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -29866,14 +29934,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "wizard_potent_cantrip",
+        "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "wizard_potent_cantrip"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_potent_cantrip is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime cantrip miss/save damage replacement owner",
+          "evidence": "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
       "battleReadinessStatus": "owner-evidence-required"
     },

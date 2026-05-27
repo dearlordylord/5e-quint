@@ -243,6 +243,83 @@ export function traceClassFeatureMechanics(
       });
       return [actionId];
     }
+    case "remarkable_athlete": {
+      const remarkableId = ids("remarkable-athlete");
+      nodes.push({
+        id: remarkableId,
+        category: "procedure",
+        atomKind: "remarkable_athlete",
+        label:
+          `remarkable_athlete\n${m.initiative.roll} ${m.initiative.kind}\n` +
+          `${m.abilityCheck.ability} ${m.abilityCheck.skill} ${m.abilityCheck.kind}\n` +
+          `${m.criticalHitMovement.trigger.kind}\n${m.criticalHitMovement.distance.kind}\n${m.criticalHitMovement.opportunityAttacks}`,
+      });
+      return [remarkableId];
+    }
+    case "open_hand_technique": {
+      const openHandId = ids("open-hand-technique");
+      nodes.push({
+        id: openHandId,
+        category: "procedure",
+        atomKind: "open_hand_technique",
+        label:
+          `open_hand_technique\n${m.trigger.resourceOptionUnitId}:${m.trigger.optionId}\n` +
+          `${m.effectSaveDc.ability} save DC\n` +
+          m.choices.map((choice) => choice.id).join(" | "),
+      });
+      return [openHandId];
+    }
+    case "sacred_weapon": {
+      const sacredWeaponId = ids("sacred-weapon");
+      nodes.push({
+        id: sacredWeaponId,
+        category: "procedure",
+        atomKind: "sacred_weapon",
+        label:
+          `sacred_weapon\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+          `${m.target.kind}\n${m.attackRollBonus.ability} modifier min ${m.attackRollBonus.minimum}\n` +
+          `${m.duration.amount} ${m.duration.unit}`,
+      });
+      return [sacredWeaponId];
+    }
+    case "hunters_prey": {
+      const preyId = ids("hunters-prey");
+      nodes.push({
+        id: preyId,
+        category: "procedure",
+        atomKind: "hunters_prey",
+        label:
+          `hunters_prey\n${m.choice.kind}\nreplace ${m.choice.replaceOn}\n` +
+          m.options.map((option) => option.id).join(" | "),
+      });
+      return [preyId];
+    }
+    case "steady_aim": {
+      const steadyAimId = ids("steady-aim");
+      nodes.push({
+        id: steadyAimId,
+        category: "procedure",
+        atomKind: "steady_aim",
+        label:
+          `steady_aim\n${m.activationCost.kind}\n${m.precondition.kind}\n` +
+          `${m.attackRoll.mode} ${m.attackRoll.appliesTo}\n` +
+          `${m.speed.kind} ${m.speed.until}`,
+      });
+      return [steadyAimId];
+    }
+    case "potent_cantrip": {
+      const cantripId = ids("potent-cantrip");
+      nodes.push({
+        id: cantripId,
+        category: "procedure",
+        atomKind: "potent_cantrip",
+        label:
+          `potent_cantrip\n${m.trigger.kind}:${m.trigger.cantripKind}\n` +
+          `${m.outcomes.join(" | ")}\n${m.damage.kind}\n${m.additionalEffect}`,
+      });
+      return [cantripId];
+    }
     case "initiative_focus_recovery":
       return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
     case "composite":

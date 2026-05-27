@@ -93,6 +93,7 @@ import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
 import fighterFightingStyleInput from "../../content/fighter_fighting_style.json";
 import fighterImprovedCriticalInput from "../../content/fighter_improved_critical.json";
+import fighterRemarkableAthleteInput from "../../content/fighter_remarkable_athlete.json";
 import fighterSecondWindInput from "../../content/fighter_second_wind.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
@@ -151,6 +152,7 @@ import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
+import monkOpenHandTechniqueInput from "../../content/monk_open_hand_technique.json";
 import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json";
 import monkUnarmoredMovementInput from "../../content/monk_unarmored_movement.json";
 import monkUncannyMetabolismInput from "../../content/monk_uncanny_metabolism.json";
@@ -164,6 +166,7 @@ import paladinFightingStyleInput from "../../content/paladin_fighting_style.json
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinOathOfDevotionSpellsInput from "../../content/paladin_oath_of_devotion_spells.json";
 import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
+import paladinSacredWeaponInput from "../../content/paladin_sacred_weapon.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import poisonSprayInput from "../../content/poison_spray.json";
@@ -176,6 +179,7 @@ import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerFightingStyleInput from "../../content/ranger_fighting_style.json";
+import rangerHuntersPreyInput from "../../content/ranger_hunters_prey.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import resistanceInput from "../../content/resistance.json";
@@ -212,6 +216,7 @@ import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
 import rogueFastHandsInput from "../../content/rogue_fast_hands.json";
 import rogueSecondStoryWorkInput from "../../content/rogue_second_story_work.json";
+import rogueSteadyAimInput from "../../content/rogue_steady_aim.json";
 import rogueUncannyDodgeInput from "../../content/rogue_uncanny_dodge.json";
 import rogueSneakAttackInput from "../../content/rogue_sneak_attack.json";
 import rogueThievesCantInput from "../../content/rogue_thieves_cant.json";
@@ -264,6 +269,7 @@ import weaponShortswordInput from "../../content/weapon_shortsword.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardEvocationSavantInput from "../../content/wizard_evocation_savant.json";
+import wizardPotentCantripInput from "../../content/wizard_potent_cantrip.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import wizardScholarInput from "../../content/wizard_scholar.json";
 import acidSplashInput from "../../content/acid_splash.json";
@@ -420,6 +426,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterExtraAttackInput,
     fighterTacticalMindInput,
     fighterImprovedCriticalInput,
+    fighterRemarkableAthleteInput,
     barbarianFrenzyInput,
     barbarianRageInput,
     barbarianUnarmoredDefenseInput,
@@ -449,6 +456,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    monkOpenHandTechniqueInput,
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
     rangerFightingStyleInput,
@@ -458,6 +466,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rogueExpertiseInput,
     rogueFastHandsInput,
     rogueSecondStoryWorkInput,
+    rogueSteadyAimInput,
     rogueSneakAttackInput,
     rogueThievesCantInput,
     sorcererInnateSorceryInput,
@@ -474,6 +483,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     wizardArcaneRecoveryInput,
     wizardScholarInput,
     wizardEvocationSavantInput,
+    wizardPotentCantripInput,
     featAbilityScoreImprovementInput,
     featArcheryInput,
     featBoonOfCombatProwessInput,
@@ -487,9 +497,11 @@ export const srdUnitCollection = defineSrdUnitCollection({
     paladinFightingStyleInput,
     paladinPaladinsSmiteInput,
     paladinOathOfDevotionSpellsInput,
+    paladinSacredWeaponInput,
     paladinExtraAttackInput,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,
+    rangerHuntersPreyInput,
     rangerRovingInput,
     rangerWeaponMasteryInput,
     rogueWeaponMasteryInput,

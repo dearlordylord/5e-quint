@@ -26,6 +26,7 @@ let rogue =
         , { level = 1, unitId = "rogue_sneak_attack" }
         , { level = 1, unitId = "rogue_thieves_cant" }
         , { level = 1, unitId = "rogue_weapon_mastery" }
+        , { level = 3, unitId = "rogue_steady_aim" }
         ]
       , hitPointDie = 8
       , id = "class_rogue"
