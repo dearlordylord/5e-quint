@@ -78,6 +78,7 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
+import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -1426,7 +1427,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
   }
   if (invocation.procedure === "featherFallMitigation") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return featherFallMitigationProfile.castSummary(invocation);
   }
   if (invocation.procedure === "persistentArmorEffect") {
     return persistentArmorEffectProfile.castSummary(invocation);

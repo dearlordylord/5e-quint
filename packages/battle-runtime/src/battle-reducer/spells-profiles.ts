@@ -164,6 +164,7 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
+import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -177,7 +178,6 @@ import {
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedDragonsBreathInitialSpellProfile,
-  supportedPreparedFeatherFallMitigationSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
@@ -595,11 +595,11 @@ export function supportedSpellActs(
       }),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedFeatherFallMitigationSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      featherFallMitigationProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       persistentArmorEffectProfile.admit(spell, {

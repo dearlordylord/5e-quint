@@ -98,7 +98,7 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 
-import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { needsHolesResult } from "./hole-helpers.ts";
 
 import { opportunityAttackOptionForReactor } from "./movement-speed.ts";
 
@@ -122,18 +122,19 @@ import {
 import {
   triggeredReactionSpellChoices,
   counterspellReactionSpellMatchesTrigger,
-  featherFallReactionSpellMatchesTrigger,
   hellishRebukeReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   activeSelfTransformationModeEffect,
   applySelfTransformationModeEffect,
 } from "./spells-active-effects.ts";
+import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
@@ -163,8 +164,6 @@ export {
 
 import { expendSpellSlot } from "./spell-effects.ts";
 
-import { spellRequiresVerbal } from "./spells-discovery.ts";
-
 import {
   applyAfterHitDamageAndIlluminationSpellEffect,
   applyAfterHitTimedDamageAndSaveSpellEffect,
@@ -181,11 +180,9 @@ import {
   spellDamageByTypeForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
-  spellTargetListHole,
   supportedSpellInvocationRef,
   supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
-  validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
 import {
@@ -2102,20 +2099,6 @@ function stateForOpeningReactionFrame(
     : { ...castingState, currentTurnResources: claimed.right };
 }
 
-function stateAfterSpellCastDeclared(input: {
-  readonly state: BattleState;
-  readonly casterId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
-}): BattleState {
-  const earlyEnded = battleStateAfterTargetActionEarlyEndForActor(
-    input.state,
-    input.casterId,
-  );
-  return spellRequiresVerbal(input.invocation.spell)
-    ? revealHidden(earlyEnded, input.casterId)
-    : earlyEnded;
-}
-
 function stateForContinuingReactionFrame(
   state: BattleState,
   frame: BattleReactionFrame,
@@ -2749,102 +2732,16 @@ function resolveFeatherFallReactionSpellCommand(
     >;
   },
 ): BattleResolutionResult {
-  if (
-    input.frame.trigger !== "creatureFalls" ||
-    !featherFallReactionSpellMatchesTrigger(input.invocation, input.frame)
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Feather Fall requires a matching falling Reaction trigger.",
-    );
-  }
   const fillSet = spellFillSet(input.fills, input.invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (
-    fillSet.targetId !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Feather Fall uses only falling target-list fills.",
-    );
-  }
-  if (fillSet.targetList === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      spellTargetListHole(
-        input.state,
-        input.subject.reactorId,
-        input.invocation,
-      ),
-    ]);
-  }
-  const targetValidation = validateSpellTargetList(
-    input.state,
-    input.subject.reactorId,
-    input.invocation,
-    fillSet.targetList.targetIds,
-    fillSet.targetList.spatialFacts,
-  );
-  if (targetValidation !== null) {
-    return invalidResult(input.state, "invalidFill", targetValidation);
-  }
-  const castingState = stateAfterSpellCastDeclared({
-    state: input.state,
-    casterId: input.subject.reactorId,
+  return featherFallMitigationProfile.resolve({
+    input,
+    actorId: input.subject.reactorId,
     invocation: input.invocation,
+    fillSet,
   });
-  const effected: BattleState = fillSet.targetList.targetIds.reduce(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      return target === undefined
-        ? state
-        : {
-            ...state,
-            combatants: new Map(state.combatants).set(targetId, {
-              ...target,
-              activeEffects: [
-                ...target.activeEffects,
-                input.invocation.activeEffect,
-              ],
-            }),
-          };
-    },
-    castingState,
-  );
-  const slotted = expendSpellSlot(
-    effected,
-    input.subject.reactorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const nextState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 function resolveHellishRebukeReactionSpellCommand(

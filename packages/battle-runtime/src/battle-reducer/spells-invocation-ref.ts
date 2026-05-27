@@ -20,6 +20,7 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
+import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -301,12 +302,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "featherFallMitigation") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "featherFallMitigation",
-    };
+    return featherFallMitigationProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "counterspell") {
     return {

@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "SPP-W3-04-FEATHER-FALL-MITIGATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate featherFallMitigation profile (reaction-trigger)"
     },
     {
@@ -886,7 +886,7 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 21 - SPP-W3-04-FEATHER-FALL-MITIGATION - Migrate featherFallMitigation
 
-Status: `ready-for-research`
+Status: `done`
 
 Reaction-triggered (Featherfall is a Reaction spell). Treat as a Wave 3
 case (uses bonus-action-time machinery via the trigger). Focused MBT:
