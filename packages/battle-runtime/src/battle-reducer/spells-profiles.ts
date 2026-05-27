@@ -23,7 +23,6 @@
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
-  elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -31,7 +30,6 @@ import {
   AbilityModifier,
   attackBonus,
   movementFeet,
-  spellSlotLevel,
   type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
@@ -51,14 +49,10 @@ import {
   type BattleState,
   type BattleTurnResources,
   type BattleTurnSpellSlotUse,
-  type PersistentArmorSpellInvocation,
   type SpellObjectContactDamageActiveEffect,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type {
-  CharacterBattleInvocationSpellAccessState,
-  CharacterBattleSpellcastingState,
-} from "../character-battle-resources.ts";
+import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import {
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
@@ -158,6 +152,10 @@ import {
 } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import {
+  admitPersistentArmorEffectInvocationSpellAccess,
+  persistentArmorEffectProfile,
+} from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -605,10 +603,17 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedPersistentSpellProfile(actor.combatantId, spell),
+      persistentArmorEffectProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...spellcasting.invocationSpellAccesses.flatMap((access) =>
-      supportedInvocationPersistentSpellProfile(actor.combatantId, access),
+      admitPersistentArmorEffectInvocationSpellAccess(
+        actor.combatantId,
+        access,
+      ),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedHealingSpellProfile(
@@ -2752,98 +2757,6 @@ export function reactionTriggerNamedSpellIdsFromTrigger(
     ),
     Match.exhaustive,
   );
-}
-
-export function supportedPreparedPersistentSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
-  return supportedPersistentArmorSpellProfile(actorId, spell, {
-    access: { tag: "prepared" },
-    resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
-  });
-}
-
-export function supportedInvocationPersistentSpellProfile(
-  actorId: CombatantId,
-  access: CharacterBattleInvocationSpellAccessState,
-): readonly SupportedSpellInvocation[] {
-  return Match.value(access).pipe(
-    Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) =>
-      supportedPersistentArmorSpellProfile(actorId, armorOfShadows.spell, {
-        access: { tag: "armorOfShadows" },
-        resource: { tag: "none" },
-      }),
-    ),
-    Match.when({ tag: "pactOfTheChainFindFamiliar" }, () => []),
-    Match.exhaustive,
-  );
-}
-
-type PersistentArmorSpellSource =
-  | Pick<
-      Extract<
-        PersistentArmorSpellInvocation,
-        { readonly access: { tag: "prepared" } }
-      >,
-      "access" | "resource"
-    >
-  | Pick<
-      Extract<
-        PersistentArmorSpellInvocation,
-        { readonly access: { tag: "armorOfShadows" } }
-      >,
-      "access" | "resource"
-    >;
-
-function supportedPersistentArmorSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  source: PersistentArmorSpellSource,
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return [];
-  }
-  if (spell.mechanics.duration.kind !== "timed") {
-    return [];
-  }
-  const operation = spell.mechanics.operations[0];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  const requiredDurationTicks = elapsedTimeTicksFromHours(8);
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    Either.isLeft(durationTicks) ||
-    Either.isLeft(requiredDurationTicks) ||
-    Number(durationTicks.right) !== Number(requiredDurationTicks.right) ||
-    spell.mechanics.operations.length !== 1 ||
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "modify_ac_set_base" ||
-    operation.effect.formula.kind !== "base_plus_dex"
-  ) {
-    return [];
-  }
-
-  return [
-    {
-      ...source,
-      procedure: "persistentArmorEffect",
-      spell,
-      rangeFeet: movementFeet(5),
-      activeEffect: {
-        kind: "spellBaseArmorClass",
-        sourceSpellId: spell.id,
-        sourceCombatantId: actorId,
-        base: operation.effect.formula.base,
-        ability: "dex",
-        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-        earlyEnds: [{ kind: "targetDonsArmor" }],
-      },
-    },
-  ];
 }
 
 export function spellHasAvailableSpend(

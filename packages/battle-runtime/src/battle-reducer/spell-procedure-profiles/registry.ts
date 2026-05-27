@@ -13,6 +13,7 @@ import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { objectLightProfile } from "./object-light.ts";
+import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
@@ -28,6 +29,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   thaumaturgyBoomingVoiceProfile,
   blurAttackRollDefenseProfile,
   seeInvisibleObserverSightProfile,
+  persistentArmorEffectProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

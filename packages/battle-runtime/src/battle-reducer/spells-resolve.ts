@@ -97,6 +97,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -112,7 +113,6 @@ import {
   spellRequiresVerbal,
 } from "./spells-discovery.ts";
 import {
-  applyPersistentSpellActiveEffect,
   endHeldLightSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
@@ -982,6 +982,14 @@ function resolveSpellActInternal(
       fillSet,
     });
   }
+  if (invocation.procedure === "persistentArmorEffect") {
+    return persistentArmorEffectProfile.resolve({
+      input: { ...input, castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
   if (invocation.procedure === "mirrorImageHitInterception") {
     return resolveMirrorImageHitInterceptionSpellAct({
       input: { ...input, state: castingState },
@@ -1262,33 +1270,6 @@ function resolveSpellActInternal(
         ],
       });
     }
-  }
-
-  if (invocationForResolution.procedure === "persistentArmorEffect") {
-    if (
-      fillSet.attackRoll != null ||
-      fillSet.damageRoll != null ||
-      fillSet.concentrationSavingThrows.length > 0
-    ) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Persistent spell effects do not use attack or damage fills.",
-      );
-    }
-    const effected = applyPersistentSpellActiveEffect(
-      castingState,
-      subject.actorId,
-      target.combatantId,
-      invocationForResolution,
-    );
-    return spendSpellCastResources({
-      state: effected,
-      actorId: subject.actorId,
-      invocation: invocationForResolution,
-      errorState: input.state,
-      startConcentration: false,
-    });
   }
 
   const spellCastReactionWindow = spellInvocationIsSpellcasting(

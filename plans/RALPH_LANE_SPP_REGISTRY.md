@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "SPP-W2-07-PERSISTENT-ARMOR-EFFECT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate persistentArmorEffect profile (prepared template)"
     },
     {
@@ -794,6 +794,7 @@ exists — likely the test file lacks the keyword grep but exists by name).
 
 ### Task 8 - SPP-W2-07-PERSISTENT-ARMOR-EFFECT - Migrate persistentArmorEffect
 
+Status: `done`.
 Focused MBT: `mage-armor-selected-identity.mbt.test.ts`.
 
 ### Task 9 - SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT - Migrate magicWeaponEnhancement

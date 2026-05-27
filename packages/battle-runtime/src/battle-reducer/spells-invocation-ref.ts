@@ -5,7 +5,6 @@ import { Match } from "effect";
 import { spellId } from "../identity.ts";
 import {
   type SpellInvocationRef,
-  armorOfShadowsSpellInvocationRef,
   classFeatureFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
 } from "../battle-subjects.ts";
@@ -18,6 +17,7 @@ import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -515,14 +515,7 @@ export function supportedSpellInvocationRef(
             },
     ),
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) =>
-      persistent.resource.tag === "none"
-        ? armorOfShadowsSpellInvocationRef(persistent.spell.id)
-        : {
-            tag: "spellSlot" as const,
-            spellId: spellId(persistent.spell.id),
-            slotLevel: persistent.resource.slotLevel,
-            procedure: "persistentArmorEffect" as const,
-          },
+      persistentArmorEffectProfile.invocationRef(persistent),
     ),
     Match.when({ procedure: "shieldReaction" }, (reactionSpell) => ({
       tag: "spellSlot" as const,

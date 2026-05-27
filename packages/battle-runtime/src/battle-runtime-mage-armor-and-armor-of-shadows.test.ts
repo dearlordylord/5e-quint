@@ -30,6 +30,7 @@ import {
   statBlockCatalog,
   resourceCount,
   unitLibrary,
+  difficultyClass,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -180,6 +181,48 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       reason: "invalidFill",
     });
     expect(state.combatants.get(wizardId)?.origin.kind).toBe("character");
+  });
+
+  test("Mage Armor target holes keep a hidden caster unrevealed until the effect succeeds", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-hidden-caster-target-hole"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Hidden Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+      ],
+    });
+    const wizard = state.combatants.get(wizardId);
+    if (wizard === undefined) {
+      throw new Error("Expected Wizard caster.");
+    }
+    const hiddenState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: difficultyClass(17) },
+      }),
+    };
+
+    const holes = resolveBattleSubject({
+      state: hiddenState,
+      subject: magicSubject("mage_armor"),
+      fills: [],
+    });
+
+    expect(holes).toMatchObject({ tag: "needsHoles" });
+    if (holes.tag !== "needsHoles") {
+      throw new Error("Expected Mage Armor target hole.");
+    }
+    expect(holes.state.combatants.get(wizardId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(17),
+    });
   });
 
   test("Mage Armor uses Beast Dexterity for Wild Shaped targets with merged equipment", () => {

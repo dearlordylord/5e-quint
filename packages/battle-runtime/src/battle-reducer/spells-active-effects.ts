@@ -49,10 +49,7 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import {
-  combatantWearingArmor,
-  currentActorId,
-} from "./creature-state-leaves.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { activeEffectsWithCreatureSizeChangeReplaced } from "./creature-size-change-effects.ts";
 import {
@@ -2898,38 +2895,6 @@ export function endOfNextTurnExpiration(
     kind: "endOfTurn",
     combatantId,
     round,
-  };
-}
-
-export function applyPersistentSpellActiveEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  targetId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "persistentArmorEffect" }
-  >,
-): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target == null || combatantWearingArmor(target)) {
-    return state;
-  }
-
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === invocation.activeEffect.kind &&
-              effect.sourceSpellId === invocation.spell.id
-            ),
-        ),
-        { ...invocation.activeEffect, sourceCombatantId: actorId },
-      ],
-    }),
   };
 }
 

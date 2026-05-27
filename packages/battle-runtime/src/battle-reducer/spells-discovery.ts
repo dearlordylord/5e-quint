@@ -79,6 +79,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -595,6 +596,13 @@ export function discoverSupportedSpellInvocations(
       }
       if (invocation.procedure === "seeInvisibleObserverSight") {
         return seeInvisibleObserverSightProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
+      if (invocation.procedure === "persistentArmorEffect") {
+        return persistentArmorEffectProfile.discoverCastAct(
           state,
           actorId,
           invocation,
@@ -1503,9 +1511,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "persistentArmorEffect") {
-    return invocation.resource.tag === "none"
-      ? `Cast ${invocation.spell.name} using Armor of Shadows.`
-      : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return persistentArmorEffectProfile.castSummary(invocation);
   }
   if (invocation.procedure === "shieldReaction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
