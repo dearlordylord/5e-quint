@@ -18,6 +18,7 @@ import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { heldLightProfile } from "./held-light.ts";
+import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
@@ -52,6 +53,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   scalarBuffProfile,
   directHitPointRestorationProfile,
   expeditiousRetreatDashProfile,
+  jumpMovementReplacementProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

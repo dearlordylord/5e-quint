@@ -32,7 +32,6 @@ import { invalidResult } from "./result-helpers.ts";
 import {
   applyDirectConditionSpellEffects,
   applyDragonsBreathInitialSpellEffect,
-  applyJumpMovementReplacementSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
   applySelfTransformationModeEffect,
   spellDamageTypeChoiceHole,
@@ -294,85 +293,6 @@ export function resolveMirrorImageHitInterceptionSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
-}
-
-export function resolveJumpMovementReplacementSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "jumpMovementReplacement" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Jump uses a target-list fill only.",
-    );
-  }
-
-  if (input.fillSet.targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  if (validation !== null) {
-    return invalidResult(input.input.state, "invalidFill", validation);
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: input.fillSet.targetList.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyJumpMovementReplacementSpellEffect(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetList.targetIds,
-    input.invocation,
-  );
-  return spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
 }
 
 export function resolveDragonsBreathInitialSpellAct(input: {

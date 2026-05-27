@@ -21,6 +21,7 @@ import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -281,12 +282,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "jumpMovementReplacement") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "jumpMovementReplacement",
-    };
+    return jumpMovementReplacementProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "dragonsBreathInitial") {
     return {

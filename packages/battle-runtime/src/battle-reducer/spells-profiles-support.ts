@@ -47,7 +47,6 @@ import {
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type DragonsBreathInitialSpellInvocation,
   type D20RollModifierSpellEffect,
-  type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
@@ -129,43 +128,6 @@ export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
   return projection.effect.kind === "d20RollModifier";
-}
-
-export function supportedPreparedJumpMovementReplacementSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = jumpMovementReplacementSpellProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const maxTargets = jumpMovementReplacementTargetCount(
-      spell,
-      slot.spellLevel,
-    );
-    return maxTargets === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "jumpMovementReplacement",
-            spell,
-            actionCost: "bonusAction",
-            targeting: {
-              kind: "targetList",
-              minTargets: 1,
-              maxTargets,
-            },
-            ...projection,
-          },
-        ];
-  });
 }
 
 export function supportedPreparedDragonsBreathInitialSpellProfile(
@@ -328,70 +290,6 @@ function featherFallMitigationSpellProjection(
       };
 }
 
-function jumpMovementReplacementSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<
-  JumpMovementReplacementSpellInvocation,
-  "activeEffect" | "rangeFeet"
-> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const selection =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : null;
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    selection?.mode !== "choose_up_to" ||
-    !("disposition" in selection) ||
-    selection.disposition !== "willing" ||
-    !("targetKinds" in selection) ||
-    selection.targetKinds === undefined ||
-    !sameStringSet(selection.targetKinds, ["creature"]) ||
-    phase.effects?.length !== 1 ||
-    effect?.kind !== "jump_movement_replacement" ||
-    effect.frequency !== "once_on_each_target_turn" ||
-    effect.maxJumpDistanceFeet !== 30 ||
-    effect.movementCostFeet !== 10
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  return Either.isLeft(durationTicks)
-    ? null
-    : {
-        rangeFeet: movementFeet(5),
-        activeEffect: {
-          kind: "jumpMovementReplacement",
-          sourceSpellId: spell.id,
-          sourceCombatantId: actorId,
-          movementCostFeet: movementFeet(effect.movementCostFeet),
-          maxJumpDistanceFeet: movementFeet(effect.maxJumpDistanceFeet),
-          usedThisTurn: false,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-        },
-      };
-}
-
 function dragonsBreathInitialSpellProjection(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -509,28 +407,6 @@ function selfTeleportSpellProjection(
     return null;
   }
   return { maxDistanceFeet: movementFeet(effect.maxFeet) };
-}
-
-function jumpMovementReplacementTargetCount(
-  spell: SpellRecord,
-  slotLevel: SpellSlotLevel,
-): number | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target"
-  ) {
-    return null;
-  }
-  return scalarBuffSpellTargetCount(
-    phase.attachment.value.selection,
-    spell.mechanics.level,
-    slotLevel,
-  );
 }
 
 export function supportedPreparedSelfTransformationModeSpellProfile(

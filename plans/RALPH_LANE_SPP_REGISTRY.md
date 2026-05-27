@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate jumpMovementReplacement profile (bonus-action)"
     },
     {
@@ -880,7 +880,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 20 - SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT - Migrate jumpMovementReplacement
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 

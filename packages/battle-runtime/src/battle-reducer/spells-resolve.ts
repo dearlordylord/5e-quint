@@ -100,6 +100,7 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -242,7 +243,6 @@ export {
 export {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
-  resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
@@ -263,7 +263,6 @@ export {
 import {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
-  resolveJumpMovementReplacementSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
@@ -2871,7 +2870,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "jumpMovementReplacement") {
-    return resolveJumpMovementReplacementSpellAct({
+    return jumpMovementReplacementProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

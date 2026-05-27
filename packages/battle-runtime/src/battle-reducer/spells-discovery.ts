@@ -79,6 +79,7 @@ import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -840,6 +841,13 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "jumpMovementReplacement") {
+        return jumpMovementReplacementProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (invocation.procedure === "dragonsBreathInitial") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
         return targetHole.choices.length === 0
@@ -861,10 +869,7 @@ export function discoverSupportedSpellInvocations(
               },
             ];
       }
-      if (
-        invocation.procedure === "jumpMovementReplacement" ||
-        invocation.procedure === "sanctuaryTargetingInterdiction"
-      ) {
+      if (invocation.procedure === "sanctuaryTargetingInterdiction") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
         return targetHole.choices.length === 0
           ? []
@@ -1406,7 +1411,7 @@ export function spellInvocationCastSummary(
     return expeditiousRetreatDashProfile.castSummary(invocation);
   }
   if (invocation.procedure === "jumpMovementReplacement") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return jumpMovementReplacementProfile.castSummary(invocation);
   }
   if (invocation.procedure === "dragonsBreathInitial") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
