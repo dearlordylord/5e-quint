@@ -5,6 +5,8 @@
 //! Table-owned facts such as spatial membership, target legality witnesses,
 //! player choices, and dice rolls enter as explicit inputs.
 
+use crate::types::Ability;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct HitPoints {
     pub current: i16,
@@ -1016,6 +1018,16 @@ pub enum SpellDefinitionProfile {
     MassCureWounds,
     MassHealingWord,
     MageArmor,
+    Command,
+    Sanctuary,
+    FalseLife,
+    Longstrider,
+    ShieldOfFaith,
+    SpiderClimb,
+    Fly,
+    Barkskin,
+    Aid,
+    BlindnessDeafness,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1354,6 +1366,24 @@ pub fn spell_invocation_target_cardinality(
                 maximum_target_count: magic_missile_dart_count(slot_level),
             }
         }
+        SpellDefinitionProfile::Command => {
+            SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+                minimum_target_count: 1,
+                maximum_target_count: command_max_targets(slot_level),
+            }
+        }
+        SpellDefinitionProfile::Longstrider
+        | SpellDefinitionProfile::SpiderClimb
+        | SpellDefinitionProfile::Fly
+        | SpellDefinitionProfile::Aid => {
+            let maximum_target_count = scalar_buff_for_spell_profile(profile)
+                .map(|spell| scalar_buff_maximum_targets(spell, slot_level))
+                .unwrap_or(1);
+            SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
+                minimum_target_count: 1,
+                maximum_target_count,
+            }
+        }
         SpellDefinitionProfile::MassHealingWord | SpellDefinitionProfile::MassCureWounds => {
             SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
                 minimum_target_count: 1,
@@ -1363,10 +1393,19 @@ pub fn spell_invocation_target_cardinality(
         SpellDefinitionProfile::RayOfFrost
         | SpellDefinitionProfile::HealingWord
         | SpellDefinitionProfile::CureWounds
-        | SpellDefinitionProfile::MageArmor => {
+        | SpellDefinitionProfile::MageArmor
+        | SpellDefinitionProfile::Sanctuary
+        | SpellDefinitionProfile::FalseLife
+        | SpellDefinitionProfile::ShieldOfFaith
+        | SpellDefinitionProfile::Barkskin
+        | SpellDefinitionProfile::BlindnessDeafness => {
             SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
                 minimum_target_count: 1,
-                maximum_target_count: 1,
+                maximum_target_count: if profile == SpellDefinitionProfile::BlindnessDeafness {
+                    blindness_deafness_maximum_targets(slot_level)
+                } else {
+                    1
+                },
             }
         }
     }
@@ -1394,15 +1433,26 @@ pub struct SpellInvocationFacts {
 
 pub fn spell_profile_action(profile: SpellDefinitionProfile) -> SpellInvocationAction {
     match profile {
-        SpellDefinitionProfile::HealingWord | SpellDefinitionProfile::MassHealingWord => {
-            SpellInvocationAction::BonusActionSpellInvocation
-        }
+        SpellDefinitionProfile::HealingWord
+        | SpellDefinitionProfile::MassHealingWord
+        | SpellDefinitionProfile::Sanctuary
+        | SpellDefinitionProfile::ShieldOfFaith
+        | SpellDefinitionProfile::Barkskin => SpellInvocationAction::BonusActionSpellInvocation,
         SpellDefinitionProfile::MagicMissile
         | SpellDefinitionProfile::RayOfFrost
         | SpellDefinitionProfile::AcidSplash
         | SpellDefinitionProfile::CureWounds
         | SpellDefinitionProfile::MassCureWounds
-        | SpellDefinitionProfile::MageArmor => SpellInvocationAction::ActionTimeSpellInvocation,
+        | SpellDefinitionProfile::MageArmor
+        | SpellDefinitionProfile::Command
+        | SpellDefinitionProfile::FalseLife
+        | SpellDefinitionProfile::Longstrider
+        | SpellDefinitionProfile::SpiderClimb
+        | SpellDefinitionProfile::Fly
+        | SpellDefinitionProfile::Aid
+        | SpellDefinitionProfile::BlindnessDeafness => {
+            SpellInvocationAction::ActionTimeSpellInvocation
+        }
     }
 }
 
@@ -1414,7 +1464,17 @@ pub fn spell_profile_minimum_slot_level(profile: SpellDefinitionProfile) -> i32 
         SpellDefinitionProfile::MagicMissile
         | SpellDefinitionProfile::HealingWord
         | SpellDefinitionProfile::CureWounds
-        | SpellDefinitionProfile::MageArmor => 1,
+        | SpellDefinitionProfile::MageArmor
+        | SpellDefinitionProfile::Command
+        | SpellDefinitionProfile::Sanctuary
+        | SpellDefinitionProfile::FalseLife
+        | SpellDefinitionProfile::Longstrider
+        | SpellDefinitionProfile::ShieldOfFaith => 1,
+        SpellDefinitionProfile::SpiderClimb
+        | SpellDefinitionProfile::Barkskin
+        | SpellDefinitionProfile::Aid
+        | SpellDefinitionProfile::BlindnessDeafness => 2,
+        SpellDefinitionProfile::Fly => 3,
     }
 }
 
@@ -1468,6 +1528,1212 @@ pub fn spell_invocation_can_affect_targets(
     spell_invocation_resource_can_affect_targets(invocation, spell_invocation_resource_facts(facts))
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionSpellProfile {
+    Counterspell,
+    HellishRebuke,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionSpellTrigger {
+    SpellCastSeenWithin60FeetWithComponents,
+    DamageFromVisibleCreatureWithin60Feet,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReactionSpellInvocationFacts {
+    pub profile: ReactionSpellProfile,
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub trigger: ReactionSpellTrigger,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CounterspellCastingResource {
+    CounterspellMagicAction,
+    CounterspellBonusAction,
+    CounterspellReaction,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CounterspellReactionFacts {
+    pub has_spell_access: bool,
+    pub counterspell_slot_level: i32,
+    pub triggering_spell_level: i32,
+    pub triggering_spell_uses_slot: bool,
+    pub triggering_caster_constitution_save_succeeded: bool,
+    pub triggering_casting_resource: CounterspellCastingResource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CounterspellReactionResult {
+    pub reactor: SpellcastingProcedureState,
+    pub triggering_caster: SpellcastingProcedureState,
+    pub triggering_spell_ended: bool,
+    pub triggering_spell_slot_expended: bool,
+    pub reaction_window_cleared: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HellishRebukeReactionFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub damage_roll: i32,
+    pub saving_throw_succeeded: bool,
+    pub trigger: ReactionSpellTrigger,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HellishRebukeReactionResult {
+    pub reactor: SpellcastingProcedureState,
+    pub damaged_reactor: CreatureVitals,
+    pub triggering_creature: HitPointRecoveryResult,
+    pub reaction_window_cleared: bool,
+}
+
+pub fn reaction_spell_minimum_slot_level(profile: ReactionSpellProfile) -> i32 {
+    match profile {
+        ReactionSpellProfile::Counterspell => 3,
+        ReactionSpellProfile::HellishRebuke => 1,
+    }
+}
+
+pub fn reaction_spell_trigger_matches(
+    profile: ReactionSpellProfile,
+    trigger: ReactionSpellTrigger,
+) -> bool {
+    match profile {
+        ReactionSpellProfile::Counterspell => {
+            trigger == ReactionSpellTrigger::SpellCastSeenWithin60FeetWithComponents
+        }
+        ReactionSpellProfile::HellishRebuke => {
+            trigger == ReactionSpellTrigger::DamageFromVisibleCreatureWithin60Feet
+        }
+    }
+}
+
+pub fn legal_reaction_spell_invocation_facts(facts: ReactionSpellInvocationFacts) -> bool {
+    facts.selected_slot_level >= reaction_spell_minimum_slot_level(facts.profile)
+        && facts.selected_slot_level <= 9
+        && reaction_spell_trigger_matches(facts.profile, facts.trigger)
+}
+
+pub fn resolve_reaction_spell_invocation(
+    state: SpellcastingProcedureState,
+    facts: ReactionSpellInvocationFacts,
+) -> SpellInvocationResult {
+    let spent_reaction = spend_reaction(state.turn);
+    let slot_expenditure_state = spell_invocation_expenditure_state(state);
+    let slot_expenditure = apply_spell_slot_expenditure(
+        slot_expenditure_state,
+        SpellSlotExpenditureRequest::SpellSlotExpenditureRequired {
+            slot_level: facts.selected_slot_level,
+        },
+    );
+    let admitted = facts.has_spell_access
+        && legal_spellcasting_procedure_state(state)
+        && legal_reaction_spell_invocation_facts(facts)
+        && spent_reaction != state.turn
+        && spell_slot_expenditure_accepted(slot_expenditure);
+    let next_slot_expenditure_state =
+        spell_slot_expenditure_result_state(slot_expenditure_state, slot_expenditure);
+
+    SpellInvocationResult {
+        state: if admitted {
+            SpellcastingProcedureState {
+                turn: spent_reaction,
+                slot_ledger: next_slot_expenditure_state.slot_ledger,
+                slot_spell_cast_this_turn: next_slot_expenditure_state.slot_spell_cast_this_turn,
+            }
+        } else {
+            state
+        },
+        admitted,
+        slot_expended: admitted && spell_slot_was_expended(slot_expenditure),
+    }
+}
+
+pub fn pending_counterspell_ends_triggering_spell(facts: CounterspellReactionFacts) -> bool {
+    facts.counterspell_slot_level >= facts.triggering_spell_level
+        || !facts.triggering_caster_constitution_save_succeeded
+}
+
+pub fn waste_countered_spell_casting_resource(
+    state: SpellcastingProcedureState,
+    resource: CounterspellCastingResource,
+) -> SpellcastingProcedureState {
+    let turn = match resource {
+        CounterspellCastingResource::CounterspellMagicAction => spend_action_cost(
+            state.turn,
+            ActionCost::StandardActionCost(StandardAction::Magic),
+        ),
+        CounterspellCastingResource::CounterspellBonusAction => {
+            spend_action_cost(state.turn, ActionCost::BonusActionCost)
+        }
+        CounterspellCastingResource::CounterspellReaction => spend_reaction(state.turn),
+    };
+
+    SpellcastingProcedureState { turn, ..state }
+}
+
+pub fn resolve_counterspell_reaction(
+    reactor: SpellcastingProcedureState,
+    triggering_caster: SpellcastingProcedureState,
+    facts: CounterspellReactionFacts,
+) -> CounterspellReactionResult {
+    let reaction = resolve_reaction_spell_invocation(
+        reactor,
+        ReactionSpellInvocationFacts {
+            profile: ReactionSpellProfile::Counterspell,
+            has_spell_access: facts.has_spell_access,
+            selected_slot_level: facts.counterspell_slot_level,
+            trigger: ReactionSpellTrigger::SpellCastSeenWithin60FeetWithComponents,
+        },
+    );
+    if !reaction.admitted {
+        return CounterspellReactionResult {
+            reactor,
+            triggering_caster,
+            triggering_spell_ended: false,
+            triggering_spell_slot_expended: false,
+            reaction_window_cleared: false,
+        };
+    }
+
+    let triggering_spell_ended = pending_counterspell_ends_triggering_spell(facts);
+    let (triggering_caster, triggering_spell_slot_expended) = if triggering_spell_ended {
+        (
+            waste_countered_spell_casting_resource(
+                triggering_caster,
+                facts.triggering_casting_resource,
+            ),
+            false,
+        )
+    } else if facts.triggering_spell_uses_slot {
+        let expenditure_state = spell_invocation_expenditure_state(triggering_caster);
+        let expenditure = apply_spell_slot_expenditure(
+            expenditure_state,
+            SpellSlotExpenditureRequest::SpellSlotExpenditureRequired {
+                slot_level: facts.triggering_spell_level,
+            },
+        );
+        let next_expenditure_state =
+            spell_slot_expenditure_result_state(expenditure_state, expenditure);
+        (
+            SpellcastingProcedureState {
+                slot_ledger: next_expenditure_state.slot_ledger,
+                slot_spell_cast_this_turn: next_expenditure_state.slot_spell_cast_this_turn,
+                ..triggering_caster
+            },
+            spell_slot_was_expended(expenditure),
+        )
+    } else {
+        (triggering_caster, false)
+    };
+
+    CounterspellReactionResult {
+        reactor: reaction.state,
+        triggering_caster,
+        triggering_spell_ended,
+        triggering_spell_slot_expended,
+        reaction_window_cleared: true,
+    }
+}
+
+pub fn hellish_rebuke_damage_dice(slot_level: i32) -> i32 {
+    if slot_level < 1 {
+        0
+    } else {
+        2 + (slot_level - 1)
+    }
+}
+
+pub fn legal_hellish_rebuke_reaction_facts(facts: HellishRebukeReactionFacts) -> bool {
+    let dice = hellish_rebuke_damage_dice(facts.selected_slot_level);
+    facts.damage_roll >= dice
+        && facts.damage_roll <= dice * 10
+        && facts.trigger == ReactionSpellTrigger::DamageFromVisibleCreatureWithin60Feet
+}
+
+pub fn resolve_hellish_rebuke_reaction(
+    reactor: SpellcastingProcedureState,
+    damaged_reactor: CreatureVitals,
+    triggering_creature: CreatureVitals,
+    facts: HellishRebukeReactionFacts,
+) -> HellishRebukeReactionResult {
+    let reaction = if legal_hellish_rebuke_reaction_facts(facts) {
+        resolve_reaction_spell_invocation(
+            reactor,
+            ReactionSpellInvocationFacts {
+                profile: ReactionSpellProfile::HellishRebuke,
+                has_spell_access: facts.has_spell_access,
+                selected_slot_level: facts.selected_slot_level,
+                trigger: facts.trigger,
+            },
+        )
+    } else {
+        SpellInvocationResult {
+            state: reactor,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let damage = if !reaction.admitted {
+        0
+    } else if facts.saving_throw_succeeded {
+        facts.damage_roll / 2
+    } else {
+        facts.damage_roll
+    };
+
+    HellishRebukeReactionResult {
+        reactor: reaction.state,
+        damaged_reactor,
+        triggering_creature: if reaction.admitted {
+            let damage_result =
+                apply_resolved_damage_to_positive_hit_points(triggering_creature, damage);
+            HitPointRecoveryResult {
+                vitals: damage_result.vitals,
+                death_saving_throws: death_saving_throw_lifecycle_after_positive_hit_point_damage(
+                    DeathSavingThrowLifecycle::reset(),
+                    damage_result,
+                ),
+                positive_hit_point_unconscious_recovery:
+                    PositiveHitPointUnconsciousRecovery::NoPositiveHitPointUnconsciousRecovery,
+                hit_points_regained: 0,
+            }
+        } else {
+            HitPointRecoveryResult {
+                vitals: triggering_creature,
+                death_saving_throws: DeathSavingThrowLifecycle::reset(),
+                positive_hit_point_unconscious_recovery:
+                    PositiveHitPointUnconsciousRecovery::NoPositiveHitPointUnconsciousRecovery,
+                hit_points_regained: 0,
+            }
+        },
+        reaction_window_cleared: reaction.admitted,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RollModifierSpell {
+    BaneRollModifier,
+    BlessRollModifier,
+    GuidanceRollModifier,
+    PassWithoutTraceRollModifier,
+    EnhanceAbilityRollModifier,
+    EnthrallRollModifier,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RollModifierSkill {
+    StealthSkill,
+    PerceptionSkill,
+    IntimidationSkill,
+    OtherSkill,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum D20ModifierSign {
+    NoD20Modifier,
+    D20ModifierBonus,
+    D20ModifierPenalty,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AbilityCheckRollMode {
+    NormalAbilityCheck,
+    AdvantageAbilityCheck,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum D20RollKind {
+    AttackRoll,
+    SavingThrow,
+    AbilityCheck {
+        ability: Ability,
+        skill: RollModifierSkill,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RollModifierActiveEffect {
+    BaneD20RollPenalty,
+    BlessD20RollBonus,
+    GuidanceAbilityCheckBonus { skill: RollModifierSkill },
+    PassWithoutTraceStealthBonus,
+    EnhanceAbilityCheckAdvantage { ability: Ability },
+    EnthrallPerceptionPenalty,
+    ThaumaturgyBoomingVoice { duration_ticks: i32 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct D20RollModifierProjection {
+    pub sign: D20ModifierSign,
+    pub attack_roll: bool,
+    pub saving_throw: bool,
+    pub ability_check: bool,
+    pub skill: Option<RollModifierSkill>,
+}
+
+pub const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS: i32 = 10;
+pub const THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS: i32 = 3;
+
+pub fn roll_modifier_choice_active_effect(
+    invocation: RollModifierSpell,
+    chosen_ability: Ability,
+    chosen_skill: RollModifierSkill,
+) -> RollModifierActiveEffect {
+    match invocation {
+        RollModifierSpell::BaneRollModifier => RollModifierActiveEffect::BaneD20RollPenalty,
+        RollModifierSpell::BlessRollModifier => RollModifierActiveEffect::BlessD20RollBonus,
+        RollModifierSpell::GuidanceRollModifier => {
+            RollModifierActiveEffect::GuidanceAbilityCheckBonus {
+                skill: chosen_skill,
+            }
+        }
+        RollModifierSpell::PassWithoutTraceRollModifier => {
+            RollModifierActiveEffect::PassWithoutTraceStealthBonus
+        }
+        RollModifierSpell::EnhanceAbilityRollModifier => {
+            RollModifierActiveEffect::EnhanceAbilityCheckAdvantage {
+                ability: chosen_ability,
+            }
+        }
+        RollModifierSpell::EnthrallRollModifier => {
+            RollModifierActiveEffect::EnthrallPerceptionPenalty
+        }
+    }
+}
+
+pub fn roll_modifier_fixed_ability_check_delta(
+    effect: RollModifierActiveEffect,
+    skill: RollModifierSkill,
+) -> i32 {
+    match effect {
+        RollModifierActiveEffect::PassWithoutTraceStealthBonus => {
+            if skill == RollModifierSkill::StealthSkill {
+                10
+            } else {
+                0
+            }
+        }
+        RollModifierActiveEffect::EnthrallPerceptionPenalty => {
+            if skill == RollModifierSkill::PerceptionSkill {
+                -10
+            } else {
+                0
+            }
+        }
+        _ => 0,
+    }
+}
+
+pub fn passive_perception_modifier_delta(effects: &[RollModifierActiveEffect]) -> i32 {
+    effects
+        .iter()
+        .map(|effect| {
+            roll_modifier_fixed_ability_check_delta(*effect, RollModifierSkill::PerceptionSkill)
+        })
+        .sum()
+}
+
+pub fn d20_roll_modifier_projection(effect: RollModifierActiveEffect) -> D20RollModifierProjection {
+    match effect {
+        RollModifierActiveEffect::BaneD20RollPenalty => D20RollModifierProjection {
+            sign: D20ModifierSign::D20ModifierPenalty,
+            attack_roll: true,
+            saving_throw: true,
+            ability_check: false,
+            skill: None,
+        },
+        RollModifierActiveEffect::BlessD20RollBonus => D20RollModifierProjection {
+            sign: D20ModifierSign::D20ModifierBonus,
+            attack_roll: true,
+            saving_throw: true,
+            ability_check: false,
+            skill: None,
+        },
+        RollModifierActiveEffect::GuidanceAbilityCheckBonus { skill } => {
+            D20RollModifierProjection {
+                sign: D20ModifierSign::D20ModifierBonus,
+                attack_roll: false,
+                saving_throw: false,
+                ability_check: true,
+                skill: Some(skill),
+            }
+        }
+        _ => D20RollModifierProjection {
+            sign: D20ModifierSign::NoD20Modifier,
+            attack_roll: false,
+            saving_throw: false,
+            ability_check: false,
+            skill: None,
+        },
+    }
+}
+
+pub fn d20_roll_modifier_delta(
+    effect: RollModifierActiveEffect,
+    roll_kind: D20RollKind,
+    d4_roll: i32,
+) -> i32 {
+    if !(1..=4).contains(&d4_roll) {
+        return 0;
+    }
+
+    match (effect, roll_kind) {
+        (RollModifierActiveEffect::BaneD20RollPenalty, D20RollKind::AttackRoll)
+        | (RollModifierActiveEffect::BaneD20RollPenalty, D20RollKind::SavingThrow) => -d4_roll,
+        (RollModifierActiveEffect::BlessD20RollBonus, D20RollKind::AttackRoll)
+        | (RollModifierActiveEffect::BlessD20RollBonus, D20RollKind::SavingThrow) => d4_roll,
+        (
+            RollModifierActiveEffect::GuidanceAbilityCheckBonus { skill: selected },
+            D20RollKind::AbilityCheck { skill, .. },
+        ) if selected == skill => d4_roll,
+        _ => roll_modifier_fixed_ability_check_delta(effect, roll_modifier_skill_for(roll_kind)),
+    }
+}
+
+fn roll_modifier_skill_for(roll_kind: D20RollKind) -> RollModifierSkill {
+    match roll_kind {
+        D20RollKind::AttackRoll | D20RollKind::SavingThrow => RollModifierSkill::OtherSkill,
+        D20RollKind::AbilityCheck { skill, .. } => skill,
+    }
+}
+
+pub fn thaumaturgy_booming_voice_active_effect() -> RollModifierActiveEffect {
+    RollModifierActiveEffect::ThaumaturgyBoomingVoice {
+        duration_ticks: THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
+    }
+}
+
+pub fn active_effects_contain_thaumaturgy_booming_voice(
+    effects: &[RollModifierActiveEffect],
+) -> bool {
+    effects.iter().any(|effect| {
+        matches!(
+            effect,
+            RollModifierActiveEffect::ThaumaturgyBoomingVoice { .. }
+        )
+    })
+}
+
+pub fn thaumaturgy_active_one_minute_effect_count_after_booming_voice_cast(
+    effects: &[RollModifierActiveEffect],
+    active_one_minute_effect_count: i32,
+) -> i32 {
+    if active_effects_contain_thaumaturgy_booming_voice(effects) {
+        active_one_minute_effect_count
+    } else {
+        active_one_minute_effect_count + 1
+    }
+}
+
+pub fn thaumaturgy_booming_voice_ability_check_roll_mode(
+    effects: &[RollModifierActiveEffect],
+    ability: Ability,
+    skill: RollModifierSkill,
+) -> AbilityCheckRollMode {
+    if ability == Ability::Charisma
+        && skill == RollModifierSkill::IntimidationSkill
+        && active_effects_contain_thaumaturgy_booming_voice(effects)
+    {
+        AbilityCheckRollMode::AdvantageAbilityCheck
+    } else {
+        AbilityCheckRollMode::NormalAbilityCheck
+    }
+}
+
+pub fn can_add_thaumaturgy_booming_voice(
+    effects: &[RollModifierActiveEffect],
+    active_one_minute_effect_count: i32,
+) -> bool {
+    active_one_minute_effect_count >= 0
+        && thaumaturgy_active_one_minute_effect_count_after_booming_voice_cast(
+            effects,
+            active_one_minute_effect_count,
+        ) <= THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScalarBuffSpell {
+    FalseLifeScalarBuff,
+    LongstriderScalarBuff,
+    ShieldOfFaithScalarBuff,
+    SpiderClimbScalarBuff,
+    FlyScalarBuff,
+    BarkskinScalarBuff,
+    AidScalarBuff,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScalarBuffActiveEffect {
+    LongstriderSpeedDelta,
+    ShieldOfFaithArmorClassBonus,
+    SpiderClimbClimbSpeedGrant { duration_ticks: i32 },
+    FlySpeedHoverGrant { duration_ticks: i32 },
+    BarkskinArmorClassFloor { duration_ticks: i32 },
+    AidHitPointMaximumIncrease { amount: i32, duration_ticks: i32 },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScalarBuffTargetState {
+    pub vitals: CreatureVitals,
+    pub active_effects: Vec<ScalarBuffActiveEffect>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ScalarBuffBaseStats {
+    pub armor_class: i32,
+    pub speed_feet: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ScalarBuffProjection {
+    pub armor_class: i32,
+    pub speed_feet: i32,
+    pub climb_speed_feet: i32,
+    pub fly_speed_feet: i32,
+    pub hit_points: i32,
+    pub hit_point_maximum: i32,
+    pub temporary_hit_points: i32,
+    pub armor_class_bonus_active: bool,
+    pub speed_delta_active: bool,
+    pub special_speed_grant_active: bool,
+    pub hit_point_maximum_increase_active: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ScalarBuffSpellFacts {
+    pub invocation: ScalarBuffSpell,
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub target_count: i32,
+    pub targets_are_valid: bool,
+    pub all_targets_willing: bool,
+    pub false_life_rolled_dice: i32,
+    pub temporary_hit_point_choice: TemporaryHitPointChoice,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScalarBuffSpellResult {
+    pub invocation: SpellInvocationResult,
+    pub target: ScalarBuffTargetState,
+    pub caster_concentrating: bool,
+    pub target_effected: bool,
+}
+
+pub const LONGSTRIDER_SPEED_DELTA_FEET: i32 = 10;
+pub const SHIELD_OF_FAITH_ARMOR_CLASS_BONUS: i32 = 2;
+pub const BARKSKIN_ARMOR_CLASS_FLOOR: i32 = 17;
+pub const SPIDER_CLIMB_DURATION_TICKS: i32 = 600;
+pub const FLY_DURATION_TICKS: i32 = 100;
+pub const BARKSKIN_DURATION_TICKS: i32 = 600;
+pub const AID_DURATION_TICKS: i32 = 4800;
+
+pub fn scalar_buff_spell_profile(spell: ScalarBuffSpell) -> SpellDefinitionProfile {
+    match spell {
+        ScalarBuffSpell::FalseLifeScalarBuff => SpellDefinitionProfile::FalseLife,
+        ScalarBuffSpell::LongstriderScalarBuff => SpellDefinitionProfile::Longstrider,
+        ScalarBuffSpell::ShieldOfFaithScalarBuff => SpellDefinitionProfile::ShieldOfFaith,
+        ScalarBuffSpell::SpiderClimbScalarBuff => SpellDefinitionProfile::SpiderClimb,
+        ScalarBuffSpell::FlyScalarBuff => SpellDefinitionProfile::Fly,
+        ScalarBuffSpell::BarkskinScalarBuff => SpellDefinitionProfile::Barkskin,
+        ScalarBuffSpell::AidScalarBuff => SpellDefinitionProfile::Aid,
+    }
+}
+
+pub fn scalar_buff_for_spell_profile(profile: SpellDefinitionProfile) -> Option<ScalarBuffSpell> {
+    match profile {
+        SpellDefinitionProfile::FalseLife => Some(ScalarBuffSpell::FalseLifeScalarBuff),
+        SpellDefinitionProfile::Longstrider => Some(ScalarBuffSpell::LongstriderScalarBuff),
+        SpellDefinitionProfile::ShieldOfFaith => Some(ScalarBuffSpell::ShieldOfFaithScalarBuff),
+        SpellDefinitionProfile::SpiderClimb => Some(ScalarBuffSpell::SpiderClimbScalarBuff),
+        SpellDefinitionProfile::Fly => Some(ScalarBuffSpell::FlyScalarBuff),
+        SpellDefinitionProfile::Barkskin => Some(ScalarBuffSpell::BarkskinScalarBuff),
+        SpellDefinitionProfile::Aid => Some(ScalarBuffSpell::AidScalarBuff),
+        _ => None,
+    }
+}
+
+pub fn scalar_buff_maximum_targets(spell: ScalarBuffSpell, slot_level: i32) -> i32 {
+    match spell {
+        ScalarBuffSpell::LongstriderScalarBuff => slot_level,
+        ScalarBuffSpell::SpiderClimbScalarBuff => 1 + (slot_level - 2).max(0),
+        ScalarBuffSpell::FlyScalarBuff => 1 + (slot_level - 3).max(0),
+        ScalarBuffSpell::AidScalarBuff => 3,
+        ScalarBuffSpell::FalseLifeScalarBuff
+        | ScalarBuffSpell::ShieldOfFaithScalarBuff
+        | ScalarBuffSpell::BarkskinScalarBuff => 1,
+    }
+}
+
+pub fn scalar_buff_requires_willing_targets(spell: ScalarBuffSpell) -> bool {
+    matches!(
+        spell,
+        ScalarBuffSpell::BarkskinScalarBuff
+            | ScalarBuffSpell::SpiderClimbScalarBuff
+            | ScalarBuffSpell::FlyScalarBuff
+    )
+}
+
+pub fn scalar_buff_requires_concentration(spell: ScalarBuffSpell) -> bool {
+    matches!(
+        spell,
+        ScalarBuffSpell::ShieldOfFaithScalarBuff
+            | ScalarBuffSpell::SpiderClimbScalarBuff
+            | ScalarBuffSpell::FlyScalarBuff
+    )
+}
+
+pub fn scalar_buff_target_disposition_is_satisfied(
+    spell: ScalarBuffSpell,
+    all_targets_willing: bool,
+) -> bool {
+    !scalar_buff_requires_willing_targets(spell) || all_targets_willing
+}
+
+pub fn scalar_buff_temporary_hit_points(
+    spell: ScalarBuffSpell,
+    slot_level: i32,
+    rolled_dice: i32,
+) -> i32 {
+    match spell {
+        ScalarBuffSpell::FalseLifeScalarBuff => rolled_dice + 4 + (slot_level - 1).max(0) * 5,
+        _ => 0,
+    }
+}
+
+pub fn scalar_buff_aid_hit_point_maximum_increase(slot_level: i32) -> i32 {
+    5 + (slot_level - 2).max(0) * 5
+}
+
+pub fn scalar_buff_active_effects(
+    spell: ScalarBuffSpell,
+    slot_level: i32,
+) -> Vec<ScalarBuffActiveEffect> {
+    match spell {
+        ScalarBuffSpell::FalseLifeScalarBuff => Vec::new(),
+        ScalarBuffSpell::LongstriderScalarBuff => {
+            vec![ScalarBuffActiveEffect::LongstriderSpeedDelta]
+        }
+        ScalarBuffSpell::ShieldOfFaithScalarBuff => {
+            vec![ScalarBuffActiveEffect::ShieldOfFaithArmorClassBonus]
+        }
+        ScalarBuffSpell::SpiderClimbScalarBuff => {
+            vec![ScalarBuffActiveEffect::SpiderClimbClimbSpeedGrant {
+                duration_ticks: SPIDER_CLIMB_DURATION_TICKS,
+            }]
+        }
+        ScalarBuffSpell::FlyScalarBuff => vec![ScalarBuffActiveEffect::FlySpeedHoverGrant {
+            duration_ticks: FLY_DURATION_TICKS,
+        }],
+        ScalarBuffSpell::BarkskinScalarBuff => {
+            vec![ScalarBuffActiveEffect::BarkskinArmorClassFloor {
+                duration_ticks: BARKSKIN_DURATION_TICKS,
+            }]
+        }
+        ScalarBuffSpell::AidScalarBuff => {
+            vec![ScalarBuffActiveEffect::AidHitPointMaximumIncrease {
+                amount: scalar_buff_aid_hit_point_maximum_increase(slot_level),
+                duration_ticks: AID_DURATION_TICKS,
+            }]
+        }
+    }
+}
+
+pub fn active_effects_contain_scalar_buff(
+    effects: &[ScalarBuffActiveEffect],
+    effect: ScalarBuffActiveEffect,
+) -> bool {
+    effects.contains(&effect)
+}
+
+pub fn active_effects_contain_kind_longstrider(effects: &[ScalarBuffActiveEffect]) -> bool {
+    effects.contains(&ScalarBuffActiveEffect::LongstriderSpeedDelta)
+}
+
+pub fn active_effects_contain_kind_shield_of_faith(effects: &[ScalarBuffActiveEffect]) -> bool {
+    effects.contains(&ScalarBuffActiveEffect::ShieldOfFaithArmorClassBonus)
+}
+
+pub fn active_effects_contain_kind_spider_climb(effects: &[ScalarBuffActiveEffect]) -> bool {
+    effects.iter().any(|effect| {
+        matches!(
+            effect,
+            ScalarBuffActiveEffect::SpiderClimbClimbSpeedGrant { .. }
+        )
+    })
+}
+
+pub fn active_effects_contain_kind_fly(effects: &[ScalarBuffActiveEffect]) -> bool {
+    effects
+        .iter()
+        .any(|effect| matches!(effect, ScalarBuffActiveEffect::FlySpeedHoverGrant { .. }))
+}
+
+pub fn active_effects_contain_kind_barkskin(effects: &[ScalarBuffActiveEffect]) -> bool {
+    effects.iter().any(|effect| {
+        matches!(
+            effect,
+            ScalarBuffActiveEffect::BarkskinArmorClassFloor { .. }
+        )
+    })
+}
+
+pub fn aid_hit_point_maximum_increase_applied_amount(effects: &[ScalarBuffActiveEffect]) -> i32 {
+    effects
+        .iter()
+        .map(|effect| match effect {
+            ScalarBuffActiveEffect::AidHitPointMaximumIncrease { amount, .. } => *amount,
+            _ => 0,
+        })
+        .max()
+        .unwrap_or(0)
+}
+
+pub fn active_effects_contain_kind_aid(effects: &[ScalarBuffActiveEffect]) -> bool {
+    aid_hit_point_maximum_increase_applied_amount(effects) > 0
+}
+
+fn scalar_buff_effects_with_added(
+    mut effects: Vec<ScalarBuffActiveEffect>,
+    added: &[ScalarBuffActiveEffect],
+) -> Vec<ScalarBuffActiveEffect> {
+    for effect in added {
+        if !effects.contains(effect) {
+            effects.push(*effect);
+        }
+    }
+    effects
+}
+
+pub fn scalar_buff_project_target(
+    target: &ScalarBuffTargetState,
+    base_stats: ScalarBuffBaseStats,
+) -> ScalarBuffProjection {
+    let speed_delta = if active_effects_contain_kind_longstrider(&target.active_effects) {
+        LONGSTRIDER_SPEED_DELTA_FEET
+    } else {
+        0
+    };
+    let speed_feet = base_stats.speed_feet + speed_delta;
+    let armor_class_with_bonus = base_stats.armor_class
+        + if active_effects_contain_kind_shield_of_faith(&target.active_effects) {
+            SHIELD_OF_FAITH_ARMOR_CLASS_BONUS
+        } else {
+            0
+        };
+    let armor_class = if active_effects_contain_kind_barkskin(&target.active_effects) {
+        armor_class_with_bonus.max(BARKSKIN_ARMOR_CLASS_FLOOR)
+    } else {
+        armor_class_with_bonus
+    };
+    let climb_speed_feet = if active_effects_contain_kind_spider_climb(&target.active_effects) {
+        speed_feet
+    } else {
+        0
+    };
+    let fly_speed_feet = if active_effects_contain_kind_fly(&target.active_effects) {
+        60 + speed_delta
+    } else {
+        0
+    };
+
+    ScalarBuffProjection {
+        armor_class,
+        speed_feet,
+        climb_speed_feet,
+        fly_speed_feet,
+        hit_points: target.vitals.hit_points(),
+        hit_point_maximum: target.vitals.hit_point_maximum(),
+        temporary_hit_points: target.vitals.temporary_hit_points(),
+        armor_class_bonus_active: active_effects_contain_kind_shield_of_faith(
+            &target.active_effects,
+        ),
+        speed_delta_active: active_effects_contain_kind_longstrider(&target.active_effects),
+        special_speed_grant_active: active_effects_contain_kind_spider_climb(
+            &target.active_effects,
+        ) || active_effects_contain_kind_fly(&target.active_effects),
+        hit_point_maximum_increase_active: active_effects_contain_kind_aid(&target.active_effects),
+    }
+}
+
+pub fn scalar_buff_target_after_aid(
+    target: ScalarBuffTargetState,
+    effects: &[ScalarBuffActiveEffect],
+) -> ScalarBuffTargetState {
+    let active_amount = aid_hit_point_maximum_increase_applied_amount(&target.active_effects);
+    let active_effects = scalar_buff_effects_with_added(target.active_effects, effects);
+    let next_active_amount = aid_hit_point_maximum_increase_applied_amount(&active_effects);
+    let increase = next_active_amount - active_amount;
+
+    ScalarBuffTargetState {
+        vitals: CreatureVitals::assume_legal(
+            target.vitals.kind(),
+            target.vitals.hit_points() + increase,
+            target.vitals.hit_point_maximum() + increase,
+            target.vitals.temporary_hit_points(),
+            target.vitals.is_dead(),
+            target.vitals.is_unconscious(),
+        ),
+        active_effects,
+    }
+}
+
+pub fn scalar_buff_target_after_effect(
+    target: ScalarBuffTargetState,
+    spell: ScalarBuffSpell,
+    slot_level: i32,
+    rolled_dice: i32,
+    temporary_hit_point_choice: TemporaryHitPointChoice,
+) -> ScalarBuffTargetState {
+    let effects = scalar_buff_active_effects(spell, slot_level);
+    match spell {
+        ScalarBuffSpell::FalseLifeScalarBuff => ScalarBuffTargetState {
+            vitals: grant_temporary_hit_points(
+                target.vitals,
+                scalar_buff_temporary_hit_points(spell, slot_level, rolled_dice),
+                temporary_hit_point_choice,
+            ),
+            active_effects: target.active_effects,
+        },
+        ScalarBuffSpell::AidScalarBuff => scalar_buff_target_after_aid(target, &effects),
+        _ => ScalarBuffTargetState {
+            vitals: target.vitals,
+            active_effects: scalar_buff_effects_with_added(target.active_effects, &effects),
+        },
+    }
+}
+
+pub fn legal_scalar_buff_spell_facts(facts: ScalarBuffSpellFacts) -> bool {
+    facts.target_count >= 1
+        && scalar_buff_target_disposition_is_satisfied(facts.invocation, facts.all_targets_willing)
+        && (facts.invocation != ScalarBuffSpell::FalseLifeScalarBuff
+            || (2..=8).contains(&facts.false_life_rolled_dice))
+}
+
+pub fn resolve_scalar_buff_spell(
+    state: SpellcastingProcedureState,
+    caster_concentrating: bool,
+    target: ScalarBuffTargetState,
+    facts: ScalarBuffSpellFacts,
+) -> ScalarBuffSpellResult {
+    let invocation_facts = SpellInvocationFacts {
+        profile: scalar_buff_spell_profile(facts.invocation),
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: facts.target_count,
+        targets_are_valid: facts.targets_are_valid,
+    };
+    let invocation = if legal_scalar_buff_spell_facts(facts) {
+        resolve_spell_invocation(state, invocation_facts)
+    } else {
+        SpellInvocationResult {
+            state,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let target_effected = spell_invocation_can_affect_targets(invocation, invocation_facts);
+    let target = if target_effected {
+        scalar_buff_target_after_effect(
+            target,
+            facts.invocation,
+            facts.selected_slot_level,
+            facts.false_life_rolled_dice,
+            facts.temporary_hit_point_choice,
+        )
+    } else {
+        target
+    };
+    let caster_concentrating =
+        if invocation.admitted && scalar_buff_requires_concentration(facts.invocation) {
+            true
+        } else {
+            caster_concentrating
+        };
+
+    ScalarBuffSpellResult {
+        invocation,
+        target,
+        caster_concentrating,
+        target_effected,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSavingThrowAbility {
+    SpellStrengthSavingThrow,
+    SpellDexteritySavingThrow,
+    SpellConstitutionSavingThrow,
+    SpellWisdomSavingThrow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlindnessDeafnessConditionChoice {
+    BlindnessDeafnessBlindedChoice,
+    BlindnessDeafnessDeafenedChoice,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SaveGatedConditionSource {
+    PrimaryCaster,
+    OtherSource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SaveGatedConditionActiveEffect {
+    BlindnessDeafnessBlinded {
+        source: SaveGatedConditionSource,
+        duration_ticks: i32,
+    },
+    BlindnessDeafnessDeafened {
+        source: SaveGatedConditionSource,
+        duration_ticks: i32,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SaveGatedConditionTargetState {
+    pub active_effects: Vec<SaveGatedConditionActiveEffect>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SaveGatedConditionProjection {
+    pub blinded: bool,
+    pub deafened: bool,
+    pub restrained: bool,
+    pub paralyzed: bool,
+    pub incapacitated: bool,
+    pub unconscious: bool,
+    pub prone: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BlindnessDeafnessSpellFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub target_count: i32,
+    pub targets_are_valid: bool,
+    pub source: SaveGatedConditionSource,
+    pub choice: BlindnessDeafnessConditionChoice,
+    pub saving_throw_succeeded: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlindnessDeafnessSpellResult {
+    pub invocation: SpellInvocationResult,
+    pub target: SaveGatedConditionTargetState,
+    pub target_effected: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlindnessDeafnessRepeatSaveResult {
+    pub target: SaveGatedConditionTargetState,
+    pub effect_ended: bool,
+}
+
+pub const BLINDNESS_DEAFNESS_DURATION_TICKS: i32 = 10;
+
+pub fn blindness_deafness_maximum_targets(slot_level: i32) -> i32 {
+    1 + (slot_level - 2).max(0)
+}
+
+pub fn blindness_deafness_saving_throw_ability() -> SpellSavingThrowAbility {
+    SpellSavingThrowAbility::SpellConstitutionSavingThrow
+}
+
+pub fn blindness_deafness_active_effect(
+    choice: BlindnessDeafnessConditionChoice,
+    source: SaveGatedConditionSource,
+) -> SaveGatedConditionActiveEffect {
+    match choice {
+        BlindnessDeafnessConditionChoice::BlindnessDeafnessBlindedChoice => {
+            SaveGatedConditionActiveEffect::BlindnessDeafnessBlinded {
+                source,
+                duration_ticks: BLINDNESS_DEAFNESS_DURATION_TICKS,
+            }
+        }
+        BlindnessDeafnessConditionChoice::BlindnessDeafnessDeafenedChoice => {
+            SaveGatedConditionActiveEffect::BlindnessDeafnessDeafened {
+                source,
+                duration_ticks: BLINDNESS_DEAFNESS_DURATION_TICKS,
+            }
+        }
+    }
+}
+
+pub fn blindness_deafness_effect_matches_choice_source(
+    effect: SaveGatedConditionActiveEffect,
+    choice: BlindnessDeafnessConditionChoice,
+    source: SaveGatedConditionSource,
+) -> bool {
+    matches!(
+        (effect, choice),
+        (
+            SaveGatedConditionActiveEffect::BlindnessDeafnessBlinded {
+                source: effect_source,
+                ..
+            },
+            BlindnessDeafnessConditionChoice::BlindnessDeafnessBlindedChoice
+        ) if effect_source == source
+    ) || matches!(
+        (effect, choice),
+        (
+            SaveGatedConditionActiveEffect::BlindnessDeafnessDeafened {
+                source: effect_source,
+                ..
+            },
+            BlindnessDeafnessConditionChoice::BlindnessDeafnessDeafenedChoice
+        ) if effect_source == source
+    )
+}
+
+pub fn active_effects_without_blindness_deafness_choice_from(
+    effects: &[SaveGatedConditionActiveEffect],
+    choice: BlindnessDeafnessConditionChoice,
+    source: SaveGatedConditionSource,
+) -> Vec<SaveGatedConditionActiveEffect> {
+    effects
+        .iter()
+        .copied()
+        .filter(|effect| !blindness_deafness_effect_matches_choice_source(*effect, choice, source))
+        .collect()
+}
+
+pub fn blindness_deafness_repeat_save_due(
+    effects: &[SaveGatedConditionActiveEffect],
+    source: SaveGatedConditionSource,
+    choice: BlindnessDeafnessConditionChoice,
+) -> bool {
+    effects
+        .iter()
+        .any(|effect| blindness_deafness_effect_matches_choice_source(*effect, choice, source))
+}
+
+pub fn save_gated_condition_projection(
+    target: &SaveGatedConditionTargetState,
+) -> SaveGatedConditionProjection {
+    SaveGatedConditionProjection {
+        blinded: target.active_effects.iter().any(|effect| {
+            matches!(
+                effect,
+                SaveGatedConditionActiveEffect::BlindnessDeafnessBlinded { .. }
+            )
+        }),
+        deafened: target.active_effects.iter().any(|effect| {
+            matches!(
+                effect,
+                SaveGatedConditionActiveEffect::BlindnessDeafnessDeafened { .. }
+            )
+        }),
+        restrained: false,
+        paralyzed: false,
+        incapacitated: false,
+        unconscious: false,
+        prone: false,
+    }
+}
+
+pub fn blindness_deafness_target(
+    target: SaveGatedConditionTargetState,
+    saving_throw_succeeded: bool,
+    source: SaveGatedConditionSource,
+    choice: BlindnessDeafnessConditionChoice,
+) -> SaveGatedConditionTargetState {
+    if saving_throw_succeeded {
+        return target;
+    }
+
+    let mut active_effects = active_effects_without_blindness_deafness_choice_from(
+        &target.active_effects,
+        choice,
+        source,
+    );
+    let effect = blindness_deafness_active_effect(choice, source);
+    if !active_effects.contains(&effect) {
+        active_effects.push(effect);
+    }
+
+    SaveGatedConditionTargetState { active_effects }
+}
+
+pub fn legal_blindness_deafness_spell_facts(facts: BlindnessDeafnessSpellFacts) -> bool {
+    legal_spell_invocation_target_count(
+        SpellDefinitionProfile::BlindnessDeafness,
+        facts.selected_slot_level,
+        facts.target_count,
+    )
+}
+
+pub fn resolve_blindness_deafness_spell(
+    state: SpellcastingProcedureState,
+    target: SaveGatedConditionTargetState,
+    facts: BlindnessDeafnessSpellFacts,
+) -> BlindnessDeafnessSpellResult {
+    let invocation_facts = SpellInvocationFacts {
+        profile: SpellDefinitionProfile::BlindnessDeafness,
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: facts.target_count,
+        targets_are_valid: facts.targets_are_valid,
+    };
+    let invocation = if legal_blindness_deafness_spell_facts(facts) {
+        resolve_spell_invocation(state, invocation_facts)
+    } else {
+        SpellInvocationResult {
+            state,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let target_effected = spell_invocation_can_affect_targets(invocation, invocation_facts);
+    let target = if target_effected {
+        blindness_deafness_target(
+            target,
+            facts.saving_throw_succeeded,
+            facts.source,
+            facts.choice,
+        )
+    } else {
+        target
+    };
+
+    BlindnessDeafnessSpellResult {
+        invocation,
+        target,
+        target_effected,
+    }
+}
+
+pub fn end_turn_with_blindness_deafness_repeat_save(
+    target: SaveGatedConditionTargetState,
+    source: SaveGatedConditionSource,
+    choice: BlindnessDeafnessConditionChoice,
+    saving_throw_succeeded: bool,
+) -> BlindnessDeafnessRepeatSaveResult {
+    let effect_due = blindness_deafness_repeat_save_due(&target.active_effects, source, choice);
+    if saving_throw_succeeded && effect_due {
+        BlindnessDeafnessRepeatSaveResult {
+            target: SaveGatedConditionTargetState {
+                active_effects: active_effects_without_blindness_deafness_choice_from(
+                    &target.active_effects,
+                    choice,
+                    source,
+                ),
+            },
+            effect_ended: true,
+        }
+    } else {
+        BlindnessDeafnessRepeatSaveResult {
+            target,
+            effect_ended: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DamageType {
     Acid,
@@ -1500,6 +2766,332 @@ pub const ALL_DAMAGE_TYPES: [DamageType; 13] = [
     DamageType::Slashing,
     DamageType::Thunder,
 ];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellAttackHitProjection {
+    SpellAttackSpeedReductionHitProjection,
+    SpellAttackHitPointRegainPreventionHitProjection,
+    SpellAttackInvisibleBenefitDeniedHitProjection,
+    SpellAttackOpportunityAttackDeniedHitProjection,
+    SpellAttackNextAttackAdvantageHitProjection,
+    SpellAttackPoisonedHitProjection,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellFailedSaveProjection {
+    SpellSaveNextAttackDisadvantageFailedProjection,
+    SpellSavePush10FeetFailedProjection,
+    SpellSaveForcedReactionMovementFailedProjection,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSaveSuccessDamagePolicy {
+    SpellNoDamageOnSuccessfulSave,
+    SpellHalfDamageOnSuccessfulSave,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellAttackDamageProfile {
+    RayOfFrostSpellAttackProfile,
+    PoisonSpraySpellAttackProfile,
+    ChillTouchSpellAttackProfile,
+    StarryWispSpellAttackProfile,
+    FireBoltSpellAttackProfile,
+    ShockingGraspSpellAttackProfile,
+    GuidingBoltSpellAttackProfile,
+    RayOfSicknessSpellAttackProfile,
+    ProduceFlameHurlSpellAttackProfile,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSaveGatedDamageProfile {
+    AcidSplashSaveDamageProfile,
+    SacredFlameSaveDamageProfile,
+    InflictWoundsSaveDamageProfile,
+    BurningHandsSaveDamageProfile,
+    FireballSaveDamageProfile,
+    LightningBoltSaveDamageProfile,
+    ViciousMockerySaveDamageProfile,
+    ThunderwaveSaveDamageProfile,
+    DissonantWhispersSaveDamageProfile,
+    HellishRebukeSaveDamageProfile,
+    MindSpikeSaveDamageProfile,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSaveGatedTargeting {
+    SpellSingleSaveTarget,
+    SpellAreaSaveTargets,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpellAttackDamageBranchFacts {
+    pub attack_roll: AttackRollProcedureFacts,
+    pub damage_type: DamageType,
+    pub hit_projections: Vec<SpellAttackHitProjection>,
+    pub base_damage_dice: i32,
+    pub maximum_base_damage_dice: i32,
+    pub rolled_damage_dice_count: i32,
+    pub damage_die_size: i32,
+    pub damage_roll: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpellAttackDamageBranchResult {
+    pub damage_amount: i32,
+    pub damage_type: DamageType,
+    pub hit_projections: Vec<SpellAttackHitProjection>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpellSaveDamageBranchFacts {
+    pub damage_type: DamageType,
+    pub success_policy: SpellSaveSuccessDamagePolicy,
+    pub failed_save_projections: Vec<SpellFailedSaveProjection>,
+    pub saving_throw_failed: bool,
+    pub damage_roll: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpellSaveDamageBranchResult {
+    pub damage_amount: i32,
+    pub damage_type: DamageType,
+    pub failed_save_projections: Vec<SpellFailedSaveProjection>,
+}
+
+pub fn spell_attack_damage_profile_damage_type(profile: SpellAttackDamageProfile) -> DamageType {
+    match profile {
+        SpellAttackDamageProfile::RayOfFrostSpellAttackProfile => DamageType::Cold,
+        SpellAttackDamageProfile::PoisonSpraySpellAttackProfile => DamageType::Poison,
+        SpellAttackDamageProfile::ChillTouchSpellAttackProfile => DamageType::Necrotic,
+        SpellAttackDamageProfile::StarryWispSpellAttackProfile => DamageType::Radiant,
+        SpellAttackDamageProfile::FireBoltSpellAttackProfile => DamageType::Fire,
+        SpellAttackDamageProfile::ShockingGraspSpellAttackProfile => DamageType::Lightning,
+        SpellAttackDamageProfile::GuidingBoltSpellAttackProfile => DamageType::Radiant,
+        SpellAttackDamageProfile::RayOfSicknessSpellAttackProfile => DamageType::Poison,
+        SpellAttackDamageProfile::ProduceFlameHurlSpellAttackProfile => DamageType::Fire,
+    }
+}
+
+pub fn spell_attack_damage_profile_hit_effects(
+    profile: SpellAttackDamageProfile,
+) -> Vec<SpellAttackHitProjection> {
+    match profile {
+        SpellAttackDamageProfile::RayOfFrostSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackSpeedReductionHitProjection]
+        }
+        SpellAttackDamageProfile::ChillTouchSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackHitPointRegainPreventionHitProjection]
+        }
+        SpellAttackDamageProfile::StarryWispSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackInvisibleBenefitDeniedHitProjection]
+        }
+        SpellAttackDamageProfile::ShockingGraspSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackOpportunityAttackDeniedHitProjection]
+        }
+        SpellAttackDamageProfile::GuidingBoltSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackNextAttackAdvantageHitProjection]
+        }
+        SpellAttackDamageProfile::RayOfSicknessSpellAttackProfile => {
+            vec![SpellAttackHitProjection::SpellAttackPoisonedHitProjection]
+        }
+        SpellAttackDamageProfile::PoisonSpraySpellAttackProfile
+        | SpellAttackDamageProfile::FireBoltSpellAttackProfile
+        | SpellAttackDamageProfile::ProduceFlameHurlSpellAttackProfile => Vec::new(),
+    }
+}
+
+pub fn spell_attack_damage_profile_supports_object_target(
+    profile: SpellAttackDamageProfile,
+) -> bool {
+    matches!(
+        profile,
+        SpellAttackDamageProfile::ChillTouchSpellAttackProfile
+            | SpellAttackDamageProfile::StarryWispSpellAttackProfile
+            | SpellAttackDamageProfile::FireBoltSpellAttackProfile
+            | SpellAttackDamageProfile::ProduceFlameHurlSpellAttackProfile
+    )
+}
+
+pub fn spell_save_gated_damage_targeting(
+    profile: SpellSaveGatedDamageProfile,
+) -> SpellSaveGatedTargeting {
+    match profile {
+        SpellSaveGatedDamageProfile::SacredFlameSaveDamageProfile
+        | SpellSaveGatedDamageProfile::InflictWoundsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::ViciousMockerySaveDamageProfile
+        | SpellSaveGatedDamageProfile::DissonantWhispersSaveDamageProfile
+        | SpellSaveGatedDamageProfile::HellishRebukeSaveDamageProfile
+        | SpellSaveGatedDamageProfile::MindSpikeSaveDamageProfile => {
+            SpellSaveGatedTargeting::SpellSingleSaveTarget
+        }
+        SpellSaveGatedDamageProfile::AcidSplashSaveDamageProfile
+        | SpellSaveGatedDamageProfile::BurningHandsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::FireballSaveDamageProfile
+        | SpellSaveGatedDamageProfile::LightningBoltSaveDamageProfile
+        | SpellSaveGatedDamageProfile::ThunderwaveSaveDamageProfile => {
+            SpellSaveGatedTargeting::SpellAreaSaveTargets
+        }
+    }
+}
+
+pub fn spell_save_gated_damage_success(
+    profile: SpellSaveGatedDamageProfile,
+) -> SpellSaveSuccessDamagePolicy {
+    match profile {
+        SpellSaveGatedDamageProfile::AcidSplashSaveDamageProfile
+        | SpellSaveGatedDamageProfile::SacredFlameSaveDamageProfile
+        | SpellSaveGatedDamageProfile::ViciousMockerySaveDamageProfile => {
+            SpellSaveSuccessDamagePolicy::SpellNoDamageOnSuccessfulSave
+        }
+        SpellSaveGatedDamageProfile::InflictWoundsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::BurningHandsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::FireballSaveDamageProfile
+        | SpellSaveGatedDamageProfile::LightningBoltSaveDamageProfile
+        | SpellSaveGatedDamageProfile::ThunderwaveSaveDamageProfile
+        | SpellSaveGatedDamageProfile::DissonantWhispersSaveDamageProfile
+        | SpellSaveGatedDamageProfile::HellishRebukeSaveDamageProfile
+        | SpellSaveGatedDamageProfile::MindSpikeSaveDamageProfile => {
+            SpellSaveSuccessDamagePolicy::SpellHalfDamageOnSuccessfulSave
+        }
+    }
+}
+
+pub fn spell_save_gated_damage_type(profile: SpellSaveGatedDamageProfile) -> DamageType {
+    match profile {
+        SpellSaveGatedDamageProfile::AcidSplashSaveDamageProfile => DamageType::Acid,
+        SpellSaveGatedDamageProfile::SacredFlameSaveDamageProfile => DamageType::Radiant,
+        SpellSaveGatedDamageProfile::InflictWoundsSaveDamageProfile => DamageType::Necrotic,
+        SpellSaveGatedDamageProfile::BurningHandsSaveDamageProfile => DamageType::Fire,
+        SpellSaveGatedDamageProfile::FireballSaveDamageProfile => DamageType::Fire,
+        SpellSaveGatedDamageProfile::LightningBoltSaveDamageProfile => DamageType::Lightning,
+        SpellSaveGatedDamageProfile::ViciousMockerySaveDamageProfile => DamageType::Psychic,
+        SpellSaveGatedDamageProfile::ThunderwaveSaveDamageProfile => DamageType::Thunder,
+        SpellSaveGatedDamageProfile::DissonantWhispersSaveDamageProfile => DamageType::Psychic,
+        SpellSaveGatedDamageProfile::HellishRebukeSaveDamageProfile => DamageType::Fire,
+        SpellSaveGatedDamageProfile::MindSpikeSaveDamageProfile => DamageType::Psychic,
+    }
+}
+
+pub fn spell_save_gated_damage_requires_slot(profile: SpellSaveGatedDamageProfile) -> bool {
+    !matches!(
+        profile,
+        SpellSaveGatedDamageProfile::AcidSplashSaveDamageProfile
+            | SpellSaveGatedDamageProfile::SacredFlameSaveDamageProfile
+            | SpellSaveGatedDamageProfile::ViciousMockerySaveDamageProfile
+    )
+}
+
+pub fn spell_save_gated_damage_requires_concentration(
+    profile: SpellSaveGatedDamageProfile,
+) -> bool {
+    profile == SpellSaveGatedDamageProfile::MindSpikeSaveDamageProfile
+}
+
+pub fn spell_save_gated_damage_failed_save_effects(
+    profile: SpellSaveGatedDamageProfile,
+) -> Vec<SpellFailedSaveProjection> {
+    match profile {
+        SpellSaveGatedDamageProfile::ViciousMockerySaveDamageProfile => {
+            vec![SpellFailedSaveProjection::SpellSaveNextAttackDisadvantageFailedProjection]
+        }
+        SpellSaveGatedDamageProfile::ThunderwaveSaveDamageProfile => {
+            vec![SpellFailedSaveProjection::SpellSavePush10FeetFailedProjection]
+        }
+        SpellSaveGatedDamageProfile::DissonantWhispersSaveDamageProfile => {
+            vec![SpellFailedSaveProjection::SpellSaveForcedReactionMovementFailedProjection]
+        }
+        SpellSaveGatedDamageProfile::AcidSplashSaveDamageProfile
+        | SpellSaveGatedDamageProfile::SacredFlameSaveDamageProfile
+        | SpellSaveGatedDamageProfile::InflictWoundsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::BurningHandsSaveDamageProfile
+        | SpellSaveGatedDamageProfile::FireballSaveDamageProfile
+        | SpellSaveGatedDamageProfile::LightningBoltSaveDamageProfile
+        | SpellSaveGatedDamageProfile::HellishRebukeSaveDamageProfile
+        | SpellSaveGatedDamageProfile::MindSpikeSaveDamageProfile => Vec::new(),
+    }
+}
+
+pub fn legal_spell_attack_damage_branch_facts(facts: &SpellAttackDamageBranchFacts) -> bool {
+    legal_attack_roll_procedure_facts(facts.attack_roll)
+        && facts.base_damage_dice >= 1
+        && facts.maximum_base_damage_dice >= 1
+        && facts.maximum_base_damage_dice <= 10
+        && facts.base_damage_dice <= facts.maximum_base_damage_dice
+        && facts.damage_die_size >= 1
+        && facts.damage_die_size <= 12
+        && damage_dice_count_matches_critical(
+            facts.base_damage_dice,
+            facts.rolled_damage_dice_count,
+            resolve_attack_roll(facts.attack_roll).critical,
+        )
+        && facts.damage_roll >= facts.rolled_damage_dice_count
+        && facts.damage_roll <= facts.rolled_damage_dice_count * facts.damage_die_size
+}
+
+pub fn resolve_spell_attack_damage_branch(
+    facts: SpellAttackDamageBranchFacts,
+) -> SpellAttackDamageBranchResult {
+    let outcome = resolve_attack_roll(facts.attack_roll);
+    if !legal_spell_attack_damage_branch_facts(&facts) || !outcome.hits {
+        SpellAttackDamageBranchResult {
+            damage_amount: 0,
+            damage_type: facts.damage_type,
+            hit_projections: Vec::new(),
+        }
+    } else {
+        SpellAttackDamageBranchResult {
+            damage_amount: nonnegative(facts.damage_roll),
+            damage_type: facts.damage_type,
+            hit_projections: facts.hit_projections,
+        }
+    }
+}
+
+pub fn spell_save_success_damage_amount(
+    policy: SpellSaveSuccessDamagePolicy,
+    damage_roll: i32,
+) -> i32 {
+    match policy {
+        SpellSaveSuccessDamagePolicy::SpellNoDamageOnSuccessfulSave => 0,
+        SpellSaveSuccessDamagePolicy::SpellHalfDamageOnSuccessfulSave => {
+            nonnegative(damage_roll) / 2
+        }
+    }
+}
+
+pub fn legal_spell_save_damage_branch_facts(facts: &SpellSaveDamageBranchFacts) -> bool {
+    facts.damage_roll >= 0
+}
+
+pub fn resolve_spell_save_damage_branch(
+    facts: SpellSaveDamageBranchFacts,
+) -> SpellSaveDamageBranchResult {
+    if !legal_spell_save_damage_branch_facts(&facts) {
+        return SpellSaveDamageBranchResult {
+            damage_amount: 0,
+            damage_type: facts.damage_type,
+            failed_save_projections: Vec::new(),
+        };
+    }
+
+    if facts.saving_throw_failed {
+        SpellSaveDamageBranchResult {
+            damage_amount: nonnegative(facts.damage_roll),
+            damage_type: facts.damage_type,
+            failed_save_projections: facts.failed_save_projections,
+        }
+    } else {
+        SpellSaveDamageBranchResult {
+            damage_amount: spell_save_success_damage_amount(
+                facts.success_policy,
+                facts.damage_roll,
+            ),
+            damage_type: facts.damage_type,
+            failed_save_projections: Vec::new(),
+        }
+    }
+}
 
 fn damage_type_slot(damage_type: DamageType) -> usize {
     match damage_type {
@@ -2797,6 +4389,605 @@ pub fn spend_movement(
             movement_spent_feet: state.movement_spent_feet + movement_cost_feet(facts),
             ..state
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandOption {
+    CommandApproach,
+    CommandDrop,
+    CommandFlee,
+    CommandGrovel,
+    CommandHalt,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandPendingEffect {
+    pub option: CommandOption,
+    pub expires_on_current_turn: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandSpellFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub target_count: i32,
+    pub targets_are_valid: bool,
+    pub failed_target_count: i32,
+    pub failed_targets_are_selected_targets: bool,
+    pub option: CommandOption,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandSpellResult {
+    pub invocation: SpellInvocationResult,
+    pub pending_effect_count: i32,
+    pub option: CommandOption,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandGrovelFollowOutcome {
+    CommandGrovelIgnored,
+    CommandGrovelAppliesProneEndsTurn,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandDropFollowOutcome {
+    CommandDropIgnored,
+    CommandDropObjectsAndEndsTurn { dropped_object_count: i32 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandHaltFollowOutcome {
+    CommandHaltIgnored,
+    CommandHaltSuppressesActionBonusAndMovement,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandApproachFollowOutcome {
+    CommandApproachNoMovement,
+    CommandApproachMovementRejected,
+    CommandApproachMovementContinues,
+    CommandApproachMovementEndsTurn,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandFleeFollowOutcome {
+    CommandFleeNoMovementEndsTurn,
+    CommandFleeMovementRejected,
+    CommandFleeOpportunityAttackContinuation,
+    CommandFleeMovementEndsTurn,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandFollowResult {
+    pub movement: MovementGrappleState,
+    pub pending: Option<CommandPendingEffect>,
+    pub dropped_object_count: i32,
+    pub reaction_window: ReactionWindowState,
+}
+
+pub fn command_max_targets(slot_level: i32) -> i32 {
+    slot_level
+}
+
+pub fn command_pending_applies(
+    pending: Option<CommandPendingEffect>,
+    option: CommandOption,
+) -> bool {
+    matches!(
+        pending,
+        Some(CommandPendingEffect {
+            option: pending_option,
+            expires_on_current_turn: true,
+        }) if pending_option == option
+    )
+}
+
+pub fn clear_command_pending(
+    pending: Option<CommandPendingEffect>,
+    option: CommandOption,
+) -> Option<CommandPendingEffect> {
+    if command_pending_applies(pending, option) {
+        None
+    } else {
+        pending
+    }
+}
+
+pub fn legal_command_spell_facts(facts: CommandSpellFacts) -> bool {
+    facts.target_count >= 1
+        && facts.failed_target_count >= 0
+        && facts.failed_target_count <= facts.target_count
+        && facts.failed_targets_are_selected_targets
+}
+
+pub fn resolve_command_spell(
+    state: SpellcastingProcedureState,
+    facts: CommandSpellFacts,
+) -> CommandSpellResult {
+    let invocation_facts = SpellInvocationFacts {
+        profile: SpellDefinitionProfile::Command,
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: facts.target_count,
+        targets_are_valid: facts.targets_are_valid,
+    };
+    let invocation = if legal_command_spell_facts(facts) {
+        resolve_spell_invocation(state, invocation_facts)
+    } else {
+        SpellInvocationResult {
+            state,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let pending_effect_count = if spell_invocation_can_affect_targets(invocation, invocation_facts)
+    {
+        facts.failed_target_count
+    } else {
+        0
+    };
+
+    CommandSpellResult {
+        invocation,
+        pending_effect_count,
+        option: facts.option,
+    }
+}
+
+pub fn command_grovel_follow_outcome(has_pending_command: bool) -> CommandGrovelFollowOutcome {
+    if has_pending_command {
+        CommandGrovelFollowOutcome::CommandGrovelAppliesProneEndsTurn
+    } else {
+        CommandGrovelFollowOutcome::CommandGrovelIgnored
+    }
+}
+
+pub fn command_drop_follow_outcome(
+    has_pending_command: bool,
+    held_object_count: i32,
+) -> CommandDropFollowOutcome {
+    if has_pending_command && held_object_count >= 0 {
+        CommandDropFollowOutcome::CommandDropObjectsAndEndsTurn {
+            dropped_object_count: held_object_count,
+        }
+    } else {
+        CommandDropFollowOutcome::CommandDropIgnored
+    }
+}
+
+pub fn command_halt_follow_outcome(has_pending_command: bool) -> CommandHaltFollowOutcome {
+    if has_pending_command {
+        CommandHaltFollowOutcome::CommandHaltSuppressesActionBonusAndMovement
+    } else {
+        CommandHaltFollowOutcome::CommandHaltIgnored
+    }
+}
+
+pub fn command_approach_follow_outcome(
+    has_movement_available: bool,
+    movement_can_be_spent: bool,
+    moved_within_five_feet_of_caster: bool,
+) -> CommandApproachFollowOutcome {
+    if !has_movement_available {
+        CommandApproachFollowOutcome::CommandApproachNoMovement
+    } else if !movement_can_be_spent {
+        CommandApproachFollowOutcome::CommandApproachMovementRejected
+    } else if moved_within_five_feet_of_caster {
+        CommandApproachFollowOutcome::CommandApproachMovementEndsTurn
+    } else {
+        CommandApproachFollowOutcome::CommandApproachMovementContinues
+    }
+}
+
+pub fn command_flee_follow_outcome(
+    has_movement_available: bool,
+    movement_cost: i32,
+    movement_remaining: i32,
+    movement_can_be_spent: bool,
+    provokes_opportunity_attack: bool,
+) -> CommandFleeFollowOutcome {
+    if !has_movement_available {
+        CommandFleeFollowOutcome::CommandFleeNoMovementEndsTurn
+    } else if movement_cost != movement_remaining || !movement_can_be_spent {
+        CommandFleeFollowOutcome::CommandFleeMovementRejected
+    } else if provokes_opportunity_attack {
+        CommandFleeFollowOutcome::CommandFleeOpportunityAttackContinuation
+    } else {
+        CommandFleeFollowOutcome::CommandFleeMovementEndsTurn
+    }
+}
+
+fn command_follow_result(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+    dropped_object_count: i32,
+    reaction_window: ReactionWindowState,
+) -> CommandFollowResult {
+    CommandFollowResult {
+        movement,
+        pending,
+        dropped_object_count,
+        reaction_window,
+    }
+}
+
+pub fn follow_command_grovel(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+) -> CommandFollowResult {
+    match command_grovel_follow_outcome(command_pending_applies(
+        pending,
+        CommandOption::CommandGrovel,
+    )) {
+        CommandGrovelFollowOutcome::CommandGrovelAppliesProneEndsTurn => command_follow_result(
+            MovementGrappleState {
+                turn: end_turn(movement.turn),
+                prone: true,
+                ..movement
+            },
+            clear_command_pending(pending, CommandOption::CommandGrovel),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+        CommandGrovelFollowOutcome::CommandGrovelIgnored => {
+            command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow)
+        }
+    }
+}
+
+pub fn follow_command_drop(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+    held_object_count: i32,
+) -> CommandFollowResult {
+    match command_drop_follow_outcome(
+        command_pending_applies(pending, CommandOption::CommandDrop),
+        held_object_count,
+    ) {
+        CommandDropFollowOutcome::CommandDropObjectsAndEndsTurn {
+            dropped_object_count,
+        } => command_follow_result(
+            MovementGrappleState {
+                turn: end_turn(movement.turn),
+                ..movement
+            },
+            clear_command_pending(pending, CommandOption::CommandDrop),
+            dropped_object_count,
+            ReactionWindowState::NoReactionWindow,
+        ),
+        CommandDropFollowOutcome::CommandDropIgnored => {
+            command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow)
+        }
+    }
+}
+
+pub fn follow_command_halt(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+) -> CommandFollowResult {
+    match command_halt_follow_outcome(command_pending_applies(pending, CommandOption::CommandHalt))
+    {
+        CommandHaltFollowOutcome::CommandHaltSuppressesActionBonusAndMovement => {
+            command_follow_result(
+                MovementGrappleState {
+                    turn: TurnProcedureState {
+                        action_quota: ActionQuota::ActionSpent,
+                        bonus_action_available: false,
+                        ..movement.turn
+                    },
+                    movement_spent_feet: movement_budget_feet(movement),
+                    ..movement
+                },
+                pending,
+                0,
+                ReactionWindowState::NoReactionWindow,
+            )
+        }
+        CommandHaltFollowOutcome::CommandHaltIgnored => {
+            command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow)
+        }
+    }
+}
+
+pub fn end_command_halt_turn(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+) -> CommandFollowResult {
+    command_follow_result(
+        MovementGrappleState {
+            turn: end_turn(movement.turn),
+            ..movement
+        },
+        clear_command_pending(pending, CommandOption::CommandHalt),
+        0,
+        ReactionWindowState::NoReactionWindow,
+    )
+}
+
+pub fn follow_command_approach(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+    facts: MovementSpendFacts,
+    moved_within_five_feet_of_caster: bool,
+) -> CommandFollowResult {
+    if !command_pending_applies(pending, CommandOption::CommandApproach) {
+        return command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow);
+    }
+
+    let one_foot_step = MovementSpendFacts {
+        distance_feet: 1,
+        extra_cost_feet: 0,
+    };
+    match command_approach_follow_outcome(
+        can_spend_movement(movement, one_foot_step),
+        can_spend_movement(movement, facts),
+        moved_within_five_feet_of_caster,
+    ) {
+        CommandApproachFollowOutcome::CommandApproachNoMovement => command_follow_result(
+            movement,
+            clear_command_pending(pending, CommandOption::CommandApproach),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+        CommandApproachFollowOutcome::CommandApproachMovementRejected => {
+            command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow)
+        }
+        CommandApproachFollowOutcome::CommandApproachMovementContinues => command_follow_result(
+            spend_movement(movement, facts),
+            clear_command_pending(pending, CommandOption::CommandApproach),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+        CommandApproachFollowOutcome::CommandApproachMovementEndsTurn => command_follow_result(
+            MovementGrappleState {
+                turn: end_turn(movement.turn),
+                ..spend_movement(movement, facts)
+            },
+            clear_command_pending(pending, CommandOption::CommandApproach),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+    }
+}
+
+pub fn follow_command_flee(
+    movement: MovementGrappleState,
+    pending: Option<CommandPendingEffect>,
+    facts: MovementSpendFacts,
+    provokes_opportunity_attack: bool,
+) -> CommandFollowResult {
+    if !command_pending_applies(pending, CommandOption::CommandFlee) {
+        return command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow);
+    }
+
+    let one_foot_step = MovementSpendFacts {
+        distance_feet: 1,
+        extra_cost_feet: 0,
+    };
+    let movement_cost = movement_cost_feet(facts);
+    match command_flee_follow_outcome(
+        can_spend_movement(movement, one_foot_step),
+        movement_cost,
+        movement_remaining_feet(movement),
+        can_spend_movement(movement, facts),
+        provokes_opportunity_attack,
+    ) {
+        CommandFleeFollowOutcome::CommandFleeNoMovementEndsTurn => command_follow_result(
+            MovementGrappleState {
+                turn: end_turn(movement.turn),
+                ..movement
+            },
+            clear_command_pending(pending, CommandOption::CommandFlee),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+        CommandFleeFollowOutcome::CommandFleeMovementRejected => {
+            command_follow_result(movement, pending, 0, ReactionWindowState::NoReactionWindow)
+        }
+        CommandFleeFollowOutcome::CommandFleeOpportunityAttackContinuation => {
+            command_follow_result(
+                movement,
+                pending,
+                0,
+                offer_reaction_window(
+                    ReactionWindowState::NoReactionWindow,
+                    ReactionWindowKind::OpportunityAttackReactionWindow,
+                ),
+            )
+        }
+        CommandFleeFollowOutcome::CommandFleeMovementEndsTurn => command_follow_result(
+            MovementGrappleState {
+                turn: end_turn(movement.turn),
+                ..spend_movement(movement, facts)
+            },
+            clear_command_pending(pending, CommandOption::CommandFlee),
+            0,
+            ReactionWindowState::NoReactionWindow,
+        ),
+    }
+}
+
+pub const SANCTUARY_DURATION_TICKS: i32 = 10;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SanctuaryWardState {
+    pub active: bool,
+    pub source_is_sanctuary: bool,
+    pub duration_ticks: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SanctuarySpellFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub target_within_range: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SanctuarySpellResult {
+    pub invocation: SpellInvocationResult,
+    pub ward: SanctuaryWardState,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SanctuaryTargetingTrigger {
+    SanctuaryAttackRollTargeting,
+    SanctuaryDamagingSpellTargeting,
+    SanctuaryAreaOfEffectTargeting,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SanctuaryTargetIdentity {
+    WardedCreature,
+    ReplacementCreature,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SanctuaryReplacementTargetWitness {
+    pub replacement: SanctuaryTargetIdentity,
+    pub caller_target_legal: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SanctuaryInterdictionOutcome {
+    SanctuarySaveSucceeded,
+    SanctuaryLoseAttackOrSpell,
+    SanctuaryChooseNewTarget {
+        witness: SanctuaryReplacementTargetWitness,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SanctuaryTargetingInterdictionResult {
+    pub wisdom_save_requested: bool,
+    pub attack_or_spell_lost: bool,
+    pub outcome_applies: bool,
+    pub replacement_admitted: bool,
+    pub resolved_target: SanctuaryTargetIdentity,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SanctuaryWardedAction {
+    AttackRoll,
+    SpellCast,
+    DamageDealt,
+    OtherAction,
+}
+
+pub fn sanctuary_ward_active_effect() -> SanctuaryWardState {
+    SanctuaryWardState {
+        active: true,
+        source_is_sanctuary: true,
+        duration_ticks: SANCTUARY_DURATION_TICKS,
+    }
+}
+
+pub fn sanctuary_ward_absent() -> SanctuaryWardState {
+    SanctuaryWardState {
+        active: false,
+        source_is_sanctuary: false,
+        duration_ticks: 0,
+    }
+}
+
+pub fn resolve_sanctuary_spell(
+    state: SpellcastingProcedureState,
+    facts: SanctuarySpellFacts,
+) -> SanctuarySpellResult {
+    let invocation_facts = SpellInvocationFacts {
+        profile: SpellDefinitionProfile::Sanctuary,
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: 1,
+        targets_are_valid: facts.target_within_range,
+    };
+    let invocation = resolve_spell_invocation(state, invocation_facts);
+
+    SanctuarySpellResult {
+        invocation,
+        ward: if spell_invocation_can_affect_targets(invocation, invocation_facts) {
+            sanctuary_ward_active_effect()
+        } else {
+            sanctuary_ward_absent()
+        },
+    }
+}
+
+pub fn ward_targeting_interdiction_applies(trigger: SanctuaryTargetingTrigger) -> bool {
+    match trigger {
+        SanctuaryTargetingTrigger::SanctuaryAttackRollTargeting
+        | SanctuaryTargetingTrigger::SanctuaryDamagingSpellTargeting => true,
+        SanctuaryTargetingTrigger::SanctuaryAreaOfEffectTargeting => false,
+    }
+}
+
+pub fn ward_interdiction_loses_attack_or_spell(outcome: SanctuaryInterdictionOutcome) -> bool {
+    match outcome {
+        SanctuaryInterdictionOutcome::SanctuarySaveSucceeded
+        | SanctuaryInterdictionOutcome::SanctuaryChooseNewTarget { .. } => false,
+        SanctuaryInterdictionOutcome::SanctuaryLoseAttackOrSpell => true,
+    }
+}
+
+pub fn sanctuary_replacement_target_admitted(witness: SanctuaryReplacementTargetWitness) -> bool {
+    witness.replacement != SanctuaryTargetIdentity::WardedCreature && witness.caller_target_legal
+}
+
+pub fn ward_interdiction_target(outcome: SanctuaryInterdictionOutcome) -> SanctuaryTargetIdentity {
+    match outcome {
+        SanctuaryInterdictionOutcome::SanctuarySaveSucceeded
+        | SanctuaryInterdictionOutcome::SanctuaryLoseAttackOrSpell => {
+            SanctuaryTargetIdentity::WardedCreature
+        }
+        SanctuaryInterdictionOutcome::SanctuaryChooseNewTarget { witness } => witness.replacement,
+    }
+}
+
+pub fn resolve_sanctuary_targeting_interdiction(
+    ward: SanctuaryWardState,
+    trigger: SanctuaryTargetingTrigger,
+    outcome: SanctuaryInterdictionOutcome,
+) -> SanctuaryTargetingInterdictionResult {
+    let wisdom_save_requested = ward.active && ward_targeting_interdiction_applies(trigger);
+    let replacement_admitted = match outcome {
+        SanctuaryInterdictionOutcome::SanctuaryChooseNewTarget { witness } => {
+            sanctuary_replacement_target_admitted(witness)
+        }
+        _ => false,
+    };
+    let attack_or_spell_lost =
+        wisdom_save_requested && ward_interdiction_loses_attack_or_spell(outcome);
+    let outcome_applies = wisdom_save_requested
+        && !attack_or_spell_lost
+        && (!matches!(
+            outcome,
+            SanctuaryInterdictionOutcome::SanctuaryChooseNewTarget { .. }
+        ) || replacement_admitted);
+
+    SanctuaryTargetingInterdictionResult {
+        wisdom_save_requested,
+        attack_or_spell_lost,
+        outcome_applies,
+        replacement_admitted,
+        resolved_target: if outcome_applies || attack_or_spell_lost {
+            ward_interdiction_target(outcome)
+        } else {
+            SanctuaryTargetIdentity::WardedCreature
+        },
+    }
+}
+
+pub fn sanctuary_ward_after_warded_action(
+    ward: SanctuaryWardState,
+    action: SanctuaryWardedAction,
+) -> SanctuaryWardState {
+    match action {
+        SanctuaryWardedAction::AttackRoll
+        | SanctuaryWardedAction::SpellCast
+        | SanctuaryWardedAction::DamageDealt => sanctuary_ward_absent(),
+        SanctuaryWardedAction::OtherAction => ward,
     }
 }
 

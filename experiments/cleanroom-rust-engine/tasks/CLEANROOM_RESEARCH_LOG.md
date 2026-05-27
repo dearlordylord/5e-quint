@@ -368,6 +368,110 @@ TypeScript runtime files.
   a generic Arcane Recovery choice model beyond the level 2 fixture, and created
   Spell Slot state for levels beyond the copied level 1 fixture.
 
+## 2026-05-27 - Lane A overnight feature-resource transitions
+
+- Targeted `SHEET.FEATURE_RESOURCES.TRANSITIONS` from the A-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt`,
+  Paladin Lay On Hands RAW, Druid Wild Shape RAW, Monk Focus and Uncanny
+  Metabolism RAW, Sorcerer Font of Magic and Metamagic RAW, Short/Long Rest RAW,
+  ubiquitous language, and scoped obligation metadata.
+- Implemented fixture-supported feature-resource facts and transitions in
+  `engine/src/character_creation.rs`: Lay On Hands spend/heal/Poisoned removal
+  admission, Long Rest resource resets, Short Rest Wild Shape and Monk Focus
+  recovery, Font of Magic ordinary-slot-to-points and points-to-level-3-slot
+  transitions, Uncanny Metabolism Initiative recovery, and Metamagic shared
+  Sorcery Point pool projection.
+- Extended `engine/tests/character_sheet_resources.rs` with fourteen
+  feature-resource tests mirroring the deterministic QNT replay cases and exact
+  rejection messages.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial. The copied QNT owner is a deterministic replay
+  fixture and the Rust implementation covers those named cases; it is not yet a
+  full generic feature-resource engine for every class feature.
+- Source gaps: full coverage still needs build-derived feature resource
+  capacities, a general Font of Magic spell-slot source/cost model for all
+  supported spell levels, broader Lay On Hands condition-removal coverage, and a
+  battle handoff contract for Metamagic beyond shared Sorcery Point expenditure.
+
+## 2026-05-27 - Lane A overnight weapon mastery reselection
+
+- Targeted `SHEET.WEAPON_MASTERY.RESELECTION` from the A-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt`,
+  Fighter/Barbarian/Paladin/Ranger/Rogue Weapon Mastery RAW, Equipment mastery
+  RAW, Long Rest RAW, ubiquitous language, and scoped obligation metadata.
+- Implemented typed sheet Weapon Mastery projection in
+  `engine/src/character_creation.rs` for Paladin, Ranger, and Rogue selected
+  two-weapon containers plus Long Rest reselection changed-choice counts.
+- Added `engine/tests/character_sheet_projection.rs` with six tests mirroring
+  the deterministic QNT selected/reselected identity cases and emitted unit ref
+  strings.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial. The copied QNT fixture covers Paladin, Ranger,
+  and Rogue two-choice projections and Long Rest reselection counts; Rust now
+  covers those cases but not a full Surface eligibility/catalog pipeline.
+- Source gaps: full coverage still needs machine-readable weapon eligibility
+  facts for the complete weapon table and all Weapon Mastery classes, plus a
+  sheet state contract for applying exactly the RAW-permitted Long Rest changes
+  against an existing finalized CharacterBuild.
+
+## 2026-05-27 - Lane A overnight class-feature resource/source projections
+
+- Targeted paired obligations `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` and
+  `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`,
+  Monk Martial Arts/Monk's Focus/Uncanny Metabolism RAW, Sorcerer Font of Magic
+  and Metamagic RAW, relevant Cleric/Druid resource RAW named by the obligation
+  metadata, ubiquitous language, and scoped obligation metadata.
+- Implemented typed resource and source-fact projections in
+  `engine/src/character_creation.rs` for the copied level 2 Monk and Sorcerer
+  fixtures: Monk Focus use-count resource linked to Uncanny Metabolism and the
+  Martial Arts die, and Sorcerer Font of Magic point pool linked to Metamagic
+  option facts.
+- Added `engine/tests/character_creation_projection.rs` with two tests mirroring
+  the deterministic QNT replay fields and exact source-fact string identities.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial for both obligations. The copied QNT fixture covers
+  Monk level 2 and Sorcerer level 2 projections; it does not cover every class
+  feature resource/source fact named by the broad obligation metadata.
+- Source gaps: full coverage still needs a machine-readable retained
+  Surface-class-feature input contract and projection fixtures for Cleric
+  Channel Divinity, Druid Wild Shape/Wild Companion, higher-level Monk Focus
+  progression, higher-level Sorcery Point and Metamagic option progression, and
+  replacement of Metamagic options on Sorcerer level gain.
+
+## 2026-05-27 - Lane A overnight Rogue Expertise choice finalization
+
+- Targeted `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` from the A-owned
+  queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt`,
+  Rogue Expertise RAW, Rules Glossary Expertise RAW, Bard/Ranger/Wizard
+  Expertise RAW named by the obligation metadata, ubiquitous language, and
+  scoped obligation metadata.
+- Implemented typed Rogue Expertise finalization in
+  `engine/src/character_creation.rs` as a set of Expertise skills linked to the
+  `rogue_expertise` feature unit, deriving selected/build Expertise counts from
+  the set rather than storing duplicate booleans.
+- Extended `engine/tests/character_creation_projection.rs` with two tests for
+  the level 1 two-choice and level 6 four-choice QNT fixtures.
+- `cd engine && cargo fmt` passed. Focused A-owned tests passed:
+  `cargo test --test character_creation_projection --test character_sheet_projection --test character_sheet_resources --test character_creation_sheet_projections --test character_creation_draft --test character_sheet_armor_class`.
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Full `cd engine && cargo test` is blocked by an unrelated B-owned failure in
+  `tests/battle_reaction_spells.rs::counterspell_reaction_rejects_wrong_trigger_spent_reaction_or_missing_slot`.
+- Obligation status: partial. The copied QNT fixture covers Rogue level 1 and
+  level 6 selected-identity outcomes; it does not cover the full cross-class
+  Expertise scope named by the obligation metadata.
+- Source gaps: full coverage still needs a machine-readable owned-skill
+  proficiency contract, rejection fixtures for selecting unowned or repeated
+  Expertise skills, and fixtures for Bard, Ranger, and Wizard Expertise choices.
+
 ## 2026-05-27 - Lane B wave 5 spell Hit Point restoration
 
 - Targeted `BATTLE.SPELL.HIT_POINT_RESTORATION` from the queue.
@@ -394,6 +498,108 @@ TypeScript runtime files.
   supply target witness facts directly.
 - Source gap: no cleanroom source gap for the implemented slice.
 
+## 2026-05-27 - Lane B overnight command option and next turn
+
+- Targeted `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-command-choice.qnt`, the Command portion of
+  `battle-runtime-ground-command.qnt`, SRD 5.2.1 Command spell text, and
+  existing local Rust action/movement/reaction helpers.
+- Implemented Command spell admission using the existing spell invocation
+  reducer, slot-scaled target cardinality, selected-target failure facts, and
+  pending-effect counts. Added next-turn follow behavior for Grovel, Drop,
+  Halt, Approach, and Flee, including explicit movement route facts and an
+  opportunity-attack continuation window for Flee.
+- Added `engine/tests/battle_command.rs` with seven tests covering slot-scaled
+  target count, invalid target resource spending without pending effects,
+  Grovel Prone/end-turn cleanup, Drop object count/end-turn cleanup, Halt
+  action/Bonus Action/movement suppression, Approach movement/end-turn
+  outcomes, and Flee all-remaining-movement / opportunity continuation.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`. The Rust
+  engine covers the QNT option outcomes and a compact spell admission/pending
+  projection, but still does not model full BattleState actor identity,
+  initiative-round expiry, or item inventory mutation beyond table-supplied held
+  object count.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B overnight Sanctuary targeting interdiction
+
+- Targeted `BATTLE.SANCTUARY.TARGETING_INTERDICTION` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-sanctuary.qnt`,
+  `battle-runtime-sanctuary-selected-identity.mbt.qnt`, SRD 5.2.1 Sanctuary
+  spell text, and existing local Rust spell invocation helpers.
+- Implemented Sanctuary spell ward creation through the spell invocation reducer,
+  the 1-minute duration projection, direct attack / damaging spell targeting
+  interdiction, area-effect exclusion, replacement target admission with an
+  explicit table witness, lose-attack-or-spell outcome, and early ward end when
+  the warded creature makes an attack roll, casts a spell, or deals damage.
+- Added `engine/tests/battle_sanctuary.rs` with six tests covering ward creation,
+  invalid target resource spending without ward creation, direct targeting save
+  request and loss/pass-through, legal replacement, illegal replacement, area
+  exclusion, and early-end triggers.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SANCTUARY.TARGETING_INTERDICTION`. The
+  Rust engine covers the compact ward/interdiction semantics and target-action
+  early end, but not full BattleState active-effect sets, source actor identity
+  beyond a Sanctuary-source witness, or interaction with other direct condition
+  effects such as Invisibility cleanup.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B overnight reaction casting time
+
+- Targeted `BATTLE.SPELL.REACTION_CASTING_TIME` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-reaction-casting-time.mbt.qnt`,
+  `battle-runtime-reaction-window.qnt`, `battle-runtime-spell-invocation.qnt`,
+  SRD 5.2.1 Counterspell, Hellish Rebuke, and Casting Time / Reaction trigger
+  text, plus existing local Rust reaction, spell slot, and damage helpers.
+- Implemented a reaction-spell invocation helper that spends Reaction and spell
+  slot resources together with trigger-specific admission. Added Counterspell
+  branches for ending the triggering spell without expending its slot or allowing
+  the triggering spell to resume and expend its slot. Added Hellish Rebuke
+  after-damage resolution with slot scaling and saving-throw half damage.
+- Added `engine/tests/battle_reaction_spells.rs` with five tests covering
+  Counterspell end/resume/rejection branches and Hellish Rebuke after-damage,
+  successful-save half damage, and bad-trigger rejection.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test --test
+  battle_reaction_spells`, `cd engine && cargo test`, and `cd engine && cargo
+  clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.REACTION_CASTING_TIME`. The Rust
+  engine covers the reaction spell trigger/resource/continuation outcomes from
+  the cleanroom MBT, but not full interrupt-stack nesting, offered-reactor sets,
+  nested Counterspell-on-Counterspell, or BattleState actor slot-use sets.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B overnight roll modifier active effects
+
+- Targeted `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-roll-modifier-choice.qnt`, `battle-runtime-thaumaturgy.qnt`,
+  `battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt`, SRD 5.2.1
+  Bane, Bless, Guidance, Pass without Trace, Enhance Ability, Enthrall,
+  Thaumaturgy, and Advantage/Disadvantage RAW, plus ubiquitous language.
+- Implemented roll-modifier active-effect projection for Bane, Bless, Guidance,
+  Pass without Trace, Enhance Ability, Enthrall, and Thaumaturgy Booming Voice.
+  Added d4 roll delta application for Bane/Bless/Guidance, fixed Stealth and
+  Perception deltas, passive Perception delta projection, and Thaumaturgy
+  one-minute effect count / Charisma (Intimidation) Advantage projection.
+- Added `engine/tests/battle_roll_modifiers.rs` with five tests covering
+  Bless/Bane attack and save d4 modifiers, Guidance selected-skill ability check
+  bonus, fixed Stealth/Passive Perception deltas, Enhance Ability selected
+  ability projection, and Thaumaturgy Booming Voice count and roll mode.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`.
+  The Rust engine covers the compact active-effect projections and d20 modifier
+  semantics from the cleanroom QNT, but not full spell casting admission,
+  concentration lifecycle, multi-target active-effect ownership, or all
+  runtime-selected profile identities.
+- Source gap: no cleanroom source gap for the implemented slice.
+
 ## 2026-05-27 - Lane C wave 5 coverage refresh
 
 - Read current local Rust APIs/tests plus cleanroom manifest, generator-readiness
@@ -412,3 +618,113 @@ TypeScript runtime files.
 - Conservative count: 2 fully implemented, 14 partially implemented, 31 not
   attempted, 0 blocked by source gap.
 - `cd engine && cargo test` passed: 97 tests passed, 0 failed.
+
+## 2026-05-27 - Lane B overnight scalar buff active effects
+
+- Targeted `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `spell-scalar-buff-projection-core.qnt`,
+  `battle-runtime-restoration-and-buffs.qnt`,
+  `battle-runtime-scalar-buff-active-effects.mbt.qnt`, SRD 5.2.1 Aid,
+  Barkskin, False Life, Fly, Longstrider, Shield of Faith, Spider Climb,
+  Temporary Hit Points, Fly Speed, and ubiquitous language.
+- Implemented scalar-buff spell profiles, slot floors, action costs, target
+  scaling, willing-target admission facts, active-effect projections for
+  Armor Class, Speed, Climb Speed, Fly Speed, Hit Point maximum/current Hit
+  Points, and Temporary Hit Points.
+- Added explicit table witness inputs for target validity, target willingness,
+  False Life dice, and Temporary Hit Point choice. Aid uses the highest active
+  Hit Point maximum increase amount rather than stacking repeated lower effects.
+- Added `engine/tests/battle_scalar_buffs.rs` with six tests covering profile
+  facts, the focused MBT projection values, willing/spatial target witnesses,
+  Barkskin and Fly projections, Aid upcast/non-stacking max increase, and False
+  Life dice/Temporary Hit Point choice.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test --test
+  battle_scalar_buffs`, `cd engine && cargo test`, and `cd engine && cargo
+  clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`. The
+  Rust engine covers the scalar projection and compact spell-admission
+  semantics for the cleanroom-supported spells, but not full BattleState
+  multi-actor active-effect ownership, concentration cleanup/fall frames for
+  ended Fly, or timed duration ticking/removal.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B overnight Blindness/Deafness save-gated condition
+
+- Targeted a scoped vertical under
+  `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `spell-save-condition-projection-core.qnt`,
+  `battle-runtime-save-gated-spell.qnt`,
+  `battle-runtime-condition-saving-throw-selected-identity.mbt.qnt`, SRD 5.2.1
+  Blindness/Deafness, Blinded, Deafened, and ubiquitous language.
+- Implemented the Blindness/Deafness spell profile as an action, level-2
+  slot-spending save-gated condition spell with slot-scaled target cardinality
+  and Constitution Saving Throw profile facts.
+- Added chosen-condition active effects for Blinded or Deafened, explicit source
+  identity for cleanup, failed-save application, successful-save no-condition
+  branch, target-validity witness handling, and end-turn repeat-save cleanup for
+  the matching source/condition choice.
+- Added `engine/tests/battle_save_gated_conditions.rs` with seven tests covering
+  profile facts, Blinded and Deafened failed-save branches, successful initial
+  save, explicit invalid-target witness, illegal slot/target count rejection,
+  and repeat-save cleanup that preserves nonmatching source/choice effects.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test --test
+  battle_save_gated_conditions`, `cd engine && cargo test`, and `cd engine &&
+  cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`.
+  The Rust engine covers Blindness/Deafness condition choice, failed-save active
+  effect, resource admission, and repeat-save cleanup, but not Color Spray,
+  Entangle, Animal Friendship, Charm Person, Hold Person, Hideous Laughter, or
+  full BattleState multi-target turn ownership.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B overnight spell damage branches
+
+- Targeted a scoped vertical under
+  `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` from the B-owned queue.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files for spell damage
+  projection and spell attack/save damage branch behavior.
+- Added spell attack damage profile helpers, hit/miss/Critical Hit branch
+  resolution, damage-type projection, object-target support facts, save-gated
+  damage profile helpers, full/half/no-damage save branches, and failed-save
+  rider projections.
+- Added `engine/tests/battle_spell_damage.rs` covering spell attack profile
+  facts, hit/miss/Critical Hit dice handling, save-gated targeting policies,
+  damage type, slot/concentration flags, full/half/no-damage branches, and
+  negative damage-roll rejection.
+- Obligation status: partial for `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`.
+  The Rust engine covers the focused branch helpers, but not full spell
+  invocation sequencing, all joined spell/profile rows, or unit-feature
+  save-damage integration.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane C large integration batch coverage refresh
+
+- Read current local Rust APIs/tests plus cleanroom manifest, generator-readiness
+  rows, and level 1-2 QNT/MBT join metadata; no production TypeScript was read.
+- Accounted for current uncommitted tests/APIs:
+  `battle_command.rs`, `battle_sanctuary.rs`, `battle_reaction_spells.rs`,
+  `battle_roll_modifiers.rs`, `battle_save_gated_conditions.rs`,
+  `battle_scalar_buffs.rs`, `battle_spell_damage.rs`,
+  `character_creation_projection.rs`, `character_sheet_projection.rs`, and the
+  expanded `character_sheet_resources.rs`.
+- Moved these obligations from not-attempted to partial:
+  `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`,
+  `BATTLE.SANCTUARY.TARGETING_INTERDICTION`,
+  `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`,
+  `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`,
+  `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`,
+  `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION`,
+  `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION`,
+  `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION`,
+  `SHEET.FEATURE_RESOURCES.TRANSITIONS`, and
+  `SHEET.WEAPON_MASTERY.RESELECTION`.
+- Kept `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,
+  `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`,
+  `BATTLE.SPELL.REACTION_CASTING_TIME`, and
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` partial with stronger evidence but
+  not full scoped coverage.
+- Conservative count: 2 fully implemented, 24 partially implemented, 21 not
+  attempted, 0 blocked by source gap.
+- `cd engine && cargo test` passed: 162 tests passed, 0 failed.
