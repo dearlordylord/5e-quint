@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "SPP-W3-05-SELF-TELEPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate selfTeleport profile (bonus-action)"
     },
     {
@@ -894,7 +894,7 @@ case (uses bonus-action-time machinery via the trigger). Focused MBT:
 
 ### Task 22 - SPP-W3-05-SELF-TELEPORT - Migrate selfTeleport
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `self-teleport-lifecycle.mbt.test.ts`.
 

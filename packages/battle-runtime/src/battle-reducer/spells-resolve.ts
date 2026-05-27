@@ -107,6 +107,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
@@ -245,7 +246,6 @@ export {
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolveSelfTransformationModeSpellAct,
-  resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
   healingSpellTargetSelection,
@@ -265,7 +265,6 @@ import {
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolveSelfTransformationModeSpellAct,
-  resolveSelfTeleportSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
@@ -2886,7 +2885,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "selfTeleport") {
-    return resolveSelfTeleportSpellAct({
+    return selfTeleportProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

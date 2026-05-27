@@ -170,6 +170,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import {
@@ -181,7 +182,6 @@ import {
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
-  supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
   supportedSpellCreatedHeldObjectActiveEffectProfile,
   supportedPreparedSlotSpellProfile,
@@ -571,7 +571,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSelfTeleportSpellProfile(spell, spellcasting.spellSlots),
+      selfTeleportProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSanctuaryTargetingInterdictionSpellProfile(

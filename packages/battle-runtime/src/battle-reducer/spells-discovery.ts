@@ -58,7 +58,6 @@ import {
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
-  spellTeleportDestinationHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
@@ -89,6 +88,7 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import {
@@ -397,19 +397,7 @@ export function discoverSupportedSpellInvocations(
             ];
       }
       if (invocation.procedure === "selfTeleport") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [spellTeleportDestinationHole(invocation, actorId)],
-          },
-        ];
+        return selfTeleportProfile.discoverCastAct(state, actorId, invocation);
       }
       if (
         invocation.procedure === "saveGatedDamage" ||
@@ -1424,7 +1412,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "selfTeleport") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
+    return selfTeleportProfile.castSummary(invocation);
   }
   if (invocation.procedure === "featherFallMitigation") {
     return featherFallMitigationProfile.castSummary(invocation);

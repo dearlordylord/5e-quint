@@ -56,7 +56,6 @@ import {
   type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
   type SpellCreatedHeldObjectActiveEffect,
-  type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-reducer.ts";
@@ -164,30 +163,6 @@ export function supportedPreparedDragonsBreathInitialSpellProfile(
   });
 }
 
-export function supportedPreparedSelfTeleportSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = selfTeleportSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "selfTeleport",
-            spell,
-            actionCost: "bonusAction",
-            ...projection,
-          },
-        ],
-  );
-}
-
 function dragonsBreathInitialSpellProjection(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -277,34 +252,6 @@ function dragonsBreathInitialSpellProjection(
           },
         },
       };
-}
-
-function selfTeleportSpellProjection(
-  spell: SpellRecord,
-): Pick<SelfTeleportSpellInvocation, "maxDistanceFeet"> | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    phase.effects?.length !== 1 ||
-    effect?.kind !== "teleport" ||
-    effect.destination !== "unoccupied_visible_space" ||
-    effect.maxFeet !== 30
-  ) {
-    return null;
-  }
-  return { maxDistanceFeet: movementFeet(effect.maxFeet) };
 }
 
 export function supportedPreparedSelfTransformationModeSpellProfile(
