@@ -54,8 +54,6 @@ import {
   applyJumpMovementReplacementSpellEffect,
   applyLevitatedCreatureSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
-  applyRollModifierSpellEffect,
-  applyRollModifierSpellEffectsByTarget,
   applyScalarBuffSpellEffect,
   applySelfTransformationModeEffect,
   applyThaumaturgyBoomingVoiceSpellEffect,
@@ -97,9 +95,6 @@ import {
   creatureTypeProtectionSpellTargetSelection,
   directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
-  rollModifierSpellAffectedTargets,
-  rollModifierSpellEffectSelection,
-  rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
 
@@ -597,128 +592,6 @@ function selfTransformationModeEffectPayload(
       naturalWeaponDamageType: selectedDamageType,
     },
   };
-}
-
-export function resolveRollModifierSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Roll modifier spells use target, optional skill or ability, and optional Saving Throw fills.",
-    );
-  }
-
-  const targetSelection = rollModifierSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const effectSelection = rollModifierSpellEffectSelection({
-    ...input,
-    targetIds: targetSelection.targetIds,
-  });
-  if (effectSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      effectSelection.hole,
-    ]);
-  }
-  if (effectSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      effectSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const affectedTargets = rollModifierSpellAffectedTargets(input);
-  if (affectedTargets.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      affectedTargets.hole,
-    ]);
-  }
-  if (affectedTargets.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      affectedTargets.message,
-    );
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const affectedTargetIds = new Set(affectedTargets.targetIds);
-  const effected =
-    effectSelection.selection.kind === "sameForTargets"
-      ? applyRollModifierSpellEffect(
-          concentrationBase,
-          affectedTargets.targetIds,
-          effectSelection.selection.effect,
-        )
-      : applyRollModifierSpellEffectsByTarget(
-          concentrationBase,
-          effectSelection.selection.targetEffects.filter((targetEffect) =>
-            affectedTargetIds.has(targetEffect.targetId),
-          ),
-        );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 export function resolveWardingBondSpellAct(input: {

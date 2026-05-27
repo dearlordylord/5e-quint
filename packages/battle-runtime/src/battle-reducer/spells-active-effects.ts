@@ -113,7 +113,6 @@ import {
   type SpellLightEmissionPostDamageRider,
   type SpellPostDamageRider,
   type SpellPostDamageRiderExpiration,
-  type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
   type BattleWebRestraintTrigger,
 } from "../battle-reducer.ts";
@@ -3283,50 +3282,6 @@ export function applyScalarBuffSpellEffect(
       applied,
       flySpeedGrantEndFallCleanupFramesForExpiredEffects(targetId, replacing),
     );
-  }, state);
-}
-
-export function applyRollModifierSpellEffect(
-  state: BattleState,
-  targetIds: readonly CombatantId[],
-  selectedEffect: SelectedRollModifierSpellEffect,
-): BattleState {
-  return applyRollModifierSpellEffectsByTarget(
-    state,
-    targetIds.map((targetId) => ({ targetId, effect: selectedEffect })),
-  );
-}
-
-export function applyRollModifierSpellEffectsByTarget(
-  state: BattleState,
-  targetEffects: readonly {
-    readonly targetId: CombatantId;
-    readonly effect: SelectedRollModifierSpellEffect;
-  }[],
-): BattleState {
-  return targetEffects.reduce((nextState, targetEffect) => {
-    const { targetId, effect: selectedEffect } = targetEffect;
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === selectedEffect.kind &&
-            effect.sourceSpellId === selectedEffect.sourceSpellId
-          ),
-      ),
-      selectedEffect,
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects,
-      }),
-    };
   }, state);
 }
 

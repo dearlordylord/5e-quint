@@ -44,7 +44,6 @@ import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   carefulSpellProtectedTargetsHole,
-  rollModifierUsesTargetAbilityChoices,
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
@@ -56,9 +55,6 @@ import {
   spellAttackSequencePartTargetHole,
   spellObjectTargetHole,
   spellAreaChoiceHole,
-  spellRollModifierAbilityChoiceHole,
-  spellRollModifierSkillChoiceHole,
-  spellRollModifierTargetAbilityChoicesHole,
   spellSavingThrowAbility,
   spellSavingThrowTargeting,
   spellSavingThrowOutcomeHole,
@@ -80,6 +76,7 @@ import {
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
   dancingLightsFromEffect,
   selfTransformationModeLabel,
@@ -532,40 +529,7 @@ export function discoverSupportedSpellInvocations(
           : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       if (invocation.procedure === "rollModifier") {
-        const targetHole = targetListSpellUsesTargetListHole(invocation)
-          ? spellTargetListHole(state, actorId, invocation)
-          : spellTargetHole(state, actorId, invocation);
-        const initialHoles =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                targetHole,
-                ...(invocation.skillChoices === null
-                  ? []
-                  : [spellRollModifierSkillChoiceHole(invocation)]),
-                ...(invocation.abilityChoices === null
-                  ? []
-                  : rollModifierUsesTargetAbilityChoices(invocation)
-                    ? [spellRollModifierTargetAbilityChoicesHole(invocation)]
-                    : [spellRollModifierAbilityChoiceHole(invocation)]),
-              ];
-        const castActs =
-          initialHoles.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                  },
-                  label: invocation.spell.name,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles,
-                },
-              ];
-        return castActs;
+        return rollModifierProfile.discoverCastAct(state, actorId, invocation);
       }
       if (
         invocation.procedure === "creatureSizeIncrease" ||
@@ -1487,9 +1451,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and choose ${invocation.modeChoices.map(selfTransformationModeLabel).join(" or ")}.`;
   }
   if (invocation.procedure === "rollModifier") {
-    return invocation.resource.tag === "spellSlot"
-      ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
-      : `Cast ${invocation.spell.name} as a cantrip.`;
+    return rollModifierProfile.castSummary(invocation);
   }
   if (
     invocation.procedure === "creatureSizeIncrease" ||
@@ -1936,7 +1898,7 @@ export function readiedSpellAct(
   }));
 }
 
-function targetListSpellUsesTargetListHole(
+export function targetListSpellUsesTargetListHole(
   invocation: TargetListSpellInvocation,
 ): boolean {
   if (!targetListTargetingHasFixedMaximum(invocation.targeting)) {

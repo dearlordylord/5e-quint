@@ -8,6 +8,7 @@
 // back to their existing dispatch.
 
 import { damageReductionProfile } from "./damage-reduction.ts";
+import { rollModifierProfile } from "./roll-modifier.ts";
 import type {
   AnySpellProcedureProfile,
   SpellProcedureProfile,
@@ -16,6 +17,7 @@ import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
 export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   damageReductionProfile,
+  rollModifierProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

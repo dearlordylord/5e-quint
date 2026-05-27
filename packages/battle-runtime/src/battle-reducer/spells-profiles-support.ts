@@ -158,7 +158,7 @@ type DirectActivationPhase = Extract<
 type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
 type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
 
-function isD20RollModifierSpellProjection(
+export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
   return projection.effect.kind === "d20RollModifier";
@@ -1163,58 +1163,6 @@ function scalarBuffSpellProjection(spell: SpellRecord): {
         duration: spell.mechanics.duration,
         effect: operation.effect,
       };
-}
-
-export function supportedPreparedRollModifierSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.level < 1) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const projection = rollModifierSpellProjection(
-      actorId,
-      spell,
-      slot.spellLevel,
-    );
-    if (projection === null) {
-      return [];
-    }
-    const base = {
-      access: { tag: "prepared" as const },
-      resource: { tag: "spellSlot" as const, slotLevel: slot.spellLevel },
-      procedure: "rollModifier" as const,
-      spell,
-      actionCost: "magicAction" as const,
-      targeting: projection.targeting,
-      rangeFeet: projection.rangeFeet,
-      saveGate: projection.saveGate,
-    };
-    if (isD20RollModifierSpellProjection(projection)) {
-      return [
-        {
-          ...base,
-          effect: projection.effect,
-          skillChoices: projection.skillChoices,
-          abilityChoices: null,
-        },
-      ];
-    }
-    return [
-      {
-        ...base,
-        effect: projection.effect,
-        skillChoices: null,
-        abilityChoices: projection.abilityChoices,
-        abilityChoiceApplication: projection.abilityChoiceApplication,
-      },
-    ];
-  });
 }
 
 export function supportedPreparedCreatureSizeChangeSpellProfile(
@@ -3376,52 +3324,6 @@ function durationTiersEqual(
         tier.amount === expected[index]?.amount,
     )
   );
-}
-
-export function supportedCantripRollModifierSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.level !== 0) {
-    return [];
-  }
-  const projection = rollModifierSpellProjection(
-    actorId,
-    spell,
-    spellSlotLevel(0),
-  );
-  if (projection === null) {
-    return [];
-  }
-  const base = {
-    access: { tag: "classCantrip" as const },
-    resource: { tag: "none" as const },
-    procedure: "rollModifier" as const,
-    spell,
-    actionCost: "magicAction" as const,
-    targeting: projection.targeting,
-    rangeFeet: projection.rangeFeet,
-    saveGate: projection.saveGate,
-  };
-  if (isD20RollModifierSpellProjection(projection)) {
-    return [
-      {
-        ...base,
-        effect: projection.effect,
-        skillChoices: projection.skillChoices,
-        abilityChoices: null,
-      },
-    ];
-  }
-  return [
-    {
-      ...base,
-      effect: projection.effect,
-      skillChoices: null,
-      abilityChoices: projection.abilityChoices,
-      abilityChoiceApplication: projection.abilityChoiceApplication,
-    },
-  ];
 }
 
 export function supportedCantripThaumaturgyBoomingVoiceSpellProfile(

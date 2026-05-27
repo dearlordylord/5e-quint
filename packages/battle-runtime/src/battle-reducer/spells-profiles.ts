@@ -151,8 +151,8 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import {
-  supportedCantripRollModifierSpellProfile,
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
@@ -171,7 +171,6 @@ import {
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
-  supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSeeInvisibleObserverSightSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
@@ -436,11 +435,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedRollModifierSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      rollModifierProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCreatureSizeChangeSpellProfile(
@@ -704,7 +703,11 @@ export function supportedSpellActs(
       supportedCantripSaveGateDamageProfile(spell, characterLevel),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
+      rollModifierProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripThaumaturgyBoomingVoiceSpellProfile(

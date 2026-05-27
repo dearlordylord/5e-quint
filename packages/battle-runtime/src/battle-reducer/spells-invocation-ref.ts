@@ -14,6 +14,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
@@ -496,18 +497,7 @@ export function supportedSpellInvocationRef(
       procedure: "scalarBuff" as const,
     })),
     Match.when({ procedure: "rollModifier" }, (modifierSpell) =>
-      modifierSpell.resource.tag === "none"
-        ? {
-            tag: "cantrip" as const,
-            spellId: spellId(modifierSpell.spell.id),
-            procedure: "rollModifier" as const,
-          }
-        : {
-            tag: "spellSlot" as const,
-            spellId: spellId(modifierSpell.spell.id),
-            slotLevel: modifierSpell.resource.slotLevel,
-            procedure: "rollModifier" as const,
-          },
+      rollModifierProfile.invocationRef(modifierSpell),
     ),
     Match.when({ procedure: "creatureTypeProtection" }, (protectionSpell) => ({
       tag: "spellSlot" as const,

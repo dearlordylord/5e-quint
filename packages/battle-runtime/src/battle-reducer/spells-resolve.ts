@@ -94,6 +94,7 @@ import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -245,7 +246,6 @@ export {
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
-  resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
@@ -288,7 +288,6 @@ import {
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
-  resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
@@ -921,7 +920,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "rollModifier") {
-    return resolveRollModifierSpellAct({
+    return rollModifierProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
