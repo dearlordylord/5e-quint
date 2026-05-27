@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 410,
-      "numerator": 214,
-      "percent": "52.2%"
+      "denominator": 416,
+      "numerator": 220,
+      "percent": "52.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 495,
-      "numerator": 259,
-      "percent": "52.3%"
+      "denominator": 501,
+      "numerator": 265,
+      "percent": "52.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 260
+      "value": 266
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 260,
-      "numerator": 260,
+      "denominator": 266,
+      "numerator": 266,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 146,
-      "numerator": 146,
+      "denominator": 147,
+      "numerator": 147,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 147,
+      "denominator": 148,
       "numerator": 144,
-      "percent": "98%"
+      "percent": "97.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 215,
-      "numerator": 147,
-      "percent": "68.4%"
+      "denominator": 221,
+      "numerator": 148,
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -2733,7 +2733,8 @@
         "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
         "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
         "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-        "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+        "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+        "L13UG-A17"
       ],
       "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
       "verificationOwners": [
@@ -3969,6 +3970,76 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.spell-slot-healing-modifier",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. It projects typed trigger, scope, and flat-plus-slot-level facts without dispatching on the feature id; spell-healing execution consumes those facts in a future promoted reducer owner.",
+      "taskRefs": [
+        "L13UG-A16"
+      ],
+      "title": "Unit feature projects a Spell Slot healing bonus equal to 2 plus the slot level",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.magic-action-healing-pool",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+      "taskRefs": [
+        "L13UG-A16"
+      ],
+      "title": "Unit feature projects a Magic Action resource-spent healing pool with Bloodied target caps",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.magic-action-area-save-damage-healing",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+      "taskRefs": [
+        "L13UG-A16"
+      ],
+      "title": "Unit feature projects a Magic Action area Constitution save damage plus one-target healing profile",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. It projects self and 10-foot other-killer trigger facts without dispatching on feature id; enemy qualification, range witness, and Temporary Hit Point application remain future promoted reducer work.",
+      "taskRefs": [
+        "L13UG-A16"
+      ],
+      "title": "Unit feature projects Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.bonus-action-delegated-standard-actions",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+      "taskRefs": [
+        "L13UG-A17"
+      ],
+      "title": "Unit feature admits delegated Bonus Action standard-action permissions",
+      "verificationOwners": []
     }
   ],
   "rulesKernelProfileJoin": {
@@ -6223,8 +6294,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 146,
-          "numerator": 146,
+          "denominator": 147,
+          "numerator": 147,
           "percent": "100%"
         }
       },
@@ -8787,6 +8858,26 @@
             }
           ],
           "unitId": "orc_relentless_endurance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+                }
+              ],
+              "profileId": "character-creation.class-feature-resource-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_channel_divinity"
         },
         {
           "joinStatus": "covered",
@@ -12876,6 +12967,26 @@
         "character-creation.hit-point-maximum-projection"
       ],
       "taskId": "L13UG-A15"
+    },
+    {
+      "claimKind": "admission-projection",
+      "note": "Focused battle-runtime admission tests cover Disciple of Life, Preserve Life, Land's Aid, and Dark One's Blessing Surface mechanics shape admission, malformed-shape rejection, and support-profile projection without authored-identity dispatch. Reducer execution, QNT parity, and later Land's Aid dice scaling remain explicit follow-up work rather than completed runtime parity.",
+      "profileIds": [
+        "unit-feature.spell-slot-healing-modifier",
+        "unit-feature.magic-action-healing-pool",
+        "unit-feature.magic-action-area-save-damage-healing",
+        "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+      ],
+      "taskId": "L13UG-A16"
+    },
+    {
+      "claimKind": "admission-projection",
+      "note": "Focused Surface, Character Creation, and battle-runtime admission tests cover Paladin Channel Divinity as a retained level-3 class resource projection and Rogue Fast Hands as a delegated Bonus Action action-economy support profile. Divine Sense execution, Sleight of Hand checks, Utilize effects, and magic-item activation remain delegated to their existing owners rather than completed runtime parity.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection",
+        "unit-feature.bonus-action-delegated-standard-actions"
+      ],
+      "taskId": "L13UG-A17"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -12944,17 +13055,17 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 66,
-        "installedUnitDenominator": 66,
+        "executableUnitDenominator": 72,
+        "installedUnitDenominator": 72,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 91,
-        "profileSubsetSupportedUnits": 16,
+        "profileFactDenominator": 97,
+        "profileSubsetSupportedUnits": 21,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 61,
-        "supportedProfileUnits": 48,
+        "supportedProfileUnits": 49,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -14940,7 +15051,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -14953,6 +15065,75 @@
       ],
       "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
       "unitId": "cleric_channel_divinity"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
+            "mechanic": "Execute the admitted healing modifier during spell Hit Point restoration: detect spell-slot casts on the cast turn, add 2 plus the spent Spell Slot level to each healed creature, and exclude non-slot casts."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
+            "mechanic": "Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity.",
+            "owner": "battle-runtime spell Hit Point restoration reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion.",
+            "title": "Cleric Disciple Of Life Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell Hit Point restoration modifier owner plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.spell-slot-healing-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the spell-healing modifier execution owner consumes this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface spell_slot_healing_modifier mechanics for spells cast with a Spell Slot that restore Hit Points",
+          "The projected support profile carries the turn-of-cast trigger, each-creature-healed scope, and 2 plus Spell Slot level bonus without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A16"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.spell-slot-healing-modifier",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. It projects typed trigger, scope, and flat-plus-slot-level facts without dispatching on the feature id; spell-healing execution consumes those facts in a future promoted reducer owner.",
+          "taskRefs": [
+            "L13UG-A16"
+          ],
+          "title": "Unit feature projects a Spell Slot healing bonus equal to 2 plus the slot level",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",
+      "unitId": "cleric_disciple_of_life"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -15085,6 +15266,75 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
+            "mechanic": "Execute Preserve Life as a Magic Action: spend one Channel Divinity use, accept chosen Bloodied creatures within 30 feet including self, distribute a five-times-Cleric-level healing pool, and cap each target at half Hit Point maximum."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
+            "mechanic": "Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap.",
+            "owner": "battle-runtime Unit feature Magic Action resource/healing reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
+            "title": "Cleric Preserve Life Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Channel Divinity healing pool owner plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.magic-action-healing-pool"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Magic Action healing pool execution owner consumes this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface magic_action_healing_pool mechanics with Magic Action activation and a referenced Channel Divinity spend",
+          "The projected support profile carries 30-foot Bloodied creature targeting including self, a pool equal to five times class level, and a half-Hit-Point-maximum cap without duplicating Channel Divinity state"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A16"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.magic-action-healing-pool",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+          "taskRefs": [
+            "L13UG-A16"
+          ],
+          "title": "Unit feature projects a Magic Action resource-spent healing pool with Bloodied target caps",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
+      "unitId": "cleric_preserve_life"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles",
@@ -15163,6 +15413,86 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/druid_druidic.json",
       "unitId": "druid_druidic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
+            "mechanic": "Execute Land's Aid as a Magic Action: spend one Wild Shape use, consume caller-supplied Sphere area membership, resolve Constitution saves, apply 2d6 Necrotic damage with half damage on success, and heal one chosen creature in the area for 2d6 Hit Points."
+          },
+          {
+            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
+            "mechanic": "Add Druid level 10 and 14 dice scaling for Land's Aid damage and healing after the level-3 runtime owner exists."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
+            "mechanic": "Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target.",
+            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.",
+            "title": "Druid Lands Aid Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
+            "mechanic": "Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted.",
+            "owner": "Surface mechanics plus battle-runtime Land's Aid execution owner",
+            "requiredOutput": "Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
+            "title": "Druid Lands Aid Scaling"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Wild Shape spend area save damage/healing owner plus later Druid-level scaling owner",
+        "profileIds": [
+          "unit-feature.magic-action-area-save-damage-healing"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface magic_action_area_save_damage_healing mechanics with Magic Action activation and a referenced Wild Shape spend",
+          "The projected level-3 support profile carries the 60-foot point origin, 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area without duplicating Wild Shape state or geometry"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A16"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.magic-action-area-save-damage-healing",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+          "taskRefs": [
+            "L13UG-A16"
+          ],
+          "title": "Unit feature projects a Magic Action area Constitution save damage plus one-target healing profile",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
+      "unitId": "druid_lands_aid"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -15306,7 +15636,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -15617,7 +15948,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -16511,6 +16843,86 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "table/tool-check owner",
+              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile."
+            },
+            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, and success/failure consequences."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "Utilize action owner",
+              "reason": "Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary."
+            },
+            "mechanic": "Execute the object interaction effects of the Utilize action."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "magic-item activation owner",
+              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
+            },
+            "mechanic": "Activate magic items that require a Magic action."
+          }
+        ],
+        "profileIds": [
+          "unit-feature.bonus-action-delegated-standard-actions"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
+          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
+          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A17"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.bonus-action-delegated-standard-actions",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+          "taskRefs": [
+            "L13UG-A17"
+          ],
+          "title": "Unit feature admits delegated Bonus Action standard-action permissions",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
+      "unitId": "rogue_fast_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "character-sheet.linked-speed-grant-projection",
           "character-sheet.jump-distance-ability-substitution"
@@ -16809,7 +17221,8 @@
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -17376,6 +17789,75 @@
       ],
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "unitId": "warlock_eldritch_invocations"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
+            "mechanic": "Execute Dark One's Blessing when an enemy is reduced to 0 Hit Points by the Warlock or by another creature within 10 feet, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
+            "mechanic": "Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch.",
+            "owner": "battle-runtime zero-Hit-Point trigger reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application.",
+            "title": "Warlock Dark Ones Blessing Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime zero-Hit-Point trigger and Temporary Hit Points owner plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the enemy-zero-Hit-Point Temporary Hit Points execution owner consumes this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface enemy_zero_hit_point_temporary_hit_points mechanics",
+          "The projected support profile carries self or another creature within 10 feet reducing an enemy to 0 Hit Points, plus Charisma modifier plus Warlock level Temporary Hit Points with minimum 1, without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A16"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. It projects self and 10-foot other-killer trigger facts without dispatching on feature id; enemy qualification, range witness, and Temporary Hit Point application remain future promoted reducer work.",
+          "taskRefs": [
+            "L13UG-A16"
+          ],
+          "title": "Unit feature projects Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",
+      "unitId": "warlock_dark_ones_blessing"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -18183,6 +18665,79 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Paladin later-level resource scaling owner",
+              "reason": "Task L13UG-A17 promotes only the level-3 two-use resource facts; the remaining Channel Divinity use increase occurs after level 3."
+            },
+            "mechanic": "Paladin level 11 Channel Divinity use scaling to three uses."
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-resource-projection"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic projection owner",
+          "reason": "Paladin Channel Divinity support is a retained CharacterBuild resource projection. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface resource facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Paladin Channel Divinity is installed as a level-3 Surface class-feature grant on class_paladin",
+          "Surface resource_container represents the shared Channel Divinity use-count pool with a fixed level-3 cap of 2 uses",
+          "Surface resetCadence represents regaining one expended use on a Short Rest and all expended uses on a Long Rest",
+          "Surface optionSet records Divine Sense as the initial resource-use option and records that option saving throws use this class's Spellcasting spell save DC",
+          "Character Creation admits supported Paladin level-3 progression and projects the Channel Divinity resource into CharacterBuild resources without duplicating class progression, Divine Sense option execution state, or class table facts"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A17"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container and resource-pool records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option, shape-shifted form, Sorcery Point conversion, and Metamagic execution remain owned by selected option or narrower runtime profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "L13UG-A17"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json",
+      "unitId": "paladin_channel_divinity"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

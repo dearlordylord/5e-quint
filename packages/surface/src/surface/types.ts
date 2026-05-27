@@ -635,6 +635,9 @@ export type ClassSpellcastingProjectionMechanics = Schema.Schema.Type<
 export type DruidWildCompanionSpellCastMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.DruidWildCompanionSpellCastMechanicsSchema
 >;
+export type ClericClassFeatureMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClericClassFeatureMechanicsSchema
+>;
 export type DruidClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.DruidClassFeatureMechanicsSchema
 >;
@@ -781,6 +784,18 @@ export type RestSpellSlotRecoveryMechanics = Schema.Schema.Type<
 >;
 export type FailedAbilityCheckResourceBoostMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FailedAbilityCheckResourceBoostMechanicsSchema
+>;
+export type SpellSlotHealingModifierMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SpellSlotHealingModifierMechanicsSchema
+>;
+export type MagicActionHealingPoolMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicActionHealingPoolMechanicsSchema
+>;
+export type MagicActionAreaSaveDamageHealingMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicActionAreaSaveDamageHealingMechanicsSchema
+>;
+export type EnemyZeroHitPointTemporaryHitPointsMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.EnemyZeroHitPointTemporaryHitPointsMechanicsSchema
 >;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema
@@ -955,8 +970,7 @@ export const DRUID_CIRCLE_LAND_CHOICES = [
   "temperate",
   "tropical",
 ] as const;
-export type DruidCircleLandChoice =
-  (typeof DRUID_CIRCLE_LAND_CHOICES)[number];
+export type DruidCircleLandChoice = (typeof DRUID_CIRCLE_LAND_CHOICES)[number];
 type ClassFeatureUnitRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }

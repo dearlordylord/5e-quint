@@ -376,3 +376,9 @@
 {"unitId":"rogue_second_story_work","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_draconic_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_draconic_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"cleric_disciple_of_life","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
+{"unitId":"cleric_preserve_life","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
+{"unitId":"druid_lands_aid","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
+{"unitId":"warlock_dark_ones_blessing","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
+{"unitId":"paladin_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"rogue_fast_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts"}}

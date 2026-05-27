@@ -26,6 +26,10 @@
     {
       "level": 2,
       "unitId": "paladin_paladins_smite"
+    },
+    {
+      "level": 3,
+      "unitId": "paladin_channel_divinity"
     }
   ],
   "hitPointDie": 10,
@@ -62,7 +66,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-37,66-99,118-120"
+    "section": "Classes/Paladin.md:3-24,33-37,66-120"
   },
   "savingThrowProficiencies": [
     "wis",

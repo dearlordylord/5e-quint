@@ -513,6 +513,40 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME: Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity. Owner: battle-runtime spell Hit Point restoration reducers plus package-local Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the spell-healing modifier execution owner consumes this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Cleric Disciple of Life",
+          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 316,
+            "lineStart": 313,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "cleric_disciple_of_life"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -541,6 +575,40 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "cleric_life_domain_spells"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME: Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap. Owner: battle-runtime Unit feature Magic Action resource/healing reducers plus package-local Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Magic Action healing pool execution owner consumes this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Cleric Preserve Life",
+          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 333,
+            "lineStart": 330,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "cleric_preserve_life"
     },
     {
       "catalogDisposition": {
@@ -1120,6 +1188,40 @@
       "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME: Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target. Owner: battle-runtime Unit feature Magic Action area save damage/healing reducers plus package-local Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.; L3-FOLLOWUP-DRUID-LANDS-AID-SCALING: Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted. Owner: Surface mechanics plus battle-runtime Land's Aid execution owner. Required output: Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Land's Aid",
+          "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 411,
+            "lineStart": 406,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "druid_lands_aid"
     },
     {
       "catalogStatus": "installed",
@@ -2404,6 +2506,40 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Rogue Fast Hands",
+          "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 166,
+            "lineStart": 159,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
+      "unitId": "rogue_fast_hands"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "character-fact-and-runtime-detached-split"
@@ -2911,6 +3047,40 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME: Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch. Owner: battle-runtime zero-Hit-Point trigger reducers plus package-local Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application.",
+      "selectedIdentity": {
+        "owner": "battle-runtime deterministic admission/projection owner",
+        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the enemy-zero-Hit-Point Temporary Hit Points execution owner consumes this profile.",
+        "status": "not-applicable"
+      },
+      "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Warlock Dark One's Blessing",
+          "id": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 463,
+            "lineStart": 460,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "warlock_dark_ones_blessing"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -3034,7 +3204,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 124,
+      "count": 125,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3115,6 +3285,7 @@
         "monk_unarmored_defense",
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
+        "paladin_channel_divinity",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
@@ -3224,20 +3395,24 @@
       ]
     },
     {
-      "count": 6,
+      "count": 10,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
+        "cleric_disciple_of_life",
+        "cleric_preserve_life",
         "darkness",
+        "druid_lands_aid",
         "druid_wild_shape",
         "enhance_ability",
         "moonbeam",
-        "sorcerer_metamagic"
+        "sorcerer_metamagic",
+        "warlock_dark_ones_blessing"
       ]
     },
     {
-      "count": 5,
+      "count": 6,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3245,7 +3420,8 @@
         "continual_flame",
         "enlarge_reduce",
         "levitate",
-        "prayer_of_healing"
+        "prayer_of_healing",
+        "rogue_fast_hands"
       ]
     },
     {
@@ -3271,13 +3447,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 580,
-      "percent": "95.6%",
+      "numerator": 582,
+      "percent": "95.9%",
       "rowsByStatus": {
-        "accepted": 419,
+        "accepted": 421,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 15,
+        "owner-evidence-required": 13,
         "partial-battle-runtime": 11
       }
     },
@@ -3292,18 +3468,18 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 123,
-      "numerator": 123,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 185,
-      "numerator": 124,
-      "percent": "67%"
+      "denominator": 191,
+      "numerator": 125,
+      "percent": "65.4%"
     },
     "strictTargetClosure": {
-      "denominator": 185,
-      "numerator": 185,
+      "denominator": 191,
+      "numerator": 191,
       "percent": "100%"
     }
   },
@@ -3330,42 +3506,6 @@
       }
     ],
     "noMatrixSrdPressure": [
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Cleric Disciple of Life",
-            "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 316,
-              "lineStart": 313,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "cleric_disciple_of_life"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Cleric Preserve Life",
-            "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 333,
-              "lineStart": 330,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "cleric_preserve_life"
-      },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
@@ -3439,24 +3579,6 @@
           }
         ],
         "unitId": "disguise_self"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Druid Land's Aid",
-            "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 411,
-              "lineStart": 406,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          }
-        ],
-        "unitId": "druid_lands_aid"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
@@ -3831,24 +3953,6 @@
         "sourceRows": [
           {
             "category": "class feature",
-            "concept": "Paladin Channel Divinity",
-            "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 117,
-              "lineStart": 100,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          }
-        ],
-        "unitId": "paladin_channel_divinity"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
             "concept": "Paladin Sacred Weapon",
             "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
             "levelBand": "level-3",
@@ -4001,24 +4105,6 @@
         "sourceRows": [
           {
             "category": "class feature",
-            "concept": "Rogue Fast Hands",
-            "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 166,
-              "lineStart": 159,
-              "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
-          }
-        ],
-        "unitId": "rogue_fast_hands"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
             "concept": "Rogue Steady Aim",
             "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
             "levelBand": "level-3",
@@ -4074,24 +4160,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Warlock Dark One's Blessing",
-            "id": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
-            "levelBand": "level-3",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 463,
-              "lineStart": 460,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "warlock_dark_ones_blessing"
       },
       {
         "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
@@ -6231,8 +6299,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 123,
-        "numerator": 123,
+        "denominator": 124,
+        "numerator": 124,
         "percent": "100%"
       }
     },
@@ -8414,6 +8482,26 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+              }
+            ],
+            "profileId": "character-creation.class-feature-resource-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "paladin_channel_divinity"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -9743,16 +9831,16 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 155,
-      "numerator": 155,
+      "denominator": 161,
+      "numerator": 161,
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 3,
+      "not-applicable": 9,
       "witness-present": 152
     },
     "rowsByStatus": {
-      "not-applicable": 3,
+      "not-applicable": 9,
       "not-required": 30,
       "witness-present": 152
     }
@@ -10155,8 +10243,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 3",
         "metrics": {
-          "denominator": 44,
-          "numerator": 44,
+          "denominator": 45,
+          "numerator": 45,
           "percent": "100%"
         },
         "rows": [
@@ -10405,6 +10493,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-3",
+            "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json",
+            "status": "installed",
+            "unitId": "paladin_channel_divinity"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_ranger",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -10558,7 +10655,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 44
+          "installed": 45
         }
       },
       {
@@ -10635,8 +10732,8 @@
       }
     ],
     "metrics": {
-      "denominator": 77,
-      "numerator": 77,
+      "denominator": 78,
+      "numerator": 78,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -10644,20 +10741,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 31,
-      "supported-profile": 124,
+      "profile-subset-supported": 36,
+      "supported-profile": 125,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
-      "closed-outside-battle-runtime-boundary": 5,
+      "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 124
+      "supported-profile": 125
     },
-    "nonSupportedFrontier": 61,
-    "strictDenominator": 185
+    "nonSupportedFrontier": 66,
+    "strictDenominator": 191
   }
 }

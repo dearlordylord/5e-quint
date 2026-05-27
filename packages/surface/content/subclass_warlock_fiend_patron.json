@@ -5,6 +5,10 @@
     {
       "level": 3,
       "unitId": "warlock_fiend_spells"
+    },
+    {
+      "level": 3,
+      "unitId": "warlock_dark_ones_blessing"
     }
   ],
   "id": "subclass_warlock_fiend_patron",

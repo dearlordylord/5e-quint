@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   battleReadinessClosureKinds,
+  isUnitFeatureProfileId,
 } = require("./unit-profile-coverage-config.cjs");
 
 const classDir = ".references/srd-5.2.1/Classes";
@@ -516,6 +517,16 @@ function isBattleReadinessClosure(value) {
     typeof value.owner === "string" &&
     value.owner.length > 0
   );
+}
+
+function claimClosedDeferredMechanics(claim) {
+  if (
+    claim?.tag !== "profile-subset-supported" ||
+    !claim.profileIds?.some(isUnitFeatureProfileId)
+  ) {
+    return undefined;
+  }
+  return battleReadinessClosureFromUnitClaim(claim);
 }
 
 function claimFollowUpTasks(claim) {
@@ -1197,6 +1208,20 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
         kind: "evidence-present",
         owner: "character-sheet-runtime",
         evidence: characterSheetEvidence,
+      };
+    }
+    const claim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
+    const battleRuntimeEvidence = row.candidateUnitId
+      ? ownerEvidenceSources.battleRuntime.get(row.candidateUnitId)
+      : undefined;
+    const closedDeferredMechanics = claimClosedDeferredMechanics(claim);
+    if (battleRuntimeEvidence && closedDeferredMechanics !== undefined) {
+      return {
+        kind: "evidence-present",
+        owner: "battle-runtime admission plus closed delegated owners",
+        evidence: `${battleRuntimeEvidence}; residual delegated owners closed by Unit claim: ${closedDeferredMechanics.owner} (${closedDeferredMechanics.reason})`,
       };
     }
     const levelThreeClassFeatureSplit = levelThreeClassFeatureOwnerSplits.get(

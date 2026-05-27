@@ -92,6 +92,7 @@
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
         "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style",
+        "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
         "srd521:classes/paladin:level-3:subclass-selection:paladin_subclass",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
@@ -230,24 +231,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 580,
-      "percent": "95.6%",
+      "numerator": 582,
+      "percent": "95.9%",
       "rowsByStatus": {
-        "accepted": 419,
+        "accepted": 421,
         "accepted-no-battle-effect": 161,
-        "owner-evidence-required": 15,
+        "owner-evidence-required": 13,
         "partial-battle-runtime": 11,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 38,
-      "percent": "74.5%",
+      "numerator": 40,
+      "percent": "78.4%",
       "rowsByStatus": {
-        "accepted": 24,
+        "accepted": 26,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 13
+        "owner-evidence-required": 11
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -274,11 +275,11 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 24,
+      "catalog-installed-owner-evidence-present": 26,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "level-3-follow-up-required": 12,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-owner-evidence-required": 5,
+      "level-3-follow-up-required": 6
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -287,14 +288,14 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 455,
+      "catalog-installed-owner-evidence-present": 457,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 2,
+      "catalog-installed-owner-evidence-required": 6,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-authored-executable-follow-up": 5,
-      "level-3-follow-up-required": 12,
+      "level-3-follow-up-required": 6,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -8761,14 +8762,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "cleric_disciple_of_life",
+        "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "cleric_disciple_of_life"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_disciple_of_life is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "spell invocation healing modifier owner",
+          "evidence": "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -8790,14 +8805,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "cleric_preserve_life",
+        "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "cleric_preserve_life"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_preserve_life is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime Channel Divinity healing-action owner",
+          "evidence": "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -12072,14 +12101,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "druid_lands_aid",
+        "sourceRecordPath": "packages/surface/content/druid_lands_aid.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "druid_lands_aid"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_lands_aid is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime Wild Shape spend and area damage/healing owner",
+          "evidence": "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
       "battleReadinessStatus": "owner-evidence-required"
     },
@@ -17381,16 +17424,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "paladin_channel_divinity",
+        "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_channel_divinity"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Paladin Channel Divinity as a split between a two-use Short Rest/Long Rest resource that later Paladin effects spend, with Paladin level 11 use scaling deferred as later-level work, and a Divine Sense detection closure for creature-type, consecrated-place, and desecrated-object knowledge outside promoted battle state.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_channel_divinity is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L13UG-A17 character-creation.class-feature-resource-projection support profile; Paladin Channel Divinity is retained from the level-3 Paladin class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container. Divine Sense detection execution and later Paladin use scaling remain outside this level-3 character-creation projection.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
@@ -22122,16 +22179,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_fast_hands",
+        "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_fast_hands"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Fast Hands as a split between a Bonus Action action-economy permission, runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action support, and Magic Item Magic Action support that reuses item-owned activation facts instead of adding Thief-specific item execution state.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/tool-check owner; Utilize action owner; magic-item activation owner",
+        "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_fast_hands is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime admission plus closed delegated owners",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A17 at packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts; residual delegated owners closed by Unit claim: table/tool-check owner; Utilize action owner; magic-item activation owner (Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.)",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
@@ -27261,14 +27338,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "warlock_dark_ones_blessing",
+        "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "warlock_dark_ones_blessing"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warlock_dark_ones_blessing is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime defeat-triggered Temporary Hit Point owner",
+          "evidence": "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
       "battleReadinessStatus": "owner-evidence-required"
     },

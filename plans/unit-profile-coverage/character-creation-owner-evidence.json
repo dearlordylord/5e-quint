@@ -2661,6 +2661,27 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Cleric 2 Channel Divinity as a class resource container"
       ]
     },
+    "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity": {
+      "taskId": "L13UG-A17",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Paladin Channel Divinity is retained from the level-3 Paladin class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container. Divine Sense detection execution and later Paladin use scaling remain outside this level-3 character-creation projection.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Paladin 3 Channel Divinity as a class resource container"
+      ]
+    },
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
       "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
       "profile": "character-creation.class-feature-source-fact-projection support profile",
