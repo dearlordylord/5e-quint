@@ -472,6 +472,109 @@ TypeScript runtime files.
   proficiency contract, rejection fixtures for selecting unowned or repeated
   Expertise skills, and fixtures for Bard, Ranger, and Wizard Expertise choices.
 
+## 2026-05-27 - Lane A resume spellbook Ritual spell access projection
+
+- Targeted `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` from the A-owned
+  queue after commit `1a15e1b09`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt`,
+  Wizard Spellbook and Ritual Adept RAW, Spellcasting Ritual and longer-casting
+  RAW, Rules Glossary Ritual RAW, ubiquitous language, and scoped obligation
+  metadata.
+- Implemented typed spellbook Ritual invocation projection in
+  `engine/src/character_creation.rs` for the copied Wizard Ritual Adept
+  `detect_magic` fixture: spellbook Ritual access is accepted without a prepared
+  spell requirement or Spell Slot cost and requires reading the spellbook;
+  prepared-only Ritual access is rejected for this feature path.
+- Extended `engine/tests/character_sheet_projection.rs` with two tests matching
+  the deterministic QNT accepted and rejected projection cases.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial. The copied QNT fixture covers one Wizard
+  spellbook Ritual access case and one prepared-only rejection; it does not
+  cover a complete spell definition catalog or every Ritual spell.
+- Source gaps: full coverage still needs machine-readable spell definition
+  Ritual tags, a complete CharacterBuild spellbook Spell Access contract, and
+  invocation fixtures for additional Ritual spells and non-Wizard ritual-casting
+  features.
+
+## 2026-05-27 - Lane A resume Warlock Pact Magic and invocation lifecycle
+
+- Targeted paired obligations `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
+  and `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt`,
+  Warlock Eldritch Invocations and Pact Magic RAW, Character Creation spell slot
+  and Pact Magic RAW, spell access RAW, ubiquitous language, and scoped
+  obligation metadata.
+- Implemented typed Warlock invocation lifecycle projection in
+  `engine/src/character_creation.rs` for the six copied QNT fixtures: level 1
+  Armor of Shadows selection, level 2 invocation gain, level 3 non-repeatable
+  replacement, level 3 repeatable-choice replacement, prerequisite-retained
+  replacement rejection, and duplicate-selection rejection.
+- The projection carries Pact Magic cantrip/prepared-spell/Pact Slot count and
+  slot-level facts alongside selected invocation identity, without modeling the
+  runtime behavior of the invocations.
+- Extended `engine/tests/character_creation_projection.rs` with six tests
+  matching the deterministic QNT replay fields.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial for both obligations. The copied QNT fixture covers
+  representative Warlock level 1/2/3/5 lifecycle facts, but not arbitrary
+  Warlock level progression or a complete invocation catalog.
+- Source gaps: full coverage still needs machine-readable Warlock spell access
+  and invocation prerequisite/repeatability catalogs, rejection contracts for
+  every invalid invocation selection shape, and projection fixtures across all
+  Warlock levels and invocation options.
+
+## 2026-05-27 - Lane A resume Fighter Fighting Style feat and replacement
+
+- Targeted paired obligations `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION`
+  and `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt`,
+  Fighter Fighting Style RAW, Fighting Style feat RAW, Character Creation level
+  gain RAW, Paladin/Ranger Fighting Style RAW named by obligation metadata,
+  ubiquitous language, and scoped obligation metadata.
+- Implemented typed Fighter Fighting Style selected-feat projection in
+  `engine/src/character_creation.rs` for finalized Defense at Fighter level 1
+  and Defense-to-Archery replacement on Fighter level gain.
+- Extended `engine/tests/character_creation_projection.rs` with two tests
+  matching the deterministic QNT selected and replaced projection cases.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial for both obligations. The copied QNT fixture covers
+  Fighter Defense finalization and one Fighter level-gain replacement, but not
+  the full Fighting Style feat catalog or all replacement paths.
+- Source gaps: full coverage still needs a machine-readable Fighting Style feat
+  catalog, qualification/admission contracts, rejection fixtures for invalid
+  replacements, and Paladin/Ranger Fighting Style finalization fixtures.
+
+## 2026-05-27 - Lane A resume Cleric/Druid class-feature options
+
+- Targeted `CREATION.CLASS_FEATURE_OPTION.PROJECTION`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `input/packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`,
+  Cleric Divine Order RAW, Druid Primal Order RAW, Paladin/Ranger Fighting Style
+  option RAW named by obligation metadata, ubiquitous language, and scoped
+  obligation metadata.
+- Implemented typed class-feature order option projections in
+  `engine/src/character_creation.rs` for Cleric Protector, Cleric Thaumaturge,
+  Druid Magician, and Druid Warden. The projection records selected option
+  identity, extra cantrip refs, weapon/armor training facts, and ability-check
+  bonus fact kind without modeling downstream option behavior.
+- Extended `engine/tests/character_creation_projection.rs` with four tests
+  matching the deterministic QNT replay cases.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets -- -D warnings` all passed.
+- Obligation status: partial. The copied QNT fixture covers Cleric/Druid order
+  choices, but the broad obligation also names Paladin/Ranger Fighting Style
+  options and Sorcerer Metamagic option projection.
+- Source gaps: full coverage still needs machine-readable option catalogs and
+  rejection/admission contracts for invalid option choices, plus fixtures for
+  Paladin Blessed Warrior, Ranger Druidic Warrior, and broader Sorcerer
+  Metamagic option finalization.
+
 ## 2026-05-27 - Lane B wave 5 spell Hit Point restoration
 
 - Targeted `BATTLE.SPELL.HIT_POINT_RESTORATION` from the queue.
@@ -497,6 +600,41 @@ TypeScript runtime files.
   model a full battle command hole frontier or authored target picker; callers
   supply target witness facts directly.
 - Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane B Divine Smite after-hit damage rider
+
+- Targeted `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` from the B-owned queue after
+  the Faerie Fire slice.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-weapon-hit-spell-riders.qnt`,
+  `spell-damage-rider-projection-core.qnt`,
+  `battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt`, SRD 5.2.1
+  Divine Smite, spell Casting Time and slot rules, and ubiquitous language.
+- Implemented the Divine Smite after-melee-hit damage rider as a level-1
+  bonus-action spell profile with an explicit melee-hit trigger witness before
+  resource spend, Radiant damage projection, slot/upcast/Fiend-or-Undead damage
+  dice projection, non-Concentration rider profile status, Critical Hit doubling
+  of the table-provided smite damage roll, and target damage adjustments.
+- Added `engine/tests/battle_spell_riders.rs` with six tests covering spell and
+  rider profile facts, bonus-action/slot spend, Radiant damage application,
+  Critical Hit doubling, explicit trigger witness rejection, resource/access
+  rejection, negative damage roll rejection, and resistance/vulnerability.
+- `cd engine && cargo fmt`, `cd engine && cargo test --test
+  battle_spell_riders`, and `cd engine && cargo test` passed.
+- Lane B scoped clippy passed with `cd engine && cargo clippy --test
+  battle_faerie_fire --test battle_spell_riders -- -D warnings`.
+- `cd engine && cargo clippy --all-targets -- -D warnings` did not complete
+  because `engine/tests/character_creation_projection.rs` has unused imports in
+  A-owned code outside Lane B write scope:
+  `ClassFeatureOrderOption`, `ClassFeatureOrderProjection`,
+  `OrderAbilityCheckBonusKind`, `SpellUnitRef`,
+  `project_cleric_protector_order`, `project_cleric_thaumaturge_order`,
+  `project_druid_magician_order`, and `project_druid_warden_order`.
+- Obligation status: partial for `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`. The
+  Rust engine covers the Divine Smite after-hit damage rider path, but not
+  Divine Favor, Paladin's Smite feature uses, Hunter's Mark, Ensnaring Strike,
+  Searing Smite, Shining Smite, or full BattleState actor/target integration.
+- Source gap: no cleanroom source gap for the implemented Divine Smite slice.
 
 ## 2026-05-27 - Lane B overnight command option and next turn
 
@@ -728,3 +866,55 @@ TypeScript runtime files.
 - Conservative count: 2 fully implemented, 24 partially implemented, 21 not
   attempted, 0 blocked by source gap.
 - `cd engine && cargo test` passed: 162 tests passed, 0 failed.
+
+## 2026-05-27 - Lane B Faerie Fire attack-roll Advantage
+
+- Targeted `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` from the B-owned
+  queue after commit `1a15e1b09`.
+- Inspected only cleanroom-local copied QNT/RAW and Rust files:
+  `battle-runtime-save-gated-spell.qnt`, `battle-runtime-spell-attack.qnt`,
+  `battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`, SRD 5.2.1
+  Faerie Fire, Advantage/Disadvantage, Attack Rolls, and ubiquitous language.
+- Implemented Faerie Fire as a level-1 action spell profile with area witness
+  admission, failed-save creature outlines, object outlines keyed by explicit
+  object identity, Concentration start for admitted/effective casts, invisible
+  benefit denial, and attack-roll mode projection with Advantage/Disadvantage
+  cancellation.
+- Added explicit table witness inputs for area validity, failed creature saves
+  being in the area, and object targets being in the area.
+- Added `engine/tests/battle_faerie_fire.rs` with five tests covering spell
+  admission/resource spend, witness-gated effect application, failed-save
+  outline installation, creature attack-roll Advantage/invisible denial, and
+  object outline identity matching.
+- Final `cd engine && cargo fmt`, `cd engine && cargo test --test
+  battle_faerie_fire`, `cd engine && cargo test`, and `cd engine && cargo
+  clippy --all-targets -- -D warnings` passed.
+- Obligation status: partial for `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`.
+  The Rust engine covers Faerie Fire outline application and attack-roll
+  projection, but not full BattleState area targeting, persistent object outline
+  ownership, duration ticking, or cleanup when Concentration ends.
+- Source gap: no cleanroom source gap for the implemented slice.
+
+## 2026-05-27 - Lane C latest completed A/B batch coverage refresh
+
+- Read current local Rust APIs/tests plus cleanroom manifest, generator-readiness
+  rows, and level 1-2 QNT/MBT join metadata; no production TypeScript was read.
+- Accounted for current uncommitted tests/APIs:
+  `battle_faerie_fire.rs`, `battle_spell_riders.rs`, expanded
+  `character_creation_projection.rs`, and expanded
+  `character_sheet_projection.rs`.
+- Moved these obligations from not-attempted to partial:
+  `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`,
+  `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`,
+  `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`,
+  `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION`,
+  `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`,
+  `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`, and
+  `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`.
+- Kept `CREATION.CLASS_FEATURE_OPTION.PROJECTION`,
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, and
+  `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` partial with stronger evidence but
+  not full scoped coverage.
+- Conservative count: 2 fully implemented, 31 partially implemented, 14 not
+  attempted, 0 blocked by source gap.
+- `cd engine && cargo test` passed: 187 tests passed, 0 failed.

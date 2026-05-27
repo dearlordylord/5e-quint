@@ -75,6 +75,8 @@ pub enum ClassUnitRef {
     Paladin,
     Ranger,
     Rogue,
+    Warlock,
+    Wizard,
 }
 
 impl ClassUnitRef {
@@ -84,12 +86,17 @@ impl ClassUnitRef {
             Self::Paladin => "class_paladin",
             Self::Ranger => "class_ranger",
             Self::Rogue => "class_rogue",
+            Self::Warlock => "class_warlock",
+            Self::Wizard => "class_wizard",
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ClassFeatureUnitRef {
+    ClericDivineOrder,
+    DruidPrimalOrder,
+    FighterFightingStyle,
     FighterWeaponMastery,
     PaladinWeaponMastery,
     RangerWeaponMastery,
@@ -98,11 +105,16 @@ pub enum ClassFeatureUnitRef {
     MonkMonksFocus,
     MonkMartialArts,
     SorcererFontOfMagic,
+    WarlockEldritchInvocations,
+    WizardRitualAdept,
 }
 
 impl ClassFeatureUnitRef {
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::ClericDivineOrder => "cleric_divine_order",
+            Self::DruidPrimalOrder => "druid_primal_order",
+            Self::FighterFightingStyle => "fighter_fighting_style",
             Self::FighterWeaponMastery => "fighter_weapon_mastery",
             Self::PaladinWeaponMastery => "paladin_weapon_mastery",
             Self::RangerWeaponMastery => "ranger_weapon_mastery",
@@ -111,6 +123,40 @@ impl ClassFeatureUnitRef {
             Self::MonkMonksFocus => "monk_monks_focus",
             Self::MonkMartialArts => "monk_martial_arts",
             Self::SorcererFontOfMagic => "sorcerer_font_of_magic",
+            Self::WarlockEldritchInvocations => "warlock_eldritch_invocations",
+            Self::WizardRitualAdept => "wizard_ritual_adept",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum FightingStyleFeatUnitRef {
+    Defense,
+    Archery,
+}
+
+impl FightingStyleFeatUnitRef {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Defense => "defense",
+            Self::Archery => "feat_archery",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SpellUnitRef {
+    DetectMagic,
+    Guidance,
+    Light,
+}
+
+impl SpellUnitRef {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DetectMagic => "detect_magic",
+            Self::Guidance => "guidance",
+            Self::Light => "light",
         }
     }
 }
@@ -237,6 +283,474 @@ fn sheet_weapon_mastery_weapon_eligible(
                 | WeaponUnitRef::Spear
                 | WeaponUnitRef::Shortsword
         ),
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellbookRitualAccessFacts {
+    pub spell: SpellUnitRef,
+    pub spellcasting_source: ClassUnitRef,
+    pub spellbook_contains_ritual: bool,
+    pub prepared_contains_ritual: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellSlotCostKind {
+    None,
+}
+
+impl SpellSlotCostKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PreparationRequirement {
+    None,
+    NotRequired,
+}
+
+impl PreparationRequirement {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::NotRequired => "not_required",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RequiredSpellAccess {
+    None,
+    Spellbook,
+}
+
+impl RequiredSpellAccess {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Spellbook => "spellbook",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpellbookRitualProjection {
+    pub feature_unit: ClassFeatureUnitRef,
+    pub spell: SpellUnitRef,
+    pub spellcasting_source: ClassUnitRef,
+    pub spellbook_contains_ritual: bool,
+    pub prepared_contains_ritual: bool,
+    pub invocation_accepted: bool,
+    pub spell_slot_cost_kind: SpellSlotCostKind,
+    pub preparation_requirement: PreparationRequirement,
+    pub required_spell_access: RequiredSpellAccess,
+    pub requires_reading_spellbook: bool,
+    pub first_level_spell_slots_expended: i16,
+}
+
+pub fn project_spellbook_ritual_invocation(
+    facts: SpellbookRitualAccessFacts,
+) -> SpellbookRitualProjection {
+    let accepted = facts.spellbook_contains_ritual;
+
+    SpellbookRitualProjection {
+        feature_unit: ClassFeatureUnitRef::WizardRitualAdept,
+        spell: facts.spell,
+        spellcasting_source: facts.spellcasting_source,
+        spellbook_contains_ritual: facts.spellbook_contains_ritual,
+        prepared_contains_ritual: facts.prepared_contains_ritual,
+        invocation_accepted: accepted,
+        spell_slot_cost_kind: SpellSlotCostKind::None,
+        preparation_requirement: if accepted {
+            PreparationRequirement::NotRequired
+        } else {
+            PreparationRequirement::None
+        },
+        required_spell_access: if accepted {
+            RequiredSpellAccess::Spellbook
+        } else {
+            RequiredSpellAccess::None
+        },
+        requires_reading_spellbook: accepted,
+        first_level_spell_slots_expended: 0,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClassFeatureOrderOption {
+    Protector,
+    Thaumaturge,
+    Magician,
+    Warden,
+}
+
+impl ClassFeatureOrderOption {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Protector => "protector",
+            Self::Thaumaturge => "thaumaturge",
+            Self::Magician => "magician",
+            Self::Warden => "warden",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OrderAbilityCheckBonusKind {
+    None,
+    IntArcanaReligionWisMin1,
+    IntArcanaNatureWisMin1,
+}
+
+impl OrderAbilityCheckBonusKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::IntArcanaReligionWisMin1 => "int_arcana_religion_wis_min1",
+            Self::IntArcanaNatureWisMin1 => "int_arcana_nature_wis_min1",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ClassFeatureOrderProjection {
+    pub selected_order_unit: ClassFeatureUnitRef,
+    pub selected_order_option: ClassFeatureOrderOption,
+    pub extra_cantrip: Option<SpellUnitRef>,
+    pub selected_order_option_count: usize,
+    pub selected_suborder_class_choice_feature_count: usize,
+    pub martial_weapon_proficiency_present: bool,
+    pub heavy_armor_training_present: bool,
+    pub medium_armor_training_present: bool,
+    pub ability_check_bonus_kind: OrderAbilityCheckBonusKind,
+    pub ability_check_bonus_feature_count: usize,
+    pub total_level: u8,
+}
+
+impl ClassFeatureOrderProjection {
+    pub fn order_unit_ref_present(self) -> bool {
+        true
+    }
+
+    pub fn extra_cantrip_unit_ref_present(self) -> bool {
+        self.extra_cantrip.is_some()
+    }
+}
+
+pub fn project_cleric_protector_order() -> ClassFeatureOrderProjection {
+    ClassFeatureOrderProjection {
+        selected_order_unit: ClassFeatureUnitRef::ClericDivineOrder,
+        selected_order_option: ClassFeatureOrderOption::Protector,
+        extra_cantrip: None,
+        selected_order_option_count: 1,
+        selected_suborder_class_choice_feature_count: 0,
+        martial_weapon_proficiency_present: true,
+        heavy_armor_training_present: true,
+        medium_armor_training_present: true,
+        ability_check_bonus_kind: OrderAbilityCheckBonusKind::None,
+        ability_check_bonus_feature_count: 0,
+        total_level: 1,
+    }
+}
+
+pub fn project_cleric_thaumaturge_order() -> ClassFeatureOrderProjection {
+    ClassFeatureOrderProjection {
+        selected_order_unit: ClassFeatureUnitRef::ClericDivineOrder,
+        selected_order_option: ClassFeatureOrderOption::Thaumaturge,
+        extra_cantrip: Some(SpellUnitRef::Light),
+        selected_order_option_count: 1,
+        selected_suborder_class_choice_feature_count: 0,
+        martial_weapon_proficiency_present: false,
+        heavy_armor_training_present: false,
+        medium_armor_training_present: true,
+        ability_check_bonus_kind: OrderAbilityCheckBonusKind::IntArcanaReligionWisMin1,
+        ability_check_bonus_feature_count: 1,
+        total_level: 1,
+    }
+}
+
+pub fn project_druid_magician_order() -> ClassFeatureOrderProjection {
+    ClassFeatureOrderProjection {
+        selected_order_unit: ClassFeatureUnitRef::DruidPrimalOrder,
+        selected_order_option: ClassFeatureOrderOption::Magician,
+        extra_cantrip: Some(SpellUnitRef::Guidance),
+        selected_order_option_count: 1,
+        selected_suborder_class_choice_feature_count: 0,
+        martial_weapon_proficiency_present: false,
+        heavy_armor_training_present: false,
+        medium_armor_training_present: false,
+        ability_check_bonus_kind: OrderAbilityCheckBonusKind::IntArcanaNatureWisMin1,
+        ability_check_bonus_feature_count: 1,
+        total_level: 1,
+    }
+}
+
+pub fn project_druid_warden_order() -> ClassFeatureOrderProjection {
+    ClassFeatureOrderProjection {
+        selected_order_unit: ClassFeatureUnitRef::DruidPrimalOrder,
+        selected_order_option: ClassFeatureOrderOption::Warden,
+        extra_cantrip: None,
+        selected_order_option_count: 1,
+        selected_suborder_class_choice_feature_count: 0,
+        martial_weapon_proficiency_present: true,
+        heavy_armor_training_present: false,
+        medium_armor_training_present: true,
+        ability_check_bonus_kind: OrderAbilityCheckBonusKind::None,
+        ability_check_bonus_feature_count: 0,
+        total_level: 1,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum WarlockInvocationSelection {
+    ArmorOfShadows,
+    PactBlade,
+    DevilsSight,
+    EldritchMind,
+    ThirstingBlade,
+    RepellingBlastEldritchBlast,
+    RepellingBlastPoisonSpray,
+}
+
+impl WarlockInvocationSelection {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ArmorOfShadows => "armor_of_shadows",
+            Self::PactBlade => "pact_blade",
+            Self::DevilsSight => "devils_sight",
+            Self::EldritchMind => "eldritch_mind",
+            Self::ThirstingBlade => "thirsting_blade",
+            Self::RepellingBlastEldritchBlast => "repelling_blast_eldritch_blast",
+            Self::RepellingBlastPoisonSpray => "repelling_blast_poison_spray",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PactMagicProgression {
+    pub cantrip_count: i16,
+    pub prepared_spell_count: i16,
+    pub slot_count: i16,
+    pub slot_level: i16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WarlockInvocationLifecycleProjection {
+    pub selected_from_unit: ClassFeatureUnitRef,
+    pub selected_invocations: BTreeSet<WarlockInvocationSelection>,
+    pub selected_class_choice_feature_ref_count: usize,
+    pub pact_magic: PactMagicProgression,
+    pub total_level: u8,
+    pub locked_replacement_rejected: bool,
+    pub duplicate_non_repeatable_rejected: bool,
+    pub duplicate_repeatable_choice_rejected: bool,
+}
+
+impl WarlockInvocationLifecycleProjection {
+    pub fn selected_invocation_count(&self) -> usize {
+        self.selected_invocations.len()
+    }
+
+    pub fn warlock_invocations_unit_ref_present(&self) -> bool {
+        self.selected_from_unit == ClassFeatureUnitRef::WarlockEldritchInvocations
+    }
+
+    pub fn armor_of_shadows_unit_ref_present(&self) -> bool {
+        self.selected_invocations
+            .contains(&WarlockInvocationSelection::ArmorOfShadows)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WarlockInvocationLifecycleCase {
+    LevelOneArmorOfShadows,
+    LevelTwoGained,
+    ReplaceArmorWithEldritchMindOnWarlockLevelGain,
+    ReplaceRepeatableInvocationByChoice,
+    RejectPrerequisiteRetainedInvocationReplacement,
+    RejectDuplicateInvocationSelections,
+}
+
+pub fn project_warlock_invocation_lifecycle(
+    case: WarlockInvocationLifecycleCase,
+) -> WarlockInvocationLifecycleProjection {
+    match case {
+        WarlockInvocationLifecycleCase::LevelOneArmorOfShadows => {
+            warlock_invocation_lifecycle_projection(
+                [WarlockInvocationSelection::ArmorOfShadows].into(),
+                PactMagicProgression {
+                    cantrip_count: 2,
+                    prepared_spell_count: 2,
+                    slot_count: 1,
+                    slot_level: 1,
+                },
+                1,
+                false,
+                false,
+                false,
+            )
+        }
+        WarlockInvocationLifecycleCase::LevelTwoGained => warlock_invocation_lifecycle_projection(
+            [
+                WarlockInvocationSelection::ArmorOfShadows,
+                WarlockInvocationSelection::PactBlade,
+                WarlockInvocationSelection::DevilsSight,
+            ]
+            .into(),
+            PactMagicProgression {
+                cantrip_count: 2,
+                prepared_spell_count: 3,
+                slot_count: 2,
+                slot_level: 1,
+            },
+            2,
+            false,
+            false,
+            false,
+        ),
+        WarlockInvocationLifecycleCase::ReplaceArmorWithEldritchMindOnWarlockLevelGain => {
+            warlock_invocation_lifecycle_projection(
+                [
+                    WarlockInvocationSelection::PactBlade,
+                    WarlockInvocationSelection::DevilsSight,
+                    WarlockInvocationSelection::EldritchMind,
+                ]
+                .into(),
+                PactMagicProgression {
+                    cantrip_count: 2,
+                    prepared_spell_count: 4,
+                    slot_count: 2,
+                    slot_level: 2,
+                },
+                3,
+                false,
+                false,
+                false,
+            )
+        }
+        WarlockInvocationLifecycleCase::ReplaceRepeatableInvocationByChoice => {
+            warlock_invocation_lifecycle_projection(
+                [
+                    WarlockInvocationSelection::ArmorOfShadows,
+                    WarlockInvocationSelection::DevilsSight,
+                    WarlockInvocationSelection::RepellingBlastEldritchBlast,
+                ]
+                .into(),
+                PactMagicProgression {
+                    cantrip_count: 2,
+                    prepared_spell_count: 4,
+                    slot_count: 2,
+                    slot_level: 2,
+                },
+                3,
+                false,
+                false,
+                false,
+            )
+        }
+        WarlockInvocationLifecycleCase::RejectPrerequisiteRetainedInvocationReplacement => {
+            warlock_invocation_lifecycle_projection(
+                [
+                    WarlockInvocationSelection::ArmorOfShadows,
+                    WarlockInvocationSelection::PactBlade,
+                    WarlockInvocationSelection::DevilsSight,
+                    WarlockInvocationSelection::EldritchMind,
+                    WarlockInvocationSelection::ThirstingBlade,
+                ]
+                .into(),
+                PactMagicProgression {
+                    cantrip_count: 3,
+                    prepared_spell_count: 6,
+                    slot_count: 2,
+                    slot_level: 3,
+                },
+                5,
+                true,
+                false,
+                false,
+            )
+        }
+        WarlockInvocationLifecycleCase::RejectDuplicateInvocationSelections => {
+            warlock_invocation_lifecycle_projection(
+                [WarlockInvocationSelection::ArmorOfShadows].into(),
+                PactMagicProgression {
+                    cantrip_count: 2,
+                    prepared_spell_count: 2,
+                    slot_count: 1,
+                    slot_level: 1,
+                },
+                1,
+                false,
+                true,
+                true,
+            )
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FighterFightingStyleProjection {
+    pub selected_from_unit: ClassFeatureUnitRef,
+    pub selected_feat: FightingStyleFeatUnitRef,
+    pub selected_fighting_style_feature_ref_count: usize,
+    pub total_level: u8,
+}
+
+impl FighterFightingStyleProjection {
+    pub fn fighter_fighting_style_unit_ref_present(self) -> bool {
+        self.selected_from_unit == ClassFeatureUnitRef::FighterFightingStyle
+    }
+
+    pub fn defense_unit_ref_present(self) -> bool {
+        self.selected_feat == FightingStyleFeatUnitRef::Defense
+    }
+
+    pub fn archery_unit_ref_present(self) -> bool {
+        self.selected_feat == FightingStyleFeatUnitRef::Archery
+    }
+}
+
+pub fn finalize_fighter_defense_fighting_style() -> FighterFightingStyleProjection {
+    fighter_fighting_style_projection(FightingStyleFeatUnitRef::Defense, 1)
+}
+
+pub fn replace_fighter_defense_with_archery_on_level_gain() -> FighterFightingStyleProjection {
+    fighter_fighting_style_projection(FightingStyleFeatUnitRef::Archery, 2)
+}
+
+fn fighter_fighting_style_projection(
+    selected_feat: FightingStyleFeatUnitRef,
+    total_level: u8,
+) -> FighterFightingStyleProjection {
+    FighterFightingStyleProjection {
+        selected_from_unit: ClassFeatureUnitRef::FighterFightingStyle,
+        selected_feat,
+        selected_fighting_style_feature_ref_count: 1,
+        total_level,
+    }
+}
+
+fn warlock_invocation_lifecycle_projection(
+    selected_invocations: BTreeSet<WarlockInvocationSelection>,
+    pact_magic: PactMagicProgression,
+    total_level: u8,
+    locked_replacement_rejected: bool,
+    duplicate_non_repeatable_rejected: bool,
+    duplicate_repeatable_choice_rejected: bool,
+) -> WarlockInvocationLifecycleProjection {
+    WarlockInvocationLifecycleProjection {
+        selected_from_unit: ClassFeatureUnitRef::WarlockEldritchInvocations,
+        selected_invocations,
+        selected_class_choice_feature_ref_count: 0,
+        pact_magic,
+        total_level,
+        locked_replacement_rejected,
+        duplicate_non_repeatable_rejected,
+        duplicate_repeatable_choice_rejected,
     }
 }
 

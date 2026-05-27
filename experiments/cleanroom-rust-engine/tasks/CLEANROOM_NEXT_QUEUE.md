@@ -1,7 +1,7 @@
 # Cleanroom Next Queue
 
 Purpose: keep Lane A/B implementation moving from the latest Lane C coverage
-map. Current cleanroom status is 2 fully implemented, 24 partial, 21 not
+map. Current cleanroom status is 2 fully implemented, 31 partial, 14 not
 attempted, and 0 blocked by source gap. Coverage claims should stay
 conservative until Lane C refreshes counts after implementation.
 
@@ -17,11 +17,11 @@ they remain not attempted and are adjacent to newly landed helper surfaces.
 
 | Rank | Lane | Obligation | Why it is a good next slice | Likely source files | Expected Rust tests |
 | --- | --- | --- | --- | --- | --- |
-| 1 | B | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | Not attempted and adjacent to the new save-gated condition and spell attack projection helpers. | `input/packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `input/packages/battle-runtime/battle-runtime-spell-attack.qnt` | Add focused tests for failed-save attack-roll Advantage active-effect application and attack-roll projection. |
-| 2 | B | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | Not attempted and adjacent to the new spell damage branch helpers. | `input/packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt`, `input/packages/battle-runtime/battle-runtime-concentration.qnt` | Add `engine/tests/battle_spell_riders.rs` for after-hit rider admission, resource spend, concentration, and rider transfer. |
-| 3 | B | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | Not attempted; should reuse spell invocation and spell attack damage branch helpers without requiring chained attack state first. | `input/packages/battle-runtime/battle-runtime-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt` | Add `engine/tests/battle_spell_sequences.rs` for independent repeated attack sequence admission and per-target attack resolution. |
-| 4 | B | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | Not attempted and pairs naturally after independent attack sequence. | `input/packages/battle-runtime/battle-runtime-chained-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt` | Extend `engine/tests/battle_spell_sequences.rs` for chained attack continuation and stop conditions. |
-| 5 | A | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | Not attempted and isolated from battle reducers; useful Lane A projection work after sheet resource fixtures. | `input/packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt` | Add `engine/tests/character_sheet_projection.rs` or a focused spellbook projection test for ritual/spell access selected refs. |
+| 1 | B | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | Not attempted and should reuse spell invocation plus spell attack damage branch helpers without requiring chained attack state first. | `input/packages/battle-runtime/battle-runtime-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt` | Add `engine/tests/battle_spell_sequences.rs` for independent repeated attack sequence admission and per-target attack resolution. |
+| 2 | B | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | Not attempted and pairs naturally after independent attack sequence. | `input/packages/battle-runtime/battle-runtime-chained-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-attack.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt` | Extend `engine/tests/battle_spell_sequences.rs` for chained attack continuation and stop conditions. |
+| 3 | B | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | Not attempted and adjacent to the new Divine Smite rider and spell damage helper surface. | `input/packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`, `input/packages/battle-runtime/battle-runtime-weapon-attacks.qnt`, `input/packages/battle-runtime/battle-runtime-light.qnt`, `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt` | Add `engine/tests/battle_spell_riders.rs` cases for weapon-hosted attack admission and rider interaction. |
+| 4 | B | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | Not attempted and adjacent to the rider work without needing area/light lifecycles. | `input/packages/battle-runtime/battle-runtime-marked-riders.qnt`, `input/packages/battle-runtime/battle-runtime-marked-spells.qnt` | Add marked-rider transfer cases to `engine/tests/battle_spell_riders.rs`. |
+| 5 | B | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | Not attempted and a compact active-effect/protection slice after scalar and condition work. | `input/packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | Add focused protection/prevention cases in `engine/tests/battle_protection_modifiers.rs`. |
 
 ## Recently Moved To Partial
 
@@ -30,12 +30,19 @@ Keep these out of top slots unless A/B explicitly chooses a deepening slice.
 - `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`
 - `BATTLE.SANCTUARY.TARGETING_INTERDICTION`
 - `BATTLE.SPELL.REACTION_CASTING_TIME`
+- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`
 - `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`
+- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`
 - `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`
 - `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`
+- `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`
+- `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION`
+- `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`
+- `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
 - `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION`
 - `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION`
 - `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION`
+- `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`
 - `SHEET.FEATURE_RESOURCES.TRANSITIONS`
 - `SHEET.WEAPON_MASTERY.RESELECTION`
 
@@ -52,8 +59,7 @@ Advantage, after-hit riders, and attack sequences.
 
 Obligations:
 
-- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`
-- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`
+- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (partial)
 - `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`
 - `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`
 - `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`
@@ -61,6 +67,7 @@ Obligations:
 - `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` (partial)
 - `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` (partial)
 - `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` (partial)
+- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (partial)
 
 Likely source files:
 
@@ -145,11 +152,11 @@ deepen fixture-based partials only where needed.
 
 Obligations:
 
-- `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`
-- `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION`
-- `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`
-- `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
-- `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`
+- `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (partial)
+- `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (partial)
+- `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (partial)
+- `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (partial)
+- `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` (partial)
 - `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (partial)
 - `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (partial)
 - `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (partial)

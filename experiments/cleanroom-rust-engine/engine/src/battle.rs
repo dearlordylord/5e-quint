@@ -1028,6 +1028,8 @@ pub enum SpellDefinitionProfile {
     Barkskin,
     Aid,
     BlindnessDeafness,
+    FaerieFire,
+    DivineSmite,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1398,7 +1400,9 @@ pub fn spell_invocation_target_cardinality(
         | SpellDefinitionProfile::FalseLife
         | SpellDefinitionProfile::ShieldOfFaith
         | SpellDefinitionProfile::Barkskin
-        | SpellDefinitionProfile::BlindnessDeafness => {
+        | SpellDefinitionProfile::BlindnessDeafness
+        | SpellDefinitionProfile::FaerieFire
+        | SpellDefinitionProfile::DivineSmite => {
             SpellInvocationTargetCardinality::SpellInvocationBoundedTargets {
                 minimum_target_count: 1,
                 maximum_target_count: if profile == SpellDefinitionProfile::BlindnessDeafness {
@@ -1437,7 +1441,8 @@ pub fn spell_profile_action(profile: SpellDefinitionProfile) -> SpellInvocationA
         | SpellDefinitionProfile::MassHealingWord
         | SpellDefinitionProfile::Sanctuary
         | SpellDefinitionProfile::ShieldOfFaith
-        | SpellDefinitionProfile::Barkskin => SpellInvocationAction::BonusActionSpellInvocation,
+        | SpellDefinitionProfile::Barkskin
+        | SpellDefinitionProfile::DivineSmite => SpellInvocationAction::BonusActionSpellInvocation,
         SpellDefinitionProfile::MagicMissile
         | SpellDefinitionProfile::RayOfFrost
         | SpellDefinitionProfile::AcidSplash
@@ -1450,9 +1455,8 @@ pub fn spell_profile_action(profile: SpellDefinitionProfile) -> SpellInvocationA
         | SpellDefinitionProfile::SpiderClimb
         | SpellDefinitionProfile::Fly
         | SpellDefinitionProfile::Aid
-        | SpellDefinitionProfile::BlindnessDeafness => {
-            SpellInvocationAction::ActionTimeSpellInvocation
-        }
+        | SpellDefinitionProfile::BlindnessDeafness
+        | SpellDefinitionProfile::FaerieFire => SpellInvocationAction::ActionTimeSpellInvocation,
     }
 }
 
@@ -1469,11 +1473,13 @@ pub fn spell_profile_minimum_slot_level(profile: SpellDefinitionProfile) -> i32 
         | SpellDefinitionProfile::Sanctuary
         | SpellDefinitionProfile::FalseLife
         | SpellDefinitionProfile::Longstrider
-        | SpellDefinitionProfile::ShieldOfFaith => 1,
+        | SpellDefinitionProfile::ShieldOfFaith
+        | SpellDefinitionProfile::DivineSmite => 1,
         SpellDefinitionProfile::SpiderClimb
         | SpellDefinitionProfile::Barkskin
         | SpellDefinitionProfile::Aid
         | SpellDefinitionProfile::BlindnessDeafness => 2,
+        SpellDefinitionProfile::FaerieFire => 1,
         SpellDefinitionProfile::Fly => 3,
     }
 }
@@ -2734,6 +2740,204 @@ pub fn end_turn_with_blindness_deafness_repeat_save(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpellAttackRollMode {
+    NormalSpellAttackRoll,
+    AdvantageSpellAttackRoll,
+    DisadvantageSpellAttackRoll,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FaerieFireActiveEffect {
+    FaerieFireOutline,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FaerieFireObjectOutline {
+    pub object_id: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FaerieFireTargetState {
+    pub active_effects: Vec<FaerieFireActiveEffect>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FaerieFireSpellFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub area_witness_valid: bool,
+    pub creature_target_count: i32,
+    pub failed_creature_save_count: i32,
+    pub failed_creatures_are_in_area: bool,
+    pub object_target_count: i32,
+    pub object_targets_are_in_area: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FaerieFireSpellResult {
+    pub invocation: SpellInvocationResult,
+    pub outlined_creature_count: i32,
+    pub object_outlines: Vec<FaerieFireObjectOutline>,
+    pub caster_concentrating: bool,
+}
+
+pub fn attack_roll_mode_from_flags(
+    has_advantage: bool,
+    has_disadvantage: bool,
+) -> SpellAttackRollMode {
+    match (has_advantage, has_disadvantage) {
+        (true, false) => SpellAttackRollMode::AdvantageSpellAttackRoll,
+        (false, true) => SpellAttackRollMode::DisadvantageSpellAttackRoll,
+        _ => SpellAttackRollMode::NormalSpellAttackRoll,
+    }
+}
+
+pub fn faerie_fire_failed_save_active_effects() -> Vec<FaerieFireActiveEffect> {
+    vec![FaerieFireActiveEffect::FaerieFireOutline]
+}
+
+pub fn faerie_fire_target(
+    target: FaerieFireTargetState,
+    saving_throw_succeeded: bool,
+) -> FaerieFireTargetState {
+    if saving_throw_succeeded {
+        return target;
+    }
+
+    let mut active_effects = target.active_effects;
+    for effect in faerie_fire_failed_save_active_effects() {
+        if !active_effects.contains(&effect) {
+            active_effects.push(effect);
+        }
+    }
+    FaerieFireTargetState { active_effects }
+}
+
+pub fn faerie_fire_target_is_outlined(effects: &[FaerieFireActiveEffect]) -> bool {
+    effects.contains(&FaerieFireActiveEffect::FaerieFireOutline)
+}
+
+pub fn faerie_fire_active_effects_grant_attack_roll_advantage(
+    target_effects: &[FaerieFireActiveEffect],
+    attacker_can_see_target: bool,
+) -> bool {
+    attacker_can_see_target && faerie_fire_target_is_outlined(target_effects)
+}
+
+pub fn faerie_fire_creature_attack_roll_mode(
+    attacker_has_disadvantage: bool,
+    target_effects: &[FaerieFireActiveEffect],
+    attacker_can_see_target: bool,
+) -> SpellAttackRollMode {
+    attack_roll_mode_from_flags(
+        faerie_fire_active_effects_grant_attack_roll_advantage(
+            target_effects,
+            attacker_can_see_target,
+        ),
+        attacker_has_disadvantage,
+    )
+}
+
+pub fn faerie_fire_active_effects_deny_invisible_benefit(
+    target_effects: &[FaerieFireActiveEffect],
+) -> bool {
+    faerie_fire_target_is_outlined(target_effects)
+}
+
+pub fn faerie_fire_object_outline_matches(
+    outline: FaerieFireObjectOutline,
+    object_id: i32,
+) -> bool {
+    outline.object_id == object_id
+}
+
+pub fn faerie_fire_object_outlines_grant_attack_roll_advantage(
+    outlines: &[FaerieFireObjectOutline],
+    object_id: i32,
+    attacker_can_see_object: bool,
+) -> bool {
+    attacker_can_see_object
+        && outlines
+            .iter()
+            .any(|outline| faerie_fire_object_outline_matches(*outline, object_id))
+}
+
+pub fn faerie_fire_object_attack_roll_mode(
+    attacker_has_disadvantage: bool,
+    outlines: &[FaerieFireObjectOutline],
+    object_id: i32,
+    attacker_can_see_object: bool,
+) -> SpellAttackRollMode {
+    attack_roll_mode_from_flags(
+        faerie_fire_object_outlines_grant_attack_roll_advantage(
+            outlines,
+            object_id,
+            attacker_can_see_object,
+        ),
+        attacker_has_disadvantage,
+    )
+}
+
+pub fn faerie_fire_object_outlines_deny_invisible_benefit(
+    outlines: &[FaerieFireObjectOutline],
+    object_id: i32,
+) -> bool {
+    outlines
+        .iter()
+        .any(|outline| faerie_fire_object_outline_matches(*outline, object_id))
+}
+
+pub fn legal_faerie_fire_spell_facts(facts: &FaerieFireSpellFacts) -> bool {
+    facts.creature_target_count >= 0
+        && facts.failed_creature_save_count >= 0
+        && facts.failed_creature_save_count <= facts.creature_target_count
+        && facts.failed_creatures_are_in_area
+        && facts.object_target_count >= 0
+        && facts.object_targets_are_in_area
+}
+
+pub fn resolve_faerie_fire_spell(
+    state: SpellcastingProcedureState,
+    facts: FaerieFireSpellFacts,
+) -> FaerieFireSpellResult {
+    let invocation_facts = SpellInvocationFacts {
+        profile: SpellDefinitionProfile::FaerieFire,
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: 1,
+        targets_are_valid: facts.area_witness_valid,
+    };
+    let invocation = if legal_faerie_fire_spell_facts(&facts) {
+        resolve_spell_invocation(state, invocation_facts)
+    } else {
+        SpellInvocationResult {
+            state,
+            admitted: false,
+            slot_expended: false,
+        }
+    };
+    let can_affect_targets = spell_invocation_can_affect_targets(invocation, invocation_facts);
+    let object_outlines = if can_affect_targets {
+        (0..facts.object_target_count)
+            .map(|object_id| FaerieFireObjectOutline { object_id })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    FaerieFireSpellResult {
+        invocation,
+        outlined_creature_count: if can_affect_targets {
+            facts.failed_creature_save_count
+        } else {
+            0
+        },
+        object_outlines,
+        caster_concentrating: can_affect_targets,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DamageType {
     Acid,
@@ -3090,6 +3294,158 @@ pub fn resolve_spell_save_damage_branch(
             damage_type: facts.damage_type,
             failed_save_projections: Vec::new(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DamageRiderSpellProfile {
+    DivineFavorWeaponDamageRiderProfile,
+    DivineSmiteAfterHitDamageProfile,
+    HuntersMarkMarkedDamageRiderProfile,
+    EnsnaringStrikeAfterHitConditionProfile,
+    SearingSmiteAfterHitTimedDamageProfile,
+    ShiningSmiteAfterHitDamageIlluminationProfile,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DivineSmiteAfterHitFacts {
+    pub has_spell_access: bool,
+    pub selected_slot_level: i32,
+    pub melee_hit_trigger_witness: bool,
+    pub target_fiend_or_undead: bool,
+    pub smite_damage_roll: i32,
+    pub attack_critical: bool,
+    pub target_adjustments: DamageAdjustmentFacts,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DivineSmiteAfterHitResult {
+    pub invocation: SpellInvocationResult,
+    pub damage_result: HitPointRecoveryResult,
+    pub damage_amount: i32,
+    pub damage_dice: i32,
+    pub damage_die_size: i32,
+    pub damage_type: DamageType,
+}
+
+pub fn damage_rider_spell_action(_profile: DamageRiderSpellProfile) -> SpellInvocationAction {
+    SpellInvocationAction::BonusActionSpellInvocation
+}
+
+pub fn damage_rider_requires_concentration(profile: DamageRiderSpellProfile) -> bool {
+    matches!(
+        profile,
+        DamageRiderSpellProfile::HuntersMarkMarkedDamageRiderProfile
+            | DamageRiderSpellProfile::EnsnaringStrikeAfterHitConditionProfile
+            | DamageRiderSpellProfile::ShiningSmiteAfterHitDamageIlluminationProfile
+    )
+}
+
+pub fn divine_smite_damage_type() -> DamageType {
+    DamageType::Radiant
+}
+
+pub fn divine_smite_damage_die_size() -> i32 {
+    8
+}
+
+pub fn divine_smite_damage_dice(slot_level: i32, target_fiend_or_undead: bool) -> i32 {
+    2 + if slot_level > 1 { slot_level - 1 } else { 0 } + if target_fiend_or_undead { 1 } else { 0 }
+}
+
+pub fn legal_divine_smite_after_hit_facts(facts: &DivineSmiteAfterHitFacts) -> bool {
+    facts.melee_hit_trigger_witness
+        && facts.selected_slot_level >= 1
+        && facts.smite_damage_roll >= 0
+}
+
+pub fn divine_smite_raw_damage_amount(facts: DivineSmiteAfterHitFacts) -> i32 {
+    let damage_roll = nonnegative(facts.smite_damage_roll);
+    if facts.attack_critical {
+        damage_roll * 2
+    } else {
+        damage_roll
+    }
+}
+
+pub fn divine_smite_damage_amount_after_adjustments(facts: DivineSmiteAfterHitFacts) -> i32 {
+    total_damage_after_target_adjustments(
+        DamageByType::empty().add_amount_for_type(
+            divine_smite_damage_type(),
+            divine_smite_raw_damage_amount(facts),
+        ),
+        facts.target_adjustments,
+    )
+}
+
+pub fn resolve_divine_smite_after_melee_hit(
+    state: SpellcastingProcedureState,
+    target_vitals: CreatureVitals,
+    facts: DivineSmiteAfterHitFacts,
+) -> DivineSmiteAfterHitResult {
+    let rejected_invocation = SpellInvocationResult {
+        state,
+        admitted: false,
+        slot_expended: false,
+    };
+    let unchanged_damage = HitPointRecoveryResult {
+        vitals: target_vitals,
+        death_saving_throws: DeathSavingThrowLifecycle::reset(),
+        positive_hit_point_unconscious_recovery:
+            PositiveHitPointUnconsciousRecovery::NoPositiveHitPointUnconsciousRecovery,
+        hit_points_regained: 0,
+    };
+    let damage_dice =
+        divine_smite_damage_dice(facts.selected_slot_level, facts.target_fiend_or_undead);
+
+    if !legal_divine_smite_after_hit_facts(&facts) {
+        return DivineSmiteAfterHitResult {
+            invocation: rejected_invocation,
+            damage_result: unchanged_damage,
+            damage_amount: 0,
+            damage_dice,
+            damage_die_size: divine_smite_damage_die_size(),
+            damage_type: divine_smite_damage_type(),
+        };
+    }
+
+    let invocation_facts = SpellInvocationFacts {
+        profile: SpellDefinitionProfile::DivineSmite,
+        has_spell_access: facts.has_spell_access,
+        selected_slot_level: facts.selected_slot_level,
+        target_count: 1,
+        targets_are_valid: true,
+    };
+    let invocation = resolve_spell_invocation(state, invocation_facts);
+    if !spell_invocation_can_affect_targets(invocation, invocation_facts) {
+        return DivineSmiteAfterHitResult {
+            invocation,
+            damage_result: unchanged_damage,
+            damage_amount: 0,
+            damage_dice,
+            damage_die_size: divine_smite_damage_die_size(),
+            damage_type: divine_smite_damage_type(),
+        };
+    }
+
+    let damage_amount = divine_smite_damage_amount_after_adjustments(facts);
+    let damage_result = apply_resolved_damage_to_positive_hit_points(target_vitals, damage_amount);
+    DivineSmiteAfterHitResult {
+        invocation,
+        damage_result: HitPointRecoveryResult {
+            vitals: damage_result.vitals,
+            death_saving_throws: death_saving_throw_lifecycle_after_positive_hit_point_damage(
+                DeathSavingThrowLifecycle::reset(),
+                damage_result,
+            ),
+            positive_hit_point_unconscious_recovery:
+                PositiveHitPointUnconsciousRecovery::NoPositiveHitPointUnconsciousRecovery,
+            hit_points_regained: 0,
+        },
+        damage_amount,
+        damage_dice,
+        damage_die_size: divine_smite_damage_die_size(),
+        damage_type: divine_smite_damage_type(),
     }
 }
 
