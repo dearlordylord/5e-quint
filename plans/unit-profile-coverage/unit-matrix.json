@@ -1,56 +1,16 @@
 {
   "collectionBoundaryNote": "SRD 5.2.1 is conceptually part of Classic, but stored separately for SRD provenance and distribution policy; the Classic 2024 library is a derived view.",
-  "collections": [
-    {
-      "discovery": {
-        "kind": "surface-srd-unit-catalog",
-        "sourcePath": "packages/surface/src/surface/unit-catalog.ts"
-      },
-      "id": "srd-5.2.1",
-      "policy": {
-        "distribution": "creative-commons-srd",
-        "provenance": "srd-5.2.1",
-        "tag": "srd"
-      },
-      "title": "SRD 5.2.1 Surface Units"
-    },
-    {
-      "discovery": {
-        "kind": "classic-fixture-directory",
-        "sourcePath": "plans/unit-profile-coverage/fixtures/classic-non-srd"
-      },
-      "id": "classic-2024-non-srd-mechanics",
-      "policy": {
-        "distribution": "public-mechanics-only-renamed",
-        "protectedExpression": "excluded",
-        "provenance": "classic-2024-mechanics-source-lane",
-        "tag": "classic-non-srd-mechanics"
-      },
-      "title": "Classic 2024 Non-SRD Mechanics-Only Units"
-    }
-  ],
-  "derivedViews": [
-    {
-      "authoring": "forbidden",
-      "derivedFrom": [
-        "srd-5.2.1",
-        "classic-2024-non-srd-mechanics"
-      ],
-      "id": "classic-2024-unit-library",
-      "title": "Classic 2024 Unit Library"
-    }
-  ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 416,
-      "numerator": 220,
-      "percent": "52.9%"
+      "denominator": 422,
+      "numerator": 226,
+      "percent": "53.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 501,
-      "numerator": 265,
-      "percent": "52.9%"
+      "denominator": 507,
+      "numerator": 271,
+      "percent": "53.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +19,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 266
+      "value": 272
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 148,
@@ -67,8 +27,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 266,
-      "numerator": 266,
+      "denominator": 272,
+      "numerator": 272,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +72,9 @@
       "percent": "97.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 221,
+      "denominator": 227,
       "numerator": 148,
-      "percent": "67%"
+      "percent": "65.2%"
     }
   },
   "metricSemantics": [
@@ -4039,6 +3999,90 @@
         "L13UG-A17"
       ],
       "title": "Unit feature admits delegated Bonus Action standard-action permissions",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.remarkable-athlete",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initiative, ability-check, attack-critical, movement, and Opportunity Attack execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Remarkable Athlete roll and critical-hit movement facts",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.open-hand-technique",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Open Hand Technique Flurry of Blows rider choices",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.paladin-sacred-weapon",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.hunters-prey",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.rogue-steady-aim",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts without duplicating movement history. Existing unit-feature action discovery, action economy, attack-roll active effects, movement budget, Speed, and end-turn cleanup owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Steady Aim Bonus Action attack-roll and Speed facts",
+      "verificationOwners": []
+    },
+    {
+      "id": "unit-feature.potent-cantrip",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "taskRefs": [
+        "L13UG-A18"
+      ],
+      "title": "Unit feature admits Potent Cantrip miss/save-success half-damage facts",
       "verificationOwners": []
     }
   ],
@@ -12987,6 +13031,19 @@
         "unit-feature.bonus-action-delegated-standard-actions"
       ],
       "taskId": "L13UG-A17"
+    },
+    {
+      "claimKind": "admission-projection",
+      "note": "Focused battle-runtime admission tests cover Surface mechanics shape admission, malformed-shape rejection, class/subclass grant reachability, and support-profile projection without authored-identity dispatch. Reducer execution and QNT parity remain explicit follow-up work: the current battle runtime has existing owners for action economy, resources, movement, attack roll modes, attack damage riders, item/light state, and spell cantrip damage that must consume these typed profiles directly rather than a detached Task 18 state machine.",
+      "profileIds": [
+        "unit-feature.remarkable-athlete",
+        "unit-feature.open-hand-technique",
+        "unit-feature.paladin-sacred-weapon",
+        "unit-feature.hunters-prey",
+        "unit-feature.rogue-steady-aim",
+        "unit-feature.potent-cantrip"
+      ],
+      "taskId": "L13UG-A18"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13055,12 +13112,12 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 72,
-        "installedUnitDenominator": 72,
+        "executableUnitDenominator": 78,
+        "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 97,
-        "profileSubsetSupportedUnits": 21,
+        "profileFactDenominator": 103,
+        "profileSubsetSupportedUnits": 27,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
@@ -14156,6 +14213,76 @@
       ],
       "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json",
       "unitId": "fighter_improved_critical"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
+            "mechanic": "Execute Remarkable Athlete Initiative Advantage, Strength (Athletics) Advantage, and post-Critical Hit half-Speed movement through the existing runtime owners."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
+            "mechanic": "Consume the admitted remarkable-athlete profile during Initiative, Strength (Athletics) checks, and immediately after critical hits without duplicating movement or Opportunity Attack state.",
+            "owner": "battle-runtime initiative/ability-check/attack-critical movement reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for roll-mode projection, Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
+            "title": "Fighter Remarkable Athlete Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime initiative, ability-check, attack-critical, movement, and Opportunity Attack owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.remarkable-athlete"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the existing initiative, ability-check, attack-critical, movement, and Opportunity Attack owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Champion grants Remarkable Athlete as a level-3 subclass feature Unit",
+          "Battle Unit support admits the Surface remarkable_athlete mechanics",
+          "The projected support profile carries Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement without Opportunity Attacks, without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.remarkable-athlete",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initiative, ability-check, attack-critical, movement, and Opportunity Attack execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Remarkable Athlete roll and critical-hit movement facts",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
+      "unitId": "fighter_remarkable_athlete"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -16342,6 +16469,76 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
+            "mechanic": "Execute Open Hand Technique after Flurry of Blows hits, including Addle Opportunity Attack denial and failed-save-gated Push/Topple outcomes."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
+            "mechanic": "Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success.",
+            "owner": "battle-runtime Flurry of Blows attack-hit reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
+            "title": "Monk Open Hand Technique Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Monk Focus, attack-hit, saving-throw, forced-movement, and condition owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.open-hand-technique"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Flurry of Blows hit and saving-throw rider owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Warrior of the Open Hand grants Open Hand Technique as a level-3 subclass feature Unit",
+          "Battle Unit support admits the Surface open_hand_technique mechanics referencing Monk Focus Flurry of Blows",
+          "The projected support profile carries Addle, Push, and Topple rider facts, including the required Strength/Dexterity Saving Throw gates for Push and Topple, without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.open-hand-technique",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Open Hand Technique Flurry of Blows rider choices",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",
+      "unitId": "monk_open_hand_technique"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "character-creation.skill-expertise-choice"
         ],
@@ -16991,6 +17188,76 @@
       ],
       "sourceRecordPath": "packages/surface/content/rogue_second_story_work.json",
       "unitId": "rogue_second_story_work"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME",
+            "mechanic": "Execute Steady Aim as a Bonus Action only if the Rogue has not moved this turn, applying next-attack-roll Advantage and Speed 0 until the end of the current turn."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME",
+            "mechanic": "Consume the admitted steady-aim profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf, Speed, and turn-end cleanup state without duplicating movement or action state.",
+            "owner": "battle-runtime unit-feature action and movement reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for no-movement admission, moved-this-turn rejection, Bonus Action spend, next attack Advantage, Speed 0, and end-turn cleanup.",
+            "title": "Rogue Steady Aim Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime unit-feature action, action economy, attack-roll active-effect, movement budget, Speed, and end-turn cleanup owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.rogue-steady-aim"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until unit-feature action discovery, action economy, attack-roll active effect, movement budget, Speed, and end-turn cleanup owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Rogue grants Steady Aim as a level-3 class feature Unit",
+          "Battle Unit support admits the Surface steady_aim mechanics",
+          "The projected support profile carries Bonus Action activation, no-prior-movement prerequisite, next-attack-roll Advantage, and Speed 0 until end of current turn without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.rogue-steady-aim",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts without duplicating movement history. Existing unit-feature action discovery, action economy, attack-roll active effects, movement budget, Speed, and end-turn cleanup owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Steady Aim Bonus Action attack-roll and Speed facts",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_steady_aim.json",
+      "unitId": "rogue_steady_aim"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -18285,6 +18552,76 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
+            "mechanic": "Execute Potent Cantrip in spell resolution, applying half cantrip damage on attack misses or successful target saves while applying no additional effect."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
+            "mechanic": "Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success.",
+            "owner": "battle-runtime spell attack/save cantrip-damage reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
+            "title": "Wizard Potent Cantrip Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell attack, spell save, cantrip damage, and additional-effect owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.potent-cantrip"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until spell attack, spell save, cantrip-damage, and additional-effect owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Evoker grants Potent Cantrip as a level-3 subclass feature Unit",
+          "Battle Unit support admits the Surface potent_cantrip mechanics",
+          "The projected support profile carries damaging-cantrip creature-target half-damage facts for attack misses and successful target saves, plus the no-additional-effect restriction, without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.potent-cantrip",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Potent Cantrip miss/save-success half-damage facts",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
+      "unitId": "wizard_potent_cantrip"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
           "owner": "character-creation-runtime",
@@ -19017,6 +19354,76 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
+            "mechanic": "Execute Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds to a held Melee weapon, applies the active attack/damage/light effects, and ends on recast, dismissal, or not carrying the weapon."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
+            "mechanic": "Consume the admitted sacred-weapon profile through existing action economy, Paladin Channel Divinity resource, held weapon item state, attack bonus, damage type choice, light emission, and dismissal lifecycle owners.",
+            "owner": "battle-runtime resource/action/item/attack/light reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for activation, resource spend, attack bonus minimum, Radiant choice, light projection, recast/dismiss/not-carried ending, and resource/weapon rejection.",
+            "title": "Paladin Sacred Weapon Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Unit action discovery, resource, item, attack, damage-type, light, and active-effect owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.paladin-sacred-weapon"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until action discovery, resource spend, item, attack, damage-type, light, and dismissal owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Oath of Devotion grants Sacred Weapon as a level-3 subclass feature Unit",
+          "Battle Unit support admits the Surface sacred_weapon mechanics with Attack action activation and referenced Paladin Channel Divinity spend",
+          "The projected support profile carries Attack action activation, Paladin Channel Divinity spend, held Melee weapon target, Charisma attack-roll bonus with minimum 1, normal-or-Radiant hit damage choice, light radii, and dismissal triggers without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.paladin-sacred-weapon",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
+      "unitId": "paladin_sacred_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
         ],
@@ -19220,6 +19627,76 @@
       ],
       "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json",
       "unitId": "ranger_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
+            "mechanic": "Execute the retained Hunter's Prey choice in attack resolution, including Colossus Slayer once-per-turn missing-HP damage and Horde Breaker once-per-turn same-weapon extra attack against a different nearby creature."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
+            "mechanic": "Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state.",
+            "owner": "battle-runtime selected-option attack reducers plus package-local Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
+            "title": "Ranger Hunters Prey Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime selected class-feature option, attack damage-rider, target-spatial-fact, and extra-attack owners plus promoted Quint parity",
+        "profileIds": [
+          "unit-feature.hunters-prey"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the selected-option and attack owners consume this profile.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Hunter grants Hunter's Prey as a level-3 subclass feature Unit",
+          "Battle Unit support admits the Surface hunters_prey choose-one mechanics",
+          "The projected support profile carries Colossus Slayer and Horde Breaker option facts, including the target missing-Hit-Point and different-creature-within-5-feet predicates, without authored-identity dispatch"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L13UG-A18"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.hunters-prey",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+          "taskRefs": [
+            "L13UG-A18"
+          ],
+          "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
+          "verificationOwners": []
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
+      "unitId": "ranger_hunters_prey"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
