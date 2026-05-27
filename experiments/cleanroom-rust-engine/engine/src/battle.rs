@@ -795,6 +795,87 @@ pub fn resolve_direct_hit_point_restoration_effect(
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpareTheDyingInvocationFacts {
+    pub character_level: i32,
+    pub has_spell_access: bool,
+    pub target_within_range: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SpareTheDyingResult {
+    pub turn: TurnProcedureState,
+    pub vitals: CreatureVitals,
+    pub death_saving_throws: DeathSavingThrowLifecycle,
+    pub admitted: bool,
+}
+
+pub fn spare_the_dying_range_feet(character_level: i32) -> i32 {
+    if character_level >= 17 {
+        120
+    } else if character_level >= 11 {
+        60
+    } else if character_level >= 5 {
+        30
+    } else {
+        15
+    }
+}
+
+pub fn legal_spare_the_dying_invocation_facts(facts: SpareTheDyingInvocationFacts) -> bool {
+    facts.character_level >= 1
+}
+
+pub fn spare_the_dying_target_admitted(
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle,
+) -> bool {
+    legal_player_character_death_saving_throw_state(vitals, lifecycle)
+        && vitals.hit_points() == 0
+        && vitals.kind() == CreatureKind::PlayerCharacter
+        && lifecycle.failures() < 3
+}
+
+pub fn apply_spare_the_dying(
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle,
+) -> (CreatureVitals, DeathSavingThrowLifecycle) {
+    if !spare_the_dying_target_admitted(vitals, lifecycle) {
+        (vitals, lifecycle)
+    } else {
+        (
+            vitals,
+            DeathSavingThrowLifecycle::assume_legal(0, 0, true, false),
+        )
+    }
+}
+
+pub fn resolve_spare_the_dying(
+    turn: TurnProcedureState,
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle,
+    facts: SpareTheDyingInvocationFacts,
+) -> SpareTheDyingResult {
+    let spent_turn = spend_action_cost(turn, ActionCost::StandardActionCost(StandardAction::Magic));
+    let admitted = legal_spare_the_dying_invocation_facts(facts)
+        && facts.has_spell_access
+        && facts.target_within_range
+        && spent_turn != turn
+        && spare_the_dying_target_admitted(vitals, lifecycle);
+    let (next_vitals, next_lifecycle) = if admitted {
+        apply_spare_the_dying(vitals, lifecycle)
+    } else {
+        (vitals, lifecycle)
+    };
+
+    SpareTheDyingResult {
+        turn: if admitted { spent_turn } else { turn },
+        vitals: next_vitals,
+        death_saving_throws: next_lifecycle,
+        admitted,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DamageType {
     Acid,

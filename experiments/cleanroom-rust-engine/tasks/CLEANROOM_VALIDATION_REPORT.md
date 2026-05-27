@@ -1,7 +1,6 @@
 # Cleanroom Validation Report
 
-Status: obligation-to-Rust coverage map refreshed for the current combined
-worktree.
+Status: obligation-to-Rust coverage map refreshed after wave 3 additions.
 
 ## Sources Inspected
 
@@ -28,15 +27,16 @@ source-system QNT/MBT parity percentages.
 
 ## Rust Coverage Summary
 
-- Implemented scoped obligations: 1/47 = 2.1%
+- Implemented scoped obligations: 2/47 = 4.3%
 - Partially implemented scoped obligations: 11/47 = 23.4%
-- Not attempted scoped obligations: 35/47 = 74.5%
+- Not attempted scoped obligations: 34/47 = 72.3%
 - Blocked by source gap: 0/47 = 0.0%
 
-Only `BATTLE.REACTION.OFFER_DECLINE_RESUME` is marked fully implemented. Every
-other locally touched scoped obligation still omits at least one behavior named
-by the obligation title, or has only generic helper coverage rather than the
-authored obligation shape.
+Only `BATTLE.REACTION.OFFER_DECLINE_RESUME` and
+`BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` are marked fully implemented. Every other
+locally touched scoped obligation still omits at least one behavior named by the
+obligation title, or has only generic helper coverage rather than the authored
+obligation shape.
 
 Adjacent implemented behavior not counted as scoped-obligation completion:
 
@@ -55,6 +55,7 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 | Obligation | Current Rust evidence |
 | --- | --- |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | `battle.rs` has reaction windows, decline/take choices, reaction quota spend, bounded nested windows, suspended-window resume, damage interruption windows, and concentration start/end/prevention/damage-save handling. `engine/tests/battle_reactions.rs` covers offer, decline, spend, unavailable quota, nested resume, opportunity trigger, readied movement reaction, damage interruption, and concentration save DC/break behavior. |
+| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | `battle.rs` has Spare the Dying range scaling, invocation admission, action spend, zero-HP non-dead player-character target admission, non-admission for positive-HP/dead/monster targets, and stable lifecycle mutation. `engine/tests/battle_spare_the_dying.rs` covers those scoped behaviors. |
 
 ## Partially Implemented
 
@@ -67,10 +68,10 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | `battle.rs` has standard and bonus-action Dash resource spend; `engine/tests/battle_actions.rs` covers dash costs. | Spell slot spend, immediate spell cast, concentration-owned later permission, and cleanup are not modeled. |
 | `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | `battle.rs` has reaction windows, bounded continuation ordering, readied reaction movement spend, movement spend admission, and Opportunity Attack interruption facts; `engine/tests/battle_reactions.rs` covers these generic pieces. | Failed-save forced movement, no-movement fallback, spell-specific movement fill admission, and Dissonant Whispers lifecycle are not modeled. |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | `battle.rs` has direct hit-point restoration profiles, dice count, die size, area profile for Mass Cure Wounds, healing, and zero-HP recovery interaction; `engine/tests/battle_hit_points.rs` covers direct restoration. | Target-selection holes and multi-target healing projection are not modeled. |
-| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | `battle.rs` has death-save stable lifecycle state and zero-HP lifecycle helpers; `engine/tests/battle_hit_points.rs` covers becoming stable through death saves. | Spare the Dying target admission and spell-driven stable mutation are not modeled. |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | `battle.rs` has reaction windows for damage interruption/readied spell kinds, generic reaction spend, bounded interruption/resume, and damage-triggered interruption; `engine/tests/battle_reactions.rs` covers the generic protocol. | Spell-cast and after-damage spell triggers, Spell Slot ledger, and concrete reaction spell resolution are not modeled. |
 | `CREATION.CLASS_FEATURE_OPTION.PROJECTION` | `character_creation.rs` has draft holes and fills for Fighter Fighting Style and related class-feature choices; `engine/tests/character_creation_draft.rs` covers acceptance/rejection. | Final CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus fact projections are not modeled. |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | `character_creation.rs` has a Fighter Weapon Mastery draft hole, selected weapon refs on finalized Fighter builds, class/feature Unit refs, and string projections; `engine/tests/character_creation_draft.rs` covers the manifest path and finalized refs. | The join rows for this scoped obligation are Paladin/Ranger/Rogue weapon mastery choices, so the current Fighter-only finalization is not full scoped coverage. |
+| `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` | `character_creation.rs` has an ability-check proficiency projection helper for Performance with Jack of All Trades, skill proficiency, Expertise, and no-other-Proficiency-Bonus rejection branches; `engine/tests/character_creation_sheet_projections.rs` covers the copied replay cases. | The Rust surface is a narrow Performance fixture projection rather than a broader character-sheet ability-check projection over the full skill/check domain. |
 
 ## Not Attempted
 
@@ -103,7 +104,6 @@ scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 - `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`
 - `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION`
 - `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
-- `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS`
 - `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`
 - `SHEET.FEATURE_RESOURCES.TRANSITIONS`
 - `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`
@@ -123,5 +123,5 @@ implementation and Rust test coverage gaps, not missing cleanroom source facts.
 ```text
 Command: cd engine && cargo test
 Result: pass
-Tests: 57 passed; 0 failed; 0 ignored; 0 doc tests
+Tests: 68 passed; 0 failed; 0 ignored; 0 doc tests
 ```

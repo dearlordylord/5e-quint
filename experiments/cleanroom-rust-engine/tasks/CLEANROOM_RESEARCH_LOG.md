@@ -142,6 +142,29 @@ TypeScript runtime files.
   Spell-specific reaction procedures such as Shield, Counterspell, and Hellish
   Rebuke remain unimplemented pending separate QNT-backed verticals.
 
+## 2026-05-27 - Lane B wave 3 Spare the Dying vertical
+
+- Targeted named obligation `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE`.
+- Inspected only cleanroom-local inputs and Rust files:
+  `input/packages/battle-runtime/battle-runtime-hit-points.qnt`,
+  `input/packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt`,
+  `input/packages/battle-runtime/battle-runtime-spell-invocation.qnt`,
+  SRD 5.2.1 Spare the Dying and Stable RAW, `UBIQUITOUS_LANGUAGE.md`, and
+  `ASSUMPTIONS.md`.
+- Implemented Spare the Dying range scaling, target admission for zero-HP
+  non-dead death-save targets, explicit `target_within_range` and spell-access
+  witness facts, Magic action spending, and Stable lifecycle mutation that
+  resets Death Saving Throw successes/failures.
+- Added `engine/tests/battle_spare_the_dying.rs` for QNT/RAW-derived range,
+  action, admission, rejection, and lifecycle mutation cases.
+- Final `cd engine && cargo test` passed: 1 crate unit test, 46 Lane B battle
+  tests, 19 Lane A character/sheet tests, and 2 semantic-core smoke tests
+  passed.
+- Final `cd engine && cargo clippy --all-targets -- -D warnings` passed.
+- Obligation status in this cleanroom Rust engine: `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE`
+  moved to full for the modeled reducer slice.
+- Cleanroom blocker: no source gap found for this obligation.
+
 ## 2026-05-27 - Combined-worktree Lane C refresh
 
 - Read the cleanroom manifest, generator-readiness JSONL, level 1-2 QNT/MBT
@@ -158,3 +181,52 @@ TypeScript runtime files.
   Rust finalizes Fighter Weapon Mastery refs, while the scoped join rows name
   Paladin/Ranger/Rogue weapon mastery choices.
 - `cd engine && cargo test` passed: 57 tests passed, 0 failed.
+
+## 2026-05-27 - Lane C wave 3 next queue
+
+- Read the current Lane C validation report plus cleanroom manifest,
+  generator-readiness rows, and level 1-2 QNT/MBT join metadata.
+- Added `tasks/CLEANROOM_NEXT_QUEUE.md` grouping the 35 not-attempted and 11
+  partial scoped obligations into four implementation waves:
+  movement/reaction closure, spell procedure/damage profiles, ongoing
+  effects/areas/light/protection, and character/sheet projection closure.
+- No source gap found while building the queue; gaps remain implementation and
+  Rust-test coverage gaps.
+- No tests run; this was a documentation-only planning update.
+
+## 2026-05-27 - Lane A wave 3 ability-check proficiency projection
+
+- Inspected copied sheet-projection QNT, scoped obligation metadata, Bard RAW,
+  Playing-the-Game/Rules-Glossary RAW, ubiquitous language, and local Rust files
+  only.
+- Implemented `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` in
+  `engine/src/character_creation.rs` as a focused projection for Performance
+  ability-check proficiency bonus facts.
+- Covered the QNT fixture cases for Jack of All Trades at Bard level 2,
+  rounded-down Jack of All Trades, ordinary skill proficiency, Expertise, the
+  no-other-Proficiency-Bonus gate, and missing Bard level 2.
+- Added `engine/tests/character_creation_sheet_projections.rs` with six Rust
+  tests mirroring those projection outcomes.
+- `cd engine && cargo fmt`, `cd engine && cargo test`, and
+  `cd engine && cargo clippy --all-targets` all passed.
+- Source gap: no gap for the scoped Performance fixture. Broad skill coverage
+  still needs either a complete skill enum/source contract or additional QNT
+  coverage beyond the single Performance witness before claiming all character
+  sheet ability-check proficiency projections.
+
+## 2026-05-27 - Lane C wave 3 coverage refresh
+
+- Read current local Rust APIs/tests plus cleanroom manifest and level 1-2
+  QNT/MBT join metadata; no production TypeScript was read.
+- Accounted for `engine/tests/battle_spare_the_dying.rs` and
+  `engine/tests/character_creation_sheet_projections.rs`.
+- Promoted `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` to implemented because Spare
+  the Dying target admission and zero-HP non-dead Stable lifecycle mutation are
+  directly modeled and tested.
+- Moved `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` from not-attempted to partial:
+  the replay cases are covered, but the Rust surface is still a narrow
+  Performance projection rather than a full character-sheet ability-check
+  projection domain.
+- Conservative count: 2 fully implemented, 11 partially implemented, 34 not
+  attempted, 0 blocked by source gap.
+- `cd engine && cargo test` passed: 68 tests passed, 0 failed.

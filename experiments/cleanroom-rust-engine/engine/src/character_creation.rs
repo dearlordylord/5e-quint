@@ -112,6 +112,126 @@ pub struct FighterWeaponMasteryBuildFeature {
 const FIGHTER_WEAPON_MASTERY_CHOICE_COUNT: usize = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum AbilityCheckSkill {
+    Performance,
+}
+
+impl AbilityCheckSkill {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Performance => "performance",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AbilityCheckSkillTraining {
+    LacksSkillProficiency {
+        jack_of_all_trades_bard_level: Option<u8>,
+        other_proficiency_bonus_applies: bool,
+    },
+    SkillProficiency,
+    Expertise,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AbilityCheckProficiencyBonusInput {
+    pub skill: AbilityCheckSkill,
+    pub proficiency_bonus: i16,
+    pub training: AbilityCheckSkillTraining,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AbilityCheckProficiencyBonusTag {
+    None,
+    JackOfAllTrades,
+    SkillProficiency,
+    Expertise,
+}
+
+impl AbilityCheckProficiencyBonusTag {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::JackOfAllTrades => "jackOfAllTrades",
+            Self::SkillProficiency => "skillProficiency",
+            Self::Expertise => "expertise",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AbilityCheckProficiencyBonusSourceUnit {
+    BardJackOfAllTrades,
+}
+
+impl AbilityCheckProficiencyBonusSourceUnit {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::BardJackOfAllTrades => "bard_jack_of_all_trades",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AbilityCheckProficiencyBonusProjection {
+    pub tag: AbilityCheckProficiencyBonusTag,
+    pub source_unit: Option<AbilityCheckProficiencyBonusSourceUnit>,
+    pub skill: AbilityCheckSkill,
+    pub bonus: i16,
+}
+
+pub fn project_ability_check_proficiency_bonus(
+    input: AbilityCheckProficiencyBonusInput,
+) -> AbilityCheckProficiencyBonusProjection {
+    match input.training {
+        AbilityCheckSkillTraining::Expertise => ability_check_proficiency_bonus_projection(
+            AbilityCheckProficiencyBonusTag::Expertise,
+            None,
+            input.skill,
+            input.proficiency_bonus * 2,
+        ),
+        AbilityCheckSkillTraining::SkillProficiency => ability_check_proficiency_bonus_projection(
+            AbilityCheckProficiencyBonusTag::SkillProficiency,
+            None,
+            input.skill,
+            input.proficiency_bonus,
+        ),
+        AbilityCheckSkillTraining::LacksSkillProficiency {
+            jack_of_all_trades_bard_level: Some(2..),
+            other_proficiency_bonus_applies: false,
+        } => ability_check_proficiency_bonus_projection(
+            AbilityCheckProficiencyBonusTag::JackOfAllTrades,
+            Some(AbilityCheckProficiencyBonusSourceUnit::BardJackOfAllTrades),
+            input.skill,
+            input.proficiency_bonus / 2,
+        ),
+        AbilityCheckSkillTraining::LacksSkillProficiency { .. } => {
+            ability_check_proficiency_bonus_projection(
+                AbilityCheckProficiencyBonusTag::None,
+                None,
+                input.skill,
+                0,
+            )
+        }
+    }
+}
+
+fn ability_check_proficiency_bonus_projection(
+    tag: AbilityCheckProficiencyBonusTag,
+    source_unit: Option<AbilityCheckProficiencyBonusSourceUnit>,
+    skill: AbilityCheckSkill,
+    bonus: i16,
+) -> AbilityCheckProficiencyBonusProjection {
+    AbilityCheckProficiencyBonusProjection {
+        tag,
+        source_unit,
+        skill,
+        bonus,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum HoleId {
     Progression,
     Background,
