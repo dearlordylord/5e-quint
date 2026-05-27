@@ -35,6 +35,7 @@ import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
+import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
 import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
@@ -66,6 +67,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   dragonsBreathInitialProfile,
   sanctuaryTargetingInterdictionProfile,
   markedDamageRiderProfile,
+  weaponDamageRiderProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

@@ -462,65 +462,6 @@ function spellCreatedHeldObjectDamageExpr(
   };
 }
 
-export function supportedPreparedWeaponDamageRiderSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return [];
-  }
-  const operation = spell.mechanics.operations[0];
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
-  );
-  if (
-    operation?.trigger.kind !== "on_caster_attack_hit" ||
-    operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== "radiant" ||
-    operation.effect.amount === undefined ||
-    expiresAt === null
-  ) {
-    return [];
-  }
-  const expr = supportedDamageAmountExpr({ amount: operation.effect.amount });
-  if (expr === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "weaponDamageRider",
-            spell,
-            actionCost: "bonusAction",
-            activeEffect: {
-              kind: "spellWeaponDamageRider",
-              sourceSpellId: spell.id,
-              sourceCombatantId: actorId,
-              damage: {
-                expr,
-                damageType: "radiant",
-              },
-              expiresAt,
-            },
-          },
-        ],
-  );
-}
-
 export function supportedPreparedAfterHitDamageSpellProfile(
   actor: BattleCreatureState,
   spell: SpellRecord,

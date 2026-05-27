@@ -39,6 +39,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
@@ -441,12 +442,9 @@ export function supportedSpellInvocationRef(
           heroism,
         ),
     ),
-    Match.when({ procedure: "weaponDamageRider" }, (riderSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(riderSpell.spell.id),
-      slotLevel: riderSpell.resource.slotLevel,
-      procedure: "weaponDamageRider" as const,
-    })),
+    Match.when({ procedure: "weaponDamageRider" }, (riderSpell) =>
+      weaponDamageRiderProfile.invocationRef(riderSpell),
+    ),
     Match.when({ procedure: "markedDamageRider" }, (riderSpell) =>
       markedDamageRiderProfile.invocationRef(riderSpell),
     ),

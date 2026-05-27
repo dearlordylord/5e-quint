@@ -163,7 +163,7 @@
     {
       "number": 27,
       "id": "SPP-W3-10-WEAPON-DAMAGE-RIDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate weaponDamageRider profile (no focused MBT)"
     },
     {
@@ -926,7 +926,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 27 - SPP-W3-10-WEAPON-DAMAGE-RIDER - Migrate weaponDamageRider
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration. Note: weaponDamageRider is
 similar in shape to afterHitDamage; the migration of both together can

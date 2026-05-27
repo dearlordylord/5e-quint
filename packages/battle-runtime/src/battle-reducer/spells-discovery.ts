@@ -95,6 +95,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
@@ -748,19 +749,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "weaponDamageRider") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return weaponDamageRiderProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "magicWeaponEnhancement") {
         return magicWeaponEnhancementProfile.discoverCastAct(
@@ -1318,7 +1311,7 @@ export function spellInvocationCastSummary(
     );
   }
   if (invocation.procedure === "weaponDamageRider") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return weaponDamageRiderProfile.castSummary(invocation);
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
     return magicWeaponEnhancementProfile.castSummary(invocation);

@@ -173,6 +173,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import {
   supportedPreparedAfterHitDamageSpellProfile,
@@ -183,7 +184,6 @@ import {
   supportedPreparedSpellCreatedHeldObjectProfile,
   supportedSpellCreatedHeldObjectActiveEffectProfile,
   supportedPreparedSlotSpellProfile,
-  supportedPreparedWeaponDamageRiderSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedDirectConditionSpellProfile } from "./spells-profiles-direct-condition.ts";
@@ -455,11 +455,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedWeaponDamageRiderSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      weaponDamageRiderProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       magicWeaponEnhancementProfile.admit(spell, admissionContext),

@@ -1710,7 +1710,8 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-damage-rider.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

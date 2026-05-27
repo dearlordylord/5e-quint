@@ -114,6 +114,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
+import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -300,7 +301,6 @@ import {
   resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
   resolveWeaponAttackOverrideSpellAct,
-  resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
@@ -2833,7 +2833,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "weaponDamageRider") {
-    return resolveWeaponDamageRiderSpellAct({
+    return weaponDamageRiderProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
