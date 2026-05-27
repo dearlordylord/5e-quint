@@ -1985,3 +1985,732 @@ pub fn end_turn_during_attack_action_attack_count(
         ..state
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MovementResource {
+    OwnMovementActionBonusReactionOrSpeed,
+    TeleportResource,
+    ForcedMovementNoOwnResource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpportunityAttackTriggerFacts {
+    pub hostile_creature: bool,
+    pub observer_can_see: bool,
+    pub leaves_reach: bool,
+    pub movement_resource: MovementResource,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MovementSpendFacts {
+    pub distance_feet: i32,
+    pub extra_cost_feet: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GrappleState {
+    NoGrapple,
+    Grappled { escape_dc: i32 },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MovementGrappleState {
+    pub turn: TurnProcedureState,
+    pub speed_feet: i32,
+    pub movement_spent_feet: i32,
+    pub prone: bool,
+    pub grapple: GrappleState,
+}
+
+impl MovementGrappleState {
+    pub fn initial() -> Self {
+        Self {
+            turn: TurnProcedureState::initial(),
+            speed_feet: 30,
+            movement_spent_feet: 0,
+            prone: false,
+            grapple: GrappleState::NoGrapple,
+        }
+    }
+}
+
+pub const MINIMUM_GRAPPLE_ESCAPE_DC: i32 = 5;
+pub const MAXIMUM_GRAPPLE_ESCAPE_DC: i32 = 27;
+
+pub fn legal_movement_spend_facts(facts: MovementSpendFacts) -> bool {
+    facts.distance_feet >= 0
+        && facts.distance_feet <= 80
+        && facts.extra_cost_feet >= 0
+        && facts.extra_cost_feet <= 80
+}
+
+pub fn movement_cost_feet(facts: MovementSpendFacts) -> i32 {
+    facts.distance_feet + facts.extra_cost_feet
+}
+
+pub fn active_grapple(grapple: GrappleState) -> bool {
+    grapple != GrappleState::NoGrapple
+}
+
+pub fn legal_grapple_escape_dc(escape_dc: i32) -> bool {
+    (MINIMUM_GRAPPLE_ESCAPE_DC..=MAXIMUM_GRAPPLE_ESCAPE_DC).contains(&escape_dc)
+}
+
+pub fn legal_grapple_state(grapple: GrappleState) -> bool {
+    match grapple {
+        GrappleState::NoGrapple => true,
+        GrappleState::Grappled { escape_dc } => legal_grapple_escape_dc(escape_dc),
+    }
+}
+
+pub fn effective_speed_feet(state: MovementGrappleState) -> i32 {
+    if active_grapple(state.grapple) {
+        0
+    } else {
+        state.speed_feet
+    }
+}
+
+pub fn movement_budget_feet(state: MovementGrappleState) -> i32 {
+    if effective_speed_feet(state) == 0 {
+        0
+    } else {
+        effective_speed_feet(state) + state.turn.dash_movement_bonus_feet
+    }
+}
+
+pub fn movement_remaining_feet(state: MovementGrappleState) -> i32 {
+    (movement_budget_feet(state) - state.movement_spent_feet).max(0)
+}
+
+pub fn legal_movement_grapple_state(state: MovementGrappleState) -> bool {
+    legal_turn_procedure_state(state.turn)
+        && state.speed_feet >= 0
+        && state.speed_feet <= 40
+        && state.movement_spent_feet >= 0
+        && state.movement_spent_feet <= 120
+        && legal_grapple_state(state.grapple)
+        && movement_remaining_feet(state) >= 0
+}
+
+pub fn can_spend_movement(state: MovementGrappleState, facts: MovementSpendFacts) -> bool {
+    let cost = movement_cost_feet(facts);
+    state.turn.current_actor_owns_turn
+        && legal_movement_spend_facts(facts)
+        && cost > 0
+        && effective_speed_feet(state) > 0
+        && movement_remaining_feet(state) >= cost
+}
+
+pub fn opportunity_attack_triggered(
+    turn: TurnProcedureState,
+    facts: OpportunityAttackTriggerFacts,
+) -> bool {
+    facts.hostile_creature
+        && facts.observer_can_see
+        && facts.leaves_reach
+        && facts.movement_resource == MovementResource::OwnMovementActionBonusReactionOrSpeed
+        && !turn.disengaged
+}
+
+pub fn spend_movement(
+    state: MovementGrappleState,
+    facts: MovementSpendFacts,
+) -> MovementGrappleState {
+    if !can_spend_movement(state, facts) {
+        state
+    } else {
+        MovementGrappleState {
+            movement_spent_feet: state.movement_spent_feet + movement_cost_feet(facts),
+            ..state
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionWindowKind {
+    OpportunityAttackReactionWindow,
+    DamageInterruptionReactionWindow,
+    ReadiedMovementReactionWindow,
+    ReadiedSpellReactionWindow,
+    StatBlockReactionWindow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SuspendedReactionWindowKind {
+    NoSuspendedReactionWindow,
+    SuspendedOpportunityAttackReactionWindow,
+    SuspendedDamageInterruptionReactionWindow,
+    SuspendedReadiedMovementReactionWindow,
+    SuspendedReadiedSpellReactionWindow,
+    SuspendedStatBlockReactionWindow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionWindowState {
+    NoReactionWindow,
+    OfferedOpportunityAttackWindow {
+        suspended: SuspendedReactionWindowKind,
+    },
+    OfferedDamageInterruptionWindow {
+        suspended: SuspendedReactionWindowKind,
+    },
+    OfferedReadiedMovementWindow {
+        suspended: SuspendedReactionWindowKind,
+    },
+    OfferedReadiedSpellWindow {
+        suspended: SuspendedReactionWindowKind,
+    },
+    OfferedStatBlockReactionWindow {
+        suspended: SuspendedReactionWindowKind,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionChoice {
+    DeclineReaction,
+    TakeOpportunityAttackReaction,
+    TakeDamageInterruptionReaction,
+    TakeReadiedMovementReaction,
+    TakeReadiedSpellReaction,
+    TakeStatBlockReaction,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConcentrationState {
+    NoConcentration,
+    Concentrating,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReactionProtocolActor {
+    InterruptedActor,
+    Reactor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ActorConcentrationState {
+    pub interrupted_actor: ConcentrationState,
+    pub reactor: ConcentrationState,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ConcentrationDamageTarget {
+    pub actor: ReactionProtocolActor,
+    pub vitals: CreatureVitals,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ConcentrationDamageResult {
+    pub concentration: ConcentrationState,
+    pub save_required: bool,
+    pub save_dc: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReactionProtocolState {
+    pub interrupted_actor: MovementGrappleState,
+    pub reactor: MovementGrappleState,
+    pub reaction_window: ReactionWindowState,
+    pub concentration: ActorConcentrationState,
+}
+
+impl ReactionProtocolState {
+    pub fn initial() -> Self {
+        Self {
+            interrupted_actor: MovementGrappleState::initial(),
+            reactor: MovementGrappleState::initial(),
+            reaction_window: ReactionWindowState::NoReactionWindow,
+            concentration: ActorConcentrationState {
+                interrupted_actor: ConcentrationState::NoConcentration,
+                reactor: ConcentrationState::NoConcentration,
+            },
+        }
+    }
+}
+
+pub const MAXIMUM_REACTION_WINDOW_DEPTH: i32 = 2;
+
+pub fn legal_reaction_window_state(window: ReactionWindowState) -> bool {
+    match window {
+        ReactionWindowState::NoReactionWindow
+        | ReactionWindowState::OfferedOpportunityAttackWindow { .. }
+        | ReactionWindowState::OfferedDamageInterruptionWindow { .. }
+        | ReactionWindowState::OfferedReadiedMovementWindow { .. }
+        | ReactionWindowState::OfferedReadiedSpellWindow { .. }
+        | ReactionWindowState::OfferedStatBlockReactionWindow { .. } => true,
+    }
+}
+
+pub fn legal_reaction_protocol_state(state: ReactionProtocolState) -> bool {
+    legal_movement_grapple_state(state.interrupted_actor)
+        && legal_movement_grapple_state(state.reactor)
+        && legal_reaction_window_state(state.reaction_window)
+}
+
+pub fn reaction_window_is_open(window: ReactionWindowState) -> bool {
+    window != ReactionWindowState::NoReactionWindow
+}
+
+pub fn reaction_window_is_kind(window: ReactionWindowState, kind: ReactionWindowKind) -> bool {
+    match window {
+        ReactionWindowState::NoReactionWindow => false,
+        ReactionWindowState::OfferedOpportunityAttackWindow { .. } => {
+            kind == ReactionWindowKind::OpportunityAttackReactionWindow
+        }
+        ReactionWindowState::OfferedDamageInterruptionWindow { .. } => {
+            kind == ReactionWindowKind::DamageInterruptionReactionWindow
+        }
+        ReactionWindowState::OfferedReadiedMovementWindow { .. } => {
+            kind == ReactionWindowKind::ReadiedMovementReactionWindow
+        }
+        ReactionWindowState::OfferedReadiedSpellWindow { .. } => {
+            kind == ReactionWindowKind::ReadiedSpellReactionWindow
+        }
+        ReactionWindowState::OfferedStatBlockReactionWindow { .. } => {
+            kind == ReactionWindowKind::StatBlockReactionWindow
+        }
+    }
+}
+
+fn reaction_window_suspended_kind(window: ReactionWindowState) -> SuspendedReactionWindowKind {
+    match window {
+        ReactionWindowState::NoReactionWindow => {
+            SuspendedReactionWindowKind::NoSuspendedReactionWindow
+        }
+        ReactionWindowState::OfferedOpportunityAttackWindow { suspended }
+        | ReactionWindowState::OfferedDamageInterruptionWindow { suspended }
+        | ReactionWindowState::OfferedReadiedMovementWindow { suspended }
+        | ReactionWindowState::OfferedReadiedSpellWindow { suspended }
+        | ReactionWindowState::OfferedStatBlockReactionWindow { suspended } => suspended,
+    }
+}
+
+pub fn reaction_window_depth(window: ReactionWindowState) -> i32 {
+    match window {
+        ReactionWindowState::NoReactionWindow => 0,
+        _ if reaction_window_suspended_kind(window)
+            == SuspendedReactionWindowKind::NoSuspendedReactionWindow =>
+        {
+            1
+        }
+        _ => 2,
+    }
+}
+
+pub fn reaction_choice_matches_window(choice: ReactionChoice, window: ReactionWindowState) -> bool {
+    match choice {
+        ReactionChoice::DeclineReaction => true,
+        ReactionChoice::TakeOpportunityAttackReaction => {
+            reaction_window_is_kind(window, ReactionWindowKind::OpportunityAttackReactionWindow)
+        }
+        ReactionChoice::TakeDamageInterruptionReaction => {
+            reaction_window_is_kind(window, ReactionWindowKind::DamageInterruptionReactionWindow)
+        }
+        ReactionChoice::TakeReadiedMovementReaction => {
+            reaction_window_is_kind(window, ReactionWindowKind::ReadiedMovementReactionWindow)
+        }
+        ReactionChoice::TakeReadiedSpellReaction => {
+            reaction_window_is_kind(window, ReactionWindowKind::ReadiedSpellReactionWindow)
+        }
+        ReactionChoice::TakeStatBlockReaction => {
+            reaction_window_is_kind(window, ReactionWindowKind::StatBlockReactionWindow)
+        }
+    }
+}
+
+pub fn suspended_reaction_window_kind(window: ReactionWindowState) -> SuspendedReactionWindowKind {
+    match window {
+        ReactionWindowState::NoReactionWindow => {
+            SuspendedReactionWindowKind::NoSuspendedReactionWindow
+        }
+        ReactionWindowState::OfferedOpportunityAttackWindow { .. } => {
+            SuspendedReactionWindowKind::SuspendedOpportunityAttackReactionWindow
+        }
+        ReactionWindowState::OfferedDamageInterruptionWindow { .. } => {
+            SuspendedReactionWindowKind::SuspendedDamageInterruptionReactionWindow
+        }
+        ReactionWindowState::OfferedReadiedMovementWindow { .. } => {
+            SuspendedReactionWindowKind::SuspendedReadiedMovementReactionWindow
+        }
+        ReactionWindowState::OfferedReadiedSpellWindow { .. } => {
+            SuspendedReactionWindowKind::SuspendedReadiedSpellReactionWindow
+        }
+        ReactionWindowState::OfferedStatBlockReactionWindow { .. } => {
+            SuspendedReactionWindowKind::SuspendedStatBlockReactionWindow
+        }
+    }
+}
+
+pub fn reaction_window_for_kind(
+    kind: ReactionWindowKind,
+    suspended: SuspendedReactionWindowKind,
+) -> ReactionWindowState {
+    match kind {
+        ReactionWindowKind::OpportunityAttackReactionWindow => {
+            ReactionWindowState::OfferedOpportunityAttackWindow { suspended }
+        }
+        ReactionWindowKind::DamageInterruptionReactionWindow => {
+            ReactionWindowState::OfferedDamageInterruptionWindow { suspended }
+        }
+        ReactionWindowKind::ReadiedMovementReactionWindow => {
+            ReactionWindowState::OfferedReadiedMovementWindow { suspended }
+        }
+        ReactionWindowKind::ReadiedSpellReactionWindow => {
+            ReactionWindowState::OfferedReadiedSpellWindow { suspended }
+        }
+        ReactionWindowKind::StatBlockReactionWindow => {
+            ReactionWindowState::OfferedStatBlockReactionWindow { suspended }
+        }
+    }
+}
+
+pub fn reaction_window_for_suspended_kind(
+    suspended: SuspendedReactionWindowKind,
+) -> ReactionWindowState {
+    match suspended {
+        SuspendedReactionWindowKind::NoSuspendedReactionWindow => {
+            ReactionWindowState::NoReactionWindow
+        }
+        SuspendedReactionWindowKind::SuspendedOpportunityAttackReactionWindow => {
+            ReactionWindowState::OfferedOpportunityAttackWindow {
+                suspended: SuspendedReactionWindowKind::NoSuspendedReactionWindow,
+            }
+        }
+        SuspendedReactionWindowKind::SuspendedDamageInterruptionReactionWindow => {
+            ReactionWindowState::OfferedDamageInterruptionWindow {
+                suspended: SuspendedReactionWindowKind::NoSuspendedReactionWindow,
+            }
+        }
+        SuspendedReactionWindowKind::SuspendedReadiedMovementReactionWindow => {
+            ReactionWindowState::OfferedReadiedMovementWindow {
+                suspended: SuspendedReactionWindowKind::NoSuspendedReactionWindow,
+            }
+        }
+        SuspendedReactionWindowKind::SuspendedReadiedSpellReactionWindow => {
+            ReactionWindowState::OfferedReadiedSpellWindow {
+                suspended: SuspendedReactionWindowKind::NoSuspendedReactionWindow,
+            }
+        }
+        SuspendedReactionWindowKind::SuspendedStatBlockReactionWindow => {
+            ReactionWindowState::OfferedStatBlockReactionWindow {
+                suspended: SuspendedReactionWindowKind::NoSuspendedReactionWindow,
+            }
+        }
+    }
+}
+
+pub fn restore_suspended_reaction_window(window: ReactionWindowState) -> ReactionWindowState {
+    match window {
+        ReactionWindowState::NoReactionWindow => ReactionWindowState::NoReactionWindow,
+        _ => reaction_window_for_suspended_kind(reaction_window_suspended_kind(window)),
+    }
+}
+
+pub fn offer_reaction_window(
+    window: ReactionWindowState,
+    kind: ReactionWindowKind,
+) -> ReactionWindowState {
+    match window {
+        ReactionWindowState::NoReactionWindow => {
+            reaction_window_for_kind(kind, SuspendedReactionWindowKind::NoSuspendedReactionWindow)
+        }
+        _ if reaction_window_depth(window) >= MAXIMUM_REACTION_WINDOW_DEPTH => window,
+        _ => reaction_window_for_kind(kind, suspended_reaction_window_kind(window)),
+    }
+}
+
+pub fn decline_reaction_window(window: ReactionWindowState) -> ReactionWindowState {
+    restore_suspended_reaction_window(window)
+}
+
+pub fn advance_continuation(window: ReactionWindowState) -> ReactionWindowState {
+    restore_suspended_reaction_window(window)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReactionChoiceResult {
+    pub turn: TurnProcedureState,
+    pub reaction_window: ReactionWindowState,
+}
+
+pub fn resolve_reaction_choice(
+    reactor_turn: TurnProcedureState,
+    window: ReactionWindowState,
+    choice: ReactionChoice,
+) -> ReactionChoiceResult {
+    match window {
+        ReactionWindowState::NoReactionWindow => ReactionChoiceResult {
+            turn: reactor_turn,
+            reaction_window: ReactionWindowState::NoReactionWindow,
+        },
+        _ if !reaction_choice_matches_window(choice, window) => ReactionChoiceResult {
+            turn: reactor_turn,
+            reaction_window: window,
+        },
+        _ if choice == ReactionChoice::DeclineReaction => ReactionChoiceResult {
+            turn: reactor_turn,
+            reaction_window: decline_reaction_window(window),
+        },
+        _ => {
+            let spent = spend_reaction(reactor_turn);
+            if spent == reactor_turn {
+                ReactionChoiceResult {
+                    turn: reactor_turn,
+                    reaction_window: window,
+                }
+            } else {
+                ReactionChoiceResult {
+                    turn: spent,
+                    reaction_window: advance_continuation(window),
+                }
+            }
+        }
+    }
+}
+
+pub fn offer_opportunity_attack_reaction(
+    state: ReactionProtocolState,
+    facts: OpportunityAttackTriggerFacts,
+) -> ReactionProtocolState {
+    if opportunity_attack_triggered(state.interrupted_actor.turn, facts) {
+        ReactionProtocolState {
+            reaction_window: offer_reaction_window(
+                state.reaction_window,
+                ReactionWindowKind::OpportunityAttackReactionWindow,
+            ),
+            ..state
+        }
+    } else {
+        state
+    }
+}
+
+pub fn resolve_opportunity_attack_continuation(
+    state: ReactionProtocolState,
+) -> ReactionProtocolState {
+    let choice = resolve_reaction_choice(
+        state.reactor.turn,
+        state.reaction_window,
+        ReactionChoice::TakeOpportunityAttackReaction,
+    );
+    if choice.reaction_window == state.reaction_window {
+        state
+    } else {
+        ReactionProtocolState {
+            reactor: MovementGrappleState {
+                turn: choice.turn,
+                ..state.reactor
+            },
+            reaction_window: choice.reaction_window,
+            ..state
+        }
+    }
+}
+
+pub fn offer_damage_interruption_reaction(
+    state: ReactionProtocolState,
+    effective_damage: i32,
+) -> ReactionProtocolState {
+    if effective_damage > 0 {
+        ReactionProtocolState {
+            reaction_window: offer_reaction_window(
+                state.reaction_window,
+                ReactionWindowKind::DamageInterruptionReactionWindow,
+            ),
+            ..state
+        }
+    } else {
+        state
+    }
+}
+
+pub fn can_spend_readied_reaction_movement(
+    reactor: MovementGrappleState,
+    facts: MovementSpendFacts,
+) -> bool {
+    let cost = movement_cost_feet(facts);
+    legal_movement_spend_facts(facts)
+        && cost > 0
+        && reactor.turn.readied_movement_held
+        && effective_speed_feet(reactor) > 0
+        && cost <= effective_speed_feet(reactor)
+        && reactor.movement_spent_feet + cost <= 120
+}
+
+pub fn spend_readied_reaction_movement(
+    reactor: MovementGrappleState,
+    facts: MovementSpendFacts,
+) -> MovementGrappleState {
+    if !can_spend_readied_reaction_movement(reactor, facts) {
+        reactor
+    } else {
+        MovementGrappleState {
+            turn: TurnProcedureState {
+                readied_movement_held: false,
+                ..reactor.turn
+            },
+            movement_spent_feet: reactor.movement_spent_feet + movement_cost_feet(facts),
+            ..reactor
+        }
+    }
+}
+
+pub fn resolve_readied_movement_reaction(
+    state: ReactionProtocolState,
+    facts: MovementSpendFacts,
+) -> ReactionProtocolState {
+    let can_release = reaction_window_is_kind(
+        state.reaction_window,
+        ReactionWindowKind::ReadiedMovementReactionWindow,
+    ) && can_spend_readied_reaction_movement(state.reactor, facts);
+    let choice = resolve_reaction_choice(
+        state.reactor.turn,
+        state.reaction_window,
+        ReactionChoice::TakeReadiedMovementReaction,
+    );
+    let moved = if !can_release || choice.reaction_window == state.reaction_window {
+        state.reactor
+    } else {
+        spend_readied_reaction_movement(
+            MovementGrappleState {
+                turn: choice.turn,
+                ..state.reactor
+            },
+            facts,
+        )
+    };
+
+    ReactionProtocolState {
+        reactor: moved,
+        reaction_window: if !can_release {
+            state.reaction_window
+        } else {
+            choice.reaction_window
+        },
+        ..state
+    }
+}
+
+pub fn concentration_for_actor(
+    concentration: ActorConcentrationState,
+    actor: ReactionProtocolActor,
+) -> ConcentrationState {
+    match actor {
+        ReactionProtocolActor::InterruptedActor => concentration.interrupted_actor,
+        ReactionProtocolActor::Reactor => concentration.reactor,
+    }
+}
+
+pub fn set_concentration_for_actor(
+    concentration: ActorConcentrationState,
+    actor: ReactionProtocolActor,
+    actor_concentration: ConcentrationState,
+) -> ActorConcentrationState {
+    match actor {
+        ReactionProtocolActor::InterruptedActor => ActorConcentrationState {
+            interrupted_actor: actor_concentration,
+            reactor: concentration.reactor,
+        },
+        ReactionProtocolActor::Reactor => ActorConcentrationState {
+            interrupted_actor: concentration.interrupted_actor,
+            reactor: actor_concentration,
+        },
+    }
+}
+
+pub fn start_concentration(
+    concentration: ActorConcentrationState,
+    actor: ReactionProtocolActor,
+    can_concentrate: bool,
+) -> ActorConcentrationState {
+    if can_concentrate {
+        set_concentration_for_actor(concentration, actor, ConcentrationState::Concentrating)
+    } else {
+        concentration
+    }
+}
+
+pub fn end_concentration(
+    concentration: ActorConcentrationState,
+    actor: ReactionProtocolActor,
+) -> ActorConcentrationState {
+    set_concentration_for_actor(concentration, actor, ConcentrationState::NoConcentration)
+}
+
+pub fn break_concentration_if_prevented(
+    concentration: ActorConcentrationState,
+    actor: ReactionProtocolActor,
+    incapacitated_or_dead: bool,
+) -> ActorConcentrationState {
+    if incapacitated_or_dead {
+        set_concentration_for_actor(concentration, actor, ConcentrationState::NoConcentration)
+    } else {
+        concentration
+    }
+}
+
+pub fn concentration_saving_throw_dc(effective_damage: i32) -> i32 {
+    let half_damage = effective_damage / 2;
+    half_damage.clamp(10, 30)
+}
+
+pub fn resolve_concentration_after_damage(
+    concentration: ConcentrationState,
+    effective_damage: i32,
+    save_succeeded: bool,
+) -> ConcentrationDamageResult {
+    let save_required = concentration == ConcentrationState::Concentrating && effective_damage > 0;
+    let save_dc = if save_required {
+        concentration_saving_throw_dc(effective_damage)
+    } else {
+        0
+    };
+    ConcentrationDamageResult {
+        concentration: if save_required && !save_succeeded {
+            ConcentrationState::NoConcentration
+        } else {
+            concentration
+        },
+        save_required,
+        save_dc,
+    }
+}
+
+pub fn apply_damage_target_with_concentration_interruption(
+    state: ReactionProtocolState,
+    target: ConcentrationDamageTarget,
+    effective_damage: i32,
+    concentration_save_succeeded: bool,
+) -> ReactionProtocolState {
+    if !can_apply_resolved_damage_to_positive_hit_points(target.vitals) {
+        return state;
+    }
+
+    let damaged = apply_resolved_damage_to_positive_hit_points(target.vitals, effective_damage);
+    let after_damage_concentration = resolve_concentration_after_damage(
+        concentration_for_actor(state.concentration, target.actor),
+        damaged.damage_to_hit_points,
+        concentration_save_succeeded,
+    );
+    let after_damage = ReactionProtocolState {
+        concentration: set_concentration_for_actor(
+            state.concentration,
+            target.actor,
+            after_damage_concentration.concentration,
+        ),
+        ..state
+    };
+
+    if damaged.damage_to_hit_points > 0 {
+        ReactionProtocolState {
+            reaction_window: offer_reaction_window(
+                after_damage.reaction_window,
+                ReactionWindowKind::DamageInterruptionReactionWindow,
+            ),
+            ..after_damage
+        }
+    } else {
+        after_damage
+    }
+}

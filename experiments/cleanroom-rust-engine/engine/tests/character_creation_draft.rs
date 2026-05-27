@@ -3,8 +3,9 @@ use std::collections::BTreeSet;
 use dnd_cleanroom_engine::character_creation::{
     empty_draft, fighter_standard_array, fill_creation_holes, initial_manifest_fills,
     manifest_choice_fills, manifest_loadout_fills, manifest_purchase_fills, BatchIssueCode,
-    CharacterLevelScope, ChoiceOptionId, Fill, FillBatchResult, FillIssue, FillIssueCode,
-    FinalizationStatus, HoleId, ProgressionSelection, SupportedAbilityScoreMethod,
+    CharacterBuild, CharacterLevelScope, ChoiceOptionId, ClassFeatureUnitRef, ClassUnitRef, Fill,
+    FillBatchResult, FillIssue, FillIssueCode, FinalizationStatus, HoleId, ProgressionSelection,
+    SupportedAbilityScoreMethod, WeaponUnitRef,
 };
 use dnd_cleanroom_engine::types::AbilityScores;
 
@@ -424,8 +425,8 @@ fn manifest_path_finalizes_level_one_fighter_build() {
     assert!(draft.open_holes().is_empty());
 
     let build = draft.finalize_build().expect("ready draft finalizes");
-    assert_eq!(build.level_scope, CharacterLevelScope::Level1);
-    assert_eq!(build.ability_scores, fighter_standard_array());
+    assert_eq!(build.level_scope(), CharacterLevelScope::Level1);
+    assert_eq!(build.ability_scores(), fighter_standard_array());
 }
 
 #[test]
@@ -442,7 +443,61 @@ fn manifest_path_finalizes_level_two_fighter_build() {
     assert_eq!(draft.finalization_status(), FinalizationStatus::Ready);
 
     let build = draft.finalize_build().expect("ready draft finalizes");
-    assert_eq!(build.level_scope, CharacterLevelScope::Level2);
+    assert_eq!(build.level_scope(), CharacterLevelScope::Level2);
+}
+
+#[test]
+fn finalized_fighter_build_projects_weapon_mastery_selected_unit_refs() {
+    let draft = fill_complete_manifest(initial_manifest_fills());
+
+    let build = draft.finalize_build().expect("ready draft finalizes");
+    let mastery = build
+        .fighter_weapon_mastery()
+        .expect("fighter build carries Fighter Weapon Mastery");
+
+    assert_eq!(
+        mastery.feature_unit,
+        ClassFeatureUnitRef::FighterWeaponMastery
+    );
+    assert_eq!(mastery.feature_unit.as_str(), "fighter_weapon_mastery");
+    assert_eq!(mastery.class_unit, ClassUnitRef::Fighter);
+    assert_eq!(mastery.class_unit.as_str(), "class_fighter");
+    assert_eq!(
+        mastery.selected_weapons,
+        [
+            WeaponUnitRef::Longsword,
+            WeaponUnitRef::Spear,
+            WeaponUnitRef::Flail
+        ]
+    );
+    assert_eq!(
+        mastery.selected_weapons.map(WeaponUnitRef::as_str),
+        ["weapon_longsword", "weapon_spear", "weapon_flail"]
+    );
+    assert_eq!(mastery.selected_weapons.len(), 3);
+}
+
+#[test]
+fn finalized_fighter_build_shape_carries_class_specific_feature_data() {
+    let draft = fill_complete_manifest(initial_manifest_fills());
+
+    let build = draft.finalize_build().expect("ready draft finalizes");
+
+    match build {
+        CharacterBuild::Fighter(fighter) => {
+            assert_eq!(fighter.level_scope, CharacterLevelScope::Level1);
+            assert_eq!(fighter.ability_scores, fighter_standard_array());
+            assert_eq!(
+                fighter.weapon_mastery.selected_weapons,
+                [
+                    WeaponUnitRef::Longsword,
+                    WeaponUnitRef::Spear,
+                    WeaponUnitRef::Flail
+                ]
+            );
+        }
+        CharacterBuild::Wizard(_) => panic!("manifest path is a Fighter build"),
+    }
 }
 
 fn assert_fill_issues<const N: usize>(result: FillBatchResult, expected: [FillIssue; N]) {

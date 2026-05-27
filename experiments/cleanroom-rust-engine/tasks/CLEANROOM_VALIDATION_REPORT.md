@@ -1,150 +1,127 @@
 # Cleanroom Validation Report
 
-Status: first combined cleanroom milestone passing.
+Status: obligation-to-Rust coverage map refreshed for the current combined
+worktree.
 
 ## Sources Inspected
 
-- `AGENTS.md`
-- `README.md`
-- `tasks/LANE_C_QNT_PARITY_VALIDATION.md`
 - `input/cleanroom-input-manifest.json`
-- `input/plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`
 - `input/plans/rules-kernel-coverage/generator-readiness.jsonl`
-- `input/UBIQUITOUS_LANGUAGE.md`
-- `input/packages/battle-runtime/battle-runtime-model.qnt`
-- `input/packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt`
-- `input/packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`
-- `input/packages/battle-runtime/battle-runtime-hit-points.qnt`
-- `input/packages/character-creation-runtime/character-creation-runtime-slice.qnt`
-- local Rust files under `engine/src/`
+- `input/plans/unit-profile-coverage/level1-2-qnt-mbt-join.json`
+- local Rust public APIs in `engine/src/`
+- local Rust tests in `engine/tests/`
 
-## Inventory
+No production TypeScript runtime or production TypeScript tests were read.
 
-Manifest metrics:
+## Source Inventory
 
-- Scoped obligations: 47
-- Copied QNT files: 156
-- Copied files total: 209
-- Generator-readiness rows in manifest: 32
-- Generator-readiness status: 32 `generation-subset-clean`, 0 blockers
+- Scoped cleanroom obligations: 47
+- Manifest generator-ready rows: 32
+- Join rows: 163
+- Unique QNT-owned obligations in join: 47/47
+- Unique parity-witnessed obligations in join: 47/47
+- Open source-system join gaps: 0
+- Manifest source blockers: 0
 
-Level 1-2 summary claims:
+The percentages below are Rust cleanroom implementation coverage, not the
+source-system QNT/MBT parity percentages.
 
-- Support completeness: pass
-- QNT/generator readiness: pass
-- MBT/parity evidence: pass
-- MCP scenario evidence: pass
+## Rust Coverage Summary
 
-## Rust Test Checklist
+- Implemented scoped obligations: 1/47 = 2.1%
+- Partially implemented scoped obligations: 11/47 = 23.4%
+- Not attempted scoped obligations: 35/47 = 74.5%
+- Blocked by source gap: 0/47 = 0.0%
 
-Initial executable test target added:
+Only `BATTLE.REACTION.OFFER_DECLINE_RESUME` is marked fully implemented. Every
+other locally touched scoped obligation still omits at least one behavior named
+by the obligation title, or has only generic helper coverage rather than the
+authored obligation shape.
 
-- `engine/tests/semantic_core_smoke.rs`
-- `engine/tests/character_creation_draft.rs`
-- `engine/tests/battle_hit_points.rs`
-- `engine/tests/battle_damage.rs`
-- `engine/tests/battle_actions.rs`
+Adjacent implemented behavior not counted as scoped-obligation completion:
 
-Covered by the smoke test file:
+- `SHARED.HIT_POINTS.POSITIVE_DAMAGE`
+- `SHEET.HP_REST_HIT_DICE.TRANSITIONS`
+- `BATTLE.DAMAGE.ATTACK_BRANCHES`
+- `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`
+- `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`
+- `CREATION.CHOICE_DISCOVERY_CARDINALITY`
 
-- Ability score projection for the six QNT abilities.
-  - QNT source: `input/packages/battle-runtime/battle-runtime-model.qnt`
-  - Domain source: `input/UBIQUITOUS_LANGUAGE.md`
-  - Rust surface: `types::AbilityScores::score`
-- Available hit-point field projection.
-  - QNT source: `input/packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt`
-  - Domain source: `input/UBIQUITOUS_LANGUAGE.md`
-  - Rust surface: `battle::HitPoints::new`
+Those are useful Rust foundations, but they are not themselves among the 47
+scoped obligation IDs in `input/cleanroom-input-manifest.json`.
 
-Covered by the first combined milestone:
+## Implemented
 
-- `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`: accepted/rejected fill batch
-  behavior, stale revision, atomic rejection, and issue reporting.
-- `CREATION.CHOICE_DISCOVERY_CARDINALITY`: initial and manifest-path open-hole
-  transitions.
-- `SHARED.HIT_POINTS.POSITIVE_DAMAGE`: positive damage, Temporary HP
-  absorption, HP clamping, zero-HP outcomes, and monster/PC distinction.
-- `SHEET.HP_REST_HIT_DICE.TRANSITIONS`: healing cap, regained-HP lifecycle
-  reset, dead-creature no-op healing, and knock-out recovery.
-- Battle damage primitives: damage type aggregation,
-  immunity/resistance/vulnerability, scalar reduction allocation, attack roll
-  outcome, attack damage admission, and knock-out attack disposition.
-- Battle action/resource primitives: Dash, Disengage, Dodge, Help, Hide/Search
-  witness facts, Ready movement, reaction spending/reset, Second Wind,
-  failed-check boost, Cunning Action, Innate Sorcery, bonus-action Dash
-  Temporary HP, Action Surge, and Extra Attack count tracking.
+| Obligation | Current Rust evidence |
+| --- | --- |
+| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | `battle.rs` has reaction windows, decline/take choices, reaction quota spend, bounded nested windows, suspended-window resume, damage interruption windows, and concentration start/end/prevention/damage-save handling. `engine/tests/battle_reactions.rs` covers offer, decline, spend, unavailable quota, nested resume, opportunity trigger, readied movement reaction, damage interruption, and concentration save DC/break behavior. |
 
-Pending executable parity tests:
+## Partially Implemented
 
-- `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE`: `spareTheDyingTargetAdmitted` and `applySpareTheDying`.
-- Character-creation finalized build breadth beyond the manifest path:
-  selected Unit refs, HP/Hit Die derivation, proficiencies, resources, and
-  loadout identity.
-- Remaining battle spell, reaction, movement, command, feature, and sheet
-  obligations from `input/cleanroom-input-manifest.json`.
+| Obligation | Current Rust evidence | Missing for full scoped coverage |
+| --- | --- | --- |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `battle.rs` has generic attack roll, critical, hit/miss, and attack damage procedures; `engine/tests/battle_damage.rs` covers those branches. | Spell-specific attack branches and Saving Throw full/half/no-damage branches are not modeled. |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | `battle.rs` has damage types, by-type aggregation, immunity/resistance/vulnerability ordering, and scalar reduction allocation; `engine/tests/battle_damage.rs` covers these. | Resistance-spell once-per-turn use state and spell damage-type choice lifecycle are not modeled. |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | `battle.rs` has feature pools, Second Wind, failed ability-check boost, Cunning Action, Innate Sorcery, bonus-action dash temporary HP, Action Surge, and Extra Attack count; `engine/tests/battle_actions.rs` covers them. | The broader supported action, bonus action, reaction, passive, resource, and active-effect profile matrix is incomplete. |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `battle.rs` has Dash, Disengage, Dodge, Hide, Search, readied movement, movement spend/budget/remaining helpers, grapple speed suppression, Opportunity Attack trigger facts, and attack-action movement segmentation; `engine/tests/battle_actions.rs` and `engine/tests/battle_reactions.rs` cover these. | Stand/Drop Prone and Grapple/Escape/Release actions are not modeled; spatial frontier facts are still caller witnesses rather than a full movement frontier reducer. |
+| `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | `battle.rs` has standard and bonus-action Dash resource spend; `engine/tests/battle_actions.rs` covers dash costs. | Spell slot spend, immediate spell cast, concentration-owned later permission, and cleanup are not modeled. |
+| `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | `battle.rs` has reaction windows, bounded continuation ordering, readied reaction movement spend, movement spend admission, and Opportunity Attack interruption facts; `engine/tests/battle_reactions.rs` covers these generic pieces. | Failed-save forced movement, no-movement fallback, spell-specific movement fill admission, and Dissonant Whispers lifecycle are not modeled. |
+| `BATTLE.SPELL.HIT_POINT_RESTORATION` | `battle.rs` has direct hit-point restoration profiles, dice count, die size, area profile for Mass Cure Wounds, healing, and zero-HP recovery interaction; `engine/tests/battle_hit_points.rs` covers direct restoration. | Target-selection holes and multi-target healing projection are not modeled. |
+| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | `battle.rs` has death-save stable lifecycle state and zero-HP lifecycle helpers; `engine/tests/battle_hit_points.rs` covers becoming stable through death saves. | Spare the Dying target admission and spell-driven stable mutation are not modeled. |
+| `BATTLE.SPELL.REACTION_CASTING_TIME` | `battle.rs` has reaction windows for damage interruption/readied spell kinds, generic reaction spend, bounded interruption/resume, and damage-triggered interruption; `engine/tests/battle_reactions.rs` covers the generic protocol. | Spell-cast and after-damage spell triggers, Spell Slot ledger, and concrete reaction spell resolution are not modeled. |
+| `CREATION.CLASS_FEATURE_OPTION.PROJECTION` | `character_creation.rs` has draft holes and fills for Fighter Fighting Style and related class-feature choices; `engine/tests/character_creation_draft.rs` covers acceptance/rejection. | Final CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus fact projections are not modeled. |
+| `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | `character_creation.rs` has a Fighter Weapon Mastery draft hole, selected weapon refs on finalized Fighter builds, class/feature Unit refs, and string projections; `engine/tests/character_creation_draft.rs` covers the manifest path and finalized refs. | The join rows for this scoped obligation are Paladin/Ranger/Rogue weapon mastery choices, so the current Fighter-only finalization is not full scoped coverage. |
 
-## Validation Runs
+## Not Attempted
 
-Baseline before Lane C test additions:
+- `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`
+- `BATTLE.SANCTUARY.TARGETING_INTERDICTION`
+- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`
+- `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`
+- `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`
+- `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`
+- `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE`
+- `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE`
+- `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`
+- `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`
+- `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE`
+- `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`
+- `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE`
+- `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`
+- `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE`
+- `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`
+- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`
+- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`
+- `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`
+- `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`
+- `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE`
+- `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`
+- `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`
+- `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION`
+- `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION`
+- `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION`
+- `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`
+- `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION`
+- `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION`
+- `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS`
+- `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`
+- `SHEET.FEATURE_RESOURCES.TRANSITIONS`
+- `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION`
+- `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`
+- `SHEET.WEAPON_MASTERY.RESELECTION`
+
+## Blocked By Source Gap
+
+None identified.
+
+The manifest and join inputs report no generator-readiness blockers and no open
+QNT/MBT join gaps for the 47 scoped obligations. Current gaps are Rust
+implementation and Rust test coverage gaps, not missing cleanroom source facts.
+
+## Latest Validation Run
 
 ```text
 Command: cd engine && cargo test
 Result: pass
-Tests: 1 passed
+Tests: 57 passed; 0 failed; 0 ignored; 0 doc tests
 ```
-
-First expanded run after adding `engine/tests/semantic_core_smoke.rs`:
-
-```text
-Command: cd engine && cargo test
-Result: fail to compile
-Error: E0583, file not found for module `character_creation` declared by engine/src/lib.rs
-Observed local state: engine/src/character_creation.rs is deleted in the working tree
-```
-
-The failure occurred before integration tests executed. Lane C did not edit
-`engine/src` because `tasks/LANE_A_CHARACTER_CREATION.md` assigns
-`engine/src/character_creation.rs` to Lane A.
-
-Final run after `engine/src/character_creation.rs` became present again in the
-shared working tree:
-
-```text
-Command: cd engine && cargo test
-Result: pass
-Tests: 1 crate unit test passed; 2 integration tests passed; 0 doc tests
-```
-
-Combined milestone after Lanes A and B landed:
-
-```text
-Command: cd engine && cargo fmt --check && cargo test
-Result: pass
-Tests: 1 crate unit test, 31 battle tests, 11 character-creation tests, and 2
-semantic-core smoke tests passed
-```
-
-## Current Blockers
-
-- Character-creation source gap: the current QNT slice explicitly covers the
-  manifest draft protocol path more deeply than finalized build breadth. Wider
-  level 1-2 creation needs more QNT parity facts for selected Unit refs, HP/Hit
-  Die derivation, proficiencies, resources, and loadout identity before a
-  cleanroom implementation can honestly claim full breadth.
-- Battle breadth gap: no blocker for the implemented first battle slices, but
-  wider spell/reaction/continuation behavior still needs additional verticals
-  against the remaining copied QNT obligations.
-- Transient shared-worktree blocker observed during validation:
-  `engine/src/character_creation.rs` was temporarily absent while
-  `engine/src/lib.rs` still declared it. This is resolved in the final run and
-  did not require Lane C edits to `engine/src`.
-
-## Cleanroom Source Assessment
-
-For the implemented first milestone, QNT plus RAW/ubiquitous language were
-sufficient to derive meaningful character-creation and battle behavior without
-reading production TypeScript.
-
-For full level 1-2 parity, the copied QNT and readiness metadata identify the
-obligations and source files, but the Rust engine still needs more verticals and
-the character-creation QNT source needs broader finalized-build facts.

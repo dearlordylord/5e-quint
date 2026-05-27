@@ -18,10 +18,98 @@ pub enum CharacterLevelScope {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CharacterBuild {
+pub enum CharacterBuild {
+    Fighter(FighterCharacterBuild),
+    Wizard(WizardCharacterBuild),
+}
+
+impl CharacterBuild {
+    pub fn level_scope(&self) -> CharacterLevelScope {
+        match self {
+            Self::Fighter(build) => build.level_scope,
+            Self::Wizard(build) => build.level_scope,
+        }
+    }
+
+    pub fn ability_scores(&self) -> AbilityScores {
+        match self {
+            Self::Fighter(build) => build.ability_scores,
+            Self::Wizard(build) => build.ability_scores,
+        }
+    }
+
+    pub fn fighter_weapon_mastery(&self) -> Option<&FighterWeaponMasteryBuildFeature> {
+        match self {
+            Self::Fighter(build) => Some(&build.weapon_mastery),
+            Self::Wizard(_) => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FighterCharacterBuild {
+    pub level_scope: CharacterLevelScope,
+    pub ability_scores: AbilityScores,
+    pub weapon_mastery: FighterWeaponMasteryBuildFeature,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WizardCharacterBuild {
     pub level_scope: CharacterLevelScope,
     pub ability_scores: AbilityScores,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ClassUnitRef {
+    Fighter,
+}
+
+impl ClassUnitRef {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Fighter => "class_fighter",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ClassFeatureUnitRef {
+    FighterWeaponMastery,
+}
+
+impl ClassFeatureUnitRef {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::FighterWeaponMastery => "fighter_weapon_mastery",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum WeaponUnitRef {
+    Longsword,
+    Spear,
+    Flail,
+}
+
+impl WeaponUnitRef {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Longsword => "weapon_longsword",
+            Self::Spear => "weapon_spear",
+            Self::Flail => "weapon_flail",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FighterWeaponMasteryBuildFeature {
+    pub feature_unit: ClassFeatureUnitRef,
+    pub class_unit: ClassUnitRef,
+    pub selected_weapons: [WeaponUnitRef; FIGHTER_WEAPON_MASTERY_CHOICE_COUNT],
+}
+
+const FIGHTER_WEAPON_MASTERY_CHOICE_COUNT: usize = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum HoleId {
@@ -200,7 +288,7 @@ pub struct Draft {
     alignment: bool,
     class_skills: bool,
     fighter_fighting_style: bool,
-    fighter_weapon_mastery: bool,
+    fighter_weapon_mastery: Option<[WeaponUnitRef; FIGHTER_WEAPON_MASTERY_CHOICE_COUNT]>,
     background_ability_score_increase: bool,
     background_tool: bool,
     class_equipment: bool,
@@ -223,7 +311,7 @@ impl Default for Draft {
             alignment: false,
             class_skills: false,
             fighter_fighting_style: false,
-            fighter_weapon_mastery: false,
+            fighter_weapon_mastery: None,
             background_ability_score_increase: false,
             background_tool: false,
             class_equipment: false,
@@ -266,22 +354,61 @@ impl Draft {
             return Err(finalize_draft(self));
         }
 
-        let level_scope = match self.progression {
-            ProgressionSelection::FighterLevel1 | ProgressionSelection::WizardLevel1 => {
-                CharacterLevelScope::Level1
-            }
-            ProgressionSelection::FighterLevel2 => CharacterLevelScope::Level2,
-            ProgressionSelection::None => return Err(FinalizationStatus::Invalid),
+        let ability_scores = match self.ability_scores {
+            Some(ability_scores) => ability_scores,
+            None => return Err(FinalizationStatus::Invalid),
         };
 
-        match self.ability_scores {
-            Some(ability_scores) => Ok(CharacterBuild {
-                level_scope,
-                ability_scores,
-            }),
-            None => Err(FinalizationStatus::Invalid),
+        match self.progression {
+            ProgressionSelection::FighterLevel1 => {
+                let selected_weapons = match self.fighter_weapon_mastery {
+                    Some(selected_weapons) => selected_weapons,
+                    None => return Err(FinalizationStatus::Invalid),
+                };
+
+                Ok(finalize_fighter_build(
+                    CharacterLevelScope::Level1,
+                    ability_scores,
+                    selected_weapons,
+                ))
+            }
+            ProgressionSelection::FighterLevel2 => {
+                let selected_weapons = match self.fighter_weapon_mastery {
+                    Some(selected_weapons) => selected_weapons,
+                    None => return Err(FinalizationStatus::Invalid),
+                };
+
+                Ok(finalize_fighter_build(
+                    CharacterLevelScope::Level2,
+                    ability_scores,
+                    selected_weapons,
+                ))
+            }
+            ProgressionSelection::WizardLevel1 => {
+                Ok(CharacterBuild::Wizard(WizardCharacterBuild {
+                    level_scope: CharacterLevelScope::Level1,
+                    ability_scores,
+                }))
+            }
+            ProgressionSelection::None => Err(FinalizationStatus::Invalid),
         }
     }
+}
+
+fn finalize_fighter_build(
+    level_scope: CharacterLevelScope,
+    ability_scores: AbilityScores,
+    selected_weapons: [WeaponUnitRef; FIGHTER_WEAPON_MASTERY_CHOICE_COUNT],
+) -> CharacterBuild {
+    CharacterBuild::Fighter(FighterCharacterBuild {
+        level_scope,
+        ability_scores,
+        weapon_mastery: FighterWeaponMasteryBuildFeature {
+            feature_unit: ClassFeatureUnitRef::FighterWeaponMastery,
+            class_unit: ClassUnitRef::Fighter,
+            selected_weapons,
+        },
+    })
 }
 
 pub fn empty_draft() -> Draft {
@@ -473,7 +600,7 @@ fn open_creation_holes(draft: &Draft) -> BTreeSet<HoleId> {
         );
         insert_if(
             &mut holes,
-            !draft.fighter_weapon_mastery,
+            draft.fighter_weapon_mastery.is_none(),
             HoleId::FighterWeaponMastery,
         );
         insert_if(&mut holes, !draft.class_equipment, HoleId::ClassEquipment);
@@ -542,7 +669,7 @@ fn finalize_draft(draft: &Draft) -> FinalizationStatus {
         && ((has_fighter_progression(draft)
             && draft.class_skills
             && draft.fighter_fighting_style
-            && draft.fighter_weapon_mastery)
+            && draft.fighter_weapon_mastery.is_some())
             || (has_wizard_progression(draft) && draft.class_skills))
         && draft.background_ability_score_increase
         && draft.background_tool
@@ -845,6 +972,34 @@ fn progression_selection(options: &[ChoiceOptionId]) -> ProgressionSelection {
     }
 }
 
+fn fighter_weapon_mastery_selection(
+    options: &[ChoiceOptionId],
+) -> Option<[WeaponUnitRef; FIGHTER_WEAPON_MASTERY_CHOICE_COUNT]> {
+    match options {
+        [first @ (ChoiceOptionId::WeaponLongsword
+        | ChoiceOptionId::WeaponSpear
+        | ChoiceOptionId::WeaponFlail), second @ (ChoiceOptionId::WeaponLongsword
+        | ChoiceOptionId::WeaponSpear
+        | ChoiceOptionId::WeaponFlail), third @ (ChoiceOptionId::WeaponLongsword
+        | ChoiceOptionId::WeaponSpear
+        | ChoiceOptionId::WeaponFlail)] => Some([
+            weapon_unit_ref(*first)?,
+            weapon_unit_ref(*second)?,
+            weapon_unit_ref(*third)?,
+        ]),
+        _ => None,
+    }
+}
+
+fn weapon_unit_ref(option: ChoiceOptionId) -> Option<WeaponUnitRef> {
+    match option {
+        ChoiceOptionId::WeaponLongsword => Some(WeaponUnitRef::Longsword),
+        ChoiceOptionId::WeaponSpear => Some(WeaponUnitRef::Spear),
+        ChoiceOptionId::WeaponFlail => Some(WeaponUnitRef::Flail),
+        _ => None,
+    }
+}
+
 fn apply_fill(draft: &mut Draft, fill: &Fill) {
     match fill {
         Fill::Choice { hole, options } => match hole {
@@ -855,7 +1010,9 @@ fn apply_fill(draft: &mut Draft, fill: &Fill) {
             HoleId::Alignment => draft.alignment = true,
             HoleId::ClassSkills => draft.class_skills = true,
             HoleId::FighterFightingStyle => draft.fighter_fighting_style = true,
-            HoleId::FighterWeaponMastery => draft.fighter_weapon_mastery = true,
+            HoleId::FighterWeaponMastery => {
+                draft.fighter_weapon_mastery = fighter_weapon_mastery_selection(options)
+            }
             HoleId::BackgroundAbilityScoreIncrease => {
                 draft.background_ability_score_increase = true
             }
