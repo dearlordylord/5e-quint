@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "SPP-W3-06-SELF-TRANSFORMATION-MODE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate selfTransformationMode profile"
     },
     {
@@ -900,7 +900,7 @@ Focused MBT: `self-teleport-lifecycle.mbt.test.ts`.
 
 ### Task 23 - SPP-W3-06-SELF-TRANSFORMATION-MODE - Migrate selfTransformationMode
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `self-transformation-mode-lifecycle.mbt.test.ts`.
 

@@ -32,6 +32,7 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -276,12 +277,7 @@ export function supportedSpellInvocationRef(
     return expeditiousRetreatDashProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "selfTransformationMode") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "selfTransformationMode",
-    };
+    return selfTransformationModeProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return jumpMovementReplacementProfile.invocationRef(invocation);

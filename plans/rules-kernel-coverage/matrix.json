@@ -1577,8 +1577,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],

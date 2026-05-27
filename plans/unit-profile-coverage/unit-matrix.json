@@ -3220,10 +3220,9 @@
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",
@@ -20684,10 +20683,9 @@
             "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",

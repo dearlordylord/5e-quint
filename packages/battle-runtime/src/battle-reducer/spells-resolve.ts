@@ -107,6 +107,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -245,7 +246,6 @@ export {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
-  resolveSelfTransformationModeSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
   healingSpellTargetSelection,
@@ -264,7 +264,6 @@ import {
   resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
-  resolveSelfTransformationModeSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
@@ -290,10 +289,7 @@ import {
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-import {
-  spellFillSet,
-  type SpellFillSet,
-} from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -883,7 +879,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "selfTransformationMode") {
-    return resolveSelfTransformationModeSpellAct({
+    return selfTransformationModeProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

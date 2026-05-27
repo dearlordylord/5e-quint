@@ -54,7 +54,6 @@ import {
   spellSavingThrowAbility,
   spellSavingThrowTargeting,
   spellSavingThrowOutcomeHole,
-  selfTransformationModeChoiceHole,
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
@@ -88,13 +87,11 @@ import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persist
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
-import {
-  dancingLightsFromEffect,
-  selfTransformationModeLabel,
-} from "./spells-active-effects.ts";
+import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
@@ -197,19 +194,11 @@ export function discoverSupportedSpellInvocations(
         return [baseCastAct, ...metamagicCastActs];
       }
       if (invocation.procedure === "selfTransformationMode") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [selfTransformationModeChoiceHole(invocation)],
-          },
-        ];
+        return selfTransformationModeProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "fogCloudObscurement") {
         return [
@@ -1311,7 +1300,7 @@ export function spellInvocationCastSummary(
     return scalarBuffProfile.castSummary(invocation);
   }
   if (invocation.procedure === "selfTransformationMode") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and choose ${invocation.modeChoices.map(selfTransformationModeLabel).join(" or ")}.`;
+    return selfTransformationModeProfile.castSummary(invocation);
   }
   if (invocation.procedure === "rollModifier") {
     return rollModifierProfile.castSummary(invocation);

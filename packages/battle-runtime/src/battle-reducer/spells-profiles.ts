@@ -170,6 +170,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
+import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -181,7 +182,6 @@ import {
   supportedPreparedDragonsBreathInitialSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
-  supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
   supportedSpellCreatedHeldObjectActiveEffectProfile,
   supportedPreparedSlotSpellProfile,
@@ -397,13 +397,11 @@ export function supportedSpellActs(
       }),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSelfTransformationModeSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-      ),
+      selfTransformationModeProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       rollModifierProfile.admit(spell, {
