@@ -15,6 +15,7 @@ import {
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
@@ -414,12 +415,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "magicWeaponEnhancement",
-    };
+    return magicWeaponEnhancementProfile.invocationRef(invocation);
   }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) =>

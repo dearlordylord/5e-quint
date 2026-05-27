@@ -97,6 +97,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
@@ -178,7 +179,6 @@ import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
-import { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
@@ -194,7 +194,6 @@ export {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
-export { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
 export { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
@@ -2865,7 +2864,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
-    return resolveMagicWeaponEnhancementSpellAct({
+    return magicWeaponEnhancementProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

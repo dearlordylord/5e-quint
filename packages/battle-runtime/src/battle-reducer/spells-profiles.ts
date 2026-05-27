@@ -151,6 +151,7 @@ import {
   isProduceFlameOngoingEffectSpell,
 } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import {
   admitPersistentArmorEffectInvocationSpellAccess,
@@ -175,7 +176,6 @@ import {
   supportedPreparedHealingSpellProfile,
   supportedPreparedLevitatedCreatureSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
-  supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
@@ -511,10 +511,11 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedMagicWeaponEnhancementSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      magicWeaponEnhancementProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitDamageSpellProfile(

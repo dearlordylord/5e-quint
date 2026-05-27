@@ -1,6 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
@@ -67,7 +66,6 @@ import {
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import {
-  magicWeaponTargetItemHole,
   spellDancingLightsPlacementHole,
   spellObjectContactTargetsHole,
   spiritualWeaponForcePositionHole,
@@ -78,6 +76,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
+import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -783,19 +782,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "magicWeaponEnhancement") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [magicWeaponTargetItemHole(invocation)],
-          },
-        ];
+        return magicWeaponEnhancementProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "weaponAttackOverride") {
         return [
@@ -1465,7 +1456,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot on a nonmagical weapon.`;
+    return magicWeaponEnhancementProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitDamage") {
     return invocation.resource.tag === "classFeatureFreeCast"

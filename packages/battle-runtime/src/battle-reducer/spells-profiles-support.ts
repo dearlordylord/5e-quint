@@ -1,5 +1,5 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement spell.invocation-dragons-breath-initial spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-dragons-breath-initial spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 
@@ -58,8 +58,6 @@ import {
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
   type LevitatedCreatureSpellInvocation,
-  MAGIC_WEAPON_ENHANCEMENT_BONUSES,
-  type MagicWeaponEnhancementBonus,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
   type RollModifierSpellTargeting,
@@ -2220,142 +2218,6 @@ export function supportedPreparedWeaponDamageRiderSpellProfile(
           },
         ],
   );
-}
-
-export function supportedPreparedMagicWeaponEnhancementSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = magicWeaponEnhancementProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const bonus = magicWeaponEnhancementBonusForSlot(
-      projection.bonus,
-      slot.spellLevel,
-    );
-    return bonus === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "magicWeaponEnhancement",
-            spell,
-            actionCost: "bonusAction",
-            bonus,
-            durationTicks: projection.durationTicks,
-          },
-        ];
-  });
-}
-
-type MagicWeaponEnhancementProjection = {
-  readonly durationTicks: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "duration" }
-  >["durationTicks"];
-  readonly bonus: Extract<
-    EffectAtom,
-    { readonly kind: "grant_magic_weapon_enhancement" }
-  >["bonus"];
-};
-
-function magicWeaponEnhancementProjection(
-  spell: SpellRecord,
-): MagicWeaponEnhancementProjection | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    !magicWeaponAttachmentIsSupported(spell.mechanics.attachment) ||
-    !magicWeaponDurationEarlyEndIsSupported(spell.mechanics.duration) ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  if (
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "grant_magic_weapon_enhancement" ||
-    Either.isLeft(durationTicks)
-  ) {
-    return null;
-  }
-  return {
-    durationTicks: durationTicks.right,
-    bonus: operation.effect.bonus,
-  };
-}
-
-function magicWeaponAttachmentIsSupported(attachment: Attachment): boolean {
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "object" &&
-    attachment.value.count === 1 &&
-    attachment.value.filter?.objectKind === "weapon" &&
-    attachment.value.filter.magicality === "nonmagical"
-  );
-}
-
-function magicWeaponDurationEarlyEndIsSupported(
-  duration: Extract<
-    SpellRecord["mechanics"]["duration"],
-    { readonly kind: "timed" }
-  >,
-): boolean {
-  const earlyEnd = duration.earlyEnd ?? [];
-  return earlyEnd.length === 1 && earlyEnd[0]?.kind === "caster_recasts_spell";
-}
-
-function magicWeaponEnhancementBonusForSlot(
-  bonus: MagicWeaponEnhancementProjection["bonus"],
-  slotLevel: SpellSlotLevel,
-): MagicWeaponEnhancementBonus | null {
-  if (
-    bonus.kind !== "threshold_tiers" ||
-    bonus.axis !== "slot" ||
-    bonus.sign !== "+"
-  ) {
-    return null;
-  }
-  const base = magicWeaponEnhancementBonusFromNumber(bonus.base);
-  if (base === null) {
-    return null;
-  }
-  return bonus.tiers.reduce<MagicWeaponEnhancementBonus | null>(
-    (current, tier) => {
-      if (current === null) {
-        return null;
-      }
-      if (Number(slotLevel) < tier.atLevel) {
-        return current;
-      }
-      return magicWeaponEnhancementBonusFromNumber(tier.value);
-    },
-    base,
-  );
-}
-
-function magicWeaponEnhancementBonusFromNumber(
-  value: number,
-): MagicWeaponEnhancementBonus | null {
-  return isMagicWeaponEnhancementBonus(value) ? value : null;
-}
-
-function isMagicWeaponEnhancementBonus(
-  value: number,
-): value is MagicWeaponEnhancementBonus {
-  return MAGIC_WEAPON_ENHANCEMENT_BONUSES.some((bonus) => bonus === value);
 }
 
 export function supportedPreparedAfterHitDamageSpellProfile(
