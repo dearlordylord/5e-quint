@@ -19,6 +19,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -283,12 +284,7 @@ export function supportedSpellInvocationRef(
     return jumpMovementReplacementProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "dragonsBreathInitial") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "dragonsBreathInitial",
-    };
+    return dragonsBreathInitialProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "selfTeleport") {
     return selfTeleportProfile.invocationRef(invocation);

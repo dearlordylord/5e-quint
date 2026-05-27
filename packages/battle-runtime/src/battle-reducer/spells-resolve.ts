@@ -99,6 +99,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -243,7 +244,6 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -261,7 +261,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
-  resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
 } from "./spells-resolve-support-effects.ts";
@@ -2873,7 +2872,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "dragonsBreathInitial") {
-    return resolveDragonsBreathInitialSpellAct({
+    return dragonsBreathInitialProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -1,7 +1,6 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-dragons-breath-initial
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -45,7 +44,6 @@ import {
   type AbilityCheckRollModeSpellEffect,
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AfterHitTimedDamageAndSaveSpellInvocation,
-  type DragonsBreathInitialSpellInvocation,
   type D20RollModifierSpellEffect,
   type HealingSpellActionCost,
   type MarkedDamageRiderCastAbilityCheckBehavior,
@@ -113,131 +111,6 @@ export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
   return projection.effect.kind === "d20RollModifier";
-}
-
-export function supportedPreparedDragonsBreathInitialSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const projection = dragonsBreathInitialSpellProjection(
-      actorId,
-      spell,
-      slot.spellLevel,
-    );
-    return projection === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "dragonsBreathInitial",
-            spell,
-            actionCost: "bonusAction",
-            targeting: {
-              kind: "targetList",
-              minTargets: 1,
-              maxTargets: 1,
-            },
-            ...projection,
-          },
-        ];
-  });
-}
-
-function dragonsBreathInitialSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  slotLevel: SpellSlotLevel,
-): Pick<
-  DragonsBreathInitialSpellInvocation,
-  "activeEffect" | "damageTypeChoices" | "rangeFeet"
-> | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  const operation = mechanics.operations[0];
-  const selection =
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "target"
-      ? mechanics.attachment.value.selection
-      : null;
-  const effect = operation?.effect;
-  const attachment = effect?.kind === "save_gate" ? effect.attachment : null;
-  const damage = effect?.kind === "save_gate" ? effect.onFail : null;
-  const damageType = damage?.kind === "damage" ? damage.damageType : null;
-  const damageTypeChoice =
-    typeof damageType === "object" &&
-    damageType !== null &&
-    damageType.kind === "hole" &&
-    typeof damageType.value === "object" &&
-    damageType.value.kind === "choice"
-      ? damageType.value
-      : null;
-  if (
-    mechanics.level !== 2 ||
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.range.kind !== "touch" ||
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== 1 ||
-    selection?.mode !== "one" ||
-    !("disposition" in selection) ||
-    selection.disposition !== "willing" ||
-    !("targetKinds" in selection) ||
-    selection.targetKinds === undefined ||
-    !sameStringSet(selection.targetKinds, ["creature"]) ||
-    mechanics.operations.length !== 1 ||
-    operation === undefined ||
-    operation.trigger.kind !== "on_attached_spends_action" ||
-    operation.trigger.cost.kind !== "standard_action" ||
-    operation.trigger.cost.action !== "magic" ||
-    effect?.kind !== "save_gate" ||
-    effect.ability !== "dex" ||
-    effect.dc.kind !== "caster_spell_save_dc" ||
-    attachment?.kind !== "area" ||
-    !("origin" in attachment) ||
-    attachment.origin.kind !== "on_attached_creature" ||
-    !("shape" in attachment) ||
-    attachment.shape.kind !== "cone" ||
-    attachment.shape.lengthFeet !== 15 ||
-    effect.onSuccess.kind !== "half_damage" ||
-    damage?.kind !== "damage" ||
-    damage.amount.kind !== "linear_per_level" ||
-    damage.amount.axis !== "slot" ||
-    damage.amount.base.dice !== 3 ||
-    damage.amount.base.dieSize !== 6 ||
-    damage.amount.perLevel.dice !== 1 ||
-    damage.amount.startingAtLevel !== 2 ||
-    damageTypeChoice === null
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.upTo,
-  );
-  return Either.isLeft(durationTicks)
-    ? null
-    : {
-        rangeFeet: movementFeet(5),
-        damageTypeChoices: damageTypeChoice.options,
-        activeEffect: {
-          kind: "dragonsBreath",
-          sourceSpellId: spell.id,
-          sourceCombatantId: actorId,
-          originalSlotLevel: slotLevel,
-          expiresAt: {
-            kind: "concentration",
-            combatantId: actorId,
-            durationTicks: durationTicks.right,
-          },
-        },
-      };
 }
 
 export function supportedPreparedMirrorImageHitInterceptionSpellProfile(

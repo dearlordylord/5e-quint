@@ -3722,8 +3722,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
@@ -22678,8 +22677,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",

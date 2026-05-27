@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "SPP-W3-07-DRAGONS-BREATH-INITIAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate dragonsBreathInitial profile"
     },
     {
@@ -906,7 +906,7 @@ Focused MBT: `self-transformation-mode-lifecycle.mbt.test.ts`.
 
 ### Task 24 - SPP-W3-07-DRAGONS-BREATH-INITIAL - Migrate dragonsBreathInitial
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `dragons-breath-initial-effect.mbt.test.ts`.
 

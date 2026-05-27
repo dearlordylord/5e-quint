@@ -75,6 +75,7 @@ import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-s
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -827,25 +828,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "dragonsBreathInitial") {
-        const targetHole = spellTargetListHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [
-                  targetHole,
-                  spellDamageTypeChoiceHole(invocation),
-                ],
-              },
-            ];
+        return dragonsBreathInitialProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "sanctuaryTargetingInterdiction") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
@@ -1392,7 +1379,7 @@ export function spellInvocationCastSummary(
     return jumpMovementReplacementProfile.castSummary(invocation);
   }
   if (invocation.procedure === "dragonsBreathInitial") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return dragonsBreathInitialProfile.castSummary(invocation);
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
