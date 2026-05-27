@@ -18,6 +18,7 @@ import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
@@ -378,11 +379,7 @@ export function supportedSpellInvocationRef(
     return makeStableProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "thaumaturgyBoomingVoice",
-    };
+    return thaumaturgyBoomingVoiceProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "blurAttackRollDefense") {
     return {

@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "SPP-W2-04-THAUMATURGY-BOOMING-VOICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate thaumaturgyBoomingVoice profile (cantrip template)"
     },
     {
@@ -777,6 +777,7 @@ Focused MBT: `level2-protection-spell-selected-identity.mbt.test.ts` or
 
 ### Task 5 - SPP-W2-04-THAUMATURGY-BOOMING-VOICE - Migrate thaumaturgyBoomingVoice
 
+Status: `done`.
 Focused MBT: `thaumaturgy-selected-identity.mbt.test.ts`. Note:
 `rollModifierSkillFilter` is shared with this profile (already documented
 in `roll-modifier.ts`). After migration, the shared helper remains in

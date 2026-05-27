@@ -158,6 +158,7 @@ import {
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import {
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
@@ -186,7 +187,6 @@ import {
   supportedPreparedSlotSpellProfile,
   supportedPreparedWardingBondSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
-  supportedCantripThaumaturgyBoomingVoiceSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
@@ -697,10 +697,11 @@ export function supportedSpellActs(
       }),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripThaumaturgyBoomingVoiceSpellProfile(
-        actor.combatantId,
-        spell,
-      ),
+      thaumaturgyBoomingVoiceProfile.admit(spell, {
+        actorId: actor.combatantId,
+        spellcasting,
+        characterLevel,
+      }),
     ),
     ...cantrips.flatMap((spell) =>
       damageReductionProfile.admit(spell, {

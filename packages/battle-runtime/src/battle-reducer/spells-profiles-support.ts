@@ -3326,25 +3326,6 @@ function durationTiersEqual(
   );
 }
 
-export function supportedCantripThaumaturgyBoomingVoiceSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): readonly ThaumaturgyBoomingVoiceSpellInvocation[] {
-  const projection = thaumaturgyBoomingVoiceProjection(actorId, spell);
-  return projection === null
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "thaumaturgyBoomingVoice",
-          spell,
-          actionCost: "magicAction",
-          ...projection,
-        },
-      ];
-}
-
 export function thaumaturgyBoomingVoiceProjection(
   actorId: CombatantId,
   spell: SpellRecord,

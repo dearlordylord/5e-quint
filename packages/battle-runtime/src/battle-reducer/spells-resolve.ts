@@ -97,6 +97,7 @@ import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduct
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -250,7 +251,6 @@ export {
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
-  resolveThaumaturgyBoomingVoiceSpellAct,
   resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
@@ -291,7 +291,6 @@ import {
   resolveScalarBuffSpellAct,
   resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
-  resolveThaumaturgyBoomingVoiceSpellAct,
   resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
@@ -954,7 +953,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
-    return resolveThaumaturgyBoomingVoiceSpellAct({
+    return thaumaturgyBoomingVoiceProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

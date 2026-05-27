@@ -63,7 +63,6 @@ import {
   spellTargetHole,
   spellTargetListHole,
   spellTeleportDestinationHole,
-  thaumaturgyActiveOneMinuteEffectCountHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
@@ -80,6 +79,7 @@ import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import {
   dancingLightsFromEffect,
   selfTransformationModeLabel,
@@ -558,21 +558,11 @@ export function discoverSupportedSpellInvocations(
         return castActs;
       }
       if (invocation.procedure === "thaumaturgyBoomingVoice") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [
-              thaumaturgyActiveOneMinuteEffectCountHole(invocation),
-            ],
-          },
-        ];
+        return thaumaturgyBoomingVoiceProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "creatureTypeProtection") {
         const targetHole = spellTargetHole(state, actorId, invocation);
@@ -1440,7 +1430,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot to ${creatureSizeChangeLabel(invocation)}.`;
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
-    return `Cast ${invocation.spell.name} as a cantrip, using the Booming Voice effect.`;
+    return thaumaturgyBoomingVoiceProfile.castSummary(invocation);
   }
   if (invocation.procedure === "creatureTypeProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

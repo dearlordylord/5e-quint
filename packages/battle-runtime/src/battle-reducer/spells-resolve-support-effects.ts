@@ -54,8 +54,6 @@ import {
   applyMirrorImageHitInterceptionSpellEffect,
   applyScalarBuffSpellEffect,
   applySelfTransformationModeEffect,
-  applyThaumaturgyBoomingVoiceSpellEffect,
-  isThaumaturgyBoomingVoiceEffectForInvocation,
   spellDamageTypeChoiceHole,
   spellConditionChoiceHole,
   spellHealingRollHole,
@@ -68,12 +66,10 @@ import {
   spellTargetListHole,
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
-  thaumaturgyActiveOneMinuteEffectCountHole,
   validateSpellTargetList,
   validateScalarBuffTemporaryHitPointsFill,
   validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
-import { THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS } from "./domain-constants.ts";
 import { spellSaveDcForCaster } from "./attack-resolution.ts";
 import {
   applyWardingBondSpellEffect,
@@ -585,127 +581,6 @@ export function resolveWardingBondSpellAct(input: {
     input.input.state,
     input.actorId,
     target.combatantId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveThaumaturgyBoomingVoiceSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "thaumaturgyBoomingVoice" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Thaumaturgy Booming Voice uses only the total active 1-minute effect count witness.",
-    );
-  }
-
-  const activeCountFill = input.fillSet.thaumaturgyActiveOneMinuteEffectCount;
-  if (activeCountFill === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      thaumaturgyActiveOneMinuteEffectCountHole(input.invocation),
-    ]);
-  }
-  const activeCount = activeCountFill.value.activeOneMinuteEffectCount;
-  if (!Number.isInteger(activeCount) || activeCount < 0) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Thaumaturgy active 1-minute effect count must be a non-negative integer.",
-    );
-  }
-  const actor = input.input.state.combatants.get(input.actorId);
-  const existingBoomingVoiceEffectCount =
-    actor?.activeEffects.filter((effect) =>
-      isThaumaturgyBoomingVoiceEffectForInvocation(
-        effect,
-        input.actorId,
-        input.invocation,
-      ),
-    ).length ?? 0;
-  if (activeCount < existingBoomingVoiceEffectCount) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Thaumaturgy active 1-minute effect count must include active Booming Voice effects tracked by battle runtime.",
-    );
-  }
-  const activeCountAfterCast =
-    activeCount - existingBoomingVoiceEffectCount + 1;
-  if (activeCountAfterCast > THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Thaumaturgy can have at most three active 1-minute effects after this cast.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyThaumaturgyBoomingVoiceSpellEffect(
-    input.input.state,
-    input.actorId,
     input.invocation,
   );
   const resourced = spendSpellCastResources({
