@@ -4,95 +4,486 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1,  "id": "SPP-W1-01-WIDEN-RESOLVE-INPUT",                    "status": "done",               "title": "Widen SpellProcedureProfileResolveInput for bonus-action and reaction inputs" },
-
-    { "number": 2,  "id": "SPP-W2-01-MAKE-STABLE",                            "status": "ready-for-research", "title": "Migrate makeStable profile (cantrip template)" },
-    { "number": 3,  "id": "SPP-W2-02-HELD-LIGHT",                             "status": "ready-for-research",            "title": "Migrate heldLight profile (cantrip template)" },
-    { "number": 4,  "id": "SPP-W2-03-OBJECT-LIGHT",                           "status": "ready-for-research",            "title": "Migrate objectLight profile (cantrip template)" },
-    { "number": 5,  "id": "SPP-W2-04-THAUMATURGY-BOOMING-VOICE",              "status": "ready-for-research",            "title": "Migrate thaumaturgyBoomingVoice profile (cantrip template)" },
-    { "number": 6,  "id": "SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE",               "status": "ready-for-research",            "title": "Migrate blurAttackRollDefense profile (prepared template)" },
-    { "number": 7,  "id": "SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT",           "status": "ready-for-research",            "title": "Migrate seeInvisibleObserverSight profile (prepared template)" },
-    { "number": 8,  "id": "SPP-W2-07-PERSISTENT-ARMOR-EFFECT",                "status": "ready-for-research",            "title": "Migrate persistentArmorEffect profile (prepared template)" },
-    { "number": 9,  "id": "SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT",               "status": "ready-for-research",            "title": "Migrate magicWeaponEnhancement profile" },
-    { "number": 10, "id": "SPP-W2-09-WARDING-BOND",                           "status": "ready-for-research",            "title": "Migrate wardingBond profile" },
-    { "number": 11, "id": "SPP-W2-10-CREATURE-TYPE-PROTECTION",               "status": "ready-for-research",            "title": "Migrate creatureTypeProtection profile" },
-    { "number": 12, "id": "SPP-W2-11-CONDITION-REMOVAL-PROTECTION",           "status": "ready-for-research",            "title": "Migrate conditionRemovalProtection profile (no focused MBT)" },
-    { "number": 13, "id": "SPP-W2-12-DIRECT-CONDITION-REMOVAL",               "status": "ready-for-research",            "title": "Migrate directConditionRemoval profile (no focused MBT)" },
-    { "number": 14, "id": "SPP-W2-13-COND-IMMUNITY-TURN-START-THP",           "status": "ready-for-research",            "title": "Migrate conditionImmunityAndTurnStartTemporaryHitPoints (no focused MBT)" },
-    { "number": 15, "id": "SPP-W2-14-CREATURE-SIZE-CHANGE",                   "status": "ready-for-research",            "title": "Migrate creatureSizeIncrease/Decrease combined profile" },
-    { "number": 16, "id": "SPP-W2-15-LEVITATED-CREATURE",                     "status": "ready-for-research",            "title": "Migrate levitatedCreature profile" },
-    { "number": 17, "id": "SPP-W2-16-SCALAR-BUFF",                            "status": "ready-for-research",            "title": "Migrate scalarBuff profile (multi-shape)" },
-
-    { "number": 18, "id": "SPP-W3-01-DIRECT-HP-RESTORATION",                  "status": "ready-for-research",            "title": "Migrate directHitPointRestoration profile (bonus-action)" },
-    { "number": 19, "id": "SPP-W3-02-EXPEDITIOUS-RETREAT-DASH",               "status": "ready-for-research",            "title": "Migrate expeditiousRetreatDash profile (bonus-action, no focused MBT)" },
-    { "number": 20, "id": "SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT",              "status": "ready-for-research",            "title": "Migrate jumpMovementReplacement profile (bonus-action)" },
-    { "number": 21, "id": "SPP-W3-04-FEATHER-FALL-MITIGATION",                "status": "ready-for-research",            "title": "Migrate featherFallMitigation profile (reaction-trigger)" },
-    { "number": 22, "id": "SPP-W3-05-SELF-TELEPORT",                          "status": "ready-for-research",            "title": "Migrate selfTeleport profile (bonus-action)" },
-    { "number": 23, "id": "SPP-W3-06-SELF-TRANSFORMATION-MODE",               "status": "ready-for-research",            "title": "Migrate selfTransformationMode profile" },
-    { "number": 24, "id": "SPP-W3-07-DRAGONS-BREATH-INITIAL",                 "status": "ready-for-research",            "title": "Migrate dragonsBreathInitial profile" },
-    { "number": 25, "id": "SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION",       "status": "ready-for-research",            "title": "Migrate sanctuaryTargetingInterdiction profile" },
-    { "number": 26, "id": "SPP-W3-09-MARKED-DAMAGE-RIDER",                    "status": "ready-for-research",            "title": "Migrate markedDamageRider profile (no focused MBT)" },
-    { "number": 27, "id": "SPP-W3-10-WEAPON-DAMAGE-RIDER",                    "status": "ready-for-research",            "title": "Migrate weaponDamageRider profile (no focused MBT)" },
-    { "number": 28, "id": "SPP-W3-11-WEAPON-ATTACK-OVERRIDE",                 "status": "ready-for-research",            "title": "Migrate weaponAttackOverride profile (no focused MBT)" },
-    { "number": 29, "id": "SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK",             "status": "ready-for-research",            "title": "Migrate spellHostedWeaponAttack profile" },
-
-    { "number": 30, "id": "SPP-W4-01-DIRECT-CONDITION",                       "status": "ready-for-research",            "title": "Migrate directCondition profile" },
-    { "number": 31, "id": "SPP-W4-02-SAVE-GATED-DAMAGE",                      "status": "ready-for-research",            "title": "Migrate saveGatedDamage profile (anchor of save-gated family)" },
-    { "number": 32, "id": "SPP-W4-03-SAVE-GATED-CONDITION",                   "status": "ready-for-research",            "title": "Migrate saveGatedCondition profile" },
-    { "number": 33, "id": "SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY",          "status": "ready-for-research",            "title": "Migrate saveGatedConditionImmunity profile" },
-    { "number": 34, "id": "SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE",       "status": "ready-for-research",            "title": "Migrate saveGatedAttackRollAdvantage profile" },
-    { "number": 35, "id": "SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE",        "status": "ready-for-research",            "title": "Migrate abilityD20TestRollModeSaveGate profile" },
-    { "number": 36, "id": "SPP-W4-07-SLEEP-TARGET-ADMISSION",                 "status": "ready-for-research",            "title": "Migrate sleepTargetAdmission profile" },
-    { "number": 37, "id": "SPP-W4-08-HIDEOUS-LAUGHTER",                       "status": "ready-for-research",            "title": "Migrate hideousLaughter profile (no focused MBT — uses integration)" },
-    { "number": 38, "id": "SPP-W4-09-GREASE-GROUND-HAZARD",                   "status": "ready-for-research",            "title": "Migrate greaseGroundHazard profile" },
-    { "number": 39, "id": "SPP-W4-10-COMMAND",                                "status": "ready-for-research",            "title": "Migrate command profile" },
-    { "number": 40, "id": "SPP-W4-11-SAVE-GATED-HELPERS-SWEEP",               "status": "ready-for-research",            "title": "After save-gated family migrates: relocate shared helpers and trim spells-profiles-save-gates.ts" },
-
-    { "number": 41, "id": "SPP-W5-01-COUNTERSPELL",                           "status": "ready-for-research",            "title": "Migrate counterspell reaction profile (requires SPP-W1-01)" },
-    { "number": 42, "id": "SPP-W5-02-SHIELD-REACTION",                        "status": "ready-for-research",            "title": "Migrate shieldReaction reaction profile" },
-
-    { "number": 43, "id": "SPP-W6-01-SPELL-ATTACK-DAMAGE",                    "status": "ready-for-research",            "title": "Migrate spellAttackDamage profile (anchor of attack family)" },
-    { "number": 44, "id": "SPP-W6-02-SPELL-ATTACK-SEQUENCE",                  "status": "ready-for-research",            "title": "Migrate spellAttackSequence profile" },
-    { "number": 45, "id": "SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE",            "status": "ready-for-research",            "title": "Migrate chainedSpellAttackDamage profile" },
-    { "number": 46, "id": "SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE",               "status": "ready-for-research",            "title": "Migrate attackBurstSaveDamage profile" },
-    { "number": 47, "id": "SPP-W6-05-REPEATED-DAMAGE-ALLOCATION",             "status": "ready-for-research",            "title": "Migrate repeatedDamageAllocation profile" },
-    { "number": 48, "id": "SPP-W6-06-HELD-LIGHT-HURL",                        "status": "ready-for-research",            "title": "Migrate heldLightHurl profile (paired with heldLight)" },
-
-    { "number": 49, "id": "SPP-W7-01-AFTER-HIT-DAMAGE",                       "status": "ready-for-research",            "title": "Migrate afterHitDamage rider profile (no focused MBT)" },
-    { "number": 50, "id": "SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION",      "status": "ready-for-research",            "title": "Migrate afterHitDamageAndIllumination (Shining Smite)" },
-    { "number": 51, "id": "SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION",         "status": "ready-for-research",            "title": "Migrate afterHitSaveGatedCondition (no focused MBT)" },
-    { "number": 52, "id": "SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE",        "status": "ready-for-research",            "title": "Migrate afterHitTimedDamageAndSave (no focused MBT)" },
-
-    { "number": 53, "id": "SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY",       "status": "ready-for-research",            "title": "Migrate spellCreatedHeldObject + Attack + ReEvoke (one file)" },
-    { "number": 54, "id": "SPP-W8-02-SPIRITUAL-WEAPON-FAMILY",                "status": "ready-for-research",            "title": "Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack (one file)" },
-    { "number": 55, "id": "SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY",           "status": "ready-for-research",            "title": "Migrate objectContactDamage + objectContactDamageRepeat (one file)" },
-    { "number": 56, "id": "SPP-W8-04-DANCING-LIGHTS-FAMILY",                  "status": "ready-for-research",            "title": "Migrate dancingLightsCombinedCast + Reposition + SeparateCast (one file)" },
-    { "number": 57, "id": "SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION",          "status": "ready-for-research",            "title": "Migrate mirrorImageHitInterception profile" },
-    { "number": 58, "id": "SPP-W8-06-FLAMING-SPHERE",                         "status": "ready-for-research",            "title": "Migrate flamingSphere lifecycle profile" },
-    { "number": 59, "id": "SPP-W8-07-MOONBEAM",                               "status": "ready-for-research",            "title": "Migrate moonbeam movable-zone profile" },
-    { "number": 60, "id": "SPP-W8-08-FOG-CLOUD-OBSCUREMENT",                  "status": "ready-for-research",            "title": "Migrate fogCloudObscurement profile" },
-    { "number": 61, "id": "SPP-W8-09-GUST-OF-WIND-LINE",                      "status": "ready-for-research",            "title": "Migrate gustOfWindLine profile" },
-    { "number": 62, "id": "SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD",           "status": "ready-for-research",            "title": "Migrate spikeGrowthMovementHazard profile" },
-    { "number": 63, "id": "SPP-W8-11-WEB-RESTRAINT-HAZARD",                   "status": "ready-for-research",            "title": "Migrate webRestraintHazard profile" },
-    { "number": 64, "id": "SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN",          "status": "ready-for-research",            "title": "Migrate magicalDarknessPointOrigin profile" },
-    { "number": 65, "id": "SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION", "status": "ready-for-research",         "title": "Migrate antimagicFieldOngoingSpellSuppression profile" },
-    { "number": 66, "id": "SPP-W8-14-ONGOING-SPELL-END",                      "status": "ready-for-research",            "title": "Migrate ongoingSpellEnd profile" },
-
-    { "number": 67, "id": "SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS",           "status": "blocked",            "title": "Export shared invocation Schema building-blocks from battle-codecs.ts" },
-    { "number": 68, "id": "SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD",            "status": "blocked",            "title": "Add invocationSchema field to SpellProcedureProfile" },
-    { "number": 69, "id": "SPP-W9-03-MIGRATE-CODEC-BRANCHES",                 "status": "blocked",            "title": "Move per-profile Schema branches into each profile file" },
-    { "number": 70, "id": "SPP-W9-04-DERIVE-METAMAGIC-TABLE",                 "status": "blocked",            "title": "Derive metamagic compatibility table from registry; delete the hand-maintained one" },
-    { "number": 71, "id": "SPP-W9-05-INVERT-TARGET-LIST-PREDICATE",           "status": "blocked",            "title": "Invert isTargetListSpellInvocation to iterate registry" },
-    { "number": 72, "id": "SPP-W9-06-INVERT-READIED-SPELL-LIST",              "status": "blocked",            "title": "Invert readiedSpellAct procedure list to iterate registry" },
-    { "number": 73, "id": "SPP-W9-07-INVERT-WILLING-TARGET-LISTS",            "status": "blocked",            "title": "Invert KNOWN_WILLING_TARGET_* consultations to iterate registry" },
-    { "number": 74, "id": "SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS",         "status": "blocked",            "title": "Invert spells-resolve-fill-set.ts negative lists" },
-    { "number": 75, "id": "SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH",           "status": "blocked",            "title": "Replace spells-resolve.ts procedure switch with registry iteration" },
-    { "number": 76, "id": "SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH",         "status": "blocked",            "title": "Replace spells-discovery.ts procedure switch (cast act + summary) with registry iteration" },
-    { "number": 77, "id": "SPP-W9-11-CONSOLIDATE-INVOCATION-REF",             "status": "blocked",            "title": "Replace spells-invocation-ref.ts Match cascade with registry iteration" },
-
-    { "number": 78, "id": "SPP-W10-01-FULL-SUITE-PARITY-RUN",                 "status": "blocked",            "title": "Run full MBT suite; confirm parity preserved end-to-end" },
-    { "number": 79, "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",                  "status": "blocked",            "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells" },
-    { "number": 80, "id": "SPP-W10-03-DOCS-AND-ADR",                          "status": "blocked",            "title": "Add ADR documenting the registry; update README; close lane" }
+    {
+      "number": 1,
+      "id": "SPP-W1-01-WIDEN-RESOLVE-INPUT",
+      "status": "done",
+      "title": "Widen SpellProcedureProfileResolveInput for bonus-action and reaction inputs"
+    },
+    {
+      "number": 2,
+      "id": "SPP-W2-01-MAKE-STABLE",
+      "status": "done",
+      "title": "Migrate makeStable profile (cantrip template)"
+    },
+    {
+      "number": 3,
+      "id": "SPP-W2-02-HELD-LIGHT",
+      "status": "ready-for-research",
+      "title": "Migrate heldLight profile (cantrip template)"
+    },
+    {
+      "number": 4,
+      "id": "SPP-W2-03-OBJECT-LIGHT",
+      "status": "ready-for-research",
+      "title": "Migrate objectLight profile (cantrip template)"
+    },
+    {
+      "number": 5,
+      "id": "SPP-W2-04-THAUMATURGY-BOOMING-VOICE",
+      "status": "ready-for-research",
+      "title": "Migrate thaumaturgyBoomingVoice profile (cantrip template)"
+    },
+    {
+      "number": 6,
+      "id": "SPP-W2-05-BLUR-ATTACK-ROLL-DEFENSE",
+      "status": "ready-for-research",
+      "title": "Migrate blurAttackRollDefense profile (prepared template)"
+    },
+    {
+      "number": 7,
+      "id": "SPP-W2-06-SEE-INVISIBLE-OBSERVER-SIGHT",
+      "status": "ready-for-research",
+      "title": "Migrate seeInvisibleObserverSight profile (prepared template)"
+    },
+    {
+      "number": 8,
+      "id": "SPP-W2-07-PERSISTENT-ARMOR-EFFECT",
+      "status": "ready-for-research",
+      "title": "Migrate persistentArmorEffect profile (prepared template)"
+    },
+    {
+      "number": 9,
+      "id": "SPP-W2-08-MAGIC-WEAPON-ENHANCEMENT",
+      "status": "ready-for-research",
+      "title": "Migrate magicWeaponEnhancement profile"
+    },
+    {
+      "number": 10,
+      "id": "SPP-W2-09-WARDING-BOND",
+      "status": "ready-for-research",
+      "title": "Migrate wardingBond profile"
+    },
+    {
+      "number": 11,
+      "id": "SPP-W2-10-CREATURE-TYPE-PROTECTION",
+      "status": "ready-for-research",
+      "title": "Migrate creatureTypeProtection profile"
+    },
+    {
+      "number": 12,
+      "id": "SPP-W2-11-CONDITION-REMOVAL-PROTECTION",
+      "status": "ready-for-research",
+      "title": "Migrate conditionRemovalProtection profile (no focused MBT)"
+    },
+    {
+      "number": 13,
+      "id": "SPP-W2-12-DIRECT-CONDITION-REMOVAL",
+      "status": "ready-for-research",
+      "title": "Migrate directConditionRemoval profile (no focused MBT)"
+    },
+    {
+      "number": 14,
+      "id": "SPP-W2-13-COND-IMMUNITY-TURN-START-THP",
+      "status": "ready-for-research",
+      "title": "Migrate conditionImmunityAndTurnStartTemporaryHitPoints (no focused MBT)"
+    },
+    {
+      "number": 15,
+      "id": "SPP-W2-14-CREATURE-SIZE-CHANGE",
+      "status": "ready-for-research",
+      "title": "Migrate creatureSizeIncrease/Decrease combined profile"
+    },
+    {
+      "number": 16,
+      "id": "SPP-W2-15-LEVITATED-CREATURE",
+      "status": "ready-for-research",
+      "title": "Migrate levitatedCreature profile"
+    },
+    {
+      "number": 17,
+      "id": "SPP-W2-16-SCALAR-BUFF",
+      "status": "ready-for-research",
+      "title": "Migrate scalarBuff profile (multi-shape)"
+    },
+    {
+      "number": 18,
+      "id": "SPP-W3-01-DIRECT-HP-RESTORATION",
+      "status": "ready-for-research",
+      "title": "Migrate directHitPointRestoration profile (bonus-action)"
+    },
+    {
+      "number": 19,
+      "id": "SPP-W3-02-EXPEDITIOUS-RETREAT-DASH",
+      "status": "ready-for-research",
+      "title": "Migrate expeditiousRetreatDash profile (bonus-action, no focused MBT)"
+    },
+    {
+      "number": 20,
+      "id": "SPP-W3-03-JUMP-MOVEMENT-REPLACEMENT",
+      "status": "ready-for-research",
+      "title": "Migrate jumpMovementReplacement profile (bonus-action)"
+    },
+    {
+      "number": 21,
+      "id": "SPP-W3-04-FEATHER-FALL-MITIGATION",
+      "status": "ready-for-research",
+      "title": "Migrate featherFallMitigation profile (reaction-trigger)"
+    },
+    {
+      "number": 22,
+      "id": "SPP-W3-05-SELF-TELEPORT",
+      "status": "ready-for-research",
+      "title": "Migrate selfTeleport profile (bonus-action)"
+    },
+    {
+      "number": 23,
+      "id": "SPP-W3-06-SELF-TRANSFORMATION-MODE",
+      "status": "ready-for-research",
+      "title": "Migrate selfTransformationMode profile"
+    },
+    {
+      "number": 24,
+      "id": "SPP-W3-07-DRAGONS-BREATH-INITIAL",
+      "status": "ready-for-research",
+      "title": "Migrate dragonsBreathInitial profile"
+    },
+    {
+      "number": 25,
+      "id": "SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION",
+      "status": "ready-for-research",
+      "title": "Migrate sanctuaryTargetingInterdiction profile"
+    },
+    {
+      "number": 26,
+      "id": "SPP-W3-09-MARKED-DAMAGE-RIDER",
+      "status": "ready-for-research",
+      "title": "Migrate markedDamageRider profile (no focused MBT)"
+    },
+    {
+      "number": 27,
+      "id": "SPP-W3-10-WEAPON-DAMAGE-RIDER",
+      "status": "ready-for-research",
+      "title": "Migrate weaponDamageRider profile (no focused MBT)"
+    },
+    {
+      "number": 28,
+      "id": "SPP-W3-11-WEAPON-ATTACK-OVERRIDE",
+      "status": "ready-for-research",
+      "title": "Migrate weaponAttackOverride profile (no focused MBT)"
+    },
+    {
+      "number": 29,
+      "id": "SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK",
+      "status": "ready-for-research",
+      "title": "Migrate spellHostedWeaponAttack profile"
+    },
+    {
+      "number": 30,
+      "id": "SPP-W4-01-DIRECT-CONDITION",
+      "status": "ready-for-research",
+      "title": "Migrate directCondition profile"
+    },
+    {
+      "number": 31,
+      "id": "SPP-W4-02-SAVE-GATED-DAMAGE",
+      "status": "ready-for-research",
+      "title": "Migrate saveGatedDamage profile (anchor of save-gated family)"
+    },
+    {
+      "number": 32,
+      "id": "SPP-W4-03-SAVE-GATED-CONDITION",
+      "status": "ready-for-research",
+      "title": "Migrate saveGatedCondition profile"
+    },
+    {
+      "number": 33,
+      "id": "SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY",
+      "status": "ready-for-research",
+      "title": "Migrate saveGatedConditionImmunity profile"
+    },
+    {
+      "number": 34,
+      "id": "SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE",
+      "status": "ready-for-research",
+      "title": "Migrate saveGatedAttackRollAdvantage profile"
+    },
+    {
+      "number": 35,
+      "id": "SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE",
+      "status": "ready-for-research",
+      "title": "Migrate abilityD20TestRollModeSaveGate profile"
+    },
+    {
+      "number": 36,
+      "id": "SPP-W4-07-SLEEP-TARGET-ADMISSION",
+      "status": "ready-for-research",
+      "title": "Migrate sleepTargetAdmission profile"
+    },
+    {
+      "number": 37,
+      "id": "SPP-W4-08-HIDEOUS-LAUGHTER",
+      "status": "ready-for-research",
+      "title": "Migrate hideousLaughter profile (no focused MBT — uses integration)"
+    },
+    {
+      "number": 38,
+      "id": "SPP-W4-09-GREASE-GROUND-HAZARD",
+      "status": "ready-for-research",
+      "title": "Migrate greaseGroundHazard profile"
+    },
+    {
+      "number": 39,
+      "id": "SPP-W4-10-COMMAND",
+      "status": "ready-for-research",
+      "title": "Migrate command profile"
+    },
+    {
+      "number": 40,
+      "id": "SPP-W4-11-SAVE-GATED-HELPERS-SWEEP",
+      "status": "ready-for-research",
+      "title": "After save-gated family migrates: relocate shared helpers and trim spells-profiles-save-gates.ts"
+    },
+    {
+      "number": 41,
+      "id": "SPP-W5-01-COUNTERSPELL",
+      "status": "ready-for-research",
+      "title": "Migrate counterspell reaction profile (requires SPP-W1-01)"
+    },
+    {
+      "number": 42,
+      "id": "SPP-W5-02-SHIELD-REACTION",
+      "status": "ready-for-research",
+      "title": "Migrate shieldReaction reaction profile"
+    },
+    {
+      "number": 43,
+      "id": "SPP-W6-01-SPELL-ATTACK-DAMAGE",
+      "status": "ready-for-research",
+      "title": "Migrate spellAttackDamage profile (anchor of attack family)"
+    },
+    {
+      "number": 44,
+      "id": "SPP-W6-02-SPELL-ATTACK-SEQUENCE",
+      "status": "ready-for-research",
+      "title": "Migrate spellAttackSequence profile"
+    },
+    {
+      "number": 45,
+      "id": "SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE",
+      "status": "ready-for-research",
+      "title": "Migrate chainedSpellAttackDamage profile"
+    },
+    {
+      "number": 46,
+      "id": "SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE",
+      "status": "ready-for-research",
+      "title": "Migrate attackBurstSaveDamage profile"
+    },
+    {
+      "number": 47,
+      "id": "SPP-W6-05-REPEATED-DAMAGE-ALLOCATION",
+      "status": "ready-for-research",
+      "title": "Migrate repeatedDamageAllocation profile"
+    },
+    {
+      "number": 48,
+      "id": "SPP-W6-06-HELD-LIGHT-HURL",
+      "status": "ready-for-research",
+      "title": "Migrate heldLightHurl profile (paired with heldLight)"
+    },
+    {
+      "number": 49,
+      "id": "SPP-W7-01-AFTER-HIT-DAMAGE",
+      "status": "ready-for-research",
+      "title": "Migrate afterHitDamage rider profile (no focused MBT)"
+    },
+    {
+      "number": 50,
+      "id": "SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION",
+      "status": "ready-for-research",
+      "title": "Migrate afterHitDamageAndIllumination (Shining Smite)"
+    },
+    {
+      "number": 51,
+      "id": "SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION",
+      "status": "ready-for-research",
+      "title": "Migrate afterHitSaveGatedCondition (no focused MBT)"
+    },
+    {
+      "number": 52,
+      "id": "SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE",
+      "status": "ready-for-research",
+      "title": "Migrate afterHitTimedDamageAndSave (no focused MBT)"
+    },
+    {
+      "number": 53,
+      "id": "SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY",
+      "status": "ready-for-research",
+      "title": "Migrate spellCreatedHeldObject + Attack + ReEvoke (one file)"
+    },
+    {
+      "number": 54,
+      "id": "SPP-W8-02-SPIRITUAL-WEAPON-FAMILY",
+      "status": "ready-for-research",
+      "title": "Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack (one file)"
+    },
+    {
+      "number": 55,
+      "id": "SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY",
+      "status": "ready-for-research",
+      "title": "Migrate objectContactDamage + objectContactDamageRepeat (one file)"
+    },
+    {
+      "number": 56,
+      "id": "SPP-W8-04-DANCING-LIGHTS-FAMILY",
+      "status": "ready-for-research",
+      "title": "Migrate dancingLightsCombinedCast + Reposition + SeparateCast (one file)"
+    },
+    {
+      "number": 57,
+      "id": "SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION",
+      "status": "ready-for-research",
+      "title": "Migrate mirrorImageHitInterception profile"
+    },
+    {
+      "number": 58,
+      "id": "SPP-W8-06-FLAMING-SPHERE",
+      "status": "ready-for-research",
+      "title": "Migrate flamingSphere lifecycle profile"
+    },
+    {
+      "number": 59,
+      "id": "SPP-W8-07-MOONBEAM",
+      "status": "ready-for-research",
+      "title": "Migrate moonbeam movable-zone profile"
+    },
+    {
+      "number": 60,
+      "id": "SPP-W8-08-FOG-CLOUD-OBSCUREMENT",
+      "status": "ready-for-research",
+      "title": "Migrate fogCloudObscurement profile"
+    },
+    {
+      "number": 61,
+      "id": "SPP-W8-09-GUST-OF-WIND-LINE",
+      "status": "ready-for-research",
+      "title": "Migrate gustOfWindLine profile"
+    },
+    {
+      "number": 62,
+      "id": "SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD",
+      "status": "ready-for-research",
+      "title": "Migrate spikeGrowthMovementHazard profile"
+    },
+    {
+      "number": 63,
+      "id": "SPP-W8-11-WEB-RESTRAINT-HAZARD",
+      "status": "ready-for-research",
+      "title": "Migrate webRestraintHazard profile"
+    },
+    {
+      "number": 64,
+      "id": "SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN",
+      "status": "ready-for-research",
+      "title": "Migrate magicalDarknessPointOrigin profile"
+    },
+    {
+      "number": 65,
+      "id": "SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION",
+      "status": "ready-for-research",
+      "title": "Migrate antimagicFieldOngoingSpellSuppression profile"
+    },
+    {
+      "number": 66,
+      "id": "SPP-W8-14-ONGOING-SPELL-END",
+      "status": "ready-for-research",
+      "title": "Migrate ongoingSpellEnd profile"
+    },
+    {
+      "number": 67,
+      "id": "SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS",
+      "status": "blocked",
+      "title": "Export shared invocation Schema building-blocks from battle-codecs.ts"
+    },
+    {
+      "number": 68,
+      "id": "SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD",
+      "status": "blocked",
+      "title": "Add invocationSchema field to SpellProcedureProfile"
+    },
+    {
+      "number": 69,
+      "id": "SPP-W9-03-MIGRATE-CODEC-BRANCHES",
+      "status": "blocked",
+      "title": "Move per-profile Schema branches into each profile file"
+    },
+    {
+      "number": 70,
+      "id": "SPP-W9-04-DERIVE-METAMAGIC-TABLE",
+      "status": "blocked",
+      "title": "Derive metamagic compatibility table from registry; delete the hand-maintained one"
+    },
+    {
+      "number": 71,
+      "id": "SPP-W9-05-INVERT-TARGET-LIST-PREDICATE",
+      "status": "blocked",
+      "title": "Invert isTargetListSpellInvocation to iterate registry"
+    },
+    {
+      "number": 72,
+      "id": "SPP-W9-06-INVERT-READIED-SPELL-LIST",
+      "status": "blocked",
+      "title": "Invert readiedSpellAct procedure list to iterate registry"
+    },
+    {
+      "number": 73,
+      "id": "SPP-W9-07-INVERT-WILLING-TARGET-LISTS",
+      "status": "blocked",
+      "title": "Invert KNOWN_WILLING_TARGET_* consultations to iterate registry"
+    },
+    {
+      "number": 74,
+      "id": "SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS",
+      "status": "blocked",
+      "title": "Invert spells-resolve-fill-set.ts negative lists"
+    },
+    {
+      "number": 75,
+      "id": "SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH",
+      "status": "blocked",
+      "title": "Replace spells-resolve.ts procedure switch with registry iteration"
+    },
+    {
+      "number": 76,
+      "id": "SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH",
+      "status": "blocked",
+      "title": "Replace spells-discovery.ts procedure switch (cast act + summary) with registry iteration"
+    },
+    {
+      "number": 77,
+      "id": "SPP-W9-11-CONSOLIDATE-INVOCATION-REF",
+      "status": "blocked",
+      "title": "Replace spells-invocation-ref.ts Match cascade with registry iteration"
+    },
+    {
+      "number": 78,
+      "id": "SPP-W10-01-FULL-SUITE-PARITY-RUN",
+      "status": "blocked",
+      "title": "Run full MBT suite; confirm parity preserved end-to-end"
+    },
+    {
+      "number": 79,
+      "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
+      "status": "blocked",
+      "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
+    },
+    {
+      "number": 80,
+      "id": "SPP-W10-03-DOCS-AND-ADR",
+      "status": "blocked",
+      "title": "Add ADR documenting the registry; update README; close lane"
+    }
   ]
 }
 -->
@@ -368,7 +759,7 @@ name; for entries marked "no focused MBT", verification falls back to
 
 ### Task 2 - SPP-W2-01-MAKE-STABLE - Migrate makeStable profile
 
-Status: `blocked` until SPP-W1-01 lands (optional dependency — makeStable
+Status: `done` until SPP-W1-01 lands (optional dependency — makeStable
 is cantrip-action-time and could go without W1, but ordering avoids
 churn).
 Focused MBT: `healing-stabilization-selected-identity.mbt.test.ts`.
