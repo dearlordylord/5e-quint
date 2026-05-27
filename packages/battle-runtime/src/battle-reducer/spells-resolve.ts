@@ -107,6 +107,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
@@ -141,7 +142,6 @@ import {
   spellObjectAttackRollHole,
   spellObjectIgnitionFact,
   spellTargetHole,
-  spellTargetListHole,
   spellTargetIsLegal,
   supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
@@ -283,7 +283,6 @@ import {
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  combatantWithSanctuaryWard,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
@@ -2888,7 +2887,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    return resolveSanctuaryTargetingInterdictionSpellAct({
+    return sanctuaryTargetingInterdictionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -3043,62 +3042,5 @@ export function resolveBonusActionDashSpellAct(
     actorId: subject.actorId,
     invocation,
     fillSet,
-  });
-}
-
-function resolveSanctuaryTargetingInterdictionSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "sanctuaryTargetingInterdiction" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  const targetList = input.fillSet.targetList;
-  if (targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  if (targetList.targetIds.length !== 1) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sanctuary must target exactly one creature.",
-    );
-  }
-  const targetId = targetList.targetIds[0]!;
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    input.input.state,
-    input.actorId,
-  );
-  const target = spellCastState.combatants.get(targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      spellCastState,
-      input.actorId,
-      targetId,
-      input.invocation,
-      targetList.spatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sanctuary target must be a combatant within range.",
-    );
-  }
-  const combatants = new Map(spellCastState.combatants).set(
-    targetId,
-    combatantWithSanctuaryWard(target, input.invocation),
-  );
-  return spendSpellCastResources({
-    state: { ...spellCastState, combatants },
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    skipTargetActionSpellCastEarlyEnd: true,
   });
 }

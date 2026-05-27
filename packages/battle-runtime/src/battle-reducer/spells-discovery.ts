@@ -86,6 +86,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
@@ -835,22 +836,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-        const targetHole = spellTargetListHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [targetHole],
-              },
-            ];
+        return sanctuaryTargetingInterdictionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "directConditionRemoval") {
         return directConditionRemovalProfile.discoverCastAct(
@@ -1382,7 +1372,7 @@ export function spellInvocationCastSummary(
     return dragonsBreathInitialProfile.castSummary(invocation);
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return sanctuaryTargetingInterdictionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "directCondition") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

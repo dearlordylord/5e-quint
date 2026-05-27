@@ -1,12 +1,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
@@ -16,108 +12,10 @@ import type {
   BattleSanctuaryInterdictionOutcomeHole,
   BattleState,
   SanctuaryTargetingInterdictionSpellInvocation,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
-import { sameStringSet } from "./spells-profile-shared.ts";
-
-export function supportedPreparedSanctuaryTargetingInterdictionSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = sanctuaryTargetingInterdictionProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "sanctuaryTargetingInterdiction",
-            spell,
-            actionCost: "bonusAction",
-            targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-            ...projection,
-          },
-        ],
-  );
-}
-
-function sanctuaryTargetingInterdictionProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<
-  SanctuaryTargetingInterdictionSpellInvocation,
-  "activeEffect" | "rangeFeet"
-> | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 30 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const attachment = spell.mechanics.attachment;
-  const targetSelection =
-    attachment.kind === "hole" && attachment.value.kind === "target"
-      ? attachment.value.selection
-      : null;
-  const operation = spell.mechanics.operations[0];
-  const earlyEnd =
-    spell.mechanics.duration.kind === "timed"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  if (
-    targetSelection?.mode !== "one" ||
-    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
-    operation?.trigger.kind !== "on_attached_targeted" ||
-    operation.trigger.excludes !== "area_of_effect" ||
-    !sameStringSet(operation.trigger.targeting, [
-      "attack_roll",
-      "damaging_spell",
-    ]) ||
-    operation.effect.kind !== "save_gate" ||
-    operation.effect.ability !== "wis" ||
-    operation.effect.dc.kind !== "caster_spell_save_dc" ||
-    operation.effect.onSuccess.kind !== "none" ||
-    operation.effect.onFail.kind !== "choose_new_target_or_lose" ||
-    operation.effect.onFail.subject !== "triggering_attack_or_spell" ||
-    !sameStringSet(
-      earlyEnd.map((end) => end.kind),
-      ["target_makes_attack_roll", "target_casts_spell", "target_deals_damage"],
-    )
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  return Either.isLeft(durationTicks)
-    ? null
-    : {
-        rangeFeet: movementFeet(30),
-        activeEffect: {
-          kind: "sanctuaryWard",
-          sourceSpellId: spell.id,
-          sourceCombatantId: actorId,
-          save: { ability: "wis", dc: operation.effect.dc },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
-        },
-      };
-}
 
 export type SanctuaryTargetingInterdictionCheck =
   | { readonly tag: "notWarded" }

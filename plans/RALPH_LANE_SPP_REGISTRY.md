@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate sanctuaryTargetingInterdiction profile"
     },
     {
@@ -912,7 +912,7 @@ Focused MBT: `dragons-breath-initial-effect.mbt.test.ts`.
 
 ### Task 25 - SPP-W3-08-SANCTUARY-TARGETING-INTERDICTION - Migrate sanctuaryTargetingInterdiction
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `sanctuary-selected-identity.mbt.test.ts`.
 
