@@ -134,6 +134,7 @@ import {
   afterHitSaveGatedConditionProfile,
   afterHitSaveGatedConditionSavingThrowOutcomeHole,
 } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
+import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
@@ -167,7 +168,6 @@ export {
 import { expendSpellSlot } from "./spell-effects.ts";
 
 import {
-  applyAfterHitTimedDamageAndSaveSpellEffect,
   battleLightEmitters,
   battleObscurementZones,
   applySpellDamage,
@@ -212,7 +212,6 @@ import {
   spellFillSetContainsOnlySpellCastReactionFacts,
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
@@ -3040,86 +3039,26 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       fillSet: fillValidation.fillSet,
     });
   }
-  const spellCastFrame = spellCastReactionFrame({
-    casterId: input.subject.casterId,
-    invocation,
-    targetIds: [target.combatantId],
-    reactionSpellTargetFacts: fillValidation.fillSet.reactionSpellTargetFacts,
-    castingResource: { kind: "bonusAction" },
-    continuation: {
-      kind: "replay",
-      subject: input.subject,
-      fills: input.fills,
-    },
-  });
-  const spellCastReactionWindow =
-    maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
-      input.state,
-      spellCastFrame,
-      input.suppressedReactionTrigger,
-    );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (invocation.procedure === "afterHitTimedDamageAndSave") {
+    if (fillValidation.tag !== "validNonSave") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack-hit timed damage and save spell fills were not parsed.",
+      );
+    }
+    return afterHitTimedDamageAndSaveProfile.resolve({
+      input: { ...input, frame: attackHitFrame, target },
+      actorId: input.subject.casterId,
+      invocation,
+      fillSet: fillValidation.fillSet,
+    });
   }
-  const resourced = spendSpellCastResources({
-    state: input.state,
-    actorId: input.subject.casterId,
-    invocation,
-    errorState: input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const damageAddition: AttackSpellDamageAddition = {
-    kind: "attackSpellDamageAddition",
-    sourceSpellId: invocation.spell.id,
-    sourceCombatantId: input.subject.casterId,
-    damage: {
-      expr: invocation.immediateDamage.expr,
-      damageType: invocation.immediateDamage.damageType,
-    },
-  };
-  const nextFrame = {
-    ...frame,
-    continuation: {
-      ...frame.continuation,
-      attackDamageAdditions: [
-        ...(frame.continuation.attackDamageAdditions ?? []),
-        damageAddition,
-      ],
-    },
-  };
-  const effected =
-    invocation.procedure === "afterHitTimedDamageAndSave"
-      ? applyAfterHitTimedDamageAndSaveSpellEffect(
-          resourced.state,
-          target.combatantId,
-          invocation,
-        )
-      : resourced.state;
-  const nextState = {
-    ...effected,
-    interruptStack: [
-      ...effected.interruptStack.slice(0, -1),
-      reactionInterruptFrame(nextFrame),
-    ],
-  };
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: nextState,
-    subject: input.subject,
-    casterId: input.subject.casterId,
-    spellId: invocation.spell.id,
-    targetIds: [target.combatantId],
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
-  });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return invalidResult(
+    input.state,
+    "unsupportedActOption",
+    "Attack-hit Bonus Action spell command requires a supported prepared after-hit spell.",
+  );
 }
 
 export function maybeOpenPostCastReadySpellCastWindow(input: {

@@ -2533,37 +2533,6 @@ function applyGreaseProneToCombatants(
   return combatants;
 }
 
-export function applyAfterHitTimedDamageAndSaveSpellEffect(
-  state: BattleState,
-  targetId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "afterHitTimedDamageAndSave" }
-  >,
-): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
-  const replacing = target.activeEffects.filter(
-    (effect) =>
-      effect.kind === "spellTurnStartDamageAndSave" &&
-      effect.sourceSpellId === invocation.spell.id &&
-      effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
-  );
-  const activeEffects = [
-    ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-    invocation.activeEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
-}
-
 export function applyFailedSaveAttackRollAdvantageEffects(
   state: BattleState,
   actorId: CombatantId,

@@ -313,7 +313,7 @@
     {
       "number": 52,
       "id": "SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate afterHitTimedDamageAndSave (no focused MBT)"
     },
     {
@@ -1110,7 +1110,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 52 - SPP-W7-04-AFTER-HIT-TIMED-DAMAGE-AND-SAVE - Migrate afterHitTimedDamageAndSave
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

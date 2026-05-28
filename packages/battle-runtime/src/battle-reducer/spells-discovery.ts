@@ -103,6 +103,7 @@ import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaum
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
+import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
@@ -723,10 +724,16 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "afterHitTimedDamageAndSave") {
+        return afterHitTimedDamageAndSaveProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
         invocation.procedure === "afterHitDamage" ||
-        invocation.procedure === "afterHitSaveGatedCondition" ||
-        invocation.procedure === "afterHitTimedDamageAndSave"
+        invocation.procedure === "afterHitSaveGatedCondition"
       ) {
         return [];
       }
@@ -1171,7 +1178,7 @@ export function spellInvocationCastSummary(
     return afterHitSaveGatedConditionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+    return afterHitTimedDamageAndSaveProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitDamageAndIllumination") {
     return afterHitDamageAndIlluminationProfile.castSummary(invocation);

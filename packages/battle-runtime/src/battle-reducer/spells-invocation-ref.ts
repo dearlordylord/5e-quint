@@ -14,6 +14,7 @@ import {
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
+import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -78,12 +79,7 @@ export function supportedSpellInvocationRef(
     return afterHitSaveGatedConditionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "afterHitTimedDamageAndSave",
-    };
+    return afterHitTimedDamageAndSaveProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitDamageAndIllumination") {
     return afterHitDamageAndIlluminationProfile.invocationRef(invocation);
