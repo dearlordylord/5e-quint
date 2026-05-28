@@ -331,7 +331,7 @@
     {
       "number": 55,
       "id": "SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate objectContactDamage + objectContactDamageRepeat (one file)"
     },
     {
@@ -1138,7 +1138,7 @@ Focused MBT: `battle-runtime.mbt.test.ts` and
 
 ### Task 55 - SPP-W8-03-OBJECT-CONTACT-DAMAGE-FAMILY - Migrate objectContactDamage + objectContactDamageRepeat
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts` and
 `heat-metal-object-contact.mbt.test.ts`.

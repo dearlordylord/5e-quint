@@ -3,10 +3,7 @@
 
 import { Match } from "effect";
 import { spellId } from "../identity.ts";
-import {
-  type SpellInvocationRef,
-  spellEffectInvocationRef,
-} from "../battle-subjects.ts";
+import type { SpellInvocationRef } from "../battle-subjects.ts";
 import {
   isPreparedDamageSpellSource,
   type SupportedSpellInvocation,
@@ -35,6 +32,10 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import {
+  objectContactDamageProfile,
+  objectContactDamageRepeatProfile,
+} from "./spell-procedure-profiles/object-contact-damage.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
@@ -187,19 +188,10 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "objectContactDamage") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "objectContactDamage",
-    };
+    return objectContactDamageProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "objectContactDamageRepeat") {
-    return spellEffectInvocationRef(
-      invocation.spell.id,
-      invocation.activeEffect.sourceCombatantId,
-      "objectContactDamageRepeat",
-    );
+    return objectContactDamageRepeatProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spiritualWeaponRepeatAttack") {
     return spiritualWeaponRepeatAttackProfile.invocationRef(invocation);

@@ -40,7 +40,6 @@ import { supportedSpellActs } from "./spells-profiles.ts";
 import {
   carefulSpellProtectedTargetsHole,
   heightenedSpellTargetChoiceHole,
-  spellObjectTargetHole,
   spellAreaChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowTargeting,
@@ -51,7 +50,6 @@ import {
 } from "./spells-holes-fills.ts";
 import {
   spellDancingLightsPlacementHole,
-  spellObjectContactTargetsHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
@@ -80,6 +78,10 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import {
+  objectContactDamageProfile,
+  objectContactDamageRepeatProfile,
+} from "./spell-procedure-profiles/object-contact-damage.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
@@ -301,42 +303,18 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "objectContactDamage") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [spellObjectTargetHole(invocation)],
-          },
-        ];
+        return objectContactDamageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "objectContactDamageRepeat") {
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: `${invocation.spell.name} damage`,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [
-              spellObjectContactTargetsHole({
-                state,
-                sourceCombatantId: invocation.activeEffect.sourceCombatantId,
-                objectId: invocation.activeEffect.objectId,
-                invocation,
-                requiresObjectWithinRange: true,
-              }),
-            ],
-          },
-        ];
+        return objectContactDamageRepeatProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "spiritualWeaponRepeatAttack") {
         return spiritualWeaponRepeatAttackProfile.discoverCastAct(
@@ -1036,10 +1014,10 @@ export function spellInvocationCastSummary(
     return spellCreatedHeldObjectReEvokeProfile.castSummary(invocation);
   }
   if (invocation.procedure === "objectContactDamage") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return objectContactDamageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "objectContactDamageRepeat") {
-    return `Use a Bonus Action to repeat ${invocation.spell.name} contact damage.`;
+    return objectContactDamageRepeatProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spiritualWeaponRepeatAttack") {
     return spiritualWeaponRepeatAttackProfile.castSummary(invocation);

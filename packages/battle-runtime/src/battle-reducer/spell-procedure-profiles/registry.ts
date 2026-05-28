@@ -38,6 +38,10 @@ import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
+import {
+  objectContactDamageProfile,
+  objectContactDamageRepeatProfile,
+} from "./object-contact-damage.ts";
 import { objectLightProfile } from "./object-light.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./repeated-damage-allocation.ts";
@@ -127,6 +131,8 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   spellCreatedHeldObjectReEvokeProfile,
   spiritualWeaponAttackProxyProfile,
   spiritualWeaponRepeatAttackProfile,
+  objectContactDamageProfile,
+  objectContactDamageRepeatProfile,
   chainedSpellAttackDamageProfile,
   attackBurstSaveDamageProfile,
   repeatedDamageAllocationProfile,

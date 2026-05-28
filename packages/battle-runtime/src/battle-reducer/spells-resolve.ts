@@ -111,6 +111,10 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import {
+  objectContactDamageProfile,
+  objectContactDamageRepeatProfile,
+} from "./spell-procedure-profiles/object-contact-damage.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -203,10 +207,6 @@ import {
   resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
-import {
-  resolveObjectContactDamageRepeatSpellAct,
-  resolveObjectContactDamageSpellAct,
-} from "./spells-resolve-object-contact-damage.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
@@ -847,7 +847,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "objectContactDamage") {
-    return resolveObjectContactDamageSpellAct({
+    return objectContactDamageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2849,7 +2849,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "objectContactDamageRepeat") {
-    return resolveObjectContactDamageRepeatSpellAct({
+    return objectContactDamageRepeatProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
