@@ -86,6 +86,7 @@ import {
   objectContactDamageRepeatProfile,
 } from "./spell-procedure-profiles/object-contact-damage.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import { ongoingSpellEndProfile } from "./spell-procedure-profiles/ongoing-spell-end.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -126,7 +127,6 @@ import {
   spellCastCanTriggerCounterspell,
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
-import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
@@ -455,21 +455,11 @@ export function discoverSupportedSpellInvocations(
         return objectLightProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "ongoingSpellEnd") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [
-              ongoingSpellTargetChoiceHole(state, actorId, invocation),
-            ],
-          },
-        ];
+        return ongoingSpellEndProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "weaponDamageRider") {
         return weaponDamageRiderProfile.discoverCastAct(
@@ -791,7 +781,7 @@ export function spellInvocationCastSummary(
     return objectLightProfile.castSummary(invocation);
   }
   if (invocation.procedure === "ongoingSpellEnd") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return ongoingSpellEndProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
     return spellCreatedHeldObjectProfile.castSummary(invocation);

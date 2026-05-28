@@ -49,6 +49,7 @@ import {
   objectContactDamageRepeatProfile,
 } from "./spell-procedure-profiles/object-contact-damage.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import { ongoingSpellEndProfile } from "./spell-procedure-profiles/ongoing-spell-end.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
@@ -224,12 +225,7 @@ export function supportedSpellInvocationRef(
     return objectLightProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "ongoingSpellEnd") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "ongoingSpellEnd",
-    };
+    return ongoingSpellEndProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "dancingLightsSeparateCast") {
     return dancingLightsSeparateCastProfile.invocationRef(invocation);

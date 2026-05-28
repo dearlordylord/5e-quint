@@ -397,13 +397,13 @@
     {
       "number": 66,
       "id": "SPP-W8-14-ONGOING-SPELL-END",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate ongoingSpellEnd profile"
     },
     {
       "number": 67,
       "id": "SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Export shared invocation Schema building-blocks from battle-codecs.ts"
     },
     {
@@ -421,7 +421,7 @@
     {
       "number": 70,
       "id": "SPP-W9-04-DERIVE-METAMAGIC-TABLE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Derive metamagic compatibility table from registry; delete the hand-maintained one"
     },
     {
@@ -1208,7 +1208,7 @@ admit/resolve/applyEffect specific to this procedure move.
 
 ### Task 66 - SPP-W8-14-ONGOING-SPELL-END - Migrate ongoingSpellEnd
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `dispel-magic-selected-identity.mbt.test.ts` and
 `dispel-magic-ongoing-spell-ending.mbt.test.ts`.
@@ -1223,7 +1223,7 @@ selected-identity MBTs is reasonable here).
 
 ### Task 67 - SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS - Export Schema building-blocks from battle-codecs.ts
 
-Status: `done` on all per-profile tasks complete.
+Status: `ready-for-research`
 
 Input: `battle-codecs.ts:602` (`ClassCantripSpellAccessSchema`),
 `battle-codecs.ts:620` (`NoSpellInvocationResourceSchema`),
@@ -1270,7 +1270,7 @@ MBT subset — at least the 5 selected-identity tests).
 
 ### Task 70 - SPP-W9-04-DERIVE-METAMAGIC-TABLE - Derive metamagic compatibility table from registry
 
-Status: `blocked` on all per-profile tasks complete.
+Status: `ready-for-research`
 
 Input: `metamagic.ts` METAMAGIC_COMPATIBILITY table.
 

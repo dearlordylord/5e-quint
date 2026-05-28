@@ -55,6 +55,7 @@ import {
   objectContactDamageRepeatProfile,
 } from "./object-contact-damage.ts";
 import { objectLightProfile } from "./object-light.ts";
+import { ongoingSpellEndProfile } from "./ongoing-spell-end.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
@@ -156,6 +157,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   spiritualWeaponRepeatAttackProfile,
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
+  ongoingSpellEndProfile,
   chainedSpellAttackDamageProfile,
   attackBurstSaveDamageProfile,
   repeatedDamageAllocationProfile,

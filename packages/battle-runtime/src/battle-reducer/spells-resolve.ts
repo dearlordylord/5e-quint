@@ -127,6 +127,7 @@ import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
 } from "./spell-procedure-profiles/object-contact-damage.ts";
+import { ongoingSpellEndProfile } from "./spell-procedure-profiles/ongoing-spell-end.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -211,7 +212,6 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
-import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
@@ -225,7 +225,6 @@ export {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
-export { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -681,7 +680,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "ongoingSpellEnd") {
-    return resolveOngoingSpellEndSpellAct({
+    return ongoingSpellEndProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

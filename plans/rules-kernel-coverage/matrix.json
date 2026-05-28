@@ -710,7 +710,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

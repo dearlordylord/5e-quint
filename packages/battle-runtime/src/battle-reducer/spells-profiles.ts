@@ -32,22 +32,13 @@ import {
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
 
-import {
-  sameStringSet,
-  supportedDamageAmountExpr,
-} from "./spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "./spells-profile-shared.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 export * from "./spells-profiles-attack-damage.ts";
-
-const DISPEL_MAGIC_TARGET_KINDS = [
-  "creature",
-  "object",
-  "magical_effect",
-] as const;
 
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
@@ -67,6 +58,7 @@ import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
 } from "./spell-procedure-profiles/object-contact-damage.ts";
+import { ongoingSpellEndProfile } from "./spell-procedure-profiles/ongoing-spell-end.ts";
 import {
   admitPersistentArmorEffectInvocationSpellAccess,
   persistentArmorEffectProfile,
@@ -159,11 +151,6 @@ export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-
 export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 export { supportedPreparedCommandProfile } from "./spell-procedure-profiles/command.ts";
-
-type ActivationPhase = Extract<
-  SpellRecord["mechanics"],
-  { readonly family: "activation" }
->["phases"][number];
 
 export function supportedSpellActs(
   actor: BattleCreatureState,
@@ -302,10 +289,7 @@ export function supportedSpellActs(
       objectLightProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedOngoingSpellEndSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      ongoingSpellEndProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       spellCreatedHeldObjectProfile.admit(spell, admissionContext),
@@ -437,113 +421,6 @@ export function supportedSpellActs(
       makeStableProfile.admit(spell, admissionContext),
     ),
   ];
-}
-
-export function supportedPreparedOngoingSpellEndSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const range =
-    spell.mechanics.family === "activation" ? spell.mechanics.range : null;
-  const rangeFeet =
-    range?.kind === "point" && typeof range.feet === "number"
-      ? range.feet
-      : null;
-  if (
-    spell.mechanics.family !== "activation" ||
-    range === null ||
-    spell.mechanics.level !== 3 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== 120 ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.components.v !== true ||
-    spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
-  ) {
-    return [];
-  }
-  const directPhase = spell.mechanics.phases[0];
-  const abilityCheckPhase = spell.mechanics.phases[1];
-  if (
-    spell.mechanics.phases.length !== 2 ||
-    directPhase === undefined ||
-    abilityCheckPhase === undefined ||
-    !isOngoingSpellEndDirectPhase(directPhase) ||
-    !isOngoingSpellEndAbilityCheckPhase(abilityCheckPhase) ||
-    ongoingSpellEndTargetHoleId(directPhase) !==
-      ongoingSpellEndTargetHoleId(abilityCheckPhase)
-  ) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "ongoingSpellEnd",
-            spell,
-            actionCost: "magicAction",
-            rangeFeet: movementFeet(rangeFeet),
-          },
-        ],
-  );
-}
-
-function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "direct" &&
-    isOngoingSpellEndTargetAttachment(phase.attachment) &&
-    phase.effects?.length === 1 &&
-    phase.effects[0]?.kind === "end_ongoing_spells" &&
-    phase.effects[0]?.maxSpellLevel === "caster_slot_level"
-  );
-}
-
-function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "ability_check_gate" &&
-    String(phase.ability) === "caster_spellcasting_ability" &&
-    phase.dc === 10 &&
-    phase.autoSuccessIfCasterSlotGte === "target_spell_level" &&
-    phase.onPass.kind === "end_ongoing_spells" &&
-    phase.onPass.maxSpellLevel === "contested_spell_level" &&
-    phase.onFail === undefined &&
-    isOngoingSpellEndTargetAttachment(phase.attachment)
-  );
-}
-
-function isOngoingSpellEndTargetAttachment(
-  attachment: Extract<
-    ActivationPhase,
-    { readonly attachment: unknown }
-  >["attachment"],
-): boolean {
-  const targetKinds =
-    attachment.kind === "hole" &&
-    attachment.value.kind === "target" &&
-    "targetKinds" in attachment.value.selection
-      ? attachment.value.selection.targetKinds
-      : undefined;
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "target" &&
-    attachment.value.selection.mode === "one" &&
-    targetKinds !== undefined &&
-    sameStringSet(targetKinds, DISPEL_MAGIC_TARGET_KINDS)
-  );
-}
-
-function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
-  if (phase.kind !== "direct" && phase.kind !== "ability_check_gate") {
-    return null;
-  }
-  const attachment = phase.attachment;
-  return attachment.kind === "hole" &&
-    isOngoingSpellEndTargetAttachment(attachment)
-    ? attachment.holeId
-    : null;
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(
