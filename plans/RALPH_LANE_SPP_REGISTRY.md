@@ -217,7 +217,7 @@
     {
       "number": 36,
       "id": "SPP-W4-07-SLEEP-TARGET-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate sleepTargetAdmission profile"
     },
     {
@@ -990,7 +990,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 36 - SPP-W4-07-SLEEP-TARGET-ADMISSION - Migrate sleepTargetAdmission
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `battle-runtime.mbt.test.ts` (integration only).
 

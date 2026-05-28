@@ -118,6 +118,7 @@ import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-da
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -278,7 +279,6 @@ import {
   resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveHideousLaughterSpellAct,
-  resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -741,7 +741,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "sleepTargetAdmission") {
-    return resolveSleepTargetAdmissionSpellAct({
+    return sleepTargetAdmissionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

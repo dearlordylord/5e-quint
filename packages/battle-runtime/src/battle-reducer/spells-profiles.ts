@@ -69,7 +69,6 @@ import {
   supportedPreparedCommandProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedHideousLaughterProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -171,6 +170,7 @@ import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
@@ -212,7 +212,6 @@ export {
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedHideousLaughterProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
   supportedSaveGateDamageProfile,
@@ -220,6 +219,7 @@ export {
   supportedSpellAttackKind,
   supportedSpellPostDamageRiders,
 } from "./spells-profiles-save-gates.ts";
+export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 
 type ActivationPhase = Extract<
   SpellRecord["mechanics"],
@@ -300,10 +300,7 @@ export function supportedSpellActs(
       saveGatedConditionImmunityProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSleepTargetAdmissionProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      sleepTargetAdmissionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedHideousLaughterProfile(spell, spellcasting.spellSlots),
