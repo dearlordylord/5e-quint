@@ -7,8 +7,8 @@
 //   - admit()                         - was
 //                                       supportedCantripHeldLightSpellProfile
 //                                       in spells-profiles.ts
-//   - isProduceFlameOngoingEffectSpell - stays exported here for the paired
-//                                       heldLightHurl profile until it migrates
+//   - isProduceFlameOngoingEffectSpell - shared shape parser for the paired
+//                                       heldLightHurl profile
 //   - discoverCastAct()               - was the heldLight branch in
 //                                       spells-discovery.ts:discoverBattleActs
 //   - castSummary()                   - was the heldLight branch in
@@ -21,8 +21,8 @@
 //                                       spells-active-effects.ts
 //
 // What stays in shared infrastructure:
-//   - heldLightHurl remains in spells-profiles.ts and spells-resolve.ts until
-//     its paired migration task.
+//   - heldLightHurl has its own paired profile; the shared attack/damage
+//     resolver still owns the hurl damage lifecycle.
 //   - The central codec branch in battle-codecs.ts still owns the Schema
 //     literal for this invocation - see the TODO in profile.ts.
 

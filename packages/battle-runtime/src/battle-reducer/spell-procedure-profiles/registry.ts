@@ -26,6 +26,7 @@ import { dragonsBreathInitialProfile } from "./dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
+import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
@@ -63,6 +64,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   rollModifierProfile,
   makeStableProfile,
   heldLightProfile,
+  heldLightHurlProfile,
   objectLightProfile,
   thaumaturgyBoomingVoiceProfile,
   blurAttackRollDefenseProfile,

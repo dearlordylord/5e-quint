@@ -289,7 +289,7 @@
     {
       "number": 48,
       "id": "SPP-W6-06-HELD-LIGHT-HURL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate heldLightHurl profile (paired with heldLight)"
     },
     {
@@ -1080,7 +1080,7 @@ procedure; the resolver wraps an inner spell-attack flow.
 
 ### Task 48 - SPP-W6-06-HELD-LIGHT-HURL - Migrate heldLightHurl
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 Paired with heldLight; the projection helper may be shared.

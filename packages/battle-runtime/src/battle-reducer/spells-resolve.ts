@@ -104,6 +104,7 @@ import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -309,7 +310,7 @@ type SpellAttackDamageInvocation = Extract<
 
 type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
-  readonly useSharedDamageResolverForSpellAttackDamage?: true;
+  readonly useSharedSpellAttackDamageResolver?: true;
 };
 
 function isSupportedDamageSpellInvocation(
@@ -395,12 +396,13 @@ export function resolveSpellAct(
 
 export function resolveSpellAttackDamageAct(
   input: SpellProcedureProfileResolveInput<
-    SpellAttackDamageInvocation,
+    | SpellAttackDamageInvocation
+    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>,
     ActionSpellBattleResolutionInput
   >,
 ): BattleResolutionResult {
   return resolveSpellActInternal(input.input, {
-    useSharedDamageResolverForSpellAttackDamage: true,
+    useSharedSpellAttackDamageResolver: true,
   });
 }
 
@@ -1020,9 +1022,20 @@ function resolveSpellActInternal(
   }
   if (
     invocation.procedure === "spellAttackDamage" &&
-    options.useSharedDamageResolverForSpellAttackDamage !== true
+    options.useSharedSpellAttackDamageResolver !== true
   ) {
     return spellAttackDamageProfile.resolve({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "heldLightHurl" &&
+    options.useSharedSpellAttackDamageResolver !== true
+  ) {
+    return heldLightHurlProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

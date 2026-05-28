@@ -75,6 +75,7 @@ import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -831,29 +832,8 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
-      if (
-        invocation.procedure === "heldLightHurl" &&
-        invocation.targeting.kind === "singleCreatureOrObject"
-      ) {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        const initialHoles = [
-          ...(targetHole.choices.length === 0 ? [] : [targetHole]),
-          spellObjectTargetHole(invocation),
-        ];
-        const castActs = [
-          {
-            subject: {
-              tag: spellSubjectTagForInvocation(invocation),
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles,
-          },
-        ];
-        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      if (invocation.procedure === "heldLightHurl") {
+        return heldLightHurlProfile.discoverCastAct(state, actorId, invocation);
       }
       const targetHole = spellTargetHole(state, actorId, invocation);
       const turnResourceAvailableForActionCast =
@@ -1066,6 +1046,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "heldLight") {
     return heldLightProfile.castSummary(invocation);
   }
+  if (invocation.procedure === "heldLightHurl") {
+    return heldLightHurlProfile.castSummary(invocation);
+  }
   if (
     invocation.procedure === "dancingLightsSeparateCast" ||
     invocation.procedure === "dancingLightsCombinedCast"
@@ -1080,9 +1063,6 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "ongoingSpellEnd") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-  }
-  if (invocation.procedure === "heldLightHurl") {
-    return `Take a Magic action to hurl ${invocation.spell.name}.`;
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

@@ -128,10 +128,8 @@ import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profile
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
-import {
-  heldLightProfile,
-  isProduceFlameOngoingEffectSpell,
-} from "./spell-procedure-profiles/held-light.ts";
+import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
@@ -231,10 +229,6 @@ export function supportedSpellActs(
   if (spellcasting === undefined || !spellcasting.canCastSpells) {
     return [];
   }
-  const characterLevel = actor.origin.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
   const cantrips = effectiveCharacterBattleCantrips(spellcasting);
   const admissionContext = spellAdmissionContextFor(actor, state);
@@ -502,12 +496,7 @@ export function supportedSpellActs(
       objectLightProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripHeldLightHurlSpellProfile(
-        spell,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-        characterLevel,
-      ),
+      heldLightHurlProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       spellHostedWeaponAttackProfile.admit(spell, admissionContext),
@@ -2270,68 +2259,6 @@ function isFlamingSphereSaveEffect(
     amount.perLevel.dice === 1 &&
     amount.perLevel.dieSize === 6
   );
-}
-
-export function supportedCantripHeldLightHurlSpellProfile(
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  if (!isProduceFlameOngoingEffectSpell(spell)) {
-    return [];
-  }
-  const hurlOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost?.kind === "standard_action" &&
-      operation.trigger.cost.action === "magic" &&
-      operation.effect.kind === "attack_roll",
-  );
-  if (
-    hurlOperation === undefined ||
-    hurlOperation.effect.kind !== "attack_roll" ||
-    hurlOperation.effect.attackKind !== "ranged_spell_attack" ||
-    hurlOperation.effect.onHit.length !== 1 ||
-    hurlOperation.effect.onMiss.length !== 1 ||
-    hurlOperation.effect.onMiss[0]?.kind !== "none"
-  ) {
-    return [];
-  }
-  const damageEffect = hurlOperation.effect.onHit[0];
-  if (
-    damageEffect?.kind !== "damage" ||
-    damageEffect.damageType !== "fire" ||
-    damageEffect.amount === undefined
-  ) {
-    return [];
-  }
-  const damageExpr = supportedDamageAmountExpr({
-    amount: damageEffect.amount,
-    spellLevel: spell.mechanics.level,
-    characterLevel,
-  });
-  if (damageExpr === null) {
-    return [];
-  }
-  return [
-    {
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      procedure: "heldLightHurl",
-      spell,
-      targeting: { kind: "singleCreatureOrObject" },
-      damage: {
-        expr: damageExpr,
-        damageType: damageEffect.damageType,
-      },
-      rangeFeet: movementFeet(60),
-      attackKind: hurlOperation.effect.attackKind,
-      attackBonus: attackBonus(
-        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-      ),
-    },
-  ];
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(

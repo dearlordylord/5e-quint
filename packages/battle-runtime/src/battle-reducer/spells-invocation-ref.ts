@@ -25,6 +25,7 @@ import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expedi
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -365,7 +366,9 @@ export function supportedSpellInvocationRef(
     Match.when({ procedure: "chainedSpellAttackDamage" }, (slotSpell) =>
       chainedSpellAttackDamageProfile.invocationRef(slotSpell),
     ),
-    Match.when({ procedure: "heldLightHurl" }, damageSpellInvocationRef),
+    Match.when({ procedure: "heldLightHurl" }, (cantrip) =>
+      heldLightHurlProfile.invocationRef(cantrip),
+    ),
     Match.when({ procedure: "spellAttackDamage" }, (spellAttackDamage) =>
       spellAttackDamageProfile.invocationRef(spellAttackDamage),
     ),
