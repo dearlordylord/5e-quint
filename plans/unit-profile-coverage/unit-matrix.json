@@ -3532,8 +3532,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
@@ -20859,8 +20858,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",

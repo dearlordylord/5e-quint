@@ -16,17 +16,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
 import {
   type BattleCreatureState,
   type BattleState,
@@ -56,6 +50,7 @@ const DISPEL_MAGIC_TARGET_KINDS = [
 ] as const;
 
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
@@ -238,9 +233,9 @@ export function supportedSpellActs(
       magicalDarknessPointOriginProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(
+      antimagicFieldOngoingSpellSuppressionProfile.admit(
         spell,
-        spellcasting.spellSlots,
+        admissionContext,
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
@@ -549,81 +544,6 @@ function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
     isOngoingSpellEndTargetAttachment(attachment)
     ? attachment.holeId
     : null;
-}
-
-export function supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const profile = antimagicFieldOngoingSpellSuppressionSpell(spell);
-  if (profile === null) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "antimagicFieldOngoingSpellSuppression",
-        spell,
-        targeting: {
-          kind: "selfOriginEmanation",
-          radiusFeet: movementFeet(profile.radiusFeet),
-        },
-        durationTicks: profile.durationTicks,
-        rangeFeet: movementFeet(0),
-      },
-    ];
-  });
-}
-
-function antimagicFieldOngoingSpellSuppressionSpell(spell: SpellRecord): {
-  readonly radiusFeet: number;
-  readonly durationTicks: ElapsedTimeTicks;
-} | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const attachment = spell.mechanics.attachment;
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const suppressOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "suppress_ongoing_magic_effects",
-  );
-  if (
-    spell.mechanics.level !== 8 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    attachment.kind !== "area" ||
-    attachment.origin.kind !== "self" ||
-    attachment.shape.kind !== "emanation" ||
-    attachment.shape.radiusFeet !== 10 ||
-    suppressOperation?.effect.kind !== "suppress_ongoing_magic_effects" ||
-    suppressOperation.effect.suppressedTimeCountsAgainstDuration !== true ||
-    !sameStringSet(suppressOperation.effect.exceptSources ?? [], [
-      "artifact",
-      "deity",
-    ]) ||
-    durationTicks === null ||
-    Either.isLeft(durationTicks)
-  ) {
-    return null;
-  }
-  return {
-    radiusFeet: attachment.shape.radiusFeet,
-    durationTicks: durationTicks.right,
-  };
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(

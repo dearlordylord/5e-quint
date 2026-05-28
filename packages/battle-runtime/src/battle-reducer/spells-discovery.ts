@@ -36,7 +36,6 @@ import {
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import {
-  spellAreaChoiceHole,
   spellTargetHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
@@ -44,6 +43,7 @@ import {
 import { targetListTargetingHasFixedMaximum } from "./spells-targeting.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
@@ -202,19 +202,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the antimagic Emanation area identity and affected ongoing spell effects.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return antimagicFieldOngoingSpellSuppressionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "webRestraintHazard") {
         return webRestraintHazardProfile.discoverCastAct(

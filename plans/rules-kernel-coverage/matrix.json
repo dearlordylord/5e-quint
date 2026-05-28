@@ -808,7 +808,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",

@@ -93,6 +93,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
@@ -210,12 +211,10 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
-import { resolveAntimagicFieldOngoingSpellSuppressionAct } from "./spells-resolve-area-effects.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
-  resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
@@ -802,7 +801,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
-    return resolveAntimagicFieldOngoingSpellSuppressionAct({
+    return antimagicFieldOngoingSpellSuppressionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

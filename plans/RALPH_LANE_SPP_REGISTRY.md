@@ -391,7 +391,7 @@
     {
       "number": 65,
       "id": "SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate antimagicFieldOngoingSpellSuppression profile"
     },
     {
@@ -1199,7 +1199,7 @@ Focused MBT: `magical-darkness-point-origin-lifecycle.mbt.test.ts`.
 
 ### Task 65 - SPP-W8-13-ANTIMAGIC-FIELD-ONGOING-SPELL-SUPPRESSION - Migrate antimagicFieldOngoingSpellSuppression
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `antimagic-field-ongoing-suppression.mbt.test.ts`. Note:
 this procedure touches the `antimagic-field-suppression.ts` module

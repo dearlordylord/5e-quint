@@ -56,7 +56,6 @@ import {
   type BattleDancingLight,
   type BattleDancingLightList,
   type BattleDancingLightsPlacementValue,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
@@ -1762,51 +1761,6 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
         ),
     ),
   };
-}
-
-export function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly areaId: BattleAreaId;
-  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
-  >;
-}): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "antimagicFieldOngoingSpellSuppression" &&
-      effect.sourceSpellId === input.invocation.spell.id &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const suppressedOngoingSpellEffects = input.affectedOngoingSpellEffects
-    .filter((effect) => effect.sourceKind === "ordinarySpell")
-    .map((effect) => effect.effect);
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
-      kind: "antimagicFieldOngoingSpellSuppression" as const,
-      sourceSpellId: input.invocation.spell.id,
-      sourceCombatantId: input.actorId,
-      areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
-      suppressedOngoingSpellEffects,
-      expiresAt: {
-        kind: "concentration" as const,
-        combatantId: input.actorId,
-        durationTicks: input.invocation.durationTicks,
-      },
-    },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
 }
 
 export function applyFlamingSphereCastEffect(input: {

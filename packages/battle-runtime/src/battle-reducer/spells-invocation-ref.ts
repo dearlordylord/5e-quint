@@ -12,6 +12,7 @@ import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
+import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -143,12 +144,9 @@ export function supportedSpellInvocationRef(
     return magicalDarknessPointOriginProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "antimagicFieldOngoingSpellSuppression",
-    };
+    return antimagicFieldOngoingSpellSuppressionProfile.invocationRef(
+      invocation,
+    );
   }
   if (invocation.procedure === "webRestraintHazard") {
     return webRestraintHazardProfile.invocationRef(invocation);

@@ -3,14 +3,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 import type {
   ActionSpellBattleResolutionInput,
-  BattleAntimagicFieldAreaChoice,
   BattleMagicalDarknessAreaChoice,
   BattleSpellAreaChoice,
   BattleResolutionResult,
@@ -25,7 +23,6 @@ import {
   applySpikeGrowthMovementHazardCastEffect,
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
-  applyAntimagicFieldOngoingSpellSuppressionCastEffect,
   applyMagicalDarknessPointOriginCastEffect,
   applyMoonbeamCastEffect,
   applyWebRestraintHazardCastEffect,
@@ -41,10 +38,7 @@ import {
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  antimagicFieldOngoingSpellEffectRefForEmitter,
   isTrackedOngoingSpellLightEmitter,
-  ongoingSpellEffectRefKey,
 } from "./antimagic-field-suppression.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 
@@ -200,91 +194,6 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   };
 }
 
-export function resolveAntimagicFieldOngoingSpellSuppressionAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Antimagic Field uses one table-supplied antimagic Emanation fill.",
-    );
-  }
-  if (input.fillSet.areaChoice === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellAreaChoiceHole(input.invocation),
-    ]);
-  }
-  if (
-    input.fillSet.areaChoice.kind !== "antimagicFieldSelfEmanation" ||
-    input.fillSet.areaChoice.areaId.length === 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Antimagic Field area id must be a non-empty antimagic Emanation area.",
-    );
-  }
-  const invalidAffectedLights = antimagicFieldAreaChoiceInvalidReason(
-    input.input.state,
-    input.fillSet.areaChoice,
-  );
-  if (invalidAffectedLights !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      invalidAffectedLights,
-    );
-  }
-
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyAntimagicFieldOngoingSpellSuppressionCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    affectedOngoingSpellEffects:
-      input.fillSet.areaChoice.affectedOngoingSpellEffects,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
-}
-
 function magicalDarknessAreaChoiceInvalidReason(
   state: ActionSpellBattleResolutionInput["state"],
   areaChoice: BattleMagicalDarknessAreaChoice,
@@ -307,47 +216,6 @@ function magicalDarknessAreaChoiceInvalidReason(
     }
   }
   return null;
-}
-
-function antimagicFieldAreaChoiceInvalidReason(
-  state: ActionSpellBattleResolutionInput["state"],
-  areaChoice: BattleAntimagicFieldAreaChoice,
-): string | null {
-  const trackedEffects = trackedOngoingSpellEffectKeys(state);
-  for (const affected of areaChoice.affectedOngoingSpellEffects) {
-    if (!trackedEffects.has(ongoingSpellEffectRefKey(affected.effect))) {
-      return "Antimagic Field affected effect must reference a tracked ongoing spell effect.";
-    }
-  }
-  return null;
-}
-
-function trackedOngoingSpellEffectKeys(
-  state: ActionSpellBattleResolutionInput["state"],
-): ReadonlySet<string> {
-  return new Set([
-    ...state.lightEmitters.flatMap((emitter) =>
-      isTrackedOngoingSpellLightEmitter(emitter)
-        ? [
-            ongoingSpellEffectRefKey(
-              antimagicFieldOngoingSpellEffectRefForEmitter(emitter),
-            ),
-          ]
-        : [],
-    ),
-    ...[...state.combatants.values()].flatMap((combatant) =>
-      combatant.activeEffects.flatMap((effect) =>
-        effect.kind === "spellObjectContactDamage" ||
-        effect.kind === "spiritualWeapon"
-          ? [
-              ongoingSpellEffectRefKey(
-                antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
-              ),
-            ]
-          : [],
-      ),
-    ),
-  ]);
 }
 
 function trackedOngoingSpellLightEmittersByEffectId(
