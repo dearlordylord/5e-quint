@@ -55,6 +55,11 @@ import { shieldReactionProfile } from "./shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-attack-sequence.ts";
+import {
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectReEvokeProfile,
+} from "./spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
@@ -113,6 +118,9 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   shieldReactionProfile,
   spellAttackDamageProfile,
   spellAttackSequenceProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectReEvokeProfile,
   chainedSpellAttackDamageProfile,
   attackBurstSaveDamageProfile,
   repeatedDamageAllocationProfile,

@@ -57,6 +57,11 @@ import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reactio
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
+import {
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectReEvokeProfile,
+} from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -205,26 +210,13 @@ export function supportedSpellInvocationRef(
     );
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "spellCreatedHeldObject",
-    };
+    return spellCreatedHeldObjectProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObjectAttack") {
-    return spellEffectInvocationRef(
-      invocation.spell.id,
-      invocation.activeEffect.sourceCombatantId,
-      "spellCreatedHeldObjectAttack",
-    );
+    return spellCreatedHeldObjectAttackProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-    return spellEffectInvocationRef(
-      invocation.spell.id,
-      invocation.activeEffect.sourceCombatantId,
-      "spellCreatedHeldObjectReEvoke",
-    );
+    return spellCreatedHeldObjectReEvokeProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "command") {
     return commandProfile.invocationRef(invocation);

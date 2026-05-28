@@ -170,17 +170,18 @@ import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reactio
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
+import {
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectReEvokeProfile,
+} from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
-import {
-  supportedPreparedMirrorImageHitInterceptionSpellProfile,
-  supportedPreparedSpellCreatedHeldObjectProfile,
-  supportedSpellCreatedHeldObjectActiveEffectProfile,
-} from "./spells-profiles-support.ts";
+import { supportedPreparedMirrorImageHitInterceptionSpellProfile } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -385,16 +386,13 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSpellCreatedHeldObjectProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-      ),
+      spellCreatedHeldObjectProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedSpellCreatedHeldObjectActiveEffectProfile(actor, spell),
+      spellCreatedHeldObjectAttackProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      spellCreatedHeldObjectReEvokeProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       conditionImmunityAndTurnStartTemporaryHitPointsProfile.admit(

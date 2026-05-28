@@ -55,7 +55,6 @@ import {
   spiritualWeaponForcePositionHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
-import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
@@ -98,6 +97,11 @@ import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
+import {
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectReEvokeProfile,
+} from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -566,58 +570,25 @@ export function discoverSupportedSpellInvocations(
         return heldLightProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "spellCreatedHeldObject") {
-        if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
-          return [];
-        }
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return spellCreatedHeldObjectProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-        if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
-          return [];
-        }
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: `${invocation.spell.name} re-evoke`,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return spellCreatedHeldObjectReEvokeProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "spellCreatedHeldObjectAttack") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "actionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: `${invocation.spell.name} attack`,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [targetHole],
-              },
-            ];
+        return spellCreatedHeldObjectAttackProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (
         invocation.procedure === "dancingLightsSeparateCast" ||
@@ -1081,13 +1052,13 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return spellCreatedHeldObjectProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObjectAttack") {
-    return `Take a Magic action to attack with ${invocation.spell.name}.`;
+    return spellCreatedHeldObjectAttackProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-    return `Re-evoke ${invocation.spell.name} with a Bonus Action.`;
+    return spellCreatedHeldObjectReEvokeProfile.castSummary(invocation);
   }
   if (invocation.procedure === "objectContactDamage") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

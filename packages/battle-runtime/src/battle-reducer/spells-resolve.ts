@@ -292,13 +292,16 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   resolveDancingLightsCastSpellAct,
   resolveDancingLightsRepositionSpellAct,
-  resolveSpellCreatedHeldObjectReEvokeSpellAct,
-  resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
 } from "./spells-resolve-release.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
+import {
+  spellCreatedHeldObjectAttackProfile,
+  spellCreatedHeldObjectProfile,
+  spellCreatedHeldObjectReEvokeProfile,
+} from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
@@ -397,7 +400,11 @@ export function resolveSpellAct(
 export function resolveSpellAttackDamageAct(
   input: SpellProcedureProfileResolveInput<
     | SpellAttackDamageInvocation
-    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>,
+    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spellCreatedHeldObjectAttack" }
+      >,
     ActionSpellBattleResolutionInput
   >,
 ): BattleResolutionResult {
@@ -648,16 +655,6 @@ function resolveSpellActInternal(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
-  }
-  if (
-    invocation.procedure === "spellCreatedHeldObjectAttack" &&
-    fillSet.reactionSpellTargetFacts.length > 0
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
-    );
   }
   if (invocation.procedure === "spellAttackSequence") {
     return spellAttackSequenceProfile.resolve({
@@ -1036,6 +1033,17 @@ function resolveSpellActInternal(
     options.useSharedSpellAttackDamageResolver !== true
   ) {
     return heldLightHurlProfile.resolve({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "spellCreatedHeldObjectAttack" &&
+    options.useSharedSpellAttackDamageResolver !== true
+  ) {
+    return spellCreatedHeldObjectAttackProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2813,7 +2821,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
-    return resolveSpellCreatedHeldObjectSpellAct({
+    return spellCreatedHeldObjectProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -2821,7 +2829,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-    return resolveSpellCreatedHeldObjectReEvokeSpellAct({
+    return spellCreatedHeldObjectReEvokeProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
