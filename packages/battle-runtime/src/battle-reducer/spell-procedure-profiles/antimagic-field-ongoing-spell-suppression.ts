@@ -27,6 +27,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -40,7 +41,11 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type BattleAreaId, type CombatantId } from "../../identity.ts";
+import {
+  spellId,
+  type BattleAreaId,
+  type CombatantId,
+} from "../../identity.ts";
 import {
   antimagicFieldOngoingSpellEffectRefForActiveEffect,
   antimagicFieldOngoingSpellEffectRefForEmitter,
@@ -169,9 +174,8 @@ function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
       subject: {
         tag: "actionSpell",
         actorId,
-        invocation: antimagicFieldOngoingSpellSuppressionInvocationRef(
-          invocation,
-        ),
+        invocation:
+          antimagicFieldOngoingSpellSuppressionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       label: invocation.spell.name,
@@ -364,6 +368,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
 
 export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

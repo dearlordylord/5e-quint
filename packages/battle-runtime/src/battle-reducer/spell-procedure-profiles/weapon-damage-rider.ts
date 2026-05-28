@@ -10,6 +10,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Attack Damage Rider, Bonus Action, Attack Roll,
 //     Damage Roll, and Spell Invocation.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -270,6 +271,7 @@ export const weaponDamageRiderProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponDamageRider",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

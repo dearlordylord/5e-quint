@@ -11,6 +11,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Attack Roll, Advantage, Magic
 //     Action, and Spell Invocation.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -240,6 +241,7 @@ function resolveSaveGatedAttackRollAdvantage(
 
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

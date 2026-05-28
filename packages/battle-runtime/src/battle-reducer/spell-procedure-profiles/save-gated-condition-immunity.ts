@@ -13,6 +13,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition Immunity, Magic Action,
 //     and Spell Invocation.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -241,6 +242,7 @@ function resolveSaveGatedConditionImmunity(
 
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

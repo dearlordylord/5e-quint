@@ -17,6 +17,7 @@ import {
   spellSlotLevel,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   ActivationPhase,
   TargetSelection,
@@ -384,6 +385,7 @@ function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
 
 export const commandProfile = {
   procedure: "command",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

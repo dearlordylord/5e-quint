@@ -24,6 +24,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -126,9 +127,7 @@ function admitMoonbeam(
           },
           durationTicks: moonbeam.durationTicks,
           rangeFeet: movementFeet(MOONBEAM_RANGE_FEET),
-          repositionMaxMoveFeet: movementFeet(
-            moonbeam.repositionMaxMoveFeet,
-          ),
+          repositionMaxMoveFeet: movementFeet(moonbeam.repositionMaxMoveFeet),
           damage: { expr: damageExpr, damageType: "radiant" },
         },
       ];
@@ -314,9 +313,7 @@ function moonbeamCastSummary(invocation: MoonbeamSpellInvocation): string {
   return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
-function resolveMoonbeam(
-  input: MoonbeamResolveInput,
-): BattleResolutionResult {
+function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
   return resolveMoonbeamSpellAct({
     input: input.input,
     actorId: input.actorId,
@@ -327,6 +324,7 @@ function resolveMoonbeam(
 
 export const moonbeamProfile = {
   procedure: "moonbeam",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

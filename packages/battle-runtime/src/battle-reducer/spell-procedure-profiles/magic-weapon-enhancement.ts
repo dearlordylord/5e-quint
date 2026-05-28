@@ -5,6 +5,7 @@
 // identity supplied by the table-owned fill boundary.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   Attachment,
@@ -402,6 +403,7 @@ export const magicWeaponEnhancementProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "magicWeaponEnhancement",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -85,7 +85,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionBattleTurn } from "./profile.ts";
+import {
+  spellAdmissionBattleTurn,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type MarkedDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
@@ -787,6 +790,7 @@ export const markedDamageRiderProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "markedDamageRider",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

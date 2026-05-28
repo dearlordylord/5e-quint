@@ -17,6 +17,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -355,6 +356,7 @@ function resolveGreaseGroundHazard(
 
 export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

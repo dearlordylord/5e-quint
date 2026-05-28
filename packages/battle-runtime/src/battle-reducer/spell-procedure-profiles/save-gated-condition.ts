@@ -11,6 +11,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Magic Action, and Spell
 //     Invocation.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   isTargetListSpellInvocation,
@@ -315,6 +316,7 @@ function resolveSaveGatedCondition(
 
 export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

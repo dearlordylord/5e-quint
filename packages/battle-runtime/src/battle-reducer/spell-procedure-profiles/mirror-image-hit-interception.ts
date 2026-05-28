@@ -23,10 +23,11 @@
 //   - The duplicate-roll hole, hit redirection, duplicate destruction, and
 //     bypass witness logic stay in mirror-image-hit-interception.ts.
 //   - Timed duration expiry stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -286,6 +287,7 @@ export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
   MirrorImageHitInterceptionSpellInvocation
 > = {
   procedure: "mirrorImageHitInterception",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -34,8 +34,9 @@
 //     ~400 lines in spells-resolve-target-selection.ts. Moveable later.
 //   - Hole builders (spellRollModifierSkillChoiceHole etc.) in
 //     spells-damage-fills.ts — moveable later when the hole subsystem migrates.
-//   - The codec branch in battle-codecs.ts and the metamagic table entry —
-//     same migration story as damageReduction.
+//   - The codec union in battle-codecs.ts — it consumes this profile's shared
+//     schema until the codec migration sweep composes the registry directly.
+//   - The metamagic table entry — same migration story as damageReduction.
 
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -76,11 +77,9 @@ import {
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
 } from "../spells-resolve-target-selection.ts";
-import {
-  spellTargetHole,
-  spellTargetListHole,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { RollModifierInvocationSchema } from "./invocation-schemas.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -417,5 +416,6 @@ export const rollModifierProfile: SpellProcedureProfile<
   discoverCastAct: discoverRollModifierCastAct,
   castSummary: rollModifierCastSummary,
   invocationRef: rollModifierInvocationRef,
+  invocationSchema: RollModifierInvocationSchema,
   resolve: resolveRollModifier,
 };

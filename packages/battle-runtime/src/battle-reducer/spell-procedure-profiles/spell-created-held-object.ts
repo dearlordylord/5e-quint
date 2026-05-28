@@ -37,6 +37,7 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
@@ -743,6 +744,7 @@ export const spellCreatedHeldObjectProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObject",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -760,6 +762,7 @@ export const spellCreatedHeldObjectAttackProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectAttack",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -777,6 +780,7 @@ export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectReEvoke",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

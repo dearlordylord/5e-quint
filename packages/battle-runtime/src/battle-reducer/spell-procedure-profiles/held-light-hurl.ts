@@ -31,10 +31,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { spellSubjectTagForInvocation } from "../spells-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
-import {
-  spellObjectTargetHole,
-  spellTargetHole,
-} from "../spells-targeting.ts";
+import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import { isProduceFlameOngoingEffectSpell } from "./held-light.ts";
 import type {
@@ -42,7 +39,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type HeldLightHurlInvocation = Extract<
   SupportedSpellInvocation,
@@ -166,6 +166,7 @@ export const heldLightHurlProfile: SpellProcedureProfile<
   HeldLightHurlInvocation
 > = {
   procedure: "heldLightHurl",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -7,6 +7,7 @@
 // and relevant-effect repeat saves.
 
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -33,10 +34,7 @@ import {
   scalarBuffActiveEffectExpiration,
   sameCreatureTypeSet,
 } from "../spells-profiles-support.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-} from "../spells-holes-fills.ts";
+import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import {
   spellRequiresConcentration,
@@ -57,7 +55,10 @@ function admitCreatureTypeProtection(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly CreatureTypeProtectionSpellInvocation[] {
-  const projection = creatureTypeProtectionSpellProjection(ctx.actor.combatantId, spell);
+  const projection = creatureTypeProtectionSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projection === null) {
     return [];
   }
@@ -342,6 +343,7 @@ export const creatureTypeProtectionProfile: SpellProcedureProfile<
   CreatureTypeProtectionSpellInvocation
 > = {
   procedure: "creatureTypeProtection",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

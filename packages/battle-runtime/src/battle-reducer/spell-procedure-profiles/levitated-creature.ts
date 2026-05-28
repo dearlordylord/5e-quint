@@ -8,6 +8,7 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -57,7 +58,10 @@ function admitLevitatedCreature(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly LevitatedCreatureInvocation[] {
-  const projection = levitatedCreatureSpellProjection(ctx.actor.combatantId, spell);
+  const projection = levitatedCreatureSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projection === null) {
     return [];
   }
@@ -445,6 +449,7 @@ export const levitatedCreatureProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "levitatedCreature",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

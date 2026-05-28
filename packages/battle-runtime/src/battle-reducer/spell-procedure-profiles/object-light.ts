@@ -20,11 +20,12 @@
 // What stays in shared infrastructure:
 //   - spellObjectLightTargetFact and spellObjectTargetHole stay in
 //     spells-targeting.ts until target legality and hole dispatch migrate.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -192,7 +193,9 @@ function admitCantripObjectLight(
       ];
 }
 
-function isContinualFlameObjectSpell(spell: SpellRecord): spell is SpellRecord & {
+function isContinualFlameObjectSpell(
+  spell: SpellRecord,
+): spell is SpellRecord & {
   readonly mechanics: Extract<
     SpellRecord["mechanics"],
     { family: "activation" }
@@ -292,7 +295,10 @@ function admitObjectLight(
 ): readonly ObjectLightInvocation[] {
   return [
     ...admitCantripObjectLight(spell),
-    ...admitPreparedObjectLight(spell, ctx.actor.origin.spellcasting.spellSlots),
+    ...admitPreparedObjectLight(
+      spell,
+      ctx.actor.origin.spellcasting.spellSlots,
+    ),
   ];
 }
 
@@ -439,9 +445,7 @@ function resolveObjectLight(
       ): fact is Extract<
         (typeof objectTarget.spatialFacts)[number],
         {
-          readonly kind:
-            | "spellObjectLightTarget"
-            | "spellTouchedObjectTarget";
+          readonly kind: "spellObjectLightTarget" | "spellTouchedObjectTarget";
         }
       > =>
         fact.kind === "spellObjectLightTarget" ||
@@ -505,6 +509,7 @@ export const objectLightProfile: SpellProcedureProfile<
   ObjectLightInvocation
 > = {
   procedure: "objectLight",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

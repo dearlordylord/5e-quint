@@ -28,6 +28,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount,
@@ -496,6 +497,7 @@ export const objectContactDamageProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -513,6 +515,7 @@ export const objectContactDamageRepeatProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamageRepeat",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

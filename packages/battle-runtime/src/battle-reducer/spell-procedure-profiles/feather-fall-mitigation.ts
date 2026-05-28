@@ -26,6 +26,7 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -83,7 +84,10 @@ function admitFeatherFallMitigation(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly FeatherFallMitigationInvocation[] {
-  const projection = featherFallMitigationSpellProjection(ctx.actor.combatantId, spell);
+  const projection = featherFallMitigationSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projection === null) {
     return [];
   }
@@ -201,10 +205,7 @@ function resolveFeatherFallMitigation(
 ): BattleResolutionResult {
   if (
     input.input.frame.trigger !== "creatureFalls" ||
-    !featherFallReactionSpellMatchesTrigger(
-      input.invocation,
-      input.input.frame,
-    )
+    !featherFallReactionSpellMatchesTrigger(input.invocation, input.input.frame)
   ) {
     return invalidResult(
       input.input.state,
@@ -298,6 +299,7 @@ function resolveFeatherFallMitigation(
 
 export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

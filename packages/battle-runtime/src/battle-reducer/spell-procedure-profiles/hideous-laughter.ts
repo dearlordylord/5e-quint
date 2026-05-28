@@ -14,6 +14,7 @@
 //     Incapacitated, Magic Action, and Spell Invocation.
 
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   ActivationPhase,
   TargetSelection,
@@ -372,6 +373,7 @@ function resolveHideousLaughter(
 
 export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,

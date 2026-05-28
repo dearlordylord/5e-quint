@@ -25,6 +25,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
@@ -204,7 +205,8 @@ function dancingLightsSpell(
     lightOperation.effect.dimAdditionalFeet !==
       Number(DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET) ||
     repositionOperation?.effect.kind !== "reposition_attachment" ||
-    repositionOperation.effect.maxMoveFeet !== DANCING_LIGHTS_REPOSITION_MAX_FEET
+    repositionOperation.effect.maxMoveFeet !==
+      DANCING_LIGHTS_REPOSITION_MAX_FEET
   ) {
     return null;
   }
@@ -279,9 +281,7 @@ function activeDancingLightsEffect(
   state: BattleState,
   actorId: CombatantId,
   invocation: DancingLightsRepositionInvocation,
-):
-  | Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>
-  | undefined {
+): Extract<BattleActiveEffect, { readonly kind: "dancingLights" }> | undefined {
   return state.combatants
     .get(actorId)
     ?.activeEffects.find(
@@ -345,6 +345,7 @@ export const dancingLightsSeparateCastProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsSeparateCast",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -362,6 +363,7 @@ export const dancingLightsCombinedCastProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsCombinedCast",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -379,6 +381,7 @@ export const dancingLightsRepositionProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsReposition",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

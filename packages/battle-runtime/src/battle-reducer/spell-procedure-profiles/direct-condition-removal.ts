@@ -5,6 +5,7 @@
 // spell that touches one creature and ends one chosen condition on it.
 
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -342,6 +343,7 @@ export const directConditionRemovalProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "directConditionRemoval",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

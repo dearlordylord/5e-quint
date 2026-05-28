@@ -23,6 +23,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -47,9 +48,7 @@ import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
-import {
-  spellFillSetContainsOnlySpellCastReactionFacts,
-} from "../spells-resolve-fill-set.ts";
+import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
   markSpellSlotExpendedThisTurn,
@@ -385,6 +384,7 @@ function counterspellReactionInterruptFrame(
 
 export const counterspellProfile = {
   procedure: "counterspell",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

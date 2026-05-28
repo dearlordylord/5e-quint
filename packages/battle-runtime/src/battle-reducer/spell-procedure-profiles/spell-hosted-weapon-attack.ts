@@ -47,7 +47,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 const DAMAGE_TYPE_CHOICES = [
   "radiant",
@@ -79,23 +82,25 @@ function admitSpellHostedWeaponAttack(
         weaponMatchesProficiency(attack.weapon, proficiency),
       ),
     )
-    .map(({ itemId, attack }): SpellHostedWeaponAttackInvocation => ({
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      procedure: "spellHostedWeaponAttack",
-      spell,
-      actionCost: "magicAction",
-      componentWeapon: { itemId, attack },
-      spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
-      attackBonus: attackBonus(
-        Number(spellcasting.spellcastingAbilityModifier) +
-          Number(spellcasting.proficiencyBonus),
-      ),
-      damageTypeChoices: [
-        ...new Set<DamageType>(["radiant", attack.weapon.damage.damageType]),
-      ],
-      bonusDamage: projection.bonusDamage,
-    }));
+    .map(
+      ({ itemId, attack }): SpellHostedWeaponAttackInvocation => ({
+        access: { tag: "classCantrip" },
+        resource: { tag: "none" },
+        procedure: "spellHostedWeaponAttack",
+        spell,
+        actionCost: "magicAction",
+        componentWeapon: { itemId, attack },
+        spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
+        attackBonus: attackBonus(
+          Number(spellcasting.spellcastingAbilityModifier) +
+            Number(spellcasting.proficiencyBonus),
+        ),
+        damageTypeChoices: [
+          ...new Set<DamageType>(["radiant", attack.weapon.damage.damageType]),
+        ],
+        bonusDamage: projection.bonusDamage,
+      }),
+    );
 }
 
 function spellHostedWeaponAttackProjection(
@@ -354,7 +359,8 @@ function spellHostedWeaponAttackBonusDamageAdditions(
   invocation: SpellHostedWeaponAttackInvocation,
   actorId: CombatantId,
 ): readonly AttackSpellDamageAddition[] {
-  return invocation.bonusDamage === null || invocation.bonusDamage.expr.dice <= 0
+  return invocation.bonusDamage === null ||
+    invocation.bonusDamage.expr.dice <= 0
     ? []
     : [
         {
@@ -372,6 +378,7 @@ export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellHostedWeaponAttack",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

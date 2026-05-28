@@ -6,6 +6,7 @@
 // Saving Throw Advantage and Poison damage Resistance.
 
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -27,10 +28,7 @@ import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-} from "../spells-holes-fills.ts";
+import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import {
   spellRequiresConcentration,
@@ -389,6 +387,7 @@ export const conditionRemovalProtectionProfile: SpellProcedureProfile<
   ConditionRemovalProtectionSpellInvocation
 > = {
   procedure: "conditionRemovalProtection",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

@@ -15,6 +15,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   EffectAtom,
   OngoingEffect,
@@ -46,9 +47,7 @@ import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
-import {
-  combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
-} from "../spell-condition-effects-helpers.ts";
+import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
@@ -72,7 +71,10 @@ function admitCreatureSizeChange(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly CreatureSizeChangeInvocation[] {
-  const projections = creatureSizeChangeSpellProjection(ctx.actor.combatantId, spell);
+  const projections = creatureSizeChangeSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projections.length === 0) {
     return [];
   }
@@ -530,6 +532,7 @@ export const creatureSizeChangeProfile: SpellProcedureProfile<
   CreatureSizeChangeInvocation
 > = {
   procedure: "creatureSizeIncrease",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

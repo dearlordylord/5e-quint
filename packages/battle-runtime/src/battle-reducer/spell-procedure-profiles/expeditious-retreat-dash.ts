@@ -15,6 +15,7 @@
 //     grants additional movement budget rather than changing Speed.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -64,7 +65,10 @@ function admitExpeditiousRetreatDash(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly ExpeditiousRetreatDashInvocation[] {
-  const activeEffect = expeditiousRetreatDashActiveEffect(ctx.actor.combatantId, spell);
+  const activeEffect = expeditiousRetreatDashActiveEffect(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (activeEffect === null) {
     return [];
   }
@@ -303,10 +307,7 @@ function resolveExpeditiousRetreatDash(
   const effected = {
     ...slotted,
     currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(
-      subject.actorId,
-      effectedActor,
-    ),
+    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
   };
   const dashed = applyDashToActor(
     effected,
@@ -323,6 +324,7 @@ function resolveExpeditiousRetreatDash(
 
 export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

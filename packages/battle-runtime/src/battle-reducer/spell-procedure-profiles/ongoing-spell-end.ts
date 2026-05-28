@@ -22,6 +22,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   maybeOpenReactionWindow,
@@ -150,9 +151,7 @@ function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
   );
 }
 
-function isOngoingSpellEndAbilityCheckPhase(
-  phase: ActivationPhase,
-): boolean {
+function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
   return (
     phase.kind === "ability_check_gate" &&
     String(phase.ability) === "caster_spellcasting_ability" &&
@@ -518,7 +517,8 @@ function ongoingSpellEndAbilityCheckHole(
   occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleSpellcastingAbilityCheckHole {
   const effect = ongoingSpellOccurrenceRef(occurrence);
-  const contestedSpellLevel = ongoingSpellOccurrenceSourceSpellLevel(occurrence);
+  const contestedSpellLevel =
+    ongoingSpellOccurrenceSourceSpellLevel(occurrence);
   const dc = difficultyClass(10 + contestedSpellLevel);
   return {
     holeInstanceKey: holeInstanceKey(
@@ -749,6 +749,7 @@ function uniqueConcentrationSources(
 
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

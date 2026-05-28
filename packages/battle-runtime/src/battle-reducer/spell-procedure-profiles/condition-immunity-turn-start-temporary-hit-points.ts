@@ -6,6 +6,7 @@
 // immunity and Temporary Hit Points at the start of each of their turns.
 
 import { movementFeet, type AbilityModifier } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DiceAmount as SurfaceDiceAmount,
   SpellRecord,
@@ -444,6 +445,7 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
 > = {
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

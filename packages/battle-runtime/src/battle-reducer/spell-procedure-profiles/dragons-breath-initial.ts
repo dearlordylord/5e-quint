@@ -18,6 +18,7 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -349,6 +350,7 @@ function resolveDragonsBreathInitial(
 
 export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

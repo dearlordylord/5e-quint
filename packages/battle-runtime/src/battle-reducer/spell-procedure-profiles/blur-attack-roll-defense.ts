@@ -24,9 +24,10 @@
 //   - Attack Roll Disadvantage projection and Blindsight/Truesight bypass
 //     witnesses stay in attack-roll.ts.
 //   - Concentration cleanup stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -280,6 +281,7 @@ export const blurAttackRollDefenseProfile: SpellProcedureProfile<
   BlurAttackRollDefenseSpellInvocation
 > = {
   procedure: "blurAttackRollDefense",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -12,6 +12,7 @@
 //     Action, and Spell Invocation.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
@@ -280,6 +281,7 @@ function resolveSleepTargetAdmission(
 
 export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

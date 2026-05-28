@@ -15,6 +15,7 @@
 //     the Reaction.
 //   - UBIQUITOUS_LANGUAGE.md: Reaction, Armor Class (AC), Casting Time.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -231,6 +232,7 @@ function resolveShieldReaction(
 
 export const shieldReactionProfile = {
   procedure: "shieldReaction",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

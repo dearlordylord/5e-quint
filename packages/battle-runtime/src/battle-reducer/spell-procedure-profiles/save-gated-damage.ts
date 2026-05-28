@@ -49,7 +49,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -330,6 +333,7 @@ function resolveSaveGatedDamage(
 
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

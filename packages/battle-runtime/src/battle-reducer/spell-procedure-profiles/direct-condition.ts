@@ -7,6 +7,7 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord, TargetSelection } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -288,6 +289,7 @@ export const directConditionProfile: SpellProcedureProfile<
   DirectConditionSpellInvocation
 > = {
   procedure: "directCondition",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

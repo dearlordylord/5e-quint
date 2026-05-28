@@ -31,6 +31,7 @@ import {
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   Attachment,
   DiceAmount,
@@ -492,6 +493,7 @@ export const spiritualWeaponAttackProxyProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponAttackProxy",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -509,6 +511,7 @@ export const spiritualWeaponRepeatAttackProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponRepeatAttack",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

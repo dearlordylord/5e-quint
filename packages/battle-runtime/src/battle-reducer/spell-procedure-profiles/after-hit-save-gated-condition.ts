@@ -25,6 +25,7 @@
 //   - The central codec branch in battle-codecs.ts and metamagic table entry
 //     are Wave 9 migration work.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -447,6 +448,7 @@ function creatureSizeIsLargeOrLarger(size: Size): boolean {
 
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -15,6 +15,7 @@
 //     Checks, Saving Throws, and Attack Rolls; Concentration can end sustained
 //     spell effects.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -172,6 +173,7 @@ function resolveAbilityD20TestRollModeSaveGate(
 
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,

@@ -20,8 +20,8 @@
 // What stays in shared infrastructure:
 //   - spellTargetIsLegal's zero-HP/non-dead target predicate remains in
 //     spells-targeting.ts until target legality dispatch migrates to profiles.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
@@ -41,17 +41,17 @@ import { invalidResult } from "../result-helpers.ts";
 import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type MakeStableInvocation = Extract<
   SupportedSpellInvocation,
@@ -279,6 +279,7 @@ export const makeStableProfile: SpellProcedureProfile<
   MakeStableInvocation
 > = {
   procedure: "makeStable",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

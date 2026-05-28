@@ -24,6 +24,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceExpr,
@@ -232,6 +233,7 @@ function resolveSpikeGrowthMovementHazard(
 
 export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -12,6 +12,7 @@
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 import type {
   ActionSpellBattleResolutionInput,
   AvailableBattleAct,
@@ -191,17 +192,23 @@ export type SpellProcedureProfile<
   // continuations.
   readonly invocationRef: (invocation: I) => SpellInvocationRef;
 
+  // Runtime codec for the exact invocation shape admitted by this profile.
+  readonly invocationSchema: Schema.Schema<I>;
+
   // Dispatch entry: consume a fill set, produce a resolution result.
   readonly resolve: (
     input: SpellProcedureProfileResolveInput<I, Input, FillSet>,
   ) => BattleResolutionResult;
-
-  // TODO(spell-procedure-profile-registry): own the invocation Schema here too,
-  // and have battle-codecs.ts compose the union from registered profiles. That
-  // requires first exporting the shared building-block schemas
-  // (ClassCantripSpellAccessSchema, NoSpellInvocationResourceSchema, etc) from
-  // battle-codecs.ts, which is a separate move.
 };
+
+export function spellInvocationSchemaUnavailable<I>(): Schema.Schema<I> {
+  // This placeholder is intentionally fail-closed for profiles whose concrete
+  // codec branch still lives in battle-codecs.ts. Effect Schema correctly types
+  // Schema.Never as Schema<never>; the cast only lets those profiles satisfy
+  // the registry contract until their exact schema migrates, and parsing through
+  // the placeholder cannot admit any runtime value.
+  return Schema.Never as unknown as Schema.Schema<I>;
+}
 
 // Existential wrapper for a heterogeneous registry. Distributes over the
 // procedure literal so the registry holds a UNION of profile instantiations

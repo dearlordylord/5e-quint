@@ -25,6 +25,7 @@
 //   - The central codec branch in battle-codecs.ts and metamagic table entry
 //     are Wave 9 migration work.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -90,11 +91,10 @@ type AfterHitTimedDamageAndSaveBattleResolutionInput =
     readonly target: BattleCreatureState;
     readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
   };
-type AfterHitTimedDamageAndSaveResolveInput =
-  SpellProcedureProfileResolveInput<
-    AfterHitTimedDamageAndSaveInvocation,
-    AfterHitTimedDamageAndSaveBattleResolutionInput
-  >;
+type AfterHitTimedDamageAndSaveResolveInput = SpellProcedureProfileResolveInput<
+  AfterHitTimedDamageAndSaveInvocation,
+  AfterHitTimedDamageAndSaveBattleResolutionInput
+>;
 
 function admitAfterHitTimedDamageAndSave(
   spell: SpellRecord,
@@ -387,6 +387,7 @@ function resolveAfterHitTimedDamageAndSave(
 
 export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

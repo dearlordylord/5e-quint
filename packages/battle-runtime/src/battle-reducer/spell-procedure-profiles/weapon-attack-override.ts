@@ -46,7 +46,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 const SHILLELAGH_WEAPON_UNIT_IDS = [
   "weapon_club",
@@ -388,6 +391,7 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponAttackOverride",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

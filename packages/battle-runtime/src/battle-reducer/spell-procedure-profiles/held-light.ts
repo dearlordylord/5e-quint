@@ -23,11 +23,12 @@
 // What stays in shared infrastructure:
 //   - heldLightHurl has its own paired profile; the shared attack/damage
 //     resolver still owns the hurl damage lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -272,6 +273,7 @@ export const heldLightProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "heldLight",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

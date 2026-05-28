@@ -41,17 +41,17 @@ import {
   supportedSpellAttackDamageProfile,
   type SpellAttackDamageInvocation,
 } from "../spells-profiles-attack-damage.ts";
-import {
-  spellObjectTargetHole,
-  spellTargetHole,
-} from "../spells-targeting.ts";
+import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackDamageInvocation,
@@ -180,6 +180,7 @@ export const spellAttackDamageProfile: SpellProcedureProfile<
   Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
 > = {
   procedure: "spellAttackDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

@@ -14,6 +14,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Spell Attack, Attack Roll, Damage Roll,
 //     Damage Type, and Spell Invocation.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -127,6 +128,7 @@ export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   ChainedSpellFillSet
 > = {
   procedure: "chainedSpellAttackDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

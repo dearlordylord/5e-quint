@@ -18,6 +18,7 @@ import {
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   EffectAtom,
@@ -88,7 +89,8 @@ function admitSelfTransformationMode(
   const projection = selfTransformationModeSpellProjection({
     actorId: ctx.actor.combatantId,
     spell,
-    spellcastingAbilityModifier: ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
+    spellcastingAbilityModifier:
+      ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
     proficiencyBonus: ctx.actor.origin.spellcasting.proficiencyBonus,
   });
   if (projection === null) {
@@ -493,6 +495,7 @@ function selfTransformationModeEffectPayload(
 
 export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

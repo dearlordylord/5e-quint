@@ -21,6 +21,7 @@ import {
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   Attachment,
   DiceExpr,
@@ -59,10 +60,7 @@ import {
 } from "../spells-discovery.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { healingSpellTargetSelection } from "../spells-resolve-target-selection.ts";
-import {
-  spellTargetHole,
-  spellTargetListHole,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -118,9 +116,7 @@ function admitDirectHitPointRestoration(
   );
 }
 
-function directHitPointRestorationProjection(
-  spell: SpellRecord,
-): {
+function directHitPointRestorationProjection(spell: SpellRecord): {
   readonly actionCost: HealingSpellActionCost;
   readonly targeting: HealingSpellTargeting;
   readonly amount: SurfaceDiceAmount;
@@ -131,9 +127,7 @@ function directHitPointRestorationProjection(
   }
   const phase = spell.mechanics.phases[0];
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const actionCost = hitPointRestorationActionCost(
-    spell.mechanics.castingTime,
-  );
+  const actionCost = hitPointRestorationActionCost(spell.mechanics.castingTime);
   const targeting =
     phase?.kind === "direct" && phase.attachment.kind === "hole"
       ? hitPointRestorationTargeting(phase.attachment.value)
@@ -163,9 +157,7 @@ function hitPointRestorationTargeting(
   attachment: Attachment,
 ): HealingSpellTargeting | null {
   if (attachment.kind === "target") {
-    const targetBounds = hitPointRestorationTargetBounds(
-      attachment.selection,
-    );
+    const targetBounds = hitPointRestorationTargetBounds(attachment.selection);
     return targetBounds === null
       ? null
       : {
@@ -405,6 +397,7 @@ function resolveDirectHitPointRestoration(
 
 export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "bonusActionRewrite",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

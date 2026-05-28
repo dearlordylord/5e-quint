@@ -18,6 +18,7 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -250,6 +251,7 @@ function resolveSanctuaryTargetingInterdiction(
 
 export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

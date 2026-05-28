@@ -31,6 +31,7 @@
 //     the Wave 9 cross-cutting cleanup.
 
 import { isEffectAtom } from "@dnd/surface/surface/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   Attachment,
   EffectAtom,
@@ -88,10 +89,7 @@ import {
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
 import { scalarBuffSpellTargetSelection } from "../spells-resolve-target-selection.ts";
-import {
-  spellTargetHole,
-  spellTargetListHole,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -450,6 +448,7 @@ function resolveScalarBuff(
 
 export const scalarBuffProfile = {
   procedure: "scalarBuff",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "bonusActionRewrite",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,

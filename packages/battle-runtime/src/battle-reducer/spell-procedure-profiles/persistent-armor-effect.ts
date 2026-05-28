@@ -24,14 +24,15 @@
 //     spells-targeting.ts until targeting classification migrates.
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 
@@ -50,10 +51,7 @@ import { combatantWearingArmor } from "../creature-state-leaves.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -337,6 +335,7 @@ export const persistentArmorEffectProfile: SpellProcedureProfile<
   PersistentArmorEffectResolutionInput
 > = {
   procedure: "persistentArmorEffect",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

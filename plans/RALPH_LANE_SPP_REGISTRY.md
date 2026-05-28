@@ -409,13 +409,13 @@
     {
       "number": 68,
       "id": "SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add invocationSchema field to SpellProcedureProfile"
     },
     {
       "number": 69,
       "id": "SPP-W9-03-MIGRATE-CODEC-BRANCHES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Move per-profile Schema branches into each profile file"
     },
     {
@@ -1238,7 +1238,7 @@ Acceptance: typecheck clean. No behavior change.
 
 ### Task 68 - SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD - Add invocationSchema field to SpellProcedureProfile
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `profile.ts`. The TODO at the bottom of the interface declaration.
 
@@ -1251,7 +1251,7 @@ their own schema.
 
 ### Task 69 - SPP-W9-03-MIGRATE-CODEC-BRANCHES - Move per-profile Schema branches into each profile file
 
-Status: `blocked` on Task 68.
+Status: `ready-for-research`.
 
 Input: `battle-codecs.ts` Schema union (~50 branches at the time of
 plan).

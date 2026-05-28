@@ -22,6 +22,7 @@
 //     are Wave 9 migration work.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type {
@@ -418,6 +419,7 @@ function spendAfterHitDamageFreeCastResource(
 
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

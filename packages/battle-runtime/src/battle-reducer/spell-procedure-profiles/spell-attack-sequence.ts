@@ -40,7 +40,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellAdmissionCharacterLevel } from "./profile.ts";
+import {
+  spellAdmissionCharacterLevel,
+  spellInvocationSchemaUnavailable,
+} from "./profile.ts";
 
 type SpellAttackSequenceResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackSequenceInvocation,
@@ -137,6 +140,7 @@ export const spellAttackSequenceProfile: SpellProcedureProfile<
   >
 > = {
   procedure: "spellAttackSequence",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

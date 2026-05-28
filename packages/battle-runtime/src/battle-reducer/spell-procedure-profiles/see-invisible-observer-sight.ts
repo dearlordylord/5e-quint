@@ -23,10 +23,11 @@
 //   - Observer-scoped visibility witnesses stay with the sight/visibility
 //     query helpers and active-effect readers.
 //   - Duration expiry stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -270,6 +271,7 @@ export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
   SeeInvisibleObserverSightSpellInvocation
 > = {
   procedure: "seeInvisibleObserverSight",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

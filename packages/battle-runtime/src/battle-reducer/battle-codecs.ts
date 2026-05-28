@@ -80,7 +80,6 @@ import {
   AbilitySchema,
   ArmorOfShadowsSpellAccessSchema,
   AttackBonus,
-  BATTLE_SURFACE_ABILITIES,
   BATTLE_SURFACE_SKILLS,
   BattleRuntimeObjectSchema,
   BattleThunderwaveAudibleBoomSchema,
@@ -97,7 +96,6 @@ import {
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   PreparedSpellAttackSequenceTargetingSchema,
-  RollModifierSpellInvocationBaseSchemaFields,
   SingleCreatureOrObjectSpellTargetingSchema,
   SizeSchema,
   SpellAttackDamagePayloadSchema,
@@ -113,6 +111,10 @@ import {
   SupportedAttackActionOptionSchema,
   SupportedHealingSpellInvocationSchema,
 } from "./codec-building-blocks.ts";
+import {
+  DamageReductionInvocationSchema,
+  RollModifierInvocationSchema,
+} from "./spell-procedure-profiles/invocation-schemas.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
@@ -1524,25 +1526,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       }),
       rangeFeet: MovementFeet,
     }),
-    Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("damageReduction"),
-      spell: BattleRuntimeObjectSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
-      }),
-      damageTypeChoices: Schema.Array(DamageTypeSchema),
-      amount: Schema.Struct({
-        dice: Schema.Literal(1),
-        dieSize: Schema.Literal(4),
-      }),
-      expiresAt: BattleRuntimeObjectSchema,
-      rangeFeet: MovementFeet,
-    }),
+    DamageReductionInvocationSchema,
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
@@ -1627,22 +1611,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       ),
       rangeFeet: MovementFeet,
     }),
-    Schema.Struct({
-      ...RollModifierSpellInvocationBaseSchemaFields,
-      skillChoices: Schema.NullOr(
-        Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
-      ),
-      abilityChoices: Schema.Literal(null),
-      abilityChoiceApplication: Schema.optionalWith(Schema.Never, {
-        exact: true,
-      }),
-    }),
-    Schema.Struct({
-      ...RollModifierSpellInvocationBaseSchemaFields,
-      skillChoices: Schema.Literal(null),
-      abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
-      abilityChoiceApplication: Schema.Literal("single", "perTarget"),
-    }),
+    RollModifierInvocationSchema,
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,

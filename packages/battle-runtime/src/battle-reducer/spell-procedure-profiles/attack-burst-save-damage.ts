@@ -21,6 +21,7 @@
 // reaction, and damage-lifecycle sequencing. The profile owns dispatch into
 // that resolver and the procedure's admission/discovery projections.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -118,6 +119,7 @@ export const attackBurstSaveDamageProfile: SpellProcedureProfile<
   AttackBurstSaveDamageInvocation
 > = {
   procedure: "attackBurstSaveDamage",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

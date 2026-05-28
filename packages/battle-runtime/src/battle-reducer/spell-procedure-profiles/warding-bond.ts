@@ -9,6 +9,7 @@
 // cast resolution.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -417,6 +418,7 @@ export const wardingBondProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "wardingBond",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

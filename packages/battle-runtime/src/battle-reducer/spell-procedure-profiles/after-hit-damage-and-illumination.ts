@@ -27,6 +27,7 @@
 //     are Wave 9 migration work.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -380,6 +381,7 @@ function resolveAfterHitDamageAndIllumination(
 
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -20,6 +20,7 @@
 // Readied Spell release continuation sequencing.
 
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -181,6 +182,7 @@ export const repeatedDamageAllocationProfile: SpellProcedureProfile<
   RepeatedDamageAllocationInvocation
 > = {
   procedure: "repeatedDamageAllocation",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

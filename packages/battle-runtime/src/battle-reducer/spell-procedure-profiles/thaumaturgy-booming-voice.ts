@@ -25,9 +25,10 @@
 //     helpers are split.
 //   - The active 1-minute-effect count witness hole stays in
 //     spells-damage-fills.ts until the hole subsystem migrates.
-//   - The central codec branch in battle-codecs.ts still owns the Schema
-//     literal for this invocation - see the TODO in profile.ts.
+//   - The central codec branch in battle-codecs.ts still owns the authoritative
+//     Schema literal for this invocation until its profile branch migrates.
 
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -63,7 +64,10 @@ function admitThaumaturgyBoomingVoice(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly ThaumaturgyBoomingVoiceInvocation[] {
-  const projection = thaumaturgyBoomingVoiceProjection(ctx.actor.combatantId, spell);
+  const projection = thaumaturgyBoomingVoiceProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   return projection === null
     ? []
     : [
@@ -280,6 +284,7 @@ export const thaumaturgyBoomingVoiceProfile: SpellProcedureProfile<
   ThaumaturgyBoomingVoiceInvocation
 > = {
   procedure: "thaumaturgyBoomingVoice",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -25,8 +25,8 @@
 //                            in battle-reducer.ts (kept exported there as a
 //                            re-export for callers that still need it)
 //
-// The central codec branch in battle-codecs.ts still owns the Schema literal
-// for this invocation — see the TODO in profile.ts for the next step.
+// The invocation Schema is shared with battle-codecs.ts through
+// invocation-schemas.ts until the central codec composes the registry directly.
 
 import { movementFeet } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
@@ -54,11 +54,9 @@ import {
 } from "../spells-resolve-resources.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-} from "../spells-targeting.ts";
+import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { DamageReductionInvocationSchema } from "./invocation-schemas.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -352,5 +350,6 @@ export const damageReductionProfile: SpellProcedureProfile<
   discoverCastAct: discoverDamageReductionCastAct,
   castSummary: damageReductionCastSummary,
   invocationRef: damageReductionInvocationRef,
+  invocationSchema: DamageReductionInvocationSchema,
   resolve: resolveDamageReduction,
 };

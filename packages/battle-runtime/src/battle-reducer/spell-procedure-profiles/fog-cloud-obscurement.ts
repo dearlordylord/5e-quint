@@ -21,6 +21,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { LinearPerLevel, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -207,6 +208,7 @@ function resolveFogCloudObscurement(
 
 export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

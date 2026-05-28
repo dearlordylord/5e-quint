@@ -17,6 +17,7 @@
 //     Attack, and Teleportation.
 
 import { movementFeet } from "@dnd/shared/types";
+import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -278,6 +279,7 @@ function validateSelfTeleportDestination(
 
 export const selfTeleportProfile = {
   procedure: "selfTeleport",
+  invocationSchema: spellInvocationSchemaUnavailable(),
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
