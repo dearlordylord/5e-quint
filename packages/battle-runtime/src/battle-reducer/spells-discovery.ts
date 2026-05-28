@@ -59,6 +59,7 @@ import {
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
@@ -775,6 +776,13 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "attackBurstSaveDamage") {
+        return attackBurstSaveDamageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (invocation.procedure === "spellHostedWeaponAttack") {
         return spellHostedWeaponAttackProfile.discoverCastAct(
           state,
@@ -1239,6 +1247,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "chainedSpellAttackDamage") {
     return chainedSpellAttackDamageProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "attackBurstSaveDamage") {
+    return attackBurstSaveDamageProfile.castSummary(invocation);
   }
   return spellActivationInvocationCastSummary(invocation);
 }

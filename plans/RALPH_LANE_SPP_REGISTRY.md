@@ -277,7 +277,7 @@
     {
       "number": 46,
       "id": "SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate attackBurstSaveDamage profile"
     },
     {
@@ -1066,7 +1066,7 @@ Focused MBT: `chained-attack-sequence.mbt.test.ts`.
 
 ### Task 46 - SPP-W6-04-ATTACK-BURST-SAVE-DAMAGE - Migrate attackBurstSaveDamage
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-damage-spell-selected-identity.mbt.test.ts`.
 

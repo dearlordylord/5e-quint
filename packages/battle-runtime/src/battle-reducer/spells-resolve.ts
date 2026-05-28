@@ -121,6 +121,7 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
@@ -277,8 +278,6 @@ export {
 import { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
-
-import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -668,7 +667,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "attackBurstSaveDamage") {
-    return resolveAttackBurstSaveDamageSpellAct({
+    return attackBurstSaveDamageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

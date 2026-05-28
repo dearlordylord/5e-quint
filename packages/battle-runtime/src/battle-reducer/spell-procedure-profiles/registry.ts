@@ -10,6 +10,7 @@
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./ability-d20-test-roll-mode-save-gate.ts";
+import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
 import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { commandProfile } from "./command.ts";
 import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.ts";
@@ -102,6 +103,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   spellAttackDamageProfile,
   spellAttackSequenceProfile,
   chainedSpellAttackDamageProfile,
+  attackBurstSaveDamageProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

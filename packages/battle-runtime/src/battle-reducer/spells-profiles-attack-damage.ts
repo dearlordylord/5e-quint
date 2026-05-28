@@ -56,6 +56,10 @@ export type SpellAttackSequenceInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellAttackSequence" }
 >;
+export type AttackBurstSaveDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "attackBurstSaveDamage" }
+>;
 
 const SORCEROUS_BURST_DAMAGE_TYPES = [
   "acid",
@@ -450,20 +454,22 @@ export function supportedPreparedAttackBurstSaveDamageProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return supportedAttackBurstSaveDamageProfile({
-      spell,
-      access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      slotLevel: slot.spellLevel,
-    });
-  });
+): readonly AttackBurstSaveDamageInvocation[] {
+  return spellSlots.flatMap(
+    (slot): readonly AttackBurstSaveDamageInvocation[] => {
+      if (Number(slot.spellLevel) < spell.mechanics.level) {
+        return [];
+      }
+      return supportedAttackBurstSaveDamageProfile({
+        spell,
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        spellcastingAbilityModifier,
+        proficiencyBonus,
+        slotLevel: slot.spellLevel,
+      });
+    },
+  );
 }
 
 export function supportedAttackBurstSaveDamageProfile(
@@ -473,7 +479,7 @@ export function supportedAttackBurstSaveDamageProfile(
     readonly proficiencyBonus: ProficiencyBonusType;
     readonly slotLevel: SpellSlotLevel;
   } & PreparedDamageSpellSource,
-): readonly SupportedSpellInvocation[] {
+): readonly AttackBurstSaveDamageInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
