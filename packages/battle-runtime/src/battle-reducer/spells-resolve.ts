@@ -137,6 +137,7 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
@@ -210,7 +211,6 @@ import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolv
 import {
   resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveMagicalDarknessPointOriginSpellAct,
-  resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
@@ -837,7 +837,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "spikeGrowthMovementHazard") {
-    return resolveSpikeGrowthMovementHazardSpellAct({
+    return spikeGrowthMovementHazardProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

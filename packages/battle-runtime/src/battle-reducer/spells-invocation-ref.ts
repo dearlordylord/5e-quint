@@ -66,6 +66,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import {
@@ -167,12 +168,7 @@ export function supportedSpellInvocationRef(
     return spiritualWeaponAttackProxyProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spikeGrowthMovementHazard") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "spikeGrowthMovementHazard",
-    };
+    return spikeGrowthMovementHazardProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "moonbeam") {
     return moonbeamProfile.invocationRef(invocation);

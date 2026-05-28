@@ -373,7 +373,7 @@
     {
       "number": 62,
       "id": "SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spikeGrowthMovementHazard profile"
     },
     {
@@ -1181,7 +1181,7 @@ Focused MBT: `gust-of-wind-line-lifecycle.mbt.test.ts`.
 
 ### Task 62 - SPP-W8-10-SPIKE-GROWTH-MOVEMENT-HAZARD - Migrate spikeGrowthMovementHazard
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `spike-growth-movement-hazard.mbt.test.ts`.
 

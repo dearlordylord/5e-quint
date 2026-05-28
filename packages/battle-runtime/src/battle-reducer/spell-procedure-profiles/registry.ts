@@ -67,6 +67,7 @@ import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
 import { shieldReactionProfile } from "./shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
+import { spikeGrowthMovementHazardProfile } from "./spike-growth-movement-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-attack-sequence.ts";
 import {
@@ -136,6 +137,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   flamingSphereProfile,
   moonbeamProfile,
   fogCloudObscurementProfile,
+  spikeGrowthMovementHazardProfile,
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,

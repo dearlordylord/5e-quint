@@ -68,6 +68,7 @@ import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
+import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -247,19 +248,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "spikeGrowthMovementHazard") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Spike Growth area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return spikeGrowthMovementHazardProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "moonbeam") {
         return moonbeamProfile.discoverCastAct(state, actorId, invocation);
