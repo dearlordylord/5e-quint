@@ -121,7 +121,6 @@ import {
 } from "./reaction-modifiers.ts";
 import {
   triggeredReactionSpellChoices,
-  counterspellReactionSpellMatchesTrigger,
   hellishRebukeReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
@@ -135,6 +134,7 @@ import {
   applySelfTransformationModeEffect,
 } from "./spells-active-effects.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
@@ -260,7 +260,6 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
   AttackSpellDamageAddition,
-  BattleTurnResources,
   BattleTurnSnapshot,
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
@@ -2117,80 +2116,6 @@ function stateForContinuingReactionFrame(
     : state;
 }
 
-function stateAfterCounteredSpellCast(
-  state: BattleState,
-  frame: Extract<BattleReactionFrame, { readonly trigger: "spellCast" }>,
-):
-  | { readonly tag: "ok"; readonly state: BattleState }
-  | { readonly tag: "invalid"; readonly message: string } {
-  const currentFrame = currentReactionFrame(state);
-  if (currentFrame?.trigger !== "spellCast") {
-    return {
-      tag: "invalid",
-      message:
-        "Counterspell can only end the current spell-cast Reaction frame.",
-    };
-  }
-  const releasedResources =
-    frame.spellSlotCommitment.kind === "none"
-      ? state.currentTurnResources
-      : releasePendingSpellSlotUseThisTurn(
-          state.currentTurnResources,
-          frame.casterId,
-        );
-  const wastedResources = turnResourcesAfterWastedSpellCastingResource(
-    releasedResources,
-    frame,
-  );
-  if (Either.isLeft(wastedResources)) {
-    return {
-      tag: "invalid",
-      message: wastedResources.left,
-    };
-  }
-  return {
-    tag: "ok",
-    state: {
-      ...state,
-      currentTurnResources: wastedResources.right,
-      interruptStack: [
-        ...state.interruptStack.slice(0, -1),
-        reactionInterruptFrame({
-          ...currentFrame,
-          offeredReactors: currentFrame.eligibleReactors,
-          continuation: {
-            kind: "resolved",
-            subject: currentFrame.continuation.subject,
-          },
-        }),
-      ],
-    },
-  };
-}
-
-function turnResourcesAfterWastedSpellCastingResource(
-  resources: BattleTurnResources,
-  frame: Extract<BattleReactionFrame, { readonly trigger: "spellCast" }>,
-): Either.Either<BattleTurnResources, string> {
-  if (frame.castingResource.kind === "magicAction") {
-    const spent = spendAction(resources, "magic");
-    return Either.isLeft(spent)
-      ? Either.left(
-          "Magic action is no longer available for the countered spell.",
-        )
-      : Either.right(spent.right);
-  }
-  if (frame.castingResource.kind === "bonusAction") {
-    const spent = spendActivationResource(resources, { kind: "bonusAction" });
-    return Either.isLeft(spent)
-      ? Either.left(
-          "Bonus Action is no longer available for the countered spell.",
-        )
-      : Either.right(spent.right);
-  }
-  return Either.right(resources);
-}
-
 export function resolveReactionRollOrDamageReduction(input: {
   readonly state: BattleState;
   readonly frame: BattleReactionFrame;
@@ -2598,123 +2523,16 @@ function resolveCounterspellReactionSpellCommand(
     >;
   },
 ): BattleResolutionResult {
-  if (
-    input.frame.trigger !== "spellCast" ||
-    !counterspellReactionSpellMatchesTrigger(
-      input.invocation,
-      input.frame,
-      input.subject.reactorId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Counterspell requires a matching spell-cast Reaction trigger.",
-    );
-  }
-
   const fillSet = spellFillSet(input.fills, input.invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (
-    !spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {
-      allowSavingThrowOutcomes: true,
-    })
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Counterspell targets the caster from the spell-cast trigger and uses only that caster's Constitution Saving Throw when needed.",
-    );
-  }
-
-  const countersAutomatically =
-    Number(input.invocation.resource.slotLevel) >= input.frame.castLevel;
-  if (countersAutomatically && fillSet.savingThrowOutcomes !== undefined) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Counterspell cast with a sufficient spell slot does not use a Saving Throw outcome.",
-    );
-  }
-
-  let triggeringCasterSaveSucceeded = false;
-  if (!countersAutomatically) {
-    const savingThrowHole = spellSavingThrowOutcomeHole(
-      input.state,
-      input.subject.reactorId,
-      input.invocation,
-    );
-    if (fillSet.savingThrowOutcomes === undefined) {
-      return needsHolesResult(input.state, input.subject, [savingThrowHole]);
-    }
-    const savingThrowValidation = validateSavingThrowOutcomes(
-      fillSet.savingThrowOutcomes,
-      savingThrowHole,
-      input.state,
-      input.subject.reactorId,
-      input.frame.casterId,
-    );
-    if (savingThrowValidation !== null) {
-      return invalidResult(input.state, "invalidFill", savingThrowValidation);
-    }
-    const outcome = fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome === undefined) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Counterspell requires the triggering caster's Saving Throw outcome.",
-      );
-    }
-    triggeringCasterSaveSucceeded = outcome.succeeded;
-  }
-
-  const castingState = stateAfterSpellCastDeclared({
-    state: input.state,
-    casterId: input.subject.reactorId,
+  return counterspellProfile.resolve({
+    input,
+    actorId: input.subject.reactorId,
     invocation: input.invocation,
+    fillSet,
   });
-  const slotted = expendSpellSlot(
-    castingState,
-    input.subject.reactorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const counterspellState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
-  if (triggeringCasterSaveSucceeded) {
-    return {
-      tag: "resolved",
-      state: counterspellState,
-      snapshot: snapshotBattle(counterspellState),
-    };
-  }
-
-  const counteredState = stateAfterCounteredSpellCast(
-    counterspellState,
-    input.frame,
-  );
-  if (counteredState.tag === "invalid") {
-    return invalidResult(input.state, "staleSubject", counteredState.message);
-  }
-  return {
-    tag: "resolved",
-    state: counteredState.state,
-    snapshot: snapshotBattle(counteredState.state),
-  };
 }
 
 function resolveFeatherFallReactionSpellCommand(

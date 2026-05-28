@@ -67,6 +67,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
@@ -1234,7 +1235,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "counterspell") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return counterspellProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackDamage") {
     return spellActivationInvocationCastSummary(invocation);

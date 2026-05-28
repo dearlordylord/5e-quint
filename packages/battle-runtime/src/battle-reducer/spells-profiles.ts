@@ -149,6 +149,7 @@ import {
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
+import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
@@ -509,10 +510,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedCounterspellReactionSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      counterspellProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedHellishRebukeReactionSpellProfile(
@@ -2494,65 +2492,6 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
           },
         ];
   });
-}
-
-export function supportedPreparedCounterspellReactionSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (
-    spell.mechanics.family !== "triggered_reaction" ||
-    spell.mechanics.level !== 3 ||
-    spell.mechanics.castingTime.kind !== "reaction" ||
-    spell.mechanics.castingTime.trigger.kind !== "creature_casts_spell" ||
-    !sameStringSet(spell.mechanics.castingTime.trigger.components ?? [], [
-      "V",
-      "S",
-      "M",
-    ]) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    !spell.mechanics.components.s ||
-    spell.mechanics.components.v ||
-    spell.mechanics.components.m ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    !spell.mechanics.interruptsTrigger ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "con" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    phase.onFail.kind !== "negate_triggering_spell" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.autoSuccessIfCasterSlotGte !== "triggering_spell_level"
-  ) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "counterspell",
-            spell,
-            ability: "con" as const,
-            dc: phase.dc,
-            targeting: { kind: "singleCombatant" as const },
-            rangeFeet: movementFeet(60),
-          },
-        ],
-  );
 }
 
 export function reactionTriggerIncludesHitByAttackRoll(

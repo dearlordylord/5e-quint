@@ -14,6 +14,7 @@ import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { commandProfile } from "./command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
+import { counterspellProfile } from "./counterspell.ts";
 import { creatureSizeChangeProfile } from "./creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionProfile } from "./direct-condition.ts";
@@ -92,6 +93,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   hideousLaughterProfile,
   greaseGroundHazardProfile,
   commandProfile,
+  counterspellProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

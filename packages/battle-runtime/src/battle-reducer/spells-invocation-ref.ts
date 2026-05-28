@@ -34,6 +34,7 @@ import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-dama
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
+import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
@@ -279,12 +280,7 @@ export function supportedSpellInvocationRef(
     return featherFallMitigationProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "counterspell") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "counterspell",
-    };
+    return counterspellProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return sanctuaryTargetingInterdictionProfile.invocationRef(invocation);

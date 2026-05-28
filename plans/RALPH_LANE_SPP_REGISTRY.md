@@ -247,7 +247,7 @@
     {
       "number": 41,
       "id": "SPP-W5-01-COUNTERSPELL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate counterspell reaction profile (requires SPP-W1-01)"
     },
     {
@@ -1030,7 +1030,7 @@ Acceptance: typecheck clean, save-gated profile MBTs still pass.
 
 ### Task 41 - SPP-W5-01-COUNTERSPELL - Migrate counterspell
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts` and
 `reaction-casting-time.mbt.test.ts`. The profile.resolve uses the
