@@ -108,6 +108,7 @@ import {
   dancingLightsSeparateCastProfile,
 } from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
+import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -204,7 +205,6 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
 import {
-  resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
   resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
@@ -292,9 +292,7 @@ import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import {
-  resolveReadySpellAct,
-} from "./spells-resolve-release.ts";
+import { resolveReadySpellAct } from "./spells-resolve-release.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
@@ -831,7 +829,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "flamingSphere") {
-    return resolveFlamingSphereSpellAct({
+    return flamingSphereProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

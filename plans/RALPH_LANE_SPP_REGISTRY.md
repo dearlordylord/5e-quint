@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "SPP-W8-06-FLAMING-SPHERE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate flamingSphere lifecycle profile"
     },
     {
@@ -1157,7 +1157,7 @@ Focused MBT: `mirror-image-hit-interception.mbt.test.ts`.
 
 ### Task 58 - SPP-W8-06-FLAMING-SPHERE - Migrate flamingSphere
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `flaming-sphere-hazard-ram.mbt.test.ts`.
 

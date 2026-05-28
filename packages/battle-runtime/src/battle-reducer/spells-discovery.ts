@@ -69,6 +69,7 @@ import {
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -252,19 +253,7 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "flamingSphere") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the sphere area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return flamingSphereProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "spiritualWeaponAttackProxy") {
         return spiritualWeaponAttackProxyProfile.discoverCastAct(
@@ -1124,6 +1113,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "command") {
     return commandProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "flamingSphere") {
+    return flamingSphereProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     return spellAttackSequenceProfile.castSummary(invocation);

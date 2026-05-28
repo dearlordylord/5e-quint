@@ -34,6 +34,7 @@ import {
 } from "./dancing-lights.ts";
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
+import { flamingSphereProfile } from "./flaming-sphere.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
@@ -128,6 +129,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   sleepTargetAdmissionProfile,
   hideousLaughterProfile,
   greaseGroundHazardProfile,
+  flamingSphereProfile,
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,
