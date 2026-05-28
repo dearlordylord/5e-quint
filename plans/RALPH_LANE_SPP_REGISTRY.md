@@ -319,7 +319,7 @@
     {
       "number": 53,
       "id": "SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spellCreatedHeldObject + Attack + ReEvoke (one file)"
     },
     {
@@ -1121,7 +1121,7 @@ literals that share state) into ONE file.
 
 ### Task 53 - SPP-W8-01-SPELL-CREATED-HELD-OBJECT-FAMILY - Migrate spellCreatedHeldObject + Attack + ReEvoke
 
-Status: `ready-for-research`
+Status: `done`
 
 Three procedure literals, one shared lifecycle. Focused MBT:
 `spell-created-held-object-lifecycle.mbt.test.ts`. The profile file
