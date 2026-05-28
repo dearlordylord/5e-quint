@@ -68,7 +68,6 @@ import {
   supportedDamageAmountExpr,
   supportedPreparedCommandProfile,
   supportedPreparedGreaseGroundHazardProfile,
-  supportedPreparedHideousLaughterProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -140,6 +139,7 @@ import {
   heldLightProfile,
   isProduceFlameOngoingEffectSpell,
 } from "./spell-procedure-profiles/held-light.ts";
+import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
@@ -211,7 +211,6 @@ export {
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
-  supportedPreparedHideousLaughterProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
   supportedSaveGateDamageProfile,
@@ -220,6 +219,7 @@ export {
   supportedSpellPostDamageRiders,
 } from "./spells-profiles-save-gates.ts";
 export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 
 type ActivationPhase = Extract<
   SpellRecord["mechanics"],
@@ -303,7 +303,7 @@ export function supportedSpellActs(
       sleepTargetAdmissionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedHideousLaughterProfile(spell, spellcasting.spellSlots),
+      hideousLaughterProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedGreaseGroundHazardProfile(

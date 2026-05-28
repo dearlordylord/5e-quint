@@ -21,7 +21,6 @@ import type { CharacterBattleMetamagicOptionFact } from "../character-battle-res
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
-  isTargetListSpellInvocation,
   reactionTriggerLabel,
   type BattleActiveEffect,
   type BattleHole,
@@ -78,6 +77,7 @@ import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -441,54 +441,17 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "hideousLaughter") {
+        return hideousLaughterProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "greaseGroundHazard" ||
         invocation.procedure === "gustOfWindLine"
       ) {
-        if (
-          invocation.procedure === "hideousLaughter" &&
-          isTargetListSpellInvocation(invocation)
-        ) {
-          const targetHole = spellTargetListHole(state, actorId, invocation);
-          if (targetHole.choices.length === 0) {
-            return [];
-          }
-          const baseCastAct = {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-            initialHoles: [targetHole],
-          };
-          const metamagicCastActs = discoverSpellMetamagicSelections({
-            actor,
-            invocation,
-          }).map((metamagic) => ({
-            ...baseCastAct,
-            subject: {
-              ...baseCastAct.subject,
-              metamagic,
-            },
-            initialHoles: [
-              targetHole,
-              ...saveMetamagicInitialHoles(
-                state,
-                actorId,
-                invocation,
-                spellMetamagicApplications(actor, metamagic),
-              ),
-            ],
-            label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
-            summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
-          }));
-          const castActs = [baseCastAct, ...metamagicCastActs];
-          return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-        }
         const initialHole = spellSavingThrowOutcomeHole(
           state,
           actorId,
@@ -1326,6 +1289,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "sleepTargetAdmission") {
     return sleepTargetAdmissionProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "hideousLaughter") {
+    return hideousLaughterProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

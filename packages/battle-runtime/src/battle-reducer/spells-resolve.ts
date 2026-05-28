@@ -103,6 +103,7 @@ import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -278,7 +279,6 @@ import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-bu
 import {
   resolveCommandSpellAct,
   resolveGreaseGroundHazardSpellAct,
-  resolveHideousLaughterSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -749,7 +749,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "hideousLaughter") {
-    return resolveHideousLaughterSpellAct({
+    return hideousLaughterProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

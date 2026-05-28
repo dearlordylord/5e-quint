@@ -70,8 +70,8 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
+import { supportedPreparedHideousLaughterProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
 import {
-  supportedPreparedHideousLaughterProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spells-profiles-save-gates.ts";

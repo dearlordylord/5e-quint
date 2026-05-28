@@ -223,7 +223,7 @@
     {
       "number": 37,
       "id": "SPP-W4-08-HIDEOUS-LAUGHTER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate hideousLaughter profile (no focused MBT — uses integration)"
     },
     {
@@ -996,7 +996,7 @@ Focused MBT: `battle-runtime.mbt.test.ts` (integration only).
 
 ### Task 37 - SPP-W4-08-HIDEOUS-LAUGHTER - Migrate hideousLaughter
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

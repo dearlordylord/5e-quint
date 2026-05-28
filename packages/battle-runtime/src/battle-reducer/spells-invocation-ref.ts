@@ -24,6 +24,7 @@ import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
+import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
@@ -110,12 +111,7 @@ export function supportedSpellInvocationRef(
     return sleepTargetAdmissionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "hideousLaughter") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "hideousLaughter",
-    };
+    return hideousLaughterProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
     return {
