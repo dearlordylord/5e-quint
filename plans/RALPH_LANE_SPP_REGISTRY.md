@@ -367,7 +367,7 @@
     {
       "number": 61,
       "id": "SPP-W8-09-GUST-OF-WIND-LINE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate gustOfWindLine profile"
     },
     {
@@ -1175,7 +1175,7 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 61 - SPP-W8-09-GUST-OF-WIND-LINE - Migrate gustOfWindLine
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `gust-of-wind-line-lifecycle.mbt.test.ts`.
 
