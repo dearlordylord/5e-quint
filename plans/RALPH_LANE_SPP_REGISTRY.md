@@ -415,7 +415,7 @@
     {
       "number": 69,
       "id": "SPP-W9-03-MIGRATE-CODEC-BRANCHES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Move per-profile Schema branches into each profile file"
     },
     {
@@ -1251,7 +1251,7 @@ their own schema.
 
 ### Task 69 - SPP-W9-03-MIGRATE-CODEC-BRANCHES - Move per-profile Schema branches into each profile file
 
-Status: `ready-for-research`.
+Status: `done`
 
 Input: `battle-codecs.ts` Schema union (~50 branches at the time of
 plan).

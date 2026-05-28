@@ -11,7 +11,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Attack Roll, Advantage, Magic
 //     Action, and Spell Invocation.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -45,6 +44,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AbilitySchema,
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SaveGatedAttackRollAdvantageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -239,9 +248,33 @@ function resolveSaveGatedAttackRollAdvantage(
   });
 }
 
+const SaveGatedAttackRollAdvantageInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "saveGatedAttackRollAdvantage" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+      ),
+      effect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SaveGatedAttackRollAdvantageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

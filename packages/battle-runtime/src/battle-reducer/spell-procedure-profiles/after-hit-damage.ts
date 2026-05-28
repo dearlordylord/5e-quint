@@ -18,11 +18,9 @@
 // What stays in shared infrastructure:
 //   - The attack-hit Reaction window and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
-//   - The central codec branch in battle-codecs.ts and metamagic table entry
-//     are Wave 9 migration work.
+//   - The metamagic table entry remains Wave 9 migration work.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type {
@@ -80,6 +78,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassFeatureFreeCastInvocationResourceSchema,
+  DamageTypeSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AfterHitDamageInvocation = AfterHitDamageSpellInvocation;
 type AttackHitBonusActionSpellCommandSubject = Extract<
@@ -417,9 +425,32 @@ function spendAfterHitDamageFreeCastResource(
   );
 }
 
+const AfterHitDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "afterHitDamage" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: Schema.Union(
+      SpellSlotInvocationResourceSchema,
+      ClassFeatureFreeCastInvocationResourceSchema,
+    ),
+    procedure: Schema.Literal("afterHitDamage"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: DamageTypeSchema,
+    }),
+    conditionalBonusDamage: Schema.Struct({
+      targetCreatureTypes: Schema.Array(Schema.String),
+      expr: BattleRuntimeObjectSchema,
+      damageType: DamageTypeSchema,
+    }),
+  }),
+);
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AfterHitDamageInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

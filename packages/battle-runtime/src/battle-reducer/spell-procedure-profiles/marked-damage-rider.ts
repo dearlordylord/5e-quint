@@ -23,7 +23,12 @@
 //
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
+import {
+  MovementFeet,
+  movementFeet,
+  spellSlotLevel,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
@@ -31,7 +36,6 @@ import type {
   EffectAtom,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import type { MovementFeet, SpellSlotLevel } from "@dnd/shared/types";
 import { Either, Match } from "effect";
 
 import {
@@ -85,10 +89,17 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionBattleTurn } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionBattleTurn,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  AbilitySchema,
+  BattleRuntimeObjectSchema,
+  ClassFeatureFreeCastInvocationResourceSchema,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type MarkedDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
@@ -784,13 +795,61 @@ function markedDamageRiderActiveAbilityCheckBehavior(
   );
 }
 
+const MarkedDamageRiderInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "markedDamageRider" }>
+>(
+  Schema.Union(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        ClassFeatureFreeCastInvocationResourceSchema,
+      ),
+      procedure: Schema.Literal("markedDamageRider"),
+      action: Schema.Literal("cast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      damage: BattleRuntimeObjectSchema,
+      abilityCheckBehavior: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("chosenAbilityDisadvantage"),
+          choices: Schema.Array(AbilitySchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("findingAdvantage"),
+          ability: Schema.Literal("wis"),
+          skills: Schema.Tuple(
+            Schema.Literal("perception"),
+            Schema.Literal("survival"),
+          ),
+        }),
+      ),
+      rangeFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("markedDamageRider"),
+      action: Schema.Literal("transfer"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      damage: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  ),
+);
 export const markedDamageRiderProfile: SpellProcedureProfile<
   "markedDamageRider",
   MarkedDamageRiderInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "markedDamageRider",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MarkedDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -17,7 +17,6 @@
 //     Attack, and Teleportation.
 
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -47,6 +46,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SelfTeleportInvocation = Extract<
   SupportedSpellInvocation,
@@ -277,9 +284,21 @@ function validateSelfTeleportDestination(
   return null;
 }
 
+const SelfTeleportInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "selfTeleport" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("selfTeleport"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    maxDistanceFeet: MovementFeet,
+  }),
+);
 export const selfTeleportProfile = {
   procedure: "selfTeleport",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SelfTeleportInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

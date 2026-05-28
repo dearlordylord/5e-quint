@@ -11,7 +11,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Magic Action, and Spell
 //     Invocation.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   isTargetListSpellInvocation,
@@ -50,6 +49,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellFailedSaveConditionEffectSchema,
+  SpellSavingThrowRollModeRuleSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SaveGatedConditionSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -314,9 +323,54 @@ function resolveSaveGatedCondition(
   });
 }
 
+const SaveGatedConditionInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("saveGatedCondition"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.String,
+    dc: BattleRuntimeObjectSchema,
+    targeting: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("selfOriginCone"),
+        lengthFeet: MovementFeet,
+      }),
+    ),
+    targetCreatureTypes: Schema.NullOr(Schema.Array(Schema.String)),
+    effect: SpellFailedSaveConditionEffectSchema,
+    saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SaveGatedConditionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

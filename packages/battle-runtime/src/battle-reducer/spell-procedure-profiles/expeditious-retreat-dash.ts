@@ -15,7 +15,6 @@
 //     grants additional movement budget rather than changing Speed.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -51,6 +50,13 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ExpeditiousRetreatDashInvocation = Extract<
   SupportedSpellInvocation,
@@ -322,9 +328,24 @@ function resolveExpeditiousRetreatDash(
   };
 }
 
+const ExpeditiousRetreatDashInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "expeditiousRetreatDash" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("expeditiousRetreatDash"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+  }),
+);
 export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ExpeditiousRetreatDashInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

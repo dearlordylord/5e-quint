@@ -39,10 +39,18 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  DamageTypeSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  SingleCreatureOrObjectSpellTargetingSchema,
+} from "../codec-building-blocks.ts";
 
 type HeldLightHurlInvocation = Extract<
   SupportedSpellInvocation,
@@ -161,12 +169,30 @@ function resolveHeldLightHurl(
   return resolveSpellAttackDamageAct(input);
 }
 
+const HeldLightHurlInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("heldLightHurl"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: SingleCreatureOrObjectSpellTargetingSchema,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: DamageTypeSchema,
+    }),
+    rangeFeet: MovementFeet,
+    attackKind: Schema.Literal("ranged_spell_attack"),
+    attackBonus: AttackBonus,
+  }),
+);
 export const heldLightHurlProfile: SpellProcedureProfile<
   "heldLightHurl",
   HeldLightHurlInvocation
 > = {
   procedure: "heldLightHurl",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: HeldLightHurlInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

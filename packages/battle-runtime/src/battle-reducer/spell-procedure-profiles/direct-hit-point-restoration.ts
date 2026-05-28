@@ -21,7 +21,6 @@ import {
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   Attachment,
   DiceExpr,
@@ -66,6 +65,8 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SupportedHealingSpellInvocationSchema } from "../codec-building-blocks.ts";
 
 type DirectHitPointRestorationInvocation = Extract<
   SupportedSpellInvocation,
@@ -395,9 +396,16 @@ function resolveDirectHitPointRestoration(
   });
 }
 
+const DirectHitPointRestorationInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "directHitPointRestoration" }
+    >
+  >(SupportedHealingSpellInvocationSchema);
 export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: DirectHitPointRestorationInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

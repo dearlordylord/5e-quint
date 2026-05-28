@@ -15,10 +15,9 @@
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   attackBonus,
-  type AbilityModifier,
+  AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   EffectAtom,
@@ -61,6 +60,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  DamageDieSizeSchema,
+  DamageTypeSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SelfTransformationModeInvocation = Extract<
   SupportedSpellInvocation,
@@ -493,9 +502,36 @@ function selfTransformationModeEffectPayload(
   };
 }
 
+const SelfTransformationModeInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("selfTransformationMode"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    modeChoices: Schema.NonEmptyArray(
+      Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+    ),
+    naturalWeaponFacts: Schema.Struct({
+      damage: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: DamageDieSizeSchema,
+        damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+      }),
+      spellcastingAbilityModifier: AbilityModifier,
+      attackBonus: AttackBonus,
+    }),
+    expiresAt: BattleRuntimeObjectSchema,
+  }),
+);
 export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SelfTransformationModeInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -201,13 +201,17 @@ export type SpellProcedureProfile<
   ) => BattleResolutionResult;
 };
 
-export function spellInvocationSchemaUnavailable<I>(): Schema.Schema<I> {
-  // This placeholder is intentionally fail-closed for profiles whose concrete
-  // codec branch still lives in battle-codecs.ts. Effect Schema correctly types
-  // Schema.Never as Schema<never>; the cast only lets those profiles satisfy
-  // the registry contract until their exact schema migrates, and parsing through
-  // the placeholder cannot admit any runtime value.
-  return Schema.Never as unknown as Schema.Schema<I>;
+export function spellProcedureInvocationSchema<
+  I,
+  S extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
+>(
+  schema: S,
+): Schema.Schema<I> {
+  // Effect Schema preserves the runtime parser for each invocation branch, but
+  // generic record/object helpers infer wider structural fields than the
+  // reducer's branded/domain aliases. Profile-local discriminants select the
+  // exact SupportedSpellInvocation branch before the value reaches runtime.
+  return schema as unknown as Schema.Schema<I>;
 }
 
 // Existential wrapper for a heterogeneous registry. Distributes over the

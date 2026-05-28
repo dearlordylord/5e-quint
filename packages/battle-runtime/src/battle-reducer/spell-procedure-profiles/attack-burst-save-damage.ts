@@ -21,7 +21,6 @@
 // reaction, and damage-lifecycle sequencing. The profile owns dispatch into
 // that resolver and the procedure's admission/discovery projections.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -47,6 +46,19 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  AbilitySchema,
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  DamageTypeSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AttackBurstSaveDamageResolveInput = SpellProcedureProfileResolveInput<
   AttackBurstSaveDamageInvocation,
@@ -114,12 +126,48 @@ function resolveAttackBurstSaveDamage(
   return resolveAttackBurstSaveDamageSpellAct(input);
 }
 
+const AttackBurstSaveDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("attackBurstSaveDamage"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("singleCombatant"),
+    }),
+    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+    attackBonus: AttackBonus,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: DamageTypeSchema,
+    }),
+    burst: Schema.Struct({
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("primaryTargetOriginEmanation"),
+        radiusFeet: MovementFeet,
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      successDamage: Schema.Literal("none"),
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const attackBurstSaveDamageProfile: SpellProcedureProfile<
   "attackBurstSaveDamage",
   AttackBurstSaveDamageInvocation
 > = {
   procedure: "attackBurstSaveDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AttackBurstSaveDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -22,12 +22,9 @@
 //                            helper; not exported from the profile)
 //   - knownWillingTargetSpellIds — was
 //                            KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS
-//                            in battle-reducer.ts (kept exported there as a
-//                            re-export for callers that still need it)
+//                            in battle-reducer.ts (kept re-exported there for
+//                            callers that still need it)
 //
-// The invocation Schema is shared with battle-codecs.ts through
-// invocation-schemas.ts until the central codec composes the registry directly.
-
 import { movementFeet } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
@@ -36,7 +33,6 @@ import { Schema } from "effect";
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
-  KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
@@ -56,12 +52,20 @@ import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { DamageReductionInvocationSchema } from "./invocation-schemas.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
+import { KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS } from "../known-willing-target-spell-ids.ts";
 
 // Shape extractor: given a SpellRecord, return the fields of a damageReduction
 // invocation that are derivable from the spell definition, or null if the
@@ -337,6 +341,29 @@ function resolveDamageReduction(
       };
 }
 
+const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("damageReduction"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    damageTypeChoices: Schema.Array(DamageTypeSchema),
+    amount: Schema.Struct({
+      dice: Schema.Literal(1),
+      dieSize: Schema.Literal(4),
+    }),
+    expiresAt: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const damageReductionProfile: SpellProcedureProfile<
   "damageReduction",
   DamageReductionSpellInvocation

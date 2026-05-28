@@ -20,7 +20,6 @@
 // Readied Spell release continuation sequencing.
 
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -47,6 +46,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type RepeatedDamageAllocationInvocation = Extract<
   SupportedSpellInvocation,
@@ -177,12 +184,34 @@ function resolveRepeatedDamageAllocation(
   return resolvePreparedSlotSpellAct(input);
 }
 
+const RepeatedDamageAllocationInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "repeatedDamageAllocation" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("repeatedDamageAllocation"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("repeatedEffectTargetAllocation"),
+      repeatedEffectCount: Schema.Number,
+    }),
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.String,
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const repeatedDamageAllocationProfile: SpellProcedureProfile<
   "repeatedDamageAllocation",
   RepeatedDamageAllocationInvocation
 > = {
   procedure: "repeatedDamageAllocation",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: RepeatedDamageAllocationInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

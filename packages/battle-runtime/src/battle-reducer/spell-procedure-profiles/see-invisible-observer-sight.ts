@@ -23,11 +23,8 @@
 //   - Observer-scoped visibility witnesses stay with the sight/visibility
 //     query helpers and active-effect readers.
 //   - Duration expiry stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -50,6 +47,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 function seeInvisibleObserverSightShape(
   actorId: CombatantId,
@@ -266,12 +271,28 @@ function resolveSeeInvisibleObserverSight(
       };
 }
 
+const SeeInvisibleObserverSightInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "seeInvisibleObserverSight" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("seeInvisibleObserverSight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
   "seeInvisibleObserverSight",
   SeeInvisibleObserverSightSpellInvocation
 > = {
   procedure: "seeInvisibleObserverSight",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SeeInvisibleObserverSightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

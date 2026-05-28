@@ -24,9 +24,8 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
@@ -45,6 +44,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type MoonbeamSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -322,9 +329,34 @@ function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
   });
 }
 
+const MoonbeamInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "moonbeam" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("moonbeam"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginCylinder"),
+      radiusFeet: MovementFeet,
+      heightFeet: MovementFeet,
+    }),
+    durationTicks: Schema.Number,
+    rangeFeet: MovementFeet,
+    repositionMaxMoveFeet: MovementFeet,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.Literal("radiant"),
+    }),
+  }),
+);
+
 export const moonbeamProfile = {
   procedure: "moonbeam",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MoonbeamInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

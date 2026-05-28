@@ -23,11 +23,9 @@
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The Shining Smite light-emitter projection constant stays in
 //     spells-active-effects.ts with the light-emitter projection code.
-//   - The central codec branch in battle-codecs.ts and metamagic table entry
-//     are Wave 9 migration work.
+//   - The metamagic table entry remains Wave 9 migration work.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -72,6 +70,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DamageTypeSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AfterHitDamageAndIlluminationInvocation =
   AfterHitDamageAndIlluminationSpellInvocation;
@@ -379,9 +385,29 @@ function resolveAfterHitDamageAndIllumination(
   };
 }
 
+const AfterHitDamageAndIlluminationInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "afterHitDamageAndIllumination" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitDamageAndIllumination"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AfterHitDamageAndIlluminationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

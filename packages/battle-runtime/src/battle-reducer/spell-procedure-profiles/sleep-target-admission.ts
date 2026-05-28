@@ -11,8 +11,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Unconscious, Magic
 //     Action, and Spell Invocation.
 
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
+import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
@@ -41,6 +40,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SleepTargetAdmissionSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -279,9 +286,29 @@ function resolveSleepTargetAdmission(
   });
 }
 
+const SleepTargetAdmissionInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sleepTargetAdmission" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("sleepTargetAdmission"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      radiusFeet: MovementFeet,
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SleepTargetAdmissionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

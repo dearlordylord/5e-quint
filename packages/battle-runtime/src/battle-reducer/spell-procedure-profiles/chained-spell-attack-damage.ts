@@ -14,7 +14,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Spell Attack, Attack Roll, Damage Roll,
 //     Damage Type, and Spell Invocation.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -41,6 +40,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  DamageTypeSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ChainedSpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -121,6 +130,30 @@ function resolveChainedSpellAttackDamage(
   });
 }
 
+const ChainedSpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("chainedSpellAttackDamage"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("singleCombatant"),
+    }),
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+    }),
+    damageTypeChoices: Schema.Array(DamageTypeSchema),
+    rangeFeet: MovementFeet,
+    leapRangeFeet: MovementFeet,
+    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+    attackBonus: AttackBonus,
+  }),
+);
 export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   "chainedSpellAttackDamage",
   ChainedSpellAttackDamageInvocation,
@@ -128,7 +161,7 @@ export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   ChainedSpellFillSet
 > = {
   procedure: "chainedSpellAttackDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ChainedSpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

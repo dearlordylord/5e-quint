@@ -17,7 +17,6 @@ import {
   spellSlotLevel,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   ActivationPhase,
   TargetSelection,
@@ -57,6 +56,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type CommandSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -383,9 +391,28 @@ function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
   });
 }
 
+const CommandInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "command" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("command"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const commandProfile = {
   procedure: "command",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: CommandInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

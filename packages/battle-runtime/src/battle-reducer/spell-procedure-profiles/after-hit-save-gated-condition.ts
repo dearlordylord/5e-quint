@@ -22,10 +22,8 @@
 // What stays in shared infrastructure:
 //   - The attack-hit Reaction window and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
-//   - The central codec branch in battle-codecs.ts and metamagic table entry
-//     are Wave 9 migration work.
+//   - The metamagic table entry remains Wave 9 migration work.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -72,6 +70,17 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  AbilitySchema,
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
+import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
 
 type AfterHitSaveGatedConditionInvocation =
   AfterHitSaveGatedConditionSpellInvocation;
@@ -446,9 +455,38 @@ function creatureSizeIsLargeOrLarger(size: Size): boolean {
   return size === "large" || size === "huge" || size === "gargantuan";
 }
 
+const AfterHitSaveGatedConditionInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "afterHitSaveGatedCondition" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitSaveGatedCondition"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      effect: Schema.Struct({
+        condition: Schema.Literal(...ALL_CONDITIONS),
+        expiresAt: Schema.Literal("concentration"),
+        escape: Schema.Struct({
+          kind: Schema.Literal("abilityCheck"),
+          ability: Schema.Literal("str"),
+          skill: Schema.Literal("athletics"),
+          successEnds: Schema.Literal("spell"),
+        }),
+        turnStartDamage: BattleRuntimeObjectSchema,
+      }),
+    }),
+  );
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AfterHitSaveGatedConditionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

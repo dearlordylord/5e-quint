@@ -21,12 +21,10 @@
 // What stays in shared infrastructure:
 //   - Reaction-window discovery and trigger matching in reaction-triggered-spells.ts.
 //   - Landing cleanup/projection helpers in spells-active-effects.ts.
-//   - The central codec branch in battle-codecs.ts and metamagic table entry;
-//     those are Wave 9 migration work.
+//   - The metamagic table entry remains Wave 9 migration work.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -58,6 +56,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type FeatherFallMitigationInvocation = Extract<
   SupportedSpellInvocation,
@@ -297,9 +303,29 @@ function resolveFeatherFallMitigation(
   };
 }
 
+const FeatherFallMitigationInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "featherFallMitigation" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("featherFallMitigation"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(5),
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: FeatherFallMitigationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

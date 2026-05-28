@@ -15,7 +15,6 @@
 //     Checks, Saving Throws, and Attack Rolls; Concentration can end sustained
 //     spell effects.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -42,6 +41,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AbilityD20TestRollModeSaveGateSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -171,9 +179,34 @@ function resolveAbilityD20TestRollModeSaveGate(
   });
 }
 
+const AbilityD20TestRollModeSaveGateInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "abilityD20TestRollModeSaveGate" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("abilityD20TestRollModeSaveGate"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("con"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      rangeFeet: MovementFeet,
+      successEffect: BattleRuntimeObjectSchema,
+      failedSaveEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,

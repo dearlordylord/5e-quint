@@ -23,12 +23,9 @@
 // What stays in shared infrastructure:
 //   - heldLightHurl has its own paired profile; the shared attack/damage
 //     resolver still owns the hurl damage lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -52,6 +49,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
@@ -267,13 +272,29 @@ function resolveHeldLight(
       };
 }
 
+const HeldLightInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "heldLight" }>
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("heldLight"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    light: Schema.Struct({
+      brightRadiusFeet: MovementFeet,
+      dimAdditionalFeet: MovementFeet,
+    }),
+    expiresAt: BattleRuntimeObjectSchema,
+  }),
+);
 export const heldLightProfile: SpellProcedureProfile<
   "heldLight",
   HeldLightInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "heldLight",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: HeldLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -16,8 +16,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
+import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -54,6 +53,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type GreaseGroundHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -354,9 +361,30 @@ function resolveGreaseGroundHazard(
   });
 }
 
+const GreaseGroundHazardInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "greaseGroundHazard" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("greaseGroundHazard"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginCube"),
+      sideFeet: MovementFeet,
+    }),
+    durationTicks: Schema.Number,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: GreaseGroundHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

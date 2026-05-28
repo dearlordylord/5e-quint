@@ -6,7 +6,6 @@
 // immunity and Temporary Hit Points at the start of each of their turns.
 
 import { movementFeet, type AbilityModifier } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DiceAmount as SurfaceDiceAmount,
   SpellRecord,
@@ -47,6 +46,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ConditionImmunityAndTurnStartTemporaryHitPointsTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
@@ -440,12 +448,40 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
   }, state);
 }
 
+const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal(
+        "conditionImmunityAndTurnStartTemporaryHitPoints",
+      ),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      activeEffects: Schema.Tuple(
+        BattleRuntimeObjectSchema,
+        BattleRuntimeObjectSchema,
+      ),
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProcedureProfile<
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
 > = {
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema:
+    ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

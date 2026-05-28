@@ -5,7 +5,6 @@
 // identity supplied by the table-owned fill boundary.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   Attachment,
@@ -43,6 +42,13 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type MagicWeaponEnhancementInvocation = Extract<
   SupportedSpellInvocation,
@@ -397,13 +403,29 @@ function magicWeaponEnhancementFillSetHasDisallowedFills(
   );
 }
 
+const MagicWeaponEnhancementInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "magicWeaponEnhancement" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("magicWeaponEnhancement"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    bonus: Schema.Literal(1, 2, 3),
+    durationTicks: Schema.Number,
+  }),
+);
 export const magicWeaponEnhancementProfile: SpellProcedureProfile<
   "magicWeaponEnhancement",
   MagicWeaponEnhancementInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "magicWeaponEnhancement",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MagicWeaponEnhancementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

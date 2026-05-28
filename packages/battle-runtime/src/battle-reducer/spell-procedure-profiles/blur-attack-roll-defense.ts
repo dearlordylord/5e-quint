@@ -24,10 +24,7 @@
 //   - Attack Roll Disadvantage projection and Blindsight/Truesight bypass
 //     witnesses stay in attack-roll.ts.
 //   - Concentration cleanup stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -55,6 +52,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 function blurAttackRollDefenseShape(
   actorId: CombatantId,
@@ -276,12 +281,27 @@ function resolveBlurAttackRollDefense(
       };
 }
 
+const BlurAttackRollDefenseInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "blurAttackRollDefense" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("blurAttackRollDefense"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+  }),
+);
 export const blurAttackRollDefenseProfile: SpellProcedureProfile<
   "blurAttackRollDefense",
   BlurAttackRollDefenseSpellInvocation
 > = {
   procedure: "blurAttackRollDefense",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: BlurAttackRollDefenseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

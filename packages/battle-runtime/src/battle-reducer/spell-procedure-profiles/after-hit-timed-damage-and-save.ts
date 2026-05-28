@@ -22,10 +22,8 @@
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The active-effect turn-start damage and save-to-end lifecycle stays with
 //     active-effect processing.
-//   - The central codec branch in battle-codecs.ts and metamagic table entry
-//     are Wave 9 migration work.
+//   - The metamagic table entry remains Wave 9 migration work.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
@@ -66,6 +64,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DamageTypeSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AfterHitTimedDamageAndSaveInvocation =
   AfterHitTimedDamageAndSaveSpellInvocation;
@@ -385,9 +391,29 @@ function resolveAfterHitTimedDamageAndSave(
   };
 }
 
+const AfterHitTimedDamageAndSaveInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "afterHitTimedDamageAndSave" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("afterHitTimedDamageAndSave"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      immediateDamage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AfterHitTimedDamageAndSaveInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -47,10 +47,19 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  AbilityModifier,
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  CharacterWeaponAttackActionOptionSchema,
+  ClassCantripSpellAccessSchema,
+  DamageTypeSchema,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 const DAMAGE_TYPE_CHOICES = [
   "radiant",
@@ -372,13 +381,40 @@ function spellHostedWeaponAttackBonusDamageAdditions(
       ];
 }
 
+const SpellHostedWeaponAttackInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellHostedWeaponAttack" }
+  >
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("spellHostedWeaponAttack"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    componentWeapon: Schema.Struct({
+      itemId: Schema.String,
+      attack: CharacterWeaponAttackActionOptionSchema,
+    }),
+    spellcastingAbilityModifier: AbilityModifier,
+    attackBonus: AttackBonus,
+    damageTypeChoices: Schema.Array(DamageTypeSchema),
+    bonusDamage: Schema.NullOr(
+      Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+    ),
+  }),
+);
 export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
   "spellHostedWeaponAttack",
   SpellHostedWeaponAttackInvocation,
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellHostedWeaponAttack",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpellHostedWeaponAttackInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

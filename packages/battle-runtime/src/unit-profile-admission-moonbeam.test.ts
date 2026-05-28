@@ -9,7 +9,11 @@ import {
   type BattleSubject,
 } from "./index.ts";
 import {
+  BattleHoleSchema,
+  BattleSnapshotSchema,
   characterSeed,
+  Either,
+  Schema,
   startBattleRight,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -116,6 +120,53 @@ describe("L12G deterministic Moonbeam admission", () => {
         damage: { expr: { dice: 3, dieSize: 10 }, damageType: "radiant" },
       }),
     );
+  });
+
+  test("moonbeam invocation holes decode through the public battle codec", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const area = requireHole(act.initialHoles, "spellAreaChoice");
+
+    const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
+    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(
+      encodedHole,
+    );
+    if (Either.isLeft(decodedHole)) {
+      throw new Error(String(decodedHole.left));
+    }
+    if (!("spell" in decodedHole.right)) {
+      throw new Error("Expected decoded Moonbeam area hole to carry a spell.");
+    }
+    expect(decodedHole.right.spell).toMatchObject({
+      procedure: "moonbeam",
+      targeting: {
+        kind: "pointOriginCylinder",
+        radiusFeet: movementFeet(5),
+        heightFeet: movementFeet(40),
+      },
+      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "radiant" },
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      resolved.snapshot,
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(encodedSnapshot),
+      ),
+    ).toBe(true);
   });
 
   test("cast records the source-owned moonbeam cylinder effect", () => {

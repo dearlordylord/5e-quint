@@ -7,7 +7,6 @@
 // and relevant-effect repeat saves.
 
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -45,6 +44,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type CreatureTypeProtectionTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
@@ -338,12 +346,33 @@ function applyCreatureTypeProtectionEffect(
   }, state);
 }
 
+const CreatureTypeProtectionInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureTypeProtection" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("creatureTypeProtection"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const creatureTypeProtectionProfile: SpellProcedureProfile<
   "creatureTypeProtection",
   CreatureTypeProtectionSpellInvocation
 > = {
   procedure: "creatureTypeProtection",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: CreatureTypeProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

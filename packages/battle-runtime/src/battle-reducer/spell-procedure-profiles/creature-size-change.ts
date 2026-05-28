@@ -15,7 +15,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   EffectAtom,
   OngoingEffect,
@@ -64,6 +63,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type CreatureSizeChangeInvocation = CreatureSizeChangeSpellInvocation;
 
@@ -527,12 +536,37 @@ function applyCreatureSizeChangeEffect(
   }, state);
 }
 
+const CreatureSizeIncreaseInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
+    }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("creatureSizeIncrease", "creatureSizeDecrease"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(1),
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const creatureSizeChangeProfile: SpellProcedureProfile<
   "creatureSizeIncrease",
   CreatureSizeChangeInvocation
 > = {
   procedure: "creatureSizeIncrease",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: CreatureSizeIncreaseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

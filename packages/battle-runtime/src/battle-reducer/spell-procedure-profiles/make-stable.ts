@@ -20,11 +20,9 @@
 // What stays in shared infrastructure:
 //   - spellTargetIsLegal's zero-HP/non-dead target predicate remains in
 //     spells-targeting.ts until target legality dispatch migrates to profiles.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { spellId } from "../../identity.ts";
@@ -48,10 +46,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type MakeStableInvocation = Extract<
   SupportedSpellInvocation,
@@ -274,12 +276,24 @@ function resolveMakeStable(
   });
 }
 
+const MakeStableInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "makeStable" }>
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("makeStable"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const makeStableProfile: SpellProcedureProfile<
   "makeStable",
   MakeStableInvocation
 > = {
   procedure: "makeStable",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MakeStableInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -7,8 +7,7 @@
 // through caller/table-supplied witnesses.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
+import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -51,6 +50,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type LevitatedCreatureInvocation = LevitatedCreatureSpellInvocation;
 
@@ -443,13 +451,34 @@ function applyLevitatedCreatureSpellEffect(
   }, state);
 }
 
+const LevitatedCreatureInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "levitatedCreature" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("levitatedCreature"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(1),
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+    maxInitialRiseFeet: MovementFeet,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const levitatedCreatureProfile: SpellProcedureProfile<
   "levitatedCreature",
   LevitatedCreatureInvocation,
   ActionSpellBattleResolutionInput
 > = {
   procedure: "levitatedCreature",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: LevitatedCreatureInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

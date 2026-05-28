@@ -5,7 +5,6 @@
 // spell that touches one creature and ends one chosen condition on it.
 
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -42,6 +41,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type DirectConditionRemovalCondition =
   DirectConditionRemovalSpellInvocation["conditionChoices"][number];
@@ -337,13 +345,38 @@ function applyDirectConditionRemovalSpellEffect(
   }, state);
 }
 
+const DirectConditionRemovalInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "directConditionRemoval" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("directConditionRemoval"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(1),
+    }),
+    conditionChoices: Schema.Tuple(
+      ...DIRECT_CONDITION_REMOVAL_CONDITIONS.map((condition) =>
+        Schema.Literal(condition),
+      ),
+    ),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const directConditionRemovalProfile: SpellProcedureProfile<
   "directConditionRemoval",
   DirectConditionRemovalSpellInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "directConditionRemoval",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: DirectConditionRemovalInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

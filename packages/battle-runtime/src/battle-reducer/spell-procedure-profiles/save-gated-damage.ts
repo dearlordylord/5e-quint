@@ -49,10 +49,20 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellFailedSavePostDamageRiderSchema,
+  SpellPostSaveAreaEffectSchema,
+  SpellSavingThrowRollModeRuleSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -331,9 +341,127 @@ function resolveSaveGatedDamage(
   });
 }
 
+const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "saveGatedDamage" }>
+>(
+  Schema.Union(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedDamage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.String,
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("singleCombatant"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCone"),
+          lengthFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginLine"),
+          lengthFeet: MovementFeet,
+          widthFeet: MovementFeet,
+        }),
+      ),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      successDamage: Schema.Literal("none", "half"),
+      rangeFeet: MovementFeet,
+      failedSavePostDamageRiders: Schema.Array(
+        SpellFailedSavePostDamageRiderSchema,
+      ),
+      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
+      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
+        exact: true,
+      }),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedDamage"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.String,
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("singleCombatant"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginSphere"),
+          radiusFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pointOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCube"),
+          sideFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginCone"),
+          lengthFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginLine"),
+          lengthFeet: MovementFeet,
+          widthFeet: MovementFeet,
+        }),
+      ),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.String,
+      }),
+      successDamage: Schema.Literal("none", "half"),
+      rangeFeet: MovementFeet,
+      failedSavePostDamageRiders: Schema.Array(
+        SpellFailedSavePostDamageRiderSchema,
+      ),
+      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
+      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
+        exact: true,
+      }),
+    }),
+  ),
+);
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SaveGatedDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

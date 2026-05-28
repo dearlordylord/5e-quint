@@ -18,7 +18,6 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -49,6 +48,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SanctuaryTargetingInterdictionInvocation = Extract<
   SupportedSpellInvocation,
@@ -249,9 +256,31 @@ function resolveSanctuaryTargetingInterdiction(
   });
 }
 
+const SanctuaryTargetingInterdictionInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "sanctuaryTargetingInterdiction" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("sanctuaryTargetingInterdiction"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SanctuaryTargetingInterdictionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

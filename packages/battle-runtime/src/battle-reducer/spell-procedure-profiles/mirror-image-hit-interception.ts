@@ -23,11 +23,8 @@
 //   - The duplicate-roll hole, hit redirection, duplicate destruction, and
 //     bypass witness logic stay in mirror-image-hit-interception.ts.
 //   - Timed duration expiry stays in the shared active-effect lifecycle.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -57,6 +54,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 function mirrorImageHitInterceptionShape(
   actorId: CombatantId,
@@ -282,12 +287,28 @@ function resolveMirrorImageHitInterception(
       };
 }
 
+const MirrorImageHitInterceptionInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "mirrorImageHitInterception" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("mirrorImageHitInterception"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
   "mirrorImageHitInterception",
   MirrorImageHitInterceptionSpellInvocation
 > = {
   procedure: "mirrorImageHitInterception",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MirrorImageHitInterceptionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

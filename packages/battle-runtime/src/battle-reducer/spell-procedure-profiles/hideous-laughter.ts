@@ -14,7 +14,6 @@
 //     Incapacitated, Magic Action, and Spell Invocation.
 
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   ActivationPhase,
   TargetSelection,
@@ -53,6 +52,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type HideousLaughterSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -371,9 +379,28 @@ function resolveHideousLaughter(
   });
 }
 
+const HideousLaughterInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "hideousLaughter" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("hideousLaughter"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: HideousLaughterInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: true,

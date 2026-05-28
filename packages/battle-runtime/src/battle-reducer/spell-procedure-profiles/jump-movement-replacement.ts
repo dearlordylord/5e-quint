@@ -16,7 +16,6 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -47,6 +46,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type JumpMovementReplacementInvocation = Extract<
   SupportedSpellInvocation,
@@ -333,9 +340,30 @@ function applyJumpMovementReplacementSpellEffect(
   }, state);
 }
 
+const JumpMovementReplacementInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "jumpMovementReplacement" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("jumpMovementReplacement"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Number,
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const jumpMovementReplacementProfile = {
   procedure: "jumpMovementReplacement",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: JumpMovementReplacementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

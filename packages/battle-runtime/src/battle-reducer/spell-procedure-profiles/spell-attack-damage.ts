@@ -48,10 +48,21 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellAttackDamagePayloadSchema,
+  SpellAttackDamageTargetingSchema,
+  SpellPostDamageRiderSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackDamageInvocation,
@@ -175,12 +186,54 @@ function resolveSpellAttackDamage(
   return resolveSpellAttackDamageAct(input);
 }
 
+const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
+>(
+  Schema.Union(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: SpellAttackDamageTargetingSchema,
+      damage: SpellAttackDamagePayloadSchema,
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
+      objectHitEffect: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("igniteFlammableUnattended"),
+        }),
+      ),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spellAttackDamage"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: SpellAttackDamageTargetingSchema,
+      damage: SpellAttackDamagePayloadSchema,
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+      attackBonus: AttackBonus,
+      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
+      objectHitEffect: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("igniteFlammableUnattended"),
+        }),
+      ),
+    }),
+  ),
+);
 export const spellAttackDamageProfile: SpellProcedureProfile<
   "spellAttackDamage",
   Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
 > = {
   procedure: "spellAttackDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: true,

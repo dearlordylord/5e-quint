@@ -27,8 +27,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
+import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type {
   DamageType,
   DiceAmount,
@@ -75,6 +74,16 @@ import {
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DamageTypeSchema,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellEffectSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -491,13 +500,58 @@ function resolveObjectContactDamageRepeat(
   return resolveObjectContactDamageRepeatSpellAct(input);
 }
 
+const ObjectContactDamageInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectContactDamage" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("objectContactDamage"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("singleManufacturedMetalObject"),
+    }),
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: DamageTypeSchema,
+    }),
+    rangeFeet: MovementFeet,
+    durationTicks: BattleRuntimeObjectSchema,
+  }),
+);
+
+const ObjectContactDamageRepeatInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "objectContactDamageRepeat" }
+    >
+  >(
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("objectContactDamageRepeat"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const objectContactDamageProfile: SpellProcedureProfile<
   "objectContactDamage",
   ObjectContactDamageInvocation,
   ActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamage",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ObjectContactDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -515,7 +569,7 @@ export const objectContactDamageRepeatProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamageRepeat",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ObjectContactDamageRepeatInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

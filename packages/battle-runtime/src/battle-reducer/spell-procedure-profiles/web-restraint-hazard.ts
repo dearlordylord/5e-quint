@@ -27,7 +27,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -47,6 +46,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type WebRestraintHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -280,9 +288,30 @@ function resolveWebRestraintHazard(
   });
 }
 
+const WebRestraintHazardInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "webRestraintHazard" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("webRestraintHazard"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginCube"),
+      sideFeet: MovementFeet,
+    }),
+    durationTicks: Schema.Number,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: WebRestraintHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

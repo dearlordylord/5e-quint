@@ -23,7 +23,6 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -60,6 +59,14 @@ import {
   type SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type CounterspellInvocation = Extract<
   SupportedSpellInvocation,
@@ -382,9 +389,23 @@ function counterspellReactionInterruptFrame(
   return { kind: "reaction", frame };
 }
 
+const CounterspellInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "counterspell" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("counterspell"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("con"),
+    dc: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const counterspellProfile = {
   procedure: "counterspell",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: CounterspellInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

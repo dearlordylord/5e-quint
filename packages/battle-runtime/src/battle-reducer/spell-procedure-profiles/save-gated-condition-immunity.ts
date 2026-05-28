@@ -13,7 +13,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition Immunity, Magic Action,
 //     and Spell Invocation.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -47,6 +46,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AbilitySchema,
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SaveGatedConditionImmunitySpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -240,9 +249,36 @@ function resolveSaveGatedConditionImmunity(
   });
 }
 
+const SaveGatedConditionImmunityInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "saveGatedConditionImmunity" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedConditionImmunity"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      targetCreatureTypes: Schema.Array(Schema.String),
+      activeEffects: Schema.Tuple(
+        BattleRuntimeObjectSchema,
+        BattleRuntimeObjectSchema,
+      ),
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SaveGatedConditionImmunityInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

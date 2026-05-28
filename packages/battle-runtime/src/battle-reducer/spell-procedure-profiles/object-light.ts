@@ -20,12 +20,9 @@
 // What stays in shared infrastructure:
 //   - spellObjectLightTargetFact and spellObjectTargetHole stay in
 //     spells-targeting.ts until target legality and hole dispatch migrate.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -59,6 +56,17 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SizeSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 const LIGHT_OBJECT_MAX_SIZE = "large" as const;
 
@@ -504,12 +512,57 @@ function resolveObjectLight(
       };
 }
 
+const ObjectLightInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "objectLight" }>
+>(
+  Schema.Union(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("objectLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleObject"),
+        object: Schema.Struct({
+          kind: Schema.Literal("lightCantripObject"),
+          maxSize: SizeSchema,
+        }),
+      }),
+      light: Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("objectLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleObject"),
+        object: Schema.Struct({
+          kind: Schema.Literal("touchedObject"),
+        }),
+      }),
+      light: Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+  ),
+);
 export const objectLightProfile: SpellProcedureProfile<
   "objectLight",
   ObjectLightInvocation
 > = {
   procedure: "objectLight",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ObjectLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

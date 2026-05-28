@@ -34,8 +34,6 @@
 //     ~400 lines in spells-resolve-target-selection.ts. Moveable later.
 //   - Hole builders (spellRollModifierSkillChoiceHole etc.) in
 //     spells-damage-fills.ts — moveable later when the hole subsystem migrates.
-//   - The codec union in battle-codecs.ts — it consumes this profile's shared
-//     schema until the codec migration sweep composes the registry directly.
 //   - The metamagic table entry — same migration story as damageReduction.
 
 import { spellSlotLevel } from "@dnd/shared/types";
@@ -44,7 +42,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
-  KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
@@ -79,12 +76,19 @@ import {
 } from "../spells-resolve-target-selection.ts";
 import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { RollModifierInvocationSchema } from "./invocation-schemas.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BATTLE_SURFACE_ABILITIES,
+  BATTLE_SURFACE_SKILLS,
+  RollModifierSpellInvocationBaseSchemaFields,
+} from "../codec-building-blocks.ts";
+import { KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS } from "../known-willing-target-spell-ids.ts";
 
 type RollModifierInvocation = Extract<
   SupportedSpellInvocation,
@@ -402,6 +406,28 @@ function resolveRollModifier(
       };
 }
 
+const RollModifierInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
+>(
+  Schema.Union(
+    Schema.Struct({
+      ...RollModifierSpellInvocationBaseSchemaFields,
+      skillChoices: Schema.NullOr(
+        Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+      ),
+      abilityChoices: Schema.Literal(null),
+      abilityChoiceApplication: Schema.optionalWith(Schema.Never, {
+        exact: true,
+      }),
+    }),
+    Schema.Struct({
+      ...RollModifierSpellInvocationBaseSchemaFields,
+      skillChoices: Schema.Literal(null),
+      abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
+      abilityChoiceApplication: Schema.Literal("single", "perTarget"),
+    }),
+  ),
+);
 export const rollModifierProfile: SpellProcedureProfile<
   "rollModifier",
   RollModifierInvocation

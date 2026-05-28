@@ -31,7 +31,6 @@ import {
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   Attachment,
   DiceAmount,
@@ -71,6 +70,17 @@ import {
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellEffectSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type SpiritualWeaponAttackProxyInvocation = Extract<
   SupportedSpellInvocation,
@@ -487,13 +497,71 @@ function resolveSpiritualWeapon(
   return resolveBonusActionSpellAttackProxyAct(input.input);
 }
 
+const SpiritualWeaponAttackProxyInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spiritualWeaponAttackProxy" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spiritualWeaponAttackProxy"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      forceReachFeet: MovementFeet,
+      repeatMoveMaxFeet: MovementFeet,
+      damage: Schema.Struct({
+        kind: Schema.Literal("fixedSpellAttackDamage"),
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("force"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+    }),
+  );
+
+const SpiritualWeaponRepeatAttackInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spiritualWeaponRepeatAttack" }
+    >
+  >(
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        kind: Schema.Literal("fixedSpellAttackDamage"),
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("force"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+      forceReachFeet: MovementFeet,
+      repeatMoveMaxFeet: MovementFeet,
+    }),
+  );
 export const spiritualWeaponAttackProxyProfile: SpellProcedureProfile<
   "spiritualWeaponAttackProxy",
   SpiritualWeaponAttackProxyInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponAttackProxy",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpiritualWeaponAttackProxyInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -511,7 +579,7 @@ export const spiritualWeaponRepeatAttackProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spiritualWeaponRepeatAttack",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpiritualWeaponRepeatAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

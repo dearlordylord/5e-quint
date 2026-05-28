@@ -10,8 +10,6 @@ import {
 import { SIZES } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
-  KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
-  KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   ATTACK_TARGET_HOLE_ID,
   ATTACK_TARGET_HOLE_INSTANCE,
   type BattleObjectContactTargetsHole,
@@ -38,6 +36,10 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import {
+  KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
+  KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
+} from "./known-willing-target-spell-ids.ts";
 import {
   spellId,
   type BattleObjectId,

@@ -24,7 +24,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -39,7 +38,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
   parseBattleSpellEffectLevel,
-  type BattleSpellEffectLevel,
+  BattleSpellEffectLevel,
 } from "../spells-effective-level.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveMagicalDarknessPointOriginSpellAct } from "../spells-resolve-area-effects.ts";
@@ -48,6 +47,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type MagicalDarknessPointOriginSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -216,9 +223,30 @@ function resolveMagicalDarknessPointOrigin(
   });
 }
 
+const MagicalDarknessPointOriginInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "magicalDarknessPointOrigin" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("magicalDarknessPointOrigin"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel,
+    }),
+  );
 export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: MagicalDarknessPointOriginInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

@@ -25,7 +25,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -61,6 +60,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type GustOfWindLineSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -405,9 +413,33 @@ function resolveGustOfWindLine(
   });
 }
 
+const GustOfWindLineInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "gustOfWindLine" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("gustOfWindLine"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("str"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("selfOriginLine"),
+      lengthFeet: MovementFeet,
+      widthFeet: MovementFeet,
+    }),
+    durationTicks: Schema.Number,
+    rangeFeet: MovementFeet,
+    pushDistanceFeet: MovementFeet,
+    movementCost: Schema.Struct({
+      multiplier: Schema.Literal(2),
+      appliesTo: Schema.Literal("towardSource"),
+    }),
+  }),
+);
 export const gustOfWindLineProfile = {
   procedure: "gustOfWindLine",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: GustOfWindLineInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

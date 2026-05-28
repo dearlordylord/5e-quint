@@ -22,7 +22,6 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   maybeOpenReactionWindow,
@@ -62,6 +61,14 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type OngoingSpellEndInvocation = Extract<
   SupportedSpellInvocation,
@@ -747,9 +754,21 @@ function uniqueConcentrationSources(
   return unique;
 }
 
+const OngoingSpellEndInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "ongoingSpellEnd" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("ongoingSpellEnd"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    rangeFeet: MovementFeet,
+  }),
+);
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: OngoingSpellEndInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

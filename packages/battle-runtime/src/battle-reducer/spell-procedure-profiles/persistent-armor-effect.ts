@@ -24,15 +24,12 @@
 //     spells-targeting.ts until targeting classification migrates.
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 
@@ -57,6 +54,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  ArmorOfShadowsSpellAccessSchema,
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type PersistentArmorInvocation = Extract<
   SupportedSpellInvocation,
@@ -329,13 +336,38 @@ function resolvePersistentArmorEffect(
   });
 }
 
+const PersistentArmorEffectInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "persistentArmorEffect" }
+  >
+>(
+  Schema.Union(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("persistentArmorEffect"),
+      spell: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ArmorOfShadowsSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("persistentArmorEffect"),
+      spell: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  ),
+);
 export const persistentArmorEffectProfile: SpellProcedureProfile<
   "persistentArmorEffect",
   PersistentArmorInvocation,
   PersistentArmorEffectResolutionInput
 > = {
   procedure: "persistentArmorEffect",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: PersistentArmorEffectInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

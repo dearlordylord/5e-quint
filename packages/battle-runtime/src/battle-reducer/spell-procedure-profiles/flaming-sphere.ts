@@ -22,7 +22,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -43,6 +42,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  DcSourceSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type FlamingSphereSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -296,9 +304,32 @@ function resolveFlamingSphere(
   });
 }
 
+const FlamingSphereInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "flamingSphere" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("flamingSphere"),
+    spell: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphereDiameter"),
+      diameterFeet: MovementFeet,
+    }),
+    durationTicks: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+    ramMaxMoveFeet: MovementFeet,
+    damage: Schema.Struct({
+      expr: BattleRuntimeObjectSchema,
+      damageType: Schema.Literal("fire"),
+    }),
+  }),
+);
 export const flamingSphereProfile = {
   procedure: "flamingSphere",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: FlamingSphereInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

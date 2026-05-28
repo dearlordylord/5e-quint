@@ -24,9 +24,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
-import type { MovementFeet } from "@dnd/shared/types";
+import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -55,6 +53,13 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 const DANCING_LIGHTS_RANGE_FEET = 120;
 const DANCING_LIGHTS_DURATION_MINUTES = 1;
@@ -339,13 +344,74 @@ function resolveDancingLightsReposition(
   return resolveDancingLightsRepositionSpellAct(input);
 }
 
+const DancingLightsSeparateCastInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "dancingLightsSeparateCast" }
+    >
+  >(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("dancingLightsSeparateCast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      form: Schema.Literal("separateLights"),
+      dimRadiusFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      maxMoveFeet: MovementFeet,
+      spacingFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+  );
+
+const DancingLightsCombinedCastInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "dancingLightsCombinedCast" }
+    >
+  >(
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("dancingLightsCombinedCast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      form: Schema.Literal("combinedMediumForm"),
+      dimRadiusFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      maxMoveFeet: MovementFeet,
+      spacingFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+  );
+
+const DancingLightsRepositionInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dancingLightsReposition" }
+  >
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("dancingLightsReposition"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    maxMoveFeet: MovementFeet,
+    rangeFeet: MovementFeet,
+    spacingFeet: MovementFeet,
+  }),
+);
 export const dancingLightsSeparateCastProfile: SpellProcedureProfile<
   "dancingLightsSeparateCast",
   DancingLightsSeparateCastInvocation,
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsSeparateCast",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: DancingLightsSeparateCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -363,7 +429,7 @@ export const dancingLightsCombinedCastProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsCombinedCast",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: DancingLightsCombinedCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -381,7 +447,7 @@ export const dancingLightsRepositionProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "dancingLightsReposition",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: DancingLightsRepositionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

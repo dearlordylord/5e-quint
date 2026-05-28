@@ -21,7 +21,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { LinearPerLevel, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -41,6 +40,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type FogCloudObscurementSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -206,9 +213,28 @@ function resolveFogCloudObscurement(
   });
 }
 
+const FogCloudObscurementInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "fogCloudObscurement" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("fogCloudObscurement"),
+    spell: BattleRuntimeObjectSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      radiusFeet: MovementFeet,
+    }),
+    durationTicks: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: FogCloudObscurementInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

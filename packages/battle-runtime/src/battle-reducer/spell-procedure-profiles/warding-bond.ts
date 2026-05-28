@@ -9,7 +9,6 @@
 // cast resolution.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -50,6 +49,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 function admitWardingBond(
   spell: SpellRecord,
@@ -412,13 +420,27 @@ function wardingBondFillSetHasDisallowedFills(
   );
 }
 
+const WardingBondInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("wardingBond"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+    connectionRangeFeet: MovementFeet,
+  }),
+);
 export const wardingBondProfile: SpellProcedureProfile<
   "wardingBond",
   WardingBondSpellInvocation,
   ActionSpellBattleResolutionInput
 > = {
   procedure: "wardingBond",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: WardingBondInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

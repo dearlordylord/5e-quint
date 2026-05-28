@@ -46,10 +46,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
-  spellAdmissionCharacterLevel,
-  spellInvocationSchemaUnavailable,
-} from "./profile.ts";
+  BattleRuntimeObjectSchema,
+  CharacterWeaponAttackActionOptionSchema,
+  ClassCantripSpellAccessSchema,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 const SHILLELAGH_WEAPON_UNIT_IDS = [
   "weapon_club",
@@ -385,13 +390,32 @@ function weaponAttackOverrideFillSetHasDisallowedFills(
   );
 }
 
+const WeaponAttackOverrideInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "weaponAttackOverride" }
+  >
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("weaponAttackOverride"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    attachedWeapon: Schema.Struct({
+      itemId: Schema.String,
+      attack: CharacterWeaponAttackActionOptionSchema,
+    }),
+    activeEffect: BattleRuntimeObjectSchema,
+  }),
+);
 export const weaponAttackOverrideProfile: SpellProcedureProfile<
   "weaponAttackOverride",
   WeaponAttackOverrideInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponAttackOverride",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: WeaponAttackOverrideInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

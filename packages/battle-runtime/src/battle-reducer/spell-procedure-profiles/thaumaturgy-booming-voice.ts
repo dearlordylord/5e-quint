@@ -25,10 +25,7 @@
 //     helpers are split.
 //   - The active 1-minute-effect count witness hole stays in
 //     spells-damage-fills.ts until the hole subsystem migrates.
-//   - The central codec branch in battle-codecs.ts still owns the authoritative
-//     Schema literal for this invocation until its profile branch migrates.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -54,6 +51,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  ClassCantripSpellAccessSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ThaumaturgyBoomingVoiceInvocation = Extract<
   SupportedSpellInvocation,
@@ -279,12 +284,28 @@ function resolveThaumaturgyBoomingVoice(
       };
 }
 
+const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "thaumaturgyBoomingVoice" }
+  >
+>(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("thaumaturgyBoomingVoice"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
 export const thaumaturgyBoomingVoiceProfile: SpellProcedureProfile<
   "thaumaturgyBoomingVoice",
   ThaumaturgyBoomingVoiceInvocation
 > = {
   procedure: "thaumaturgyBoomingVoice",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ThaumaturgyBoomingVoiceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

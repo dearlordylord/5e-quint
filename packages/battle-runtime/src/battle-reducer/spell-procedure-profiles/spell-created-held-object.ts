@@ -37,7 +37,6 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
@@ -77,6 +76,16 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  AttackBonus,
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  SpellEffectSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 
@@ -738,13 +747,71 @@ function spellCreatedHeldObjectHasUnrelatedFills(
   );
 }
 
+const SpellCreatedHeldObjectInvocationSchema = spellProcedureInvocationSchema<
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellCreatedHeldObject" }
+  >
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("spellCreatedHeldObject"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+  }),
+);
+
+const SpellCreatedHeldObjectAttackInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellCreatedHeldObjectAttack" }
+    >
+  >(
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellCreatedHeldObjectAttack"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
+
+const SpellCreatedHeldObjectReEvokeInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "spellCreatedHeldObjectReEvoke" }
+    >
+  >(
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+  );
 export const spellCreatedHeldObjectProfile: SpellProcedureProfile<
   "spellCreatedHeldObject",
   SpellCreatedHeldObjectInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObject",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpellCreatedHeldObjectInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -762,7 +829,7 @@ export const spellCreatedHeldObjectAttackProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectAttack",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpellCreatedHeldObjectAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
@@ -780,7 +847,7 @@ export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellCreatedHeldObjectReEvoke",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: SpellCreatedHeldObjectReEvokeInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

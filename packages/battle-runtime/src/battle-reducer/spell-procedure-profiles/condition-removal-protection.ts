@@ -6,7 +6,6 @@
 // Saving Throw Advantage and Poison damage Resistance.
 
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -39,6 +38,15 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type ConditionRemovalProtectionTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
@@ -382,12 +390,37 @@ function applyConditionRemovalProtectionEffect(
   }, state);
 }
 
+const ConditionRemovalProtectionInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "conditionRemovalProtection" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("conditionRemovalProtection"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      protection: Schema.Struct({
+        conditionSaveRollMode: BattleRuntimeObjectSchema,
+        damageResistance: BattleRuntimeObjectSchema,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const conditionRemovalProtectionProfile: SpellProcedureProfile<
   "conditionRemovalProtection",
   ConditionRemovalProtectionSpellInvocation
 > = {
   procedure: "conditionRemovalProtection",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: ConditionRemovalProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: true,
   isReadiedSpellCompatible: false,

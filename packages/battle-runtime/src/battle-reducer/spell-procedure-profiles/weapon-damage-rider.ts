@@ -10,7 +10,6 @@
 //   - UBIQUITOUS_LANGUAGE.md: Attack Damage Rider, Bonus Action, Attack Roll,
 //     Damage Roll, and Spell Invocation.
 
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -37,6 +36,13 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type WeaponDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
@@ -265,13 +271,25 @@ function weaponDamageRiderFillSetHasDisallowedFills(
   );
 }
 
+const WeaponDamageRiderInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "weaponDamageRider" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("weaponDamageRider"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    activeEffect: BattleRuntimeObjectSchema,
+  }),
+);
 export const weaponDamageRiderProfile: SpellProcedureProfile<
   "weaponDamageRider",
   WeaponDamageRiderInvocation,
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "weaponDamageRider",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: WeaponDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,

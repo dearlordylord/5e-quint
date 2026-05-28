@@ -27,7 +27,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { spellInvocationSchemaUnavailable } from "./profile.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
@@ -64,6 +63,14 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
 type AntimagicFieldOngoingSpellSuppressionInvocation = Extract<
   SupportedSpellInvocation,
@@ -366,9 +373,29 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   return { ...input.state, combatants };
 }
 
+const AntimagicFieldOngoingSpellSuppressionInvocationSchema =
+  spellProcedureInvocationSchema<
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
+    >
+  >(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("antimagicFieldOngoingSpellSuppression"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("selfOriginEmanation"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+  );
 export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
-  invocationSchema: spellInvocationSchemaUnavailable(),
+  invocationSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   isTargetListInvocation: false,
   isReadiedSpellCompatible: false,
