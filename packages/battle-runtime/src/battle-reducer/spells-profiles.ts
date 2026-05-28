@@ -80,12 +80,12 @@ import {
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
   supportedCantripSpellAttackProfile,
-  supportedCantripSpellHostedWeaponAttackProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
   supportedPreparedSpellAttackSequenceProfile,
   supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
+import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 export * from "./spells-profiles-attack-damage.ts";
 
@@ -566,13 +566,7 @@ export function supportedSpellActs(
       ),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripSpellHostedWeaponAttackProfile(
-        actor,
-        spell,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-        characterLevel,
-      ),
+      spellHostedWeaponAttackProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       weaponAttackOverrideProfile.admit(spell, admissionContext),

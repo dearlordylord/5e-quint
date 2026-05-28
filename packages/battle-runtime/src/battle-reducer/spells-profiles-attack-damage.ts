@@ -12,13 +12,9 @@ import type {
   DamageType,
   SpellRecord,
   TargetSelection,
-  WeaponProficiency,
-  WeaponRecord,
 } from "@dnd/surface/surface/types";
-import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  type BattleCreatureState,
   type CantripSpellAttackSequenceTargeting,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
@@ -72,10 +68,6 @@ export function supportedCantripSpellAttackProfile(
   ];
 }
 
-const TRUE_STRIKE_DAMAGE_TYPE_CHOICES = [
-  "radiant",
-  "weapon_normal",
-] as const satisfies readonly string[];
 const SORCEROUS_BURST_DAMAGE_TYPES = [
   "acid",
   "cold",
@@ -91,130 +83,6 @@ const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
 const SCORCHING_RAY_BASE_LEVEL = 2;
 const SCORCHING_RAY_BASE_RAY_COUNT = 3;
 const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
-
-export function supportedCantripSpellHostedWeaponAttackProfile(
-  actor: BattleCreatureState,
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  if (actor.origin.kind !== "character") {
-    return [];
-  }
-  const origin = actor.origin;
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? phase.effects : undefined;
-  const effect = effects?.[0];
-  const bonusDamage =
-    effect?.kind === "make_weapon_attack" ? effect.bonusDamage : undefined;
-  if (
-    phase?.kind !== "direct" ||
-    effects === undefined ||
-    effects.length !== 1 ||
-    effect?.kind !== "make_weapon_attack" ||
-    effect.damageTypeChoice === undefined ||
-    bonusDamage === undefined ||
-    typeof bonusDamage.damageType !== "string" ||
-    effect.weapon !== "material_component" ||
-    effect.abilityOverride !== "spellcasting" ||
-    !sameStringSet(effect.damageTypeChoice, [
-      ...TRUE_STRIKE_DAMAGE_TYPE_CHOICES,
-    ])
-  ) {
-    return [];
-  }
-  const bonusDamageExpr = supportedDamageAmountExpr({
-    amount: bonusDamage.amount,
-    spellLevel: spell.mechanics.level,
-    characterLevel,
-  });
-  if (bonusDamageExpr === null) {
-    return [];
-  }
-  const bonusDamageType: DamageType = bonusDamage.damageType;
-  const attacks = [
-    ...(origin.attack === null
-      ? []
-      : [
-          {
-            itemId:
-              origin.selectedLoadout.weapon?.itemId ?? origin.attack.weapon.id,
-            attack: origin.attack,
-          },
-        ]),
-    ...(origin.offHandAttack === undefined
-      ? []
-      : [
-          {
-            itemId:
-              origin.selectedLoadout.offHandWeapon?.itemId ??
-              origin.offHandAttack.weapon.id,
-            attack: origin.offHandAttack,
-          },
-        ]),
-  ];
-  return attacks
-    .filter(
-      ({ attack }) =>
-        attack.weapon.costGp >= 0.01 &&
-        origin.weaponProficiencies.some((proficiency) =>
-          weaponMatchesProficiency(attack.weapon, proficiency),
-        ),
-    )
-    .map(({ itemId, attack }) => ({
-      access: { tag: "classCantrip" as const },
-      resource: { tag: "none" as const },
-      procedure: "spellHostedWeaponAttack" as const,
-      spell,
-      actionCost: "magicAction" as const,
-      componentWeapon: { itemId, attack },
-      spellcastingAbilityModifier,
-      attackBonus: attackBonus(
-        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-      ),
-      damageTypeChoices: [
-        ...new Set<DamageType>(["radiant", attack.weapon.damage.damageType]),
-      ],
-      bonusDamage: {
-        expr: bonusDamageExpr,
-        damageType: bonusDamageType,
-      },
-    }));
-}
-
-const byKind = Match.discriminator("kind");
-
-function weaponMatchesProficiency(
-  weapon: WeaponRecord,
-  proficiency: WeaponProficiency,
-): boolean {
-  return Match.value(proficiency).pipe(
-    byKind(
-      "weapon_category",
-      (categoryProficiency) => weapon.category === categoryProficiency.category,
-    ),
-    byKind(
-      "weapon_category_with_properties",
-      (propertyProficiency) =>
-        weapon.category === propertyProficiency.category &&
-        weapon.properties?.some((property) =>
-          propertyProficiency.anyOfProperties.includes(property.kind),
-        ) === true,
-    ),
-    Match.exhaustive,
-  );
-}
 
 export function supportedPreparedSpellAttackProfile(
   spell: SpellRecord,

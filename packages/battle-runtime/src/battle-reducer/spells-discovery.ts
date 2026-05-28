@@ -91,12 +91,12 @@ import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
-import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
   counterspellCapableReactors,
@@ -853,32 +853,11 @@ export function discoverSupportedSpellInvocations(
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       if (invocation.procedure === "spellHostedWeaponAttack") {
-        const targetHole = attackTargetHole(
+        return spellHostedWeaponAttackProfile.discoverCastAct(
           state,
           actorId,
-          invocation.componentWeapon.attack,
+          invocation,
         );
-        const castActs =
-          targetHole.choices.length === 0
-            ? []
-            : [
-                {
-                  subject: {
-                    tag: "actionSpell" as const,
-                    actorId,
-                    invocation: supportedSpellInvocationRef(invocation),
-                    mode: { tag: "cast" as const },
-                    componentWeaponItemId: invocation.componentWeapon.itemId,
-                  },
-                  label: `${invocation.spell.name} (${invocation.componentWeapon.attack.weapon.name})`,
-                  summary: spellInvocationCastSummary(invocation),
-                  initialHoles: [
-                    spellDamageTypeChoiceHole(invocation),
-                    targetHole,
-                  ],
-                },
-              ];
-        return castActs;
       }
       if (invocation.procedure === "spellAttackSequence") {
         const initialHoles = Array.from(
@@ -1288,7 +1267,7 @@ export function spellInvocationCastSummary(
     return makeStableProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
-    return `Cast ${invocation.spell.name} as a cantrip using ${invocation.componentWeapon.attack.weapon.name}.`;
+    return spellHostedWeaponAttackProfile.castSummary(invocation);
   }
   if (invocation.procedure === "weaponAttackOverride") {
     return weaponAttackOverrideProfile.castSummary(invocation);

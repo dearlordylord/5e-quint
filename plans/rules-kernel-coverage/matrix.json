@@ -1707,7 +1707,7 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-weapon-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",

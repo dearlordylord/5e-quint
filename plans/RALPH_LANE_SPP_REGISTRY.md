@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spellHostedWeaponAttack profile"
     },
     {
@@ -940,7 +940,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 29 - SPP-W3-12-SPELL-HOSTED-WEAPON-ATTACK - Migrate spellHostedWeaponAttack
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-buff-mark-smite-selected-identity.mbt.test.ts`.
 

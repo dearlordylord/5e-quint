@@ -112,6 +112,7 @@ import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profile
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
@@ -301,7 +302,6 @@ import {
   resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
 } from "./spells-resolve-release.ts";
-import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
@@ -694,7 +694,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
-    return resolveSpellHostedWeaponAttackSpellAct({
+    return spellHostedWeaponAttackProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
