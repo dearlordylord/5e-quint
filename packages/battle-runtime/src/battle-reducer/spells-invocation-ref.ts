@@ -31,6 +31,7 @@ import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather
 import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
 import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
+import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -130,12 +131,7 @@ export function supportedSpellInvocationRef(
     return greaseGroundHazardProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "gustOfWindLine") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "gustOfWindLine",
-    };
+    return gustOfWindLineProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "fogCloudObscurement") {
     return fogCloudObscurementProfile.invocationRef(invocation);

@@ -37,6 +37,7 @@ import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./flaming-sphere.ts";
 import { fogCloudObscurementProfile } from "./fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
+import { gustOfWindLineProfile } from "./gust-of-wind-line.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
@@ -131,6 +132,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   sleepTargetAdmissionProfile,
   hideousLaughterProfile,
   greaseGroundHazardProfile,
+  gustOfWindLineProfile,
   flamingSphereProfile,
   moonbeamProfile,
   fogCloudObscurementProfile,

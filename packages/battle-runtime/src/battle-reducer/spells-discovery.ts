@@ -17,7 +17,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
@@ -37,12 +36,7 @@ import {
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
   spellAreaChoiceHole,
-  spellSavingThrowAbility,
-  spellSavingThrowTargeting,
-  spellSavingThrowOutcomeHole,
   spellTargetHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
@@ -73,6 +67,7 @@ import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.
 import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
+import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -131,13 +126,8 @@ import {
 import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   spellInvocationSupportsQuickenedActionRewrite,
-  spellMetamagicApplications,
-  spellMetamagicLabel,
 } from "./metamagic.ts";
 
 export function discoverSupportedSpellInvocations(
@@ -355,51 +345,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "gustOfWindLine") {
-        const initialHole = spellSavingThrowOutcomeHole(
+        return gustOfWindLineProfile.discoverCastAct(
           state,
           actorId,
           invocation,
         );
-        const baseCastAct = {
-          subject: {
-            tag: "actionSpell" as const,
-            actorId,
-            invocation: supportedSpellInvocationRef(invocation),
-            mode: { tag: "cast" as const },
-          },
-          label: invocation.spell.name,
-          summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-          initialHoles: [initialHole],
-        };
-        const metamagicCastActs = discoverSpellMetamagicSelections({
-          actor,
-          invocation,
-        }).map((metamagic) => ({
-          ...baseCastAct,
-          subject: {
-            ...baseCastAct.subject,
-            metamagic,
-          },
-          initialHoles: (() => {
-            const metamagicApplications = spellMetamagicApplications(
-              actor,
-              metamagic,
-            );
-            const metamagicSelectionHoles = saveMetamagicInitialHoles(
-              state,
-              actorId,
-              invocation,
-              metamagicApplications,
-            );
-            return metamagicSelectionHoles.length === 0
-              ? [spellSavingThrowOutcomeHole(state, actorId, invocation)]
-              : metamagicSelectionHoles;
-          })(),
-          label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
-          summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
-        }));
-        const castActs = [baseCastAct, ...metamagicCastActs];
-        return castActs;
       }
       if (invocation.procedure === "rollModifier") {
         return rollModifierProfile.discoverCastAct(state, actorId, invocation);
@@ -798,70 +748,6 @@ function spellActWithQuickenedRewrite(input: {
         ]
       : [];
   return [...naturalActs, ...quickenedActs];
-}
-
-type SaveMetamagicSupportedInvocation = Extract<
-  SupportedSpellInvocation,
-  {
-    readonly procedure:
-      | "saveGatedDamage"
-      | "saveGatedCondition"
-      | "saveGatedConditionImmunity"
-      | "saveGatedAttackRollAdvantage"
-      | "hideousLaughter"
-      | "command"
-      | "greaseGroundHazard"
-      | "gustOfWindLine";
-  }
->;
-
-function saveMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
-  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
-): readonly BattleHole[] {
-  const saveInvocation = saveMetamagicInvocationOrNull(invocation);
-  if (saveInvocation === null) {
-    return [];
-  }
-  const targeting = spellSavingThrowTargeting(saveInvocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(
-      carefulSpellProtectedTargetsHole(state, actorId, saveInvocation),
-    );
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, saveInvocation));
-  }
-  return holes;
-}
-
-function saveMetamagicInvocationOrNull(
-  invocation: SupportedSpellInvocation,
-): SaveMetamagicSupportedInvocation | null {
-  return invocation.procedure === "saveGatedDamage" ||
-    invocation.procedure === "saveGatedCondition" ||
-    invocation.procedure === "saveGatedConditionImmunity" ||
-    invocation.procedure === "saveGatedAttackRollAdvantage" ||
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "gustOfWindLine"
-    ? invocation
-    : null;
 }
 
 function spellCastReactionFactsAct(
