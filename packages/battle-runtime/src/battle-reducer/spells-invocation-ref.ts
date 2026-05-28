@@ -46,6 +46,7 @@ import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
@@ -282,6 +283,9 @@ export function supportedSpellInvocationRef(
   if (invocation.procedure === "counterspell") {
     return counterspellProfile.invocationRef(invocation);
   }
+  if (invocation.procedure === "shieldReaction") {
+    return shieldReactionProfile.invocationRef(invocation);
+  }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return sanctuaryTargetingInterdictionProfile.invocationRef(invocation);
   }
@@ -417,12 +421,6 @@ export function supportedSpellInvocationRef(
     Match.when({ procedure: "persistentArmorEffect" }, (persistent) =>
       persistentArmorEffectProfile.invocationRef(persistent),
     ),
-    Match.when({ procedure: "shieldReaction" }, (reactionSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(reactionSpell.spell.id),
-      slotLevel: reactionSpell.resource.slotLevel,
-      procedure: "shieldReaction" as const,
-    })),
     Match.when({ procedure: "directHitPointRestoration" }, (healing) =>
       directHitPointRestorationProfile.invocationRef(healing),
     ),

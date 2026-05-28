@@ -41,7 +41,7 @@ import type {
   EffectAtom,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Either } from "effect";
 import {
   type BattleActiveEffect,
   type BattleCreatureState,
@@ -55,7 +55,6 @@ import {
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
-import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 import {
   antimagicFieldOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
@@ -171,6 +170,7 @@ import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
+import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -504,10 +504,7 @@ export function supportedSpellActs(
       directHitPointRestorationProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedShieldReactionSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      shieldReactionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       counterspellProfile.admit(spell, admissionContext),
@@ -2362,68 +2359,6 @@ export function supportedCantripHeldLightHurlSpellProfile(
   ];
 }
 
-export function supportedPreparedShieldReactionSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.family !== "triggered_reaction") {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const acDeltas = effects.flatMap((effect) =>
-    effect.kind === "modify_ac" ? [effect.delta] : [],
-  );
-  const acDelta = acDeltas[0];
-  const negatedSpellIds = effects.flatMap((effect) =>
-    effect.kind === "negate_named_effect" &&
-    effect.scope === "damage_only" &&
-    typeof effect.spellId === "string"
-      ? [effect.spellId]
-      : [],
-  );
-  const namedSpellTriggerIds =
-    spell.mechanics.castingTime.kind === "reaction"
-      ? reactionTriggerNamedSpellIds(spell.mechanics.castingTime)
-      : [];
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "reaction" ||
-    !reactionTriggerIncludesHitByAttackRoll(spell.mechanics.castingTime) ||
-    !sameStringSet(namedSpellTriggerIds, [SHIELD_MAGIC_MISSILE_SPELL_ID]) ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "round" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    effects.length !== 2 ||
-    acDeltas.length !== 1 ||
-    acDelta?.kind !== "fixed_dice" ||
-    acDelta.sign !== "+" ||
-    acDelta.dice !== 5 ||
-    acDelta.dieSize !== 1 ||
-    !sameStringSet(negatedSpellIds, namedSpellTriggerIds)
-  ) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "shieldReaction",
-            spell,
-            armorClassBonus: acDelta.dice,
-            negatedSpellIds,
-          },
-        ],
-  );
-}
-
 export function supportedPreparedHellishRebukeReactionSpellProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
@@ -2492,52 +2427,4 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
           },
         ];
   });
-}
-
-export function reactionTriggerIncludesHitByAttackRoll(
-  castingTime: Extract<
-    SpellRecord["mechanics"]["castingTime"],
-    { kind: "reaction" }
-  >,
-): boolean {
-  const trigger = castingTime.trigger;
-  return trigger.kind === "hit_by_attack_roll"
-    ? true
-    : trigger.kind === "any_of" &&
-        trigger.triggers.some(
-          (candidate) => candidate.kind === "hit_by_attack_roll",
-        );
-}
-
-export function reactionTriggerNamedSpellIds(
-  castingTime: Extract<
-    SpellRecord["mechanics"]["castingTime"],
-    { kind: "reaction" }
-  >,
-): readonly string[] {
-  return reactionTriggerNamedSpellIdsFromTrigger(castingTime.trigger);
-}
-
-export type ReactionTrigger = Extract<
-  SpellRecord["mechanics"]["castingTime"],
-  { kind: "reaction" }
->["trigger"];
-
-export function reactionTriggerNamedSpellIdsFromTrigger(
-  trigger: ReactionTrigger,
-): readonly string[] {
-  return Match.value(trigger).pipe(
-    Match.when({ kind: "hit_by_attack_roll" }, () => []),
-    Match.when({ kind: "takes_damage_from_creature" }, () => []),
-    Match.when({ kind: "self_or_visible_creature_falls" }, () => []),
-    Match.when({ kind: "targeted_by_named_spell" }, (namedSpell) => [
-      namedSpell.spellId,
-    ]),
-    Match.when({ kind: "creature_casts_spell" }, () => []),
-    Match.when({ kind: "spell_save_outcome" }, () => []),
-    Match.when({ kind: "any_of" }, (anyOf) =>
-      anyOf.triggers.flatMap(reactionTriggerNamedSpellIdsFromTrigger),
-    ),
-    Match.exhaustive,
-  );
 }

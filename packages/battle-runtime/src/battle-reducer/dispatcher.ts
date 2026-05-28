@@ -135,6 +135,7 @@ import {
 } from "./spells-active-effects.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
+import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
@@ -172,7 +173,6 @@ import {
   battleLightEmitters,
   battleObscurementZones,
   applySpellDamage,
-  applyShieldReactionSpellActiveEffect,
   featherFallLandingCleanupForCombatant,
   sameSpellInvocationRef,
   saveGateDamageResultForOutcome,
@@ -200,9 +200,7 @@ import {
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import {
-  supportedSpellActs,
-} from "./spells-profiles.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
 
 import {
   resolveBonusActionDashSpellAct,
@@ -2343,52 +2341,11 @@ export function resolveCastTriggeredReactionSpellCommand(
       invocation,
     });
   }
-  const shieldFillSet = spellFillSet(input.fills, invocation);
-  if (shieldFillSet.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", shieldFillSet.message);
-  }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(shieldFillSet, {})) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Triggered Reaction Shield spell accepts only spell-cast Reaction trigger facts.",
-    );
-  }
-  const castingState = stateAfterSpellCastDeclared({
-    state: input.state,
-    casterId: input.subject.reactorId,
+  return resolveShieldReactionSpellCommand({
+    ...input,
+    frame,
     invocation,
   });
-  const effected = applyShieldReactionSpellActiveEffect(
-    castingState,
-    input.subject.reactorId,
-    invocation,
-  );
-  const slotted = expendSpellSlot(
-    effected,
-    input.subject.reactorId,
-    invocation.resource.slotLevel,
-  );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const nextState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 function maybeOpenTriggeredReactionSpellCastWindow(input: {
@@ -2557,6 +2514,35 @@ function resolveFeatherFallReactionSpellCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   return featherFallMitigationProfile.resolve({
+    input,
+    actorId: input.subject.reactorId,
+    invocation: input.invocation,
+    fillSet,
+  });
+}
+
+function resolveShieldReactionSpellCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "castTriggeredReactionSpell";
+      }
+    >
+  > & {
+    readonly frame: BattleReactionFrame;
+    readonly invocation: Extract<
+      ReturnType<typeof supportedSpellActs>[number],
+      { readonly procedure: "shieldReaction" }
+    >;
+  },
+): BattleResolutionResult {
+  const fillSet = spellFillSet(input.fills, input.invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  return shieldReactionProfile.resolve({
     input,
     actorId: input.subject.reactorId,
     invocation: input.invocation,

@@ -11,11 +11,8 @@ import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import {
-  reactionTriggerIncludesHitByAttackRoll,
-  reactionTriggerNamedSpellIds,
-  supportedSpellActs,
-} from "./spells-profiles.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
+import { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
@@ -35,6 +32,8 @@ import type {
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { activeOngoingFeaturesPreventSpellcasting } from "../battle-reducer.ts";
+
+export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 
 export function triggeredReactionSpellChoices(
   state: BattleState,
@@ -90,14 +89,13 @@ export function triggeredReactionSpellChoices(
             return [];
           }
           const invocationRef = supportedSpellInvocationRef(invocation);
-          const spellCastReactionFactsHoles =
-            spellCastCanTriggerCounterspell({
-              casterId: reactorId,
-              invocation,
-              reactors: getCounterspellReactors(),
-            })
-              ? [spellCastReactionFactsHole({ casterId: reactorId, invocation })]
-              : [];
+          const spellCastReactionFactsHoles = spellCastCanTriggerCounterspell({
+            casterId: reactorId,
+            invocation,
+            reactors: getCounterspellReactors(),
+          })
+            ? [spellCastReactionFactsHole({ casterId: reactorId, invocation })]
+            : [];
           const initialHoles =
             invocation.procedure === "saveGatedDamage"
               ? [
@@ -112,12 +110,12 @@ export function triggeredReactionSpellChoices(
                     ...spellCastReactionFactsHoles,
                     spellSavingThrowOutcomeHole(state, reactorId, invocation),
                   ]
-              : invocation.procedure === "featherFallMitigation"
-                ? [
-                    ...spellCastReactionFactsHoles,
-                    spellTargetListHole(state, reactorId, invocation),
-                  ]
-                : spellCastReactionFactsHoles;
+                : invocation.procedure === "featherFallMitigation"
+                  ? [
+                      ...spellCastReactionFactsHoles,
+                      spellTargetListHole(state, reactorId, invocation),
+                    ]
+                  : spellCastReactionFactsHoles;
           return [
             {
               kind: "castTriggeredReactionSpell" as const,
@@ -159,28 +157,6 @@ export function triggeredReactionSpellTurnResourceAvailable(
   return !combatantHasSpellSlotUseThisTurn(
     state.currentTurnResources,
     reactorId,
-  );
-}
-
-export function shieldReactionSpellMatchesTrigger(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "shieldReaction" }
-  >,
-  frame: BattleReactionFrameInput,
-): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
-  if (castingTime.kind !== "reaction") {
-    return false;
-  }
-  if (frame.trigger === "attackHit") {
-    return reactionTriggerIncludesHitByAttackRoll(castingTime);
-  }
-  const namedSpellTriggerIds = reactionTriggerNamedSpellIds(castingTime);
-  return (
-    frame.trigger === "spellCast" &&
-    namedSpellTriggerIds.includes(frame.spellId) &&
-    invocation.negatedSpellIds.includes(frame.spellId)
   );
 }
 

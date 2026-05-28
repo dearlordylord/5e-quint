@@ -253,7 +253,7 @@
     {
       "number": 42,
       "id": "SPP-W5-02-SHIELD-REACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate shieldReaction reaction profile"
     },
     {
@@ -1038,7 +1038,7 @@ reaction-time resolve input.
 
 ### Task 42 - SPP-W5-02-SHIELD-REACTION - Migrate shieldReaction
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts`.
 

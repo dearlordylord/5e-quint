@@ -43,6 +43,7 @@ import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
+import { shieldReactionProfile } from "./shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
@@ -94,6 +95,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   greaseGroundHazardProfile,
   commandProfile,
   counterspellProfile,
+  shieldReactionProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

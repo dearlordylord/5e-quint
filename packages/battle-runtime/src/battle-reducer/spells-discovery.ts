@@ -76,6 +76,7 @@ import { directHitPointRestorationProfile } from "./spell-procedure-profiles/dir
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -1232,7 +1233,7 @@ export function spellInvocationCastSummary(
     return persistentArmorEffectProfile.castSummary(invocation);
   }
   if (invocation.procedure === "shieldReaction") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return shieldReactionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "counterspell") {
     return counterspellProfile.castSummary(invocation);
