@@ -68,10 +68,8 @@ import {
 } from "./spells-profile-shared.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
 import {
-  supportedCantripSpellAttackSequenceProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
-  supportedPreparedSpellAttackSequenceProfile,
 } from "./spells-profiles-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
@@ -172,6 +170,7 @@ import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
+import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
@@ -250,12 +249,7 @@ export function supportedSpellActs(
       supportedPreparedSlotSpellProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSpellAttackSequenceProfile(
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-      ),
+      spellAttackSequenceProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       spellAttackDamageProfile.admit(spell, admissionContext),
@@ -534,12 +528,7 @@ export function supportedSpellActs(
       weaponAttackOverrideProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripSpellAttackSequenceProfile(
-        spell,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-        characterLevel,
-      ),
+      spellAttackSequenceProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       spellAttackDamageProfile.admit(spell, admissionContext),

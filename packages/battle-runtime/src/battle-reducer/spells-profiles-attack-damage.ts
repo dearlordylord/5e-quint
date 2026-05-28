@@ -52,6 +52,10 @@ export type SpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellAttackDamage" }
 >;
+export type SpellAttackSequenceInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackSequence" }
+>;
 
 const SORCEROUS_BURST_DAMAGE_TYPES = [
   "acid",
@@ -253,7 +257,7 @@ export function supportedPreparedSpellAttackSequenceProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackSequenceInvocation[] {
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]
@@ -281,7 +285,7 @@ export function supportedPreparedSpellAttackSequenceProfile(
   if (scorchingRayTargetingIsCanonical(phase.attachment) !== true) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return spellSlots.flatMap((slot): readonly SpellAttackSequenceInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
@@ -736,7 +740,7 @@ export function supportedCantripSpellAttackSequenceProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackSequenceInvocation[] {
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]

@@ -122,6 +122,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
+import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -198,7 +199,6 @@ import {
   resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
-import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
@@ -658,7 +658,7 @@ function resolveSpellActInternal(
     );
   }
   if (invocation.procedure === "spellAttackSequence") {
-    return resolveSpellAttackSequenceAct({
+    return spellAttackSequenceProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

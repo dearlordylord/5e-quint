@@ -49,6 +49,7 @@ import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
+import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -249,19 +250,7 @@ export function supportedSpellInvocationRef(
     return commandProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
-    if (invocation.resource.tag === "spellSlot") {
-      return {
-        tag: "spellSlot",
-        spellId: spellId(invocation.spell.id),
-        slotLevel: invocation.resource.slotLevel,
-        procedure: "spellAttackSequence",
-      };
-    }
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "spellAttackSequence",
-    };
+    return spellAttackSequenceProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "expeditiousRetreatDash") {
     return expeditiousRetreatDashProfile.invocationRef(invocation);

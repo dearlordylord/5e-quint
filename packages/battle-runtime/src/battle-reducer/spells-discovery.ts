@@ -37,13 +37,10 @@ import {
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
-import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import {
   carefulSpellProtectedTargetsHole,
   heightenedSpellTargetChoiceHole,
   spellDamageTypeChoiceHole,
-  spellAttackSequencePartObjectTargetHole,
-  spellAttackSequencePartTargetHole,
   spellObjectTargetHole,
   spellAreaChoiceHole,
   spellSavingThrowAbility,
@@ -99,6 +96,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
+import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -794,31 +792,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "spellAttackSequence") {
-        const initialHoles = Array.from(
-          { length: invocation.targeting.attackCount },
-          (_, partIndex) => [
-            spellAttackSequencePartTargetHole(
-              state,
-              actorId,
-              invocation,
-              partIndex,
-            ),
-            spellAttackSequencePartObjectTargetHole(invocation, partIndex),
-          ],
-        ).flat();
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles,
-          },
-        ];
+        return spellAttackSequenceProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "scalarBuff") {
         return scalarBuffProfile.discoverCastAct(state, actorId, invocation);
@@ -1266,12 +1244,7 @@ export function spellInvocationCastSummary(
     return commandProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
-    const partName = spellAttackSequencePartName();
-    const resource =
-      invocation.resource.tag === "spellSlot"
-        ? `using a level ${invocation.resource.slotLevel} Spell Slot`
-        : "as a cantrip";
-    return `Cast ${invocation.spell.name} ${resource}, resolving ${invocation.targeting.attackCount} ${partName}${invocation.targeting.attackCount === 1 ? "" : "s"}.`;
+    return spellAttackSequenceProfile.castSummary(invocation);
   }
   if (invocation.procedure === "chainedSpellAttackDamage") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;

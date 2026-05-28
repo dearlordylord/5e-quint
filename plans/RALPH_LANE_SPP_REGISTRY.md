@@ -265,7 +265,7 @@
     {
       "number": 44,
       "id": "SPP-W6-02-SPELL-ATTACK-SEQUENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spellAttackSequence profile"
     },
     {
@@ -1054,7 +1054,7 @@ Anchor. Focused MBT:
 
 ### Task 44 - SPP-W6-02-SPELL-ATTACK-SEQUENCE - Migrate spellAttackSequence
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts`.
 
