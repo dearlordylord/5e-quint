@@ -205,7 +205,7 @@
     {
       "number": 34,
       "id": "SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate saveGatedAttackRollAdvantage profile"
     },
     {
@@ -978,7 +978,7 @@ Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 
 ### Task 34 - SPP-W4-05-SAVE-GATED-ATTACK-ROLL-ADVANTAGE - Migrate saveGatedAttackRollAdvantage
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 

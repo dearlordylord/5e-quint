@@ -86,6 +86,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
@@ -417,8 +418,14 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "saveGatedAttackRollAdvantage") {
+        return saveGatedAttackRollAdvantageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "abilityD20TestRollModeSaveGate" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
@@ -426,20 +433,11 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "gustOfWindLine"
       ) {
         if (
-          invocation.targeting.kind === "singleCombatant" ||
-          ((invocation.procedure === "hideousLaughter" ||
+          (invocation.procedure === "hideousLaughter" ||
             invocation.procedure === "abilityD20TestRollModeSaveGate") &&
-            invocation.targeting.kind === "targetList")
+          isTargetListSpellInvocation(invocation)
         ) {
-          const targetHole =
-            invocation.targeting.kind === "singleCombatant"
-              ? spellTargetHole(state, actorId, invocation)
-              : isTargetListSpellInvocation(invocation)
-                ? spellTargetListHole(state, actorId, invocation)
-                : null;
-          if (targetHole === null) {
-            return [];
-          }
+          const targetHole = spellTargetListHole(state, actorId, invocation);
           if (targetHole.choices.length === 0) {
             return [];
           }
@@ -476,10 +474,7 @@ export function discoverSupportedSpellInvocations(
             summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
           }));
           const castActs = [baseCastAct, ...metamagicCastActs];
-          return invocation.procedure === "greaseGroundHazard" ||
-            invocation.procedure === "gustOfWindLine"
-            ? castActs
-            : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+          return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
         }
         const initialHole = spellSavingThrowOutcomeHole(
           state,
@@ -1312,6 +1307,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "saveGatedConditionImmunity") {
     return saveGatedConditionImmunityProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
+    return saveGatedAttackRollAdvantageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

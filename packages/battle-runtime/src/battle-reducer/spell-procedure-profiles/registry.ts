@@ -30,6 +30,7 @@ import { objectLightProfile } from "./object-light.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./sanctuary-targeting-interdiction.ts";
+import { saveGatedAttackRollAdvantageProfile } from "./save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./save-gated-damage.ts";
@@ -80,6 +81,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   saveGatedDamageProfile,
   saveGatedConditionProfile,
   saveGatedConditionImmunityProfile,
+  saveGatedAttackRollAdvantageProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

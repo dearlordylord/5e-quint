@@ -110,6 +110,7 @@ import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-dama
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
@@ -277,7 +278,6 @@ import {
   resolveAbilityD20TestRollModeSaveGateSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveHideousLaughterSpellAct,
-  resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -724,7 +724,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "saveGatedAttackRollAdvantage") {
-    return resolveSaveGateAttackRollAdvantageSpellAct({
+    return saveGatedAttackRollAdvantageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

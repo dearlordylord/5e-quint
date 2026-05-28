@@ -34,6 +34,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
@@ -406,12 +407,10 @@ export function supportedSpellInvocationRef(
     ),
     Match.when(
       { procedure: "saveGatedAttackRollAdvantage" },
-      (attackRollAdvantageSpell) => ({
-        tag: "spellSlot" as const,
-        spellId: spellId(attackRollAdvantageSpell.spell.id),
-        slotLevel: attackRollAdvantageSpell.resource.slotLevel,
-        procedure: "saveGatedAttackRollAdvantage" as const,
-      }),
+      (attackRollAdvantageSpell) =>
+        saveGatedAttackRollAdvantageProfile.invocationRef(
+          attackRollAdvantageSpell,
+        ),
     ),
     Match.when({ procedure: "scalarBuff" }, (buffSpell) =>
       scalarBuffProfile.invocationRef(buffSpell),

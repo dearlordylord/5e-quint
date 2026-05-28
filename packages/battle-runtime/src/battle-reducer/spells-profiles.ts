@@ -66,7 +66,6 @@ import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 import {
   hasSaveGateRepeatSaves,
   supportedDamageAmountExpr,
-  supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedAbilityD20TestRollModeSaveGateProfile,
   supportedPreparedCommandProfile,
   supportedPreparedGreaseGroundHazardProfile,
@@ -164,6 +163,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
@@ -291,11 +291,7 @@ export function supportedSpellActs(
       saveGatedConditionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSaveGateAttackRollAdvantageProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      saveGatedAttackRollAdvantageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAbilityD20TestRollModeSaveGateProfile(
