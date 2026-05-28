@@ -199,7 +199,7 @@
     {
       "number": 33,
       "id": "SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate saveGatedConditionImmunity profile"
     },
     {
@@ -972,7 +972,7 @@ Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 
 ### Task 33 - SPP-W4-04-SAVE-GATED-CONDITION-IMMUNITY - Migrate saveGatedConditionImmunity
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 

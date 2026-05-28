@@ -86,6 +86,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
@@ -409,8 +410,14 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "saveGatedConditionImmunity") {
+        return saveGatedConditionImmunityProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "abilityD20TestRollModeSaveGate" ||
         invocation.procedure === "sleepTargetAdmission" ||
@@ -1302,6 +1309,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "saveGatedCondition") {
     return saveGatedConditionProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "saveGatedConditionImmunity") {
+    return saveGatedConditionImmunityProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

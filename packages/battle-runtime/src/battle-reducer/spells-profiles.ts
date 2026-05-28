@@ -68,7 +68,6 @@ import {
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedAbilityD20TestRollModeSaveGateProfile,
-  supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedHideousLaughterProfile,
@@ -166,6 +165,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
+import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
@@ -305,11 +305,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSaveGateConditionImmunityProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      saveGatedConditionImmunityProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSleepTargetAdmissionProfile(

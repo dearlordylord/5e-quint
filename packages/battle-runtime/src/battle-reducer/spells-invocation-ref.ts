@@ -34,6 +34,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
@@ -365,12 +366,7 @@ export function supportedSpellInvocationRef(
     return conditionRemovalProtectionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "saveGatedConditionImmunity") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "saveGatedConditionImmunity",
-    };
+    return saveGatedConditionImmunityProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "magicWeaponEnhancement") {
     return magicWeaponEnhancementProfile.invocationRef(invocation);
