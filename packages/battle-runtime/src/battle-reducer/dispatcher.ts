@@ -33,7 +33,6 @@ import { type StandardActionKind } from "@dnd/shared/game-facts";
 import {
   damageAmount as toDamageAmount,
   type DamageAmount,
-  type Size,
 } from "@dnd/shared/types";
 
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -78,8 +77,6 @@ import {
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state.ts";
-import { combatantEffectiveSize } from "./druid-wild-shape.ts";
-
 import {
   applyAttackDamageAmount,
   breakBattleConcentration,
@@ -133,6 +130,10 @@ import {
 } from "./spells-active-effects.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
+import {
+  afterHitSaveGatedConditionProfile,
+  afterHitSaveGatedConditionSavingThrowOutcomeHole,
+} from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
@@ -167,8 +168,6 @@ import { expendSpellSlot } from "./spell-effects.ts";
 
 import {
   applyAfterHitTimedDamageAndSaveSpellEffect,
-  applyFailedSaveSpellConditionEffects,
-  selectFailedSaveConditionEffect,
   battleLightEmitters,
   battleObscurementZones,
   applySpellDamage,
@@ -224,7 +223,6 @@ import type {
   BattleAttackDamageEvent,
   BattleAttackHitTriggerKind,
   BattleConcentrationSavingThrowHole,
-  BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
   BattleFeatherFallLandingResult,
@@ -249,7 +247,6 @@ import type {
   BattleResolutionResult,
   BattleRolledDiceFill,
   BattleSnapshot,
-  BattleSpellSavingThrowOutcomeValue,
   BattleState,
   BattleTargetSpatialFact,
   AttackSpellDamageAddition,
@@ -2883,14 +2880,6 @@ type AttackHitBonusActionSpellInvocation = Extract<
       | "afterHitDamageAndIllumination";
   }
 >;
-type AttackHitSaveGatedConditionInvocation = Extract<
-  AttackHitBonusActionSpellInvocation,
-  { readonly procedure: "afterHitSaveGatedCondition" }
->;
-type AttackHitSaveGatedConditionFillSet = Extract<
-  ReturnType<typeof spellFillSet>,
-  { readonly tag: "ok" }
->;
 
 export function resolveCastAttackHitBonusActionSpellCommand(
   input: AttackHitBonusActionSpellCommandInput,
@@ -2993,10 +2982,17 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell no longer has its required runtime spell resource.",
     );
   }
+  if (invocation.procedure === "afterHitSaveGatedCondition") {
+    return afterHitSaveGatedConditionProfile.resolve({
+      input: { ...input, target },
+      actorId: input.subject.casterId,
+      invocation,
+      fillSet: input.fills,
+    });
+  }
   const fillValidation = attackHitBonusActionSpellFillValidation(
     input,
     invocation,
-    target,
   );
   if (fillValidation.tag === "invalid") {
     return fillValidation.result;
@@ -3044,16 +3040,11 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       fillSet: fillValidation.fillSet,
     });
   }
-  const reactionSpellTargetFacts =
-    fillValidation.tag === "validSaveGated" ||
-    fillValidation.tag === "validNonSave"
-      ? fillValidation.fillSet.reactionSpellTargetFacts
-      : [];
   const spellCastFrame = spellCastReactionFrame({
     casterId: input.subject.casterId,
     invocation,
     targetIds: [target.combatantId],
-    reactionSpellTargetFacts,
+    reactionSpellTargetFacts: fillValidation.fillSet.reactionSpellTargetFacts,
     castingResource: { kind: "bonusAction" },
     continuation: {
       kind: "replay",
@@ -3069,21 +3060,6 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
-  }
-  if (invocation.procedure === "afterHitSaveGatedCondition") {
-    if (fillValidation.tag !== "validSaveGated") {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack-hit save-gated condition spell fills were not parsed.",
-      );
-    }
-    return resolveCastAttackHitSaveGatedConditionSpellCommand(
-      input,
-      invocation,
-      target,
-      fillValidation.fillSet,
-    );
   }
   const resourced = spendSpellCastResources({
     state: input.state,
@@ -3184,7 +3160,6 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
 function attackHitBonusActionSpellFillValidation(
   input: BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject>,
   invocation: AttackHitBonusActionSpellInvocation,
-  target: BattleCreatureState,
 ):
   | {
       readonly tag: "validNonSave";
@@ -3192,55 +3167,6 @@ function attackHitBonusActionSpellFillValidation(
         ReturnType<typeof spellFillSet>,
         { readonly tag: "ok" }
       >;
-    }
-  | {
-      readonly tag: "validSaveGated";
-      readonly fillSet: AttackHitSaveGatedConditionFillSet;
-    }
-  | {
-      readonly tag: "invalid";
-      readonly result: Extract<
-        BattleResolutionResult,
-        { readonly tag: "invalid" }
-      >;
-    } {
-  if (invocation.procedure !== "afterHitSaveGatedCondition") {
-    const fillSet = spellFillSet(input.fills, invocation);
-    if (fillSet.tag === "invalid") {
-      return {
-        tag: "invalid",
-        result: invalidResult(input.state, "invalidFill", fillSet.message),
-      };
-    }
-    return spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})
-      ? { tag: "validNonSave", fillSet }
-      : {
-          tag: "invalid",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
-          ),
-        };
-  }
-  const fillSetResult = attackHitSaveGatedConditionFillSet(
-    input,
-    invocation,
-    target,
-  );
-  return fillSetResult.tag === "invalid"
-    ? fillSetResult
-    : { tag: "validSaveGated", fillSet: fillSetResult.fillSet };
-}
-
-function attackHitSaveGatedConditionFillSet(
-  input: BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject>,
-  invocation: AttackHitSaveGatedConditionInvocation,
-  target: BattleCreatureState,
-):
-  | {
-      readonly tag: "ok";
-      readonly fillSet: AttackHitSaveGatedConditionFillSet;
     }
   | {
       readonly tag: "invalid";
@@ -3256,163 +3182,16 @@ function attackHitSaveGatedConditionFillSet(
       result: invalidResult(input.state, "invalidFill", fillSet.message),
     };
   }
-  if (
-    fillSet.targetId !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.spellDamageReductionRolls.length > 0
-  ) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack-hit save-gated condition spells only use Saving Throw outcome fills.",
-      ),
-    };
-  }
-  if (fillSet.savingThrowOutcomes === undefined) {
-    return { tag: "ok", fillSet };
-  }
-  const validation = validateAttackHitSavingThrowOutcome(
-    fillSet.savingThrowOutcomes,
-    target.combatantId,
-  );
-  return validation === null
-    ? { tag: "ok", fillSet }
+  return spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})
+    ? { tag: "validNonSave", fillSet }
     : {
         tag: "invalid",
-        result: invalidResult(input.state, "invalidFill", validation),
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
+        ),
       };
-}
-
-function resolveCastAttackHitSaveGatedConditionSpellCommand(
-  input: AttackHitBonusActionSpellCommandInput,
-  invocation: AttackHitSaveGatedConditionInvocation,
-  target: BattleCreatureState,
-  fillSet: AttackHitSaveGatedConditionFillSet,
-): BattleResolutionResult {
-  const savingThrowHole = attackHitSavingThrowOutcomeHole(
-    input.state,
-    input.subject.casterId,
-    target,
-    invocation,
-  );
-  if (fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.state, input.subject, [savingThrowHole]);
-  }
-
-  const failedTargets = fillSet.savingThrowOutcomes.outcomes[0]!.succeeded
-    ? []
-    : [target.combatantId];
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: target.combatantId,
-        sourceSpellId: invocation.spell.id,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.suppressedReactionTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
-  }
-
-  const resourced = spendSpellCastResources({
-    state: input.state,
-    actorId: input.subject.casterId,
-    invocation,
-    errorState: input.state,
-    startConcentration: failedTargets.length > 0,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const selectedEffect = selectFailedSaveConditionEffect(
-    invocation.effect,
-    null,
-  );
-  if (selectedEffect.tag !== "selected") {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
-    );
-  }
-  const effected = applyFailedSaveSpellConditionEffects(
-    resourced.state,
-    input.subject.casterId,
-    failedTargets,
-    invocation,
-    selectedEffect.effect,
-  );
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: effected,
-    subject: input.subject,
-    casterId: input.subject.casterId,
-    spellId: invocation.spell.id,
-    targetIds: [target.combatantId],
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
-  });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: effected,
-    snapshot: snapshotBattle(effected),
-  };
-}
-
-function attackHitSavingThrowOutcomeHole(
-  state: BattleState,
-  casterId: CombatantId,
-  target: BattleCreatureState,
-  invocation: Extract<
-    ReturnType<typeof supportedSpellActs>[number],
-    { readonly procedure: "afterHitSaveGatedCondition" }
-  >,
-) {
-  const base = spellSavingThrowOutcomeHole(state, casterId, invocation);
-  return {
-    ...base,
-    label: `${invocation.spell.name} Saving Throw outcome`,
-    targetRollModes: [
-      ...base.targetRollModes,
-      ...(creatureSizeIsLargeOrLarger(combatantEffectiveSize(target))
-        ? [{ targetId: target.combatantId, rollMode: "advantage" as const }]
-        : []),
-    ],
-  };
-}
-
-function validateAttackHitSavingThrowOutcome(
-  value: BattleSpellSavingThrowOutcomeValue,
-  targetId: CombatantId,
-): string | null {
-  if ("area" in value) {
-    return "Single-target save-gate spell outcomes must not include area facts.";
-  }
-  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
-    ? null
-    : "Single-target save-gate spell Saving Throw outcome must match the triggering hit target.";
-}
-
-function creatureSizeIsLargeOrLarger(size: Size): boolean {
-  return size === "large" || size === "huge" || size === "gargantuan";
 }
 
 function afterHitSpellMatchesAttackTrigger(
@@ -4693,7 +4472,7 @@ export function attackHitBonusActionSpellReactionChoices(
       const initialHoles =
         invocation.procedure === "afterHitSaveGatedCondition"
           ? [
-              attackHitSavingThrowOutcomeHole(
+              afterHitSaveGatedConditionSavingThrowOutcomeHole(
                 state,
                 frame.attackerId,
                 target,

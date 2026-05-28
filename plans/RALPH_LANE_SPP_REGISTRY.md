@@ -307,7 +307,7 @@
     {
       "number": 51,
       "id": "SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate afterHitSaveGatedCondition (no focused MBT)"
     },
     {
@@ -1104,7 +1104,7 @@ Focused MBT: `shining-smite-selected-identity.mbt.test.ts`.
 
 ### Task 51 - SPP-W7-03-AFTER-HIT-SAVE-GATED-CONDITION - Migrate afterHitSaveGatedCondition
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

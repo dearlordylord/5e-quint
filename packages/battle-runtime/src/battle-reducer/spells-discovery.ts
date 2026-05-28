@@ -104,6 +104,7 @@ import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
+import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
@@ -1167,7 +1168,7 @@ export function spellInvocationCastSummary(
     return afterHitDamageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+    return afterHitSaveGatedConditionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;

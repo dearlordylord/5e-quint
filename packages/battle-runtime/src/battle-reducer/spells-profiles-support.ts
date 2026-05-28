@@ -454,58 +454,6 @@ function spellCreatedHeldObjectDamageExpr(
   };
 }
 
-export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = afterHitSaveGatedConditionSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const damageExpr = supportedDamageAmountExpr({
-      amount: projection.turnStartDamageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel: slot.spellLevel,
-    });
-    if (damageExpr === null) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "afterHitSaveGatedCondition",
-        spell,
-        actionCost: "bonusAction",
-        ability: projection.ability,
-        dc: projection.dc,
-        targeting: { kind: "singleCombatant" },
-        effect: {
-          kind: "fixed",
-          condition: projection.condition,
-          expiresAt: "concentration",
-          escape: {
-            kind: "abilityCheck",
-            ability: "str",
-            skill: "athletics",
-            allowedActor: "targetOrCreatureWithinReach",
-            successEnds: "spell",
-          },
-          turnStartDamage: {
-            expr: damageExpr,
-            damageType: projection.turnStartDamageType,
-          },
-          repeatSave: null,
-        },
-      },
-    ];
-  });
-}
-
 export function supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -641,55 +589,6 @@ export function afterHitTimedDamageAndSaveSpellProjection(
     saveAbility: "con",
     dc: { kind: "caster_spell_save_dc" },
     expiresAt,
-  };
-}
-
-export function afterHitSaveGatedConditionSpellProjection(spell: SpellRecord): {
-  readonly ability: "str";
-  readonly dc: { readonly kind: "caster_spell_save_dc" };
-  readonly condition: "restrained";
-  readonly turnStartDamageAmount: SurfaceDiceAmount;
-  readonly turnStartDamageType: Extract<DamageType, "piercing">;
-} | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !== "weapon" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const initialPhase = spell.mechanics.initialPhase;
-  const operation = spell.mechanics.operations[0];
-  if (
-    initialPhase?.kind !== "save_gate" ||
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    initialPhase.ability !== "str" ||
-    initialPhase.dc.kind !== "caster_spell_save_dc" ||
-    initialPhase.onFail.kind !== "apply_condition" ||
-    initialPhase.onFail.condition !== "restrained" ||
-    initialPhase.onSuccess.kind !== "end_current_effect" ||
-    operation?.trigger.kind !== "on_attached_turn_start" ||
-    operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== "piercing" ||
-    operation.effect.amount === undefined
-  ) {
-    return null;
-  }
-  return {
-    ability: "str",
-    dc: { kind: "caster_spell_save_dc" },
-    condition: "restrained",
-    turnStartDamageAmount: operation.effect.amount,
-    turnStartDamageType: "piercing",
   };
 }
 

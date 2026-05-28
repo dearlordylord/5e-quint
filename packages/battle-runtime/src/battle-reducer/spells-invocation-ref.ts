@@ -13,6 +13,7 @@ import {
 } from "../battle-reducer.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
+import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -74,12 +75,7 @@ export function supportedSpellInvocationRef(
     return afterHitDamageProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "afterHitSaveGatedCondition",
-    };
+    return afterHitSaveGatedConditionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
     return {
