@@ -45,6 +45,7 @@ import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
 import { shieldReactionProfile } from "./shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
+import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
@@ -96,6 +97,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,
+  spellAttackDamageProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

@@ -48,6 +48,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -382,7 +383,9 @@ export function supportedSpellInvocationRef(
       procedure: "chainedSpellAttackDamage" as const,
     })),
     Match.when({ procedure: "heldLightHurl" }, damageSpellInvocationRef),
-    Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
+    Match.when({ procedure: "spellAttackDamage" }, (spellAttackDamage) =>
+      spellAttackDamageProfile.invocationRef(spellAttackDamage),
+    ),
     Match.when({ procedure: "saveGatedDamage" }, (saveGatedDamage) =>
       saveGatedDamageProfile.invocationRef(saveGatedDamage),
     ),

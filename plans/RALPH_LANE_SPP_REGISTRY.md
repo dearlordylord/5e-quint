@@ -259,7 +259,7 @@
     {
       "number": 43,
       "id": "SPP-W6-01-SPELL-ATTACK-DAMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spellAttackDamage profile (anchor of attack family)"
     },
     {
@@ -1046,7 +1046,7 @@ Focused MBT: `reaction-spell-selected-identity.mbt.test.ts`.
 
 ### Task 43 - SPP-W6-01-SPELL-ATTACK-DAMAGE - Migrate spellAttackDamage
 
-Status: `ready-for-research`
+Status: `done`
 
 Anchor. Focused MBT:
 `level1-damage-spell-selected-identity.mbt.test.ts`. Also covered by

@@ -98,6 +98,7 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -839,17 +840,19 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "spellAttackDamage") {
+        return spellAttackDamageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        (invocation.procedure === "heldLightHurl" ||
-          invocation.procedure === "spellAttackDamage") &&
+        invocation.procedure === "heldLightHurl" &&
         invocation.targeting.kind === "singleCreatureOrObject"
       ) {
         const targetHole = spellTargetHole(state, actorId, invocation);
         const initialHoles = [
-          ...(invocation.procedure === "spellAttackDamage" &&
-          invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
-            ? [spellDamageTypeChoiceHole(invocation)]
-            : []),
           ...(targetHole.choices.length === 0 ? [] : [targetHole]),
           spellObjectTargetHole(invocation),
         ];
@@ -1239,7 +1242,7 @@ export function spellInvocationCastSummary(
     return counterspellProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackDamage") {
-    return spellActivationInvocationCastSummary(invocation);
+    return spellAttackDamageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "saveGatedDamage") {
     return saveGatedDamageProfile.castSummary(invocation);

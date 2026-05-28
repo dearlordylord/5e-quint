@@ -121,6 +121,7 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
@@ -296,6 +297,7 @@ import {
   resolveReadySpellAct,
 } from "./spells-resolve-release.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
+import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
@@ -308,6 +310,7 @@ type SpellAttackDamageInvocation = Extract<
 
 type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
+  readonly useSharedDamageResolverForSpellAttackDamage?: true;
 };
 
 function isSupportedDamageSpellInvocation(
@@ -389,6 +392,17 @@ export function resolveSpellAct(
   input: ActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   return resolveSpellActInternal(input);
+}
+
+export function resolveSpellAttackDamageAct(
+  input: SpellProcedureProfileResolveInput<
+    SpellAttackDamageInvocation,
+    ActionSpellBattleResolutionInput
+  >,
+): BattleResolutionResult {
+  return resolveSpellActInternal(input.input, {
+    useSharedDamageResolverForSpellAttackDamage: true,
+  });
 }
 
 function resolveSpellActInternal(
@@ -998,6 +1012,17 @@ function resolveSpellActInternal(
   }
   if (invocation.procedure === "directCondition") {
     return directConditionProfile.resolve({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "spellAttackDamage" &&
+    options.useSharedDamageResolverForSpellAttackDamage !== true
+  ) {
+    return spellAttackDamageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

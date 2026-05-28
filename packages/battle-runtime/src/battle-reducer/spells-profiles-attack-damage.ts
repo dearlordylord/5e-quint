@@ -48,29 +48,10 @@ import {
   supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 
-export function supportedCantripSpellAttackProfile(
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  return [
-    ...supportedCantripSpellAttackSequenceProfile(
-      spell,
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      characterLevel,
-    ),
-    ...supportedSpellAttackDamageProfile({
-      spell,
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      characterLevel,
-    }),
-  ];
-}
+export type SpellAttackDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+>;
 
 const SORCEROUS_BURST_DAMAGE_TYPES = [
   "acid",
@@ -265,27 +246,6 @@ export function isGuidingBoltNextAttackRiderShape(
     spell.mechanics.duration.value.amount === 1 &&
     phase.attackKind === "ranged_spell_attack"
   );
-}
-
-export function supportedPreparedSpellAttackProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return supportedSpellAttackDamageProfile({
-      spell,
-      access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      slotLevel: slot.spellLevel,
-    });
-  });
 }
 
 export function supportedPreparedSpellAttackSequenceProfile(
@@ -610,7 +570,7 @@ export function supportedSpellAttackDamageProfile(
     readonly slotLevel?: SpellSlotLevel;
     readonly characterLevel?: number;
   } & DamageSpellSource,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackDamageInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
@@ -723,7 +683,7 @@ export function supportedSpellAttackDamageProfile(
         access: { tag: "classCantrip" },
         resource: { tag: "none" },
         ...attackDamageInvocation,
-      } satisfies SupportedSpellInvocation,
+      } satisfies SpellAttackDamageInvocation,
     ];
   }
   if (input.access.tag !== "prepared" || input.resource.tag !== "spellSlot") {
@@ -734,7 +694,7 @@ export function supportedSpellAttackDamageProfile(
       access: { tag: "prepared" },
       resource: input.resource,
       ...attackDamageInvocation,
-    } satisfies SupportedSpellInvocation,
+    } satisfies SpellAttackDamageInvocation,
   ];
 }
 
