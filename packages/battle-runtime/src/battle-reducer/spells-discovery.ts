@@ -43,8 +43,6 @@ import {
   carefulSpellProtectedTargetsHole,
   commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
-  saveGatedConditionHasConditionChoice,
-  spellConditionChoiceHole,
   spellDamageTypeChoiceHole,
   spellAttackSequencePartObjectTargetHole,
   spellAttackSequencePartTargetHole,
@@ -88,6 +86,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
@@ -403,8 +402,14 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "saveGatedCondition") {
+        return saveGatedConditionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "abilityD20TestRollModeSaveGate" ||
@@ -415,8 +420,7 @@ export function discoverSupportedSpellInvocations(
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
-          ((invocation.procedure === "saveGatedCondition" ||
-            invocation.procedure === "hideousLaughter" ||
+          ((invocation.procedure === "hideousLaughter" ||
             invocation.procedure === "abilityD20TestRollModeSaveGate") &&
             invocation.targeting.kind === "targetList")
         ) {
@@ -432,11 +436,6 @@ export function discoverSupportedSpellInvocations(
           if (targetHole.choices.length === 0) {
             return [];
           }
-          const conditionChoiceHoles =
-            invocation.procedure === "saveGatedCondition" &&
-            saveGatedConditionHasConditionChoice(invocation)
-              ? [spellConditionChoiceHole(invocation)]
-              : [];
           const baseCastAct = {
             subject: {
               tag: "actionSpell" as const,
@@ -446,7 +445,7 @@ export function discoverSupportedSpellInvocations(
             },
             label: invocation.spell.name,
             summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-            initialHoles: [targetHole, ...conditionChoiceHoles],
+            initialHoles: [targetHole],
           };
           const metamagicCastActs = discoverSpellMetamagicSelections({
             actor,
@@ -465,7 +464,6 @@ export function discoverSupportedSpellInvocations(
                 invocation,
                 spellMetamagicApplications(actor, metamagic),
               ),
-              ...conditionChoiceHoles,
             ],
             label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
             summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
@@ -481,11 +479,6 @@ export function discoverSupportedSpellInvocations(
           actorId,
           invocation,
         );
-        const conditionChoiceHoles =
-          invocation.procedure === "saveGatedCondition" &&
-          saveGatedConditionHasConditionChoice(invocation)
-            ? [spellConditionChoiceHole(invocation)]
-            : [];
         const baseCastAct = {
           subject: {
             tag: "actionSpell" as const,
@@ -495,7 +488,7 @@ export function discoverSupportedSpellInvocations(
           },
           label: invocation.spell.name,
           summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-          initialHoles: [initialHole, ...conditionChoiceHoles],
+          initialHoles: [initialHole],
         };
         const metamagicCastActs = discoverSpellMetamagicSelections({
           actor,
@@ -518,11 +511,8 @@ export function discoverSupportedSpellInvocations(
               metamagicApplications,
             );
             return metamagicSelectionHoles.length === 0
-              ? [
-                  spellSavingThrowOutcomeHole(state, actorId, invocation),
-                  ...conditionChoiceHoles,
-                ]
-              : [...metamagicSelectionHoles, ...conditionChoiceHoles];
+              ? [spellSavingThrowOutcomeHole(state, actorId, invocation)]
+              : metamagicSelectionHoles;
           })(),
           label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
           summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
@@ -1309,6 +1299,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "saveGatedDamage") {
     return saveGatedDamageProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "saveGatedCondition") {
+    return saveGatedConditionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

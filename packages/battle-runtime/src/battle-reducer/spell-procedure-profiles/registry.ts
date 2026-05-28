@@ -30,6 +30,7 @@ import { objectLightProfile } from "./object-light.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./sanctuary-targeting-interdiction.ts";
+import { saveGatedConditionProfile } from "./save-gated-condition.ts";
 import { saveGatedDamageProfile } from "./save-gated-damage.ts";
 import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
@@ -76,6 +77,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   weaponAttackOverrideProfile,
   spellHostedWeaponAttackProfile,
   saveGatedDamageProfile,
+  saveGatedConditionProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

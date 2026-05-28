@@ -193,7 +193,7 @@
     {
       "number": 32,
       "id": "SPP-W4-03-SAVE-GATED-CONDITION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate saveGatedCondition profile"
     },
     {
@@ -966,7 +966,7 @@ Anchor of family. Focused MBT:
 
 ### Task 32 - SPP-W4-03-SAVE-GATED-CONDITION - Migrate saveGatedCondition
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level2-control-spell-selected-identity.mbt.test.ts`.
 
