@@ -14,6 +14,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condit
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
+import { directConditionProfile } from "./direct-condition.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./dragons-breath-initial.ts";
@@ -55,6 +56,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   wardingBondProfile,
   creatureTypeProtectionProfile,
   conditionRemovalProtectionProfile,
+  directConditionProfile,
   directConditionRemovalProfile,
   conditionImmunityAndTurnStartTemporaryHitPointsProfile,
   creatureSizeChangeProfile,

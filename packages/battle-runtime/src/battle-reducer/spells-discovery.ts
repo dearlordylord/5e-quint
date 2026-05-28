@@ -72,6 +72,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
@@ -819,22 +820,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "directCondition") {
-        const targetHole = spellTargetListHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "actionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [targetHole],
-              },
-            ];
+        return directConditionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
@@ -1318,7 +1308,7 @@ export function spellInvocationCastSummary(
     return sanctuaryTargetingInterdictionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "directCondition") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return directConditionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "selfTeleport") {
     return selfTeleportProfile.castSummary(invocation);

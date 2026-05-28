@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "SPP-W4-01-DIRECT-CONDITION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate directCondition profile"
     },
     {
@@ -953,7 +953,7 @@ into a `save-gate-helpers.ts` shared module.
 
 ### Task 30 - SPP-W4-01-DIRECT-CONDITION - Migrate directCondition
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `direct-condition-lifecycle.mbt.test.ts`.
 

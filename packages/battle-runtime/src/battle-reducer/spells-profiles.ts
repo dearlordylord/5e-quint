@@ -158,6 +158,7 @@ import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/co
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
@@ -186,8 +187,6 @@ import {
   supportedPreparedSlotSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
-import { supportedPreparedDirectConditionSpellProfile } from "./spells-profiles-direct-condition.ts";
-export * from "./spells-profiles-direct-condition.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
   areaSaveGateSpellRangeFeet,
@@ -506,11 +505,7 @@ export function supportedSpellActs(
       sanctuaryTargetingInterdictionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedDirectConditionSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      directConditionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       directConditionRemovalProfile.admit(spell, admissionContext),

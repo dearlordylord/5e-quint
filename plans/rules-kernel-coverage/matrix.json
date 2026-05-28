@@ -264,8 +264,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-direct-condition.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"

@@ -97,6 +97,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
@@ -248,10 +249,7 @@ export {
   resolveSleepTargetAdmissionSpellAct,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
-export {
-  resolveDirectConditionSpellAct,
-  resolveMirrorImageHitInterceptionSpellAct,
-} from "./spells-resolve-support-effects.ts";
+export { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
 export {
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
@@ -265,10 +263,7 @@ export {
   type ScalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
 
-import {
-  resolveDirectConditionSpellAct,
-  resolveMirrorImageHitInterceptionSpellAct,
-} from "./spells-resolve-support-effects.ts";
+import { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 
@@ -1004,7 +999,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "directCondition") {
-    return resolveDirectConditionSpellAct({
+    return directConditionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

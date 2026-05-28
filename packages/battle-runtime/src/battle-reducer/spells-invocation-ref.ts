@@ -17,6 +17,7 @@ import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
@@ -301,12 +302,7 @@ export function supportedSpellInvocationRef(
     return sanctuaryTargetingInterdictionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "directCondition") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "directCondition",
-    };
+    return directConditionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "directConditionRemoval") {
     return directConditionRemovalProfile.invocationRef(invocation);
