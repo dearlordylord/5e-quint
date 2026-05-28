@@ -73,7 +73,6 @@ import {
   supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./spells-active-effects.ts";
-export * from "./spells-profiles-repeated-damage.ts";
 
 const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 

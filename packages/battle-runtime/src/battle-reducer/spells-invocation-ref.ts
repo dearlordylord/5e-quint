@@ -38,6 +38,7 @@ import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts"
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
+import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
@@ -355,12 +356,9 @@ export function supportedSpellInvocationRef(
     Match.when({ procedure: "damageReduction" }, (cantrip) =>
       damageReductionProfile.invocationRef(cantrip),
     ),
-    Match.when({ procedure: "repeatedDamageAllocation" }, (slotSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(slotSpell.spell.id),
-      slotLevel: slotSpell.resource.slotLevel,
-      procedure: "repeatedDamageAllocation" as const,
-    })),
+    Match.when({ procedure: "repeatedDamageAllocation" }, (slotSpell) =>
+      repeatedDamageAllocationProfile.invocationRef(slotSpell),
+    ),
     Match.when({ procedure: "attackBurstSaveDamage" }, (slotSpell) =>
       attackBurstSaveDamageProfile.invocationRef(slotSpell),
     ),

@@ -42,7 +42,6 @@ export * from "./spells-invocation-guards.ts";
 export * from "./spells-targeting.ts";
 export * from "./spells-profile-shared.ts";
 export * from "./spells-profiles-attack-damage.ts";
-export * from "./spells-profiles-repeated-damage.ts";
 export * from "./spells-profiles-support.ts";
 export * from "./spell-procedure-profiles/_save-gate-helpers.ts";
 export * from "./spells-profiles.ts";

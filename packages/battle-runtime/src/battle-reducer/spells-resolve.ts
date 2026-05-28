@@ -111,6 +111,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
+import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
@@ -276,8 +277,6 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
-
-import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -862,7 +861,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
-    return resolvePreparedSlotSpellAct({
+    return repeatedDamageAllocationProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

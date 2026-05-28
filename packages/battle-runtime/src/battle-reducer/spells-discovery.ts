@@ -45,7 +45,6 @@ import {
   spellSavingThrowAbility,
   spellSavingThrowTargeting,
   spellSavingThrowOutcomeHole,
-  spellTargetAllocationHole,
   spellTargetHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
@@ -84,6 +83,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
+import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
@@ -824,6 +824,13 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "repeatedDamageAllocation") {
+        return repeatedDamageAllocationProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
         invocation.procedure === "heldLightHurl" &&
         invocation.targeting.kind === "singleCreatureOrObject"
@@ -848,10 +855,7 @@ export function discoverSupportedSpellInvocations(
         ];
         return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
-      const targetHole =
-        invocation.procedure === "repeatedDamageAllocation"
-          ? spellTargetAllocationHole(state, actorId, invocation)
-          : spellTargetHole(state, actorId, invocation);
+      const targetHole = spellTargetHole(state, actorId, invocation);
       const turnResourceAvailableForActionCast =
         naturalTurnResourceAvailable || quickenedTurnResourceAvailable;
       const castActs =
@@ -1099,7 +1103,7 @@ export function spellInvocationCastSummary(
     return `Use a Bonus Action to move ${invocation.spell.name}'s force and repeat the attack.`;
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
+    return repeatedDamageAllocationProfile.castSummary(invocation);
   }
   if (invocation.procedure === "directHitPointRestoration") {
     return directHitPointRestorationProfile.castSummary(invocation);

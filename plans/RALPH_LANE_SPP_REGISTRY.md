@@ -283,7 +283,7 @@
     {
       "number": 47,
       "id": "SPP-W6-05-REPEATED-DAMAGE-ALLOCATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate repeatedDamageAllocation profile"
     },
     {
@@ -1072,7 +1072,7 @@ Focused MBT: `level1-damage-spell-selected-identity.mbt.test.ts`.
 
 ### Task 47 - SPP-W6-05-REPEATED-DAMAGE-ALLOCATION - Migrate repeatedDamageAllocation
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `reaction-spell-selected-identity.mbt.test.ts` and
 `reaction-casting-time.mbt.test.ts`. Note: this is a continuation-style

@@ -155,6 +155,7 @@ import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
+import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
@@ -181,7 +182,6 @@ import {
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
   supportedSpellCreatedHeldObjectActiveEffectProfile,
-  supportedPreparedSlotSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 export {
@@ -244,7 +244,7 @@ export function supportedSpellActs(
 
   return [
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSlotSpellProfile(spell, spellcasting.spellSlots),
+      repeatedDamageAllocationProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       spellAttackSequenceProfile.admit(spell, admissionContext),
