@@ -229,7 +229,7 @@
     {
       "number": 38,
       "id": "SPP-W4-09-GREASE-GROUND-HAZARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate greaseGroundHazard profile"
     },
     {
@@ -1002,7 +1002,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 38 - SPP-W4-09-GREASE-GROUND-HAZARD - Migrate greaseGroundHazard
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 

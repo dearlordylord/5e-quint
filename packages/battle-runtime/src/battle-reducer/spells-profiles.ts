@@ -67,7 +67,6 @@ import {
   hasSaveGateRepeatSaves,
   supportedDamageAmountExpr,
   supportedPreparedCommandProfile,
-  supportedPreparedGreaseGroundHazardProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -158,6 +157,7 @@ import { directHitPointRestorationProfile } from "./spell-procedure-profiles/dir
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -210,7 +210,6 @@ export {
   supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
-  supportedPreparedGreaseGroundHazardProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
   supportedSaveGateDamageProfile,
@@ -220,6 +219,7 @@ export {
 } from "./spells-profiles-save-gates.ts";
 export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
+export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 
 type ActivationPhase = Extract<
   SpellRecord["mechanics"],
@@ -306,10 +306,7 @@ export function supportedSpellActs(
       hideousLaughterProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedGreaseGroundHazardProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      greaseGroundHazardProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedGustOfWindLineProfile(spell, spellcasting.spellSlots),

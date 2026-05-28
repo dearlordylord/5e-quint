@@ -76,6 +76,7 @@ import { directHitPointRestorationProfile } from "./spell-procedure-profiles/dir
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
@@ -448,10 +449,14 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
-      if (
-        invocation.procedure === "greaseGroundHazard" ||
-        invocation.procedure === "gustOfWindLine"
-      ) {
+      if (invocation.procedure === "greaseGroundHazard") {
+        return greaseGroundHazardProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
+      if (invocation.procedure === "gustOfWindLine") {
         const initialHole = spellSavingThrowOutcomeHole(
           state,
           actorId,
@@ -496,10 +501,7 @@ export function discoverSupportedSpellInvocations(
           summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
         }));
         const castActs = [baseCastAct, ...metamagicCastActs];
-        return invocation.procedure === "greaseGroundHazard" ||
-          invocation.procedure === "gustOfWindLine"
-          ? castActs
-          : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+        return castActs;
       }
       if (invocation.procedure === "rollModifier") {
         return rollModifierProfile.discoverCastAct(state, actorId, invocation);

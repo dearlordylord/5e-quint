@@ -5,7 +5,6 @@
 
 import {
   elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   movementDeltaFeet,
@@ -80,23 +79,6 @@ export type SaveGateAttackRollAdvantageSpell = {
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;
   readonly dice: number;
-};
-type GreaseGroundHazardPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
-> & {
-  readonly ability: "dex";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "area";
-      readonly origin: { readonly kind: "point_within_range" };
-      readonly shape: {
-        readonly kind: "cube";
-        readonly sideFeet: 10;
-      };
-    };
-  };
 };
 type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
   readonly ability: "wis";
@@ -482,35 +464,6 @@ function conditionImmunityEffectsFromSaveGateFailure(
     : null;
 }
 
-export function supportedPreparedGreaseGroundHazardProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const grease = greaseGroundHazardSpell(spell);
-  if (grease === null) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "greaseGroundHazard",
-        spell,
-        ability: grease.phase.ability,
-        dc: grease.phase.dc,
-        targeting: grease.targeting,
-        durationTicks: grease.durationTicks,
-        rangeFeet: grease.rangeFeet,
-      },
-    ];
-  });
-}
-
 export function supportedPreparedCommandProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
@@ -629,70 +582,6 @@ export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(
     return null;
   }
   return scalarBuffSpellTargetCountBySlot(selection, spellLevel);
-}
-
-function greaseGroundHazardSpell(spell: SpellRecord): {
-  readonly phase: GreaseGroundHazardPhase;
-  readonly targeting: Extract<
-    SpellTargeting,
-    { readonly kind: "pointOriginCube" }
-  >;
-  readonly durationTicks: ElapsedTimeTicks;
-  readonly rangeFeet: MovementFeet;
-} | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  const durationTicks =
-    spell.mechanics.duration.kind === "timed"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
-      : null;
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    !isGreaseGroundHazardPhase(phase) ||
-    durationTicks === null ||
-    Either.isLeft(durationTicks)
-  ) {
-    return null;
-  }
-
-  return {
-    phase,
-    targeting: {
-      kind: "pointOriginCube",
-      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
-    },
-    durationTicks: durationTicks.right,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-  };
-}
-
-function isGreaseGroundHazardPhase(
-  phase: ActivationPhase | undefined,
-): phase is GreaseGroundHazardPhase {
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  return (
-    phase?.kind === "save_gate" &&
-    !hasSaveGateRepeatSaves(phase) &&
-    phase.ability === "dex" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area" &&
-    phase.attachment.value.origin.kind === "point_within_range" &&
-    phase.attachment.value.shape.kind === "cube" &&
-    phase.attachment.value.shape.sideFeet === 10 &&
-    failedEffect?.kind === "apply_condition" &&
-    failedEffect.condition === "prone"
-  );
 }
 
 function abilityD20TestRollModeSaveGateSpell(

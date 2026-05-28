@@ -125,6 +125,7 @@ import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaum
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
+import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
   repositionSpiritualWeaponAttackProxyEffect,
@@ -278,7 +279,6 @@ import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-bu
 
 import {
   resolveCommandSpellAct,
-  resolveGreaseGroundHazardSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -758,7 +758,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "greaseGroundHazard") {
-    return resolveGreaseGroundHazardSpellAct({
+    return greaseGroundHazardProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

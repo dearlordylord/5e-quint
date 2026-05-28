@@ -23,6 +23,7 @@ import { directHitPointRestorationProfile } from "./spell-procedure-profiles/dir
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
+import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
@@ -122,12 +123,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "greaseGroundHazard") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "greaseGroundHazard",
-    };
+    return greaseGroundHazardProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "gustOfWindLine") {
     return {

@@ -21,6 +21,7 @@ import { directHitPointRestorationProfile } from "./direct-hit-point-restoration
 import { dragonsBreathInitialProfile } from "./dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
+import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
@@ -88,6 +89,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   abilityD20TestRollModeSaveGateProfile,
   sleepTargetAdmissionProfile,
   hideousLaughterProfile,
+  greaseGroundHazardProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles
