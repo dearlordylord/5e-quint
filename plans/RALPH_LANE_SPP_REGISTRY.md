@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "SPP-W4-02-SAVE-GATED-DAMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate saveGatedDamage profile (anchor of save-gated family)"
     },
     {
@@ -959,7 +959,7 @@ Focused MBT: `direct-condition-lifecycle.mbt.test.ts`.
 
 ### Task 31 - SPP-W4-02-SAVE-GATED-DAMAGE - Migrate saveGatedDamage
 
-Status: `ready-for-research`
+Status: `done`
 
 Anchor of family. Focused MBT:
 `level2-damage-spell-selected-identity.mbt.test.ts`.

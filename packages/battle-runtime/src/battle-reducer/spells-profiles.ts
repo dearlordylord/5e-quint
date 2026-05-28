@@ -65,14 +65,12 @@ import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 import {
   hasSaveGateRepeatSaves,
-  supportedCantripSaveGateDamageProfile,
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedAbilityD20TestRollModeSaveGateProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
-  supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedHideousLaughterProfile,
   supportedPreparedSleepTargetAdmissionProfile,
@@ -168,6 +166,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
@@ -286,7 +285,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedSaveGateDamageProfile(spell, spellcasting.spellSlots),
+      saveGatedDamageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateConditionProfile(spell, spellcasting.spellSlots),
@@ -575,7 +574,7 @@ export function supportedSpellActs(
       ),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripSaveGateDamageProfile(spell, characterLevel),
+      saveGatedDamageProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       rollModifierProfile.admit(spell, admissionContext),

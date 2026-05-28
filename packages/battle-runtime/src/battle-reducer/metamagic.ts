@@ -447,6 +447,32 @@ export function discoverSpellMetamagicSelections(input: {
   });
 }
 
+export function spellMetamagicApplications(
+  actor: BattleCreatureState,
+  metamagic: readonly Pick<SpellMetamagicSelection, "effectKind">[],
+): readonly CharacterBattleMetamagicOptionFact[] {
+  if (
+    actor.origin.kind !== "character" ||
+    actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const knownOptions = actor.origin.metamagic.knownOptions;
+  return metamagic.flatMap((selection) =>
+    knownOptions.filter((option) => option.effectKind === selection.effectKind),
+  );
+}
+
+export function spellMetamagicLabel(
+  metamagic: readonly Pick<SpellMetamagicSelection, "effectKind">[],
+): string {
+  return metamagic[0]?.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND
+    ? "Careful Spell"
+    : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
+      ? "Heightened Spell"
+      : "Quickened Spell";
+}
+
 function spellMetamagicSupportIssue(input: {
   readonly applications: readonly CharacterBattleMetamagicOptionFact[];
   readonly invocation: SupportedSpellInvocation;

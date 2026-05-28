@@ -88,6 +88,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
@@ -112,6 +113,8 @@ import {
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   spellInvocationSupportsQuickenedActionRewrite,
+  spellMetamagicApplications,
+  spellMetamagicLabel,
 } from "./metamagic.ts";
 
 export function discoverSupportedSpellInvocations(
@@ -393,8 +396,14 @@ export function discoverSupportedSpellInvocations(
       if (invocation.procedure === "selfTeleport") {
         return selfTeleportProfile.discoverCastAct(state, actorId, invocation);
       }
+      if (invocation.procedure === "saveGatedDamage") {
+        return saveGatedDamageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
@@ -1023,24 +1032,6 @@ function spellActWithQuickenedRewrite(input: {
   return [...naturalActs, ...quickenedActs];
 }
 
-function spellMetamagicApplications(
-  actor: BattleCreatureState,
-  metamagic: readonly {
-    readonly effectKind: CharacterBattleMetamagicOptionFact["effectKind"];
-  }[],
-): readonly CharacterBattleMetamagicOptionFact[] {
-  if (
-    actor.origin.kind !== "character" ||
-    actor.origin.metamagic === undefined
-  ) {
-    return [];
-  }
-  const knownOptions = actor.origin.metamagic.knownOptions;
-  return metamagic.flatMap((selection) =>
-    knownOptions.filter((option) => option.effectKind === selection.effectKind),
-  );
-}
-
 type SaveMetamagicSupportedInvocation = Extract<
   SupportedSpellInvocation,
   {
@@ -1103,18 +1094,6 @@ function saveMetamagicInvocationOrNull(
     invocation.procedure === "gustOfWindLine"
     ? invocation
     : null;
-}
-
-function spellMetamagicLabel(
-  metamagic: readonly {
-    readonly effectKind: CharacterBattleMetamagicOptionFact["effectKind"];
-  }[],
-): string {
-  return metamagic[0]?.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND
-    ? "Careful Spell"
-    : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
-      ? "Heightened Spell"
-      : "Quickened Spell";
 }
 
 function spellCastReactionFactsAct(
@@ -1327,6 +1306,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "spellAttackDamage") {
     return spellActivationInvocationCastSummary(invocation);
+  }
+  if (invocation.procedure === "saveGatedDamage") {
+    return saveGatedDamageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

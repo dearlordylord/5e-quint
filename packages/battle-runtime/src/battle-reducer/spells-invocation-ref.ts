@@ -34,6 +34,7 @@ import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-at
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
@@ -400,7 +401,9 @@ export function supportedSpellInvocationRef(
     })),
     Match.when({ procedure: "heldLightHurl" }, damageSpellInvocationRef),
     Match.when({ procedure: "spellAttackDamage" }, damageSpellInvocationRef),
-    Match.when({ procedure: "saveGatedDamage" }, damageSpellInvocationRef),
+    Match.when({ procedure: "saveGatedDamage" }, (saveGatedDamage) =>
+      saveGatedDamageProfile.invocationRef(saveGatedDamage),
+    ),
     Match.when({ procedure: "saveGatedCondition" }, (conditionSpell) => ({
       tag: "spellSlot" as const,
       spellId: spellId(conditionSpell.spell.id),

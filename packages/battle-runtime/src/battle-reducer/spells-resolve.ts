@@ -110,6 +110,7 @@ import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-dama
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
+import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
 import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
@@ -277,7 +278,6 @@ import {
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateConditionImmunitySpellAct,
-  resolveSaveGateDamageSpellAct,
   resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -697,7 +697,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "saveGatedDamage") {
-    return resolveSaveGateDamageSpellAct({
+    return saveGatedDamageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
