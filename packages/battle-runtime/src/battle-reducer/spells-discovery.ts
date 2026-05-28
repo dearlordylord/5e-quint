@@ -81,6 +81,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
+import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -278,19 +279,7 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "moonbeam") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Moonbeam cylinder area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return moonbeamProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "objectContactDamage") {
         return objectContactDamageProfile.discoverCastAct(
@@ -1117,6 +1106,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "flamingSphere") {
     return flamingSphereProfile.castSummary(invocation);
   }
+  if (invocation.procedure === "moonbeam") {
+    return moonbeamProfile.castSummary(invocation);
+  }
   if (invocation.procedure === "spellAttackSequence") {
     return spellAttackSequenceProfile.castSummary(invocation);
   }
@@ -1369,6 +1361,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "magicalDarknessPointOrigin" &&
     invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
     invocation.procedure !== "flamingSphere" &&
+    invocation.procedure !== "moonbeam" &&
     invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -1433,6 +1426,7 @@ export function readiedSpellAct(
     invocation.procedure === "magicalDarknessPointOrigin" ||
     invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
     invocation.procedure === "flamingSphere" ||
+    invocation.procedure === "moonbeam" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||

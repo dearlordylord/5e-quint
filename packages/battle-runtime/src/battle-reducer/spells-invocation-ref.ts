@@ -39,6 +39,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
+import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -182,12 +183,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "moonbeam") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "moonbeam",
-    };
+    return moonbeamProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "objectContactDamage") {
     return objectContactDamageProfile.invocationRef(invocation);

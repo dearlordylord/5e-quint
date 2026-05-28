@@ -355,7 +355,7 @@
     {
       "number": 59,
       "id": "SPP-W8-07-MOONBEAM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate moonbeam movable-zone profile"
     },
     {
@@ -1163,7 +1163,7 @@ Focused MBT: `flaming-sphere-hazard-ram.mbt.test.ts`.
 
 ### Task 59 - SPP-W8-07-MOONBEAM - Migrate moonbeam
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `moonbeam-movable-zone.mbt.test.ts`.
 

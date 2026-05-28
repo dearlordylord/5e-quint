@@ -45,6 +45,7 @@ import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
+import { moonbeamProfile } from "./moonbeam.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -130,6 +131,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   hideousLaughterProfile,
   greaseGroundHazardProfile,
   flamingSphereProfile,
+  moonbeamProfile,
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,

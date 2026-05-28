@@ -118,6 +118,7 @@ import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
+import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -209,7 +210,6 @@ import {
   resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
-  resolveMoonbeamSpellAct,
   resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
@@ -845,7 +845,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "moonbeam") {
-    return resolveMoonbeamSpellAct({
+    return moonbeamProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
