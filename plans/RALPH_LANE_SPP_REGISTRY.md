@@ -235,7 +235,7 @@
     {
       "number": 39,
       "id": "SPP-W4-10-COMMAND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate command profile"
     },
     {
@@ -1008,14 +1008,14 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 39 - SPP-W4-10-COMMAND - Migrate command
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `rule-core-ability-skill-command.mbt.test.ts` and
 `movement-forced-movement-selected-identity.mbt.test.ts`.
 
 ### Task 40 - SPP-W4-11-SAVE-GATED-HELPERS-SWEEP - Relocate save-gate shared helpers
 
-Status: `blocked` on Tasks 30–39 all complete.
+Status: `ready-for-research`
 
 Input: `spells-profiles-save-gates.ts` after the per-profile migrations.
 

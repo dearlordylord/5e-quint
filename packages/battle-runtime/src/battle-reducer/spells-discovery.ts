@@ -40,7 +40,6 @@ import { supportedSpellActs } from "./spells-profiles.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import {
   carefulSpellProtectedTargetsHole,
-  commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
   spellDamageTypeChoiceHole,
   spellAttackSequencePartObjectTargetHole,
@@ -52,7 +51,6 @@ import {
   spellSavingThrowOutcomeHole,
   spellTargetAllocationHole,
   spellTargetHole,
-  spellTargetListHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
@@ -66,6 +64,7 @@ import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.t
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
@@ -166,44 +165,7 @@ export function discoverSupportedSpellInvocations(
         return [];
       }
       if (invocation.procedure === "command") {
-        const targetHole = spellTargetListHole(state, actorId, invocation);
-        if (targetHole.choices.length === 0) {
-          return [];
-        }
-        const baseCastAct = {
-          subject: {
-            tag: "actionSpell" as const,
-            actorId,
-            invocation: supportedSpellInvocationRef(invocation),
-            mode: { tag: "cast" as const },
-          },
-          label: invocation.spell.name,
-          summary: `${spellActivationInvocationCastSummary(invocation)} Failed targets follow the selected command on their next turns.`,
-          initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
-        };
-        const metamagicCastActs = discoverSpellMetamagicSelections({
-          actor,
-          invocation,
-        }).map((metamagic) => ({
-          ...baseCastAct,
-          subject: {
-            ...baseCastAct.subject,
-            metamagic,
-          },
-          initialHoles: [
-            targetHole,
-            ...saveMetamagicInitialHoles(
-              state,
-              actorId,
-              invocation,
-              spellMetamagicApplications(actor, metamagic),
-            ),
-            commandOptionChoiceHole(invocation),
-          ],
-          label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
-          summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
-        }));
-        return [baseCastAct, ...metamagicCastActs];
+        return commandProfile.discoverCastAct(state, actorId, invocation);
       }
       if (invocation.procedure === "selfTransformationMode") {
         return selfTransformationModeProfile.discoverCastAct(
@@ -1294,6 +1256,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "hideousLaughter") {
     return hideousLaughterProfile.castSummary(invocation);
+  }
+  if (invocation.procedure === "command") {
+    return commandProfile.castSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     const partName = spellAttackSequencePartName();

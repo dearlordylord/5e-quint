@@ -66,7 +66,6 @@ import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 import {
   hasSaveGateRepeatSaves,
   supportedDamageAmountExpr,
-  supportedPreparedCommandProfile,
 } from "./spells-profiles-save-gates.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
@@ -134,6 +133,7 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import {
   heldLightProfile,
   isProduceFlameOngoingEffectSpell,
@@ -208,7 +208,6 @@ export {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateConditionImmunityProfile,
-  supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
@@ -220,6 +219,7 @@ export {
 export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
+export { supportedPreparedCommandProfile } from "./spell-procedure-profiles/command.ts";
 
 type ActivationPhase = Extract<
   SpellRecord["mechanics"],
@@ -368,7 +368,7 @@ export function supportedSpellActs(
       supportedSpiritualWeaponRepeatAttackProfile(actor, state, spell),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
+      commandProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       scalarBuffProfile.admit(spell, admissionContext),

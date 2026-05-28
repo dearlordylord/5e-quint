@@ -80,32 +80,6 @@ type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;
   readonly dice: number;
 };
-type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
-  readonly ability: "wis";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "target";
-      readonly selection: TargetSelection;
-    };
-  };
-  readonly onFail: {
-    readonly kind: "command_target_next_turn";
-    readonly execution: "target_next_turn";
-    readonly options: {
-      readonly grovel: {
-        readonly condition: "prone";
-        readonly afterward: "end_turn";
-      };
-      readonly halt: {
-        readonly movement: "none";
-        readonly action: "none";
-        readonly bonusAction: "none";
-        readonly duration: "target_turn";
-      };
-    };
-  };
-};
 type SaveGateFailedEffect = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
@@ -462,106 +436,6 @@ function conditionImmunityEffectsFromSaveGateFailure(
     )
     ? [immunities[0]!, immunities[1]!]
     : null;
-}
-
-export function supportedPreparedCommandProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const command = commandSpell(spell);
-  if (command === null) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "command",
-        spell,
-        actionCost: "magicAction",
-        ability: command.phase.ability,
-        dc: command.phase.dc,
-        targeting: command.targeting(slot.spellLevel),
-        rangeFeet: command.rangeFeet,
-      },
-    ];
-  });
-}
-
-function commandSpell(spell: SpellRecord): {
-  readonly phase: CommandPhase;
-  readonly targeting: (
-    slotLevel: SpellSlotLevel,
-  ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
-  readonly rangeFeet: MovementFeet;
-} | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1 ||
-    !isCommandPhase(phase)
-  ) {
-    return null;
-  }
-  const targetSelection = phase.attachment.value.selection;
-  const targetCountBySlot = oneAdditionalTargetPerSpellSlotAboveBaseLevel(
-    targetSelection,
-    spell.mechanics.level,
-  );
-  if (
-    targetSelection.mode !== "choose_up_to" ||
-    targetSelection.targetKinds?.length !== 1 ||
-    targetSelection.targetKinds[0] !== "creature" ||
-    targetCountBySlot === null ||
-    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
-  ) {
-    return null;
-  }
-
-  return {
-    phase,
-    targeting: (slotLevel) => ({
-      kind: "targetList",
-      minTargets: 1,
-      maxTargets: targetCountBySlot(slotLevel),
-    }),
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-  };
-}
-
-function isCommandPhase(
-  phase: ActivationPhase | undefined,
-): phase is CommandPhase {
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  return (
-    phase?.kind === "save_gate" &&
-    !hasSaveGateRepeatSaves(phase) &&
-    phase.ability === "wis" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target" &&
-    failedEffect?.kind === "command_target_next_turn" &&
-    failedEffect.execution === "target_next_turn" &&
-    failedEffect.options.grovel.condition === "prone" &&
-    failedEffect.options.grovel.afterward === "end_turn" &&
-    failedEffect.options.halt.movement === "none" &&
-    failedEffect.options.halt.action === "none" &&
-    failedEffect.options.halt.bonusAction === "none" &&
-    failedEffect.options.halt.duration === "target_turn"
-  );
 }
 
 export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(

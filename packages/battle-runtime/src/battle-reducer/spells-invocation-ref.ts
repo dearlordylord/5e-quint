@@ -33,6 +33,7 @@ import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
@@ -242,12 +243,7 @@ export function supportedSpellInvocationRef(
     );
   }
   if (invocation.procedure === "command") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "command",
-    };
+    return commandProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
     if (invocation.resource.tag === "spellSlot") {

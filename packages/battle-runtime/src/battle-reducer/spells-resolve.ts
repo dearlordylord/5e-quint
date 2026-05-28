@@ -94,6 +94,7 @@ import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
+import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
@@ -277,9 +278,6 @@ import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
 
 import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 
-import {
-  resolveCommandSpellAct,
-} from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
@@ -840,7 +838,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "command") {
-    return resolveCommandSpellAct({
+    return commandProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
