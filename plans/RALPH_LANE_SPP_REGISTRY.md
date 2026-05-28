@@ -379,7 +379,7 @@
     {
       "number": 63,
       "id": "SPP-W8-11-WEB-RESTRAINT-HAZARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate webRestraintHazard profile"
     },
     {
@@ -1187,7 +1187,7 @@ Focused MBT: `spike-growth-movement-hazard.mbt.test.ts`.
 
 ### Task 63 - SPP-W8-11-WEB-RESTRAINT-HAZARD - Migrate webRestraintHazard
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `web-restraint-hazard.mbt.test.ts`.
 

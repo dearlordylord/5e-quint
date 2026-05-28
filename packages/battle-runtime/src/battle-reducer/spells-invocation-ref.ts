@@ -67,6 +67,7 @@ import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
+import { webRestraintHazardProfile } from "./spell-procedure-profiles/web-restraint-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import {
@@ -154,12 +155,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "webRestraintHazard") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "webRestraintHazard",
-    };
+    return webRestraintHazardProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "flamingSphere") {
     return flamingSphereProfile.invocationRef(invocation);

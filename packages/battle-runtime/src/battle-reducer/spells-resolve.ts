@@ -138,6 +138,7 @@ import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-t
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
+import { webRestraintHazardProfile } from "./spell-procedure-profiles/web-restraint-hazard.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
@@ -211,7 +212,6 @@ import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolv
 import {
   resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveMagicalDarknessPointOriginSpellAct,
-  resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
@@ -812,7 +812,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "webRestraintHazard") {
-    return resolveWebRestraintHazardSpellAct({
+    return webRestraintHazardProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

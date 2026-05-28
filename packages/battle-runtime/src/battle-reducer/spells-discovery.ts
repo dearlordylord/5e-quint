@@ -69,6 +69,7 @@ import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reactio
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
 import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
+import { webRestraintHazardProfile } from "./spell-procedure-profiles/web-restraint-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -223,19 +224,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "webRestraintHazard") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Web cube area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return webRestraintHazardProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "flamingSphere") {
         return flamingSphereProfile.discoverCastAct(state, actorId, invocation);
