@@ -131,6 +131,7 @@ import {
   activeSelfTransformationModeEffect,
   applySelfTransformationModeEffect,
 } from "./spells-active-effects.ts";
+import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
@@ -165,7 +166,6 @@ export {
 import { expendSpellSlot } from "./spell-effects.ts";
 
 import {
-  applyAfterHitDamageAndIlluminationSpellEffect,
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
   selectFailedSaveConditionEffect,
@@ -3029,6 +3029,21 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       fillSet: fillValidation.fillSet,
     });
   }
+  if (invocation.procedure === "afterHitDamageAndIllumination") {
+    if (fillValidation.tag !== "validNonSave") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack-hit damage and illumination spell fills were not parsed.",
+      );
+    }
+    return afterHitDamageAndIlluminationProfile.resolve({
+      input: { ...input, frame: attackHitFrame, target },
+      actorId: input.subject.casterId,
+      invocation,
+      fillSet: fillValidation.fillSet,
+    });
+  }
   const reactionSpellTargetFacts =
     fillValidation.tag === "validSaveGated" ||
     fillValidation.tag === "validNonSave"
@@ -3079,17 +3094,13 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const damage =
-    invocation.procedure === "afterHitTimedDamageAndSave"
-      ? invocation.immediateDamage
-      : invocation.damage;
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceSpellId: invocation.spell.id,
     sourceCombatantId: input.subject.casterId,
     damage: {
-      expr: damage.expr,
-      damageType: damage.damageType,
+      expr: invocation.immediateDamage.expr,
+      damageType: invocation.immediateDamage.damageType,
     },
   };
   const nextFrame = {
@@ -3109,13 +3120,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
           target.combatantId,
           invocation,
         )
-      : invocation.procedure === "afterHitDamageAndIllumination"
-        ? applyAfterHitDamageAndIlluminationSpellEffect(
-            resourced.state,
-            target.combatantId,
-            invocation,
-          )
-        : resourced.state;
+      : resourced.state;
   const nextState = {
     ...effected,
     interruptStack: [

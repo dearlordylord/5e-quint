@@ -301,7 +301,7 @@
     {
       "number": 50,
       "id": "SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate afterHitDamageAndIllumination (Shining Smite)"
     },
     {
@@ -1098,7 +1098,7 @@ No focused MBT. Falls back to integration.
 
 ### Task 50 - SPP-W7-02-AFTER-HIT-DAMAGE-AND-ILLUMINATION - Migrate afterHitDamageAndIllumination
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `shining-smite-selected-identity.mbt.test.ts`.
 

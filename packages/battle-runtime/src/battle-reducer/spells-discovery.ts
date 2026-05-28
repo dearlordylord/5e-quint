@@ -102,6 +102,7 @@ import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
+import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
@@ -714,11 +715,17 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "afterHitDamageAndIllumination") {
+        return afterHitDamageAndIlluminationProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
         invocation.procedure === "afterHitDamage" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
-        invocation.procedure === "afterHitTimedDamageAndSave" ||
-        invocation.procedure === "afterHitDamageAndIllumination"
+        invocation.procedure === "afterHitTimedDamageAndSave"
       ) {
         return [];
       }
@@ -1166,7 +1173,7 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
   if (invocation.procedure === "afterHitDamageAndIllumination") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+    return afterHitDamageAndIlluminationProfile.castSummary(invocation);
   }
   if (invocation.procedure === "markedDamageRider") {
     return markedDamageRiderProfile.castSummary(invocation);

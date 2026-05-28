@@ -11,6 +11,7 @@ import {
   isPreparedDamageSpellSource,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
@@ -89,12 +90,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "afterHitDamageAndIllumination") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "afterHitDamageAndIllumination",
-    };
+    return afterHitDamageAndIlluminationProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return spellHostedWeaponAttackProfile.invocationRef(invocation);

@@ -10,6 +10,7 @@
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./ability-d20-test-roll-mode-save-gate.ts";
+import { afterHitDamageAndIlluminationProfile } from "./after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./after-hit-damage.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
 import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
@@ -92,6 +93,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   markedDamageRiderProfile,
   weaponDamageRiderProfile,
   afterHitDamageProfile,
+  afterHitDamageAndIlluminationProfile,
   weaponAttackOverrideProfile,
   spellHostedWeaponAttackProfile,
   saveGatedDamageProfile,

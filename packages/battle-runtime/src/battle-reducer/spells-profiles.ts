@@ -172,9 +172,9 @@ import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-att
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
+import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import {
-  supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
@@ -425,11 +425,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedAfterHitDamageAndIlluminationSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      afterHitDamageAndIlluminationProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       markedDamageRiderProfile.admit(spell, admissionContext),
