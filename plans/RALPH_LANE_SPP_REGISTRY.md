@@ -271,7 +271,7 @@
     {
       "number": 45,
       "id": "SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate chainedSpellAttackDamage profile"
     },
     {
@@ -1060,7 +1060,7 @@ Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts`.
 
 ### Task 45 - SPP-W6-03-CHAINED-SPELL-ATTACK-DAMAGE - Migrate chainedSpellAttackDamage
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `chained-attack-sequence.mbt.test.ts`.
 

@@ -67,10 +67,8 @@ import {
   supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
-import {
-  supportedPreparedAttackBurstSaveDamageProfile,
-  supportedPreparedChainedSpellAttackDamageProfile,
-} from "./spells-profiles-attack-damage.ts";
+import { supportedPreparedAttackBurstSaveDamageProfile } from "./spells-profiles-attack-damage.ts";
+import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 export * from "./spells-profiles-attack-damage.ts";
@@ -255,12 +253,7 @@ export function supportedSpellActs(
       spellAttackDamageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedChainedSpellAttackDamageProfile(
-        spell,
-        spellcasting.spellSlots,
-        spellcasting.spellcastingAbilityModifier,
-        spellcasting.proficiencyBonus,
-      ),
+      chainedSpellAttackDamageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAttackBurstSaveDamageProfile(

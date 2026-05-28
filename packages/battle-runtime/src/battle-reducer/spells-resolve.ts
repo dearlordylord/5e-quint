@@ -121,6 +121,7 @@ import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see
 import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
+import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
@@ -188,7 +189,7 @@ import {
 } from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
-import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
 import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
@@ -636,10 +637,11 @@ function resolveSpellActInternal(
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
-    return resolveChainedSpellAttackDamageAct({
+    return chainedSpellAttackDamageProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
+      fillSet: parseChainedSpellFillSet(input.fills, invocation),
     });
   }
 

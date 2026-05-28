@@ -40,7 +40,6 @@ import { supportedSpellActs } from "./spells-profiles.ts";
 import {
   carefulSpellProtectedTargetsHole,
   heightenedSpellTargetChoiceHole,
-  spellDamageTypeChoiceHole,
   spellObjectTargetHole,
   spellAreaChoiceHole,
   spellSavingThrowAbility,
@@ -102,6 +101,7 @@ import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaum
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
+import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
@@ -769,20 +769,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "chainedSpellAttackDamage") {
-        const castActs = [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [spellDamageTypeChoiceHole(invocation)],
-          },
-        ];
-        return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+        return chainedSpellAttackDamageProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "spellHostedWeaponAttack") {
         return spellHostedWeaponAttackProfile.discoverCastAct(
@@ -1247,7 +1238,7 @@ export function spellInvocationCastSummary(
     return spellAttackSequenceProfile.castSummary(invocation);
   }
   if (invocation.procedure === "chainedSpellAttackDamage") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return chainedSpellAttackDamageProfile.castSummary(invocation);
   }
   return spellActivationInvocationCastSummary(invocation);
 }

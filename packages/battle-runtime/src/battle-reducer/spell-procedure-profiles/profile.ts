@@ -97,11 +97,12 @@ export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 export type SpellProcedureProfileResolveInput<
   I,
   Input = ActionSpellBattleResolutionInput,
+  FillSet = OkSpellFillSet,
 > = {
   readonly input: Input;
   readonly actorId: CombatantId;
   readonly invocation: I;
-  readonly fillSet: OkSpellFillSet;
+  readonly fillSet: FillSet;
 };
 
 export type SpellInvocationAdmittedByRegisteredProcedure<
@@ -121,6 +122,7 @@ export type SpellProcedureProfile<
   P extends SupportedSpellInvocation["procedure"],
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Input = ActionSpellBattleResolutionInput,
+  FillSet = OkSpellFillSet,
 > = {
   readonly procedure: P;
 
@@ -155,7 +157,7 @@ export type SpellProcedureProfile<
 
   // Dispatch entry: consume a fill set, produce a resolution result.
   readonly resolve: (
-    input: SpellProcedureProfileResolveInput<I, Input>,
+    input: SpellProcedureProfileResolveInput<I, Input, FillSet>,
   ) => BattleResolutionResult;
 
   // TODO(spell-procedure-profile-registry): own the invocation Schema here too,
@@ -174,6 +176,7 @@ export type AnySpellProcedureProfile = {
   readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureProfile<
     P,
     SpellInvocationAdmittedByRegisteredProcedure<P>,
+    never,
     never
   >;
 }[SupportedSpellInvocation["procedure"]];

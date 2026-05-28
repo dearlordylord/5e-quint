@@ -35,6 +35,7 @@ import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
+import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
@@ -365,12 +366,9 @@ export function supportedSpellInvocationRef(
       slotLevel: slotSpell.resource.slotLevel,
       procedure: "attackBurstSaveDamage" as const,
     })),
-    Match.when({ procedure: "chainedSpellAttackDamage" }, (slotSpell) => ({
-      tag: "spellSlot" as const,
-      spellId: spellId(slotSpell.spell.id),
-      slotLevel: slotSpell.resource.slotLevel,
-      procedure: "chainedSpellAttackDamage" as const,
-    })),
+    Match.when({ procedure: "chainedSpellAttackDamage" }, (slotSpell) =>
+      chainedSpellAttackDamageProfile.invocationRef(slotSpell),
+    ),
     Match.when({ procedure: "heldLightHurl" }, damageSpellInvocationRef),
     Match.when({ procedure: "spellAttackDamage" }, (spellAttackDamage) =>
       spellAttackDamageProfile.invocationRef(spellAttackDamage),
