@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 //
 // The rollModifier Spell Procedure Profile: SRD spells (Bless, Bane, Guidance,
 // Resistance, Shield of Faith and similar) that grant a persistent d20-roll

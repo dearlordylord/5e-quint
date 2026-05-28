@@ -43,6 +43,7 @@ import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
+import { mirrorImageHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -91,6 +92,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   thaumaturgyBoomingVoiceProfile,
   blurAttackRollDefenseProfile,
   seeInvisibleObserverSightProfile,
+  mirrorImageHitInterceptionProfile,
   persistentArmorEffectProfile,
   magicWeaponEnhancementProfile,
   wardingBondProfile,

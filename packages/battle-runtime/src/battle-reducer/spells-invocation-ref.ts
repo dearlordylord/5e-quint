@@ -37,6 +37,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -282,12 +283,7 @@ export function supportedSpellInvocationRef(
     return seeInvisibleObserverSightProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "mirrorImageHitInterception") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "mirrorImageHitInterception",
-    };
+    return mirrorImageHitInterceptionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "conditionRemovalProtection") {
     return conditionRemovalProtectionProfile.invocationRef(invocation);

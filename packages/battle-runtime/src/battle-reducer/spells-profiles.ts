@@ -134,6 +134,7 @@ import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
+import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
@@ -164,7 +165,6 @@ import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-dama
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
-import { supportedPreparedMirrorImageHitInterceptionSpellProfile } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -342,11 +342,7 @@ export function supportedSpellActs(
       seeInvisibleObserverSightProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedMirrorImageHitInterceptionSpellProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      mirrorImageHitInterceptionProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       conditionRemovalProtectionProfile.admit(spell, admissionContext),

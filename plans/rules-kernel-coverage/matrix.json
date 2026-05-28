@@ -1389,9 +1389,9 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1428,9 +1428,9 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1463,9 +1463,9 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1537,12 +1537,13 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-removal-protection.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition-removal.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1709,7 +1710,6 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-damage-rider.ts"
       ],
@@ -1864,7 +1864,7 @@
         "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1893,7 +1893,6 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",

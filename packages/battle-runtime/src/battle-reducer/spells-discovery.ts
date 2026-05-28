@@ -79,6 +79,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -495,19 +496,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "mirrorImageHitInterception") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [],
-          },
-        ];
+        return mirrorImageHitInterceptionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "damageReduction") {
         return damageReductionProfile.discoverCastAct(
@@ -1027,7 +1020,7 @@ export function spellInvocationCastSummary(
     return seeInvisibleObserverSightProfile.castSummary(invocation);
   }
   if (invocation.procedure === "mirrorImageHitInterception") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+    return mirrorImageHitInterceptionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "conditionRemovalProtection") {
     return conditionRemovalProtectionProfile.castSummary(invocation);

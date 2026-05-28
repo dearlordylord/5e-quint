@@ -53,7 +53,6 @@ export * from "./spells-resolve-prepared-slot.ts";
 export * from "./spells-resolve-release.ts";
 export * from "./spells-resolve-resources.ts";
 export * from "./spells-resolve-save-gates.ts";
-export * from "./spells-resolve-support-effects.ts";
 export * from "./spells-resolve-target-selection.ts";
 export * from "./spells-resolve.ts";
 export * from "./statblock-attacks.ts";

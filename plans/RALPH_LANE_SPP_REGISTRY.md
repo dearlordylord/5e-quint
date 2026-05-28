@@ -343,7 +343,7 @@
     {
       "number": 57,
       "id": "SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate mirrorImageHitInterception profile"
     },
     {
@@ -1151,7 +1151,7 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 57 - SPP-W8-05-MIRROR-IMAGE-HIT-INTERCEPTION - Migrate mirrorImageHitInterception
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `mirror-image-hit-interception.mbt.test.ts`.
 

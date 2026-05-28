@@ -27,7 +27,6 @@ import { Either, Match } from "effect";
 import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,
-  type MirrorImageHitInterceptionSpellInvocation,
   type BattleActiveEffectExpiration,
   type BattleSpecialSpeedKind,
   type BattleD20RollModifierDelta,
@@ -38,17 +37,11 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
-  type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-reducer.ts";
-import { type CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
-  MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
-  MIRROR_IMAGE_INITIAL_DUPLICATES,
-  MIRROR_IMAGE_UNAFFECTED_BY,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
@@ -84,83 +77,6 @@ export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
   return projection.effect.kind === "d20RollModifier";
-}
-
-export function supportedPreparedMirrorImageHitInterceptionSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  const projection = mirrorImageHitInterceptionSpellProjection(actorId, spell);
-  if (projection === null) {
-    return [];
-  }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
-    Number(slot.spellLevel) < spell.mechanics.level
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "mirrorImageHitInterception",
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          },
-        ],
-  );
-}
-
-function mirrorImageHitInterceptionSpellProjection(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
-  if (
-    spell.mechanics.family !== "passive_hit_intercept" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    !spell.mechanics.components.v ||
-    !spell.mechanics.components.s ||
-    spell.mechanics.components.m !== false ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.duplicatePool.count !== MIRROR_IMAGE_INITIAL_DUPLICATES ||
-    spell.mechanics.duplicatePool.dicePerRemainingDuplicate !== 1 ||
-    spell.mechanics.duplicatePool.dieSize !== MIRROR_IMAGE_DUPLICATE_DIE_SIZE ||
-    spell.mechanics.duplicatePool.successAtLeast !==
-      MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST ||
-    spell.mechanics.duplicatePool.onHit !==
-      "duplicate_hit_instead_and_destroyed" ||
-    spell.mechanics.duplicatePool.onFailure !== "caster_hit_normally" ||
-    !spell.mechanics.duplicatePool.ignoresOtherDamageAndEffects ||
-    spell.mechanics.duplicatePool.endsWhen !== "all_duplicates_destroyed" ||
-    !sameStringSet(
-      spell.mechanics.duplicatePool.unaffectedBy,
-      MIRROR_IMAGE_UNAFFECTED_BY,
-    )
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  return Either.isLeft(durationTicks)
-    ? null
-    : {
-        activeEffect: {
-          kind: "mirrorImageDuplicates",
-          sourceSpellId: spell.id,
-          sourceCombatantId: actorId,
-          remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
-          expiresAt: {
-            kind: "duration",
-            durationTicks: durationTicks.right,
-          },
-        },
-      };
 }
 
 export function sameCreatureTypeSet(

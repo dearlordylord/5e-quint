@@ -116,6 +116,7 @@ import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-c
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
+import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import {
   objectContactDamageProfile,
   objectContactDamageRepeatProfile,
@@ -268,7 +269,6 @@ export {
   resolveSleepTargetAdmissionSpellAct,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
-export { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
 export {
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
@@ -281,8 +281,6 @@ export {
   type RollModifierSpellTargetSelection,
   type ScalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
-
-import { resolveMirrorImageHitInterceptionSpellAct } from "./spells-resolve-support-effects.ts";
 
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -982,7 +980,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "mirrorImageHitInterception") {
-    return resolveMirrorImageHitInterceptionSpellAct({
+    return mirrorImageHitInterceptionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

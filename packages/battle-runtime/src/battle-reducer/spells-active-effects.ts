@@ -190,11 +190,6 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
   { readonly procedure: "saveGatedAttackRollAdvantage" }
 >;
 
-export type MirrorImageHitInterceptionInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "mirrorImageHitInterception" }
->;
-
 export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
   invocation: SaveGatedAttackRollAdvantageInvocation,
 ): boolean {
@@ -2878,39 +2873,6 @@ export function applyDragonsBreathInitialSpellEffect(
       ...target,
       activeEffects,
     }),
-  };
-}
-
-export function applyMirrorImageHitInterceptionSpellEffect(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: MirrorImageHitInterceptionInvocation,
-): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "mirrorImageDuplicates" &&
-          effect.sourceSpellId === invocation.spell.id &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
   };
 }
 
