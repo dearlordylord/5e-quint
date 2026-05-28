@@ -302,6 +302,10 @@ import {
   spellCreatedHeldObjectProfile,
   spellCreatedHeldObjectReEvokeProfile,
 } from "./spell-procedure-profiles/spell-created-held-object.ts";
+import {
+  spiritualWeaponAttackProxyProfile,
+  spiritualWeaponRepeatAttackProfile,
+} from "./spell-procedure-profiles/spiritual-weapon.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
@@ -2852,13 +2856,20 @@ export function resolveBonusActionSpellAct(
       fillSet,
     });
   }
-  if (
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    return resolveBonusActionSpellAttackProxyAct({
-      ...input,
-      state: castingState,
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    return spiritualWeaponAttackProxyProfile.resolve({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "spiritualWeaponRepeatAttack") {
+    return spiritualWeaponRepeatAttackProfile.resolve({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
     });
   }
   if (invocation.procedure === "scalarBuff") {
@@ -2953,7 +2964,7 @@ export function resolveBonusActionSpellAct(
   });
 }
 
-function resolveBonusActionSpellAttackProxyAct(
+export function resolveBonusActionSpellAttackProxyAct(
   input: BonusActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   const result = resolveSpellActInternal(

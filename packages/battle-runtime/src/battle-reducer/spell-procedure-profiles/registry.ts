@@ -61,6 +61,10 @@ import {
   spellCreatedHeldObjectReEvokeProfile,
 } from "./spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
+import {
+  spiritualWeaponAttackProxyProfile,
+  spiritualWeaponRepeatAttackProfile,
+} from "./spiritual-weapon.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
@@ -121,6 +125,8 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   spellCreatedHeldObjectProfile,
   spellCreatedHeldObjectAttackProfile,
   spellCreatedHeldObjectReEvokeProfile,
+  spiritualWeaponAttackProxyProfile,
+  spiritualWeaponRepeatAttackProfile,
   chainedSpellAttackDamageProfile,
   attackBurstSaveDamageProfile,
   repeatedDamageAllocationProfile,

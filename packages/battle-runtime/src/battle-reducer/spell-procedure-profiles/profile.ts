@@ -15,6 +15,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import type {
   ActionSpellBattleResolutionInput,
   AvailableBattleAct,
+  BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
   BattleResolutionResult,
   BattleState,
@@ -23,6 +24,10 @@ import type {
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
+import {
+  antimagicFieldSuppressedOngoingSpellEffectKeys,
+  ongoingSpellEffectRefKey,
+} from "../antimagic-field-suppression.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
@@ -42,9 +47,14 @@ export type SpellAdmissionBattleTurn = {
   readonly round: BattleState["initiative"]["round"];
 };
 
+export type SpellAdmissionBattleProjection = {
+  readonly turn: SpellAdmissionBattleTurn;
+  readonly suppressedOngoingSpellEffectKeys: ReadonlySet<string>;
+};
+
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
-  readonly battleTurn: SpellAdmissionBattleTurn | undefined;
+  readonly battle: SpellAdmissionBattleProjection | undefined;
 };
 
 function isSpellAdmissionActor(
@@ -66,14 +76,40 @@ export function spellAdmissionContextFor(
   }
   return {
     actor,
-    battleTurn:
-      state === undefined
-        ? undefined
-        : {
-            currentActorId: currentActing(state.initiative),
-            round: state.initiative.round,
-          },
+    battle: spellAdmissionBattleProjection(state),
   };
+}
+
+export function spellAdmissionBattleTurn(
+  ctx: SpellAdmissionContext,
+): SpellAdmissionBattleTurn | undefined {
+  return ctx.battle?.turn;
+}
+
+export function spellAdmissionOngoingSpellEffectSuppressed(
+  ctx: SpellAdmissionContext,
+  effect: BattleAntimagicFieldOngoingSpellEffectRef,
+): boolean {
+  return (
+    ctx.battle?.suppressedOngoingSpellEffectKeys.has(
+      ongoingSpellEffectRefKey(effect),
+    ) ?? false
+  );
+}
+
+function spellAdmissionBattleProjection(
+  state: BattleState | undefined,
+): SpellAdmissionBattleProjection | undefined {
+  return state === undefined
+    ? undefined
+    : {
+        turn: {
+          currentActorId: currentActing(state.initiative),
+          round: state.initiative.round,
+        },
+        suppressedOngoingSpellEffectKeys:
+          antimagicFieldSuppressedOngoingSpellEffectKeys(state),
+      };
 }
 
 export function spellAdmissionCharacterLevel(

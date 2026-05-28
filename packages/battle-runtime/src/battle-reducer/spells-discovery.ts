@@ -52,7 +52,6 @@ import {
 import {
   spellDancingLightsPlacementHole,
   spellObjectContactTargetsHole,
-  spiritualWeaponForcePositionHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
@@ -103,6 +102,10 @@ import {
   spellCreatedHeldObjectReEvokeProfile,
 } from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
+import {
+  spiritualWeaponAttackProxyProfile,
+  spiritualWeaponRepeatAttackProfile,
+} from "./spell-procedure-profiles/spiritual-weapon.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
@@ -261,25 +264,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "spiritualWeaponAttackProxy") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the spectral force position and target adjacency.`,
-                initialHoles: [
-                  spiritualWeaponForcePositionHole(invocation),
-                  targetHole,
-                ],
-              },
-            ];
+        return spiritualWeaponAttackProxyProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "spikeGrowthMovementHazard") {
         return [
@@ -350,25 +339,11 @@ export function discoverSupportedSpellInvocations(
         ];
       }
       if (invocation.procedure === "spiritualWeaponRepeatAttack") {
-        const targetHole = spellTargetHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: `${invocation.spell.name} attack`,
-                summary: spellInvocationCastSummary(invocation),
-                initialHoles: [
-                  spiritualWeaponForcePositionHole(invocation),
-                  targetHole,
-                ],
-              },
-            ];
+        return spiritualWeaponRepeatAttackProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "selfTeleport") {
         return selfTeleportProfile.discoverCastAct(state, actorId, invocation);
@@ -1067,7 +1042,7 @@ export function spellInvocationCastSummary(
     return `Use a Bonus Action to repeat ${invocation.spell.name} contact damage.`;
   }
   if (invocation.procedure === "spiritualWeaponRepeatAttack") {
-    return `Use a Bonus Action to move ${invocation.spell.name}'s force and repeat the attack.`;
+    return spiritualWeaponRepeatAttackProfile.castSummary(invocation);
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return repeatedDamageAllocationProfile.castSummary(invocation);

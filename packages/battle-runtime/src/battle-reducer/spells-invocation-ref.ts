@@ -63,6 +63,10 @@ import {
   spellCreatedHeldObjectReEvokeProfile,
 } from "./spell-procedure-profiles/spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
+import {
+  spiritualWeaponAttackProxyProfile,
+  spiritualWeaponRepeatAttackProfile,
+} from "./spell-procedure-profiles/spiritual-weapon.ts";
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
@@ -164,12 +168,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "spiritualWeaponAttackProxy") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "spiritualWeaponAttackProxy",
-    };
+    return spiritualWeaponAttackProxyProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spikeGrowthMovementHazard") {
     return {
@@ -203,11 +202,7 @@ export function supportedSpellInvocationRef(
     );
   }
   if (invocation.procedure === "spiritualWeaponRepeatAttack") {
-    return spellEffectInvocationRef(
-      invocation.spell.id,
-      invocation.activeEffect.sourceCombatantId,
-      "spiritualWeaponRepeatAttack",
-    );
+    return spiritualWeaponRepeatAttackProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "spellCreatedHeldObject") {
     return spellCreatedHeldObjectProfile.invocationRef(invocation);

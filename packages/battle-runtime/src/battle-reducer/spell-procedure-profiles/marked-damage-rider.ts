@@ -85,6 +85,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellAdmissionBattleTurn } from "./profile.ts";
 
 type MarkedDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
@@ -115,7 +116,10 @@ function admitMarkedDamageRider(
     // RAW permits replacing Concentration by casting the spell again and
     // choosing a new quarry; this branch currently exposes only the slotless
     // Bonus Action transfer after the marked target drops to 0 Hit Points.
-    return markedDamageRiderTransferIsDiscoverable(activeMark, ctx.battleTurn)
+    return markedDamageRiderTransferIsDiscoverable(
+      activeMark,
+      spellAdmissionBattleTurn(ctx),
+    )
       ? [
           {
             access: { tag: "prepared" },

@@ -325,7 +325,7 @@
     {
       "number": 54,
       "id": "SPP-W8-02-SPIRITUAL-WEAPON-FAMILY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack (one file)"
     },
     {
@@ -1131,7 +1131,7 @@ instance — but verify with typecheck.
 
 ### Task 54 - SPP-W8-02-SPIRITUAL-WEAPON-FAMILY - Migrate spiritualWeaponAttackProxy + spiritualWeaponRepeatAttack
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `battle-runtime.mbt.test.ts` and
 `level2-damage-spell-selected-identity.mbt.test.ts`.
