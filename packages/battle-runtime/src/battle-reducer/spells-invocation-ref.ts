@@ -5,13 +5,13 @@ import { Match } from "effect";
 import { spellId } from "../identity.ts";
 import {
   type SpellInvocationRef,
-  classFeatureFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
 } from "../battle-subjects.ts";
 import {
   isPreparedDamageSpellSource,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -70,19 +70,7 @@ export function supportedSpellInvocationRef(
     return levitatedCreatureProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitDamage") {
-    if (invocation.resource.tag === "classFeatureFreeCast") {
-      return classFeatureFreeCastSpellInvocationRef(
-        invocation.spell.id,
-        invocation.resource.resourceUnitId,
-        "afterHitDamage",
-      );
-    }
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "afterHitDamage",
-    };
+    return afterHitDamageProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
     return {

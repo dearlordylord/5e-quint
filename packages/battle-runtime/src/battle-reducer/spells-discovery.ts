@@ -102,6 +102,7 @@ import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell
 import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
+import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
@@ -1156,9 +1157,7 @@ export function spellInvocationCastSummary(
     return wardingBondProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitDamage") {
-    return invocation.resource.tag === "classFeatureFreeCast"
-      ? `Cast ${invocation.spell.name} using a class feature free cast after a qualifying hit.`
-      : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+    return afterHitDamageProfile.castSummary(invocation);
   }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;

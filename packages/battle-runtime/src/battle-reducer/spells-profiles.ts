@@ -125,6 +125,7 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
   >;
 };
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { commandProfile } from "./spell-procedure-profiles/command.ts";
@@ -173,7 +174,6 @@ import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import {
-  supportedPreparedAfterHitDamageSpellProfile,
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
@@ -409,11 +409,7 @@ export function supportedSpellActs(
       magicWeaponEnhancementProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedAfterHitDamageSpellProfile(
-        actor,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      afterHitDamageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitSaveGatedConditionSpellProfile(

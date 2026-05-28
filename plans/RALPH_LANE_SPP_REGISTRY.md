@@ -295,7 +295,7 @@
     {
       "number": 49,
       "id": "SPP-W7-01-AFTER-HIT-DAMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate afterHitDamage rider profile (no focused MBT)"
     },
     {
@@ -1092,7 +1092,7 @@ back to `battle-runtime.mbt.test.ts` plus authored unit tests.
 
 ### Task 49 - SPP-W7-01-AFTER-HIT-DAMAGE - Migrate afterHitDamage
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 
