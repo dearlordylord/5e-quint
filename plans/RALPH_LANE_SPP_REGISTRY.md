@@ -403,13 +403,13 @@
     {
       "number": 67,
       "id": "SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Export shared invocation Schema building-blocks from battle-codecs.ts"
     },
     {
       "number": 68,
       "id": "SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add invocationSchema field to SpellProcedureProfile"
     },
     {
@@ -1223,7 +1223,7 @@ selected-identity MBTs is reasonable here).
 
 ### Task 67 - SPP-W9-01-EXPORT-CODEC-BUILDING-BLOCKS - Export Schema building-blocks from battle-codecs.ts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `battle-codecs.ts:602` (`ClassCantripSpellAccessSchema`),
 `battle-codecs.ts:620` (`NoSpellInvocationResourceSchema`),
@@ -1238,7 +1238,7 @@ Acceptance: typecheck clean. No behavior change.
 
 ### Task 68 - SPP-W9-02-ADD-INVOCATION-SCHEMA-FIELD - Add invocationSchema field to SpellProcedureProfile
 
-Status: `blocked` on Task 67.
+Status: `ready-for-research`
 
 Input: `profile.ts`. The TODO at the bottom of the interface declaration.
 

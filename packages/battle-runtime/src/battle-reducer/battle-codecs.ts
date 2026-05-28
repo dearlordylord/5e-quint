@@ -10,36 +10,13 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import {
-  ABILITIES,
-  CREATURE_TYPES,
-  STANDARD_ACTION_KINDS,
-} from "@dnd/shared/game-facts";
+import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
-  AbilityModifier,
   ArmorClass as SharedArmorClass,
-  AttackBonus,
-  DamageAmount,
-  DamageDieSizeSchema,
-  DifficultyClass,
-  MovementDeltaFeet,
-  MovementFeet,
-  SpellSlotLevel,
   type Hp,
 } from "@dnd/shared/types";
-import {
-  AbilitySchema,
-  DamageTypeSchema,
-  DcSourceSchema,
-  SizeSchema,
-} from "@dnd/surface/surface/schema";
-import {
-  SKILLS as SURFACE_SKILLS,
-  type Ability,
-  type DamageType,
-  type Skill,
-} from "@dnd/surface/surface/types";
+import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type { StatBlockPartSection } from "../battle-action-options.ts";
 import {
@@ -91,21 +68,52 @@ import {
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  ELDRITCH_BLAST_BEAM_COUNTS,
   MIRROR_IMAGE_DUPLICATE_COUNTS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_UNAFFECTED_SENSES,
-  SCORCHING_RAY_RAY_COUNTS,
   SELF_TRANSFORMATION_MODE_KINDS,
-  SPELL_CONDITION_ABILITY_CHECK_ACTORS,
-  SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
+import {
+  AbilityModifier,
+  AbilitySchema,
+  ArmorOfShadowsSpellAccessSchema,
+  AttackBonus,
+  BATTLE_SURFACE_ABILITIES,
+  BATTLE_SURFACE_SKILLS,
+  BattleRuntimeObjectSchema,
+  BattleThunderwaveAudibleBoomSchema,
+  CantripSpellAttackSequenceTargetingSchema,
+  CharacterWeaponAttackActionOptionSchema,
+  ClassCantripSpellAccessSchema,
+  ClassFeatureFreeCastInvocationResourceSchema,
+  DamageAmount,
+  DamageDieSizeSchema,
+  DamageTypeSchema,
+  DcSourceSchema,
+  DifficultyClass,
+  MovementFeet,
+  NoSpellInvocationResourceSchema,
+  PreparedSpellAccessSchema,
+  PreparedSpellAttackSequenceTargetingSchema,
+  RollModifierSpellInvocationBaseSchemaFields,
+  SingleCreatureOrObjectSpellTargetingSchema,
+  SizeSchema,
+  SpellAttackDamagePayloadSchema,
+  SpellAttackDamageTargetingSchema,
+  SpellEffectSpellAccessSchema,
+  SpellFailedSaveConditionEffectSchema,
+  SpellFailedSavePostDamageRiderSchema,
+  SpellPostDamageRiderSchema,
+  SpellPostSaveAreaEffectSchema,
+  SpellSavingThrowRollModeRuleSchema,
+  SpellSlotLevel,
+  SpellSlotInvocationResourceSchema,
+  SupportedAttackActionOptionSchema,
+  SupportedHealingSpellInvocationSchema,
+} from "./codec-building-blocks.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
-
-const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
-const BATTLE_SURFACE_ABILITIES = ABILITIES;
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -247,11 +255,6 @@ const BattleHoleBaseSchema = {
   label: Schema.optionalWith(Schema.String, { exact: true }),
 } as const;
 
-const BattleRuntimeObjectSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Any,
-});
-
 const BattleDancingLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
   distanceFromCasterFeet: MovementFeet,
@@ -311,97 +314,6 @@ const BattleThunderwavePushDispositionSchema = Schema.Union(
 );
 const BattleGustOfWindLinePushDispositionSchema =
   BattleThunderwavePushDispositionSchema;
-
-const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
-  sound: Schema.Literal("thunderous boom"),
-  audibleRadiusFeet: MovementFeet,
-});
-
-const SpellPostSaveAreaEffectSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("fireballObjectIgnition"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("shatterObjectDamage"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("thunderwave"),
-    creaturePush: Schema.Struct({
-      distanceFeet: MovementFeet,
-      originDirection: Schema.Literal("away_from_caster"),
-    }),
-    unsecuredObjectPush: Schema.Struct({
-      distanceFeet: MovementFeet,
-      originDirection: Schema.Literal("away_from_caster"),
-      objectLocation: Schema.Literal("entirely_within_area"),
-    }),
-    audibleBoom: BattleThunderwaveAudibleBoomSchema,
-  }),
-);
-
-const SpellSavingThrowRollModeRuleSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("hostileTarget"),
-    mode: Schema.Literal("advantage"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("creatureType"),
-    creatureType: Schema.Literal(...CREATURE_TYPES),
-    mode: Schema.Literal("disadvantage"),
-  }),
-);
-
-const SpellFailedSavePostDamageRiderSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("nextAttackRollByTarget"),
-    mode: Schema.Literal("disadvantage"),
-    expiresAt: Schema.Literal("endOfTargetNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("forcedReactionMovement"),
-    direction: Schema.Literal("awayFromCaster"),
-    route: Schema.Literal("safest"),
-    distance: Schema.Literal("asFarAsPossible"),
-    cost: Schema.Literal("targetReactionIfAvailable"),
-  }),
-);
-
-const SpellPostDamageRiderSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("speedDelta"),
-    deltaFeet: MovementDeltaFeet,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("condition"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
-    expiresAt: Schema.Literal("endOfCasterNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("opportunityAttackDenied"),
-    expiresAt: Schema.Literal("startOfTargetNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("nextAttackRollAgainstTarget"),
-    mode: Schema.Literal("advantage"),
-    expiresAt: Schema.Literal("endOfCasterNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("hitPointRegainPrevented"),
-    expiresAt: Schema.Literal("endOfCasterNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("invisibleBenefitDenied"),
-    expiresAt: Schema.Literal("endOfCasterNextTurn"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("lightEmission"),
-    emission: Schema.Struct({
-      kind: Schema.Literal("dim"),
-      radiusFeet: MovementFeet,
-    }),
-    expiresAt: Schema.Literal("endOfCasterNextTurn"),
-  }),
-);
 
 const BattleSpellAreaChoiceBaseSchema = {
   originAnchorId: CombatantId,
@@ -523,165 +435,6 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
   BattleSpellAreaChoiceEncoded,
   never
 >;
-
-const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
-  kind: Schema.Literal("weapon"),
-  weapon: BattleRuntimeObjectSchema,
-  ability: AbilitySchema,
-  abilityModifier: AbilityModifier,
-  attackBonus: Schema.optionalWith(AttackBonus, {
-    exact: true,
-  }),
-  damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
-    exact: true,
-  }),
-  damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
-  damageTypeChoices: Schema.optionalWith(
-    Schema.NonEmptyArray(DamageTypeSchema).pipe(
-      Schema.filter((choices) => choices.length >= 2, {
-        message: () =>
-          "Weapon attack damage type choices must contain at least two choices.",
-      }),
-    ),
-    {
-      exact: true,
-    },
-  ),
-  alternateAbilityChoices: Schema.optionalWith(
-    Schema.NonEmptyArray(
-      Schema.Struct({
-        ability: AbilitySchema,
-        abilityModifier: AbilityModifier,
-        attackBonus: AttackBonus,
-        damageAbilityModifier: AbilityModifier,
-      }),
-    ),
-    {
-      exact: true,
-    },
-  ),
-});
-
-const SupportedAttackActionOptionSchema = Schema.Union(
-  CharacterWeaponAttackActionOptionSchema,
-  Schema.Struct({
-    kind: Schema.Literal("unarmedStrike"),
-    effect: Schema.Struct({
-      kind: Schema.Literal("damage"),
-      damage: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("base"),
-          damageType: Schema.Literal("bludgeoning"),
-          flat: Schema.Literal(1),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("authoredReplacement"),
-          sourceUnitId: Schema.String,
-          dice: Schema.Literal(1),
-          dieSize: DamageDieSizeSchema,
-          damageType: DamageTypeSchema,
-        }),
-      ),
-    }),
-    attackAbility: Schema.Union(AbilitySchema, Schema.Literal("spellcasting")),
-    attackAbilityModifier: AbilityModifier,
-    attackBonus: AttackBonus,
-    damageAbilityModifier: AbilityModifier,
-    damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("statBlockAttack"),
-    attack: BattleRuntimeObjectSchema,
-  }),
-);
-
-const PreparedSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("prepared"),
-});
-
-const ClassCantripSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("classCantrip"),
-});
-
-const ArmorOfShadowsSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("armorOfShadows"),
-});
-
-const SpellEffectSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("spellEffect"),
-  sourceCombatantId: CombatantId,
-});
-
-const SpellSlotInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("spellSlot"),
-  slotLevel: SpellSlotLevel,
-});
-
-const NoSpellInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("none"),
-});
-
-const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("classFeatureFreeCast"),
-  resourceUnitId: Schema.String,
-});
-
-const SingleCreatureOrObjectSpellTargetingSchema = Schema.Struct({
-  kind: Schema.Literal("singleCreatureOrObject"),
-});
-
-const SpellAttackDamageTargetingSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("singleCombatant"),
-  }),
-  SingleCreatureOrObjectSpellTargetingSchema,
-);
-
-const CantripSpellAttackSequenceAttackCountSchema = Schema.Literal(
-  ...ELDRITCH_BLAST_BEAM_COUNTS,
-);
-
-const PreparedSpellAttackSequenceAttackCountSchema = Schema.Literal(
-  ...SCORCHING_RAY_RAY_COUNTS,
-);
-
-const CantripSpellAttackSequenceTargetingSchema = Schema.Struct({
-  kind: Schema.Literal("spellAttackSequenceCreatureOrObject"),
-  countSource: Schema.Literal("characterLevel"),
-  attackCount: CantripSpellAttackSequenceAttackCountSchema,
-});
-
-const PreparedSpellAttackSequenceTargetingSchema = Schema.Struct({
-  kind: Schema.Literal("spellAttackSequenceCreatureOrObject"),
-  countSource: Schema.Literal("spellSlotLevel"),
-  attackCount: PreparedSpellAttackSequenceAttackCountSchema,
-});
-
-const SpellAttackDamagePayloadSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("fixedSpellAttackDamage"),
-    expr: BattleRuntimeObjectSchema,
-    damageType: DamageTypeSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
-    expr: BattleRuntimeObjectSchema,
-    damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
-    maxDieAdditionalDiceLimit: Schema.Number.pipe(
-      Schema.int(),
-      Schema.greaterThanOrEqualTo(0),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("selectedSorcerousBurstDamage"),
-    expr: BattleRuntimeObjectSchema,
-    damageType: DamageTypeSchema,
-    maxDieAdditionalDiceLimit: Schema.Number.pipe(
-      Schema.int(),
-      Schema.greaterThanOrEqualTo(0),
-    ),
-  }),
-);
 
 const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("flammableUnattended") }),
@@ -1018,139 +771,6 @@ export const BattleShovePushOutcomeSchema = Schema.Struct({
     }),
   ),
 }) as unknown as Schema.Schema<BattleShovePushOutcome>;
-
-const SupportedHealingSpellInvocationSchema = Schema.Struct({
-  access: PreparedSpellAccessSchema,
-  resource: SpellSlotInvocationResourceSchema,
-  procedure: Schema.Literal("directHitPointRestoration"),
-  spell: BattleRuntimeObjectSchema,
-  actionCost: Schema.Literal("magicAction", "bonusAction"),
-  targeting: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginSphereTargetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-      area: Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-    }),
-  ),
-  healing: Schema.Struct({
-    expr: BattleRuntimeObjectSchema,
-  }),
-  rangeFeet: MovementFeet,
-});
-
-const SpellFailedSaveConditionExpirationSchema = Schema.Union(
-  Schema.Literal("endOfCasterNextTurn", "concentration"),
-  Schema.Struct({
-    kind: Schema.Literal("concentration"),
-    durationTicks: Schema.Number,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("duration"),
-    durationTicks: Schema.Number,
-  }),
-);
-const SpellConditionEscapeSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("abilityCheck"),
-    ability: Schema.Literal("str"),
-    skill: Schema.Literal("athletics"),
-    allowedActor: Schema.Literal(...SPELL_CONDITION_ABILITY_CHECK_ACTORS),
-    successEnds: Schema.Literal(...SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("targetDamagedByCasterOrAlly"),
-  }),
-);
-const SpellConditionRepeatSaveSchema = Schema.Struct({
-  ability: AbilitySchema,
-  dc: DcSourceSchema,
-});
-const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("fixed"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
-    expiresAt: SpellFailedSaveConditionExpirationSchema,
-    escape: Schema.NullOr(SpellConditionEscapeSchema),
-    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
-    repeatSave: Schema.Null,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("fixed"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
-    expiresAt: SpellFailedSaveConditionExpirationSchema,
-    escape: Schema.Null,
-    turnStartDamage: Schema.Null,
-    repeatSave: SpellConditionRepeatSaveSchema,
-  }),
-);
-const SpellFailedSaveConditionChoiceEffectSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("choice"),
-    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
-    expiresAt: SpellFailedSaveConditionExpirationSchema,
-    escape: Schema.NullOr(SpellConditionEscapeSchema),
-    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
-    repeatSave: Schema.Null,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("choice"),
-    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
-    expiresAt: SpellFailedSaveConditionExpirationSchema,
-    escape: Schema.Null,
-    turnStartDamage: Schema.Null,
-    repeatSave: SpellConditionRepeatSaveSchema,
-  }),
-);
-const SpellFailedSaveConditionEffectSchema = Schema.Union(
-  SpellFailedSaveFixedConditionEffectSchema,
-  SpellFailedSaveConditionChoiceEffectSchema,
-);
-
-const RollModifierSpellTargetingSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("targetList"),
-    minTargets: Schema.Literal(1),
-    maxTargets: Schema.Number,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("targetList"),
-    minTargets: Schema.Literal(1),
-    maxTargets: Schema.Literal("allLegalTargets"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("selfAndChosenLegalTargets"),
-    minTargets: Schema.Literal(1),
-  }),
-);
-const RollModifierSpellSaveGateSchema = Schema.NullOr(
-  Schema.Struct({
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-  }),
-);
-const RollModifierSpellInvocationBaseSchemaFields = {
-  access: Schema.Union(PreparedSpellAccessSchema, ClassCantripSpellAccessSchema),
-  resource: Schema.Union(
-    SpellSlotInvocationResourceSchema,
-    NoSpellInvocationResourceSchema,
-  ),
-  procedure: Schema.Literal("rollModifier"),
-  spell: BattleRuntimeObjectSchema,
-  actionCost: Schema.Literal("magicAction"),
-  targeting: RollModifierSpellTargetingSchema,
-  effect: BattleRuntimeObjectSchema,
-  rangeFeet: MovementFeet,
-  saveGate: RollModifierSpellSaveGateSchema,
-} as const;
 
 // Schema.Union preserves the runtime parser but infers a wider structural
 // union for nested BattleRuntimeObjectSchema fields than the authored
