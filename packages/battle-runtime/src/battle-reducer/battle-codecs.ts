@@ -750,16 +750,20 @@ export const BattleShovePushOutcomeSchema = Schema.Struct({
   ),
 }) as unknown as Schema.Schema<BattleShovePushOutcome>;
 
-const supportedSpellInvocationSchemas = REGISTERED_SPELL_PROCEDURE_PROFILES.map(
-  (profile) => profile.invocationSchema,
-) as unknown as readonly [
-  Schema.Schema<SupportedSpellInvocation>,
-  ...Schema.Schema<SupportedSpellInvocation>[],
-];
-
 const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
-  Schema.Union(...supportedSpellInvocationSchemas).annotations({
-    identifier: "SupportedSpellInvocation",
+  // Registry projection is suspended so profile imports can finish before the
+  // schema union reads the profile list.
+  Schema.suspend(() => {
+    const supportedSpellInvocationSchemas =
+      REGISTERED_SPELL_PROCEDURE_PROFILES.map(
+        (profile) => profile.invocationSchema,
+      ) as unknown as readonly [
+        Schema.Schema<SupportedSpellInvocation>,
+        ...Schema.Schema<SupportedSpellInvocation>[],
+      ];
+    return Schema.Union(...supportedSpellInvocationSchemas).annotations({
+      identifier: "SupportedSpellInvocation",
+    });
   }) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({

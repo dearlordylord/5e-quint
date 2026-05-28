@@ -6,9 +6,9 @@
 // applying the corresponding size, Strength roll-mode, and attack damage
 // effect for the spell's concentration duration.
 //
-// This is one profile for two procedure literals. It registers under
-// creatureSizeIncrease so the migration registry has one row, while admit()
-// and resolve() still handle both increase and decrease invocations.
+// This implementation owns two procedure literals. Both are registered so
+// registry-derived procedure tables remain total over supported invocations,
+// while admit() and resolve() still share the same implementation.
 
 import {
   elapsedTimeTicksFromTimeSpanDuration,
@@ -576,4 +576,12 @@ export const creatureSizeChangeProfile: SpellProcedureProfile<
   castSummary: creatureSizeChangeCastSummary,
   invocationRef: creatureSizeChangeInvocationRef,
   resolve: resolveCreatureSizeChange,
+};
+
+export const creatureSizeDecreaseProfile: SpellProcedureProfile<
+  "creatureSizeDecrease",
+  CreatureSizeChangeInvocation
+> = {
+  ...creatureSizeChangeProfile,
+  procedure: "creatureSizeDecrease",
 };

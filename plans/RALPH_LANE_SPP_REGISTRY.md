@@ -421,7 +421,7 @@
     {
       "number": 70,
       "id": "SPP-W9-04-DERIVE-METAMAGIC-TABLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Derive metamagic compatibility table from registry; delete the hand-maintained one"
     },
     {
@@ -1270,7 +1270,7 @@ MBT subset — at least the 5 selected-identity tests).
 
 ### Task 70 - SPP-W9-04-DERIVE-METAMAGIC-TABLE - Derive metamagic compatibility table from registry
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `metamagic.ts` METAMAGIC_COMPATIBILITY table.
 

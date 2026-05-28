@@ -122,8 +122,8 @@ export function spellAdmissionCharacterLevel(
   );
 }
 
-// Currently lives as a string literal table in metamagic.ts. Mirrored here so
-// each profile carries its own metamagic classification.
+// Each profile carries its own metamagic classification so dispatch tables can
+// project the compatibility from the registry instead of duplicating it.
 export type SpellProcedureMetamagicCompatibility =
   | "actionSpellResolverNotRewritten"
   | "bonusActionRewrite"

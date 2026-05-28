@@ -30,7 +30,7 @@ import {
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
   spellMetamagicLabel,
-} from "../metamagic.ts";
+} from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
   heightenedSpellTargetChoiceHole,

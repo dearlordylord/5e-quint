@@ -22,7 +22,10 @@ import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.t
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { counterspellProfile } from "./counterspell.ts";
-import { creatureSizeChangeProfile } from "./creature-size-change.ts";
+import {
+  creatureSizeChangeProfile,
+  creatureSizeDecreaseProfile,
+} from "./creature-size-change.ts";
 import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionProfile } from "./direct-condition.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
@@ -91,99 +94,132 @@ import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
 import type { AnySpellProcedureProfile } from "./profile.ts";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
 
-export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
-  damageReductionProfile,
-  rollModifierProfile,
-  makeStableProfile,
-  heldLightProfile,
-  heldLightHurlProfile,
-  objectLightProfile,
-  thaumaturgyBoomingVoiceProfile,
-  blurAttackRollDefenseProfile,
-  seeInvisibleObserverSightProfile,
-  mirrorImageHitInterceptionProfile,
-  persistentArmorEffectProfile,
-  magicWeaponEnhancementProfile,
-  wardingBondProfile,
-  creatureTypeProtectionProfile,
-  conditionRemovalProtectionProfile,
-  directConditionProfile,
-  directConditionRemovalProfile,
-  conditionImmunityAndTurnStartTemporaryHitPointsProfile,
-  creatureSizeChangeProfile,
-  levitatedCreatureProfile,
-  scalarBuffProfile,
-  directHitPointRestorationProfile,
-  expeditiousRetreatDashProfile,
-  jumpMovementReplacementProfile,
-  featherFallMitigationProfile,
-  selfTeleportProfile,
-  selfTransformationModeProfile,
-  dragonsBreathInitialProfile,
-  sanctuaryTargetingInterdictionProfile,
-  markedDamageRiderProfile,
-  weaponDamageRiderProfile,
-  afterHitDamageProfile,
-  afterHitSaveGatedConditionProfile,
-  afterHitTimedDamageAndSaveProfile,
-  afterHitDamageAndIlluminationProfile,
-  weaponAttackOverrideProfile,
-  spellHostedWeaponAttackProfile,
-  saveGatedDamageProfile,
-  saveGatedConditionProfile,
-  saveGatedConditionImmunityProfile,
-  saveGatedAttackRollAdvantageProfile,
-  abilityD20TestRollModeSaveGateProfile,
-  sleepTargetAdmissionProfile,
-  hideousLaughterProfile,
-  greaseGroundHazardProfile,
-  gustOfWindLineProfile,
-  flamingSphereProfile,
-  moonbeamProfile,
-  fogCloudObscurementProfile,
-  spikeGrowthMovementHazardProfile,
-  webRestraintHazardProfile,
-  magicalDarknessPointOriginProfile,
-  antimagicFieldOngoingSpellSuppressionProfile,
-  commandProfile,
-  counterspellProfile,
-  shieldReactionProfile,
-  spellAttackDamageProfile,
-  spellAttackSequenceProfile,
-  spellCreatedHeldObjectProfile,
-  spellCreatedHeldObjectAttackProfile,
-  spellCreatedHeldObjectReEvokeProfile,
-  spiritualWeaponAttackProxyProfile,
-  spiritualWeaponRepeatAttackProfile,
-  objectContactDamageProfile,
-  objectContactDamageRepeatProfile,
-  ongoingSpellEndProfile,
-  chainedSpellAttackDamageProfile,
-  attackBurstSaveDamageProfile,
-  repeatedDamageAllocationProfile,
-  dancingLightsSeparateCastProfile,
-  dancingLightsCombinedCastProfile,
-  dancingLightsRepositionProfile,
-] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
+function registeredSpellProcedureProfiles() {
+  return [
+    damageReductionProfile,
+    rollModifierProfile,
+    makeStableProfile,
+    heldLightProfile,
+    heldLightHurlProfile,
+    objectLightProfile,
+    thaumaturgyBoomingVoiceProfile,
+    blurAttackRollDefenseProfile,
+    seeInvisibleObserverSightProfile,
+    mirrorImageHitInterceptionProfile,
+    persistentArmorEffectProfile,
+    magicWeaponEnhancementProfile,
+    wardingBondProfile,
+    creatureTypeProtectionProfile,
+    conditionRemovalProtectionProfile,
+    directConditionProfile,
+    directConditionRemovalProfile,
+    conditionImmunityAndTurnStartTemporaryHitPointsProfile,
+    creatureSizeChangeProfile,
+    creatureSizeDecreaseProfile,
+    levitatedCreatureProfile,
+    scalarBuffProfile,
+    directHitPointRestorationProfile,
+    expeditiousRetreatDashProfile,
+    jumpMovementReplacementProfile,
+    featherFallMitigationProfile,
+    selfTeleportProfile,
+    selfTransformationModeProfile,
+    dragonsBreathInitialProfile,
+    sanctuaryTargetingInterdictionProfile,
+    markedDamageRiderProfile,
+    weaponDamageRiderProfile,
+    afterHitDamageProfile,
+    afterHitSaveGatedConditionProfile,
+    afterHitTimedDamageAndSaveProfile,
+    afterHitDamageAndIlluminationProfile,
+    weaponAttackOverrideProfile,
+    spellHostedWeaponAttackProfile,
+    saveGatedDamageProfile,
+    saveGatedConditionProfile,
+    saveGatedConditionImmunityProfile,
+    saveGatedAttackRollAdvantageProfile,
+    abilityD20TestRollModeSaveGateProfile,
+    sleepTargetAdmissionProfile,
+    hideousLaughterProfile,
+    greaseGroundHazardProfile,
+    gustOfWindLineProfile,
+    flamingSphereProfile,
+    moonbeamProfile,
+    fogCloudObscurementProfile,
+    spikeGrowthMovementHazardProfile,
+    webRestraintHazardProfile,
+    magicalDarknessPointOriginProfile,
+    antimagicFieldOngoingSpellSuppressionProfile,
+    commandProfile,
+    counterspellProfile,
+    shieldReactionProfile,
+    spellAttackDamageProfile,
+    spellAttackSequenceProfile,
+    spellCreatedHeldObjectProfile,
+    spellCreatedHeldObjectAttackProfile,
+    spellCreatedHeldObjectReEvokeProfile,
+    spiritualWeaponAttackProxyProfile,
+    spiritualWeaponRepeatAttackProfile,
+    objectContactDamageProfile,
+    objectContactDamageRepeatProfile,
+    ongoingSpellEndProfile,
+    chainedSpellAttackDamageProfile,
+    attackBurstSaveDamageProfile,
+    repeatedDamageAllocationProfile,
+    dancingLightsSeparateCastProfile,
+    dancingLightsCombinedCastProfile,
+    dancingLightsRepositionProfile,
+  ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
+}
+
+type RegisteredSpellProcedureProfiles = ReturnType<
+  typeof registeredSpellProcedureProfiles
+>;
+
+// The proxy target is never read directly; get traps defer tuple construction
+// until registry consumers run, after profile/codecs cyclic imports settle.
+export const REGISTERED_SPELL_PROCEDURE_PROFILES = new Proxy(
+  [] as unknown as RegisteredSpellProcedureProfiles,
+  {
+    get(_target, property) {
+      const profiles = registeredSpellProcedureProfiles();
+      const value = Reflect.get(profiles, property, profiles);
+      return typeof value === "function" ? value.bind(profiles) : value;
+    },
+  },
+) as RegisteredSpellProcedureProfiles;
 
 // Procedure literal type derived from the registry. As more profiles
 // migrate, this widens automatically without a hand-maintained union.
 export type RegisteredSpellProcedure =
   (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number]["procedure"];
 
-const REGISTRY_BY_PROCEDURE: ReadonlyMap<
+type AssertNoMissingSpellProcedure<T extends never> = T;
+export type RegisteredSpellProcedureCompletenessCheck =
+  AssertNoMissingSpellProcedure<
+    Exclude<SupportedSpellInvocation["procedure"], RegisteredSpellProcedure>
+  >;
+
+let registryByProcedure:
+  | ReadonlyMap<SupportedSpellInvocation["procedure"], AnySpellProcedureProfile>
+  | undefined;
+
+function registeredSpellProcedureProfileMap(): ReadonlyMap<
   SupportedSpellInvocation["procedure"],
   AnySpellProcedureProfile
-> = new Map(
-  REGISTERED_SPELL_PROCEDURE_PROFILES.map(
-    (p) => [p.procedure, p as AnySpellProcedureProfile] as const,
-  ),
-);
+> {
+  registryByProcedure ??= new Map(
+    REGISTERED_SPELL_PROCEDURE_PROFILES.map(
+      (p) => [p.procedure, p as AnySpellProcedureProfile] as const,
+    ),
+  );
+  return registryByProcedure;
+}
 
 export function registeredSpellProcedureProfile(
   procedure: SupportedSpellInvocation["procedure"],
 ): AnySpellProcedureProfile | null {
-  return REGISTRY_BY_PROCEDURE.get(procedure) ?? null;
+  return registeredSpellProcedureProfileMap().get(procedure) ?? null;
 }
 
 // Typed lookup for callers that have already narrowed by procedure literal.
@@ -195,7 +231,7 @@ export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
   (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number],
   { readonly procedure: P }
 > {
-  const found = REGISTRY_BY_PROCEDURE.get(procedure);
+  const found = registeredSpellProcedureProfileMap().get(procedure);
   if (found === undefined) {
     throw new Error(
       `spellProcedureProfileFor: procedure ${procedure} is in RegisteredSpellProcedure but missing from registry map`,

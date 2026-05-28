@@ -28,7 +28,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import {
   discoverSpellMetamagicSelections,
   spellMetamagicLabel,
-} from "../metamagic.ts";
+} from "../metamagic-support.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import {
   spellSavingThrowAbility,
