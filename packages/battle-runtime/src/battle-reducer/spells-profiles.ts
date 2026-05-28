@@ -126,6 +126,7 @@ import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
+import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
@@ -260,10 +261,7 @@ export function supportedSpellActs(
       supportedPreparedGustOfWindLineProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedFogCloudObscurementProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      fogCloudObscurementProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMagicalDarknessPointOriginProfile(
@@ -589,84 +587,6 @@ function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
     isOngoingSpellEndTargetAttachment(attachment)
     ? attachment.holeId
     : null;
-}
-
-export function supportedPreparedFogCloudObscurementProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return [];
-  }
-  const attachment = spell.mechanics.attachment;
-  const operation = spell.mechanics.operations[0];
-  const earlyEnd =
-    spell.mechanics.duration.kind === "concentration"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const rangeFeet =
-    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
-  const area =
-    attachment.kind === "hole" &&
-    attachment.value.kind === "area" &&
-    "shape" in attachment.value
-      ? attachment.value
-      : null;
-  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
-  if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== 120 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    earlyEnd.length !== 1 ||
-    earlyEnd[0]?.kind !== "area_dispersed_by_strong_wind" ||
-    spell.mechanics.operations.length !== 1 ||
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "area_is_heavily_obscured" ||
-    area?.origin.kind !== "point_within_range" ||
-    radius === null ||
-    typeof radius !== "object" ||
-    radius.kind !== "linear_per_level" ||
-    radius.axis !== "slot" ||
-    radius.startingAtLevel !== 1 ||
-    radius.base !== 20 ||
-    radius.perLevel !== 20 ||
-    durationTicks === null ||
-    Either.isLeft(durationTicks)
-  ) {
-    return [];
-  }
-  const slotRadius = radius;
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const radiusFeet =
-      slotRadius.base +
-      Math.max(0, Number(slot.spellLevel) - slotRadius.startingAtLevel) *
-        slotRadius.perLevel;
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "fogCloudObscurement",
-        spell,
-        targeting: {
-          kind: "pointOriginSphere",
-          radiusFeet: movementFeet(radiusFeet),
-        },
-        durationTicks: durationTicks.right,
-        rangeFeet: movementFeet(rangeFeet),
-      },
-    ];
-  });
 }
 
 export function supportedPreparedMagicalDarknessPointOriginProfile(

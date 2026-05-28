@@ -70,6 +70,7 @@ import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
+import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
@@ -194,19 +195,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "fogCloudObscurement") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the fog area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return fogCloudObscurementProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "magicalDarknessPointOrigin") {
         return [

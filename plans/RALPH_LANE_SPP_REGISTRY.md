@@ -361,7 +361,7 @@
     {
       "number": 60,
       "id": "SPP-W8-08-FOG-CLOUD-OBSCUREMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate fogCloudObscurement profile"
     },
     {
@@ -1169,7 +1169,7 @@ Focused MBT: `moonbeam-movable-zone.mbt.test.ts`.
 
 ### Task 60 - SPP-W8-08-FOG-CLOUD-OBSCUREMENT - Migrate fogCloudObscurement
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 

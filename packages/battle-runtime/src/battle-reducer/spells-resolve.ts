@@ -109,6 +109,7 @@ import {
 } from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
+import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
@@ -206,7 +207,6 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
 import {
-  resolveFogCloudObscurementSpellAct,
   resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
@@ -788,7 +788,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "fogCloudObscurement") {
-    return resolveFogCloudObscurementSpellAct({
+    return fogCloudObscurementProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

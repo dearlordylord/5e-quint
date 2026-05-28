@@ -35,6 +35,7 @@ import {
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./flaming-sphere.ts";
+import { fogCloudObscurementProfile } from "./fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
@@ -132,6 +133,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   greaseGroundHazardProfile,
   flamingSphereProfile,
   moonbeamProfile,
+  fogCloudObscurementProfile,
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,

@@ -29,6 +29,7 @@ import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
+import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
@@ -137,12 +138,7 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "fogCloudObscurement") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "fogCloudObscurement",
-    };
+    return fogCloudObscurementProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "magicalDarknessPointOrigin") {
     return {
