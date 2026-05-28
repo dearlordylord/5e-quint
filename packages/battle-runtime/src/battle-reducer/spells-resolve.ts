@@ -118,6 +118,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
@@ -209,10 +210,7 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
-import {
-  resolveAntimagicFieldOngoingSpellSuppressionAct,
-  resolveMagicalDarknessPointOriginSpellAct,
-} from "./spells-resolve-area-effects.ts";
+import { resolveAntimagicFieldOngoingSpellSuppressionAct } from "./spells-resolve-area-effects.ts";
 import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
@@ -796,7 +794,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "magicalDarknessPointOrigin") {
-    return resolveMagicalDarknessPointOriginSpellAct({
+    return magicalDarknessPointOriginProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

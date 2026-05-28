@@ -75,6 +75,7 @@ import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
+import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
@@ -194,19 +195,11 @@ export function discoverSupportedSpellInvocations(
         );
       }
       if (invocation.procedure === "magicalDarknessPointOrigin") {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the magical Darkness area identity.`,
-            initialHoles: [spellAreaChoiceHole(invocation)],
-          },
-        ];
+        return magicalDarknessPointOriginProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
       }
       if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
         return [

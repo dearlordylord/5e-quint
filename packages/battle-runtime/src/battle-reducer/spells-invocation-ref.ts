@@ -39,6 +39,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
+import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
@@ -139,12 +140,7 @@ export function supportedSpellInvocationRef(
     return fogCloudObscurementProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "magicalDarknessPointOrigin") {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: "magicalDarknessPointOrigin",
-    };
+    return magicalDarknessPointOriginProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
     return {

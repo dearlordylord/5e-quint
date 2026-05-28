@@ -385,7 +385,7 @@
     {
       "number": 64,
       "id": "SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate magicalDarknessPointOrigin profile"
     },
     {
@@ -1193,7 +1193,7 @@ Focused MBT: `web-restraint-hazard.mbt.test.ts`.
 
 ### Task 64 - SPP-W8-12-MAGICAL-DARKNESS-POINT-ORIGIN - Migrate magicalDarknessPointOrigin
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `magical-darkness-point-origin-lifecycle.mbt.test.ts`.
 

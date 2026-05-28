@@ -37,7 +37,6 @@ import {
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
-import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 import {
   sameStringSet,
@@ -99,6 +98,7 @@ import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-gro
 import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
+import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
 import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
@@ -235,10 +235,7 @@ export function supportedSpellActs(
       fogCloudObscurementProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedMagicalDarknessPointOriginProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      magicalDarknessPointOriginProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(
@@ -552,81 +549,6 @@ function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
     isOngoingSpellEndTargetAttachment(attachment)
     ? attachment.holeId
     : null;
-}
-
-export function supportedPreparedMagicalDarknessPointOriginProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return [];
-  }
-  const attachment = spell.mechanics.attachment;
-  const darknessOperation = spell.mechanics.operations[0];
-  const overlapOperation = spell.mechanics.operations[1];
-  const maxSpellLevel =
-    overlapOperation?.effect.kind ===
-    "end_overlapping_spell_created_bright_or_dim_light"
-      ? parseBattleSpellEffectLevel(overlapOperation.effect.maxSpellLevel)
-      : null;
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const earlyEnd =
-    spell.mechanics.duration.kind === "concentration"
-      ? (spell.mechanics.duration.earlyEnd ?? [])
-      : [];
-  const rangeFeet =
-    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
-  const area =
-    attachment.kind === "hole" &&
-    attachment.value.kind === "area" &&
-    "shape" in attachment.value
-      ? attachment.value
-      : null;
-  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
-  if (
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== 60 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 10 ||
-    earlyEnd.length !== 0 ||
-    spell.mechanics.operations.length !== 2 ||
-    darknessOperation?.trigger.kind !== "passive" ||
-    darknessOperation.effect.kind !== "area_is_magical_darkness" ||
-    overlapOperation?.trigger.kind !== "passive" ||
-    maxSpellLevel === null ||
-    area?.origin.kind !== "point_within_range" ||
-    radius !== 15 ||
-    durationTicks === null ||
-    Either.isLeft(durationTicks)
-  ) {
-    return [];
-  }
-
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "magicalDarknessPointOrigin",
-        spell,
-        targeting: {
-          kind: "pointOriginSphere",
-          radiusFeet: movementFeet(radius),
-        },
-        durationTicks: durationTicks.right,
-        rangeFeet: movementFeet(rangeFeet),
-        dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,
-      },
-    ];
-  });
 }
 
 export function supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(

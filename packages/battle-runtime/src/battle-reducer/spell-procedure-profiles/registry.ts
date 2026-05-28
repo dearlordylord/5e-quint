@@ -45,6 +45,7 @@ import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
+import { magicalDarknessPointOriginProfile } from "./magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
 import { moonbeamProfile } from "./moonbeam.ts";
@@ -140,6 +141,7 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   fogCloudObscurementProfile,
   spikeGrowthMovementHazardProfile,
   webRestraintHazardProfile,
+  magicalDarknessPointOriginProfile,
   commandProfile,
   counterspellProfile,
   shieldReactionProfile,
