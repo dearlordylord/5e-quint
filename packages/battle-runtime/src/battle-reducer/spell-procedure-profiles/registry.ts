@@ -27,6 +27,11 @@ import { directConditionProfile } from "./direct-condition.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./direct-hit-point-restoration.ts";
 import { dragonsBreathInitialProfile } from "./dragons-breath-initial.ts";
+import {
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
+  dancingLightsSeparateCastProfile,
+} from "./dancing-lights.ts";
 import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
@@ -136,6 +141,9 @@ export const REGISTERED_SPELL_PROCEDURE_PROFILES = [
   chainedSpellAttackDamageProfile,
   attackBurstSaveDamageProfile,
   repeatedDamageAllocationProfile,
+  dancingLightsSeparateCastProfile,
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
 ] as const satisfies ReadonlyArray<AnySpellProcedureProfile>;
 
 // Procedure literal type derived from the registry. As more profiles

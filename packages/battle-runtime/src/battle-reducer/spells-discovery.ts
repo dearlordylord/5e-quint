@@ -22,7 +22,6 @@ import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
   reactionTriggerLabel,
-  type BattleActiveEffect,
   type BattleHole,
   type AvailableBattleAct,
   type BattleCreatureState,
@@ -48,10 +47,7 @@ import {
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
-import {
-  spellDancingLightsPlacementHole,
-  targetListTargetingHasFixedMaximum,
-} from "./spells-targeting.ts";
+import { targetListTargetingHasFixedMaximum } from "./spells-targeting.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
@@ -65,6 +61,11 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import {
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
+  dancingLightsSeparateCastProfile,
+} from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
@@ -117,7 +118,6 @@ import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-dama
 import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
-import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
   counterspellCapableReactors,
@@ -547,58 +547,24 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "dancingLightsSeparateCast" ||
         invocation.procedure === "dancingLightsCombinedCast"
       ) {
-        return [
-          {
-            subject: {
-              tag: "actionSpell" as const,
+        return invocation.procedure === "dancingLightsSeparateCast"
+          ? dancingLightsSeparateCastProfile.discoverCastAct(
+              state,
               actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [
-              spellDancingLightsPlacementHole(invocation, invocation.form, []),
-            ],
-          },
-        ];
+              invocation,
+            )
+          : dancingLightsCombinedCastProfile.discoverCastAct(
+              state,
+              actorId,
+              invocation,
+            );
       }
       if (invocation.procedure === "dancingLightsReposition") {
-        const activeEffect = actor.activeEffects.find(
-          (
-            effect,
-          ): effect is Extract<
-            BattleActiveEffect,
-            { readonly kind: "dancingLights" }
-          > =>
-            effect.kind === "dancingLights" &&
-            effect.sourceSpellId === invocation.spell.id &&
-            effect.sourceCombatantId === actorId,
+        return dancingLightsRepositionProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
         );
-        if (activeEffect === undefined) {
-          return [];
-        }
-        return [
-          {
-            subject: {
-              tag: "bonusActionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: `${invocation.spell.name} movement`,
-            summary: spellInvocationCastSummary(invocation),
-            initialHoles: [
-              spellDancingLightsPlacementHole(
-                invocation,
-                activeEffect.form,
-                dancingLightsFromEffect(activeEffect).map(
-                  (light) => light.lightId,
-                ),
-              ),
-            ],
-          },
-        ];
       }
       if (invocation.procedure === "objectLight") {
         return objectLightProfile.discoverCastAct(state, actorId, invocation);
@@ -993,10 +959,12 @@ export function spellInvocationCastSummary(
     invocation.procedure === "dancingLightsSeparateCast" ||
     invocation.procedure === "dancingLightsCombinedCast"
   ) {
-    return `Cast ${invocation.spell.name} as a cantrip.`;
+    return invocation.procedure === "dancingLightsSeparateCast"
+      ? dancingLightsSeparateCastProfile.castSummary(invocation)
+      : dancingLightsCombinedCastProfile.castSummary(invocation);
   }
   if (invocation.procedure === "dancingLightsReposition") {
-    return `Move ${invocation.spell.name} with a Bonus Action.`;
+    return dancingLightsRepositionProfile.castSummary(invocation);
   }
   if (invocation.procedure === "objectLight") {
     return objectLightProfile.castSummary(invocation);

@@ -337,7 +337,7 @@
     {
       "number": 56,
       "id": "SPP-W8-04-DANCING-LIGHTS-FAMILY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate dancingLightsCombinedCast + Reposition + SeparateCast (one file)"
     },
     {
@@ -1145,7 +1145,7 @@ Focused MBT: `level2-damage-spell-selected-identity.mbt.test.ts` and
 
 ### Task 56 - SPP-W8-04-DANCING-LIGHTS-FAMILY - Migrate dancingLightsCombinedCast + Reposition + SeparateCast
 
-Status: `ready-for-research`
+Status: `done`
 
 Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 

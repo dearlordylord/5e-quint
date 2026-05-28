@@ -102,6 +102,11 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import {
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
+  dancingLightsSeparateCastProfile,
+} from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
@@ -290,8 +295,6 @@ import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
-  resolveDancingLightsCastSpellAct,
-  resolveDancingLightsRepositionSpellAct,
   resolveReadySpellAct,
 } from "./spells-resolve-release.ts";
 import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
@@ -696,12 +699,19 @@ function resolveSpellActInternal(
     invocation.procedure === "dancingLightsSeparateCast" ||
     invocation.procedure === "dancingLightsCombinedCast"
   ) {
-    return resolveDancingLightsCastSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
+    return invocation.procedure === "dancingLightsSeparateCast"
+      ? dancingLightsSeparateCastProfile.resolve({
+          input: { ...input, state: castingState },
+          actorId: subject.actorId,
+          invocation,
+          fillSet,
+        })
+      : dancingLightsCombinedCastProfile.resolve({
+          input: { ...input, state: castingState },
+          actorId: subject.actorId,
+          invocation,
+          fillSet,
+        });
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return spellHostedWeaponAttackProfile.resolve({
@@ -2841,7 +2851,7 @@ export function resolveBonusActionSpellAct(
     });
   }
   if (invocation.procedure === "dancingLightsReposition") {
-    return resolveDancingLightsRepositionSpellAct({
+    return dancingLightsRepositionProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

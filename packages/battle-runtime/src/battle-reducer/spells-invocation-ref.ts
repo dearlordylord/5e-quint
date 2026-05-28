@@ -20,6 +20,11 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import {
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
+  dancingLightsSeparateCastProfile,
+} from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
@@ -256,25 +261,13 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "dancingLightsSeparateCast") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "dancingLightsSeparateCast",
-    };
+    return dancingLightsSeparateCastProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "dancingLightsCombinedCast") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "dancingLightsCombinedCast",
-    };
+    return dancingLightsCombinedCastProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "dancingLightsReposition") {
-    return {
-      tag: "cantrip",
-      spellId: spellId(invocation.spell.id),
-      procedure: "dancingLightsReposition",
-    };
+    return dancingLightsRepositionProfile.invocationRef(invocation);
   }
   if (invocation.procedure === "makeStable") {
     return makeStableProfile.invocationRef(invocation);

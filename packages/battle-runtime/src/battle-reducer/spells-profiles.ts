@@ -41,7 +41,6 @@ import {
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
-import type { CombatantId } from "../identity.ts";
 import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 import {
@@ -124,6 +123,11 @@ import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creatu
 import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
 import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
+import {
+  dancingLightsCombinedCastProfile,
+  dancingLightsRepositionProfile,
+  dancingLightsSeparateCastProfile,
+} from "./spell-procedure-profiles/dancing-lights.ts";
 import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
 import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
@@ -444,7 +448,13 @@ export function supportedSpellActs(
       heldLightProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
-      supportedCantripDancingLightsSpellProfile(actor.combatantId, spell),
+      dancingLightsSeparateCastProfile.admit(spell, admissionContext),
+    ),
+    ...cantrips.flatMap((spell) =>
+      dancingLightsCombinedCastProfile.admit(spell, admissionContext),
+    ),
+    ...cantrips.flatMap((spell) =>
+      dancingLightsRepositionProfile.admit(spell, admissionContext),
     ),
     ...cantrips.flatMap((spell) =>
       objectLightProfile.admit(spell, admissionContext),
@@ -479,93 +489,6 @@ export function supportedSpellActs(
     ...cantrips.flatMap((spell) =>
       makeStableProfile.admit(spell, admissionContext),
     ),
-  ];
-}
-
-export function supportedCantripDancingLightsSpellProfile(
-  actorId: CombatantId,
-  spell: SpellRecord,
-): readonly SupportedSpellInvocation[] {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 120 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1
-  ) {
-    return [];
-  }
-  const lightOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
-  );
-  const repositionOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost?.kind === "bonus_action" &&
-      operation.effect.kind === "reposition_attachment",
-  );
-  if (
-    lightOperation?.effect.kind !== "emit_light" ||
-    lightOperation.effect.brightRadiusFeet !== 0 ||
-    lightOperation.effect.dimAdditionalFeet !== 10 ||
-    repositionOperation?.effect.kind !== "reposition_attachment" ||
-    repositionOperation.effect.maxMoveFeet !== 60
-  ) {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  if (Either.isLeft(durationTicks)) {
-    return [];
-  }
-  const base = {
-    access: { tag: "classCantrip" as const },
-    resource: { tag: "none" as const },
-    spell,
-    dimRadiusFeet: movementFeet(lightOperation.effect.dimAdditionalFeet),
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-    maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),
-    spacingFeet: movementFeet(20),
-  };
-  return [
-    {
-      ...base,
-      procedure: "dancingLightsSeparateCast",
-      actionCost: "magicAction",
-      form: "separateLights",
-      expiresAt: {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: durationTicks.right,
-      },
-    },
-    {
-      ...base,
-      procedure: "dancingLightsCombinedCast",
-      actionCost: "magicAction",
-      form: "combinedMediumForm",
-      expiresAt: {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: durationTicks.right,
-      },
-    },
-    {
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      procedure: "dancingLightsReposition",
-      spell,
-      actionCost: "bonusAction",
-      maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),
-      rangeFeet: movementFeet(spell.mechanics.range.feet),
-      spacingFeet: movementFeet(20),
-    },
   ];
 }
 
