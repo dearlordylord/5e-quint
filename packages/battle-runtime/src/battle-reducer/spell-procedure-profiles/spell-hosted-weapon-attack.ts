@@ -34,8 +34,10 @@ import {
 import { spellId, type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
-import { supportedDamageAmountExpr } from "../spells-profiles-save-gates.ts";
+import {
+  sameStringSet,
+  supportedDamageAmountExpr,
+} from "../spells-profile-shared.ts";
 import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";

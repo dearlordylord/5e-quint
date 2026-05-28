@@ -1,13 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
-// Save-gated and attack-damage spell profile projections extracted from spells-profiles.ts.
+// Save-gated spell profile projections shared by save-gated profiles.
 
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  movementDeltaFeet,
   movementFeet,
   spellSlotLevel,
   type Ability,
@@ -19,10 +16,8 @@ import type { CreatureType } from "@dnd/shared/game-facts";
 import type {
   ActivationPhase,
   Attachment,
-  DiceExpr,
   EffectAtom,
   SpellRecord,
-  DiceAmount as SurfaceDiceAmount,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
@@ -33,29 +28,27 @@ import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
   damageSpellSource,
-  type BattleAttackKindForRedirect,
   type DamageSpellSource,
   type SaveGateFailureEffect,
   type SpellActivationPhase,
-  type SpellAttackHitEffect,
-  type SpellAttackKind,
   type SpellFailedSaveAttackRollEffect,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
   type SpellPostSaveAreaEffect,
-  type SpellPostDamageRider,
   type SpellSavingThrowRollModeRule,
   type SpellTargeting,
   type SaveGatedConditionImmunitySpellInvocation,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import type { CombatantId } from "../identity.ts";
+} from "../../battle-reducer.ts";
+import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
+import type { CombatantId } from "../../identity.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
   scalarBuffSpellTargetCountBySlot,
-} from "./spells-profile-shared.ts";
+  singleTargetSpellRangeFeet,
+  supportedDamageAmountExpr,
+} from "../spells-profile-shared.ts";
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -76,10 +69,6 @@ export type SaveGateAttackRollAdvantageSpell = {
   readonly rangeFeet: MovementFeet;
 };
 
-type ExplodingMaxDieThresholdTier = {
-  readonly atLevel: number;
-  readonly dice: number;
-};
 type SaveGateFailedEffect = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
@@ -1347,203 +1336,12 @@ export function areaSaveGateSpellRangeFeet(
   );
 }
 
-export function singleTargetSpellRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
-): MovementFeet | null {
-  return Match.value(range).pipe(
-    Match.when({ kind: "point" }, (point) =>
-      typeof point.feet === "number" ? movementFeet(point.feet) : null,
-    ),
-    Match.when({ kind: "touch" }, () => movementFeet(5)),
-    Match.orElse(() => null),
-  );
-}
-
 function fixedPointRangeFeet(
   range: SpellRecord["mechanics"]["range"],
 ): MovementFeet | null {
   return range.kind === "point" && typeof range.feet === "number"
     ? movementFeet(range.feet)
     : null;
-}
-
-export function supportedSpellAttackKind(
-  attackKind: string,
-): attackKind is SpellAttackKind {
-  return (
-    attackKind === "melee_spell_attack" || attackKind === "ranged_spell_attack"
-  );
-}
-
-export function spellAttackKindForRedirect(
-  attackKind: SpellAttackKind,
-): BattleAttackKindForRedirect {
-  return Match.value(attackKind).pipe(
-    Match.when("melee_spell_attack", () => "melee" as const),
-    Match.when("ranged_spell_attack", () => "ranged" as const),
-    Match.exhaustive,
-  );
-}
-
-export function supportedSpellPostDamageRiders(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-  effects: readonly SpellAttackHitEffect[],
-): readonly SpellPostDamageRider[] | null {
-  const riders: SpellPostDamageRider[] = [];
-  for (const effect of effects) {
-    if (effect.kind === "modify_speed") {
-      if (effect.unit !== "feet" || effect.delta >= 0) {
-        return null;
-      }
-      riders.push({
-        kind: "speedDelta",
-        deltaFeet: movementDeltaFeet(effect.delta),
-      });
-      continue;
-    }
-    if (
-      effect.kind === "apply_condition" &&
-      effect.condition === "poisoned" &&
-      isRayOfSicknessPoisonedRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "condition",
-        condition: effect.condition,
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "deny_opportunity_attack" &&
-      isShockingGraspOpportunityAttackRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "opportunityAttackDenied",
-        expiresAt: "startOfTargetNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "modify_roll_advantage" &&
-      effect.mode === "advantage" &&
-      sameStringSet(effect.on ?? [], ["attack_roll"]) &&
-      isGuidingBoltNextAttackRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "nextAttackRollAgainstTarget",
-        mode: "advantage",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "prevent_hit_point_regain" &&
-      effect.expiresAt === "end_of_caster_next_turn" &&
-      isChillTouchHitPointRegainPreventionRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "hitPointRegainPrevented",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "emit_dim_light" &&
-      effect.radiusFeet === 10 &&
-      effect.expiresAt === "end_of_caster_next_turn" &&
-      isStarryWispDimLightRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "lightEmission",
-        emission: {
-          kind: "dim",
-          radiusFeet: movementFeet(effect.radiusFeet),
-        },
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "suppress_condition_benefit" &&
-      effect.condition === "invisible" &&
-      isStarryWispInvisibleBenefitDenialRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "invisibleBenefitDenied",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    return null;
-  }
-  return riders;
-}
-
-export function isStarryWispInvisibleBenefitDenialRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return isStarryWispDimLightRiderShape(spell, phase);
-}
-
-export function isStarryWispDimLightRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return (
-    spell.mechanics.level === 0 &&
-    spell.mechanics.duration.kind === "instantaneous" &&
-    phase.attackKind === "ranged_spell_attack"
-  );
-}
-
-export function isChillTouchHitPointRegainPreventionRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return (
-    spell.mechanics.level === 0 &&
-    spell.mechanics.duration.kind === "instantaneous" &&
-    phase.attackKind === "melee_spell_attack"
-  );
-}
-
-export function isRayOfSicknessPoisonedRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return (
-    spell.mechanics.level === 1 &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "round" &&
-    spell.mechanics.duration.value.amount === 1 &&
-    phase.attackKind === "ranged_spell_attack"
-  );
-}
-
-export function isShockingGraspOpportunityAttackRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return (
-    spell.mechanics.level === 0 &&
-    spell.mechanics.duration.kind === "instantaneous" &&
-    phase.attackKind === "melee_spell_attack"
-  );
-}
-
-export function isGuidingBoltNextAttackRiderShape(
-  spell: SpellRecord,
-  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
-): boolean {
-  return (
-    spell.mechanics.level === 1 &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "round" &&
-    spell.mechanics.duration.value.amount === 1 &&
-    phase.attackKind === "ranged_spell_attack"
-  );
 }
 
 export function supportedSaveGateFailedSaveEffects(
@@ -1926,104 +1724,4 @@ export function isViciousMockeryNextAttackRiderShape(
     phase.ability === "wis" &&
     phase.onSuccess.kind === "none"
   );
-}
-
-export function supportedRepeatedEffectCount(
-  selection: TargetSelection,
-  spellLevel: number,
-): ((slotLevel: SpellSlotLevel) => number) | null {
-  if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
-    return null;
-  }
-  const count = selection.count;
-  if (typeof count === "number") {
-    return () => count;
-  }
-  if (count.kind !== "linear") {
-    return null;
-  }
-  const { base, perSlotAboveBase } = count;
-  const baseLevel = count.baseLevel ?? spellLevel;
-  return (slotLevel) =>
-    base + Math.max(0, Number(slotLevel) - baseLevel) * perSlotAboveBase;
-}
-
-export function supportedDamageAmountExpr(input: {
-  readonly amount: SurfaceDiceAmount;
-  readonly spellLevel?: number | undefined;
-  readonly slotLevel?: SpellSlotLevel | undefined;
-  readonly characterLevel?: number | undefined;
-}): DiceExpr | null {
-  const { amount } = input;
-  if (amount.kind === "fixed") {
-    return amount.expr;
-  }
-  if (
-    amount.kind === "threshold_tiers" &&
-    amount.axis === "character" &&
-    input.characterLevel !== undefined
-  ) {
-    return amount.tiers.reduce(
-      (expr, tier) =>
-        input.characterLevel !== undefined &&
-        input.characterLevel >= tier.atLevel
-          ? diceExprWithDelta(expr, tier.override)
-          : expr,
-      amount.base,
-    );
-  }
-  if (
-    amount.kind === "threshold_tiers_exploding_max_die" &&
-    amount.axis === "character" &&
-    input.characterLevel !== undefined
-  ) {
-    return amount.tiers.reduce<DiceExpr>(
-      (expr: DiceExpr, tier: ExplodingMaxDieThresholdTier): DiceExpr =>
-        input.characterLevel !== undefined &&
-        input.characterLevel >= tier.atLevel
-          ? diceExprWithDelta(expr, { dice: tier.dice })
-          : expr,
-      { dice: amount.baseDice, dieSize: amount.dieSize },
-    );
-  }
-  if (
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
-    input.spellLevel !== undefined &&
-    input.slotLevel !== undefined &&
-    (amount.startingAtLevel === input.spellLevel ||
-      amount.startingAtLevel === input.spellLevel + 1) &&
-    amount.base.dieSize !== undefined
-  ) {
-    const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
-    const slotDelta = Math.max(
-      0,
-      Number(input.slotLevel) -
-        amount.startingAtLevel +
-        (firstIncreasedSlot ? 1 : 0),
-    );
-    return {
-      dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
-      dieSize: amount.base.dieSize,
-      ...(amount.base.flat === undefined ? {} : { flat: amount.base.flat }),
-    };
-  }
-  return null;
-}
-
-export function diceExprWithDelta(
-  base: DiceExpr,
-  delta: {
-    readonly dice?: number | undefined;
-    readonly dieSize?: number | undefined;
-    readonly flat?: number | undefined;
-  },
-): DiceExpr {
-  return {
-    dice: delta.dice ?? base.dice,
-    dieSize: delta.dieSize ?? base.dieSize,
-    ...((delta.flat ?? base.flat) === undefined
-      ? {}
-      : { flat: delta.flat ?? base.flat }),
-  };
 }

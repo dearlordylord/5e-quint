@@ -42,7 +42,7 @@ import {
 import {
   supportedCantripSaveGateDamageProfile,
   supportedPreparedSaveGateDamageProfile,
-} from "../spells-profiles-save-gates.ts";
+} from "./_save-gate-helpers.ts";
 import { resolveSaveGateDamageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
@@ -100,13 +100,11 @@ function discoverSaveGatedDamageCastAct(
           actor,
           invocation,
         )
-      : discoverAreaSaveGatedDamageCastActs(
-          state,
-          actorId,
-          actor,
-          invocation,
-        );
-  return [...castActs, ...readiedSaveGatedDamageActs(state, actorId, invocation)];
+      : discoverAreaSaveGatedDamageCastActs(state, actorId, actor, invocation);
+  return [
+    ...castActs,
+    ...readiedSaveGatedDamageActs(state, actorId, invocation),
+  ];
 }
 
 function discoverSingleTargetSaveGatedDamageCastActs(

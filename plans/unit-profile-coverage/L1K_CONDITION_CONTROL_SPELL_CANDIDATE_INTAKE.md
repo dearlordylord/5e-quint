@@ -41,7 +41,7 @@ Generated coverage artifacts checked:
   `spell.invocation-command-flee-route`,
   `spell.invocation-hideous-laughter-repeat-save-lifecycle`, and
   `spell.creature-type-protection-and-charm`.
-- `packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts`:
+- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts`:
   the condition-save profile currently admits specific fixed-condition spell
   shapes, not a general repeat-save or condition-choice profile.
 

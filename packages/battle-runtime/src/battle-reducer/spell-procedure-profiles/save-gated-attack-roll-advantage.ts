@@ -37,7 +37,7 @@ import {
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
 } from "../spells-holes-fills.ts";
-import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "../spells-profiles-save-gates.ts";
+import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,

@@ -392,7 +392,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",

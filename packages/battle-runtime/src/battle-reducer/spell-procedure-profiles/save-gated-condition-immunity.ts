@@ -39,7 +39,7 @@ import {
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
 } from "../spells-holes-fills.ts";
-import { supportedPreparedSaveGateConditionImmunityProfile } from "../spells-profiles-save-gates.ts";
+import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,

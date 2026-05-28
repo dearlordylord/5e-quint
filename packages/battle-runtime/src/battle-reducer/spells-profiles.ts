@@ -64,10 +64,10 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 import {
-  hasSaveGateRepeatSaves,
+  sameStringSet,
   supportedDamageAmountExpr,
-} from "./spells-profiles-save-gates.ts";
-import { sameStringSet } from "./spells-profile-shared.ts";
+} from "./spells-profile-shared.ts";
+import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
 import {
   supportedCantripSpellAttackProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
@@ -191,31 +191,27 @@ export {
   areaSaveGateSpellRangeFeet,
   charmPersonSaveGateConditionSpell,
   colorSpraySaveGateConditionSpell,
-  diceExprWithDelta,
   entangleSaveGateConditionSpell,
   faerieFireSaveGateAttackRollAdvantageSpell,
   hasSaveGateRepeatSaves,
-  isGuidingBoltNextAttackRiderShape,
-  isRayOfSicknessPoisonedRiderShape,
-  isShockingGraspOpportunityAttackRiderShape,
   isViciousMockeryNextAttackRiderShape,
   saveGateTargeting,
-  singleTargetSpellRangeFeet,
-  spellAttackKindForRedirect,
   supportedCantripSaveGateDamageProfile,
-  supportedDamageAmountExpr,
   supportedFailedSavePostDamageRiders,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedSaveGateDamageProfile,
-  supportedRepeatedEffectCount,
   supportedSaveGateConditionSpell,
   supportedSaveGateDamageProfile,
   supportedSaveGateFailedSaveEffects,
-  supportedSpellAttackKind,
-  supportedSpellPostDamageRiders,
-} from "./spells-profiles-save-gates.ts";
+} from "./spell-procedure-profiles/_save-gate-helpers.ts";
+export {
+  diceExprWithDelta,
+  singleTargetSpellRangeFeet,
+  supportedDamageAmountExpr,
+  supportedRepeatedEffectCount,
+} from "./spells-profile-shared.ts";
 export { supportedPreparedSleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 export { supportedPreparedHideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
 export { supportedPreparedGreaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";

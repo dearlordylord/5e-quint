@@ -45,7 +45,7 @@ import {
   spellSavingThrowAbility,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
-import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "../spells-profiles-save-gates.ts";
+import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveHideousLaughterSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,

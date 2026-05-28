@@ -67,10 +67,10 @@ import {
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
-import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
+  supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./spells-active-effects.ts";
 export * from "./spells-profiles-repeated-damage.ts";

@@ -42,7 +42,7 @@ import {
   spellTargetHole,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
-import { supportedPreparedSaveGateConditionProfile } from "../spells-profiles-save-gates.ts";
+import { supportedPreparedSaveGateConditionProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
@@ -92,12 +92,7 @@ function discoverSaveGatedConditionCastAct(
         actor,
         invocation,
       )
-    : discoverAreaSaveGatedConditionCastActs(
-        state,
-        actorId,
-        actor,
-        invocation,
-      );
+    : discoverAreaSaveGatedConditionCastActs(state, actorId, actor, invocation);
 }
 
 function discoverTargetedSaveGatedConditionCastActs(

@@ -44,7 +44,7 @@ export * from "./spells-profile-shared.ts";
 export * from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-repeated-damage.ts";
 export * from "./spells-profiles-support.ts";
-export * from "./spells-profiles-save-gates.ts";
+export * from "./spell-procedure-profiles/_save-gate-helpers.ts";
 export * from "./spells-profiles.ts";
 export * from "./spells-resolve-attack-burst.ts";
 export * from "./spells-resolve-chained.ts";

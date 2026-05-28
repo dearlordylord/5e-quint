@@ -2,6 +2,7 @@
 
 import {
   attackBonus,
+  movementDeltaFeet,
   movementFeet,
   type AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
@@ -13,8 +14,10 @@ import type {
   SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
+  type BattleAttackKindForRedirect,
   type CantripSpellAttackSequenceTargeting,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
@@ -22,7 +25,9 @@ import {
   type SpellActivationPhase,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
+  type SpellAttackKind,
   type SpellObjectHitEffect,
+  type SpellPostDamageRider,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -36,13 +41,12 @@ import {
   type EldritchBlastBeamCount,
   type ScorchingRayRayCount,
 } from "./domain-constants.ts";
-import { sameDiceExpr, sameStringSet } from "./spells-profile-shared.ts";
 import {
+  sameDiceExpr,
+  sameStringSet,
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
-  supportedSpellAttackKind,
-  supportedSpellPostDamageRiders,
-} from "./spells-profiles-save-gates.ts";
+} from "./spells-profile-shared.ts";
 
 export function supportedCantripSpellAttackProfile(
   spell: SpellRecord,
@@ -83,6 +87,185 @@ const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
 const SCORCHING_RAY_BASE_LEVEL = 2;
 const SCORCHING_RAY_BASE_RAY_COUNT = 3;
 const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
+
+export function supportedSpellAttackKind(
+  attackKind: string,
+): attackKind is SpellAttackKind {
+  return (
+    attackKind === "melee_spell_attack" || attackKind === "ranged_spell_attack"
+  );
+}
+
+export function spellAttackKindForRedirect(
+  attackKind: SpellAttackKind,
+): BattleAttackKindForRedirect {
+  return Match.value(attackKind).pipe(
+    Match.when("melee_spell_attack", () => "melee" as const),
+    Match.when("ranged_spell_attack", () => "ranged" as const),
+    Match.exhaustive,
+  );
+}
+
+export function supportedSpellPostDamageRiders(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+  effects: readonly SpellAttackHitEffect[],
+): readonly SpellPostDamageRider[] | null {
+  const riders: SpellPostDamageRider[] = [];
+  for (const effect of effects) {
+    if (effect.kind === "modify_speed") {
+      if (effect.unit !== "feet" || effect.delta >= 0) {
+        return null;
+      }
+      riders.push({
+        kind: "speedDelta",
+        deltaFeet: movementDeltaFeet(effect.delta),
+      });
+      continue;
+    }
+    if (
+      effect.kind === "apply_condition" &&
+      effect.condition === "poisoned" &&
+      isRayOfSicknessPoisonedRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "condition",
+        condition: effect.condition,
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "deny_opportunity_attack" &&
+      isShockingGraspOpportunityAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "opportunityAttackDenied",
+        expiresAt: "startOfTargetNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "modify_roll_advantage" &&
+      effect.mode === "advantage" &&
+      sameStringSet(effect.on ?? [], ["attack_roll"]) &&
+      isGuidingBoltNextAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "nextAttackRollAgainstTarget",
+        mode: "advantage",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "prevent_hit_point_regain" &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isChillTouchHitPointRegainPreventionRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "hitPointRegainPrevented",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "emit_dim_light" &&
+      effect.radiusFeet === 10 &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isStarryWispDimLightRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "lightEmission",
+        emission: {
+          kind: "dim",
+          radiusFeet: movementFeet(effect.radiusFeet),
+        },
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "suppress_condition_benefit" &&
+      effect.condition === "invisible" &&
+      isStarryWispInvisibleBenefitDenialRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "invisibleBenefitDenied",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    return null;
+  }
+  return riders;
+}
+
+export function isStarryWispInvisibleBenefitDenialRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return isStarryWispDimLightRiderShape(spell, phase);
+}
+
+export function isStarryWispDimLightRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+export function isChillTouchHitPointRegainPreventionRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
+}
+
+export function isRayOfSicknessPoisonedRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+export function isShockingGraspOpportunityAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
+}
+
+export function isGuidingBoltNextAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
 
 export function supportedPreparedSpellAttackProfile(
   spell: SpellRecord,

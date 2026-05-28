@@ -4,7 +4,10 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { SupportedSpellInvocation } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import { supportedDamageAmountExpr, supportedRepeatedEffectCount } from "./spells-profiles-save-gates.ts";
+import {
+  supportedDamageAmountExpr,
+  supportedRepeatedEffectCount,
+} from "./spells-profile-shared.ts";
 
 export function supportedPreparedSlotSpellProfile(
   spell: SpellRecord,

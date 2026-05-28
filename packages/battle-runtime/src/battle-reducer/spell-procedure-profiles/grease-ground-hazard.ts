@@ -46,7 +46,7 @@ import {
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
 } from "../spells-holes-fills.ts";
-import { hasSaveGateRepeatSaves } from "../spells-profiles-save-gates.ts";
+import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,

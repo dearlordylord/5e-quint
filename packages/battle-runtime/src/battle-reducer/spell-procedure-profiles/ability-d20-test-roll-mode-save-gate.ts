@@ -34,7 +34,7 @@ import {
   spellSavingThrowAbility,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
-import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "../spells-profiles-save-gates.ts";
+import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./_save-gate-helpers.ts";
 import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,

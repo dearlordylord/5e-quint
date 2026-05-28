@@ -241,7 +241,7 @@
     {
       "number": 40,
       "id": "SPP-W4-11-SAVE-GATED-HELPERS-SWEEP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "After save-gated family migrates: relocate shared helpers and trim spells-profiles-save-gates.ts"
     },
     {
@@ -1015,7 +1015,7 @@ Focused MBT: `rule-core-ability-skill-command.mbt.test.ts` and
 
 ### Task 40 - SPP-W4-11-SAVE-GATED-HELPERS-SWEEP - Relocate save-gate shared helpers
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-profiles-save-gates.ts` after the per-profile migrations.
 

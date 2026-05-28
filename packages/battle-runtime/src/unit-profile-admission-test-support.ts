@@ -74,7 +74,7 @@ import { supportedPreparedHideousLaughterProfile } from "./battle-reducer/spell-
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-} from "./battle-reducer/spells-profiles-save-gates.ts";
+} from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
 import { supportedPreparedSleepTargetAdmissionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
 import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";

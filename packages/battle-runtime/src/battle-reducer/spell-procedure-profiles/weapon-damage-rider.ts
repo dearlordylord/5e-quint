@@ -27,7 +27,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
-import { supportedDamageAmountExpr } from "../spells-profiles-save-gates.ts";
+import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {

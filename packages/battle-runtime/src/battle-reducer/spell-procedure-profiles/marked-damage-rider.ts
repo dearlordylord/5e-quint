@@ -70,7 +70,7 @@ import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
 import { spellAbilityChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
-import { supportedDamageAmountExpr } from "../spells-profiles-save-gates.ts";
+import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spendClassFeatureFreeCastResource,
