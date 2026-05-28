@@ -65,6 +65,7 @@ import {
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -425,16 +426,21 @@ export function discoverSupportedSpellInvocations(
           invocation,
         );
       }
+      if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
+        return abilityD20TestRollModeSaveGateProfile.discoverCastAct(
+          state,
+          actorId,
+          invocation,
+        );
+      }
       if (
-        invocation.procedure === "abilityD20TestRollModeSaveGate" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "greaseGroundHazard" ||
         invocation.procedure === "gustOfWindLine"
       ) {
         if (
-          (invocation.procedure === "hideousLaughter" ||
-            invocation.procedure === "abilityD20TestRollModeSaveGate") &&
+          invocation.procedure === "hideousLaughter" &&
           isTargetListSpellInvocation(invocation)
         ) {
           const targetHole = spellTargetListHole(state, actorId, invocation);

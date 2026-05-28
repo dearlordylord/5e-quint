@@ -92,6 +92,7 @@ import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
+import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
@@ -275,7 +276,6 @@ import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-bu
 
 import {
   resolveCommandSpellAct,
-  resolveAbilityD20TestRollModeSaveGateSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveHideousLaughterSpellAct,
   resolveSleepTargetAdmissionSpellAct,
@@ -733,7 +733,7 @@ function resolveSpellActInternal(
     });
   }
   if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
-    return resolveAbilityD20TestRollModeSaveGateSpellAct({
+    return abilityD20TestRollModeSaveGateProfile.resolve({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

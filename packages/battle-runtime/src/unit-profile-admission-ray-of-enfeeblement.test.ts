@@ -42,19 +42,12 @@ import {
   spellTargetListFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import {
-  damageAmount,
-  Hp,
-  proficiencyBonus,
-  resourceCount,
-  spellSlotLevel,
-} from "@dnd/shared/types";
+import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
 import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spells-profiles-save-gates.ts";
-import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "./battle-reducer/spells-resolve-save-gates.ts";
+import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
-import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { endTurn } from "./unit-profile-admission-test-support.ts";
 import {
@@ -77,21 +70,20 @@ function rayOfEnfeeblementSpell(): SpellRecord {
 }
 
 function rayOfEnfeeblementInvocation(
+  state: BattleState,
   spell: SpellRecord,
 ): Extract<
   SupportedSpellInvocation,
   { readonly procedure: "abilityD20TestRollModeSaveGate" }
 > {
-  const invocation = supportedPreparedAbilityD20TestRollModeSaveGateProfile(
-    spellCasterId,
+  const actor = requireCombatant(state, spellCasterId);
+  const admissionContext = spellAdmissionContextFor(actor, state);
+  if (admissionContext === null) {
+    throw new Error("Expected spell caster admission actor.");
+  }
+  const invocation = abilityD20TestRollModeSaveGateProfile.admit(
     spell,
-    [
-      {
-        spellLevel: spellSlotLevel(2),
-        count: resourceCount(1),
-        expended: resourceCount(0),
-      },
-    ],
+    admissionContext,
   )[0];
   expect(invocation).toBeDefined();
   if (invocation?.procedure !== "abilityD20TestRollModeSaveGate") {
@@ -105,7 +97,7 @@ function resolveRayOfEnfeeblementCast(input: {
   readonly spell: SpellRecord;
   readonly succeeded: boolean;
 }) {
-  const invocation = rayOfEnfeeblementInvocation(input.spell);
+  const invocation = rayOfEnfeeblementInvocation(input.state, input.spell);
   const targetHole = spellTargetListHole(
     input.state,
     spellCasterId,
@@ -131,13 +123,14 @@ function resolveRayOfEnfeeblementCast(input: {
   if (fillSet.tag !== "ok") {
     throw new Error(fillSet.message);
   }
-  return resolveAbilityD20TestRollModeSaveGateSpellAct({
+  return abilityD20TestRollModeSaveGateProfile.resolve({
     input: {
       state: input.state,
       subject: {
         tag: "actionSpell",
         actorId: spellCasterId,
-        invocation: supportedSpellInvocationRef(invocation),
+        invocation:
+          abilityD20TestRollModeSaveGateProfile.invocationRef(invocation),
         mode: { tag: "cast" },
       },
       fills,
@@ -533,7 +526,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const penaltyRequest = resolveBattleSubject({
       state: targetTurn.state,
       subject: attackAct.subject,
-      fills: [targetFill, attackFill, damageRollFillWithGroups(damageRoll, [[6]])],
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damageRoll, [[6]]),
+      ],
     });
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
     expect(penaltyRoll).toHaveProperty("sourceDamageRollPenalty");
@@ -989,7 +986,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     expect(resolved.tag).toBe("resolved");
     if (resolved.tag !== "resolved") return;
     expect(Number(requireCombatant(resolved.state, spellCasterId).hp)).toBe(7);
-    expect(requireCombatant(resolved.state, spellCasterId).activeEffects).toEqual(
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellDamageReduction",
@@ -1483,9 +1482,7 @@ function sourceDamageRollPenaltyHoles(
   holes: readonly BattleHole[],
 ): readonly Extract<BattleHole, { readonly kind: "rolledDice" }>[] {
   return holes.filter(
-    (
-      hole,
-    ): hole is Extract<BattleHole, { readonly kind: "rolledDice" }> =>
+    (hole): hole is Extract<BattleHole, { readonly kind: "rolledDice" }> =>
       hole.kind === "rolledDice" && "sourceDamageRollPenalty" in hole,
   );
 }

@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate abilityD20TestRollModeSaveGate profile"
     },
     {
@@ -984,7 +984,7 @@ Focused MBT: `level1-spatial-witness-selected-identity.mbt.test.ts`.
 
 ### Task 35 - SPP-W4-06-ABILITY-D20-ROLL-MODE-SAVE-GATE - Migrate abilityD20TestRollModeSaveGate
 
-Status: `ready-for-research`
+Status: `done`
 
 No focused MBT. Falls back to integration.
 

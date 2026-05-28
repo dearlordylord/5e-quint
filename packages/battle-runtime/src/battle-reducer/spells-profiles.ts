@@ -66,7 +66,6 @@ import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 import {
   hasSaveGateRepeatSaves,
   supportedDamageAmountExpr,
-  supportedPreparedAbilityD20TestRollModeSaveGateProfile,
   supportedPreparedCommandProfile,
   supportedPreparedGreaseGroundHazardProfile,
   supportedPreparedHideousLaughterProfile,
@@ -135,6 +134,7 @@ type WebRestraintSaveEffect = OngoingSaveGateEffect & {
     { readonly kind: "apply_condition_while_in_area_or_until_escape" }
   >;
 };
+import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
 import {
@@ -294,11 +294,7 @@ export function supportedSpellActs(
       saveGatedAttackRollAdvantageProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedAbilityD20TestRollModeSaveGateProfile(
-        actor.combatantId,
-        spell,
-        spellcasting.spellSlots,
-      ),
+      abilityD20TestRollModeSaveGateProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       saveGatedConditionImmunityProfile.admit(spell, admissionContext),
