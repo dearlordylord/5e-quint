@@ -499,13 +499,13 @@
     {
       "number": 83,
       "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
     },
     {
       "number": 84,
       "id": "SPP-W10-03-DOCS-AND-ADR",
-      "status": "blocked-needs-design",
+      "status": "ready-for-research",
       "title": "Add ADR documenting the registry; update README; close lane"
     }
   ]
@@ -1521,7 +1521,7 @@ finite witness at its domain step limit while still honoring `MBT_TRACES`.
 
 ### Task 83 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input: `spells-resolve-support-effects.ts`,
 `spells-active-effects.ts` (rollModifier and damageReduction-shaped
@@ -1533,12 +1533,20 @@ become a thin re-export gets folded into the importer.
 
 Acceptance: typecheck clean. No imports point at deleted files.
 
+Implementation note: The specific dead code this task targeted was already
+eliminated by earlier waves. `spells-resolve-support-effects.ts` was deleted
+in the mirror-image profile migration (wave 3). The rollModifier and
+damageReduction applyEffect functions were inlined into their respective
+profile files during waves 2-3 (see provenance comments in
+`damage-reduction.ts` and `roll-modifier.ts`). The old admit predicates in
+`spells-profiles-support.ts` were removed as each profile was migrated.
+`spells-active-effects.ts`, `spells-profiles-support.ts`, and
+`spells-discovery.ts` retain substantive non-dispatch logic that remains in
+active use. Typecheck passes clean; no imports reference deleted files.
+
 ### Task 84 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
 
-Status: `blocked-needs-design`
-
-Blocker Type: dependency
-Blocker Detail: SPP-W10-02-DELETE-DEAD-DISPATCH
+Status: `ready-for-research`
 
 Input: registry state at end of Wave 9; original ADR-0001 (forest of QNT
 slices); the directory README.
