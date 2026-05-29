@@ -457,7 +457,7 @@
     {
       "number": 76,
       "id": "SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace spells-discovery.ts procedure switch (cast act + summary) with registry iteration"
     },
     {
@@ -1357,7 +1357,7 @@ Acceptance: typecheck clean, full MBT subset passes.
 
 ### Task 76 - SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH - Replace spells-discovery.ts switches
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-discovery.ts` `discoverBattleActs` per-procedure branches,
 and `spellInvocationCastSummary` per-procedure branches.
