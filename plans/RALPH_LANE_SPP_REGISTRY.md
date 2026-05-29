@@ -487,7 +487,7 @@
     {
       "number": 81,
       "id": "SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fix character battle settlement max-HP fixture/runtime mismatch"
     },
     {
@@ -1469,7 +1469,7 @@ and an explicit rationale for any narrowing.
 
 ### Task 81 - SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP - Fix character battle settlement max-HP fixture/runtime mismatch
 
-Status: `ready-for-research`
+Status: `done`
 
 Problem: `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts`
 fails during trace replay because character battle initialization rejects the
