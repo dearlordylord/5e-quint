@@ -433,7 +433,7 @@
     {
       "number": 72,
       "id": "SPP-W9-06-INVERT-READIED-SPELL-LIST",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Invert readiedSpellAct procedure list to iterate registry"
     },
     {
@@ -1302,7 +1302,7 @@ Acceptance: typecheck clean. Same full MBT subset as task 69.
 
 ### Task 72 - SPP-W9-06-INVERT-READIED-SPELL-LIST - Invert readiedSpellAct list
 
-Status: `ready-for-research`
+Status: `done`
 
 Same pattern as Task 71 for the
 `readiedSpellAct` procedure list in `spells-discovery.ts:1880`.
