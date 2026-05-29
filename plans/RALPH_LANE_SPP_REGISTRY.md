@@ -481,7 +481,7 @@
     {
       "number": 80,
       "id": "SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fix Bardic selected-identity MBT timeout"
     },
     {
@@ -1451,7 +1451,7 @@ SPP-W9-FU-04.
 
 ### Task 80 - SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT - Fix Bardic selected-identity MBT timeout
 
-Status: `ready-for-research`
+Status: `done`
 
 Problem: `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts`
 times out at the configured 120s Vitest limit under the promoted MBT settings.
