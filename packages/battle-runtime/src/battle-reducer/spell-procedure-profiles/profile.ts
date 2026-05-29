@@ -20,6 +20,7 @@ import type {
   BattleCreatureState,
   BattleResolutionResult,
   BattleState,
+  ReadiedSpellInvocation,
   SupportedSpellInvocation,
   TargetListSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -178,6 +179,15 @@ export type SpellProcedureTargetListInvocationClassifier<
             readonly targetingKind: "targetList";
           };
 
+export type SpellProcedureReadiedSpellCompatibility<
+  I extends SupportedSpellInvocation,
+> = Extract<
+  ReadiedSpellInvocation,
+  { readonly procedure: I["procedure"] }
+> extends never
+  ? false
+  : boolean;
+
 // One profile per spell-procedure registration. Generic in the registered
 // procedure literal and the narrowed invocation/input types so admit/resolve
 // stay type-checked against the right shape. Most profiles register the same
@@ -195,7 +205,7 @@ export type SpellProcedureProfile<
   // membership checks across several modules.
   readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
   readonly targetListInvocation: SpellProcedureTargetListInvocationClassifier<I>;
-  readonly isReadiedSpellCompatible: boolean;
+  readonly isReadiedSpellCompatible: SpellProcedureReadiedSpellCompatibility<I>;
   readonly knownWillingTargetSpellIds: ReadonlyArray<SpellRecord["id"]>;
 
   // Discovery: enumerate every currently-admissible invocation of this

@@ -499,7 +499,7 @@ export const scalarBuffProfile = {
     kind: "byTargetingKind",
     targetingKind: "targetList",
   },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitScalarBuff,
   discoverCastAct: discoverScalarBuffCastAct,

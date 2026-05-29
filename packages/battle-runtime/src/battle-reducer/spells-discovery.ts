@@ -41,6 +41,7 @@ import {
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import { targetListTargetingHasFixedMaximum } from "./spells-targeting.ts";
+import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
 import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
@@ -1144,66 +1145,21 @@ export function spellRequiresVerbal(spell: SpellRecord): boolean {
 export function isReadiedSpellInvocation(
   invocation: SupportedSpellInvocation,
 ): invocation is ReadiedSpellInvocation {
+  const profile = registeredSpellProcedureProfile(invocation.procedure);
   return (
-    invocation.procedure !== "directHitPointRestoration" &&
-    invocation.procedure !== "heldLight" &&
-    invocation.procedure !== "spellCreatedHeldObject" &&
-    invocation.procedure !== "spellCreatedHeldObjectAttack" &&
-    invocation.procedure !== "spellCreatedHeldObjectReEvoke" &&
-    invocation.procedure !== "objectContactDamage" &&
-    invocation.procedure !== "objectContactDamageRepeat" &&
-    invocation.procedure !== "spiritualWeaponAttackProxy" &&
-    invocation.procedure !== "spiritualWeaponRepeatAttack" &&
-    invocation.procedure !== "dancingLightsSeparateCast" &&
-    invocation.procedure !== "dancingLightsCombinedCast" &&
-    invocation.procedure !== "dancingLightsReposition" &&
-    invocation.procedure !== "objectLight" &&
-    invocation.procedure !== "ongoingSpellEnd" &&
-    invocation.procedure !== "heldLightHurl" &&
-    invocation.procedure !== "spellHostedWeaponAttack" &&
-    invocation.procedure !== "weaponAttackOverride" &&
-    invocation.procedure !== "damageReduction" &&
-    invocation.procedure !== "makeStable" &&
-    invocation.procedure !== "persistentArmorEffect" &&
-    invocation.procedure !== "rollModifier" &&
-    invocation.procedure !== "wardingBond" &&
-    invocation.procedure !== "creatureTypeProtection" &&
-    invocation.procedure !== "blurAttackRollDefense" &&
-    invocation.procedure !== "seeInvisibleObserverSight" &&
-    invocation.procedure !== "mirrorImageHitInterception" &&
-    invocation.procedure !== "conditionRemovalProtection" &&
-    invocation.procedure !== "directConditionRemoval" &&
-    invocation.procedure !== "scalarBuff" &&
-    invocation.procedure !== "selfTransformationMode" &&
-    invocation.procedure !== "weaponDamageRider" &&
-    invocation.procedure !== "magicWeaponEnhancement" &&
-    invocation.procedure !== "afterHitDamage" &&
-    invocation.procedure !== "afterHitSaveGatedCondition" &&
-    invocation.procedure !== "afterHitTimedDamageAndSave" &&
-    invocation.procedure !== "afterHitDamageAndIllumination" &&
-    invocation.procedure !== "markedDamageRider" &&
-    invocation.procedure !== "expeditiousRetreatDash" &&
-    invocation.procedure !== "jumpMovementReplacement" &&
-    invocation.procedure !== "dragonsBreathInitial" &&
-    invocation.procedure !== "selfTeleport" &&
-    invocation.procedure !== "sanctuaryTargetingInterdiction" &&
-    invocation.procedure !== "directCondition" &&
-    invocation.procedure !== "saveGatedCondition" &&
-    invocation.procedure !== "saveGatedConditionImmunity" &&
-    invocation.procedure !== "saveGatedAttackRollAdvantage" &&
-    invocation.procedure !== "sleepTargetAdmission" &&
-    invocation.procedure !== "hideousLaughter" &&
-    invocation.procedure !== "command" &&
-    invocation.procedure !== "greaseGroundHazard" &&
-    invocation.procedure !== "webRestraintHazard" &&
-    invocation.procedure !== "gustOfWindLine" &&
-    invocation.procedure !== "fogCloudObscurement" &&
-    invocation.procedure !== "magicalDarknessPointOrigin" &&
-    invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
-    invocation.procedure !== "flamingSphere" &&
-    invocation.procedure !== "moonbeam" &&
-    invocation.procedure !== "spellAttackSequence" &&
-    invocation.procedure !== "shieldReaction"
+    profile?.isReadiedSpellCompatible === true &&
+    readiedSpellInvocationHasReleaseReadyShape(invocation)
+  );
+}
+
+function readiedSpellInvocationHasReleaseReadyShape(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  // A readied spell release replays spellAttackDamage after any damage-type
+  // choice has already been selected by the original cast.
+  return (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
   );
 }
 
@@ -1212,66 +1168,7 @@ export function readiedSpellAct(
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): readonly AvailableBattleAct[] {
-  if (
-    invocation.procedure === "persistentArmorEffect" ||
-    invocation.procedure === "directHitPointRestoration" ||
-    invocation.procedure === "spellCreatedHeldObject" ||
-    invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
-    invocation.procedure === "objectContactDamage" ||
-    invocation.procedure === "objectContactDamageRepeat" ||
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
-    invocation.procedure === "damageReduction" ||
-    invocation.procedure === "makeStable" ||
-    invocation.procedure === "spellHostedWeaponAttack" ||
-    invocation.procedure === "scalarBuff" ||
-    invocation.procedure === "selfTransformationMode" ||
-    invocation.procedure === "weaponDamageRider" ||
-    invocation.procedure === "magicWeaponEnhancement" ||
-    invocation.procedure === "weaponAttackOverride" ||
-    invocation.procedure === "markedDamageRider" ||
-    invocation.procedure === "expeditiousRetreatDash" ||
-    invocation.procedure === "jumpMovementReplacement" ||
-    invocation.procedure === "dragonsBreathInitial" ||
-    invocation.procedure === "selfTeleport" ||
-    invocation.procedure === "sanctuaryTargetingInterdiction" ||
-    invocation.procedure === "directCondition" ||
-    invocation.procedure === "afterHitDamage" ||
-    invocation.procedure === "spellAttackSequence" ||
-    invocation.procedure === "afterHitSaveGatedCondition" ||
-    invocation.procedure === "afterHitTimedDamageAndSave" ||
-    invocation.procedure === "afterHitDamageAndIllumination" ||
-    invocation.procedure === "heldLight" ||
-    invocation.procedure === "heldLightHurl" ||
-    invocation.procedure === "ongoingSpellEnd" ||
-    invocation.procedure === "rollModifier" ||
-    invocation.procedure === "creatureTypeProtection" ||
-    invocation.procedure === "blurAttackRollDefense" ||
-    invocation.procedure === "seeInvisibleObserverSight" ||
-    invocation.procedure === "mirrorImageHitInterception" ||
-    invocation.procedure === "conditionRemovalProtection" ||
-    invocation.procedure === "directConditionRemoval" ||
-    invocation.procedure === "attackBurstSaveDamage" ||
-    invocation.procedure === "saveGatedCondition" ||
-    invocation.procedure === "saveGatedConditionImmunity" ||
-    invocation.procedure === "saveGatedAttackRollAdvantage" ||
-    invocation.procedure === "sleepTargetAdmission" ||
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "webRestraintHazard" ||
-    invocation.procedure === "gustOfWindLine" ||
-    invocation.procedure === "fogCloudObscurement" ||
-    invocation.procedure === "magicalDarknessPointOrigin" ||
-    invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
-    invocation.procedure === "flamingSphere" ||
-    invocation.procedure === "moonbeam" ||
-    invocation.procedure === "shieldReaction" ||
-    (invocation.procedure === "spellAttackDamage" &&
-      invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||
-    state.readiedSpells.has(actorId)
-  ) {
+  if (!isReadiedSpellInvocation(invocation) || state.readiedSpells.has(actorId)) {
     return [];
   }
   return BATTLE_READIED_SPELL_TRIGGERS.map((trigger) => ({

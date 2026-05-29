@@ -209,7 +209,7 @@ export const abilityD20TestRollModeSaveGateProfile = {
   invocationSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitAbilityD20TestRollModeSaveGate,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,

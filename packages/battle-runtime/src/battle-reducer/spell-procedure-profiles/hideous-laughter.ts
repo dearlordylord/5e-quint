@@ -403,7 +403,7 @@ export const hideousLaughterProfile = {
   invocationSchema: HideousLaughterInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitHideousLaughter,
   discoverCastAct: discoverHideousLaughterCastAct,

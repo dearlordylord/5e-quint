@@ -311,7 +311,7 @@ export const sleepTargetAdmissionProfile = {
   invocationSchema: SleepTargetAdmissionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSleepTargetAdmission,
   discoverCastAct: discoverSleepTargetAdmissionCastAct,

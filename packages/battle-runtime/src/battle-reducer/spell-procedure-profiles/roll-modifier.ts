@@ -435,7 +435,7 @@ export const rollModifierProfile: SpellProcedureProfile<
   procedure: "rollModifier",
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   admit: admitRollModifier,
 

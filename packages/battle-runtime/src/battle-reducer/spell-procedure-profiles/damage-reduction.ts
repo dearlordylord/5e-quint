@@ -371,7 +371,7 @@ export const damageReductionProfile: SpellProcedureProfile<
   procedure: "damageReduction",
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: true,
+  isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
   admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
