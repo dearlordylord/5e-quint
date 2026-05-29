@@ -463,7 +463,7 @@
     {
       "number": 77,
       "id": "SPP-W9-11-CONSOLIDATE-INVOCATION-REF",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace spells-invocation-ref.ts Match cascade with registry iteration"
     },
     {
@@ -1367,7 +1367,7 @@ Output: each replaced with
 
 ### Task 77 - SPP-W9-11-CONSOLIDATE-INVOCATION-REF - Replace spells-invocation-ref.ts Match cascade
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-invocation-ref.ts:supportedSpellInvocationRef`.
 
