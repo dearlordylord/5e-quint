@@ -427,61 +427,61 @@
     {
       "number": 71,
       "id": "SPP-W9-05-INVERT-TARGET-LIST-PREDICATE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Invert isTargetListSpellInvocation to iterate registry"
     },
     {
       "number": 72,
       "id": "SPP-W9-06-INVERT-READIED-SPELL-LIST",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Invert readiedSpellAct procedure list to iterate registry"
     },
     {
       "number": 73,
       "id": "SPP-W9-07-INVERT-WILLING-TARGET-LISTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Invert KNOWN_WILLING_TARGET_* consultations to iterate registry"
     },
     {
       "number": 74,
       "id": "SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Invert spells-resolve-fill-set.ts negative lists"
     },
     {
       "number": 75,
       "id": "SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace spells-resolve.ts procedure switch with registry iteration"
     },
     {
       "number": 76,
       "id": "SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace spells-discovery.ts procedure switch (cast act + summary) with registry iteration"
     },
     {
       "number": 77,
       "id": "SPP-W9-11-CONSOLIDATE-INVOCATION-REF",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace spells-invocation-ref.ts Match cascade with registry iteration"
     },
     {
       "number": 78,
       "id": "SPP-W10-01-FULL-SUITE-PARITY-RUN",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Run full MBT suite; confirm parity preserved end-to-end"
     },
     {
       "number": 79,
       "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
     },
     {
       "number": 80,
       "id": "SPP-W10-03-DOCS-AND-ADR",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add ADR documenting the registry; update README; close lane"
     }
   ]
@@ -1283,7 +1283,7 @@ Acceptance: typecheck clean. `quickened-spell-governor.mbt.test.ts` passes
 
 ### Task 71 - SPP-W9-05-INVERT-TARGET-LIST-PREDICATE - Invert isTargetListSpellInvocation
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-invocation-guards.ts:51` (`isTargetListSpellInvocation`)
 — the 26-clause OR-chain.
@@ -1302,14 +1302,14 @@ Acceptance: typecheck clean. Same full MBT subset as task 69.
 
 ### Task 72 - SPP-W9-06-INVERT-READIED-SPELL-LIST - Invert readiedSpellAct list
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Same pattern as Task 71 for the
 `readiedSpellAct` procedure list in `spells-discovery.ts:1880`.
 
 ### Task 73 - SPP-W9-07-INVERT-WILLING-TARGET-LISTS - Invert KNOWN_WILLING_TARGET_* consultations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-targeting.ts:1065,1069` consultations of
 `KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS` and
@@ -1321,7 +1321,7 @@ Delete the hand-maintained constants if no other consumers.
 
 ### Task 74 - SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS - Invert spells-resolve-fill-set.ts negative lists
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-resolve-fill-set.ts:787, 959, 971, 988, 1213` — the
 negative-list `invocation.procedure !== "X"` chains.
@@ -1333,7 +1333,7 @@ additional logic, fold into the relevant profile's resolve.
 
 ### Task 75 - SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH - Replace spells-resolve.ts procedure switch with registry iteration
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-resolve.ts` — the giant `if (invocation.procedure === "X")
 return resolveX(...)` ladder.
@@ -1349,7 +1349,7 @@ Acceptance: typecheck clean, full MBT subset passes.
 
 ### Task 76 - SPP-W9-10-CONSOLIDATE-DISCOVERY-DISPATCH - Replace spells-discovery.ts switches
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-discovery.ts` `discoverBattleActs` per-procedure branches,
 and `spellInvocationCastSummary` per-procedure branches.
@@ -1359,7 +1359,7 @@ Output: each replaced with
 
 ### Task 77 - SPP-W9-11-CONSOLIDATE-INVOCATION-REF - Replace spells-invocation-ref.ts Match cascade
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-invocation-ref.ts:supportedSpellInvocationRef`.
 
@@ -1370,7 +1370,7 @@ Output: replace the Match cascade with
 
 ### Task 78 - SPP-W10-01-FULL-SUITE-PARITY-RUN - Run full MBT suite
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Run every `*.mbt.test.ts` (sequentially per CLAUDE.md "one MBT at a time"
 rule, or in carefully isolated batches). Total budget ~70 tests × ~90s
@@ -1382,7 +1382,7 @@ declaring done.
 
 ### Task 79 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: `spells-resolve-support-effects.ts`,
 `spells-active-effects.ts` (rollModifier and damageReduction-shaped
@@ -1396,7 +1396,7 @@ Acceptance: typecheck clean. No imports point at deleted files.
 
 ### Task 80 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input: registry state at end of Wave 9; original ADR-0001 (forest of QNT
 slices); the directory README.
