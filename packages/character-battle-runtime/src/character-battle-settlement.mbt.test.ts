@@ -17,6 +17,7 @@ import {
 import {
   abilityScoreAssignment,
   classUnitId,
+  characterBuildHitPoints,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   sorcererMetamagicOptionId,
   type CharacterBuild,
@@ -124,6 +125,9 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const wizardBattleFixtureMaximumHp = characterBuildMaximumHp(
+  wizardWarlockBuild(),
+);
 const settlementStateCheck = stateCheck(
   normalizeSettlementQuintState,
   compareSettlementState,
@@ -382,8 +386,8 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-sheet",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
-    currentHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
   });
   const combatant = startCharacterBattle({
     battleIdText: "battle:settlement-identity-mismatch",
@@ -416,8 +420,8 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-maximum",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
-    currentHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
   });
   const combatant = startCharacterBattle({
     battleIdText: "battle:settlement-maximum-drift",
@@ -429,7 +433,7 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     unitLibrary,
     combatant: {
       ...combatant,
-      maxHp: Hp(12),
+      maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
     },
   });
   if (Either.isRight(result)) {
@@ -499,13 +503,13 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
-    currentHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
       tag: "stable",
@@ -561,13 +565,13 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started-accepted",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
-    currentHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet-accepted",
     build: wizardWarlockBuild(),
-    maximumHp: 10,
+    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
       tag: "stable",
@@ -853,6 +857,10 @@ function sheetFixture(
   );
 }
 
+function characterBuildMaximumHp(build: CharacterBuild): number {
+  return requireRight(characterBuildHitPoints(build, unitLibrary)).maximum;
+}
+
 function wizardWarlockBuild(): CharacterBuild {
   return {
     ...baseBuild({ startingClass: "class_wizard" }),
@@ -984,8 +992,10 @@ function baseBuild(input: {
 }
 
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
-  "stat_block_cat",
+  "stat_block_rat",
   "stat_block_riding_horse",
+  "stat_block_lizard",
+  "stat_block_cat",
 ] as const;
 
 function druidWildShapeBuild(): CharacterBuild {
