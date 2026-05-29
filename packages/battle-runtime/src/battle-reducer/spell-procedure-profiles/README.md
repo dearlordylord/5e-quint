@@ -47,15 +47,6 @@ Consolidating each profile behind the `SpellProcedureProfile<P, I>` type
 localises change: adding a new profile is one file; changing how an
 existing profile behaves opens exactly that file.
 
-## Migration status
-
-The registry is being filled incrementally. Profiles that have not yet
-migrated still use the original scattered dispatch sites; the registry
-lookup returns `null` for them and callers fall back to the existing code
-path. See `plans/SPELL_PROCEDURE_PROFILE_RALPH_PLAN.md` (or whatever the
-current Ralph plan filename is) for remaining work and the per-profile
-migration template.
-
 ## Glossary used by this module
 
 These terms live here, not in `UBIQUITOUS_LANGUAGE.md`, because they
