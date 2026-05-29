@@ -441,7 +441,7 @@ export const gustOfWindLineProfile = {
   procedure: "gustOfWindLine",
   invocationSchema: GustOfWindLineInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitGustOfWindLine,

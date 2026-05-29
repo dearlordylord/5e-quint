@@ -386,7 +386,7 @@ export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
   invocationSchema: GreaseGroundHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitGreaseGroundHazard,

@@ -267,7 +267,7 @@ export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
   invocationSchema: SpikeGrowthMovementHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSpikeGrowthMovementHazard,

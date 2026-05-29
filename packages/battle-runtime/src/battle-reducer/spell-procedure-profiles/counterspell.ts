@@ -407,7 +407,7 @@ export const counterspellProfile = {
   procedure: "counterspell",
   invocationSchema: CounterspellInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitCounterspell,

@@ -358,7 +358,7 @@ export const moonbeamProfile = {
   procedure: "moonbeam",
   invocationSchema: MoonbeamInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMoonbeam,

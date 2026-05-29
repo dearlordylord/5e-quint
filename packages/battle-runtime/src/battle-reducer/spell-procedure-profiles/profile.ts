@@ -21,6 +21,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   SupportedSpellInvocation,
+  TargetListSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type { CombatantId } from "../../identity.ts";
@@ -150,6 +151,33 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
     : never;
 }[SupportedSpellInvocation["procedure"]];
 
+type SpellProcedureTargeting<I> = I extends {
+  readonly targeting: infer Targeting;
+}
+  ? Targeting
+  : never;
+
+export type SpellProcedureAnyTargetListInvocationClassifier =
+  | { readonly kind: "always" }
+  | { readonly kind: "none" }
+  | { readonly kind: "byTargetingKind"; readonly targetingKind: "targetList" };
+
+export type SpellProcedureTargetListInvocationClassifier<
+  I extends SupportedSpellInvocation,
+> = [I] extends [TargetListSpellInvocation]
+  ? { readonly kind: "always" }
+  : Extract<
+        SpellProcedureTargeting<I>,
+        { readonly kind: "targetList" }
+      > extends never
+    ? { readonly kind: "none" }
+    :
+        | { readonly kind: "none" }
+        | {
+            readonly kind: "byTargetingKind";
+            readonly targetingKind: "targetList";
+          };
+
 // One profile per spell-procedure registration. Generic in the registered
 // procedure literal and the narrowed invocation/input types so admit/resolve
 // stay type-checked against the right shape. Most profiles register the same
@@ -166,7 +194,7 @@ export type SpellProcedureProfile<
   // Static classification that used to live as scattered negative-list
   // membership checks across several modules.
   readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
-  readonly isTargetListInvocation: boolean;
+  readonly targetListInvocation: SpellProcedureTargetListInvocationClassifier<I>;
   readonly isReadiedSpellCompatible: boolean;
   readonly knownWillingTargetSpellIds: ReadonlyArray<SpellRecord["id"]>;
 

@@ -372,7 +372,10 @@ export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
   invocationSchema: SaveGatedConditionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: {
+    kind: "byTargetingKind",
+    targetingKind: "targetList",
+  },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSaveGatedCondition,

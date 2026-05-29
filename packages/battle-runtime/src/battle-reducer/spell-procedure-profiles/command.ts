@@ -414,7 +414,7 @@ export const commandProfile = {
   procedure: "command",
   invocationSchema: CommandInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitCommand,

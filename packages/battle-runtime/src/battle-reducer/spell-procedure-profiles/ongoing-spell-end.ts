@@ -770,7 +770,7 @@ export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
   invocationSchema: OngoingSpellEndInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitOngoingSpellEnd,

@@ -409,7 +409,7 @@ export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
   invocationSchema: AfterHitDamageAndIlluminationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitAfterHitDamageAndIllumination,

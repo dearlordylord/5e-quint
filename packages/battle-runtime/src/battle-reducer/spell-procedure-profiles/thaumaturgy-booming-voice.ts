@@ -307,7 +307,7 @@ export const thaumaturgyBoomingVoiceProfile: SpellProcedureProfile<
   procedure: "thaumaturgyBoomingVoice",
   invocationSchema: ThaumaturgyBoomingVoiceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitThaumaturgyBoomingVoice,

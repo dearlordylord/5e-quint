@@ -347,7 +347,7 @@ export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
   invocationSchema: ExpeditiousRetreatDashInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitExpeditiousRetreatDash,

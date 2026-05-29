@@ -252,7 +252,7 @@ export const shieldReactionProfile = {
   procedure: "shieldReaction",
   invocationSchema: ShieldReactionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitShieldReaction,

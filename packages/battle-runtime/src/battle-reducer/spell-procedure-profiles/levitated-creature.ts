@@ -480,7 +480,7 @@ export const levitatedCreatureProfile: SpellProcedureProfile<
   procedure: "levitatedCreature",
   invocationSchema: LevitatedCreatureInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitLevitatedCreature,

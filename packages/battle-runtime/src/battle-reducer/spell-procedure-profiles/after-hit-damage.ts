@@ -452,7 +452,7 @@ export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
   invocationSchema: AfterHitDamageInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitAfterHitDamage,

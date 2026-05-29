@@ -402,7 +402,7 @@ export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
   invocationSchema: HideousLaughterInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitHideousLaughter,

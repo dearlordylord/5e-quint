@@ -291,7 +291,7 @@ export const weaponDamageRiderProfile: SpellProcedureProfile<
   procedure: "weaponDamageRider",
   invocationSchema: WeaponDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitWeaponDamageRider,

@@ -365,7 +365,7 @@ export const jumpMovementReplacementProfile = {
   procedure: "jumpMovementReplacement",
   invocationSchema: JumpMovementReplacementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitJumpMovementReplacement,

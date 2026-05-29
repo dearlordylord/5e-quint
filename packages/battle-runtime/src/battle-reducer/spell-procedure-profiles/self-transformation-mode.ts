@@ -533,7 +533,7 @@ export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
   invocationSchema: SelfTransformationModeInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSelfTransformationMode,

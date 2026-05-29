@@ -248,7 +248,7 @@ export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
   invocationSchema: MagicalDarknessPointOriginInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMagicalDarknessPointOrigin,

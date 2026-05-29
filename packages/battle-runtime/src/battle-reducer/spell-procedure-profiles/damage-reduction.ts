@@ -370,7 +370,7 @@ export const damageReductionProfile: SpellProcedureProfile<
 > = {
   procedure: "damageReduction",
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
   admit: admitDamageReduction,

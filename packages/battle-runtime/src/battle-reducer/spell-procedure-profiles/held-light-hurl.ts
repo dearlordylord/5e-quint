@@ -194,7 +194,7 @@ export const heldLightHurlProfile: SpellProcedureProfile<
   procedure: "heldLightHurl",
   invocationSchema: HeldLightHurlInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitHeldLightHurl,

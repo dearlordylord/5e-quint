@@ -295,7 +295,7 @@ export const makeStableProfile: SpellProcedureProfile<
   procedure: "makeStable",
   invocationSchema: MakeStableInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMakeStable,

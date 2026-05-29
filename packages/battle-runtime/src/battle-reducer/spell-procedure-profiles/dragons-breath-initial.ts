@@ -382,7 +382,7 @@ export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
   invocationSchema: DragonsBreathInitialInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitDragonsBreathInitial,

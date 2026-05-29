@@ -236,7 +236,7 @@ export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
   invocationSchema: FogCloudObscurementInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitFogCloudObscurement,

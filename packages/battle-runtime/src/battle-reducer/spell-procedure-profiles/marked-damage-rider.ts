@@ -851,7 +851,7 @@ export const markedDamageRiderProfile: SpellProcedureProfile<
   procedure: "markedDamageRider",
   invocationSchema: MarkedDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMarkedDamageRider,

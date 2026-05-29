@@ -310,7 +310,7 @@ export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
   invocationSchema: SleepTargetAdmissionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitSleepTargetAdmission,

@@ -483,7 +483,7 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   invocationSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitConditionImmunityAndTurnStartTemporaryHitPoints,

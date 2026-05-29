@@ -300,7 +300,7 @@ export const selfTeleportProfile = {
   procedure: "selfTeleport",
   invocationSchema: SelfTeleportInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSelfTeleport,

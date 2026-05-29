@@ -442,7 +442,7 @@ export const wardingBondProfile: SpellProcedureProfile<
   procedure: "wardingBond",
   invocationSchema: WardingBondInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitWardingBond,

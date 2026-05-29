@@ -235,7 +235,7 @@ export const spellAttackDamageProfile: SpellProcedureProfile<
   procedure: "spellAttackDamage",
   invocationSchema: SpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitSpellAttackDamage,

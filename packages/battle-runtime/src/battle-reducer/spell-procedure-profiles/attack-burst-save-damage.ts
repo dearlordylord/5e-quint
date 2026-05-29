@@ -169,7 +169,7 @@ export const attackBurstSaveDamageProfile: SpellProcedureProfile<
   procedure: "attackBurstSaveDamage",
   invocationSchema: AttackBurstSaveDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitAttackBurstSaveDamage,

@@ -564,7 +564,7 @@ export const objectLightProfile: SpellProcedureProfile<
   procedure: "objectLight",
   invocationSchema: ObjectLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitObjectLight,

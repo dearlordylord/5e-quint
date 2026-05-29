@@ -495,7 +495,10 @@ export const scalarBuffProfile = {
   procedure: "scalarBuff",
   invocationSchema: ScalarBuffInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  isTargetListInvocation: true,
+  targetListInvocation: {
+    kind: "byTargetingKind",
+    targetingKind: "targetList",
+  },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitScalarBuff,

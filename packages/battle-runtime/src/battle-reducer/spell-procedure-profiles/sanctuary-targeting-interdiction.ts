@@ -282,7 +282,7 @@ export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
   invocationSchema: SanctuaryTargetingInterdictionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSanctuaryTargetingInterdiction,

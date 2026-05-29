@@ -296,7 +296,7 @@ export const heldLightProfile: SpellProcedureProfile<
   procedure: "heldLight",
   invocationSchema: HeldLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitHeldLight,

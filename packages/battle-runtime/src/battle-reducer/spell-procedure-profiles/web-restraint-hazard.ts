@@ -313,7 +313,7 @@ export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
   invocationSchema: WebRestraintHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitWebRestraintHazard,

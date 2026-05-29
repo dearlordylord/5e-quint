@@ -463,7 +463,7 @@ export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   invocationSchema: SaveGatedDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitSaveGatedDamage,

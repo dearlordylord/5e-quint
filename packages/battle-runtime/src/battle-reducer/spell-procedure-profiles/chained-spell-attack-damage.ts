@@ -163,7 +163,7 @@ export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
   procedure: "chainedSpellAttackDamage",
   invocationSchema: ChainedSpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitChainedSpellAttackDamage,

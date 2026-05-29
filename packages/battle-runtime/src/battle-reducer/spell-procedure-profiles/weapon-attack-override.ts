@@ -417,7 +417,7 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
   procedure: "weaponAttackOverride",
   invocationSchema: WeaponAttackOverrideInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitWeaponAttackOverride,

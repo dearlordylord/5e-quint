@@ -303,7 +303,7 @@ export const blurAttackRollDefenseProfile: SpellProcedureProfile<
   procedure: "blurAttackRollDefense",
   invocationSchema: BlurAttackRollDefenseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitBlurAttackRollDefense,

@@ -327,7 +327,7 @@ export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
   invocationSchema: FeatherFallMitigationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitFeatherFallMitigation,

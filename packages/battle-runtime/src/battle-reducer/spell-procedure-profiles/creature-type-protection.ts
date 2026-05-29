@@ -374,7 +374,7 @@ export const creatureTypeProtectionProfile: SpellProcedureProfile<
   procedure: "creatureTypeProtection",
   invocationSchema: CreatureTypeProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitCreatureTypeProtection,

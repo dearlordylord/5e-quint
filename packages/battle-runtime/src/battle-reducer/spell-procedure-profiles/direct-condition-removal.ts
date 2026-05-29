@@ -378,7 +378,7 @@ export const directConditionRemovalProfile: SpellProcedureProfile<
   procedure: "directConditionRemoval",
   invocationSchema: DirectConditionRemovalInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitDirectConditionRemoval,

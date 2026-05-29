@@ -416,7 +416,7 @@ export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
   procedure: "spellHostedWeaponAttack",
   invocationSchema: SpellHostedWeaponAttackInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSpellHostedWeaponAttack,

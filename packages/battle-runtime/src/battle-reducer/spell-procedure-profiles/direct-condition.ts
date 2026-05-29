@@ -317,7 +317,7 @@ export const directConditionProfile: SpellProcedureProfile<
   procedure: "directCondition",
   invocationSchema: DirectConditionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitDirectCondition,

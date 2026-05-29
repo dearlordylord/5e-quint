@@ -310,7 +310,7 @@ export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
   procedure: "mirrorImageHitInterception",
   invocationSchema: MirrorImageHitInterceptionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMirrorImageHitInterception,

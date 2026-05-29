@@ -407,7 +407,7 @@ export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
   invocationSchema: DirectHitPointRestorationInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitDirectHitPointRestoration,

@@ -294,7 +294,7 @@ export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
   procedure: "seeInvisibleObserverSight",
   invocationSchema: SeeInvisibleObserverSightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSeeInvisibleObserverSight,

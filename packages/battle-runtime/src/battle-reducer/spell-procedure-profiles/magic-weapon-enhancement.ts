@@ -427,7 +427,7 @@ export const magicWeaponEnhancementProfile: SpellProcedureProfile<
   procedure: "magicWeaponEnhancement",
   invocationSchema: MagicWeaponEnhancementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitMagicWeaponEnhancement,

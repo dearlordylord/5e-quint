@@ -568,7 +568,7 @@ export const creatureSizeChangeProfile: SpellProcedureProfile<
   procedure: "creatureSizeIncrease",
   invocationSchema: CreatureSizeIncreaseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitCreatureSizeChange,

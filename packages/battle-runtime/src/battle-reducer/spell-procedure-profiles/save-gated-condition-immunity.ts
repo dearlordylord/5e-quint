@@ -280,7 +280,7 @@ export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   invocationSchema: SaveGatedConditionImmunityInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitSaveGatedConditionImmunity,

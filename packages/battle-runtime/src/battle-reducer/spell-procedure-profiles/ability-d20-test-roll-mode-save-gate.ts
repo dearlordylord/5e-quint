@@ -208,7 +208,7 @@ export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
   invocationSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitAbilityD20TestRollModeSaveGate,

@@ -422,7 +422,7 @@ export const conditionRemovalProtectionProfile: SpellProcedureProfile<
   procedure: "conditionRemovalProtection",
   invocationSchema: ConditionRemovalProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: true,
+  targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitConditionRemovalProtection,

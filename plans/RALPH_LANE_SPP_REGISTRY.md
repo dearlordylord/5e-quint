@@ -427,7 +427,7 @@
     {
       "number": 71,
       "id": "SPP-W9-05-INVERT-TARGET-LIST-PREDICATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Invert isTargetListSpellInvocation to iterate registry"
     },
     {
@@ -1283,7 +1283,7 @@ Acceptance: typecheck clean. `quickened-spell-governor.mbt.test.ts` passes
 
 ### Task 71 - SPP-W9-05-INVERT-TARGET-LIST-PREDICATE - Invert isTargetListSpellInvocation
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-invocation-guards.ts:51` (`isTargetListSpellInvocation`)
 — the 26-clause OR-chain.

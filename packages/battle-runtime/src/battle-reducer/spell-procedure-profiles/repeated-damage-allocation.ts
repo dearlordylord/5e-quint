@@ -213,7 +213,7 @@ export const repeatedDamageAllocationProfile: SpellProcedureProfile<
   procedure: "repeatedDamageAllocation",
   invocationSchema: RepeatedDamageAllocationInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
   admit: admitRepeatedDamageAllocation,

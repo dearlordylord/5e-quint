@@ -369,7 +369,7 @@ export const persistentArmorEffectProfile: SpellProcedureProfile<
   procedure: "persistentArmorEffect",
   invocationSchema: PersistentArmorEffectInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitPersistentArmorEffect,

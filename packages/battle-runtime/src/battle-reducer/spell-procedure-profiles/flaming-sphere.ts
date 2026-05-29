@@ -331,7 +331,7 @@ export const flamingSphereProfile = {
   procedure: "flamingSphere",
   invocationSchema: FlamingSphereInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  isTargetListInvocation: false,
+  targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
   admit: admitFlamingSphere,
