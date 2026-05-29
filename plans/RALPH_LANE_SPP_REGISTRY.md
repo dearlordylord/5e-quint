@@ -469,19 +469,43 @@
     {
       "number": 78,
       "id": "SPP-W10-01-FULL-SUITE-PARITY-RUN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Run full MBT suite; confirm parity preserved end-to-end"
     },
     {
       "number": 79,
-      "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
+      "id": "SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION",
       "status": "ready-for-research",
-      "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
+      "title": "Diagnose fresh-worktree battle MBT Quint QNT404 resolution failures"
     },
     {
       "number": 80,
-      "id": "SPP-W10-03-DOCS-AND-ADR",
+      "id": "SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT",
       "status": "ready-for-research",
+      "title": "Fix Bardic selected-identity MBT timeout"
+    },
+    {
+      "number": 81,
+      "id": "SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP",
+      "status": "ready-for-research",
+      "title": "Fix character battle settlement max-HP fixture/runtime mismatch"
+    },
+    {
+      "number": 82,
+      "id": "SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS",
+      "status": "blocked-needs-design",
+      "title": "Fix battle-runtime integration MBT timeouts after QNT404 resolution"
+    },
+    {
+      "number": 83,
+      "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
+      "status": "blocked-needs-design",
+      "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
+    },
+    {
+      "number": 84,
+      "id": "SPP-W10-03-DOCS-AND-ADR",
+      "status": "blocked-needs-design",
       "title": "Add ADR documenting the registry; update README; close lane"
     }
   ]
@@ -1378,7 +1402,7 @@ Output: replace the Match cascade with
 
 ### Task 78 - SPP-W10-01-FULL-SUITE-PARITY-RUN - Run full MBT suite
 
-Status: `ready-for-research`
+Status: `done`
 
 Run every `*.mbt.test.ts` (sequentially per CLAUDE.md "one MBT at a time"
 rule, or in carefully isolated batches). Total budget ~70 tests × ~90s
@@ -1388,9 +1412,113 @@ report durations.
 Acceptance: 100% pass. If any fails, file as a Wave 9 follow-up before
 declaring done.
 
-### Task 79 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
+Task 78 result: the promoted suite ran 95 `*.mbt.test.ts` files. 91 passed
+and 4 failed. The failed lanes are now tracked as concrete Wave 9 follow-ups:
+SPP-W9-FU-01 through SPP-W9-FU-04.
+
+### Task 79 - SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION - Diagnose fresh-worktree battle MBT Quint QNT404 resolution failures
 
 Status: `ready-for-research`
+
+Problem: promoted battle MBT files fail in a fresh Ralph worktree with Quint
+`QNT404` unresolved-name errors for helpers that exist in the corpus.
+
+Observed failure surface:
+
+- `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`
+- representative unresolved names include `damageAfterAdjustments`,
+  `resolveSpellInvocation`, `resolveMagicMissileDamage`,
+  `holdReadiedSpellResponse`, and `initialReadiedSpellProcedureState`.
+
+Reproduction commands:
+
+```bash
+cd packages/battle-runtime
+MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-spells.mbt.test.ts
+MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts -t "Rogue weapon Attack"
+```
+
+Acceptance: the reproduction commands no longer fail with `QNT404` in a fresh
+Ralph worktree, or the lane has an executable preflight/cache-priming step that
+makes promoted MBT module resolution stable before the full suite starts.
+
+### Task 80 - SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT - Fix Bardic selected-identity MBT timeout
+
+Status: `ready-for-research`
+
+Problem: `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts`
+times out at the configured 120s Vitest limit under the promoted MBT settings.
+
+Reproduction command:
+
+```bash
+cd packages/battle-runtime
+MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/bardic-inspiration-selected-identity.mbt.test.ts
+```
+
+Acceptance: the promoted Bardic selected-identity MBT passes under its
+configured timeout, or the test is split/narrowed with domain-correct coverage
+and an explicit rationale for any narrowing.
+
+### Task 81 - SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP - Fix character battle settlement max-HP fixture/runtime mismatch
+
+Status: `ready-for-research`
+
+Problem: `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts`
+fails during trace replay because character battle initialization rejects the
+fixture as exceeding build-derived maximum HP.
+
+Observed error: `battleCreatureInitIssue`, message
+`Character battle initialization max HP exceeds build-derived max HP.`
+
+Reproduction command:
+
+```bash
+cd packages/character-battle-runtime
+MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/character-battle-settlement.mbt.test.ts
+```
+
+Acceptance: the deterministic settlement MBT replay passes, with the fixture
+and runtime projection agreeing on build-derived maximum HP.
+
+### Task 82 - SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS - Fix battle-runtime integration MBT timeouts after QNT404 resolution
+
+Status: `blocked-needs-design`
+
+Blocker Type: dependency
+Blocker Detail: SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION
+
+Problem: the full `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+run timed out several integration cases after the `QNT404` failures.
+
+Observed timeout cases:
+
+- Extra Attack action spend, interleaved Movement, and slot closure.
+- Longstrider target-specific Speed increase.
+- Eldritch Blast beam sequencing.
+- Start-turn Death Saving Throw holes for a Character Build combatant.
+
+Reproduction command after SPP-W9-FU-01 is resolved:
+
+```bash
+cd packages/battle-runtime
+MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts
+```
+
+Acceptance: the promoted battle-runtime integration MBT passes without timeout
+after module resolution is stable, or each slow integration case is
+split/narrowed with domain-correct coverage and an explicit rationale.
+
+### Task 83 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
+
+Status: `blocked-needs-design`
+
+Blocker Type: dependency
+Blocker Detail: SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION,
+SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT,
+SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP, and
+SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS
 
 Input: `spells-resolve-support-effects.ts`,
 `spells-active-effects.ts` (rollModifier and damageReduction-shaped
@@ -1402,9 +1530,13 @@ become a thin re-export gets folded into the importer.
 
 Acceptance: typecheck clean. No imports point at deleted files.
 
-### Task 80 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
+### Task 84 - SPP-W10-03-DOCS-AND-ADR - Write the ADR; update README; close lane
 
-Status: `ready-for-research`
+Status: `blocked-needs-design`
+
+Blocker Type: dependency
+Blocker Detail: SPP-W10-02-DELETE-DEAD-DISPATCH and the Wave 9 follow-ups
+discovered by SPP-W10-01-FULL-SUITE-PARITY-RUN
 
 Input: registry state at end of Wave 9; original ADR-0001 (forest of QNT
 slices); the directory README.
@@ -1437,9 +1569,12 @@ status `done`.
   Optimistic: ~110 hours total. Realistic with discovery surprises: ~180.
 - Wave 9: 11 tasks. Each touches many files. Per task ~3–5 hours.
   ~40 hours total.
-- Wave 10: 3 tasks. ~6 hours.
+- Wave 9 follow-ups discovered by the full-suite parity run: 4 tasks.
+  Runtime depends on the failure mode; the first pass should isolate
+  module-resolution/cache priming from true parity regressions.
+- Wave 10: 2 remaining tasks after the follow-ups clear. ~6 hours.
 
-Total: ~160–230 hours of focused work. Parallelisable across multiple
-Ralph agents up to ~5 concurrent (limited by MBT machine-time
-serialization per CLAUDE.md "one MBT at a time" rule and the
-.quint-cache priming step).
+Original lane estimate before full-suite follow-ups: ~160-230 hours of
+focused work. Parallelisable across multiple Ralph agents up to ~5
+concurrent (limited by MBT machine-time serialization per CLAUDE.md "one
+MBT at a time" rule and the .quint-cache priming step).
