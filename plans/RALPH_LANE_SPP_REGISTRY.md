@@ -475,7 +475,7 @@
     {
       "number": 79,
       "id": "SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Diagnose fresh-worktree battle MBT Quint QNT404 resolution failures"
     },
     {
@@ -493,7 +493,7 @@
     {
       "number": 82,
       "id": "SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS",
-      "status": "blocked-needs-design",
+      "status": "ready-for-research",
       "title": "Fix battle-runtime integration MBT timeouts after QNT404 resolution"
     },
     {
@@ -1418,7 +1418,7 @@ SPP-W9-FU-01 through SPP-W9-FU-04.
 
 ### Task 79 - SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION - Diagnose fresh-worktree battle MBT Quint QNT404 resolution failures
 
-Status: `ready-for-research`
+Status: `done`
 
 Problem: promoted battle MBT files fail in a fresh Ralph worktree with Quint
 `QNT404` unresolved-name errors for helpers that exist in the corpus.
@@ -1442,6 +1442,12 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts -t 
 Acceptance: the reproduction commands no longer fail with `QNT404` in a fresh
 Ralph worktree, or the lane has an executable preflight/cache-priming step that
 makes promoted MBT module resolution stable before the full suite starts.
+
+Task 79 result: the promoted MBT specs now directly import the helper modules
+whose names they use, so fresh worktrees no longer rely on transitive
+resolution/cache state for these helpers. The battle-runtime focused run can
+still time out after module resolution succeeds; that remains tracked by
+SPP-W9-FU-04.
 
 ### Task 80 - SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT - Fix Bardic selected-identity MBT timeout
 
@@ -1484,16 +1490,14 @@ and runtime projection agreeing on build-derived maximum HP.
 
 ### Task 82 - SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS - Fix battle-runtime integration MBT timeouts after QNT404 resolution
 
-Status: `blocked-needs-design`
-
-Blocker Type: dependency
-Blocker Detail: SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION
+Status: `ready-for-research`
 
 Problem: the full `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
 run timed out several integration cases after the `QNT404` failures.
 
 Observed timeout cases:
 
+- Rogue weapon Attack and Sneak Attack traces against a Skeleton target.
 - Extra Attack action spend, interleaved Movement, and slot closure.
 - Longstrider target-specific Speed increase.
 - Eldritch Blast beam sequencing.
