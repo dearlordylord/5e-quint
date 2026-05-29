@@ -267,6 +267,8 @@ function weaponDamageRiderFillSetHasDisallowedFills(
     fillSet.healingRoll !== undefined ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
     fillSet.concentrationSavingThrows.length > 0
   );
 }

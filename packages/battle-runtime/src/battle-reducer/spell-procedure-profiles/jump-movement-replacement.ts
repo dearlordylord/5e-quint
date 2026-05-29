@@ -242,6 +242,7 @@ function resolveJumpMovementReplacement(
     input.fillSet.attackBurstDamageRoll !== undefined ||
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.damageDispositions.length > 0 ||

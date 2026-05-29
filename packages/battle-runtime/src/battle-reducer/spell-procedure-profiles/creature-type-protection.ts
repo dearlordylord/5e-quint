@@ -208,6 +208,7 @@ function resolveCreatureTypeProtection(
     input.fillSet.attackBurstDamageRoll !== undefined ||
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.damageDispositions.length > 0 ||
     input.fillSet.concentrationSavingThrows.length > 0

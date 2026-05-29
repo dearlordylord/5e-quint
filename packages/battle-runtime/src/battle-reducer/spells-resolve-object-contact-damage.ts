@@ -1364,6 +1364,7 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.attackRoll !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
     fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
     fillSet.commandOptionChoice !== undefined ||

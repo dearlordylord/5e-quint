@@ -110,7 +110,11 @@ export function resolveSpellAttackSequenceAct(input: {
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetList !== undefined ||
     input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.mirrorImageDuplicateRoll !== undefined ||
     input.fillSet.damageRoll !== undefined
   ) {

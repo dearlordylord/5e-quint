@@ -221,6 +221,7 @@ function resolveHeldLight(
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.damageDispositions.length > 0 ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0

@@ -312,6 +312,7 @@ function resolvePersistentArmorEffect(
   if (
     input.fillSet.attackRoll != null ||
     input.fillSet.damageRoll != null ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0
   ) {
     return invalidResult(

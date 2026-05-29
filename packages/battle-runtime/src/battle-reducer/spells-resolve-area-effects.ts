@@ -59,6 +59,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -131,6 +132,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -250,6 +252,7 @@ export function resolveFlamingSphereSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -322,6 +325,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -394,6 +398,7 @@ export function resolveMoonbeamSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -466,6 +471,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
@@ -539,6 +545,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     input.fillSet.areaChoice !== undefined ||
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||

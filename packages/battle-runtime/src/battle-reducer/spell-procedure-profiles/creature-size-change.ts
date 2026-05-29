@@ -351,6 +351,7 @@ function resolveCreatureSizeChange(
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.mirrorImageDuplicateRoll !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||

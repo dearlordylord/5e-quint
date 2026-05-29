@@ -445,7 +445,7 @@ export function spellTargetAllocationHole(
 }
 
 export function spellTargetListHoleId(
-  invocation: TargetListSpellInvocation,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:target-list:${invocation.spell.id}`);
 }

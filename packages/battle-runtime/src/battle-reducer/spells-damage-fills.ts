@@ -693,10 +693,7 @@ export function spellScalarBuffRollHole(
 }
 
 export function spellRollModifierSkillChoiceHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:skill-choice:${invocation.spell.id}`);
 }
@@ -762,10 +759,7 @@ export function rollModifierUsesTargetAbilityChoices(
 }
 
 export function spellRollModifierTargetAbilityChoicesHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:target-ability-choices:${invocation.spell.id}`);
 }

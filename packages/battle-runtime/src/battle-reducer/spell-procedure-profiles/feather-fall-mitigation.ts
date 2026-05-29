@@ -226,6 +226,8 @@ function resolveFeatherFallMitigation(
     input.fillSet.damageRoll !== undefined ||
     input.fillSet.damageDispositions.length > 0 ||
     input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0
   ) {
     return invalidResult(

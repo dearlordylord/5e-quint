@@ -191,6 +191,7 @@ function resolveDirectConditionRemoval(
     input.fillSet.attackBurstDamageRoll !== undefined ||
     input.fillSet.healingRoll !== undefined ||
     input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
     input.fillSet.commandOptionChoice !== undefined ||
     input.fillSet.areaChoice !== undefined ||

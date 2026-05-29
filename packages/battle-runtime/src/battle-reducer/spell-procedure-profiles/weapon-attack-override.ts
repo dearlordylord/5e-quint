@@ -384,6 +384,7 @@ function weaponAttackOverrideFillSetHasDisallowedFills(
     fillSet.healingRoll !== undefined ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
     fillSet.commandOptionChoice !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.concentrationSavingThrows.length > 0

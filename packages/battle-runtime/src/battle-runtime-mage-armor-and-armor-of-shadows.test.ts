@@ -32,6 +32,7 @@ import {
   unitLibrary,
   difficultyClass,
 } from "./battle-runtime-test-support.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Mage Armor and Armor of Shadows", () => {
@@ -124,6 +125,49 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     });
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(1);
+  });
+
+  test("Mage Armor rejects forged Saving Throw outcome fills", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-forged-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: magicSubject("mage_armor"),
+      fills: [
+        targetFill(target, wizardId),
+        {
+          kind: "savingThrowOutcome",
+          holeId: holeId("battle:spell:saving-throw-outcome:mage_armor"),
+          value: {
+            outcomes: [{ targetId: wizardId, succeeded: false }],
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("Mage Armor rejects armored targets before spending resources", () => {

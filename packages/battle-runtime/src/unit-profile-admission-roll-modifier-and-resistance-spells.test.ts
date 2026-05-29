@@ -45,6 +45,12 @@ import {
   spellTargetListFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill-support.ts";
+import {
+  spellRollModifierSkillChoiceHoleId,
+  spellRollModifierTargetAbilityChoicesHoleId,
+  spellSavingThrowOutcomeHoleId,
+  spellTargetListHoleId,
+} from "./battle-reducer/spells-holes-fills.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyCondition,
@@ -849,6 +855,205 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
+  });
+
+  test("resistance rejects fill kinds owned by other spell procedures", () => {
+    const spell = spellRecord(resistanceUnitId);
+    const state = spellBattle({ cantrips: [spell], spellSlots: [] });
+    const act = spellAct({ state, spellId: resistanceUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const invocation = damageTypeHole.spell;
+    const baseFills = [
+      spellTargetFill(
+        targetHole,
+        resistanceUnitId,
+        spellCasterId,
+        spellCasterId,
+      ),
+      {
+        kind: "damageTypeChoice" as const,
+        holeId: damageTypeHole.holeId,
+        value: "bludgeoning" as const,
+      },
+    ];
+    const nonDamageReductionFills = [
+      {
+        kind: "spellTargetList" as const,
+        holeId: spellTargetListHoleId(invocation),
+        value: { targetIds: [spellCasterId] },
+        spatialFacts: [
+          {
+            kind: "spellTarget" as const,
+            casterId: spellCasterId,
+            targetId: spellCasterId,
+            spellId: resistanceUnitId,
+          },
+        ],
+      },
+      {
+        kind: "savingThrowOutcome" as const,
+        holeId: spellSavingThrowOutcomeHoleId(invocation),
+        value: {
+          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+        },
+      },
+      {
+        kind: "skillChoice" as const,
+        holeId: spellRollModifierSkillChoiceHoleId(invocation),
+        value: "stealth" as const,
+      },
+      {
+        kind: "targetAbilityChoices" as const,
+        holeId: spellRollModifierTargetAbilityChoicesHoleId(invocation),
+        value: {
+          choices: [{ targetId: spellCasterId, ability: "dex" as const }],
+        },
+      },
+    ];
+
+    for (const fill of nonDamageReductionFills) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [...baseFills, fill],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    }
+  });
+
+  test("roll modifier delegated selection rejects non-owned fill kinds", () => {
+    const guidanceSpell = spellRecord(guidanceUnitId);
+    const guidanceState = spellBattle({
+      cantrips: [guidanceSpell],
+      spellSlots: [],
+    });
+    const guidanceAct = spellAct({
+      state: guidanceState,
+      spellId: guidanceUnitId,
+    });
+    const guidanceTargetHole = requireHole(
+      guidanceAct.initialHoles,
+      "targetChoice",
+    );
+    const guidanceSkillHole = requireHole(
+      guidanceAct.initialHoles,
+      "skillChoice",
+    );
+    const guidanceInvocation = guidanceSkillHole.spell;
+    const guidanceTargetFill = spellTargetFill(
+      guidanceTargetHole,
+      guidanceUnitId,
+      spellCasterId,
+      spellCasterId,
+    );
+    const guidanceSkillFill = skillChoiceFill(guidanceSkillHole, "stealth");
+
+    const targetListResult = resolveBattleSubject({
+      state: guidanceState,
+      subject: guidanceAct.subject,
+      fills: [
+        {
+          kind: "spellTargetList" as const,
+          holeId: spellTargetListHoleId(guidanceInvocation),
+          value: { targetIds: [spellCasterId] },
+          spatialFacts: [
+            {
+              kind: "spellTarget" as const,
+              casterId: spellCasterId,
+              targetId: spellCasterId,
+              spellId: guidanceUnitId,
+            },
+          ],
+        },
+        guidanceSkillFill,
+      ],
+    });
+    expect(targetListResult).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const targetAbilityResult = resolveBattleSubject({
+      state: guidanceState,
+      subject: guidanceAct.subject,
+      fills: [
+        guidanceTargetFill,
+        guidanceSkillFill,
+        {
+          kind: "targetAbilityChoices" as const,
+          holeId: spellRollModifierTargetAbilityChoicesHoleId(
+            guidanceInvocation,
+          ),
+          value: {
+            choices: [{ targetId: spellCasterId, ability: "dex" as const }],
+          },
+        },
+      ],
+    });
+    expect(targetAbilityResult).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const savingThrowResult = resolveBattleSubject({
+      state: guidanceState,
+      subject: guidanceAct.subject,
+      fills: [
+        guidanceTargetFill,
+        guidanceSkillFill,
+        {
+          kind: "savingThrowOutcome" as const,
+          holeId: spellSavingThrowOutcomeHoleId(guidanceInvocation),
+          value: {
+            outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          },
+        },
+      ],
+    });
+    expect(savingThrowResult).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const blessSpell = spellRecord(blessUnitId);
+    const blessState = spellBattle({
+      preparedSpells: [blessSpell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const blessAct = spellAct({
+      state: blessState,
+      spellId: blessUnitId,
+      slotLevel: 1,
+    });
+    const blessTargetListHole = requireHole(
+      blessAct.initialHoles,
+      "spellTargetList",
+    );
+    const skillChoiceResult = resolveBattleSubject({
+      state: blessState,
+      subject: blessAct.subject,
+      fills: [
+        spellTargetListFill(
+          blessTargetListHole,
+          spellCasterId,
+          blessUnitId,
+          [spellTargetId],
+        ),
+        {
+          kind: "skillChoice" as const,
+          holeId: spellRollModifierSkillChoiceHoleId(
+            blessTargetListHole.spell,
+          ),
+          value: "stealth" as const,
+        },
+      ],
+    });
+    expect(skillChoiceResult).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
   });
 
   test("resistance damage reduction consumes one matching d4 roll for the turn", () => {

@@ -1064,6 +1064,18 @@ function resolveSpellActInternal(
       "Spell target must choose either one combatant or one object, not both.",
     );
   }
+  if (
+    fillSet.targetList !== undefined ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell attack damage spells use target, attack-roll, and damage fills.",
+    );
+  }
   const selectedInvocation = selectedSpellAttackDamageInvocation(
     invocation,
     fillSet.damageTypeChoice,
