@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMagicMissileMbt {
-  import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qSkeletonHp: int

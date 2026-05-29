@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeAdrenalineRushMbt {
-  import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qActorTempHp: int

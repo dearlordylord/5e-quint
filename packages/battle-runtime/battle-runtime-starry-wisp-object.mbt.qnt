@@ -1,8 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeStarryWispObjectMbt {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
 
   type ObjectDamageOutcomeOption =
     | NoObjectDamage

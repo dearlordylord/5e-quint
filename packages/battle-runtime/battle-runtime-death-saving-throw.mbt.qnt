@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDeathSavingThrowMbt {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 

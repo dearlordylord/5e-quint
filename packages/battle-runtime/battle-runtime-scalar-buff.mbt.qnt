@@ -1,8 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeScalarBuffMbt {
-  import battleRuntime.* from "./battle-runtime"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  type Hole =
+    | TargetChoice
 
   var qFighterSpeed: int
   var qGoblinSpeed: int

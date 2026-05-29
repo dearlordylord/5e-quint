@@ -493,13 +493,13 @@
     {
       "number": 82,
       "id": "SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fix battle-runtime integration MBT timeouts after QNT404 resolution"
     },
     {
       "number": 83,
       "id": "SPP-W10-02-DELETE-DEAD-DISPATCH",
-      "status": "blocked-needs-design",
+      "status": "ready-for-implementation",
       "title": "Delete now-empty spells-resolve-support-effects.ts and other dispatch shells"
     },
     {
@@ -1490,7 +1490,7 @@ and runtime projection agreeing on build-derived maximum HP.
 
 ### Task 82 - SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS - Fix battle-runtime integration MBT timeouts after QNT404 resolution
 
-Status: `ready-for-research`
+Status: `done`
 
 Problem: the full `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
 run timed out several integration cases after the `QNT404` failures.
@@ -1514,15 +1514,14 @@ Acceptance: the promoted battle-runtime integration MBT passes without timeout
 after module resolution is stable, or each slow integration case is
 split/narrowed with domain-correct coverage and an explicit rationale.
 
+Task 82 result: the package-local battle-runtime MBT specs now avoid broad
+imports of the full integration shell when they only need focused helper
+modules or local witness enums, and the promoted test harness caps each
+finite witness at its domain step limit while still honoring `MBT_TRACES`.
+
 ### Task 83 - SPP-W10-02-DELETE-DEAD-DISPATCH - Delete now-empty dispatch shells
 
-Status: `blocked-needs-design`
-
-Blocker Type: dependency
-Blocker Detail: SPP-W9-FU-01-BATTLE-MBT-QNT404-WORKTREE-RESOLUTION,
-SPP-W9-FU-02-BARDIC-SELECTED-IDENTITY-TIMEOUT,
-SPP-W9-FU-03-CHARACTER-BATTLE-SETTLEMENT-MAX-HP, and
-SPP-W9-FU-04-BATTLE-RUNTIME-INTEGRATION-TIMEOUTS
+Status: `ready-for-implementation`
 
 Input: `spells-resolve-support-effects.ts`,
 `spells-active-effects.ts` (rollModifier and damageReduction-shaped
@@ -1539,8 +1538,7 @@ Acceptance: typecheck clean. No imports point at deleted files.
 Status: `blocked-needs-design`
 
 Blocker Type: dependency
-Blocker Detail: SPP-W10-02-DELETE-DEAD-DISPATCH and the Wave 9 follow-ups
-discovered by SPP-W10-01-FULL-SUITE-PARITY-RUN
+Blocker Detail: SPP-W10-02-DELETE-DEAD-DISPATCH
 
 Input: registry state at end of Wave 9; original ADR-0001 (forest of QNT
 slices); the directory README.

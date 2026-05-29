@@ -1,8 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSleepRepeatSaveMbt {
-  import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   var qCurrentTurnRole: str
   var qTargetIncapacitated: bool
