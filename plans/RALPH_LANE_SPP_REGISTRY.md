@@ -1331,6 +1331,14 @@ own fill set (the negative checks at the top of `resolveDamageReduction`
 and `resolveRollModifier` already do this). If the lists carried
 additional logic, fold into the relevant profile's resolve.
 
+Retry Guidance: before deleting a `spells-resolve-fill-set.ts` negative
+list, enumerate every fill kind whose procedure guard is being removed and
+prove it is rejected or consumed by the destination profile/delegate resolver.
+In particular, do not let `skillChoice`, `targetAbilityChoices`, or
+`savingThrowOutcomes` become parseable-and-ignored by non-owning profiles.
+Add focused runtime tests for at least one direct profile and one delegated
+resolver path that would otherwise silently ignore each removed fill kind.
+
 ### Task 75 - SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH - Replace spells-resolve.ts procedure switch with registry iteration
 
 Status: `ready-for-research`
