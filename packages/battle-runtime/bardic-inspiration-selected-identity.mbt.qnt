@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module bardicInspirationSelectedIdentityMbt {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
 
