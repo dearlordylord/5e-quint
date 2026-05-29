@@ -439,7 +439,7 @@
     {
       "number": 73,
       "id": "SPP-W9-07-INVERT-WILLING-TARGET-LISTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Invert KNOWN_WILLING_TARGET_* consultations to iterate registry"
     },
     {
@@ -1309,7 +1309,7 @@ Same pattern as Task 71 for the
 
 ### Task 73 - SPP-W9-07-INVERT-WILLING-TARGET-LISTS - Invert KNOWN_WILLING_TARGET_* consultations
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-targeting.ts:1065,1069` consultations of
 `KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS` and

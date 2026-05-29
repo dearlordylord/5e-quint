@@ -88,7 +88,6 @@ import {
   BATTLE_SURFACE_SKILLS,
   RollModifierSpellInvocationBaseSchemaFields,
 } from "../codec-building-blocks.ts";
-import { KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS } from "../known-willing-target-spell-ids.ts";
 
 type RollModifierInvocation = Extract<
   SupportedSpellInvocation,
@@ -436,7 +435,9 @@ export const rollModifierProfile: SpellProcedureProfile<
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
+  knownWillingTargetSpellIds: ["guidance"] as const satisfies ReadonlyArray<
+    SpellRecord["id"]
+  >,
   admit: admitRollModifier,
 
   discoverCastAct: discoverRollModifierCastAct,

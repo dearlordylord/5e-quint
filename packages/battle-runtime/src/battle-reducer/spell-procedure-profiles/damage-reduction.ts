@@ -20,10 +20,7 @@
 //   - applyEffect()        — was applyDamageReductionSpellEffect in
 //                            spells-active-effects.ts (kept as a file-local
 //                            helper; not exported from the profile)
-//   - knownWillingTargetSpellIds — was
-//                            KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS
-//                            in battle-reducer.ts (kept re-exported there for
-//                            callers that still need it)
+//   - knownWillingTargetSpellIds — known-willing targeting classification
 //
 import { movementFeet } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
@@ -65,7 +62,6 @@ import {
   MovementFeet,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS } from "../known-willing-target-spell-ids.ts";
 
 // Shape extractor: given a SpellRecord, return the fields of a damageReduction
 // invocation that are derivable from the spell definition, or null if the
@@ -372,7 +368,9 @@ export const damageReductionProfile: SpellProcedureProfile<
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
+  knownWillingTargetSpellIds: ["resistance"] as const satisfies ReadonlyArray<
+    SpellRecord["id"]
+  >,
   admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
   castSummary: damageReductionCastSummary,
