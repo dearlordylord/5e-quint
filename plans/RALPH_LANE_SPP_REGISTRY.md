@@ -445,7 +445,7 @@
     {
       "number": 74,
       "id": "SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Invert spells-resolve-fill-set.ts negative lists"
     },
     {
@@ -1321,7 +1321,7 @@ Delete the hand-maintained constants if no other consumers.
 
 ### Task 74 - SPP-W9-08-INVERT-FILL-SET-NEGATIVE-LISTS - Invert spells-resolve-fill-set.ts negative lists
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-resolve-fill-set.ts:787, 959, 971, 988, 1213` — the
 negative-list `invocation.procedure !== "X"` chains.
