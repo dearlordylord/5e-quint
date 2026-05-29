@@ -2,26 +2,22 @@
 
 import {
   attackBonus,
-  DAMAGE_DIE_SIZES,
+  movementDeltaFeet,
   movementFeet,
   type AbilityModifier,
-  type DamageDieSize,
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   Attachment,
   DamageType,
   SpellRecord,
   TargetSelection,
-  WeaponProficiency,
-  WeaponRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  type BattleCreatureState,
+  type BattleAttackKindForRedirect,
   type CantripSpellAttackSequenceTargeting,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
@@ -29,12 +25,13 @@ import {
   type SpellActivationPhase,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
+  type SpellAttackKind,
   type SpellObjectHitEffect,
+  type SpellPostDamageRider,
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
@@ -47,42 +44,23 @@ import {
 import {
   sameDiceExpr,
   sameStringSet,
-} from "./spells-profile-shared.ts";
-import {
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
-  supportedSpellAttackKind,
-  supportedSpellPostDamageRiders,
-} from "./spells-profiles-save-gates.ts";
+} from "./spells-profile-shared.ts";
 
-export function supportedCantripSpellAttackProfile(
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  return [
-    ...supportedCantripSpellAttackSequenceProfile(
-      spell,
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      characterLevel,
-    ),
-    ...supportedSpellAttackDamageProfile({
-      spell,
-      access: { tag: "classCantrip" },
-      resource: { tag: "none" },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      characterLevel,
-    }),
-  ];
-}
+export type SpellAttackDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+>;
+export type SpellAttackSequenceInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackSequence" }
+>;
+export type AttackBurstSaveDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "attackBurstSaveDamage" }
+>;
 
-const TRUE_STRIKE_DAMAGE_TYPE_CHOICES = [
-  "radiant",
-  "weapon_normal",
-] as const satisfies readonly string[];
 const SORCEROUS_BURST_DAMAGE_TYPES = [
   "acid",
   "cold",
@@ -92,10 +70,6 @@ const SORCEROUS_BURST_DAMAGE_TYPES = [
   "psychic",
   "thunder",
 ] as const satisfies readonly DamageType[];
-const SHILLELAGH_WEAPON_UNIT_IDS = [
-  "weapon_club",
-  "weapon_quarterstaff",
-] as const satisfies readonly WeaponRecord["id"][];
 const SCORCHING_RAY_DAMAGE_TYPE = "fire" as const satisfies DamageType;
 const SCORCHING_RAY_RANGE_FEET = 120;
 const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
@@ -103,316 +77,183 @@ const SCORCHING_RAY_BASE_LEVEL = 2;
 const SCORCHING_RAY_BASE_RAY_COUNT = 3;
 const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
 
-export function supportedCantripSpellHostedWeaponAttackProfile(
-  actor: BattleCreatureState,
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  if (actor.origin.kind !== "character") {
-    return [];
-  }
-  const origin = actor.origin;
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? phase.effects : undefined;
-  const effect = effects?.[0];
-  const bonusDamage =
-    effect?.kind === "make_weapon_attack" ? effect.bonusDamage : undefined;
-  if (
-    phase?.kind !== "direct" ||
-    effects === undefined ||
-    effects.length !== 1 ||
-    effect?.kind !== "make_weapon_attack" ||
-    effect.damageTypeChoice === undefined ||
-    bonusDamage === undefined ||
-    typeof bonusDamage.damageType !== "string" ||
-    effect.weapon !== "material_component" ||
-    effect.abilityOverride !== "spellcasting" ||
-    !sameStringSet(effect.damageTypeChoice, [
-      ...TRUE_STRIKE_DAMAGE_TYPE_CHOICES,
-    ])
-  ) {
-    return [];
-  }
-  const bonusDamageExpr = supportedDamageAmountExpr({
-    amount: bonusDamage.amount,
-    spellLevel: spell.mechanics.level,
-    characterLevel,
-  });
-  if (bonusDamageExpr === null) {
-    return [];
-  }
-  const bonusDamageType: DamageType = bonusDamage.damageType;
-  const attacks = [
-    ...(origin.attack === null
-      ? []
-      : [
-          {
-            itemId:
-              origin.selectedLoadout.weapon?.itemId ?? origin.attack.weapon.id,
-            attack: origin.attack,
-          },
-        ]),
-    ...(origin.offHandAttack === undefined
-      ? []
-      : [
-          {
-            itemId:
-              origin.selectedLoadout.offHandWeapon?.itemId ??
-              origin.offHandAttack.weapon.id,
-            attack: origin.offHandAttack,
-          },
-        ]),
-  ];
-  return attacks
-    .filter(
-      ({ attack }) =>
-        attack.weapon.costGp >= 0.01 &&
-        origin.weaponProficiencies.some((proficiency) =>
-          weaponMatchesProficiency(attack.weapon, proficiency),
-        ),
-    )
-    .map(({ itemId, attack }) => ({
-      access: { tag: "classCantrip" as const },
-      resource: { tag: "none" as const },
-      procedure: "spellHostedWeaponAttack" as const,
-      spell,
-      actionCost: "magicAction" as const,
-      componentWeapon: { itemId, attack },
-      spellcastingAbilityModifier,
-      attackBonus: attackBonus(
-        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-      ),
-      damageTypeChoices: [
-        ...new Set<DamageType>(["radiant", attack.weapon.damage.damageType]),
-      ],
-      bonusDamage: {
-        expr: bonusDamageExpr,
-        damageType: bonusDamageType,
-      },
-    }));
-}
-
-export function supportedCantripWeaponAttackOverrideProfile(
-  actor: BattleCreatureState,
-  spell: SpellRecord,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-  characterLevel: number,
-): readonly SupportedSpellInvocation[] {
-  if (
-    actor.origin.kind !== "character" ||
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return [];
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  const operation = spell.mechanics.operations[0];
-  const effect =
-    operation?.trigger.kind === "passive" &&
-    operation.effect.kind === "override_attached_weapon_attack"
-      ? operation.effect
-      : null;
-  const damageExpr =
-    effect === null
-      ? null
-      : effect.damageDie.kind === "threshold_tiers"
-        ? shillelaghDamageExpr(effect.damageDie, characterLevel)
-        : null;
-  if (
-    effect === null ||
-    effect.replacesAbility !== "str" ||
-    effect.attackRollAbility !== "spellcasting" ||
-    effect.damageRollAbility !== "spellcasting" ||
-    effect.attackScope !== "melee_attacks_using_attached_weapon" ||
-    !sameStringSet(effect.damageTypeChoice, ["force", "weapon_normal"]) ||
-    damageExpr === null ||
-    Either.isLeft(durationTicks)
-  ) {
-    return [];
-  }
-  return shillelaghAttachedWeaponAttacks(actor).map(({ itemId, attack }) => ({
-    access: { tag: "classCantrip" as const },
-    resource: { tag: "none" as const },
-    procedure: "weaponAttackOverride" as const,
-    spell,
-    actionCost: "bonusAction" as const,
-    attachedWeapon: { itemId, attack },
-    activeEffect: {
-      kind: "spellWeaponAttackOverride" as const,
-      sourceSpellId: spell.id,
-      sourceCombatantId: actor.combatantId,
-      weaponItemId: itemId,
-      spellcastingAbilityModifier,
-      attackBonus: attackBonus(
-        Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-      ),
-      damage: { expr: damageExpr },
-      damageTypeChoices: ["force", attack.weapon.damage.damageType],
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: durationTicks.right,
-      },
-    },
-  }));
-}
-
-function shillelaghAttachedWeaponAttacks(actor: BattleCreatureState): readonly {
-  readonly itemId: string;
-  readonly attack: CharacterWeaponAttackActionOption;
-}[] {
-  if (actor.origin.kind !== "character") {
-    return [];
-  }
-  const origin = actor.origin;
-  return [
-    ...(origin.attack === null || origin.selectedLoadout.weapon === undefined
-      ? []
-      : [
-          {
-            itemId: origin.selectedLoadout.weapon.itemId,
-            attack: origin.attack,
-            unitId: origin.selectedLoadout.weapon.unitId,
-          },
-        ]),
-    ...(origin.offHandAttack === undefined ||
-    origin.selectedLoadout.offHandWeapon === undefined
-      ? []
-      : [
-          {
-            itemId: origin.selectedLoadout.offHandWeapon.itemId,
-            attack: origin.offHandAttack,
-            unitId: origin.selectedLoadout.offHandWeapon.unitId,
-          },
-        ]),
-  ].filter(
-    (
-      held,
-    ): held is {
-      readonly itemId: string;
-      readonly attack: CharacterWeaponAttackActionOption;
-      readonly unitId: WeaponRecord["id"];
-    } =>
-      held.attack.weapon.usage === "melee" &&
-      held.unitId === held.attack.weapon.id &&
-      SHILLELAGH_WEAPON_UNIT_IDS.some((unitId) => unitId === held.unitId),
+export function supportedSpellAttackKind(
+  attackKind: string,
+): attackKind is SpellAttackKind {
+  return (
+    attackKind === "melee_spell_attack" || attackKind === "ranged_spell_attack"
   );
 }
 
-function shillelaghDamageExpr(
-  damageDie: {
-    readonly kind: string;
-    readonly axis: string;
-    readonly base: { readonly dice: number; readonly dieSize: number };
-    readonly tiers: readonly {
-      readonly atLevel: number;
-      readonly override: {
-        readonly dice?: number | undefined;
-        readonly dieSize?: number | undefined;
-      };
-    }[];
-  },
-  characterLevel: number,
-): {
-  readonly dice: number;
-  readonly dieSize: DamageDieSize;
-} | null {
-  if (
-    damageDie.kind !== "threshold_tiers" ||
-    damageDie.axis !== "character" ||
-    damageDie.base.dice !== 1 ||
-    damageDie.base.dieSize !== 8
-  ) {
-    return null;
-  }
-  const override = damageDie.tiers.reduce<{
-    readonly dice: number;
-    readonly dieSize: number;
-  }>(
-    (current, tier) =>
-      characterLevel >= tier.atLevel
-        ? {
-            dice: tier.override.dice ?? current.dice,
-            dieSize: tier.override.dieSize ?? current.dieSize,
-          }
-        : current,
-    damageDie.base,
-  );
-  if (!isDamageDieSize(override.dieSize)) {
-    return null;
-  }
-  return {
-    dice: override.dice,
-    dieSize: override.dieSize,
-  };
-}
-
-function isDamageDieSize(value: number): value is DamageDieSize {
-  return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
-}
-
-const byKind = Match.discriminator("kind");
-
-function weaponMatchesProficiency(
-  weapon: WeaponRecord,
-  proficiency: WeaponProficiency,
-): boolean {
-  return Match.value(proficiency).pipe(
-    byKind(
-      "weapon_category",
-      (categoryProficiency) => weapon.category === categoryProficiency.category,
-    ),
-    byKind(
-      "weapon_category_with_properties",
-      (propertyProficiency) =>
-        weapon.category === propertyProficiency.category &&
-        weapon.properties?.some((property) =>
-          propertyProficiency.anyOfProperties.includes(property.kind),
-        ) === true,
-    ),
+export function spellAttackKindForRedirect(
+  attackKind: SpellAttackKind,
+): BattleAttackKindForRedirect {
+  return Match.value(attackKind).pipe(
+    Match.when("melee_spell_attack", () => "melee" as const),
+    Match.when("ranged_spell_attack", () => "ranged" as const),
     Match.exhaustive,
   );
 }
 
-export function supportedPreparedSpellAttackProfile(
+export function supportedSpellPostDamageRiders(
   spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+  effects: readonly SpellAttackHitEffect[],
+): readonly SpellPostDamageRider[] | null {
+  const riders: SpellPostDamageRider[] = [];
+  for (const effect of effects) {
+    if (effect.kind === "modify_speed") {
+      if (effect.unit !== "feet" || effect.delta >= 0) {
+        return null;
+      }
+      riders.push({
+        kind: "speedDelta",
+        deltaFeet: movementDeltaFeet(effect.delta),
+      });
+      continue;
     }
-    return supportedSpellAttackDamageProfile({
-      spell,
-      access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      slotLevel: slot.spellLevel,
-    });
-  });
+    if (
+      effect.kind === "apply_condition" &&
+      effect.condition === "poisoned" &&
+      isRayOfSicknessPoisonedRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "condition",
+        condition: effect.condition,
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "deny_opportunity_attack" &&
+      isShockingGraspOpportunityAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "opportunityAttackDenied",
+        expiresAt: "startOfTargetNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "modify_roll_advantage" &&
+      effect.mode === "advantage" &&
+      sameStringSet(effect.on ?? [], ["attack_roll"]) &&
+      isGuidingBoltNextAttackRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "nextAttackRollAgainstTarget",
+        mode: "advantage",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "prevent_hit_point_regain" &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isChillTouchHitPointRegainPreventionRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "hitPointRegainPrevented",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "emit_dim_light" &&
+      effect.radiusFeet === 10 &&
+      effect.expiresAt === "end_of_caster_next_turn" &&
+      isStarryWispDimLightRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "lightEmission",
+        emission: {
+          kind: "dim",
+          radiusFeet: movementFeet(effect.radiusFeet),
+        },
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    if (
+      effect.kind === "suppress_condition_benefit" &&
+      effect.condition === "invisible" &&
+      isStarryWispInvisibleBenefitDenialRiderShape(spell, phase)
+    ) {
+      riders.push({
+        kind: "invisibleBenefitDenied",
+        expiresAt: "endOfCasterNextTurn",
+      });
+      continue;
+    }
+    return null;
+  }
+  return riders;
+}
+
+export function isStarryWispInvisibleBenefitDenialRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return isStarryWispDimLightRiderShape(spell, phase);
+}
+
+export function isStarryWispDimLightRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+export function isChillTouchHitPointRegainPreventionRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
+}
+
+export function isRayOfSicknessPoisonedRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
+}
+
+export function isShockingGraspOpportunityAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 0 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.attackKind === "melee_spell_attack"
+  );
+}
+
+export function isGuidingBoltNextAttackRiderShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 1 &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.unit === "round" &&
+    spell.mechanics.duration.value.amount === 1 &&
+    phase.attackKind === "ranged_spell_attack"
+  );
 }
 
 export function supportedPreparedSpellAttackSequenceProfile(
@@ -420,7 +261,7 @@ export function supportedPreparedSpellAttackSequenceProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackSequenceInvocation[] {
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]
@@ -448,7 +289,7 @@ export function supportedPreparedSpellAttackSequenceProfile(
   if (scorchingRayTargetingIsCanonical(phase.attachment) !== true) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return spellSlots.flatMap((slot): readonly SpellAttackSequenceInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
@@ -613,20 +454,22 @@ export function supportedPreparedAttackBurstSaveDamageProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
-): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return supportedAttackBurstSaveDamageProfile({
-      spell,
-      access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-      spellcastingAbilityModifier,
-      proficiencyBonus,
-      slotLevel: slot.spellLevel,
-    });
-  });
+): readonly AttackBurstSaveDamageInvocation[] {
+  return spellSlots.flatMap(
+    (slot): readonly AttackBurstSaveDamageInvocation[] => {
+      if (Number(slot.spellLevel) < spell.mechanics.level) {
+        return [];
+      }
+      return supportedAttackBurstSaveDamageProfile({
+        spell,
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        spellcastingAbilityModifier,
+        proficiencyBonus,
+        slotLevel: slot.spellLevel,
+      });
+    },
+  );
 }
 
 export function supportedAttackBurstSaveDamageProfile(
@@ -636,7 +479,7 @@ export function supportedAttackBurstSaveDamageProfile(
     readonly proficiencyBonus: ProficiencyBonusType;
     readonly slotLevel: SpellSlotLevel;
   } & PreparedDamageSpellSource,
-): readonly SupportedSpellInvocation[] {
+): readonly AttackBurstSaveDamageInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
@@ -737,7 +580,7 @@ export function supportedSpellAttackDamageProfile(
     readonly slotLevel?: SpellSlotLevel;
     readonly characterLevel?: number;
   } & DamageSpellSource,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackDamageInvocation[] {
   const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return [];
@@ -850,7 +693,7 @@ export function supportedSpellAttackDamageProfile(
         access: { tag: "classCantrip" },
         resource: { tag: "none" },
         ...attackDamageInvocation,
-      } satisfies SupportedSpellInvocation,
+      } satisfies SpellAttackDamageInvocation,
     ];
   }
   if (input.access.tag !== "prepared" || input.resource.tag !== "spellSlot") {
@@ -861,7 +704,7 @@ export function supportedSpellAttackDamageProfile(
       access: { tag: "prepared" },
       resource: input.resource,
       ...attackDamageInvocation,
-    } satisfies SupportedSpellInvocation,
+    } satisfies SpellAttackDamageInvocation,
   ];
 }
 
@@ -903,7 +746,7 @@ export function supportedCantripSpellAttackSequenceProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
-): readonly SupportedSpellInvocation[] {
+): readonly SpellAttackSequenceInvocation[] {
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]

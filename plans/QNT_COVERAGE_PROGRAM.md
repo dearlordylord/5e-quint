@@ -35,8 +35,8 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
   witness-shape deepening candidates after the current coverage and generator
   readiness gates closed.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
-  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` —
-  current manual Rust dry-run evidence and the next scoped dry-run plan.
+  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` —
+  current manual Rust dry-run evidence.
 - `plans/RALPH_LANE_B_QNT_DEEPENING.md` — next runnable QNT deepening lane,
   combining the recovery dry run with focused composite-slice MBT promotion.
 - `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
@@ -80,10 +80,10 @@ Checked source-of-truth artifacts:
   runtime boundaries a future generator must target without adding parallel
   runtime state.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` is the current
-  manual Rust dry-run vertical.
-- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md` is the
-  next planned manual dry-run vertical, scoped to Hit Point recovery without
-  adding parallel Character Sheet state.
+  Hit Point damage manual Rust dry-run vertical.
+- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` is the
+  current Hit Point recovery manual Rust dry-run vertical, scoped to pure
+  healing projection without adding parallel Character Sheet state.
 - `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the next
   optional battle composite-slice candidates. It also records that current
   coverage and generator-readiness gates are closed enough for the next phase;
@@ -99,15 +99,19 @@ Active generator and Rust queues:
 - No active generator-readiness blocker queue. `generator-readiness.jsonl`
   currently has 69 rows, all `generation-subset-clean`, with no `blockedBy` or
   `followUpTaskIds` entries.
-- The next scoped manual Rust planning artifact is
-  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md`.
+- Generator implementation is not an active project concern in this plan. A
+  golden generator-readiness state means the checked QNT inputs are classified,
+  blocker-free, and boundary-mapped for a future consumer; it does not require
+  implementing an emitter or committing generated Rust.
+- The current scoped manual Rust recovery evidence is
+  `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`.
 - Optional battle composite-slice deepening candidates are listed in
   `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
   generator-readiness blockers.
 - The next runnable deepening batch is
-  `plans/RALPH_LANE_B_QNT_DEEPENING.md`. It starts from the recovery dry-run
-  plan and `QCP-CS1` through `QCP-CS8` without reopening generator-readiness
-  blocker cleanup.
+  `plans/RALPH_LANE_B_QNT_DEEPENING.md`. After the recovery dry-run review, its
+  remaining runnable work is `QCP-CS1` through `QCP-CS8` without reopening
+  generator-readiness blocker cleanup.
 - Parked non-runnable ideas remain in
   `plans/QNT_GENERATOR_READINESS_BACKLOG.md`. Reopen them only by carving a
   small coherent batch into a fresh lane plan with current checker-owned inputs.

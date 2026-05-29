@@ -67,6 +67,33 @@ const levelThreeSubclassChoiceUnitIds = [
   "subclass_wizard_evoker",
 ] as const;
 
+const levelThreeClassSpecificMechanicMismatches = [
+  {
+    unitId: "fighter_remarkable_athlete",
+    wrongClassName: "rogue",
+  },
+  {
+    unitId: "monk_open_hand_technique",
+    wrongClassName: "paladin",
+  },
+  {
+    unitId: "paladin_sacred_weapon",
+    wrongClassName: "rogue",
+  },
+  {
+    unitId: "ranger_hunters_prey",
+    wrongClassName: "paladin",
+  },
+  {
+    unitId: "rogue_steady_aim",
+    wrongClassName: "wizard",
+  },
+  {
+    unitId: "wizard_potent_cantrip",
+    wrongClassName: "paladin",
+  },
+] as const;
+
 const alterSelfNaturalWeaponGrowthDamageType = {
   kind: "choice_table",
   holeId: "alter_self_natural_weapon_growth",
@@ -5198,6 +5225,89 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("installs Paladin Channel Divinity as a level-3 resource container", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_paladin")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 3, unitId: "paladin_channel_divinity" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("paladin_channel_divinity"),
+    ).toMatchObject({
+      acquiredAtLevel: 3,
+      className: "paladin",
+      kind: "class_feature",
+      mechanics: {
+        effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
+        family: "resource_container",
+        optionSet: {
+          choiceKey: "paladin_channel_divinity_effect",
+          initialOptions: [
+            { id: "paladin_divine_sense", displayName: "Divine Sense" },
+          ],
+          timing: "resource_use",
+        },
+        resetCadence: {
+          kind: "partial_short_full_long",
+          shortRestRefill: 1,
+        },
+        resource: {
+          cap: {
+            kind: "fixed",
+            uses: 2,
+          },
+          kind: "use_count",
+        },
+      },
+    });
+  });
+
+  test("installs Rogue Fast Hands as delegated Bonus Action options", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("subclass_rogue_thief")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 3, unitId: "rogue_fast_hands" },
+      ]),
+      kind: "subclass",
+    });
+    expect(result.catalog.requireUnit("rogue_fast_hands")).toMatchObject({
+      acquiredAtLevel: 3,
+      className: "rogue",
+      kind: "class_feature",
+      mechanics: {
+        activationCost: { kind: "bonus_action" },
+        family: "bonus_action_delegated_standard_actions",
+        objectUse: {
+          actions: [
+            { action: "utilize" },
+            {
+              action: "magic",
+              restrictedTo: "magic_item_requires_magic_action",
+            },
+          ],
+        },
+        sleightOfHand: {
+          abilityCheck: { ability: "dex", skill: "sleight_of_hand" },
+          operations: [
+            "pick_lock_with_thieves_tools",
+            "disarm_trap_with_thieves_tools",
+            "pick_pocket",
+          ],
+        },
+      },
+    });
+  });
+
   test("installs Ranger Deft Explorer as level-2 Expertise and language choices", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -5423,10 +5533,37 @@ describe("SRD Unit catalog boundary", () => {
       expect(champion).toMatchObject({
         kind: "subclass",
         className: "fighter",
-        featureGrants: [{ level: 3, unitId: "fighter_improved_critical" }],
+        featureGrants: expect.arrayContaining([
+          { level: 3, unitId: "fighter_improved_critical" },
+          { level: 3, unitId: "fighter_remarkable_athlete" },
+        ]),
       });
     }
   });
+
+  test.each(levelThreeClassSpecificMechanicMismatches)(
+    "rejects $unitId mechanics when authored under $wrongClassName",
+    ({ unitId, wrongClassName }) => {
+      const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+      expect(result.tag).toBe("ok");
+      if (result.tag !== "ok") return;
+
+      const unit = result.catalog.requireUnit(unitId);
+      if (unit.kind !== "class_feature") {
+        throw new Error(`Expected ${unitId} to be a class feature.`);
+      }
+
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(ClassFeatureRecordSchema)({
+            ...unit,
+            className: wrongClassName,
+          }),
+        ),
+      ).toBe(true);
+    },
+  );
 
   test("keeps Action Surge authored through one canonical content record", () => {
     expect(

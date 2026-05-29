@@ -16,6 +16,8 @@ import {
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
+import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
+import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 
 export function isPreparedDamageSpellSource(
   source: DamageSpellSource,
@@ -51,29 +53,30 @@ export function isScalarBuffTargetListInvocation(
 export function isTargetListSpellInvocation(
   invocation: SupportedSpellInvocation,
 ): invocation is TargetListSpellInvocation {
+  const profile = registeredSpellProcedureProfile(invocation.procedure);
+  if (profile === null) {
+    return false;
+  }
+
+  return targetListInvocationClassifierMatches(
+    profile.targetListInvocation,
+    invocation,
+  );
+}
+
+function targetListInvocationClassifierMatches(
+  classifier: SpellProcedureAnyTargetListInvocationClassifier,
+  invocation: SupportedSpellInvocation,
+): invocation is TargetListSpellInvocation {
+  if (classifier.kind === "none") {
+    return false;
+  }
+  if (classifier.kind === "always") {
+    return true;
+  }
   return (
-    invocation.procedure === "directHitPointRestoration" ||
-    (invocation.procedure === "scalarBuff" &&
-      invocation.targeting.kind === "targetList") ||
-    invocation.procedure === "rollModifier" ||
-    invocation.procedure === "abilityD20TestRollModeSaveGate" ||
-    invocation.procedure === "damageReduction" ||
-    (invocation.procedure === "saveGatedCondition" &&
-      invocation.targeting.kind === "targetList") ||
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "creatureTypeProtection" ||
-    invocation.procedure === "creatureSizeIncrease" ||
-    invocation.procedure === "creatureSizeDecrease" ||
-    invocation.procedure === "conditionRemovalProtection" ||
-    invocation.procedure === "directConditionRemoval" ||
-    invocation.procedure ===
-      "conditionImmunityAndTurnStartTemporaryHitPoints" ||
-    invocation.procedure === "jumpMovementReplacement" ||
-    invocation.procedure === "dragonsBreathInitial" ||
-    invocation.procedure === "featherFallMitigation" ||
-    invocation.procedure === "sanctuaryTargetingInterdiction" ||
-    invocation.procedure === "directCondition"
+    "targeting" in invocation &&
+    invocation.targeting.kind === classifier.targetingKind
   );
 }
 

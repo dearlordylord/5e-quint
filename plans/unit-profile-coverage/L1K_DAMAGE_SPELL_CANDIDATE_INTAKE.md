@@ -36,7 +36,7 @@ Generated coverage artifacts checked:
   `spell.invocation-independent-attack-sequence`, and
   `spell.invocation-chained-attack-damage`.
 - `packages/battle-runtime/src/battle-reducer.ts` and
-  `packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts`:
+  `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts`:
   the promoted save-gated damage area boundary admits 5-foot point-origin
   Spheres and 15-foot self-origin Cones, so 10-foot Spheres and 60-foot Cones
   need area-boundary widening before admission.

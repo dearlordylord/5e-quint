@@ -108,7 +108,7 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
-} from "./metamagic.ts";
+} from "./metamagic-support.ts";
 
 import {
   spendSpellCastResources,

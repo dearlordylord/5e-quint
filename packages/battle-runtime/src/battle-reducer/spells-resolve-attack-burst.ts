@@ -96,6 +96,17 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
+  if (
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Attack-burst save damage spells use one target and burst Saving Throw fills.",
+    );
+  }
   if (input.fillSet.targetId === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellTargetHole(input.input.state, input.actorId, input.invocation),

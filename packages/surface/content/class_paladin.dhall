@@ -16,6 +16,7 @@ let paladin =
         , { level = 1, unitId = "paladin_weapon_mastery" }
         , { level = 2, unitId = "paladin_fighting_style" }
         , { level = 2, unitId = "paladin_paladins_smite" }
+        , { level = 3, unitId = "paladin_channel_divinity" }
         ]
       , hitPointDie = 10
       , id = "class_paladin"
@@ -31,7 +32,7 @@ let paladin =
           }
       , name = "Paladin"
       , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-37,66-99,118-120" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-37,66-120" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }

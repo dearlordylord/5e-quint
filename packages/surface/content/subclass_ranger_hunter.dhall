@@ -2,7 +2,8 @@ let hunter =
       { className = "ranger"
       , description =
           "The Hunter Ranger subclass choice. Subclass feature Units are modeled separately from the choice boundary."
-      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , featureGrants =
+          [ { level = 3, unitId = "ranger_hunters_prey" } ]
       , id = "subclass_ranger_hunter"
       , kind = "subclass"
       , name = "Hunter"

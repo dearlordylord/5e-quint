@@ -147,10 +147,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
     SupportedSpellInvocation,
     { readonly procedure: "chainedSpellAttackDamage" }
   >;
+  readonly fillSet?: ChainedSpellFillSet;
   readonly opensSpellCastReactionWindow?: boolean;
   readonly spendsCastResources?: boolean;
 }): BattleResolutionResult {
-  const fillSet = chainedSpellFillSet(input.input.fills, input.invocation);
+  const fillSet =
+    input.fillSet ?? chainedSpellFillSet(input.input.fills, input.invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.input.state, "invalidFill", fillSet.message);
   }

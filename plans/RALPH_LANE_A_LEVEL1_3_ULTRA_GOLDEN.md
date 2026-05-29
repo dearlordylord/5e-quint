@@ -97,47 +97,117 @@
     {
       "number": 16,
       "id": "L13UG-A16-L3-HEAL-DAMAGE-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing heal and damage level-3 feature Units"
     },
     {
       "number": 17,
       "id": "L13UG-A17-L3-RESOURCE-ACTION-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing resource and action level-3 feature Units"
     },
     {
       "number": 18,
       "id": "L13UG-A18-L3-ATTACK-MOVEMENT-UNITS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit missing attack and movement level-3 feature Units"
     },
     {
       "number": 19,
       "id": "L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Promote or block Suggestion Charmed lifecycle subset"
     },
     {
       "number": 20,
       "id": "L13UG-A20-LEVEL13-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
       "number": 21,
       "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Plan the next level-support batch if this lane drains"
+    },
+    {
+      "number": 22,
+      "id": "L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Disciple of Life healing modifier runtime"
+    },
+    {
+      "number": 23,
+      "id": "L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Preserve Life healing pool runtime"
+    },
+    {
+      "number": 24,
+      "id": "L13UG-A24-DRUID-LANDS-AID-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Land's Aid level-3 runtime"
+    },
+    {
+      "number": 25,
+      "id": "L13UG-A25-DRUID-LANDS-AID-SCALING",
+      "status": "deferred",
+      "title": "Promote Land's Aid later-level scaling"
+    },
+    {
+      "number": 26,
+      "id": "L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Dark One's Blessing runtime"
+    },
+    {
+      "number": 27,
+      "id": "L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Remarkable Athlete runtime"
+    },
+    {
+      "number": 28,
+      "id": "L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Open Hand Technique runtime"
+    },
+    {
+      "number": 29,
+      "id": "L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Sacred Weapon runtime"
+    },
+    {
+      "number": 30,
+      "id": "L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Hunter's Prey runtime"
+    },
+    {
+      "number": 31,
+      "id": "L13UG-A31-ROGUE-STEADY-AIM-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Steady Aim runtime"
+    },
+    {
+      "number": 32,
+      "id": "L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME",
+      "status": "deferred",
+      "title": "Promote Potent Cantrip runtime"
     }
   ]
 }
 -->
 
-This is the active Ralph lane for opening the character levels 1-3
-ultra-golden gate. Character level and spell level are separate axes:
-character levels 1-3 include spell-level-2 pressure, not spell-level-3
-pressure.
+This lane is being parked after the Task 18 admission milestone. Character level and
+spell level are separate axes: character levels 1-3 include spell-level-2
+pressure, not spell-level-3 pressure.
+
+Post-Task-18 level-support breadth tasks are deferred because the current
+priority is generator-readiness accounting, not more level-frontier expansion. Do not
+launch this lane for new work unless the owner explicitly reopens the
+level-support frontier.
 
 ## Context Budget
 
@@ -407,7 +477,7 @@ Character Sheet owners derive from source facts without duplicated state.
 
 ### Task 16 - L13UG-A16-L3-HEAL-DAMAGE-UNITS - Admit missing heal and damage level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `cleric_disciple_of_life`, `cleric_preserve_life`, `druid_lands_aid`, and
@@ -423,7 +493,7 @@ runtime support rather than authored-identity dispatch.
 
 ### Task 17 - L13UG-A17-L3-RESOURCE-ACTION-UNITS - Admit missing resource and action level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `paladin_channel_divinity` and `rogue_fast_hands`, and the local SRD passages
@@ -439,7 +509,7 @@ evidence or concrete residual follow-up.
 
 ### Task 18 - L13UG-A18-L3-ATTACK-MOVEMENT-UNITS - Admit missing attack and movement level-3 feature Units
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `fighter_remarkable_athlete`, `monk_open_hand_technique`,
@@ -447,16 +517,26 @@ Input: Task 12 no-matrix audit, `srd-unit-inventory.json` rows for
 `wizard_potent_cantrip`, and the local SRD passages cited by the audit.
 
 Output: authored Surface records, Unit claims, deterministic
-admission/projection evidence, focused runtime tests, and promoted Quint parity
-for attack, movement, rider, and cantrip-damage behavior.
+admission/projection evidence, and focused admission tests for the six
+attack/movement level-3 class-feature Units.
 
 Acceptance: the six real missing attack/movement level-3 class-feature rows no
-longer appear as no-matrix SRD pressure, and each promoted behavior is admitted
-through typed procedure facts and runtime state rather than authored identity.
+longer appear as no-matrix SRD pressure, each Unit has a typed Surface shape and
+support-profile projection, class-specific mechanics are rejected at the wrong
+class boundary, and no reducer/QNT parity is claimed yet.
+
+Milestone closeout: Task 18 was narrowed after reviewer-loop convergence. The
+accepted milestone is admission/projection only. Runtime execution and promoted
+Quint parity are deliberately split into Tasks 27-32 so future work consumes
+these typed profiles through existing battle owners instead of creating a
+parallel feature runtime or dispatching on authored identity.
 
 ### Task 19 - L13UG-FOLLOWUP-SUGGESTION-CHARMED-LIFECYCLE - Promote or block Suggestion Charmed lifecycle subset
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+Reopen only after the owner explicitly resumes level-support breadth.
 
 Input: Task 13 closed-disposition RAW audit, local SRD Suggestion text, current
 Suggestion Surface record and Unit claim/evidence rows, Charm Person Charmed
@@ -481,9 +561,18 @@ table/social split.
 
 ### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
 
-Status: `ready-for-research`
+Status: `deferred`
 
-Input: results from Tasks 1-19.
+Deferred because the active priority moved to generator-readiness accounting.
+Reopen only after the owner explicitly resumes level-support breadth.
+
+Input: results from Tasks 1-19 and the appended Task 16 runtime follow-ups
+(`L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME`,
+`L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME`,
+`L13UG-A24-DRUID-LANDS-AID-RUNTIME`,
+`L13UG-A25-DRUID-LANDS-AID-SCALING`, and
+`L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME`), plus the Task 18 runtime
+follow-ups (`L13UG-A27` through `L13UG-A32`).
 
 Output: concise closeout section in this plan or generated summary identifying
 whether level 1-3 is now ultra-golden, what remains non-blocking, and what the
@@ -494,7 +583,11 @@ new work is discovered.
 
 ### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+Recursive
+level-support planning must not run while generator-readiness accounting is the priority.
 
 Input: current generated reports after Task 20.
 
@@ -505,3 +598,252 @@ closed, add exact repair tasks here instead of ending the run.
 Acceptance: Ralph must not end merely because the initial list is done. It
 either leaves a closed lane with a clear next plan committed, or it appends
 new runnable tasks discovered from current generated artifacts.
+
+### Task 22 - L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME - Promote Disciple of Life healing modifier runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting. This remains
+valid level-support work, but it is not part of the current generator-readiness lane.
+
+Input: Task 16 admitted `unit-feature.spell-slot-healing-modifier` profile for
+`cleric_disciple_of_life`, local SRD Cleric Disciple of Life text, supported
+spell Hit Point restoration reducers, and package-local battle-runtime Quint
+parity files.
+
+Output: runtime consumption of the admitted support profile during supported
+spell healing resolution. Detect Spell Slot casts on the turn the spell is
+cast, add 2 plus the spent Spell Slot level to each affected creature's Hit
+Point restoration, reject non-slot casts, and keep all dispatch on typed
+profile facts rather than Cleric or feature authored identity.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover slot
+healing bonus application, each-creature scope, non-slot exclusion, and selected
+Unit identity flow where the reducer boundary consumes the profile.
+
+### Task 23 - L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME - Promote Preserve Life healing pool runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting. This remains
+valid level-support work, but it is not part of the current generator-readiness lane.
+
+Input: Task 16 admitted `unit-feature.magic-action-healing-pool` profile for
+`cleric_preserve_life`, local SRD Cleric Preserve Life text, Channel Divinity
+resource ownership, and package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted support profile as a Magic Action
+that spends one Channel Divinity use, accepts caller-chosen Bloodied creatures
+within 30 feet including self, distributes a pool equal to five times Cleric
+level, and caps each target at half Hit Point Maximum without duplicating
+Channel Divinity state.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover resource
+spend, target validation, pool distribution, cap enforcement, rejection cases,
+and no authored-identity dispatch.
+
+### Task 24 - L13UG-A24-DRUID-LANDS-AID-RUNTIME - Promote Land's Aid level-3 runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting. This remains
+valid level-support work, but it is not part of the current generator-readiness lane.
+
+Input: Task 16 admitted `unit-feature.magic-action-area-save-damage-healing`
+profile for `druid_lands_aid`, local SRD Druid Land's Aid text, Wild Shape
+resource ownership, area-membership caller facts, and package-local
+battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted level-3 support profile as a Magic
+Action that spends one Wild Shape use, validates caller-supplied 10-foot-radius
+Sphere membership within 60 feet, resolves Constitution saves against the class
+Spell Save DC, deals 2d6 Necrotic damage with half damage on success, and heals
+one chosen creature in the area for 2d6 Hit Points.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover resource
+spend, area membership fills, save outcomes, damage, healing, rejection cases,
+and no authored-identity dispatch.
+
+### Task 25 - L13UG-A25-DRUID-LANDS-AID-SCALING - Promote Land's Aid later-level scaling
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting. This remains
+valid later-level scaling work, but it is not part of the current generator
+lane.
+
+Input: Task 24 Land's Aid runtime owner, local SRD Druid Land's Aid level 10 and
+14 scaling text, current Surface mechanics, and package-local battle-runtime
+Quint parity files.
+
+Output: represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid
+damage and healing scaling after the level-3 runtime owner exists. Update the
+Surface mechanics, support-profile projection, generated matrix artifacts, and
+runtime/QNT behavior without storing derived dice facts beside their source
+level thresholds.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover the
+level-threshold dice scaling for damage and healing while preserving the Task
+24 level-3 behavior.
+
+### Task 26 - L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME - Promote Dark One's Blessing runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting. This remains
+valid level-support work, but it is not part of the current generator-readiness lane.
+
+Input: Task 16 admitted
+`unit-feature.enemy-zero-hit-point-temporary-hit-points` profile for
+`warlock_dark_ones_blessing`, local SRD Warlock Dark One's Blessing text,
+zero-Hit-Point damage resolution hooks, and package-local battle-runtime Quint
+parity files.
+
+Output: runtime consumption of the admitted support profile when an enemy is
+reduced to 0 Hit Points by the Warlock or by another creature within 10 feet,
+granting Temporary Hit Points equal to Charisma modifier plus Warlock level with
+a minimum of 1. Use caller-visible enemy and range facts without authored
+identity dispatch.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover self
+kill, nearby other kill, enemy/range rejection, Temporary Hit Points application,
+and selected Unit identity flow where the reducer boundary consumes the profile.
+
+### Task 27 - L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME - Promote Remarkable Athlete runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.remarkable-athlete` profile for
+`fighter_remarkable_athlete`, local SRD Fighter Remarkable Athlete text,
+existing initiative, ability-check, critical-hit, movement, and Opportunity
+Attack owners, and package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted profile for Initiative Advantage,
+Strength (Athletics) Advantage, and immediately-after-Critical-Hit movement up
+to half Speed without provoking Opportunity Attacks. Use existing movement and
+Opportunity Attack state instead of a detached feature state machine.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover the two
+roll-mode projections, Critical Hit trigger gating, half-Speed movement, no
+Opportunity Attack movement, and no authored-identity dispatch.
+
+### Task 28 - L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME - Promote Open Hand Technique runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.open-hand-technique` profile for
+`monk_open_hand_technique`, local SRD Monk Open Hand Technique text, supported
+Monk Focus/Flurry of Blows runtime owners, saving-throw owners, forced movement,
+condition, and Opportunity Attack denial owners, and package-local
+battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted profile after supported Flurry of
+Blows hits. Addle applies the Opportunity Attack denial effect; Push and Topple
+require failed Strength/Dexterity saves before applying forced movement or
+Prone. Do not assume save failure or store a parallel Flurry state.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover Addle,
+Push save success/failure, Topple save success/failure, stale/non-Flurry
+rejection, and no authored-identity dispatch.
+
+### Task 29 - L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME - Promote Sacred Weapon runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.paladin-sacred-weapon` profile for
+`paladin_sacred_weapon`, local SRD Paladin Sacred Weapon text, Paladin Channel
+Divinity resource projection, action economy, held-weapon item state, attack
+roll, damage-type choice, light, active-effect, and dismissal owners, and
+package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted profile as an Attack action option
+that spends one Paladin Channel Divinity use, binds to a held Melee weapon,
+applies Charisma attack-roll bonus with minimum 1, exposes normal-or-Radiant
+damage choice, projects Bright/Dim Light, and ends on recast, dismissal, or no
+longer carrying the weapon.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover
+activation, resource spend, attack bonus minimum, Radiant choice, light
+projection, recast/dismiss/not-carried ending, resource/weapon rejection, and no
+authored-identity dispatch.
+
+### Task 30 - L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME - Promote Hunter's Prey runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.hunters-prey` profile for
+`ranger_hunters_prey`, local SRD Ranger Hunter's Prey text, selected-option
+state, weapon attack and damage-rider owners, target witness facts, extra-attack
+owners, and package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted selected-option profile in weapon
+attack resolution. Colossus Slayer adds once-per-turn 1d8 same-attack damage
+only against a creature missing Hit Points. Horde Breaker grants the once-per
+turn same-weapon extra attack only against a different creature within 5 feet of
+the original target and within weapon range.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover selected
+option retention, Colossus Slayer hit/missing-HP/once-per-turn gates, Horde
+Breaker different-nearby-target and same-weapon gates, rejection cases, and no
+authored-identity dispatch.
+
+### Task 31 - L13UG-A31-ROGUE-STEADY-AIM-RUNTIME - Promote Steady Aim runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.rogue-steady-aim` profile for
+`rogue_steady_aim`, local SRD Rogue Steady Aim text, unit-feature action
+discovery, action economy, movement budget, attack-roll active effect, Speed,
+and turn-end cleanup owners, and package-local battle-runtime Quint parity
+files.
+
+Output: runtime consumption of the admitted profile as a Bonus Action that is
+legal only if the Rogue has not moved this turn, spends the Bonus Action, grants
+Advantage on the next attack roll this turn, and sets Speed to 0 until end of
+turn using existing movement and Speed state.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover
+no-movement admission, moved-this-turn rejection, Bonus Action spend, next attack
+Advantage, Speed 0, end-turn cleanup, and no authored-identity dispatch.
+
+### Task 32 - L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME - Promote Potent Cantrip runtime
+
+Status: `deferred`
+
+Deferred because the active priority moved to generator-readiness accounting.
+This remains valid level-support work, but it is not part of the current
+generator-readiness lane.
+
+Input: Task 18 admitted `unit-feature.potent-cantrip` profile for
+`wizard_potent_cantrip`, local SRD Wizard Potent Cantrip text, supported cantrip
+spell attack/save damage owners, creature target facts, additional-effect
+projection owners, and package-local battle-runtime Quint parity files.
+
+Output: runtime consumption of the admitted profile in damaging cantrip
+resolution. On an attack miss or successful target save against a creature,
+apply half cantrip damage if any and no additional effect, without cantrip
+authored-identity dispatch.
+
+Acceptance: focused runtime tests and promoted QNT/runtime parity cover
+attack-miss half damage, save-success half damage, non-creature and unsupported
+cantrip rejection, no additional effect, and no authored-identity dispatch.

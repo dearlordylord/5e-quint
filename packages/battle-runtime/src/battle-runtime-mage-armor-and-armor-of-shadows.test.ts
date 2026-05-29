@@ -30,7 +30,9 @@ import {
   statBlockCatalog,
   resourceCount,
   unitLibrary,
+  difficultyClass,
 } from "./battle-runtime-test-support.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Mage Armor and Armor of Shadows", () => {
@@ -125,6 +127,49 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(1);
   });
 
+  test("Mage Armor rejects forged Saving Throw outcome fills", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-forged-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: magicSubject("mage_armor"),
+      fills: [
+        targetFill(target, wizardId),
+        {
+          kind: "savingThrowOutcome",
+          holeId: holeId("battle:spell:saving-throw-outcome:mage_armor"),
+          value: {
+            outcomes: [{ targetId: wizardId, succeeded: false }],
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
   test("Mage Armor rejects armored targets before spending resources", () => {
     const armored = {
       ...defaultArmorClassState(),
@@ -180,6 +225,48 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       reason: "invalidFill",
     });
     expect(state.combatants.get(wizardId)?.origin.kind).toBe("character");
+  });
+
+  test("Mage Armor target holes keep a hidden caster unrevealed until the effect succeeds", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-hidden-caster-target-hole"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Hidden Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+      ],
+    });
+    const wizard = state.combatants.get(wizardId);
+    if (wizard === undefined) {
+      throw new Error("Expected Wizard caster.");
+    }
+    const hiddenState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: difficultyClass(17) },
+      }),
+    };
+
+    const holes = resolveBattleSubject({
+      state: hiddenState,
+      subject: magicSubject("mage_armor"),
+      fills: [],
+    });
+
+    expect(holes).toMatchObject({ tag: "needsHoles" });
+    if (holes.tag !== "needsHoles") {
+      throw new Error("Expected Mage Armor target hole.");
+    }
+    expect(holes.state.combatants.get(wizardId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(17),
+    });
   });
 
   test("Mage Armor uses Beast Dexterity for Wild Shaped targets with merged equipment", () => {

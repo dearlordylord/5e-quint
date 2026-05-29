@@ -635,6 +635,9 @@ export type ClassSpellcastingProjectionMechanics = Schema.Schema.Type<
 export type DruidWildCompanionSpellCastMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.DruidWildCompanionSpellCastMechanicsSchema
 >;
+export type ClericClassFeatureMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClericClassFeatureMechanicsSchema
+>;
 export type DruidClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.DruidClassFeatureMechanicsSchema
 >;
@@ -782,6 +785,36 @@ export type RestSpellSlotRecoveryMechanics = Schema.Schema.Type<
 export type FailedAbilityCheckResourceBoostMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FailedAbilityCheckResourceBoostMechanicsSchema
 >;
+export type SpellSlotHealingModifierMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SpellSlotHealingModifierMechanicsSchema
+>;
+export type MagicActionHealingPoolMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicActionHealingPoolMechanicsSchema
+>;
+export type MagicActionAreaSaveDamageHealingMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicActionAreaSaveDamageHealingMechanicsSchema
+>;
+export type EnemyZeroHitPointTemporaryHitPointsMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.EnemyZeroHitPointTemporaryHitPointsMechanicsSchema
+>;
+export type RemarkableAthleteMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.RemarkableAthleteMechanicsSchema
+>;
+export type OpenHandTechniqueMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.OpenHandTechniqueMechanicsSchema
+>;
+export type SacredWeaponMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SacredWeaponMechanicsSchema
+>;
+export type HuntersPreyMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.HuntersPreyMechanicsSchema
+>;
+export type SteadyAimMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SteadyAimMechanicsSchema
+>;
+export type PotentCantripMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.PotentCantripMechanicsSchema
+>;
 export type ClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassRecordSchema
 >;
@@ -808,6 +841,15 @@ export type NonWizardClassRecord = Schema.Schema.Type<
 >;
 export type ClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureRecordSchema
+>;
+export type PaladinClassFeatureRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.PaladinClassFeatureRecordSchema
+>;
+export type RangerClassFeatureRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.RangerClassFeatureRecordSchema
+>;
+export type RogueClassFeatureRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.RogueClassFeatureRecordSchema
 >;
 export type WarlockClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WarlockClassFeatureRecordSchema
@@ -955,8 +997,7 @@ export const DRUID_CIRCLE_LAND_CHOICES = [
   "temperate",
   "tropical",
 ] as const;
-export type DruidCircleLandChoice =
-  (typeof DRUID_CIRCLE_LAND_CHOICES)[number];
+export type DruidCircleLandChoice = (typeof DRUID_CIRCLE_LAND_CHOICES)[number];
 type ClassFeatureUnitRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }

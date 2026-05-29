@@ -235,7 +235,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -264,8 +264,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-direct-condition.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
@@ -357,8 +357,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/see-invisible-observer-sight.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
@@ -393,7 +392,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
@@ -634,7 +633,7 @@
         "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
         "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
@@ -671,10 +670,9 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -712,7 +710,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -810,7 +808,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -1144,7 +1142,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/expeditious-retreat-dash.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1353,7 +1351,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/make-stable.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1373,6 +1371,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -1385,15 +1389,16 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane",
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enthrall",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance",
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace",
         ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy"
@@ -1423,9 +1428,9 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1458,9 +1463,9 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1491,8 +1496,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
       "status": "covered",
@@ -1533,12 +1537,13 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-removal-protection.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition-removal.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1573,8 +1578,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
@@ -1704,10 +1708,10 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-weapon-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-damage-rider.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1747,8 +1751,7 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/marked-damage-rider.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1861,7 +1864,7 @@
         "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1890,7 +1893,6 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -3069,8 +3071,7 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -9174,6 +9175,7 @@
     },
     {
       "blockedBy": [],
+      "dryRun": "plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md",
       "generatorSubset": [
         "import",
         "variant",

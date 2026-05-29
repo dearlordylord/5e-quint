@@ -51,7 +51,11 @@ export const fighterTacticalMindUnitId = "fighter_tactical_mind";
 
 export const fighterImprovedCriticalUnitId = "fighter_improved_critical";
 
+export const fighterRemarkableAthleteUnitId = "fighter_remarkable_athlete";
+
 export const fighterExtraAttackUnitId = "fighter_extra_attack";
+
+export const subclassFighterChampionUnitId = "subclass_fighter_champion";
 
 export const barbarianRageUnitId = "barbarian_rage";
 
@@ -81,11 +85,54 @@ export const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 
 export const bardCuttingWordsUnitId = "bard_cutting_words";
 
+export const clericDiscipleOfLifeUnitId = "cleric_disciple_of_life";
+
+export const clericPreserveLifeUnitId = "cleric_preserve_life";
+
+export const subclassClericLifeDomainUnitId = "subclass_cleric_life_domain";
+
+export const paladinChannelDivinityUnitId = "paladin_channel_divinity";
+
+export const paladinSacredWeaponUnitId = "paladin_sacred_weapon";
+
+export const subclassPaladinOathOfDevotionUnitId =
+  "subclass_paladin_oath_of_devotion";
+
+export const rogueFastHandsUnitId = "rogue_fast_hands";
+
+export const rogueSteadyAimUnitId = "rogue_steady_aim";
+
+export const classRogueUnitId = "class_rogue";
+
+export const subclassRogueThiefUnitId = "subclass_rogue_thief";
+
+export const druidLandsAidUnitId = "druid_lands_aid";
+
+export const subclassDruidCircleOfTheLandUnitId =
+  "subclass_druid_circle_of_the_land";
+
+export const warlockDarkOnesBlessingUnitId = "warlock_dark_ones_blessing";
+
+export const subclassWarlockFiendPatronUnitId = "subclass_warlock_fiend_patron";
+
 export const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 
 export const monkMartialArtsUnitId = "monk_martial_arts";
 
 export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
+
+export const monkOpenHandTechniqueUnitId = "monk_open_hand_technique";
+
+export const subclassMonkWarriorOfTheOpenHandUnitId =
+  "subclass_monk_warrior_of_the_open_hand";
+
+export const rangerHuntersPreyUnitId = "ranger_hunters_prey";
+
+export const subclassRangerHunterUnitId = "subclass_ranger_hunter";
+
+export const wizardPotentCantripUnitId = "wizard_potent_cantrip";
+
+export const subclassWizardEvokerUnitId = "subclass_wizard_evoker";
 
 export const baneUnitId = "bane";
 

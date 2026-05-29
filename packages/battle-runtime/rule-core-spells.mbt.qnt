@@ -3,6 +3,9 @@
 module ruleCoreSpellsMbt {
   import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
+  import spellInvocationActionSlotCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-action-slot-core"
+  import spellDirectDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-direct-damage-projection-core"
+  import spellReadiedSpellResponseCore.* from "../shared-algebras/proofs/rule-core/spell-readied-spell-response-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   // Fixture bounds:

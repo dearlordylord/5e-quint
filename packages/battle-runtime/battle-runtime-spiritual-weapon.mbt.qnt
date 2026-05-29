@@ -1,8 +1,11 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpiritualWeaponMbt {
-  import battleRuntime.* from "./battle-runtime"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  type Hole =
+    | TargetChoice
+    | SpiritualWeaponForcePosition
+    | AttackRoll
+    | SpellDamageRoll
 
   var qTargetHp: int
   var qBonusActionAvailable: bool

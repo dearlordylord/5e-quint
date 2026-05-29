@@ -340,6 +340,16 @@ const deathSavingThrowDriverSchema = {
   step: {},
 } as const;
 
+const promotedMbtTraces = Number(process.env["MBT_TRACES"] ?? 1);
+
+// These package-local specs are finite scenario witnesses. The promoted
+// command supplies a broad step count, but each witness keeps its domain limit
+// so MBT cannot spend extra steps only replaying stale invalid operations.
+function focusedMbtMaxSteps(domainMaxSteps: number): number {
+  const requestedSteps = Number(process.env["MBT_STEPS"] ?? domainMaxSteps);
+  return Math.min(requestedSteps, domainMaxSteps);
+}
+
 const magicMissileDriverSchema = {
   init: {},
   doFillMagicMissileAllocation: {},
@@ -1829,8 +1839,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createBattleRuntimeDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 6),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(4),
       stateCheck: battleRuntimeStateCheck,
     });
   }, 120_000);
@@ -1845,8 +1855,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createMagicMissileDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(2),
       stateCheck: battleRuntimeStateCheck,
     });
   }, 120_000);
@@ -1861,8 +1871,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createExtraAttackDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(4),
       stateCheck: extraAttackStateCheck,
     });
   }, 120_000);
@@ -1877,8 +1887,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createAdrenalineRushDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(2),
       stateCheck: adrenalineRushStateCheck,
     });
   }, 120_000);
@@ -1893,8 +1903,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createScalarBuffDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 2),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(2),
       stateCheck: scalarBuffStateCheck,
     });
   }, 120_000);
@@ -1909,8 +1919,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createStarryWispObjectDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(4),
       stateCheck: starryWispObjectStateCheck,
     });
   }, 120_000);
@@ -1925,8 +1935,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createEldritchBlastDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(4),
       stateCheck: eldritchBlastStateCheck,
     });
   }, 120_000);
@@ -1941,8 +1951,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createSleepRepeatSaveDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 4),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(4),
       stateCheck: sleepRepeatSaveStateCheck,
     });
   }, 120_000);
@@ -1957,8 +1967,8 @@ describe("battle-runtime MBT", () => {
       step: "step",
       driver: createSpiritualWeaponDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 6),
+      nTraces: promotedMbtTraces,
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: spiritualWeaponStateCheck,
     });
   }, 120_000);
@@ -1974,7 +1984,7 @@ describe("battle-runtime MBT", () => {
       driver: createDeathSavingThrowDriver(),
       backend: "typescript",
       nTraces: Number(process.env["MBT_TRACES"] ?? 4),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 3),
+      maxSteps: focusedMbtMaxSteps(3),
       stateCheck: deathSavingThrowStateCheck,
     });
   }, 120_000);

@@ -3,7 +3,9 @@ let oathOfDevotion =
       , description =
           "The Oath of Devotion Paladin subclass choice. Subclass feature Units are modeled separately from the choice boundary."
       , featureGrants =
-          [ { level = 3, unitId = "paladin_oath_of_devotion_spells" } ]
+        [ { level = 3, unitId = "paladin_oath_of_devotion_spells" }
+        , { level = 3, unitId = "paladin_sacred_weapon" }
+        ]
       , id = "subclass_paladin_oath_of_devotion"
       , kind = "subclass"
       , name = "Oath of Devotion"

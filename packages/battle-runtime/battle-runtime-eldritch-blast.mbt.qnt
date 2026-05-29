@@ -1,8 +1,11 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeEldritchBlastMbt {
-  import battleRuntime.* from "./battle-runtime"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  type Hole =
+    | TargetChoice
+    | ObjectTargetChoice
+    | AttackRoll
+    | SpellDamageRoll
 
   var qActionAvailable: bool
   var qTargetHp: int

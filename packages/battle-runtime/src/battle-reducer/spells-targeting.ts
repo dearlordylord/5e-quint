@@ -10,8 +10,6 @@ import {
 import { SIZES } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
-  KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
-  KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   ATTACK_TARGET_HOLE_ID,
   ATTACK_TARGET_HOLE_INSTANCE,
   type BattleObjectContactTargetsHole,
@@ -38,6 +36,7 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {
   spellId,
   type BattleObjectId,
@@ -446,7 +445,7 @@ export function spellTargetAllocationHole(
 }
 
 export function spellTargetListHoleId(
-  invocation: TargetListSpellInvocation,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:target-list:${invocation.spell.id}`);
 }
@@ -478,7 +477,9 @@ export function targetListTargetingHasFixedMaximum(
 ): targeting is TargetListSpellInvocation["targeting"] & {
   readonly maxTargets: number;
 } {
-  return "maxTargets" in targeting && targeting.maxTargets !== "allLegalTargets";
+  return (
+    "maxTargets" in targeting && targeting.maxTargets !== "allLegalTargets"
+  );
 }
 
 function targetListTargetingRequiresCaster(
@@ -1062,14 +1063,10 @@ export function spellInvocationRequiresKnownWillingTarget(
     (invocation.procedure === "scalarBuff" &&
       invocation.targeting.kind === "targetList" &&
       invocation.targeting.requiredTargetDisposition === "willing") ||
-    (invocation.procedure === "damageReduction" &&
-      KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS.includes(
-        invocation.spell.id,
-      )) ||
-    (invocation.procedure === "rollModifier" &&
-      KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS.includes(
-        invocation.spell.id,
-      ))
+    (registeredSpellProcedureProfile(
+      invocation.procedure,
+    )?.knownWillingTargetSpellIds.includes(invocation.spell.id) ??
+      false)
   );
 }
 

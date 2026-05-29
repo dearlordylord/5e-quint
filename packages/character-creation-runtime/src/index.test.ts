@@ -170,6 +170,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-RANGER-FIGHTING-STYLE ranger_deft_explorer ranger_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A17 paladin_channel_divinity
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
@@ -4297,6 +4298,35 @@ describe("character creation finalization", () => {
             { atLevel: 6, value: 3 },
             { atLevel: 18, value: 4 },
           ],
+        },
+      },
+    });
+  });
+
+  test("accepts Paladin 3 Channel Divinity as a class resource container", () => {
+    const paladinThree = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-channel-divinity",
+      progression: testProgression("class_paladin", 3),
+    });
+    const result = finalizeCharacterDraft({ draft: paladinThree, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining(["paladin_channel_divinity"]),
+    );
+    expect(
+      characterBuildResources(result.build, unitLibrary).find(
+        (resource) => resource.unitId === "paladin_channel_divinity",
+      ),
+    ).toEqual({
+      unitId: "paladin_channel_divinity",
+      resource: {
+        kind: "use_count",
+        cap: {
+          kind: "fixed",
+          uses: 2,
         },
       },
     });

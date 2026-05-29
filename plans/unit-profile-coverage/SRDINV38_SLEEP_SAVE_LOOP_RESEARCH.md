@@ -55,7 +55,7 @@ Sleep is currently unsupported in `@dnd/battle-runtime`.
 - `packages/battle-runtime/src/unit-profile-admission.test.ts` has an explicit
   guard that Sleep remains unsupported by the Color Spray condition-save
   admission path.
-- `packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts`
+- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts`
   rejects current save-gated condition profiles when `"repeatSave" in phase`.
 - Existing `spellCondition` effects can represent one condition with one
   expiration, optional caster-or-ally damage escape, and optional turn-start

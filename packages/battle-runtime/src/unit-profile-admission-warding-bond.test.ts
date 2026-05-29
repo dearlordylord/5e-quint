@@ -46,6 +46,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyBattleHitPointDamage,
   combatantId,
+  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   movementFeet,
@@ -165,6 +166,29 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         bonus: 1,
       },
     ]);
+  });
+
+  test("does not discover unusable Ready actions", () => {
+    const state = wardingBondBattle();
+    const readyActs = discoverBattleActs(state).flatMap((act) => {
+      if (
+        act.subject.tag === "actionSpell" &&
+        act.subject.invocation.spellId === wardingBondUnitId &&
+        act.subject.invocation.tag === "spellSlot" &&
+        act.subject.invocation.procedure === "wardingBond" &&
+        act.subject.mode.tag === "ready"
+      ) {
+        return [
+          {
+            trigger: act.subject.mode.trigger,
+            initialHoles: act.initialHoles,
+          },
+        ];
+      }
+      return [];
+    });
+
+    expect(readyActs).toEqual([]);
   });
 
   test("grants all-damage Resistance and shares the final target damage amount to the caster", () => {
@@ -319,12 +343,12 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       throw new Error("Expected attack damage continuation to resolve.");
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(8);
-    expect(requireCombatant(resolved.state, spellTargetId).concentration).toEqual(
-      {
-        sourceSpellId: spellId(wardingBondUnitId),
-        effectKind: "spellEffect",
-      },
-    );
+    expect(
+      requireCombatant(resolved.state, spellTargetId).concentration,
+    ).toEqual({
+      sourceSpellId: spellId(wardingBondUnitId),
+      effectKind: "spellEffect",
+    });
     expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(8);
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
@@ -630,7 +654,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       spellTargetId,
     );
     const attackRoll = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
       "attackRoll",
     );
     const attackRollResult = attackRollFill(attackRoll, {
@@ -672,12 +700,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [
-          targetFill,
-          attackRollResult,
-          attackDamageFill,
-          burstSaveFill,
-        ],
+        fills: [targetFill, attackRollResult, attackDamageFill, burstSaveFill],
       }),
       "rolledDice",
     );
@@ -711,10 +734,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       state,
       actorId: spellCasterId,
     });
-    const turnStartDamage = requireResultHole(
-      awaitingTurnStart,
-      "rolledDice",
-    );
+    const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
     const turnStartSave = requireResultHole(
       awaitingTurnStart,
       "savingThrowOutcome",
@@ -748,9 +768,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
     if (resolved.tag !== "resolved") {
-      throw new Error(
-        "Expected turn-start Warding Bond damage to resolve.",
-      );
+      throw new Error("Expected turn-start Warding Bond damage to resolve.");
     }
     expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(9);
     expect(
@@ -766,10 +784,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       state,
       actorId: spellCasterId,
     });
-    const turnStartDamage = requireResultHole(
-      awaitingTurnStart,
-      "rolledDice",
-    );
+    const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
     if (awaitingTurnStart.tag !== "needsHoles") {
       throw new Error("Expected turn-start damage and save holes.");
     }
@@ -791,7 +806,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole.spellTurnStartSave.targetId === spellTargetId,
     );
     if (endTurnRepeatSave === undefined || turnStartSave === undefined) {
-      throw new Error("Expected Hideous Laughter end-turn and turn-start saves.");
+      throw new Error(
+        "Expected Hideous Laughter end-turn and turn-start saves.",
+      );
     }
     const damageFill = damageRollFillWithGroups(turnStartDamage, [[2, 2, 2]]);
     const endTurnRepeatSaveFill = savingThrowOutcomeFill(endTurnRepeatSave, [
@@ -886,32 +903,36 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       spellTargetId,
       1,
     );
-    const expired = advanceRound(durationInitial, [spellCasterId, spellTargetId]);
+    const expired = advanceRound(durationInitial, [
+      spellCasterId,
+      spellTargetId,
+    ]);
     expect(wardingBondEffects(expired, spellTargetId)).toEqual([]);
   });
 });
 
-function wardingBondBattle(input: {
-  readonly spellSlotCount?: number;
-  readonly spellSlots?: Parameters<typeof spellBattle>[0]["spellSlots"];
-  readonly additionalPreparedSpells?: Parameters<
-    typeof spellBattle
-  >[0]["preparedSpells"];
-  readonly extraTargetIds?: readonly CombatantId[];
-  readonly casterAttack?: Parameters<typeof spellBattle>[0]["attack"];
-} = {}): BattleState {
+function wardingBondBattle(
+  input: {
+    readonly spellSlotCount?: number;
+    readonly spellSlots?: Parameters<typeof spellBattle>[0]["spellSlots"];
+    readonly additionalPreparedSpells?: Parameters<
+      typeof spellBattle
+    >[0]["preparedSpells"];
+    readonly extraTargetIds?: readonly CombatantId[];
+    readonly casterAttack?: Parameters<typeof spellBattle>[0]["attack"];
+  } = {},
+): BattleState {
   return spellBattle({
     preparedSpells: [
       spellRecord(wardingBondUnitId),
       ...(input.additionalPreparedSpells ?? []),
     ],
-    spellSlots:
-      input.spellSlots ?? [{ spellLevel: 2, count: input.spellSlotCount ?? 1 }],
+    spellSlots: input.spellSlots ?? [
+      { spellLevel: 2, count: input.spellSlotCount ?? 1 },
+    ],
     targetHp: 12,
     targetMaxHp: 12,
-    ...(input.casterAttack === undefined
-      ? {}
-      : { attack: input.casterAttack }),
+    ...(input.casterAttack === undefined ? {} : { attack: input.casterAttack }),
     ...(input.extraTargetIds === undefined
       ? {}
       : { extraTargetIds: input.extraTargetIds }),

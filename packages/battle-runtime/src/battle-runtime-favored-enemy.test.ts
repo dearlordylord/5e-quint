@@ -31,7 +31,6 @@ import {
   requiredAbilityCheckRollMode,
   resolveBattleSubject,
   resolveBattleReaction,
-  resolveMarkedDamageRiderSpellAct,
   resourceCount,
   snapshotBattle,
   spellFillSet,
@@ -40,6 +39,7 @@ import {
   supportedSpellInvocationMatchesRef,
 } from "./battle-runtime-test-support.ts";
 import type { BattleState } from "./battle-runtime-test-support.ts";
+import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Favored Enemy", () => {
@@ -234,7 +234,7 @@ describe("battle runtime: Favored Enemy", () => {
       throw new Error(fillSet.message);
     }
 
-    const result = resolveMarkedDamageRiderSpellAct({
+    const result = markedDamageRiderProfile.resolve({
       input: {
         state: staleState,
         subject,

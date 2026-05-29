@@ -8,6 +8,8 @@ import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
+} from "./spell-turn-resources.ts";
+import {
   supportedSpellActs,
 } from "./spells-profiles.ts";
 import { spellComponents } from "./spell-cast-reaction-frame.ts";

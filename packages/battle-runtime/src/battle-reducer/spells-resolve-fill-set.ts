@@ -781,23 +781,7 @@ export function spellFillSet(
       if (fill.holeId === carefulSpellProtectedTargetsHoleId(invocation)) {
         continue;
       }
-      if (
-        invocation.procedure !== "directHitPointRestoration" &&
-        invocation.procedure !== "scalarBuff" &&
-        invocation.procedure !== "rollModifier" &&
-        invocation.procedure !== "abilityD20TestRollModeSaveGate" &&
-        invocation.procedure !== "damageReduction" &&
-        invocation.procedure !== "saveGatedCondition" &&
-        invocation.procedure !== "hideousLaughter" &&
-        invocation.procedure !== "command" &&
-        invocation.procedure !== "jumpMovementReplacement" &&
-        invocation.procedure !== "dragonsBreathInitial" &&
-        invocation.procedure !== "featherFallMitigation" &&
-        invocation.procedure !== "sanctuaryTargetingInterdiction" &&
-        invocation.procedure !== "directCondition" &&
-        invocation.procedure !==
-          "conditionImmunityAndTurnStartTemporaryHitPoints"
-      ) {
+      if (!isTargetListSpellInvocation(invocation)) {
         return {
           tag: "invalid",
           message: "Spell target list does not match this spell act.",
@@ -915,33 +899,6 @@ export function spellFillSet(
         objectContactSavingThrowOutcome = fill;
         continue;
       }
-      if (
-        invocation.procedure !== "attackBurstSaveDamage" &&
-        invocation.procedure !== "saveGatedDamage" &&
-        invocation.procedure !== "saveGatedCondition" &&
-        invocation.procedure !== "saveGatedConditionImmunity" &&
-        invocation.procedure !== "afterHitSaveGatedCondition" &&
-        invocation.procedure !== "saveGatedAttackRollAdvantage" &&
-        invocation.procedure !== "abilityD20TestRollModeSaveGate" &&
-        invocation.procedure !== "counterspell" &&
-        invocation.procedure !== "sleepTargetAdmission" &&
-        invocation.procedure !== "hideousLaughter" &&
-        invocation.procedure !== "command" &&
-        invocation.procedure !== "creatureSizeIncrease" &&
-        invocation.procedure !== "creatureSizeDecrease" &&
-        invocation.procedure !== "levitatedCreature" &&
-        invocation.procedure !== "greaseGroundHazard" &&
-        invocation.procedure !== "gustOfWindLine" &&
-        !(
-          invocation.procedure === "rollModifier" &&
-          invocation.saveGate !== null
-        )
-      ) {
-        return {
-          tag: "invalid",
-          message: "Spell saving throw outcomes do not match this spell act.",
-        };
-      }
       if (fill.holeId !== spellSavingThrowOutcomeHoleId(invocation)) {
         return {
           tag: "invalid",
@@ -956,7 +913,6 @@ export function spellFillSet(
         };
       }
       if (
-        invocation.procedure !== "rollModifier" &&
         spellFillSetSavingThrowTargeting(invocation).kind !==
           "singleCombatant" &&
         spellFillSetSavingThrowTargeting(invocation).kind !== "targetList" &&
@@ -968,7 +924,6 @@ export function spellFillSet(
         };
       }
       if (
-        invocation.procedure !== "rollModifier" &&
         spellFillSetSavingThrowTargeting(invocation).kind ===
           "singleCombatant" &&
         "area" in fill.value
@@ -984,10 +939,7 @@ export function spellFillSet(
     }
 
     if (fill.kind === "skillChoice") {
-      if (
-        invocation.procedure !== "rollModifier" ||
-        invocation.skillChoices === null
-      ) {
+      if (!isRollModifierInvocation(invocation)) {
         return {
           tag: "invalid",
           message: "Spell skill choice does not match this spell act.",
@@ -1210,22 +1162,24 @@ export function spellFillSet(
 
     if (fill.kind === "targetAbilityChoices") {
       if (
-        invocation.procedure !== "rollModifier" ||
-        invocation.abilityChoices === null ||
-        !rollModifierUsesTargetAbilityChoices(invocation)
-      ) {
-        return {
-          tag: "invalid",
-          message: "Spell target ability choices do not match this spell act.",
-        };
-      }
-      if (
         fill.holeId !== spellRollModifierTargetAbilityChoicesHoleId(invocation)
       ) {
         return {
           tag: "invalid",
           message:
             "Spell target ability choices must use the selected spell act target-ability-choices hole.",
+        };
+      }
+      if (targetAbilityChoices !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell target ability choices were filled twice.",
+        };
+      }
+      if (!isTargetAbilityChoicesRollModifierInvocation(invocation)) {
+        return {
+          tag: "invalid",
+          message: "Spell target ability choices do not match this spell act.",
         };
       }
       const seenTargets = new Set<CombatantId>();
@@ -1244,12 +1198,6 @@ export function spellFillSet(
           };
         }
         seenTargets.add(choice.targetId);
-      }
-      if (targetAbilityChoices !== undefined) {
-        return {
-          tag: "invalid",
-          message: "Spell target ability choices were filled twice.",
-        };
       }
       targetAbilityChoices = fill;
       continue;
@@ -1761,6 +1709,27 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "gustOfWindLine"
       ? invocation.targeting
       : { kind: "singleCombatant" };
+}
+
+function isTargetAbilityChoicesRollModifierInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "rollModifier" }
+> & { readonly abilityChoices: readonly Ability[] } {
+  return invocation.procedure === "rollModifier"
+    ? invocation.abilityChoices !== null &&
+        rollModifierUsesTargetAbilityChoices(invocation)
+      : false;
+}
+
+function isRollModifierInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "rollModifier" }
+> {
+  return invocation.procedure === "rollModifier";
 }
 
 function spellAttackSequencePartIndexForHole(

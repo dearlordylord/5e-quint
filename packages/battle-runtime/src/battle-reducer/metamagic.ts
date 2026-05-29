@@ -1,7 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
-import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import type {
   BattleCreatureState,
@@ -23,28 +22,41 @@ import type { CombatantId } from "../identity.ts";
 import {
   combatantHasLevelOnePlusSpellCastThisTurn,
   spellInvocationIsLevelOnePlus,
-} from "./spells-profiles.ts";
+} from "./spell-turn-resources.ts";
+import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
+import {
+  DISTANT_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
+  EXTENDED_METAMAGIC_EFFECT_KIND,
+  metamagicApplicationsIncludeQuickened,
+  metamagicSorceryPointCost,
+  metamagicSorceryPointSpendIssue,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+  saveMetamagicSupportIssue,
+  SEEKING_METAMAGIC_EFFECT_KIND,
+  SUBTLE_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TWINNED_METAMAGIC_EFFECT_KIND,
+} from "./metamagic-support.ts";
+export {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  DISTANT_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
+  EXTENDED_METAMAGIC_EFFECT_KIND,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  metamagicActionCostOverride,
+  metamagicApplicationsIncludeQuickened,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_SPELL_METAMAGIC_SELECTION,
+  SEEKING_METAMAGIC_EFFECT_KIND,
+  spellMetamagicApplications,
+  spellMetamagicLabel,
+  SUBTLE_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TWINNED_METAMAGIC_EFFECT_KIND,
+} from "./metamagic-support.ts";
 
-export const QUICKENED_METAMAGIC_EFFECT_KIND =
-  "action_casting_time_to_bonus_action_with_spell_turn_limit" satisfies CharacterBattleMetamagicEffectKind;
-export const CAREFUL_METAMAGIC_EFFECT_KIND =
-  "saving_throw_protection" satisfies CharacterBattleMetamagicEffectKind;
-export const HEIGHTENED_METAMAGIC_EFFECT_KIND =
-  "saving_throw_disadvantage" satisfies CharacterBattleMetamagicEffectKind;
-export const DISTANT_METAMAGIC_EFFECT_KIND =
-  "spell_range_increase" satisfies CharacterBattleMetamagicEffectKind;
-export const EXTENDED_METAMAGIC_EFFECT_KIND =
-  "duration_extension_and_concentration_save_advantage" satisfies CharacterBattleMetamagicEffectKind;
-export const SUBTLE_METAMAGIC_EFFECT_KIND =
-  "component_suppression" satisfies CharacterBattleMetamagicEffectKind;
-export const TRANSMUTED_METAMAGIC_EFFECT_KIND =
-  "damage_type_substitution" satisfies CharacterBattleMetamagicEffectKind;
-export const TWINNED_METAMAGIC_EFFECT_KIND =
-  "effective_spell_level_increase_for_extra_target" satisfies CharacterBattleMetamagicEffectKind;
-export const EMPOWERED_METAMAGIC_EFFECT_KIND =
-  "damage_dice_reroll" satisfies CharacterBattleMetamagicEffectKind;
-export const SEEKING_METAMAGIC_EFFECT_KIND =
-  "missed_spell_attack_reroll" satisfies CharacterBattleMetamagicEffectKind;
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Distant Spell is not supported until spell target witnesses carry range facts that can be rewritten without trusting authored spell identity.";
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -60,10 +72,6 @@ export const EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE =
 export const SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Seeking Spell is not supported until spell attack roll fills carry a typed missed-spell-attack reroll boundary that replaces one missed d20 with the forced new roll without storing reroll opportunity state.";
 
-export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
-  { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
-] as const satisfies readonly [SpellMetamagicSelection];
-
 export const QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE =
   "Quickened Spell is not supported for this action-casting spell procedure until its resolver threads a Bonus Action rewrite and Metamagic applications through the shared spell-cast resource boundary.";
 export const QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE =
@@ -74,92 +82,39 @@ type QuickenedActionRewriteProcedureDisposition =
   | "actionSpellResolverNotRewritten"
   | "notActionSpellCasting";
 
-const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
-  afterHitDamage: "notActionSpellCasting",
-  afterHitDamageAndIllumination: "notActionSpellCasting",
-  afterHitSaveGatedCondition: "notActionSpellCasting",
-  afterHitTimedDamageAndSave: "notActionSpellCasting",
-  antimagicFieldOngoingSpellSuppression: "actionSpellResolverNotRewritten",
-  attackBurstSaveDamage: "actionSpellResolverNotRewritten",
-  blurAttackRollDefense: "actionSpellResolverNotRewritten",
-  chainedSpellAttackDamage: "actionSpellResolverNotRewritten",
-  command: "actionSpellResolverNotRewritten",
-  conditionImmunityAndTurnStartTemporaryHitPoints:
-    "actionSpellResolverNotRewritten",
-  conditionRemovalProtection: "actionSpellResolverNotRewritten",
-  counterspell: "notActionSpellCasting",
-  creatureSizeDecrease: "actionSpellResolverNotRewritten",
-  creatureSizeIncrease: "actionSpellResolverNotRewritten",
-  creatureTypeProtection: "actionSpellResolverNotRewritten",
-  damageReduction: "actionSpellResolverNotRewritten",
-  dancingLightsCombinedCast: "actionSpellResolverNotRewritten",
-  dancingLightsReposition: "notActionSpellCasting",
-  dancingLightsSeparateCast: "actionSpellResolverNotRewritten",
-  directCondition: "actionSpellResolverNotRewritten",
-  directConditionRemoval: "actionSpellResolverNotRewritten",
-  directHitPointRestoration: "bonusActionRewrite",
-  dragonsBreathInitial: "notActionSpellCasting",
-  expeditiousRetreatDash: "notActionSpellCasting",
-  featherFallMitigation: "notActionSpellCasting",
-  flamingSphere: "actionSpellResolverNotRewritten",
-  spiritualWeaponAttackProxy: "actionSpellResolverNotRewritten",
-  spiritualWeaponRepeatAttack: "notActionSpellCasting",
-  fogCloudObscurement: "actionSpellResolverNotRewritten",
-  greaseGroundHazard: "actionSpellResolverNotRewritten",
-  gustOfWindLine: "actionSpellResolverNotRewritten",
-  heldLight: "actionSpellResolverNotRewritten",
-  heldLightHurl: "actionSpellResolverNotRewritten",
-  hideousLaughter: "actionSpellResolverNotRewritten",
-  jumpMovementReplacement: "notActionSpellCasting",
-  levitatedCreature: "actionSpellResolverNotRewritten",
-  magicWeaponEnhancement: "notActionSpellCasting",
-  magicalDarknessPointOrigin: "actionSpellResolverNotRewritten",
-  makeStable: "actionSpellResolverNotRewritten",
-  markedDamageRider: "notActionSpellCasting",
-  mirrorImageHitInterception: "actionSpellResolverNotRewritten",
-  moonbeam: "actionSpellResolverNotRewritten",
-  objectContactDamage: "actionSpellResolverNotRewritten",
-  objectContactDamageRepeat: "notActionSpellCasting",
-  objectLight: "actionSpellResolverNotRewritten",
-  ongoingSpellEnd: "notActionSpellCasting",
-  persistentArmorEffect: "actionSpellResolverNotRewritten",
-  repeatedDamageAllocation: "actionSpellResolverNotRewritten",
-  rollModifier: "actionSpellResolverNotRewritten",
-  sanctuaryTargetingInterdiction: "notActionSpellCasting",
-  abilityD20TestRollModeSaveGate: "actionSpellResolverNotRewritten",
-  saveGatedAttackRollAdvantage: "actionSpellResolverNotRewritten",
-  saveGatedCondition: "actionSpellResolverNotRewritten",
-  saveGatedConditionImmunity: "actionSpellResolverNotRewritten",
-  saveGatedDamage: "actionSpellResolverNotRewritten",
-  scalarBuff: "bonusActionRewrite",
-  seeInvisibleObserverSight: "actionSpellResolverNotRewritten",
-  selfTeleport: "notActionSpellCasting",
-  selfTransformationMode: "actionSpellResolverNotRewritten",
-  shieldReaction: "notActionSpellCasting",
-  sleepTargetAdmission: "actionSpellResolverNotRewritten",
-  spellAttackDamage: "actionSpellResolverNotRewritten",
-  spellAttackSequence: "actionSpellResolverNotRewritten",
-  spellCreatedHeldObject: "notActionSpellCasting",
-  spellCreatedHeldObjectAttack: "notActionSpellCasting",
-  spellCreatedHeldObjectReEvoke: "notActionSpellCasting",
-  spellHostedWeaponAttack: "actionSpellResolverNotRewritten",
-  spikeGrowthMovementHazard: "actionSpellResolverNotRewritten",
-  thaumaturgyBoomingVoice: "actionSpellResolverNotRewritten",
-  wardingBond: "actionSpellResolverNotRewritten",
-  weaponAttackOverride: "notActionSpellCasting",
-  weaponDamageRider: "notActionSpellCasting",
-  webRestraintHazard: "actionSpellResolverNotRewritten",
-} as const satisfies Record<
+type QuickenedActionRewriteProcedureDispositions = {
+  readonly [Profile in (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number] as Profile["procedure"]]: Profile["metamagicCompatibility"];
+} & Record<
   SupportedSpellInvocation["procedure"],
   QuickenedActionRewriteProcedureDisposition
 >;
 
+let quickenedActionRewriteProcedureDispositions:
+  | QuickenedActionRewriteProcedureDispositions
+  | undefined;
+
+function quickenedActionRewriteProcedureDispositionTable(): QuickenedActionRewriteProcedureDispositions {
+  // Build lazily so registry imports can finish before metamagic reads the
+  // registered profile list.
+  // Object.fromEntries erases the one-entry-per-procedure relationship; the
+  // mapped type above keeps that registry-derived key/value invariant visible.
+  quickenedActionRewriteProcedureDispositions ??= Object.freeze(
+    Object.fromEntries(
+      REGISTERED_SPELL_PROCEDURE_PROFILES.map((profile) => [
+        profile.procedure,
+        profile.metamagicCompatibility,
+      ]),
+    ),
+  ) as QuickenedActionRewriteProcedureDispositions;
+  return quickenedActionRewriteProcedureDispositions;
+}
+
 type QuickenedActionRewriteProcedure = {
-  [Procedure in keyof typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS]: (typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS)[Procedure] extends
+  [Procedure in keyof QuickenedActionRewriteProcedureDispositions]: QuickenedActionRewriteProcedureDispositions[Procedure] extends
     "bonusActionRewrite"
     ? Procedure
     : never;
-}[keyof typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS];
+}[keyof QuickenedActionRewriteProcedureDispositions];
 
 export type SpellMetamagicAdmissionIssue = {
   readonly tag: "spellMetamagicAdmissionIssue";
@@ -250,22 +205,6 @@ export function admitSpellMetamagicApplications(input: {
   return sorceryPointIssue === null
     ? { tag: "ok", applications: knownApplications }
     : metamagicIssue(sorceryPointIssue);
-}
-
-export function metamagicApplicationsIncludeQuickened(
-  applications: readonly CharacterBattleMetamagicOptionFact[],
-): boolean {
-  return applications.some(
-    (application) => application.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
-  );
-}
-
-export function metamagicActionCostOverride(
-  applications: readonly CharacterBattleMetamagicOptionFact[],
-): "bonusAction" | undefined {
-  return metamagicApplicationsIncludeQuickened(applications)
-    ? "bonusAction"
-    : undefined;
 }
 
 export function actorCanOfferQuickenedSpellMetamagic(input: {
@@ -409,44 +348,6 @@ function metamagicStackingIssue(
     : "A spell can use only one Metamagic option unless one selected option explicitly combines with a different Metamagic option.";
 }
 
-export function discoverSpellMetamagicSelections(input: {
-  readonly actor: BattleCreatureState;
-  readonly invocation: SupportedSpellInvocation;
-}): readonly (readonly [SpellMetamagicSelection])[] {
-  if (
-    input.actor.origin.kind !== "character" ||
-    input.actor.origin.metamagic === undefined
-  ) {
-    return [];
-  }
-  return input.actor.origin.metamagic.knownOptions.flatMap((application) => {
-    if (
-      application.effectKind !== CAREFUL_METAMAGIC_EFFECT_KIND &&
-      application.effectKind !== HEIGHTENED_METAMAGIC_EFFECT_KIND
-    ) {
-      return [];
-    }
-    if (
-      spellMetamagicSupportIssue({
-        applications: [application],
-        invocation: input.invocation,
-        subject: {
-          tag: "actionSpell",
-          mode: { tag: "cast" },
-        },
-      }) !== null
-    ) {
-      return [];
-    }
-    return metamagicSorceryPointSpendIssue({
-      actor: input.actor,
-      applications: [application],
-    }) === null
-      ? [[{ effectKind: application.effectKind }]]
-      : [];
-  });
-}
-
 function spellMetamagicSupportIssue(input: {
   readonly applications: readonly CharacterBattleMetamagicOptionFact[];
   readonly invocation: SupportedSpellInvocation;
@@ -484,41 +385,19 @@ function spellMetamagicSupportIssue(input: {
   if (rerollIssue !== null) {
     return rerollIssue;
   }
-  const saveMetamagicOnly =
-    effectKinds.size > 0 &&
-    [...effectKinds].every(
-      (effectKind) =>
-        effectKind === CAREFUL_METAMAGIC_EFFECT_KIND ||
-        effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    );
-  if (!saveMetamagicOnly) {
-    return "Selected Metamagic option effect is not supported for this spell procedure.";
-  }
-  if (
-    input.subject.tag !== "actionSpell" ||
-    input.subject.mode.tag !== "cast"
-  ) {
-    return "Save-affecting Metamagic is supported only for action-time spell casts.";
-  }
-  if (input.invocation.procedure === "sleepTargetAdmission") {
-    return "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.";
-  }
-  if (
-    effectKinds.has(HEIGHTENED_METAMAGIC_EFFECT_KIND) &&
-    spellInvocationHasRepeatSavingThrowLifecycle(input.invocation)
-  ) {
-    return "Heightened Spell is not supported for spell procedures with repeat Saving Throws until the selected target is carried through later save holes.";
-  }
-  if (!spellInvocationSupportsSaveMetamagic(input.invocation)) {
-    return "Selected Metamagic option effect is not supported for this spell procedure.";
-  }
-  return null;
+  return saveMetamagicSupportIssue({
+    effectKinds,
+    invocation: input.invocation,
+    subject: input.subject,
+  });
 }
 
 function quickenedActionRewriteProcedureDisposition(
   invocation: SupportedSpellInvocation,
 ): QuickenedActionRewriteProcedureDisposition {
-  return QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS[invocation.procedure];
+  return quickenedActionRewriteProcedureDispositionTable()[
+    invocation.procedure
+  ];
 }
 
 function quickenedActionRewriteSupportIssue(
@@ -570,33 +449,6 @@ function rerollMetamagicSupportIssue(
     : null;
 }
 
-function spellInvocationSupportsSaveMetamagic(
-  invocation: SupportedSpellInvocation,
-): boolean {
-  return (
-    invocation.procedure === "saveGatedDamage" ||
-    invocation.procedure === "saveGatedCondition" ||
-    invocation.procedure === "saveGatedConditionImmunity" ||
-    invocation.procedure === "saveGatedAttackRollAdvantage" ||
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "gustOfWindLine"
-  );
-}
-
-function spellInvocationHasRepeatSavingThrowLifecycle(
-  invocation: SupportedSpellInvocation,
-): boolean {
-  return (
-    invocation.procedure === "hideousLaughter" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "gustOfWindLine" ||
-    (invocation.procedure === "saveGatedCondition" &&
-      invocation.effect.repeatSave !== null)
-  );
-}
-
 function quickenedSpellAdmissionIssue(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
@@ -625,40 +477,4 @@ function quickenedSpellAdmissionIssue(input: {
     )
     ? null
     : "Quickened Spell selection requires the actor to know Quickened Spell.";
-}
-
-function metamagicSorceryPointSpendIssue(input: {
-  readonly actor: BattleCreatureState;
-  readonly applications: readonly CharacterBattleMetamagicOptionFact[];
-}): string | null {
-  if (input.actor.origin.kind !== "character") {
-    return "Metamagic selection requires a character with known Metamagic options.";
-  }
-  const metamagic = input.actor.origin.metamagic;
-  if (metamagic === undefined) {
-    return "Metamagic selection requires a character with known Metamagic options.";
-  }
-  const resource = input.actor.origin.resources.find(
-    (candidate): candidate is CharacterBattlePointPoolResourceState =>
-      candidate.unit.id === metamagic.sorceryPointResourceUnitId &&
-      characterBattleResourceIsPointPool(candidate),
-  );
-  if (resource === undefined) {
-    return "Metamagic requires its shared Sorcery Point resource.";
-  }
-  return Number(resource.pointsRemaining) >=
-    Number(metamagicSorceryPointCost(input.applications))
-    ? null
-    : "Metamagic requires enough unexpended Sorcery Points.";
-}
-
-function metamagicSorceryPointCost(
-  applications: readonly CharacterBattleMetamagicOptionFact[],
-): ResourceCount {
-  return resourceCount(
-    applications.reduce(
-      (total, application) => total + Number(application.sorceryPointCost),
-      0,
-    ),
-  );
 }

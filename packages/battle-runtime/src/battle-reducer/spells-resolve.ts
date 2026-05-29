@@ -56,6 +56,7 @@ import {
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -74,7 +75,6 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
-  breakBattleConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
@@ -90,10 +90,9 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
-import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
-import { expendSpellSlot } from "./spell-effects.ts";
+import { spellProcedureProfileFor } from "./spell-procedure-profiles/registry.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
   repositionSpiritualWeaponAttackProxyEffect,
@@ -101,11 +100,9 @@ import {
 import {
   isReadiedSpellInvocation,
   spellInvocationCasterPrerequisiteIsMet,
-  spellInvocationIsSpellcasting,
   spellRequiresVerbal,
 } from "./spells-discovery.ts";
 import {
-  applyPersistentSpellActiveEffect,
   endHeldLightSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
@@ -123,19 +120,19 @@ import {
   spellObjectAttackRollHole,
   spellObjectIgnitionFact,
   spellTargetHole,
-  spellTargetListHole,
   spellTargetIsLegal,
   supportedSpellInvocationMatchesRef,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import {
-  markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
-  spellAttackKindForRedirect,
   spellHasAvailableSpend,
+  spellInvocationIsSpellcasting,
+} from "./spell-turn-resources.ts";
+import {
+  spellAttackKindForRedirect,
   supportedSpellActs,
 } from "./spells-profiles.ts";
-import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -155,28 +152,13 @@ import {
 } from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
-import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import {
-  resolveFlamingSphereSpellAct,
-  resolveFogCloudObscurementSpellAct,
-  resolveAntimagicFieldOngoingSpellSuppressionAct,
-  resolveGustOfWindLineSpellAct,
-  resolveMagicalDarknessPointOriginSpellAct,
-  resolveMoonbeamSpellAct,
-  resolveSpikeGrowthMovementHazardSpellAct,
-  resolveWebRestraintHazardSpellAct,
-} from "./spells-resolve-area-effects.ts";
-import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
-import {
-  resolveObjectContactDamageRepeatSpellAct,
-  resolveObjectContactDamageSpellAct,
-} from "./spells-resolve-object-contact-damage.ts";
-import { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
-import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
+  chainedSpellFillSet as parseChainedSpellFillSet,
+  type ChainedSpellFillSet,
+} from "./spells-resolve-chained.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
-  resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
@@ -187,8 +169,6 @@ export {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
-export { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
-export { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -230,42 +210,11 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
-  resolveBlurAttackRollDefenseSpellAct,
-  resolveSeeInvisibleObserverSightSpellAct,
-  resolveConditionRemovalProtectionSpellAct,
-  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
-  resolveCreatureSizeChangeSpellAct,
-  resolveCreatureTypeProtectionSpellAct,
-  resolveDamageReductionSpellAct,
-  resolveDragonsBreathInitialSpellAct,
-  resolveDirectConditionRemovalSpellAct,
-  resolveDirectConditionSpellAct,
-  resolveJumpMovementReplacementSpellAct,
-  resolveLevitatedCreatureSpellAct,
-  resolveMakeStableSpellAct,
-  resolveMirrorImageHitInterceptionSpellAct,
-  resolvePreparedHealingSpellAct,
-  resolveRollModifierSpellAct,
-  resolveScalarBuffSpellAct,
-  resolveSelfTransformationModeSpellAct,
-  resolveSelfTeleportSpellAct,
-  resolveThaumaturgyBoomingVoiceSpellAct,
-  resolveWardingBondSpellAct,
-} from "./spells-resolve-support-effects.ts";
-export {
-  conditionRemovalProtectionSpellTargetSelection,
-  conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  creatureTypeProtectionSpellTargetSelection,
-  directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
-  type ConditionRemovalProtectionSpellTargetSelection,
-  type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
-  type CreatureTypeProtectionSpellTargetSelection,
-  type DirectConditionRemovalSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
   type RollModifierSpellEffectSelection,
@@ -273,73 +222,18 @@ export {
   type ScalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
 
-import {
-  resolveBlurAttackRollDefenseSpellAct,
-  resolveSeeInvisibleObserverSightSpellAct,
-  resolveConditionRemovalProtectionSpellAct,
-  resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
-  resolveCreatureSizeChangeSpellAct,
-  resolveCreatureTypeProtectionSpellAct,
-  resolveDamageReductionSpellAct,
-  resolveDragonsBreathInitialSpellAct,
-  resolveDirectConditionRemovalSpellAct,
-  resolveDirectConditionSpellAct,
-  resolveJumpMovementReplacementSpellAct,
-  resolveLevitatedCreatureSpellAct,
-  resolveMakeStableSpellAct,
-  resolveMirrorImageHitInterceptionSpellAct,
-  resolvePreparedHealingSpellAct,
-  resolveRollModifierSpellAct,
-  resolveScalarBuffSpellAct,
-  resolveSelfTransformationModeSpellAct,
-  resolveSelfTeleportSpellAct,
-  resolveThaumaturgyBoomingVoiceSpellAct,
-  resolveWardingBondSpellAct,
-} from "./spells-resolve-support-effects.ts";
-
-import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
-
-import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
-
-import {
-  resolveCommandSpellAct,
-  resolveAbilityD20TestRollModeSaveGateSpellAct,
-  resolveGreaseGroundHazardSpellAct,
-  resolveHideousLaughterSpellAct,
-  resolveSaveGateAttackRollAdvantageSpellAct,
-  resolveSaveGateConditionSpellAct,
-  resolveSaveGateConditionImmunitySpellAct,
-  resolveSaveGateDamageSpellAct,
-  resolveSleepTargetAdmissionSpellAct,
-} from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  combatantWithSanctuaryWard,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-import {
-  spellFillSet,
-  spellFillSetContainsOnlySpellCastReactionFacts,
-  type SpellFillSet,
-} from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import {
-  resolveDancingLightsCastSpellAct,
-  resolveDancingLightsRepositionSpellAct,
-  resolveHeldLightSpellAct,
-  resolveMarkedDamageRiderSpellAct,
-  resolveObjectLightSpellAct,
-  resolveSpellCreatedHeldObjectReEvokeSpellAct,
-  resolveSpellCreatedHeldObjectSpellAct,
-  resolveReadySpellAct,
-  resolveWeaponAttackOverrideSpellAct,
-  resolveWeaponDamageRiderSpellAct,
-} from "./spells-resolve-release.ts";
-import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
+import { resolveReadySpellAct } from "./spells-resolve-release.ts";
+import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -350,7 +244,104 @@ type SpellAttackDamageInvocation = Extract<
 
 type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
+  readonly useSharedSpellAttackDamageResolver?: true;
 };
+
+type SpellProcedureActionCostOverride = Exclude<
+  ReturnType<typeof metamagicActionCostOverride>,
+  undefined
+>;
+
+type SpellProcedureResolveDispatchInput = {
+  readonly input:
+    | (ActionSpellBattleResolutionInput & {
+        readonly castingState?: BattleState;
+      })
+    | BonusActionSpellBattleResolutionInput
+    | BonusActionDashSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly fillSet:
+    | Extract<SpellFillSet, { readonly tag: "ok" }>
+    | Extract<ChainedSpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: SpellProcedureActionCostOverride;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
+
+type SpellProcedureProfileResolver = {
+  readonly resolve: (input: never) => BattleResolutionResult;
+};
+
+const PROFILE_DELEGATED_SPELL_ATTACK_DAMAGE_PROCEDURES = [
+  "spellAttackDamage",
+  "heldLightHurl",
+  "spellCreatedHeldObjectAttack",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const BONUS_ACTION_SPELL_ATTACK_PROXY_PROCEDURES = [
+  "spiritualWeaponAttackProxy",
+  "spiritualWeaponRepeatAttack",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
+  "saveGatedDamage",
+  "saveGatedCondition",
+  "saveGatedConditionImmunity",
+  "saveGatedAttackRollAdvantage",
+  "hideousLaughter",
+  "greaseGroundHazard",
+  "gustOfWindLine",
+  "command",
+  "directHitPointRestoration",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
+  "scalarBuff",
+  "directHitPointRestoration",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+function procedureIsIn(
+  procedure: SupportedSpellInvocation["procedure"],
+  procedures: ReadonlyArray<SupportedSpellInvocation["procedure"]>,
+): boolean {
+  return procedures.includes(procedure);
+}
+
+function resolveRegisteredSpellProcedureProfile(
+  profile: SpellProcedureProfileResolver,
+  input: SpellProcedureResolveDispatchInput,
+): BattleResolutionResult {
+  // Registry lookup preserves the procedure/invocation pairing, but the
+  // heterogeneous resolver methods erase to a union at this call site.
+  return profile.resolve(input as never);
+}
+
+function actionSpellProfileResolutionInput(
+  input: ActionSpellBattleResolutionInput,
+  castingState: BattleState,
+  invocation: SupportedSpellInvocation,
+): ActionSpellBattleResolutionInput & { readonly castingState?: BattleState } {
+  return invocation.procedure === "persistentArmorEffect"
+    ? { ...input, castingState }
+    : { ...input, state: castingState };
+}
+
+function actionSpellUsesSharedSpellAttackDamageBody(
+  invocation: SupportedSpellInvocation,
+  options: ResolveSpellActInternalOptions,
+): boolean {
+  return (
+    procedureIsIn(
+      invocation.procedure,
+      BONUS_ACTION_SPELL_ATTACK_PROXY_PROCEDURES,
+    ) ||
+    (options.useSharedSpellAttackDamageResolver === true &&
+      procedureIsIn(
+        invocation.procedure,
+        PROFILE_DELEGATED_SPELL_ATTACK_DAMAGE_PROCEDURES,
+      ))
+  );
+}
 
 function isSupportedDamageSpellInvocation(
   invocation: SupportedSpellInvocation,
@@ -431,6 +422,22 @@ export function resolveSpellAct(
   input: ActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   return resolveSpellActInternal(input);
+}
+
+export function resolveSpellAttackDamageAct(
+  input: SpellProcedureProfileResolveInput<
+    | SpellAttackDamageInvocation
+    | Extract<SupportedSpellInvocation, { readonly procedure: "heldLightHurl" }>
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spellCreatedHeldObjectAttack" }
+      >,
+    ActionSpellBattleResolutionInput
+  >,
+): BattleResolutionResult {
+  return resolveSpellActInternal(input.input, {
+    useSharedSpellAttackDamageResolver: true,
+  });
 }
 
 function resolveSpellActInternal(
@@ -664,10 +671,16 @@ function resolveSpellActInternal(
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
-    return resolveChainedSpellAttackDamageAct({
+    const fillSet = parseChainedSpellFillSet(input.fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    const profile = spellProcedureProfileFor(invocation.procedure);
+    return resolveRegisteredSpellProcedureProfile(profile, {
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
+      fillSet,
     });
   }
 
@@ -675,367 +688,23 @@ function resolveSpellActInternal(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (
-    invocation.procedure === "spellCreatedHeldObjectAttack" &&
-    fillSet.reactionSpellTargetFacts.length > 0
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
-    );
-  }
-  if (invocation.procedure === "spellAttackSequence") {
-    return resolveSpellAttackSequenceAct({
-      input: { ...input, state: castingState },
+  if (!actionSpellUsesSharedSpellAttackDamageBody(invocation, options)) {
+    const profile = spellProcedureProfileFor(invocation.procedure);
+    return resolveRegisteredSpellProcedureProfile(profile, {
+      input: actionSpellProfileResolutionInput(
+        input,
+        castingState,
+        invocation,
+      ),
       actorId: subject.actorId,
       invocation,
       fillSet,
-    });
-  }
-  if (invocation.procedure === "attackBurstSaveDamage") {
-    return resolveAttackBurstSaveDamageSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectLight") {
-    return resolveObjectLightSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "ongoingSpellEnd") {
-    return resolveOngoingSpellEndSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "dancingLightsSeparateCast" ||
-    invocation.procedure === "dancingLightsCombinedCast"
-  ) {
-    return resolveDancingLightsCastSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spellHostedWeaponAttack") {
-    return resolveSpellHostedWeaponAttackSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "saveGatedDamage") {
-    return resolveSaveGateDamageSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedCondition") {
-    return resolveSaveGateConditionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedConditionImmunity") {
-    return resolveSaveGateConditionImmunitySpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
-    return resolveSaveGateAttackRollAdvantageSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
-    return resolveAbilityD20TestRollModeSaveGateSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "sleepTargetAdmission") {
-    return resolveSleepTargetAdmissionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "hideousLaughter") {
-    return resolveHideousLaughterSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "greaseGroundHazard") {
-    return resolveGreaseGroundHazardSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "fogCloudObscurement") {
-    return resolveFogCloudObscurementSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "magicalDarknessPointOrigin") {
-    return resolveMagicalDarknessPointOriginSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
-    return resolveAntimagicFieldOngoingSpellSuppressionAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "webRestraintHazard") {
-    return resolveWebRestraintHazardSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "gustOfWindLine") {
-    return resolveGustOfWindLineSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "flamingSphere") {
-    return resolveFlamingSphereSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spikeGrowthMovementHazard") {
-    return resolveSpikeGrowthMovementHazardSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "moonbeam") {
-    return resolveMoonbeamSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectContactDamage") {
-    return resolveObjectContactDamageSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "command") {
-    return resolveCommandSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "repeatedDamageAllocation") {
-    return resolvePreparedSlotSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directHitPointRestoration") {
-    return resolvePreparedHealingSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "scalarBuff") {
-    return resolveScalarBuffSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "selfTransformationMode") {
-    return resolveSelfTransformationModeSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "rollModifier") {
-    return resolveRollModifierSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "creatureSizeIncrease" ||
-    invocation.procedure === "creatureSizeDecrease"
-  ) {
-    return resolveCreatureSizeChangeSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "levitatedCreature") {
-    return resolveLevitatedCreatureSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "wardingBond") {
-    return resolveWardingBondSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "thaumaturgyBoomingVoice") {
-    return resolveThaumaturgyBoomingVoiceSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "creatureTypeProtection") {
-    return resolveCreatureTypeProtectionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "blurAttackRollDefense") {
-    return resolveBlurAttackRollDefenseSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "seeInvisibleObserverSight") {
-    return resolveSeeInvisibleObserverSightSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "mirrorImageHitInterception") {
-    return resolveMirrorImageHitInterceptionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "conditionRemovalProtection") {
-    return resolveConditionRemovalProtectionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "damageReduction") {
-    return resolveDamageReductionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "makeStable") {
-    return resolveMakeStableSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
-  ) {
-    return resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directCondition") {
-    return resolveDirectConditionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
+      ...(procedureIsIn(
+        invocation.procedure,
+        ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES,
+      )
+        ? { metamagicApplications: metamagicAdmission.applications }
+        : {}),
     });
   }
 
@@ -1044,6 +713,18 @@ function resolveSpellActInternal(
       input.state,
       "invalidFill",
       "Spell target must choose either one combatant or one object, not both.",
+    );
+  }
+  if (
+    fillSet.targetList !== undefined ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell attack damage spells use target, attack-roll, and damage fills.",
     );
   }
   const selectedInvocation = selectedSpellAttackDamageInvocation(
@@ -1268,33 +949,6 @@ function resolveSpellActInternal(
         ],
       });
     }
-  }
-
-  if (invocationForResolution.procedure === "persistentArmorEffect") {
-    if (
-      fillSet.attackRoll != null ||
-      fillSet.damageRoll != null ||
-      fillSet.concentrationSavingThrows.length > 0
-    ) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Persistent spell effects do not use attack or damage fills.",
-      );
-    }
-    const effected = applyPersistentSpellActiveEffect(
-      castingState,
-      subject.actorId,
-      target.combatantId,
-      invocationForResolution,
-    );
-    return spendSpellCastResources({
-      state: effected,
-      actorId: subject.actorId,
-      invocation: invocationForResolution,
-      errorState: input.state,
-      startConcentration: false,
-    });
   }
 
   const spellCastReactionWindow = spellInvocationIsSpellcasting(
@@ -2111,7 +1765,8 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
 }): boolean {
   return (
     input.actorId !== input.invocation.activeEffect.startedOn.actorId ||
-    input.state.initiative.round !== input.invocation.activeEffect.startedOn.round
+    input.state.initiative.round !==
+      input.invocation.activeEffect.startedOn.round
   );
 }
 
@@ -2601,7 +2256,11 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   let invocation =
     actor?.origin.kind === "character"
-      ? supportedBonusActionSpellInvocationForSubject(actor, input.state, subject)
+      ? supportedBonusActionSpellInvocationForSubject(
+          actor,
+          input.state,
+          subject,
+        )
       : undefined;
   if (actor?.origin.kind === "character" && invocation == null) {
     invocation = antimagicSuppressedInvocationForStaleSubject(
@@ -2822,148 +2481,23 @@ export function resolveBonusActionSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (invocation.procedure === "heldLight") {
-    return resolveHeldLightSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spellCreatedHeldObject") {
-    return resolveSpellCreatedHeldObjectSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-    return resolveSpellCreatedHeldObjectReEvokeSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "dancingLightsReposition") {
-    return resolveDancingLightsRepositionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectContactDamageRepeat") {
-    return resolveObjectContactDamageRepeatSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    return resolveBonusActionSpellAttackProxyAct({
-      ...input,
-      state: castingState,
-    });
-  }
-  if (invocation.procedure === "scalarBuff") {
-    return resolveScalarBuffSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "weaponDamageRider") {
-    return resolveWeaponDamageRiderSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "magicWeaponEnhancement") {
-    return resolveMagicWeaponEnhancementSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "weaponAttackOverride") {
-    return resolveWeaponAttackOverrideSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "markedDamageRider") {
-    return resolveMarkedDamageRiderSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "jumpMovementReplacement") {
-    return resolveJumpMovementReplacementSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "dragonsBreathInitial") {
-    return resolveDragonsBreathInitialSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "selfTeleport") {
-    return resolveSelfTeleportSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    return resolveSanctuaryTargetingInterdictionSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directConditionRemoval") {
-    return resolveDirectConditionRemovalSpellAct({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  return resolvePreparedHealingSpellAct({
+  const profile = spellProcedureProfileFor(invocation.procedure);
+  return resolveRegisteredSpellProcedureProfile(profile, {
     input: { ...input, state: castingState },
     actorId: subject.actorId,
     invocation,
     fillSet,
-    metamagicApplications: metamagicAdmission.applications,
+    ...(procedureIsIn(
+      invocation.procedure,
+      BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES,
+    )
+      ? { metamagicApplications: metamagicAdmission.applications }
+      : {}),
     ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
   });
 }
 
-function resolveBonusActionSpellAttackProxyAct(
+export function resolveBonusActionSpellAttackProxyAct(
   input: BonusActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
   const result = resolveSpellActInternal(
@@ -3042,8 +2576,7 @@ function stateForAntimagicSuppressedRepeatLookup(
         {
           ...combatant,
           activeEffects: combatant.activeEffects.filter(
-            (effect) =>
-              effect.kind !== "antimagicFieldOngoingSpellSuppression",
+            (effect) => effect.kind !== "antimagicFieldOngoingSpellSuppression",
           ),
         },
       ]),
@@ -3089,192 +2622,11 @@ export function resolveBonusActionDashSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
-    );
-  }
-  if (!spellHasAvailableSpend(actor, invocation)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat no longer has its required runtime spell resource.",
-    );
-  }
-  if (
-    !spellActTurnResourceAvailable(
-      input.state.currentTurnResources,
-      input.subject.actorId,
-      invocation,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  if (!representedMovementSpeedKinds(actor).includes(subject.speedKind)) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Expeditious Retreat Dash speed kind is not represented for this combatant.",
-    );
-  }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat is unavailable while an active ongoing feature prevents spellcasting.",
-    );
-  }
-
-  const castingState = spellRequiresVerbal(invocation.spell)
-    ? revealHidden(input.state, subject.actorId)
-    : input.state;
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    castingState,
-    spellCastReactionFrame({
-      casterId: subject.actorId,
-      invocation,
-      targetIds: [subject.actorId],
-      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.subject,
-        fills: input.fills,
-      },
-    }),
-    input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    castingState,
-    subject.actorId,
-  );
-  const spent = spendActivationResource(spellCastState.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Expeditious Retreat Bonus Action is no longer available for the current actor.",
-    );
-  }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.right,
-    input.subject.actorId,
-  );
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const afterPriorConcentration = breakBattleConcentration(
-    spellCastState,
-    subject.actorId,
-  );
-  const slotted = expendSpellSlot(
-    afterPriorConcentration,
-    subject.actorId,
-    invocation.resource.slotLevel,
-  );
-  const effectHost = slotted.combatants.get(subject.actorId);
-  if (effectHost === undefined) {
-    return invalidResult(
-      input.state,
-      "missingCombatant",
-      "Expeditious Retreat caster is not in this battle.",
-    );
-  }
-  const effectedActor = {
-    ...effectHost,
-    concentration: {
-      sourceSpellId: invocation.spell.id,
-      effectKind: "spellEffect" as const,
-    },
-    activeEffects: [...effectHost.activeEffects, invocation.activeEffect],
-  };
-  const effected = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
-  };
-  const dashed = applyDashToActor(
-    effected,
-    effectedActor,
-    subject.speedKind,
-    effected.currentTurnResources,
-  );
-  return {
-    tag: "resolved",
-    state: dashed,
-    snapshot: snapshotBattle(dashed),
-  };
-}
-
-function resolveSanctuaryTargetingInterdictionSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "sanctuaryTargetingInterdiction" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  const targetList = input.fillSet.targetList;
-  if (targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  if (targetList.targetIds.length !== 1) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sanctuary must target exactly one creature.",
-    );
-  }
-  const targetId = targetList.targetIds[0]!;
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    input.input.state,
-    input.actorId,
-  );
-  const target = spellCastState.combatants.get(targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      spellCastState,
-      input.actorId,
-      targetId,
-      input.invocation,
-      targetList.spatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Sanctuary target must be a combatant within range.",
-    );
-  }
-  const combatants = new Map(spellCastState.combatants).set(
-    targetId,
-    combatantWithSanctuaryWard(target, input.invocation),
-  );
-  return spendSpellCastResources({
-    state: { ...spellCastState, combatants },
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    skipTargetActionSpellCastEarlyEnd: true,
+  const profile = spellProcedureProfileFor(invocation.procedure);
+  return resolveRegisteredSpellProcedureProfile(profile, {
+    input,
+    actorId: subject.actorId,
+    invocation,
+    fillSet,
   });
 }

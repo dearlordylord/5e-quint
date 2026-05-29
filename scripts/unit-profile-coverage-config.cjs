@@ -25,6 +25,7 @@ const profileKinds = new Set([
   "bonus-action",
   "reaction",
   "spell-invocation",
+  "battle-admission",
   "persistent-effect",
   "summoned-companion",
   "stat-block-control",
@@ -51,6 +52,7 @@ const rulesKernelProfileKindClassifications = Object.freeze({
   "bonus-action": "rules-kernel",
   reaction: "rules-kernel",
   "spell-invocation": "rules-kernel",
+  "battle-admission": "surface-authored-data",
   "persistent-effect": "rules-kernel",
   "summoned-companion": "rules-kernel",
   "stat-block-control": "rules-kernel",
@@ -69,6 +71,8 @@ const rulesKernelProfileKindClassificationReasons = Object.freeze({
   reaction: "reaction profiles execute reducer-owned continuations",
   "spell-invocation":
     "spell invocation profiles execute reducer-owned procedures",
+  "battle-admission":
+    "battle admission profiles parse authored Surface mechanics into typed support facts without owning reducer procedure semantics",
   "persistent-effect":
     "persistent-effect profiles own active-effect lifecycle and table-state projection",
   "summoned-companion":

@@ -304,6 +304,7 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
   "fighter_action_surge",
   "fighter_second_wind",
   "monk_monks_focus",
+  "paladin_channel_divinity",
   "paladin_lay_on_hands",
   "sorcerer_font_of_magic",
   "sorcerer_innate_sorcery",

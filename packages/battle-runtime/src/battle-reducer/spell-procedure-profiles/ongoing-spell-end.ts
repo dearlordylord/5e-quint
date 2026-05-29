@@ -1,15 +1,33 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
+//
+// The Dispel Magic ongoing-spell ending Spell Procedure Profile: action-time
+// level-3-or-higher Spell Slot casting selects one creature, object, or
+// magical-effect target within 120 feet, ends tracked ongoing spell effects at
+// or below the slot level, and gates higher-level tracked effects behind a
+// spellcasting Ability Check against DC 10 + the tracked spell level.
+//
+// RAW anchors:
+//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Dispel Magic":
+//     Action; 120 feet; V/S; instantaneous; choose one creature, object, or
+//     magical effect within range; ongoing spells of level 3 or lower end;
+//     higher-level ongoing spells require a spellcasting Ability Check against
+//     DC 10 plus the spell level; higher-level slots automatically end spells
+//     whose level is equal to or below the slot level.
+//   - UBIQUITOUS_LANGUAGE.md: Magic Action, Ability Check, Spell Slot, Spell
+//     Invocation, Spell Effect, and Battle Runtime Boundaries.
 
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { difficultyClass } from "@dnd/shared/types";
+import { difficultyClass, movementFeet } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureState,
   type BattleOngoingSpellEffectRef,
@@ -21,27 +39,211 @@ import {
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
-import { invalidResult } from "./result-helpers.ts";
+} from "../../battle-reducer.ts";
+import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { spellId, type CombatantId } from "../../identity.ts";
+import { needsHolesResult } from "../hole-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import {
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefEquals,
   ongoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
-} from "./antimagic-field-suppression.ts";
-import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
-import type { BattleSpellEffectLevel } from "./spells-effective-level.ts";
-import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+} from "../antimagic-field-suppression.ts";
+import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
+import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { sameStringSet } from "../spells-profile-shared.ts";
+import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
+import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import type {
+  SpellAdmissionContext,
+  SpellProcedureProfile,
+} from "./profile.ts";
+import { Schema } from "effect";
+import { spellProcedureInvocationSchema } from "./profile.ts";
+import {
+  BattleRuntimeObjectSchema,
+  MovementFeet,
+  PreparedSpellAccessSchema,
+  SpellSlotInvocationResourceSchema,
+} from "../codec-building-blocks.ts";
 
-export const ONGOING_SPELL_TARGET_CHOICE_HOLE_ID = holeId(
+type OngoingSpellEndInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "ongoingSpellEnd" }
+>;
+type ActivationPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>["phases"][number];
+
+const DISPEL_MAGIC_LEVEL = 3;
+const DISPEL_MAGIC_RANGE_FEET = 120;
+const DISPEL_MAGIC_TARGET_KINDS = [
+  "creature",
+  "object",
+  "magical_effect",
+] as const;
+
+function admitOngoingSpellEnd(
+  spell: SpellRecord,
+  ctx: SpellAdmissionContext,
+): readonly OngoingSpellEndInvocation[] {
+  const rangeFeet = ongoingSpellEndSpellRangeFeet(spell);
+  if (rangeFeet === null) {
+    return [];
+  }
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+    (slot): readonly OngoingSpellEndInvocation[] =>
+      Number(slot.spellLevel) < spell.mechanics.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              procedure: "ongoingSpellEnd",
+              spell,
+              actionCost: "magicAction",
+              rangeFeet: movementFeet(rangeFeet),
+            },
+          ],
+  );
+}
+
+function ongoingSpellEndSpellRangeFeet(spell: SpellRecord): number | null {
+  const range =
+    spell.mechanics.family === "activation" ? spell.mechanics.range : null;
+  const rangeFeet =
+    range?.kind === "point" && typeof range.feet === "number"
+      ? range.feet
+      : null;
+  if (
+    spell.mechanics.family !== "activation" ||
+    range === null ||
+    spell.mechanics.level !== DISPEL_MAGIC_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== DISPEL_MAGIC_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.components.v !== true ||
+    spell.mechanics.components.s !== true ||
+    spell.mechanics.components.m !== false
+  ) {
+    return null;
+  }
+  const directPhase = spell.mechanics.phases[0];
+  const abilityCheckPhase = spell.mechanics.phases[1];
+  if (
+    spell.mechanics.phases.length !== 2 ||
+    directPhase === undefined ||
+    abilityCheckPhase === undefined ||
+    !isOngoingSpellEndDirectPhase(directPhase) ||
+    !isOngoingSpellEndAbilityCheckPhase(abilityCheckPhase) ||
+    ongoingSpellEndTargetHoleId(directPhase) !==
+      ongoingSpellEndTargetHoleId(abilityCheckPhase)
+  ) {
+    return null;
+  }
+  return rangeFeet;
+}
+
+function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "direct" &&
+    isOngoingSpellEndTargetAttachment(phase.attachment) &&
+    phase.effects?.length === 1 &&
+    phase.effects[0]?.kind === "end_ongoing_spells" &&
+    phase.effects[0]?.maxSpellLevel === "caster_slot_level"
+  );
+}
+
+function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "ability_check_gate" &&
+    String(phase.ability) === "caster_spellcasting_ability" &&
+    phase.dc === 10 &&
+    phase.autoSuccessIfCasterSlotGte === "target_spell_level" &&
+    phase.onPass.kind === "end_ongoing_spells" &&
+    phase.onPass.maxSpellLevel === "contested_spell_level" &&
+    phase.onFail === undefined &&
+    isOngoingSpellEndTargetAttachment(phase.attachment)
+  );
+}
+
+function isOngoingSpellEndTargetAttachment(
+  attachment: Extract<
+    ActivationPhase,
+    { readonly attachment: unknown }
+  >["attachment"],
+): boolean {
+  const targetKinds =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    "targetKinds" in attachment.value.selection
+      ? attachment.value.selection.targetKinds
+      : undefined;
+  return (
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one" &&
+    targetKinds !== undefined &&
+    sameStringSet(targetKinds, DISPEL_MAGIC_TARGET_KINDS)
+  );
+}
+
+function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
+  if (phase.kind !== "direct" && phase.kind !== "ability_check_gate") {
+    return null;
+  }
+  const attachment = phase.attachment;
+  return attachment.kind === "hole" &&
+    isOngoingSpellEndTargetAttachment(attachment)
+    ? attachment.holeId
+    : null;
+}
+
+function discoverOngoingSpellEndCastAct(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: OngoingSpellEndInvocation,
+): readonly AvailableBattleAct[] {
+  return [
+    {
+      subject: {
+        tag: "actionSpell",
+        actorId,
+        invocation: ongoingSpellEndInvocationRef(invocation),
+        mode: { tag: "cast" },
+      },
+      label: invocation.spell.name,
+      summary: ongoingSpellEndCastSummary(invocation),
+      initialHoles: [ongoingSpellTargetChoiceHole(state, actorId, invocation)],
+    },
+  ];
+}
+
+function ongoingSpellEndInvocationRef(
+  invocation: OngoingSpellEndInvocation,
+): SpellInvocationRef {
+  return {
+    tag: "spellSlot",
+    spellId: spellId(invocation.spell.id),
+    slotLevel: invocation.resource.slotLevel,
+    procedure: "ongoingSpellEnd",
+  };
+}
+
+function ongoingSpellEndCastSummary(
+  invocation: OngoingSpellEndInvocation,
+): string {
+  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+}
+
+const ONGOING_SPELL_TARGET_CHOICE_HOLE_ID = holeId(
   "battle:spell:ongoing-end:target",
 );
-export const ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE = holeInstanceKey(
+const ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE = holeInstanceKey(
   "battle:spell:ongoing-end:target",
 );
 
@@ -60,13 +262,10 @@ type BattleTrackedOngoingSpellOccurrence =
       readonly effect: TrackedDispellableOngoingSpellActiveEffect;
     };
 
-export function ongoingSpellTargetChoiceHole(
+function ongoingSpellTargetChoiceHole(
   state: BattleState,
   casterId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "ongoingSpellEnd" }
-  >,
+  invocation: OngoingSpellEndInvocation,
 ): BattleOngoingSpellTargetChoiceHole {
   return {
     holeInstanceKey: ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE,
@@ -81,7 +280,7 @@ export function ongoingSpellTargetChoiceHole(
   };
 }
 
-export function ongoingSpellTargetEquals(
+function ongoingSpellTargetEquals(
   left: BattleOngoingSpellTarget,
   right: BattleOngoingSpellTarget,
 ): boolean {
@@ -99,13 +298,10 @@ export function ongoingSpellTargetEquals(
   );
 }
 
-export function ongoingSpellTargetMatchesFact(input: {
+function ongoingSpellTargetMatchesFact(input: {
   readonly fact: BattleOngoingSpellTargetWithinRangeFact;
   readonly casterId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "ongoingSpellEnd" }
-  >;
+  readonly invocation: OngoingSpellEndInvocation;
   readonly target: BattleOngoingSpellTarget;
 }): boolean {
   return (
@@ -117,13 +313,10 @@ export function ongoingSpellTargetMatchesFact(input: {
   );
 }
 
-export function resolveOngoingSpellEndSpellAct(input: {
+function resolveOngoingSpellEndSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "ongoingSpellEnd" }
-  >;
+  readonly invocation: OngoingSpellEndInvocation;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   const unrelatedFill = ongoingSpellEndUnrelatedFill(input.fillSet);
@@ -324,17 +517,15 @@ export function resolveOngoingSpellEndSpellAct(input: {
       };
 }
 
-export function ongoingSpellEndAbilityCheckHole(
+function ongoingSpellEndAbilityCheckHole(
   casterId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "ongoingSpellEnd" }
-  >,
+  invocation: OngoingSpellEndInvocation,
   target: BattleOngoingSpellTarget,
   occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleSpellcastingAbilityCheckHole {
   const effect = ongoingSpellOccurrenceRef(occurrence);
-  const contestedSpellLevel = ongoingSpellOccurrenceSourceSpellLevel(occurrence);
+  const contestedSpellLevel =
+    ongoingSpellOccurrenceSourceSpellLevel(occurrence);
   const dc = difficultyClass(10 + contestedSpellLevel);
   return {
     holeInstanceKey: holeInstanceKey(
@@ -482,6 +673,7 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.attackRoll !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
     fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
     fillSet.commandOptionChoice !== undefined ||
@@ -562,3 +754,34 @@ function uniqueConcentrationSources(
   }
   return unique;
 }
+
+const OngoingSpellEndInvocationSchema = spellProcedureInvocationSchema<
+  Extract<SupportedSpellInvocation, { readonly procedure: "ongoingSpellEnd" }>
+>(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("ongoingSpellEnd"),
+    spell: BattleRuntimeObjectSchema,
+    actionCost: Schema.Literal("magicAction"),
+    rangeFeet: MovementFeet,
+  }),
+);
+export const ongoingSpellEndProfile = {
+  procedure: "ongoingSpellEnd",
+  invocationSchema: OngoingSpellEndInvocationSchema,
+  metamagicCompatibility: "notActionSpellCasting",
+  targetListInvocation: { kind: "none" },
+  isReadiedSpellCompatible: false,
+  knownWillingTargetSpellIds: [],
+  admit: admitOngoingSpellEnd,
+  discoverCastAct: discoverOngoingSpellEndCastAct,
+  castSummary: ongoingSpellEndCastSummary,
+  invocationRef: ongoingSpellEndInvocationRef,
+  resolve: resolveOngoingSpellEndSpellAct,
+} satisfies SpellProcedureProfile<
+  "ongoingSpellEnd",
+  OngoingSpellEndInvocation,
+  ActionSpellBattleResolutionInput,
+  Extract<SpellFillSet, { readonly tag: "ok" }>
+>;

@@ -49,7 +49,7 @@ Level 1-2 QNT/MBT join open gaps: **0**.
 | Unique QNT-owned obligations | 47/47 (100%) |
 | Unique parity-witnessed obligations | 47/47 (100%) |
 
-Generator readiness is the incomplete layer.
+Generator readiness passes when every scoped semantic-core obligation is generation-subset-clean and has no blocker or follow-up rows. It does not require a generator implementation or committed generated Rust.
 
 | Generator readiness status | Blocking rows |
 | --- | ---: |

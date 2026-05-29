@@ -1,5 +1,5 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import {
@@ -21,7 +21,6 @@ import {
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleDancingLightsPlacementValue,
-  type BattleMagicWeaponTargetItemFact,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
@@ -31,7 +30,6 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  battleWeaponItemHasMagicWeaponEnhancement,
   damageDispositionFillFor,
   damageDispositionFillsValidation,
   damageDispositionForTarget,
@@ -44,7 +42,6 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
@@ -54,7 +51,6 @@ import {
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
 import {
-  activeMarkedDamageRiderEffect,
   activeMarkedDamageRiders,
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
@@ -68,41 +64,28 @@ import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-target
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
-  applyHeldLightSpellEffect,
-  applySpellCreatedHeldObjectEffect,
-  applyMarkedDamageRiderSpellEffect,
-  applyObjectLightSpellEffect,
   setSpellCreatedHeldObjectState,
   spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
   dancingLightsFromEffect,
-  applyWeaponAttackOverrideSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
-  spellAbilityChoiceHole,
   spellAttackRollHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
-  spellObjectLightTargetFact,
-  spellObjectTargetHole,
   spellTargetHole,
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
 import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
-import {
-  spendClassFeatureFreeCastResource,
-  spendSpellCastResources,
-  startSpellEffectConcentration,
-  type SpellCastResourceSpendResult,
-} from "./spells-resolve-resources.ts";
+import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
@@ -114,217 +97,7 @@ import {
   type SpellFillSet,
 } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import {
-  magicWeaponTargetItemHole,
-  spellDancingLightsPlacementHole,
-} from "./spells-targeting.ts";
-import {
-  spellCreatedHeldObjectHasFreeHand,
-} from "./spell-created-held-object.ts";
-
-export function resolveHeldLightSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "heldLight" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Held light spells do not use target, roll, damage, or save fills.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyHeldLightSpellEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveSpellCreatedHeldObjectSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellCreatedHeldObject" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  const handStateError = spellCreatedHeldObjectHandStateError(
-    input.input.state,
-    input.actorId,
-    input.fillSet,
-    {
-      allowSpellCastReactionFacts: true,
-      unrelatedFillsMessage:
-        "Spell-created held object creation only accepts spell-cast Reaction facts.",
-    },
-  );
-  if (handStateError !== null) {
-    return invalidResult(
-      input.input.state,
-      handStateError.reason,
-      handStateError.message,
-    );
-  }
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const effected = applySpellCreatedHeldObjectEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    activeEffect: input.invocation.activeEffect,
-  });
-  if (effected.tag === "invalid") {
-    return invalidResult(input.input.state, "staleSubject", effected.message);
-  }
-  return {
-    tag: "resolved",
-    state: effected.state,
-    snapshot: snapshotBattle(effected.state),
-  };
-}
-
-export function resolveSpellCreatedHeldObjectReEvokeSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellCreatedHeldObjectReEvoke" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  const handStateError = spellCreatedHeldObjectHandStateError(
-    input.input.state,
-    input.actorId,
-    input.fillSet,
-    {
-      allowSpellCastReactionFacts: false,
-      unrelatedFillsMessage:
-        "Spell-created held object re-evocation does not accept fills.",
-    },
-  );
-  if (handStateError !== null) {
-    return invalidResult(
-      input.input.state,
-      handStateError.reason,
-      handStateError.message,
-    );
-  }
-  const actor = input.input.state.combatants.get(input.actorId);
-  const activeEffect = spellCreatedHeldObjectEffectForSource(
-    actor,
-    input.invocation.activeEffect.sourceCombatantId,
-    input.invocation.spell.id,
-  );
-  if (activeEffect === undefined || activeEffect.objectState.kind !== "notHeld") {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Spell-created held object can no longer be re-evoked.",
-    );
-  }
-  const spent = spendActivationResource(input.input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Bonus Action spell-created held object re-evocation is no longer available.",
-    );
-  }
-  const reEvoked = setSpellCreatedHeldObjectState({
-    state: { ...input.input.state, currentTurnResources: spent.right },
-    actorId: input.actorId,
-    effect: activeEffect,
-    objectState: { kind: "held" },
-  });
-  if (reEvoked.tag === "invalid") {
-    return invalidResult(input.input.state, "staleSubject", reEvoked.message);
-  }
-  return {
-    tag: "resolved",
-    state: reEvoked.state,
-    snapshot: snapshotBattle(reEvoked.state),
-  };
-}
+import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
 
 export function resolveReleaseSpellCreatedHeldObjectCommand(
   input: BattleResolutionInputForSubject<
@@ -371,76 +144,6 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
     state: released.state,
     snapshot: snapshotBattle(released.state),
   };
-}
-
-function spellCreatedHeldObjectHandStateError(
-  state: BattleState,
-  actorId: CombatantId,
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-  options: {
-    readonly allowSpellCastReactionFacts: boolean;
-    readonly unrelatedFillsMessage: string;
-  },
-):
-  | {
-      readonly reason: "invalidFill" | "staleSubject";
-      readonly message: string;
-    }
-  | null {
-  if (
-    spellCreatedHeldObjectHasUnrelatedFills(fillSet) ||
-    (!options.allowSpellCastReactionFacts &&
-      fillSet.reactionSpellTargetFacts.length > 0)
-  ) {
-    return { reason: "invalidFill", message: options.unrelatedFillsMessage };
-  }
-  if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
-    return {
-      reason: "staleSubject",
-      message: "Spell-created held object requires a free hand.",
-    };
-  }
-  return null;
-}
-
-function spellCreatedHeldObjectHasUnrelatedFills(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.selfTransformationModeChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
-  );
 }
 
 export function resolveDancingLightsCastSpellAct(input: {
@@ -736,6 +439,7 @@ function dancingLightsFillSetHasUnrelatedFills(
     fillSet.attackRoll !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
     fillSet.commandOptionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
@@ -778,693 +482,6 @@ function dancingLightsSeparatePlacementError(
     return "Dancing Lights separate lights must stay within 20 feet of another light.";
   }
   return null;
-}
-
-export function resolveWeaponAttackOverrideSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "weaponAttackOverride" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Weapon attack override spells do not use target, roll, damage, or save fills.",
-    );
-  }
-  if (
-    input.input.subject.componentWeaponItemId !==
-    input.invocation.attachedWeapon.itemId
-  ) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Weapon attack override spell no longer matches the selected held weapon.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyWeaponAttackOverrideSpellEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveObjectLightSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "objectLight" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Object light spells use only an object target fill.",
-    );
-  }
-  if (input.fillSet.objectTarget === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellObjectTargetHole(input.invocation),
-    ]);
-  }
-  const objectTarget = input.fillSet.objectTarget;
-  const lightFact = spellObjectLightTargetFact(
-    objectTarget.spatialFacts.filter(
-      (
-        fact,
-      ): fact is Extract<
-        (typeof objectTarget.spatialFacts)[number],
-        {
-          readonly kind:
-            | "spellObjectLightTarget"
-            | "spellTouchedObjectTarget";
-        }
-      > =>
-        fact.kind === "spellObjectLightTarget" ||
-        fact.kind === "spellTouchedObjectTarget",
-    ),
-    input.actorId,
-    objectTarget.objectId,
-    input.invocation,
-  );
-  if (lightFact === null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Object light target does not satisfy the selected spell's object targeting requirements.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyObjectLightSpellEffect(
-    input.input.state,
-    input.actorId,
-    objectTarget.objectId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveWeaponDamageRiderSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "weaponDamageRider" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Weapon damage rider spells do not use target, roll, damage, or save fills.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const actor = input.input.state.combatants.get(input.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.input.state,
-      "missingCombatant",
-      "Bonus Action spell actor is not in this battle.",
-    );
-  }
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellWeaponDamageRider" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
-    input.invocation.activeEffect,
-  ];
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-export function resolveMagicWeaponEnhancementSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "magicWeaponEnhancement" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (magicWeaponEnhancementFillSetHasDisallowedFills(input.fillSet)) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Magic Weapon uses one nonmagical weapon item target fill and spell-cast Reaction facts only.",
-    );
-  }
-  if (input.fillSet.magicWeaponTargetItem === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      magicWeaponTargetItemHole(input.invocation),
-    ]);
-  }
-  const targetItem = input.fillSet.magicWeaponTargetItem.value;
-  if (!battleMagicWeaponTargetItemIsHeldWeapon(input.input.state, targetItem)) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Magic Weapon target item must identify a held nonmagical weapon item.",
-    );
-  }
-  if (
-    battleWeaponItemHasMagicWeaponEnhancement(
-      input.input.state,
-      targetItem.holderCombatantId,
-      targetItem.itemId,
-      {
-        exceptSourceCombatantId: input.actorId,
-        exceptSourceSpellId: input.invocation.spell.id,
-      },
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Magic Weapon target item is already magical from an active Magic Weapon effect.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    input.input.state,
-    spellCastReactionFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.suppressedReactionTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const actor = input.input.state.combatants.get(input.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.input.state,
-      "missingCombatant",
-      "Magic Weapon caster is not in this battle.",
-    );
-  }
-  const activeEffects: readonly BattleActiveEffect[] = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellMagicWeaponEnhancement" &&
-          effect.sourceSpellId === input.invocation.spell.id &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
-    {
-      kind: "spellMagicWeaponEnhancement",
-      sourceSpellId: input.invocation.spell.id,
-      sourceCombatantId: input.actorId,
-      holderCombatantId: targetItem.holderCombatantId,
-      weaponItemId: targetItem.itemId,
-      bonus: input.invocation.bonus,
-      expiresAt: {
-        kind: "duration",
-        durationTicks: input.invocation.durationTicks,
-      },
-    },
-  ];
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-function battleMagicWeaponTargetItemIsHeldWeapon(
-  state: BattleState,
-  targetItem: BattleMagicWeaponTargetItemFact,
-): boolean {
-  const holder = state.combatants.get(targetItem.holderCombatantId);
-  if (holder?.origin.kind !== "character") {
-    return false;
-  }
-  return (
-    holder.origin.selectedLoadout.weapon?.itemId === targetItem.itemId ||
-    holder.origin.selectedLoadout.offHandWeapon?.itemId === targetItem.itemId
-  );
-}
-
-function magicWeaponEnhancementFillSetHasDisallowedFills(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.objectContactTargets !== undefined ||
-    fillSet.objectContactSavingThrowOutcome !== undefined ||
-    fillSet.objectDropResolution !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.selfTransformationModeChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
-  );
-}
-
-export function resolveMarkedDamageRiderSpellAct(input: {
-  readonly input: BonusActionSpellBattleResolutionInput;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider" }
-  >;
-  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): BattleResolutionResult {
-  if (
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Marked damage rider spells use one target fill.",
-    );
-  }
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Marked spell target must be a combatant within the selected spell's supported range.",
-    );
-  }
-  if (input.invocation.action === "transfer") {
-    const activeMark = activeMarkedDamageRiderEffect(
-      input.input.state.combatants.get(input.actorId),
-      input.invocation.spell.id,
-    );
-    if (
-      activeMark === null ||
-      !markedDamageRiderTransferIsAvailable(input.input.state, activeMark)
-    ) {
-      return invalidResult(
-        input.input.state,
-        "staleSubject",
-        "Marked damage rider spells can move only after the marked target drops to 0 Hit Points and any later-turn timing is satisfied.",
-      );
-    }
-  }
-  if (
-    input.invocation.action === "cast" &&
-    input.invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
-  ) {
-    if (input.fillSet.abilityChoice === undefined) {
-      return needsHolesResult(input.input.state, input.input.subject, [
-        spellAbilityChoiceHole(input.invocation),
-      ]);
-    }
-  } else if (input.fillSet.abilityChoice !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "This marked damage rider spell does not choose an ability.",
-    );
-  }
-  if (input.invocation.action === "cast") {
-    const spellCastReactionWindow = maybeOpenReactionWindow(
-      input.input.state,
-      spellCastReactionFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [input.fillSet.targetId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "bonusAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.suppressedReactionTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const spent = spendActivationResource(
-    input.input.state.currentTurnResources,
-    {
-      kind: "bonusAction",
-    },
-  );
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
-    );
-  }
-  if (input.invocation.action === "transfer") {
-    const nextState = applyMarkedDamageRiderSpellEffect(
-      {
-        ...input.input.state,
-        currentTurnResources:
-          clearPendingAttackRollMissToHitReplacementSelection(
-            spent.right,
-            input.actorId,
-          ),
-      },
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.abilityChoice,
-    );
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
-  }
-  const concentrationBase = breakBattleConcentration(
-    input.input.state,
-    input.actorId,
-  );
-  const turnResources = clearPendingAttackRollMissToHitReplacementSelection(
-    spent.right,
-    input.actorId,
-  );
-  const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
-      ? spendClassFeatureFreeCastResource(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.resourceUnitId,
-          input.invocation,
-          input.input.state,
-        )
-      : spendMarkedDamageRiderSpellSlot(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.slotLevel,
-          input.input.state,
-        );
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const effected = applyMarkedDamageRiderSpellEffect(
-    resourced.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.abilityChoice,
-  );
-  const nextState = startSpellEffectConcentration(
-    effected,
-    input.actorId,
-    input.invocation,
-  );
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
-}
-
-function spendMarkedDamageRiderSpellSlot(
-  state: BattleState,
-  actorId: CombatantId,
-  slotLevel: Extract<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-    >["resource"],
-    { readonly tag: "spellSlot" }
-  >["slotLevel"],
-  errorState: BattleState,
-): SpellCastResourceSpendResult {
-  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
-    state,
-    actorId,
-  );
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spellCastState.currentTurnResources,
-    actorId,
-  );
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      errorState,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  return {
-    tag: "resolved",
-    state: expendSpellSlot(
-      {
-        ...spellCastState,
-        currentTurnResources: slotTurnResources.right,
-      },
-      actorId,
-      slotLevel,
-    ),
-  };
-}
-
-function markedDamageRiderTransferIsAvailable(
-  state: BattleState,
-  activeMark: SpellMarkedDamageRider,
-): boolean {
-  if (activeMark.transfer.kind === "available") {
-    return true;
-  }
-  if (activeMark.transfer.kind === "awaitingTargetDrop") {
-    return false;
-  }
-  return (
-    currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
-    state.initiative.round !== activeMark.transfer.droppedOnTurn.round
-  );
 }
 
 export function resolveReadySpellAct(
@@ -1832,13 +849,12 @@ export function resolveSpellRelease(
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      fillSet.sourceDamageRollPenaltyRolls,
-      damageSource,
-      spellDamageByType,
-      fillSet.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    fillSet.sourceDamageRollPenaltyRolls,
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     spellDamageByType,
@@ -1882,14 +898,13 @@ export function resolveSpellRelease(
           concentrationLifecycleFills,
           concentrationSave,
         );
-  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
-    {
+  const concentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
       state: input.state,
       target,
       damageAmount: spellDamageAmount,
       fills: fillSet.concentrationSavingThrows,
-    },
-  );
+    });
   if (concentrationSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...concentrationSaveCheck.holes,

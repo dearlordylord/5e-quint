@@ -76,33 +76,47 @@ const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literal(
   ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 );
 
+type ClassFeatureRecordWithSpecificMechanicsClassName =
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "wizard"
+  | "warlock";
+
+const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
+  "cleric",
+  "druid",
+  "fighter",
+  "monk",
+  "paladin",
+  "ranger",
+  "rogue",
+  "sorcerer",
+  "wizard",
+  "warlock",
+] as const satisfies ReadonlyArray<ClassName>;
+
 const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   (
     className,
   ): className is Exclude<
     ClassName,
-    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+    ClassFeatureRecordWithSpecificMechanicsClassName
   > =>
-    className !== "druid" &&
-    className !== "fighter" &&
-    className !== "monk" &&
-    className !== "sorcerer" &&
-    className !== "wizard" &&
-    className !== "warlock",
+    !(
+      CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES as ReadonlyArray<string>
+    ).includes(className),
   // Brands and literal unions are erased at runtime; the filter above removes
   // exactly the excluded class names, and Schema.Literal requires a non-empty
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
-  Exclude<
-    ClassName,
-    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
-  >,
-  ...Array<
-    Exclude<
-      ClassName,
-      "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
-    >
-  >,
+  Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>,
+  ...Array<Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>>,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -1006,6 +1020,307 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
   resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
 
+const ReferencedResourceSpendSchema = strictStruct({
+  resourceUnitId: NonEmptyStringSchema,
+  amount: PositiveIntegerSchema,
+});
+
+export const SpellSlotHealingModifierMechanicsSchema = strictStruct({
+  family: Schema.Literal("spell_slot_healing_modifier"),
+  trigger: strictStruct({
+    kind: Schema.Literal("caster_spell_slot_restores_hit_points"),
+    timing: Schema.Literal("turn_spell_is_cast"),
+  }),
+  appliesTo: Schema.Literal("each_creature_healed_by_spell"),
+  bonus: strictStruct({
+    kind: Schema.Literal("flat_plus_spell_slot_level"),
+    flat: Schema.Literal(2),
+  }),
+});
+
+export const MagicActionHealingPoolMechanicsSchema = strictStruct({
+  family: Schema.Literal("magic_action_healing_pool"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("magic"),
+  }),
+  spends: ReferencedResourceSpendSchema,
+  range: strictStruct({
+    kind: Schema.Literal("point"),
+    feet: Schema.Literal(30),
+  }),
+  targetSelection: strictStruct({
+    mode: Schema.Literal("any_number"),
+    targetKinds: Schema.Tuple(Schema.Literal("creature")),
+    stateFilter: Schema.Tuple(Schema.Literal("bloodied")),
+    includesSelf: Schema.Literal(true),
+  }),
+  pool: strictStruct({
+    kind: Schema.Literal("class_level_multiplier"),
+    multiplier: Schema.Literal(5),
+  }),
+  perTargetCap: Schema.Literal("half_hit_point_maximum"),
+});
+
+export const MagicActionAreaSaveDamageHealingMechanicsSchema = strictStruct({
+  family: Schema.Literal("magic_action_area_save_damage_healing"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("magic"),
+  }),
+  spends: ReferencedResourceSpendSchema,
+  area: strictStruct({
+    origin: strictStruct({
+      kind: Schema.Literal("point_within_range"),
+      rangeFeet: Schema.Literal(60),
+    }),
+    shape: strictStruct({
+      kind: Schema.Literal("sphere"),
+      radiusFeet: Schema.Literal(10),
+    }),
+  }),
+  save: strictStruct({
+    ability: Schema.Literal("con"),
+    dc: strictStruct({
+      kind: Schema.Literal("class_spellcasting_spell_save_dc"),
+    }),
+  }),
+  damage: strictStruct({
+    targetSelection: strictStruct({
+      mode: Schema.Literal("creatures_of_your_choice_in_area"),
+    }),
+    damageType: Schema.Literal("necrotic"),
+    amount: DiceAmountSchema,
+    onSuccess: Schema.Literal("half_damage"),
+  }),
+  healing: strictStruct({
+    targetSelection: strictStruct({
+      mode: Schema.Literal("one_creature_of_your_choice_in_area"),
+    }),
+    amount: DiceAmountSchema,
+  }),
+});
+
+export const EnemyZeroHitPointTemporaryHitPointsMechanicsSchema = strictStruct({
+  family: Schema.Literal("enemy_zero_hit_point_temporary_hit_points"),
+  trigger: strictStruct({
+    kind: Schema.Literal("enemy_reduced_to_zero_hit_points"),
+    bySelf: Schema.Literal(true),
+    byOtherWithinFeet: Schema.Literal(10),
+  }),
+  amount: strictStruct({
+    kind: Schema.Literal("ability_modifier_plus_class_level"),
+    ability: Schema.Literal("cha"),
+    minimum: Schema.Literal(1),
+  }),
+});
+
+export const BonusActionDelegatedStandardActionsMechanicsSchema = strictStruct({
+  family: Schema.Literal("bonus_action_delegated_standard_actions"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+  sleightOfHand: strictStruct({
+    abilityCheck: strictStruct({
+      ability: Schema.Literal("dex"),
+      skill: Schema.Literal("sleight_of_hand"),
+    }),
+    operations: Schema.Tuple(
+      Schema.Literal("pick_lock_with_thieves_tools"),
+      Schema.Literal("disarm_trap_with_thieves_tools"),
+      Schema.Literal("pick_pocket"),
+    ),
+  }),
+  objectUse: strictStruct({
+    actions: Schema.Tuple(
+      strictStruct({
+        action: Schema.Literal("utilize"),
+      }),
+      strictStruct({
+        action: Schema.Literal("magic"),
+        restrictedTo: Schema.Literal("magic_item_requires_magic_action"),
+      }),
+    ),
+  }),
+});
+
+export const RemarkableAthleteMechanicsSchema = strictStruct({
+  family: Schema.Literal("remarkable_athlete"),
+  initiative: strictStruct({
+    kind: Schema.Literal("roll_advantage"),
+    roll: Schema.Literal("initiative"),
+  }),
+  abilityCheck: strictStruct({
+    kind: Schema.Literal("roll_advantage"),
+    ability: Schema.Literal("str"),
+    skill: Schema.Literal("athletics"),
+  }),
+  criticalHitMovement: strictStruct({
+    trigger: strictStruct({
+      kind: Schema.Literal("score_critical_hit"),
+    }),
+    timing: Schema.Literal("immediately_after_trigger"),
+    distance: strictStruct({
+      kind: Schema.Literal("half_speed"),
+    }),
+    opportunityAttacks: Schema.Literal("does_not_provoke"),
+  }),
+});
+
+export const OpenHandTechniqueMechanicsSchema = strictStruct({
+  family: Schema.Literal("open_hand_technique"),
+  trigger: strictStruct({
+    kind: Schema.Literal("hit_with_attack_granted_by"),
+    resourceOptionUnitId: Schema.Literal("monk_monks_focus"),
+    optionId: Schema.Literal("flurry_of_blows"),
+  }),
+  optional: Schema.Literal(true),
+  effectSaveDc: strictStruct({
+    kind: Schema.Literal("class_feature_ability_save_dc"),
+    base: Schema.Literal(8),
+    ability: Schema.Literal("wis"),
+  }),
+  choices: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal("addle"),
+      effect: strictStruct({
+        kind: Schema.Literal("deny_opportunity_attacks"),
+        expires: Schema.Literal("start_of_target_next_turn"),
+      }),
+    }),
+    strictStruct({
+      id: Schema.Literal("push"),
+      save: strictStruct({
+        ability: Schema.Literal("str"),
+      }),
+      onFail: strictStruct({
+        kind: Schema.Literal("push_away"),
+        distanceFeet: Schema.Literal(15),
+      }),
+    }),
+    strictStruct({
+      id: Schema.Literal("topple"),
+      save: strictStruct({
+        ability: Schema.Literal("dex"),
+      }),
+      onFail: strictStruct({
+        kind: Schema.Literal("apply_condition"),
+        condition: Schema.Literal("prone"),
+      }),
+    }),
+  ),
+});
+
+export const SacredWeaponMechanicsSchema = strictStruct({
+  family: Schema.Literal("sacred_weapon"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("attack"),
+  }),
+  spends: ReferencedResourceSpendSchema,
+  target: strictStruct({
+    kind: Schema.Literal("held_melee_weapon"),
+  }),
+  duration: strictStruct({
+    unit: Schema.Literal("minute"),
+    amount: Schema.Literal(10),
+    endsOn: Schema.Tuple(
+      Schema.Literal("use_feature_again"),
+      Schema.Literal("dismiss_no_action"),
+      Schema.Literal("not_carrying_weapon"),
+    ),
+  }),
+  attackRollBonus: strictStruct({
+    kind: Schema.Literal("ability_modifier"),
+    ability: Schema.Literal("cha"),
+    minimum: Schema.Literal(1),
+    appliesTo: Schema.Literal("imbued_weapon_attack_rolls"),
+  }),
+  hitDamageType: strictStruct({
+    choice: Schema.Tuple(Schema.Literal("normal"), Schema.Literal("radiant")),
+  }),
+  light: strictStruct({
+    brightRadiusFeet: Schema.Literal(20),
+    dimAdditionalFeet: Schema.Literal(20),
+  }),
+});
+
+export const HuntersPreyMechanicsSchema = strictStruct({
+  family: Schema.Literal("hunters_prey"),
+  choice: strictStruct({
+    kind: Schema.Literal("choose_one"),
+    replaceOn: Schema.Literal("short_or_long_rest"),
+  }),
+  options: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal("colossus_slayer"),
+      trigger: strictStruct({
+        kind: Schema.Literal("hit_creature_with_weapon"),
+      }),
+      targetPredicate: Schema.Literal("missing_any_hit_points"),
+      usageLimit: strictStruct({ kind: Schema.Literal("once_per_turn") }),
+      damage: strictStruct({
+        kind: Schema.Literal("add_attack_damage_dice"),
+        dice: strictStruct({
+          dice: Schema.Literal(1),
+          dieSize: Schema.Literal(8),
+        }),
+        damageType: Schema.Literal("same_as_attack"),
+      }),
+    }),
+    strictStruct({
+      id: Schema.Literal("horde_breaker"),
+      trigger: strictStruct({
+        kind: Schema.Literal("make_weapon_attack"),
+      }),
+      usageLimit: strictStruct({ kind: Schema.Literal("once_per_turn") }),
+      extraAttack: strictStruct({
+        weapon: Schema.Literal("same_weapon"),
+        target: strictStruct({
+          kind: Schema.Literal("different_creature_near_original_target"),
+          withinFeetOfOriginalTarget: Schema.Literal(5),
+          withinWeaponRange: Schema.Literal(true),
+          notAttackedThisTurn: Schema.Literal(true),
+        }),
+      }),
+    }),
+  ),
+});
+
+export const SteadyAimMechanicsSchema = strictStruct({
+  family: Schema.Literal("steady_aim"),
+  activationCost: strictStruct({
+    kind: Schema.Literal("bonus_action"),
+  }),
+  precondition: strictStruct({
+    kind: Schema.Literal("no_movement_this_turn"),
+  }),
+  attackRoll: strictStruct({
+    mode: Schema.Literal("advantage"),
+    appliesTo: Schema.Literal("next_attack_roll_current_turn"),
+  }),
+  speed: strictStruct({
+    kind: Schema.Literal("set_to_zero"),
+    until: Schema.Literal("end_of_current_turn"),
+  }),
+});
+
+export const PotentCantripMechanicsSchema = strictStruct({
+  family: Schema.Literal("potent_cantrip"),
+  trigger: strictStruct({
+    kind: Schema.Literal("cast_cantrip_at_creature"),
+    cantripKind: Schema.Literal("damaging"),
+  }),
+  outcomes: Schema.Tuple(
+    Schema.Literal("miss_with_attack_roll"),
+    Schema.Literal("target_succeeds_saving_throw"),
+  ),
+  damage: strictStruct({
+    kind: Schema.Literal("half_cantrip_damage_if_any"),
+  }),
+  additionalEffect: Schema.Literal("none"),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -1044,6 +1359,17 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
+  SpellSlotHealingModifierMechanicsSchema,
+  MagicActionHealingPoolMechanicsSchema,
+  MagicActionAreaSaveDamageHealingMechanicsSchema,
+  EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
+  BonusActionDelegatedStandardActionsMechanicsSchema,
+  RemarkableAthleteMechanicsSchema,
+  OpenHandTechniqueMechanicsSchema,
+  SacredWeaponMechanicsSchema,
+  HuntersPreyMechanicsSchema,
+  SteadyAimMechanicsSchema,
+  PotentCantripMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -1053,25 +1379,54 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureResourceContainerMechanicsSchema,
   ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
+  BonusActionDelegatedStandardActionsMechanicsSchema,
+);
+
+export const ClericClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  SpellSlotHealingModifierMechanicsSchema,
+  MagicActionHealingPoolMechanicsSchema,
 );
 
 export const DruidClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
+  MagicActionAreaSaveDamageHealingMechanicsSchema,
 );
 
 export const WizardClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   WizardSpellbookLearningMechanicsSchema,
+  PotentCantripMechanicsSchema,
 );
 
-export const FighterClassFeatureMechanicsSchema =
-  FailedAbilityCheckResourceBoostMechanicsSchema;
+export const FighterClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  FailedAbilityCheckResourceBoostMechanicsSchema,
+  RemarkableAthleteMechanicsSchema,
+);
 
 export const MonkClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
+  OpenHandTechniqueMechanicsSchema,
+);
+
+export const PaladinClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  SacredWeaponMechanicsSchema,
+);
+
+export const RangerClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  HuntersPreyMechanicsSchema,
+);
+
+export const RogueClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  SteadyAimMechanicsSchema,
 );
 
 export const SorcererClassFeatureMechanicsSchema = Schema.Union(
@@ -1084,6 +1439,7 @@ export const WarlockClassFeatureMechanicsSchema = Schema.Union(
   FeatureChoiceMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
+  EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
 );
 
 export const MasteryTriggerSchema = Schema.Union(
@@ -1103,7 +1459,9 @@ export const SneakAttackDamageRiderTriggerSchema = strictStruct({
 export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
   attackFilter: Schema.Literal("strength_weapon_or_unarmed_strike"),
-  prerequisite: Schema.Literal("rage_active_and_reckless_attack_used_this_turn"),
+  prerequisite: Schema.Literal(
+    "rage_active_and_reckless_attack_used_this_turn",
+  ),
   hitLimit: Schema.Literal("first_target_hit_this_turn"),
 });
 
@@ -2943,19 +3301,19 @@ const ClassFeatureRecordBaseFields = {
 export const WizardClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("wizard"),
-  mechanics: Schema.Union(
-    ClassGeneralFeatureMechanicsSchema,
-    WizardClassFeatureMechanicsSchema,
-  ),
+  mechanics: WizardClassFeatureMechanicsSchema,
 });
 
 export const FighterClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("fighter"),
-  mechanics: Schema.Union(
-    ClassGeneralFeatureMechanicsSchema,
-    FighterClassFeatureMechanicsSchema,
-  ),
+  mechanics: FighterClassFeatureMechanicsSchema,
+});
+
+export const ClericClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("cleric"),
+  mechanics: ClericClassFeatureMechanicsSchema,
 });
 
 export const DruidClassFeatureRecordSchema = Schema.Struct({
@@ -2968,6 +3326,24 @@ export const MonkClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("monk"),
   mechanics: MonkClassFeatureMechanicsSchema,
+});
+
+export const PaladinClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("paladin"),
+  mechanics: PaladinClassFeatureMechanicsSchema,
+});
+
+export const RangerClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("ranger"),
+  mechanics: RangerClassFeatureMechanicsSchema,
+});
+
+export const RogueClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("rogue"),
+  mechanics: RogueClassFeatureMechanicsSchema,
 });
 
 export const SorcererClassFeatureRecordSchema = Schema.Struct({
@@ -2991,8 +3367,12 @@ export const OtherClassFeatureRecordSchema = Schema.Struct({
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  ClericClassFeatureRecordSchema,
   DruidClassFeatureRecordSchema,
   MonkClassFeatureRecordSchema,
+  PaladinClassFeatureRecordSchema,
+  RangerClassFeatureRecordSchema,
+  RogueClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
   OtherClassFeatureRecordSchema,

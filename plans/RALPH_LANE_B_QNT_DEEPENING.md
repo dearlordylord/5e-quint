@@ -7,31 +7,31 @@
     {
       "number": 1,
       "id": "QNTD-B01-HP-RECOVERY-RUST-DRY-RUN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Run the Hit Point recovery manual Rust dry-run vertical"
     },
     {
       "number": 2,
       "id": "QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW",
-      "status": "blocked",
+      "status": "done",
       "title": "Review the recovery dry run for projection and connascence gaps"
     },
     {
       "number": 3,
       "id": "QNTD-B03-CREATURE-SIZE-FOCUSED-MBT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Enlarge/Reduce creature-size lifecycle focused MBT"
     },
     {
       "number": 4,
       "id": "QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Levitate creature lifecycle focused MBT"
     },
     {
       "number": 5,
       "id": "QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add roll-modifier active effects focused MBT"
     },
     {
@@ -98,7 +98,7 @@ Read only these by default:
 - `plans/QNT_COVERAGE_PROGRAM.md`
 - `plans/rules-kernel-coverage/README.md`
 - `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`
-- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN_PLAN.md`
+- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`
 - The relevant rows in `plans/rules-kernel-coverage/obligations.jsonl`
 - The relevant rows in `plans/rules-kernel-coverage/generator-readiness.jsonl`
 - The exact QNT owners, TS owners, parity witnesses, SRD passages, and
@@ -162,11 +162,11 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | ready-for-research | none | Starts the manual Rust dry-run path. |
-| 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | blocked | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
-| 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | ready-for-research | none | Independent focused MBT promotion. |
-| 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 1 | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical | done | none | Starts the manual Rust dry-run path. |
+| 2 | QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps | done | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN | Reviews the artifact produced by Task 1. |
+| 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | done | none | Independent focused MBT promotion. |
+| 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | done | none | Independent focused MBT promotion. |
+| 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | done | none | Independent focused MBT promotion. |
 | 6 | QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 7 | QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
 | 8 | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT | blocked | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
@@ -179,7 +179,7 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 
 ### Task 1 - QNTD-B01-HP-RECOVERY-RUST-DRY-RUN - Run the Hit Point recovery manual Rust dry-run vertical
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -212,7 +212,7 @@ Acceptance:
 
 ### Task 2 - QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW - Review the recovery dry run for projection and connascence gaps
 
-Status: `blocked`
+Status: `done`
 
 Input: Task 1 artifact, `kernel-ir-boundaries.jsonl`, and the existing
 Character Sheet HP/rest runtime owner.
@@ -233,7 +233,7 @@ Acceptance:
 
 ### Task 3 - QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QCP-CS1` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -255,7 +255,7 @@ Acceptance:
 
 ### Task 4 - QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QCP-CS2` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -279,7 +279,7 @@ Acceptance:
 
 ### Task 5 - QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QCP-CS3` from `COMPOSITE_SLICE_CANDIDATES.md`.
 

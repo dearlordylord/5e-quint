@@ -68,7 +68,6 @@ import {
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
   type BattleFill,
-  type BattleHole,
   type BattleHoleId,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
@@ -694,10 +693,7 @@ export function spellScalarBuffRollHole(
 }
 
 export function spellRollModifierSkillChoiceHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:skill-choice:${invocation.spell.id}`);
 }
@@ -763,10 +759,7 @@ export function rollModifierUsesTargetAbilityChoices(
 }
 
 export function spellRollModifierTargetAbilityChoicesHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >,
+  invocation: SupportedSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:target-ability-choices:${invocation.spell.id}`);
 }
@@ -834,17 +827,6 @@ export function thaumaturgyActiveOneMinuteEffectCountHole(
     maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
     requiresTableSpellEffectCount: true,
   };
-}
-
-export function scalarBuffInitialHoles(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "scalarBuff" }
-  >,
-): readonly BattleHole[] {
-  return invocation.effect.kind === "temporaryHitPoints"
-    ? [spellScalarBuffRollHole(invocation)]
-    : [];
 }
 
 export function spellSavingThrowOutcomeHoleId(

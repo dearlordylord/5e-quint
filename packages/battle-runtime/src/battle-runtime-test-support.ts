@@ -102,7 +102,6 @@ import {
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
-import { resolveMarkedDamageRiderSpellAct } from "./battle-reducer/spells-resolve-release.ts";
 import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
 import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
 import {
@@ -4073,7 +4072,6 @@ export {
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   resolveFindFamiliarForm,
-  resolveMarkedDamageRiderSpellAct,
   resolvePactOfTheChainFindFamiliarForm,
   resolveSuccessfulAbilityCheckReactionReduction,
   resourceCount,

@@ -56,7 +56,7 @@ Generated coverage artifacts checked:
   `spell.invocation-damage-save-or-attack`,
   `spell.invocation-marked-damage-rider`, and
   `spell.invocation-expeditious-retreat-dash`.
-- `packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts`:
+- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts`:
   save-gated damage currently admits limited point-origin Sphere/Cube and
   self-origin Cone shapes, while condition-save admits fixed cases such as
   Entangle rather than a general ongoing zone hazard profile.
