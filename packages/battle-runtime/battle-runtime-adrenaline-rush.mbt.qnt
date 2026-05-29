@@ -1,9 +1,12 @@
 // -*- mode: Bluespec; -*-
 
+// Self-contained literal projection witness: asserts the SRD outcome of the
+// Adrenaline Rush Bonus Action Dash directly, instead of re-running the movement
+// reducer. This keeps the driver's import closure empty so its MBT trace
+// generation stays fast (see scripts/check-mbt-driver-closure.cjs). The expected
+// facts are the movement reducer's SRD formalization for this fixture; if that
+// rule changes, update the literals here.
 module battleRuntimeAdrenalineRushMbt {
-  import battleRuntimeMovement.* from "./battle-runtime-movement"
-  import battleRuntimeModel.* from "./battle-runtime-model"
-
   var qActorTempHp: int
   var qBonusActionAvailable: bool
   var qDashBonusFeet: int
@@ -33,26 +36,18 @@ module battleRuntimeAdrenalineRushMbt {
   action init =
     recordProjection(1, true, 0, 3, "init", "")
 
+  // SRD outcome for this fixture (one use spent from 3, fighter at walk speed 30,
+  // proficiency bonus 3): the Bonus Action Dash adds the walk speed to movement,
+  // grants temporary Hit Points equal to the proficiency bonus (higher than the
+  // prior 1, so it replaces it), and spends the Bonus Action.
   action doAdrenalineRushDash = all {
     qBonusActionAvailable,
     qFeatureUsesRemaining > 0,
-    val state = {
-      ...initialState,
-      fighter: { ...initialState.fighter, tempHp: qActorTempHp, speed: adrenalineRushSpeedFeet },
-      bonusActionAvailable: qBonusActionAvailable,
-      dashMovementBonus: qDashBonusFeet,
-    }
-    val result = bonusActionDashTemporaryHitPointsFighter(
-      state,
-      qFeatureUsesRemaining,
-      adrenalineRushProficiencyBonus,
-      WalkSpeedKind
-    )
     recordProjection(
-      result.state.fighter.tempHp,
-      result.state.bonusActionAvailable,
-      result.state.dashMovementBonus,
-      result.usesRemaining,
+      adrenalineRushProficiencyBonus,
+      false,
+      adrenalineRushSpeedFeet,
+      qFeatureUsesRemaining - 1,
       "resolved",
       ""
     ),

@@ -38,7 +38,6 @@ const ALLOWLIST = {
   "battle-runtime-sleep-repeat-save.mbt.qnt": "imports concentration + sleep-hideous-laughter + turn-advancement behaviour",
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "imports blur attack-roll-defense behaviour",
   "battle-runtime-starry-wisp-object.mbt.qnt": "imports object/light-emitter behaviour",
-  "battle-runtime-adrenaline-rush.mbt.qnt": "calls one movement pure fn; pulls movement closure",
   "battle-runtime-death-saving-throw.mbt.qnt": "imports hit-point/death-save behaviour",
   "bardic-inspiration-selected-identity.mbt.qnt": "calls bardic-inspiration impl fn via feature-bridge",
   "rule-core-spells.mbt.qnt": "rule-core inductive spell driver",
