@@ -56,6 +56,7 @@ import {
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -91,67 +92,7 @@ import {
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
-import { damageReductionProfile } from "./spell-procedure-profiles/damage-reduction.ts";
-import { abilityD20TestRollModeSaveGateProfile } from "./spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
-import { antimagicFieldOngoingSpellSuppressionProfile } from "./spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts";
-import { blurAttackRollDefenseProfile } from "./spell-procedure-profiles/blur-attack-roll-defense.ts";
-import { commandProfile } from "./spell-procedure-profiles/command.ts";
-import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
-import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
-import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
-import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
-import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
-import { directConditionRemovalProfile } from "./spell-procedure-profiles/direct-condition-removal.ts";
-import { directHitPointRestorationProfile } from "./spell-procedure-profiles/direct-hit-point-restoration.ts";
-import {
-  dancingLightsCombinedCastProfile,
-  dancingLightsRepositionProfile,
-  dancingLightsSeparateCastProfile,
-} from "./spell-procedure-profiles/dancing-lights.ts";
-import { dragonsBreathInitialProfile } from "./spell-procedure-profiles/dragons-breath-initial.ts";
-import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.ts";
-import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
-import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
-import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
-import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
-import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
-import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
-import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
-import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
-import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
-import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
-import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
-import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
-import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
-import {
-  objectContactDamageProfile,
-  objectContactDamageRepeatProfile,
-} from "./spell-procedure-profiles/object-contact-damage.ts";
-import { ongoingSpellEndProfile } from "./spell-procedure-profiles/ongoing-spell-end.ts";
-import { persistentArmorEffectProfile } from "./spell-procedure-profiles/persistent-armor-effect.ts";
-import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
-import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
-import { sanctuaryTargetingInterdictionProfile } from "./spell-procedure-profiles/sanctuary-targeting-interdiction.ts";
-import { saveGatedAttackRollAdvantageProfile } from "./spell-procedure-profiles/save-gated-attack-roll-advantage.ts";
-import { saveGatedConditionImmunityProfile } from "./spell-procedure-profiles/save-gated-condition-immunity.ts";
-import { saveGatedConditionProfile } from "./spell-procedure-profiles/save-gated-condition.ts";
-import { saveGatedDamageProfile } from "./spell-procedure-profiles/save-gated-damage.ts";
-import { seeInvisibleObserverSightProfile } from "./spell-procedure-profiles/see-invisible-observer-sight.ts";
-import { selfTransformationModeProfile } from "./spell-procedure-profiles/self-transformation-mode.ts";
-import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts";
-import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
-import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
-import { webRestraintHazardProfile } from "./spell-procedure-profiles/web-restraint-hazard.ts";
-import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
-import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
-import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
-import { spellAttackSequenceProfile } from "./spell-procedure-profiles/spell-attack-sequence.ts";
-import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
-import { thaumaturgyBoomingVoiceProfile } from "./spell-procedure-profiles/thaumaturgy-booming-voice.ts";
-import { wardingBondProfile } from "./spell-procedure-profiles/warding-bond.ts";
-import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-damage-rider.ts";
-import { expeditiousRetreatDashProfile } from "./spell-procedure-profiles/expeditious-retreat-dash.ts";
-import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
+import { spellProcedureProfileFor } from "./spell-procedure-profiles/registry.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
   repositionSpiritualWeaponAttackProxyEffect,
@@ -211,7 +152,10 @@ import {
 } from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
-import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
+import {
+  chainedSpellFillSet as parseChainedSpellFillSet,
+  type ChainedSpellFillSet,
+} from "./spells-resolve-chained.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
@@ -289,19 +233,7 @@ import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { resolveReadySpellAct } from "./spells-resolve-release.ts";
-import { objectLightProfile } from "./spell-procedure-profiles/object-light.ts";
 import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
-import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
-import {
-  spellCreatedHeldObjectAttackProfile,
-  spellCreatedHeldObjectProfile,
-  spellCreatedHeldObjectReEvokeProfile,
-} from "./spell-procedure-profiles/spell-created-held-object.ts";
-import {
-  spiritualWeaponAttackProxyProfile,
-  spiritualWeaponRepeatAttackProfile,
-} from "./spell-procedure-profiles/spiritual-weapon.ts";
-import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
@@ -314,6 +246,102 @@ type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
   readonly useSharedSpellAttackDamageResolver?: true;
 };
+
+type SpellProcedureActionCostOverride = Exclude<
+  ReturnType<typeof metamagicActionCostOverride>,
+  undefined
+>;
+
+type SpellProcedureResolveDispatchInput = {
+  readonly input:
+    | (ActionSpellBattleResolutionInput & {
+        readonly castingState?: BattleState;
+      })
+    | BonusActionSpellBattleResolutionInput
+    | BonusActionDashSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly fillSet:
+    | Extract<SpellFillSet, { readonly tag: "ok" }>
+    | Extract<ChainedSpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: SpellProcedureActionCostOverride;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
+
+type SpellProcedureProfileResolver = {
+  readonly resolve: (input: never) => BattleResolutionResult;
+};
+
+const PROFILE_DELEGATED_SPELL_ATTACK_DAMAGE_PROCEDURES = [
+  "spellAttackDamage",
+  "heldLightHurl",
+  "spellCreatedHeldObjectAttack",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const BONUS_ACTION_SPELL_ATTACK_PROXY_PROCEDURES = [
+  "spiritualWeaponAttackProxy",
+  "spiritualWeaponRepeatAttack",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
+  "saveGatedDamage",
+  "saveGatedCondition",
+  "saveGatedConditionImmunity",
+  "saveGatedAttackRollAdvantage",
+  "hideousLaughter",
+  "greaseGroundHazard",
+  "gustOfWindLine",
+  "command",
+  "directHitPointRestoration",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
+  "scalarBuff",
+  "directHitPointRestoration",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+
+function procedureIsIn(
+  procedure: SupportedSpellInvocation["procedure"],
+  procedures: ReadonlyArray<SupportedSpellInvocation["procedure"]>,
+): boolean {
+  return procedures.includes(procedure);
+}
+
+function resolveRegisteredSpellProcedureProfile(
+  profile: SpellProcedureProfileResolver,
+  input: SpellProcedureResolveDispatchInput,
+): BattleResolutionResult {
+  // Registry lookup preserves the procedure/invocation pairing, but the
+  // heterogeneous resolver methods erase to a union at this call site.
+  return profile.resolve(input as never);
+}
+
+function actionSpellProfileResolutionInput(
+  input: ActionSpellBattleResolutionInput,
+  castingState: BattleState,
+  invocation: SupportedSpellInvocation,
+): ActionSpellBattleResolutionInput & { readonly castingState?: BattleState } {
+  return invocation.procedure === "persistentArmorEffect"
+    ? { ...input, castingState }
+    : { ...input, state: castingState };
+}
+
+function actionSpellUsesSharedSpellAttackDamageBody(
+  invocation: SupportedSpellInvocation,
+  options: ResolveSpellActInternalOptions,
+): boolean {
+  return (
+    procedureIsIn(
+      invocation.procedure,
+      BONUS_ACTION_SPELL_ATTACK_PROXY_PROCEDURES,
+    ) ||
+    (options.useSharedSpellAttackDamageResolver === true &&
+      procedureIsIn(
+        invocation.procedure,
+        PROFILE_DELEGATED_SPELL_ATTACK_DAMAGE_PROCEDURES,
+      ))
+  );
+}
 
 function isSupportedDamageSpellInvocation(
   invocation: SupportedSpellInvocation,
@@ -643,11 +671,16 @@ function resolveSpellActInternal(
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
-    return chainedSpellAttackDamageProfile.resolve({
+    const fillSet = parseChainedSpellFillSet(input.fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    const profile = spellProcedureProfileFor(invocation.procedure);
+    return resolveRegisteredSpellProcedureProfile(profile, {
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
-      fillSet: parseChainedSpellFillSet(input.fills, invocation),
+      fillSet,
     });
   }
 
@@ -655,405 +688,23 @@ function resolveSpellActInternal(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (invocation.procedure === "spellAttackSequence") {
-    return spellAttackSequenceProfile.resolve({
-      input: { ...input, state: castingState },
+  if (!actionSpellUsesSharedSpellAttackDamageBody(invocation, options)) {
+    const profile = spellProcedureProfileFor(invocation.procedure);
+    return resolveRegisteredSpellProcedureProfile(profile, {
+      input: actionSpellProfileResolutionInput(
+        input,
+        castingState,
+        invocation,
+      ),
       actorId: subject.actorId,
       invocation,
       fillSet,
-    });
-  }
-  if (invocation.procedure === "attackBurstSaveDamage") {
-    return attackBurstSaveDamageProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectLight") {
-    return objectLightProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "ongoingSpellEnd") {
-    return ongoingSpellEndProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "dancingLightsSeparateCast" ||
-    invocation.procedure === "dancingLightsCombinedCast"
-  ) {
-    return invocation.procedure === "dancingLightsSeparateCast"
-      ? dancingLightsSeparateCastProfile.resolve({
-          input: { ...input, state: castingState },
-          actorId: subject.actorId,
-          invocation,
-          fillSet,
-        })
-      : dancingLightsCombinedCastProfile.resolve({
-          input: { ...input, state: castingState },
-          actorId: subject.actorId,
-          invocation,
-          fillSet,
-        });
-  }
-  if (invocation.procedure === "spellHostedWeaponAttack") {
-    return spellHostedWeaponAttackProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "saveGatedDamage") {
-    return saveGatedDamageProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedCondition") {
-    return saveGatedConditionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedConditionImmunity") {
-    return saveGatedConditionImmunityProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
-    return saveGatedAttackRollAdvantageProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
-    return abilityD20TestRollModeSaveGateProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "sleepTargetAdmission") {
-    return sleepTargetAdmissionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "hideousLaughter") {
-    return hideousLaughterProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "greaseGroundHazard") {
-    return greaseGroundHazardProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "fogCloudObscurement") {
-    return fogCloudObscurementProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "magicalDarknessPointOrigin") {
-    return magicalDarknessPointOriginProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
-    return antimagicFieldOngoingSpellSuppressionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "webRestraintHazard") {
-    return webRestraintHazardProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "gustOfWindLine") {
-    return gustOfWindLineProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "flamingSphere") {
-    return flamingSphereProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spikeGrowthMovementHazard") {
-    return spikeGrowthMovementHazardProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "moonbeam") {
-    return moonbeamProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectContactDamage") {
-    return objectContactDamageProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "command") {
-    return commandProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "repeatedDamageAllocation") {
-    return repeatedDamageAllocationProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directHitPointRestoration") {
-    return directHitPointRestorationProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "scalarBuff") {
-    return scalarBuffProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "selfTransformationMode") {
-    return selfTransformationModeProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "rollModifier") {
-    return rollModifierProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "creatureSizeIncrease" ||
-    invocation.procedure === "creatureSizeDecrease"
-  ) {
-    return creatureSizeChangeProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "levitatedCreature") {
-    return levitatedCreatureProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "wardingBond") {
-    return wardingBondProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "thaumaturgyBoomingVoice") {
-    return thaumaturgyBoomingVoiceProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "creatureTypeProtection") {
-    return creatureTypeProtectionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "blurAttackRollDefense") {
-    return blurAttackRollDefenseProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "seeInvisibleObserverSight") {
-    return seeInvisibleObserverSightProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "persistentArmorEffect") {
-    return persistentArmorEffectProfile.resolve({
-      input: { ...input, castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "mirrorImageHitInterception") {
-    return mirrorImageHitInterceptionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "conditionRemovalProtection") {
-    return conditionRemovalProtectionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "damageReduction") {
-    return damageReductionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "makeStable") {
-    return makeStableProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
-  ) {
-    return conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directCondition") {
-    return directConditionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "spellAttackDamage" &&
-    options.useSharedSpellAttackDamageResolver !== true
-  ) {
-    return spellAttackDamageProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "heldLightHurl" &&
-    options.useSharedSpellAttackDamageResolver !== true
-  ) {
-    return heldLightHurlProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (
-    invocation.procedure === "spellCreatedHeldObjectAttack" &&
-    options.useSharedSpellAttackDamageResolver !== true
-  ) {
-    return spellCreatedHeldObjectAttackProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
+      ...(procedureIsIn(
+        invocation.procedure,
+        ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES,
+      )
+        ? { metamagicApplications: metamagicAdmission.applications }
+        : {}),
     });
   }
 
@@ -2830,150 +2481,18 @@ export function resolveBonusActionSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (invocation.procedure === "heldLight") {
-    return heldLightProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spellCreatedHeldObject") {
-    return spellCreatedHeldObjectProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
-    return spellCreatedHeldObjectReEvokeProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "dancingLightsReposition") {
-    return dancingLightsRepositionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "objectContactDamageRepeat") {
-    return objectContactDamageRepeatProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
-    return spiritualWeaponAttackProxyProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "spiritualWeaponRepeatAttack") {
-    return spiritualWeaponRepeatAttackProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "scalarBuff") {
-    return scalarBuffProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
-      metamagicApplications: metamagicAdmission.applications,
-    });
-  }
-  if (invocation.procedure === "weaponDamageRider") {
-    return weaponDamageRiderProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "magicWeaponEnhancement") {
-    return magicWeaponEnhancementProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "weaponAttackOverride") {
-    return weaponAttackOverrideProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "markedDamageRider") {
-    return markedDamageRiderProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "jumpMovementReplacement") {
-    return jumpMovementReplacementProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "dragonsBreathInitial") {
-    return dragonsBreathInitialProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "selfTeleport") {
-    return selfTeleportProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    return sanctuaryTargetingInterdictionProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  if (invocation.procedure === "directConditionRemoval") {
-    return directConditionRemovalProfile.resolve({
-      input: { ...input, state: castingState },
-      actorId: subject.actorId,
-      invocation,
-      fillSet,
-    });
-  }
-  return directHitPointRestorationProfile.resolve({
+  const profile = spellProcedureProfileFor(invocation.procedure);
+  return resolveRegisteredSpellProcedureProfile(profile, {
     input: { ...input, state: castingState },
     actorId: subject.actorId,
     invocation,
     fillSet,
-    metamagicApplications: metamagicAdmission.applications,
+    ...(procedureIsIn(
+      invocation.procedure,
+      BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES,
+    )
+      ? { metamagicApplications: metamagicAdmission.applications }
+      : {}),
     ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
   });
 }
@@ -3103,7 +2622,8 @@ export function resolveBonusActionDashSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  return expeditiousRetreatDashProfile.resolve({
+  const profile = spellProcedureProfileFor(invocation.procedure);
+  return resolveRegisteredSpellProcedureProfile(profile, {
     input,
     actorId: subject.actorId,
     invocation,

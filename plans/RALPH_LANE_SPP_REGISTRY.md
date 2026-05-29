@@ -451,7 +451,7 @@
     {
       "number": 75,
       "id": "SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace spells-resolve.ts procedure switch with registry iteration"
     },
     {
@@ -1341,7 +1341,7 @@ resolver path that would otherwise silently ignore each removed fill kind.
 
 ### Task 75 - SPP-W9-09-CONSOLIDATE-RESOLVE-DISPATCH - Replace spells-resolve.ts procedure switch with registry iteration
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `spells-resolve.ts` — the giant `if (invocation.procedure === "X")
 return resolveX(...)` ladder.
