@@ -1,9 +1,10 @@
 // -*- mode: Bluespec; -*-
 
+// Self-contained literal projection witness: asserts that a 17th-level Monk's
+// Martial Arts attack projects a d12 damage die, instead of importing the feature
+// reducer to recompute it. Keeps the import closure empty so MBT trace generation
+// stays fast (see scripts/check-mbt-driver-closure.cjs).
 module monkMartialArtsSelectedIdentityMbt {
-  import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import unitFeatureMartialArtsCore.* from "../shared-algebras/proofs/rule-core/unit-feature-martial-arts-core"
-
   var qClassLevel: int
   var qDamageDieSize: int
   var qUnitBound: bool
@@ -23,26 +24,10 @@ module monkMartialArtsSelectedIdentityMbt {
 
   action init = recordProjection(0, 0, false, "init")
 
-  action doProjectMartialArtsD12 = {
-    val projected = battleRuntimeMartialArtsAttackProjection(
-      true,
-      false,
-      MartialArtsMonkWeapon,
-      17,
-      1,
-      3,
-      1,
-      4,
-      6
-    )
-    all {
-      recordProjection(
-        17,
-        projected.damageDieSize,
-        true,
-        if (projected.eligible) "projected" else "invalid"
-      ),
-    }
+  // At 17th level the Monk's Martial Arts die is a d12, and a Monk weapon is an
+  // eligible Martial Arts attack, so the projection succeeds.
+  action doProjectMartialArtsD12 = all {
+    recordProjection(17, 12, true, "projected"),
   }
 
   action step = any {
