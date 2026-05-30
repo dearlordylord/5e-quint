@@ -35,7 +35,6 @@ const BUDGET_FILES = 8;
 // imports a behavioural module / the type model for a few symbols and pays that
 // module's whole closure per trace. Shrink this list; do not add to it.
 const ALLOWLIST = {
-  "battle-runtime-sleep-repeat-save.mbt.qnt": "imports concentration + sleep-hideous-laughter + turn-advancement behaviour",
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "imports blur attack-roll-defense behaviour",
   "battle-runtime-starry-wisp-object.mbt.qnt": "imports object/light-emitter behaviour",
   "rule-core-spells.mbt.qnt": "rule-core inductive spell driver",
