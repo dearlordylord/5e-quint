@@ -43,21 +43,14 @@ language-agnostic test suite — the source any language library is generated fr
 and validated against (ADR-0001). Concern order: QNT code first, then TS, then
 the Rust witness.
 
-Audit verdict (reopen context): the package-local attack shell has overgrown
-ADR-0001's "thin bounded witness" mandate. It imports no rule-core slice and
-re-implements the general attack pipeline inline — `attackHits(...,
-combatantArmorClass(state.goblin), fighterCriticalThreshold(state))`, inline
-rider arithmetic, `applyDamageFromSource(state.goblin, ...)` — while rule-core
-already owns the general resolver (`resolveAttackProcedure`, `resolveAttackRoll`,
-`resolveAttackDamage`, `attackDamageDispositionIsLegal`) and riders
-(`resolveSneakAttack`, `attackCriticalThreshold`); `spendActionQuota` is
-referenced 0×. The logic is duplicated per direction (a `resolveAttack*` fighter
-family and a parallel `resolveGoblin*` family), and `BattleState` carries
-per-combatant capability facts as `fighter*`-prefixed top-level fields
-(`fighterLongswordSapMastery`, `fighterQuarterstaffToppleMastery`,
-`fighterGreataxeCleaveMastery`, `fighterCriticalRange`, …) plus the relationship
-field `fighterHelpAttackGoblinForGoblin`. This is
-`BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md` anomaly A3 realized at scale.
+Audit verdict (reopen context): the shell already composes over rule-core via
+bridges (`battle-runtime-attack-facts`: `attackHits` = `resolveAttackRoll`;
+`applyDamageFromSource` wraps the shared `applyResolvedDamageToPositiveHitPoints`).
+The defect is fixture-pinned *state*, not duplicated rules: `BattleState { fighter,
+goblin }`, `fighter*`-prefixed capability fields, `GrappleState =
+FighterGrapplesGoblin`, and the parallel `resolveAttack*`/`resolveGoblin*` families
+(downstream of the named slots). This shape propagates into every generated target
+and hurts generation, so O1 de-fixtures the state — it does not remove duplication.
 
 Concern order is **O1 then O2** (QNT code before Rust-witness code). O1 is the
 deliverable — improving the QNT test suite — and is already protected by the
@@ -71,7 +64,7 @@ rather than `creature-attack.qnt`); reopen them together, do not duplicate.
 | Task | Title | Depends on | Input | Output |
 | --- | --- | --- | --- | --- |
 | `O2-NONTS-PARITY-LANE` | Native Rust quint-connect witness in the cleanroom | — | native Rust quint-connect (the first-class lib the TS `@firfi/quint-connect` port copies); copied `cleanroom-input/qnt/**.mbt.qnt` driver specs; cleanroom AGENTS.md verification-lane admission | A native Rust quint-connect harness driving the cleanroom engine against the copied `.mbt.qnt` specs, replacing the cleanroom's hand-transcription parity (`// Source:` + literal asserts, 0 quint executions) with executed conformance. Validates the main-repo MBT approach (the cleanroom's sole purpose) and measures QNT-as-test-suite quality, surfacing the gaps O1-class work fixes. Lowest-priority code in this group. |
-| `O1-ATTACK-SHELL-DEFIXTURE` | Compose attack shell over rule-core; de-fixture state | overlaps `B28`, `B29` | `battle-runtime-weapon-attacks.qnt`; `battle-runtime-model.qnt` `BattleState`; rule-core `attack-damage-composition.qnt` + `unit-feature-attack-rider-core.qnt` | Shell attack families compose over `resolveAttackProcedure` / `resolveSneakAttack`; per-combatant capability facts move onto `Combatant`; the `resolveGoblin*` family collapses to the general resolver + thin per-actor sequencing. Behaviour-preserving: validated by the existing TS battle MBT with bridges updated as needed; reviewer-loop + RAW/ubiquitous-language convergence required. |
+| `O1-ATTACK-SHELL-DEFIXTURE` | De-fixture BattleState/Combatant/GrappleState | overlaps `B28`, `B29` | `battle-runtime-model.qnt` (`BattleState`, `Combatant`, `GrappleState`); `battle-runtime-weapon-attacks.qnt`; bridges + TS reducers + 72 MBT drivers | Staged behaviour-preserving migration of the fixture shape (rules already factored, so this removes fixture *state*, not duplication): (1) move `fighter*` capability/turn fields onto `Combatant`; (2) generalize the `fighter`/`goblin` slots to combatant addressing; (3) collapse `resolveGoblin*` and `GrappleState`. Each step gated by the existing TS battle MBT; reviewer-loop + RAW convergence. |
 
 ## Reopen Checklist
 
