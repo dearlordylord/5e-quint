@@ -35,6 +35,40 @@ Former source lane: Ralph lane B, deleted after merge.
 | `B28-MIRROR-IMAGE-READINESS` | Classify Mirror Image hit-interception readiness | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION`, `packages/battle-runtime/battle-runtime-mirror-image.qnt`, and Mirror Image witness. | Classify duplicate pool, interception roll, duplicate destruction, bypass witness, and normal damage continuation readiness. |
 | `B29-MINIMAL-ATTACK-READINESS` | Classify minimal creature attack readiness | `BATTLE.ATTACK.MINIMAL_RESOLUTION`, `packages/battle-runtime/creature-attack.qnt`, and creature attack witness. | Classify whether the pilot creature-vs-creature attack slice is semantic-core, fixture-bound, or blocked for generator use. |
 
+## Parked Oracle-Reliability Tasks (Attack Integration Shell)
+
+Source: 2026-05-29 shell-boundary audit of `battle-runtime-weapon-attacks.qnt`,
+prompted by the cleanroom Rust transcription. Framing: make QNT a reliable
+*oracle* for non-TS targets, not only a TS parity spec.
+
+Audit verdict (reopen context): the package-local attack shell has overgrown
+ADR-0001's "thin bounded witness" mandate. It imports no rule-core slice and
+re-implements the general attack pipeline inline — `attackHits(...,
+combatantArmorClass(state.goblin), fighterCriticalThreshold(state))`, inline
+rider arithmetic, `applyDamageFromSource(state.goblin, ...)` — while rule-core
+already owns the general resolver (`resolveAttackProcedure`, `resolveAttackRoll`,
+`resolveAttackDamage`, `attackDamageDispositionIsLegal`) and riders
+(`resolveSneakAttack`, `attackCriticalThreshold`); `spendActionQuota` is
+referenced 0×. The logic is duplicated per direction (a `resolveAttack*` fighter
+family and a parallel `resolveGoblin*` family), and `BattleState` carries
+per-combatant capability facts as `fighter*`-prefixed top-level fields
+(`fighterLongswordSapMastery`, `fighterQuarterstaffToppleMastery`,
+`fighterGreataxeCleaveMastery`, `fighterCriticalRange`, …) plus the relationship
+field `fighterHelpAttackGoblinForGoblin`. This is
+`BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md` anomaly A3 realized at scale.
+
+Sequenced **O2 before O1**: stand up the executable parity instrument before the
+shell is remodelled, so O1 is validated against it for non-TS targets (not only
+the existing TS MBT). O1 overlaps the parked `B28-MIRROR-IMAGE-READINESS` and
+`B29-MINIMAL-ATTACK-READINESS` rows above (same fixture-bound-vs-semantic-core
+question, applied to the weapon-attack shell rather than `creature-attack.qnt`);
+reopen them together, do not duplicate.
+
+| Task | Title | Depends on | Input | Output |
+| --- | --- | --- | --- | --- |
+| `O2-NONTS-PARITY-LANE` | Executable QNT→non-TS parity export | — (target boundary fixed by audit) | `battle-runtime-public-trace-contract.qnt`; rule-core general resolver slices; ITF / `quint` trace generation; cleanroom `quint`-binary admission decision | Fixture-free parity-vector export from the oracle (public trace contract per slice + materialized ITF vectors) that a non-TS target replays, mirroring the TS quint-connect lane in `BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`. Targets rule-core + public-trace-contract, NOT the internal `resolveAttack*` surface. |
+| `O1-ATTACK-SHELL-DEFIXTURE` | Compose attack shell over rule-core; de-fixture state | `O2`; overlaps `B28`, `B29` | `battle-runtime-weapon-attacks.qnt`; `battle-runtime-model.qnt` `BattleState`; rule-core `attack-damage-composition.qnt` + `unit-feature-attack-rider-core.qnt` | Shell attack families compose over `resolveAttackProcedure` / `resolveSneakAttack`; per-combatant capability facts move onto `Combatant`; the `resolveGoblin*` family collapses to the general resolver + thin per-actor sequencing. Validated against O2 parity vectors and existing battle MBT; reviewer-loop + RAW/ubiquitous-language convergence required. |
+
 ## Reopen Checklist
 
 - Start from `plans/QNT_COVERAGE_PROGRAM.md` and
