@@ -121,93 +121,106 @@
     {
       "number": 20,
       "id": "L13UG-A20-LEVEL13-CLOSEOUT",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Close out level 1-3 ultra-golden lane"
     },
     {
       "number": 21,
       "id": "L13UG-A21-RECURSIVE-NEXT-BATCH",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Plan the next level-support batch if this lane drains"
     },
     {
       "number": 22,
       "id": "L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Disciple of Life healing modifier runtime"
     },
     {
       "number": 23,
       "id": "L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Preserve Life healing pool runtime"
     },
     {
       "number": 24,
       "id": "L13UG-A24-DRUID-LANDS-AID-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Land's Aid level-3 runtime"
     },
     {
       "number": 25,
       "id": "L13UG-A25-DRUID-LANDS-AID-SCALING",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Land's Aid later-level scaling"
     },
     {
       "number": 26,
       "id": "L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Dark One's Blessing runtime"
     },
     {
       "number": 27,
       "id": "L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Remarkable Athlete runtime"
     },
     {
       "number": 28,
       "id": "L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Open Hand Technique runtime"
     },
     {
       "number": 29,
       "id": "L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Sacred Weapon runtime"
     },
     {
       "number": 30,
       "id": "L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Hunter's Prey runtime"
     },
     {
       "number": 31,
       "id": "L13UG-A31-ROGUE-STEADY-AIM-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Steady Aim runtime"
     },
     {
       "number": 32,
       "id": "L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Promote Potent Cantrip runtime"
+    },
+    {
+      "number": 33,
+      "id": "L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT",
+      "status": "ready-for-research",
+      "title": "Repair and refresh level 1-3 verification preflight"
     }
   ]
 }
 -->
 
-This lane is being parked after the Task 18 admission milestone. Character level and
+Reopened on 2026-05-29 for the level-3 Ralph continuation. Character level and
 spell level are separate axes: character levels 1-3 include spell-level-2
 pressure, not spell-level-3 pressure.
 
-Post-Task-18 level-support breadth tasks are deferred because the current
-priority is generator-readiness accounting, not more level-frontier expansion. Do not
-launch this lane for new work unless the owner explicitly reopens the
-level-support frontier.
+Current checked artifacts already show level 1-3 in the aggregate ultra-golden
+gate with all four layers passing. The continuation is not about making the
+claim pass for the first time; it is about promoting admitted level-3 runtime
+profiles and preserving the claim under the now-stricter verification preflight.
+
+Refresh note: `pnpm unit-profile-coverage:check -- --write` was attempted on
+2026-05-29 and failed before useful generation because selected-identity replay
+metadata validation now reports broad pre-existing gaps in deterministic replay
+data and focused MBT consumer linkage. Task 33 is the required first Ralph task
+for this reopened lane. Runtime-promotion tasks remain blocked until that
+preflight is repaired or deliberately narrowed with checker-owned rationale.
 
 ## Context Budget
 
@@ -217,6 +230,7 @@ Read only these by default:
 - `plans/unit-profile-coverage/level1-3-full-support.json`
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`
+- `plans/unit-profile-coverage/LEVEL1_3_DIAGNOSTIC_READINESS_AUDIT.md`
 - Relevant `mind_spike` files when a task touches Mind Spike:
   `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Mind Spike`,
   `packages/surface/content/mind_spike.json`,
@@ -257,7 +271,41 @@ artifact changes:
 - Focused package tests for touched runtime/evidence files
 - `git diff --check`
 
-## Tasks
+## Reopened Batch Shape
+
+This is at least a three-day Ralph queue:
+
+- Day 1: Task 33 preflight repair, then the healing/resource runtime slice
+  (Tasks 22-26) if the preflight unblocks.
+- Day 2: attack, action, movement, and selected-option runtime slices
+  (Tasks 27-31).
+- Day 3: Potent Cantrip, closeout, and recursive next-batch planning
+  (Tasks 32, 20, and 21).
+
+Ralph must keep the normal implementer, reviewer, handback, and decider loop
+per task. If any task proves too broad, split it into narrower runnable tasks in
+this plan before marking the original done.
+
+## DAG / Queue Order
+
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 33 | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT - Repair and refresh level 1-3 verification preflight | ready-for-research | none | First task for reopened lane; fixes the failed refresh gate before runtime promotion. |
+| 22 | L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME - Promote Disciple of Life healing modifier runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 1 healing modifier runtime. |
+| 23 | L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME - Promote Preserve Life healing pool runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 1 resource/healing runtime. |
+| 24 | L13UG-A24-DRUID-LANDS-AID-RUNTIME - Promote Land's Aid level-3 runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 1 area damage/healing runtime. |
+| 25 | L13UG-A25-DRUID-LANDS-AID-SCALING - Promote Land's Aid later-level scaling | blocked | L13UG-A24-DRUID-LANDS-AID-RUNTIME | Runs only after the level-3 Land's Aid owner exists. |
+| 26 | L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME - Promote Dark One's Blessing runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 1 zero-Hit-Point trigger runtime. |
+| 27 | L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME - Promote Remarkable Athlete runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 2 roll/movement trigger runtime. |
+| 28 | L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME - Promote Open Hand Technique runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 2 Flurry hit follow-up runtime. |
+| 29 | L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME - Promote Sacred Weapon runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 2 resource/weapon/light runtime. |
+| 30 | L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME - Promote Hunter's Prey runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 2 selected-option attack runtime. |
+| 31 | L13UG-A31-ROGUE-STEADY-AIM-RUNTIME - Promote Steady Aim runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 2 Bonus Action/movement runtime. |
+| 32 | L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME - Promote Potent Cantrip runtime | blocked | L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT | Day 3 cantrip damage runtime. |
+| 20 | L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane | blocked | L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME, L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME, L13UG-A24-DRUID-LANDS-AID-RUNTIME, L13UG-A25-DRUID-LANDS-AID-SCALING, L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME, L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME, L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME, L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME, L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME, L13UG-A31-ROGUE-STEADY-AIM-RUNTIME, L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME | Day 3 closeout after reopened runtime queue drains. |
+| 21 | L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains | blocked | L13UG-A20-LEVEL13-CLOSEOUT | Keeps Ralph from ending with no next batch. |
+
+## Task Details
 
 ### Task 1 - L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY - Close Mind Spike selected-identity witness
 
@@ -561,10 +609,9 @@ table/social split.
 
 ### Task 20 - L13UG-A20-LEVEL13-CLOSEOUT - Close out level 1-3 ultra-golden lane
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-Reopen only after the owner explicitly resumes level-support breadth.
+Blocked until the reopened level-3 runtime promotion queue drains.
 
 Input: results from Tasks 1-19 and the appended Task 16 runtime follow-ups
 (`L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME`,
@@ -583,11 +630,9 @@ new work is discovered.
 
 ### Task 21 - L13UG-A21-RECURSIVE-NEXT-BATCH - Plan the next level-support batch if this lane drains
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-Recursive
-level-support planning must not run while generator-readiness accounting is the priority.
+Blocked until Task 20 closes out the reopened level-3 runtime queue.
 
 Input: current generated reports after Task 20.
 
@@ -601,10 +646,9 @@ new runnable tasks discovered from current generated artifacts.
 
 ### Task 22 - L13UG-A22-CLERIC-DISCIPLE-LIFE-RUNTIME - Promote Disciple of Life healing modifier runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting. This remains
-valid level-support work, but it is not part of the current generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 16 admitted `unit-feature.spell-slot-healing-modifier` profile for
 `cleric_disciple_of_life`, local SRD Cleric Disciple of Life text, supported
@@ -623,10 +667,9 @@ Unit identity flow where the reducer boundary consumes the profile.
 
 ### Task 23 - L13UG-A23-CLERIC-PRESERVE-LIFE-RUNTIME - Promote Preserve Life healing pool runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting. This remains
-valid level-support work, but it is not part of the current generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 16 admitted `unit-feature.magic-action-healing-pool` profile for
 `cleric_preserve_life`, local SRD Cleric Preserve Life text, Channel Divinity
@@ -644,10 +687,9 @@ and no authored-identity dispatch.
 
 ### Task 24 - L13UG-A24-DRUID-LANDS-AID-RUNTIME - Promote Land's Aid level-3 runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting. This remains
-valid level-support work, but it is not part of the current generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 16 admitted `unit-feature.magic-action-area-save-damage-healing`
 profile for `druid_lands_aid`, local SRD Druid Land's Aid text, Wild Shape
@@ -666,11 +708,10 @@ and no authored-identity dispatch.
 
 ### Task 25 - L13UG-A25-DRUID-LANDS-AID-SCALING - Promote Land's Aid later-level scaling
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting. This remains
-valid later-level scaling work, but it is not part of the current generator
-lane.
+Blocked on Task 24 because the level-3 Land's Aid runtime owner must exist
+before later-level scaling can be represented honestly.
 
 Input: Task 24 Land's Aid runtime owner, local SRD Druid Land's Aid level 10 and
 14 scaling text, current Surface mechanics, and package-local battle-runtime
@@ -688,10 +729,9 @@ level-threshold dice scaling for damage and healing while preserving the Task
 
 ### Task 26 - L13UG-A26-WARLOCK-DARK-ONES-BLESSING-RUNTIME - Promote Dark One's Blessing runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting. This remains
-valid level-support work, but it is not part of the current generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 16 admitted
 `unit-feature.enemy-zero-hit-point-temporary-hit-points` profile for
@@ -711,11 +751,9 @@ and selected Unit identity flow where the reducer boundary consumes the profile.
 
 ### Task 27 - L13UG-A27-FIGHTER-REMARKABLE-ATHLETE-RUNTIME - Promote Remarkable Athlete runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.remarkable-athlete` profile for
 `fighter_remarkable_athlete`, local SRD Fighter Remarkable Athlete text,
@@ -733,11 +771,9 @@ Opportunity Attack movement, and no authored-identity dispatch.
 
 ### Task 28 - L13UG-A28-MONK-OPEN-HAND-TECHNIQUE-RUNTIME - Promote Open Hand Technique runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.open-hand-technique` profile for
 `monk_open_hand_technique`, local SRD Monk Open Hand Technique text, supported
@@ -756,11 +792,9 @@ rejection, and no authored-identity dispatch.
 
 ### Task 29 - L13UG-A29-PALADIN-SACRED-WEAPON-RUNTIME - Promote Sacred Weapon runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.paladin-sacred-weapon` profile for
 `paladin_sacred_weapon`, local SRD Paladin Sacred Weapon text, Paladin Channel
@@ -781,11 +815,9 @@ authored-identity dispatch.
 
 ### Task 30 - L13UG-A30-RANGER-HUNTERS-PREY-RUNTIME - Promote Hunter's Prey runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.hunters-prey` profile for
 `ranger_hunters_prey`, local SRD Ranger Hunter's Prey text, selected-option
@@ -805,11 +837,9 @@ authored-identity dispatch.
 
 ### Task 31 - L13UG-A31-ROGUE-STEADY-AIM-RUNTIME - Promote Steady Aim runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.rogue-steady-aim` profile for
 `rogue_steady_aim`, local SRD Rogue Steady Aim text, unit-feature action
@@ -828,11 +858,9 @@ Advantage, Speed 0, end-turn cleanup, and no authored-identity dispatch.
 
 ### Task 32 - L13UG-A32-WIZARD-POTENT-CANTRIP-RUNTIME - Promote Potent Cantrip runtime
 
-Status: `deferred`
+Status: `blocked`
 
-Deferred because the active priority moved to generator-readiness accounting.
-This remains valid level-support work, but it is not part of the current
-generator-readiness lane.
+Blocked on Task 33 verification preflight.
 
 Input: Task 18 admitted `unit-feature.potent-cantrip` profile for
 `wizard_potent_cantrip`, local SRD Wizard Potent Cantrip text, supported cantrip
@@ -847,3 +875,28 @@ authored-identity dispatch.
 Acceptance: focused runtime tests and promoted QNT/runtime parity cover
 attack-miss half damage, save-success half damage, non-creature and unsupported
 cantrip rejection, no additional effect, and no authored-identity dispatch.
+
+### Task 33 - L13UG-A33-LEVEL13-VERIFICATION-PREFLIGHT - Repair and refresh level 1-3 verification preflight
+
+Status: `ready-for-research`
+
+Input: failed 2026-05-29 refresh output from
+`pnpm unit-profile-coverage:check -- --write`, current selected-identity MBT
+evidence comments, focused MBT driver schemas, rules-kernel witness rows,
+`plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`, and
+`plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`.
+
+Output: a checker-clean level 1-3 verification preflight that lets this reopened
+Ralph lane run ordinary task verification again. Prefer repairing stale or
+incomplete metadata at the source. If any validation is intentionally too broad
+for this lane, narrow it with checker-owned self-test coverage and an explicit
+domain reason; do not bypass the selected-identity or rules-kernel gates by
+weakening authored-identity discipline.
+
+Acceptance: `pnpm unit-profile-coverage:check -- --write`,
+`pnpm unit-profile-coverage:check`, `pnpm rules-kernel-coverage:check`, and
+`git diff --check` pass or leave one precisely documented non-level-3 blocker
+that is moved to its own Ralph task before Tasks 22-32 are unblocked. The
+refreshed generated reports still show level 1-3 support completeness,
+QNT/generator readiness, MBT/parity evidence, and MCP scenario evidence as
+passing, or the task records the exact layer that is no longer true.
