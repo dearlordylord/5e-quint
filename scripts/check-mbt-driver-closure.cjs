@@ -31,15 +31,23 @@ const ROOT = path.resolve(__dirname, "..");
 const PKGS = path.join(ROOT, "packages");
 const BUDGET_FILES = 8;
 
-// Grandfathered heavy drivers (basename -> reason). Migration backlog: each
-// imports a behavioural module / the type model for a few symbols and pays that
-// module's whole closure per trace. Shrink this list; do not add to it.
+// Grandfathered heavy drivers (basename -> reason). These import a behavioural
+// module / the type model and pay its whole closure per trace. Do not add to this
+// list. Two kinds remain, by design:
+//   - "computed oracle": the projection is computed from MUTABLE driver state via
+//     the rule reducer, so the reducer (the SRD formalization) is the oracle.
+//     Converting to literals would duplicate that rule logic into the witness and
+//     weaken the parity check -- keep these as-is.
+//   - "convertible": a deterministic fixed-outcome scenario that can become a
+//     self-contained literal witness (capture the reducer values via the Quint
+//     REPL, then assert them). adrenaline-rush / death-saving-throw / sleep-repeat-save
+//     / bardic-inspiration / monk-martial-arts were migrated this way; do the rest.
 const ALLOWLIST = {
-  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "imports blur attack-roll-defense behaviour",
-  "battle-runtime-starry-wisp-object.mbt.qnt": "imports object/light-emitter behaviour",
-  "rule-core-spells.mbt.qnt": "rule-core inductive spell driver",
-  "rule-core-features.mbt.qnt": "rule-core inductive feature driver",
-  "rule-core-stat-block-controls.mbt.qnt": "rule-core inductive stat-block driver",
+  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "computed oracle: attack-roll mode depends on mutable bypass/advantage state",
+  "rule-core-stat-block-controls.mbt.qnt": "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
+  "battle-runtime-starry-wisp-object.mbt.qnt": "convertible but projects complex ObjectDamageOutcome/LightEmitter records",
+  "rule-core-spells.mbt.qnt": "convertible: ~33-action fixed-outcome rule-core spell tracer",
+  "rule-core-features.mbt.qnt": "convertible: ~32-action rule-core feature tracer (partly state-dependent)",
 };
 
 const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
