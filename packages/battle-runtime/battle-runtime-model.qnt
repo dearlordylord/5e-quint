@@ -3,8 +3,15 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 
 module battleRuntimeModel {
-  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  // This module is the battle-runtime TYPE VOCABULARY. It must stay free of the
+  // bridges' rule-core closure: every simulated *.mbt.qnt driver imports this
+  // module, and a driver pays a per-trace cost proportional to its import closure.
+  // The only names this module needs from the bridges are four plain enums, which
+  // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or
+  // battle-runtime-spell-bridge here — that re-attaches the 30-file closure and
+  // makes every model-importing driver ~100x slower (see the leaf headers).
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
+  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
   type Actor = Fighter | Goblin
   type CombatantSide = PartySide | OppositionSide

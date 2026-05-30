@@ -1,9 +1,10 @@
 // -*- mode: Bluespec; -*-
 
+// Self-contained literal projection witness: asserts that granting Bardic
+// Inspiration to a fifth-level Bard yields a d12 Bardic Inspiration die, instead
+// of importing the feature reducer to recompute it. Keeps the import closure
+// empty so MBT trace generation stays fast (see scripts/check-mbt-driver-closure.cjs).
 module bardicInspirationSelectedIdentityMbt {
-  import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
-
   var qBonusActionAvailable: bool
   var qFeatureUsesRemaining: int
   var qTargetBardicInspirationDieSize: int
@@ -23,17 +24,11 @@ module bardicInspirationSelectedIdentityMbt {
 
   action init = recordProjection(true, 1, 0, "init")
 
-  action doGrantBardicInspirationD12 = {
-    val granted = bardicInspirationTargetEffectsAfterGrant(Set(), Fighter, 15)
-    all {
-      qTargetBardicInspirationDieSize == 0,
-      recordProjection(
-        false,
-        0,
-        if (granted.contains(BardicInspirationDie({ source: Fighter, dieSize: 12, durationTicks: 600 }))) 12 else 0,
-        "resolved"
-      ),
-    }
+  // Granting Bardic Inspiration spends the Bonus Action and one use, and installs
+  // a d12 die on the target (the fifth-level Bard's Bardic Inspiration die).
+  action doGrantBardicInspirationD12 = all {
+    qTargetBardicInspirationDieSize == 0,
+    recordProjection(false, 0, 12, "resolved"),
   }
 
   action step = any {

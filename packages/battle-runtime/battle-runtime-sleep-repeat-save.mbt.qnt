@@ -1,10 +1,17 @@
 // -*- mode: Bluespec; -*-
 
+// Self-contained literal projection witness for the Sleep pending-repeat-save
+// lifecycle. Asserts the SRD outcomes directly instead of importing the
+// concentration / sleep / turn-advancement reducers, so the driver's import
+// closure stays empty and its MBT trace generation stays fast (see
+// scripts/check-mbt-driver-closure.cjs). Each fact below is that reducer chain's
+// result for the fixed Sleep scenario (caster concentrates on Sleep against a
+// single target that fails the initial save). The projected fields are
+// (incapacitated, unconscious, prone, caster-concentrating, action-available).
+// If the underlying rules change, update the literals here.
 module battleRuntimeSleepRepeatSaveMbt {
-  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
-  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  // Only the repeat Saving Throw hole is exercised by this witness.
+  type Hole = | SavingThrowOutcome
 
   var qCurrentTurnRole: str
   var qTargetIncapacitated: bool
@@ -19,92 +26,90 @@ module battleRuntimeSleepRepeatSaveMbt {
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
 
-  pure val slept: BattleState = resolveSleepTargetAdmission(initialState, false, false, false)
-  pure val concentrationBroken: BattleState = breakConcentrationSpellEffects(slept, Fighter)
-  pure val concentrationBrokenTargetTurn: BattleState = endTurn(concentrationBroken)
-  pure val concentrationBrokenNextRound: BattleState = endTurn(concentrationBrokenTargetTurn)
-  pure val targetTurn: BattleState = endTurn(slept)
-  pure val repeatSucceeded: BattleState = endTurnWithSleepRepeatSave(targetTurn, true)
-  pure val repeatFailed: BattleState = endTurnWithSleepRepeatSave(targetTurn, false)
-
-  pure def projectedIncapacitated(target: Combatant): bool =
-    target.incapacitated or target.unconscious
-
   action init = all {
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(initialState.goblin),
-    qTargetUnconscious' = initialState.goblin.unconscious,
-    qTargetProne' = initialState.goblin.prone,
-    qCasterConcentrating' = initialState.fighter.concentrating,
-    qActionAvailable' = initialState.actionAvailable,
+    qTargetIncapacitated' = false,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = false,
+    qActionAvailable' = true,
     qHoles' = Set(SavingThrowOutcome),
     qLastResult' = "init",
     qLastInvalidReason' = "",
   }
 
+  // Failing the initial save: the target is incapacitated and the caster is now
+  // concentrating on Sleep; the casting spent the action.
   action doFillInitialSaveFailure = all {
     qCurrentTurnRole == casterTurnRole,
     qActionAvailable,
     qHoles == Set(SavingThrowOutcome),
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(slept.goblin),
-    qTargetUnconscious' = slept.goblin.unconscious,
-    qTargetProne' = slept.goblin.prone,
-    qCasterConcentrating' = slept.fighter.concentrating,
-    qActionAvailable' = slept.actionAvailable,
+    qTargetIncapacitated' = true,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = true,
+    qActionAvailable' = false,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Breaking Concentration ends the Sleep effect: the target is no longer
+  // incapacitated and the caster no longer concentrates.
   action doBreakConcentrationBeforeRepeat = all {
     qCurrentTurnRole == casterTurnRole,
     not(qActionAvailable),
     qCasterConcentrating,
     qHoles == Set(),
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(concentrationBroken.goblin),
-    qTargetUnconscious' = concentrationBroken.goblin.unconscious,
-    qTargetProne' = concentrationBroken.goblin.prone,
-    qCasterConcentrating' = concentrationBroken.fighter.concentrating,
-    qActionAvailable' = concentrationBroken.actionAvailable,
+    qTargetIncapacitated' = false,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = false,
+    qActionAvailable' = false,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Ending the caster turn while Sleep persists: the target stays incapacitated,
+  // Concentration continues, and the new turn refreshes the action.
   action doEndCasterTurn = all {
     qCurrentTurnRole == casterTurnRole,
     not(qActionAvailable),
     qCasterConcentrating,
     qHoles == Set(),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(targetTurn.goblin),
-    qTargetUnconscious' = targetTurn.goblin.unconscious,
-    qTargetProne' = targetTurn.goblin.prone,
-    qCasterConcentrating' = targetTurn.fighter.concentrating,
-    qActionAvailable' = targetTurn.actionAvailable,
+    qTargetIncapacitated' = true,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = true,
+    qActionAvailable' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Ending the caster turn after Concentration broke: Sleep is gone, action refreshes.
   action doEndCasterTurnAfterConcentrationBreak = all {
     qCurrentTurnRole == casterTurnRole,
     not(qActionAvailable),
     not(qCasterConcentrating),
     qHoles == Set(),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(concentrationBrokenTargetTurn.goblin),
-    qTargetUnconscious' = concentrationBrokenTargetTurn.goblin.unconscious,
-    qTargetProne' = concentrationBrokenTargetTurn.goblin.prone,
-    qCasterConcentrating' = concentrationBrokenTargetTurn.fighter.concentrating,
-    qActionAvailable' = concentrationBrokenTargetTurn.actionAvailable,
+    qTargetIncapacitated' = false,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = false,
+    qActionAvailable' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Ending the target turn after Concentration broke advances to the next round
+  // with Sleep still gone.
   action doEndTargetTurnAfterConcentrationBreak = all {
     qCurrentTurnRole == targetTurnRole,
     qActionAvailable,
@@ -112,11 +117,11 @@ module battleRuntimeSleepRepeatSaveMbt {
     not(qCasterConcentrating),
     qHoles == Set(),
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(concentrationBrokenNextRound.goblin),
-    qTargetUnconscious' = concentrationBrokenNextRound.goblin.unconscious,
-    qTargetProne' = concentrationBrokenNextRound.goblin.prone,
-    qCasterConcentrating' = concentrationBrokenNextRound.fighter.concentrating,
-    qActionAvailable' = concentrationBrokenNextRound.actionAvailable,
+    qTargetIncapacitated' = false,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = false,
+    qActionAvailable' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
@@ -138,29 +143,31 @@ module battleRuntimeSleepRepeatSaveMbt {
     qLastInvalidReason' = "",
   }
 
+  // Succeeding the repeat save wakes the target while Concentration continues.
   action doFillRepeatSaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
     qHoles == Set(SavingThrowOutcome),
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(repeatSucceeded.goblin),
-    qTargetUnconscious' = repeatSucceeded.goblin.unconscious,
-    qTargetProne' = repeatSucceeded.goblin.prone,
-    qCasterConcentrating' = repeatSucceeded.fighter.concentrating,
-    qActionAvailable' = repeatSucceeded.actionAvailable,
+    qTargetIncapacitated' = false,
+    qTargetUnconscious' = false,
+    qTargetProne' = false,
+    qCasterConcentrating' = true,
+    qActionAvailable' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Failing the repeat save keeps the target Unconscious and Prone.
   action doFillRepeatSaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
     qHoles == Set(SavingThrowOutcome),
     qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = projectedIncapacitated(repeatFailed.goblin),
-    qTargetUnconscious' = repeatFailed.goblin.unconscious,
-    qTargetProne' = repeatFailed.goblin.prone,
-    qCasterConcentrating' = repeatFailed.fighter.concentrating,
-    qActionAvailable' = repeatFailed.actionAvailable,
+    qTargetIncapacitated' = true,
+    qTargetUnconscious' = true,
+    qTargetProne' = true,
+    qCasterConcentrating' = true,
+    qActionAvailable' = true,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",

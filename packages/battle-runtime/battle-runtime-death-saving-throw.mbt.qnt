@@ -1,8 +1,15 @@
 // -*- mode: Bluespec; -*-
 
+// Self-contained literal projection witness for the start-turn Death Saving Throw
+// lifecycle. Asserts the SRD outcomes directly instead of importing the hit-point
+// reducer, so the driver's import closure stays empty and its MBT trace generation
+// stays fast (see scripts/check-mbt-driver-closure.cjs). The fixture target begins
+// Unconscious at 0 Hit Points with 2 death-save successes and 1 failure; the facts
+// below are that reducer's SRD result for each die result. If the death-save rule
+// changes, update the literals here.
 module battleRuntimeDeathSavingThrowMbt {
-  import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  // Only the start-turn Death Saving Throw hole is exercised by this witness.
+  type Hole = | DeathSavingThrow
 
   var qCurrentTurnRole: str
   var qTargetHp: int
@@ -18,30 +25,14 @@ module battleRuntimeDeathSavingThrowMbt {
   pure val actorTurnRole: str = "actor"
   pure val targetTurnRole: str = "target"
 
-  pure val initialDeathSavingThrowTarget: Combatant = {
-    ...initialState.fighter,
-    hp: 0,
-    unconscious: true,
-    stable: false,
-    deathSuccesses: 2,
-    deathFailures: 1,
-    lifecycle: UsesDeathSavingThrows,
-  }
-
-  pure def deathSavingThrowTargetAfter(roll: int): Combatant =
-    applyStartTurnDeathSave(initialDeathSavingThrowTarget, roll)
-
-  pure def targetDeadAfter(roll: int): bool =
-    deathSavingThrowTargetAfter(roll).deathFailures >= 3
-
   action init = all {
     qCurrentTurnRole' = actorTurnRole,
-    qTargetHp' = initialDeathSavingThrowTarget.hp,
-    qTargetUnconscious' = initialDeathSavingThrowTarget.unconscious,
-    qTargetStable' = initialDeathSavingThrowTarget.stable,
-    qTargetDead' = initialDeathSavingThrowTarget.deathFailures >= 3,
-    qTargetDeathSuccesses' = initialDeathSavingThrowTarget.deathSuccesses,
-    qTargetDeathFailures' = initialDeathSavingThrowTarget.deathFailures,
+    qTargetHp' = 0,
+    qTargetUnconscious' = true,
+    qTargetStable' = false,
+    qTargetDead' = false,
+    qTargetDeathSuccesses' = 2,
+    qTargetDeathFailures' = 1,
     qHoles' = Set(),
     qLastResult' = "init",
     qLastInvalidReason' = "",
@@ -62,61 +53,65 @@ module battleRuntimeDeathSavingThrowMbt {
     qLastInvalidReason' = "",
   }
 
+  // Natural 1 counts as two failures: 1 + 2 = 3 failures, so the target dies.
   action doFillDeathSavingThrowNaturalOne = all {
     qCurrentTurnRole == actorTurnRole,
     qHoles == Set(DeathSavingThrow),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = deathSavingThrowTargetAfter(1).hp,
-    qTargetUnconscious' = deathSavingThrowTargetAfter(1).unconscious,
-    qTargetStable' = deathSavingThrowTargetAfter(1).stable,
-    qTargetDead' = targetDeadAfter(1),
-    qTargetDeathSuccesses' = deathSavingThrowTargetAfter(1).deathSuccesses,
-    qTargetDeathFailures' = deathSavingThrowTargetAfter(1).deathFailures,
+    qTargetHp' = 0,
+    qTargetUnconscious' = true,
+    qTargetStable' = false,
+    qTargetDead' = true,
+    qTargetDeathSuccesses' = 2,
+    qTargetDeathFailures' = 3,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // A roll of 2-9 is one failure: failures 1 -> 2, target keeps rolling.
   action doFillDeathSavingThrowFailure = all {
     qCurrentTurnRole == actorTurnRole,
     qHoles == Set(DeathSavingThrow),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = deathSavingThrowTargetAfter(5).hp,
-    qTargetUnconscious' = deathSavingThrowTargetAfter(5).unconscious,
-    qTargetStable' = deathSavingThrowTargetAfter(5).stable,
-    qTargetDead' = targetDeadAfter(5),
-    qTargetDeathSuccesses' = deathSavingThrowTargetAfter(5).deathSuccesses,
-    qTargetDeathFailures' = deathSavingThrowTargetAfter(5).deathFailures,
+    qTargetHp' = 0,
+    qTargetUnconscious' = true,
+    qTargetStable' = false,
+    qTargetDead' = false,
+    qTargetDeathSuccesses' = 2,
+    qTargetDeathFailures' = 2,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // A roll of 10-19 is one success: successes 2 -> 3, target becomes Stable.
   action doFillDeathSavingThrowSuccess = all {
     qCurrentTurnRole == actorTurnRole,
     qHoles == Set(DeathSavingThrow),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = deathSavingThrowTargetAfter(10).hp,
-    qTargetUnconscious' = deathSavingThrowTargetAfter(10).unconscious,
-    qTargetStable' = deathSavingThrowTargetAfter(10).stable,
-    qTargetDead' = targetDeadAfter(10),
-    qTargetDeathSuccesses' = deathSavingThrowTargetAfter(10).deathSuccesses,
-    qTargetDeathFailures' = deathSavingThrowTargetAfter(10).deathFailures,
+    qTargetHp' = 0,
+    qTargetUnconscious' = true,
+    qTargetStable' = true,
+    qTargetDead' = false,
+    qTargetDeathSuccesses' = 3,
+    qTargetDeathFailures' = 1,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
   }
 
+  // Natural 20 regains 1 Hit Point: the target is conscious and death saves reset.
   action doFillDeathSavingThrowNaturalTwenty = all {
     qCurrentTurnRole == actorTurnRole,
     qHoles == Set(DeathSavingThrow),
     qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = deathSavingThrowTargetAfter(20).hp,
-    qTargetUnconscious' = deathSavingThrowTargetAfter(20).unconscious,
-    qTargetStable' = deathSavingThrowTargetAfter(20).stable,
-    qTargetDead' = targetDeadAfter(20),
-    qTargetDeathSuccesses' = deathSavingThrowTargetAfter(20).deathSuccesses,
-    qTargetDeathFailures' = deathSavingThrowTargetAfter(20).deathFailures,
+    qTargetHp' = 1,
+    qTargetUnconscious' = false,
+    qTargetStable' = false,
+    qTargetDead' = false,
+    qTargetDeathSuccesses' = 0,
+    qTargetDeathFailures' = 0,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",
