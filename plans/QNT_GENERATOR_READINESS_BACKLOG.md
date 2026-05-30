@@ -38,8 +38,10 @@ Former source lane: Ralph lane B, deleted after merge.
 ## Parked Oracle-Reliability Tasks (Attack Integration Shell)
 
 Source: 2026-05-29 shell-boundary audit of `battle-runtime-weapon-attacks.qnt`,
-prompted by the cleanroom Rust transcription. Framing: make QNT a reliable
-*oracle* for non-TS targets, not only a TS parity spec.
+prompted by the cleanroom Rust transcription. Framing: make QNT a better
+language-agnostic test suite — the source any language library is generated from
+and validated against (ADR-0001). Concern order: QNT code first, then TS, then
+the Rust witness.
 
 Audit verdict (reopen context): the package-local attack shell has overgrown
 ADR-0001's "thin bounded witness" mandate. It imports no rule-core slice and
@@ -57,17 +59,19 @@ per-combatant capability facts as `fighter*`-prefixed top-level fields
 field `fighterHelpAttackGoblinForGoblin`. This is
 `BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md` anomaly A3 realized at scale.
 
-Sequenced **O2 before O1**: stand up the executable parity instrument before the
-shell is remodelled, so O1 is validated against it for non-TS targets (not only
-the existing TS MBT). O1 overlaps the parked `B28-MIRROR-IMAGE-READINESS` and
-`B29-MINIMAL-ATTACK-READINESS` rows above (same fixture-bound-vs-semantic-core
-question, applied to the weapon-attack shell rather than `creature-attack.qnt`);
-reopen them together, do not duplicate.
+Concern order is **O1 then O2** (QNT code before Rust-witness code). O1 is the
+deliverable — improving the QNT test suite — and is already protected by the
+existing TS MBT lane (QNT↔TS parity via quint-connect), so it needs no new
+instrument first. O2 broadens validation to the multi-language case with a native
+Rust quint-connect witness and is the lowest-priority code here. O1 overlaps the
+parked `B28-MIRROR-IMAGE-READINESS` and `B29-MINIMAL-ATTACK-READINESS` rows above
+(same fixture-bound-vs-semantic-core question, applied to the weapon-attack shell
+rather than `creature-attack.qnt`); reopen them together, do not duplicate.
 
 | Task | Title | Depends on | Input | Output |
 | --- | --- | --- | --- | --- |
-| `O2-NONTS-PARITY-LANE` | Executable QNT→non-TS parity export | — (target boundary fixed by audit) | `battle-runtime-public-trace-contract.qnt`; rule-core general resolver slices; ITF / `quint` trace generation; cleanroom `quint`-binary admission decision | Fixture-free parity-vector export from the oracle (public trace contract per slice + materialized ITF vectors) that a non-TS target replays, mirroring the TS quint-connect lane in `BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`. Targets rule-core + public-trace-contract, NOT the internal `resolveAttack*` surface. |
-| `O1-ATTACK-SHELL-DEFIXTURE` | Compose attack shell over rule-core; de-fixture state | `O2`; overlaps `B28`, `B29` | `battle-runtime-weapon-attacks.qnt`; `battle-runtime-model.qnt` `BattleState`; rule-core `attack-damage-composition.qnt` + `unit-feature-attack-rider-core.qnt` | Shell attack families compose over `resolveAttackProcedure` / `resolveSneakAttack`; per-combatant capability facts move onto `Combatant`; the `resolveGoblin*` family collapses to the general resolver + thin per-actor sequencing. Validated against O2 parity vectors and existing battle MBT; reviewer-loop + RAW/ubiquitous-language convergence required. |
+| `O2-NONTS-PARITY-LANE` | Native Rust quint-connect witness in the cleanroom | — | native Rust quint-connect (the first-class lib the TS `@firfi/quint-connect` port copies); copied `cleanroom-input/qnt/**.mbt.qnt` driver specs; cleanroom AGENTS.md verification-lane admission | A native Rust quint-connect harness driving the cleanroom engine against the copied `.mbt.qnt` specs, replacing the cleanroom's hand-transcription parity (`// Source:` + literal asserts, 0 quint executions) with executed conformance. Validates the main-repo MBT approach (the cleanroom's sole purpose) and measures QNT-as-test-suite quality, surfacing the gaps O1-class work fixes. Lowest-priority code in this group. |
+| `O1-ATTACK-SHELL-DEFIXTURE` | Compose attack shell over rule-core; de-fixture state | overlaps `B28`, `B29` | `battle-runtime-weapon-attacks.qnt`; `battle-runtime-model.qnt` `BattleState`; rule-core `attack-damage-composition.qnt` + `unit-feature-attack-rider-core.qnt` | Shell attack families compose over `resolveAttackProcedure` / `resolveSneakAttack`; per-combatant capability facts move onto `Combatant`; the `resolveGoblin*` family collapses to the general resolver + thin per-actor sequencing. Behaviour-preserving: validated by the existing TS battle MBT with bridges updated as needed; reviewer-loop + RAW/ubiquitous-language convergence required. |
 
 ## Reopen Checklist
 
