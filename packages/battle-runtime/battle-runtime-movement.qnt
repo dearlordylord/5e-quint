@@ -31,7 +31,7 @@ module battleRuntimeMovement {
     dodging: state.fighter.dodging,
     hidden: fighterIsHidden(state),
     helpAttackHeld: state.fighterHelpAttackGoblinForGoblin,
-    readiedMovementHeld: state.fighterReadiedMovementHeld,
+    readiedMovementHeld: state.fighter.readiedMovementHeld,
     speedFeet: movementSpeed(state.fighter, speedKind),
     movementSpentFeet: state.fighter.movementSpent,
     prone: state.fighter.prone,
@@ -202,13 +202,13 @@ module battleRuntimeMovement {
       dashMovementBonus: step.dashMovementBonus,
       disengaged: step.disengaged,
       fighterHelpAttackGoblinForGoblin: step.helpAttackHeld,
-      fighterReadiedMovementHeld: step.readiedMovementHeld,
       fighter: {
         ...state.fighter,
         reactionAvailable: step.reactionAvailable,
         movementSpent: step.movementSpentFeet,
         prone: step.prone,
         dodging: step.dodging,
+        readiedMovementHeld: step.readiedMovementHeld,
       },
     }
 

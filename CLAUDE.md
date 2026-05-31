@@ -171,6 +171,29 @@ verification lane. **Treat MBT runs as a scarce resource.**
 - **If a seed is slow**, re-run without `QUINT_SEED` for a fresh one. Slow-seed rate measured at ~49% for invariant fuzzer (5 samples × 5 steps, 120s timeout) and 0% for battle MBT Tier 1 (10 seeds). Slow seeds are caused by branch count (Finding 14), not nondet range sizes.
 - **Slow evaluator? Try different seeds first.** Slow seeds are caused by branch count (Finding 14), not nondet range sizes. Re-run with fresh seeds before considering range narrowing. If narrowing is truly necessary, keep domain-correct ranges as comments and document the narrowing rationale in the code.
 
+## QNT proof lane (run consciously, CRITICAL)
+
+The package-local Quint proofs (`run`-block tests in
+`packages/battle-runtime/*.qnt`) are the SRD-parity gate, but any single proof
+can regress into a forever-running state-explosion search. That hazard is
+invisible if it hides inside a slow default test run, so the lane is structured
+to surface it instead:
+
+- **Not in `pnpm test`.** The proof lane is opt-in: `pnpm --filter
+  @dnd/battle-runtime test:qnt-proofs` (sets `RUN_QNT_PROOFS=1`). A normal
+  `pnpm test` runs only a fast reminder test and renders the proof modules as
+  skipped — that standing skip is the nag to run the lane consciously. Do not
+  fold the proofs back into the default lane.
+- **Bounded + attributable per module.** Each `.qnt` with `run` blocks runs as
+  its own `quint test <file>`, hard-killed at `proofModuleTimeoutMs`
+  (`src/battle-runtime-qnt-proofs.ts`). A runaway proof fails that one module
+  rather than hanging the suite, so a "fast → forever" regression is caught and
+  named, not silently absorbed into a week of work.
+- **Self-discovering.** The corpus is globbed by `run`-block presence, never a
+  hand-maintained import list, so a new proof slice cannot drift into being
+  unrun (the retired `battle-runtime-self-tests.qnt` aggregator had).
+- Run it before merging proof/spec changes and in a dedicated CI job.
+
 ## MBT driver closure discipline (CRITICAL)
 
 The Quint evaluator instantiates a simulated spec's **entire transitive `import` closure on every generated trace**, so a `*.mbt.qnt` driver's per-trace cost scales with the size of everything it imports — not with its own state width, branch count, or step depth. This is the dominant MBT performance factor. Measured: an _unused_ `import battle-runtime-model` took a 0.6s spec to 85s; a driver importing the full battle-runtime closure ran ~100× slower than an equivalent one importing only leaf modules. See `docs/adr/0001-forest-of-qnt-slices.md`.

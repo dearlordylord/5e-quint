@@ -35,7 +35,7 @@ module battleRuntimeTurnOrder {
     state.initiative.stillToAct[0]
 
   pure def currentActorCanAttack(state: BattleState): bool =
-    (state.actionAvailable or (currentActor(state) == Fighter and state.fighterExtraAttackSlotsRemaining > 0)) and
+    (state.actionAvailable or (currentActor(state) == Fighter and state.fighter.extraAttackSlotsRemaining > 0)) and
     (
       (currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated)) or
       (currentActor(state) == Goblin and state.goblin.hp > 0)

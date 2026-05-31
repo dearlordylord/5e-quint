@@ -1280,9 +1280,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   hosted weapon attack, Stat Block attack, Multiattack, and Opportunity Attack
   reducers.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
-  so the canonical integration spec stays focused on reducer behavior.
-- `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the
-  Vitest harness so split test modules run in one Quint invocation.
+  so the canonical integration spec stays focused on reducer behavior. Run them
+  via the opt-in proof lane, `pnpm --filter @dnd/battle-runtime test:qnt-proofs`
+  (each `run`-block module runs as its own bounded `quint test`; see CLAUDE.md
+  "QNT proof lane (run consciously)").
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
@@ -1291,6 +1292,7 @@ Useful checks:
 ```sh
 pnpm --filter @dnd/battle-runtime typecheck
 pnpm --filter @dnd/battle-runtime test
+pnpm --filter @dnd/battle-runtime test:qnt-proofs  # opt-in QNT proof lane; not run by `test` (see CLAUDE.md "QNT proof lane")
 MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts
 MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime.mbt.test.ts
 ```

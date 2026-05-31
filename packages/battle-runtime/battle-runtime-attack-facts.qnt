@@ -18,19 +18,19 @@ module battleRuntimeAttackFacts {
     naturalD20MeetsCriticalThreshold(naturalD20, criticalThreshold)
 
   pure def fighterCriticalThreshold(state: BattleState): int =
-    battleRuntimeChampionCriticalThreshold(state.fighterCriticalRange == ImprovedCriticalRange19)
+    battleRuntimeChampionCriticalThreshold(state.fighter.criticalRange == ImprovedCriticalRange19)
 
   pure def attackCriticalThreshold(state: BattleState, attacker: Actor): int =
     if (attacker == Fighter) fighterCriticalThreshold(state) else 20
 
   pure def withFighterImprovedCriticalRange19(state: BattleState): BattleState =
-    { ...state, fighterCriticalRange: ImprovedCriticalRange19 }
+    { ...state, fighter: { ...state.fighter, criticalRange: ImprovedCriticalRange19 } }
 
   pure def withFighterSneakAttack(state: BattleState): BattleState =
-    { ...state, fighterSneakAttackSupported: true }
+    { ...state, fighter: { ...state.fighter, sneakAttackSupported: true } }
 
   pure def withFighterExtraAttack(state: BattleState): BattleState =
-    { ...state, fighterExtraAttackSupported: true }
+    { ...state, fighter: { ...state.fighter, extraAttackSupported: true } }
 
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }
@@ -126,8 +126,8 @@ module battleRuntimeAttackFacts {
     allyAdjacent: bool,
     rollHasDisadvantage: bool,
   ): bool =
-    state.fighterSneakAttackSupported and
-    not(state.fighterSneakAttackUsedThisTurn) and
+    state.fighter.sneakAttackSupported and
+    not(state.fighter.sneakAttackUsedThisTurn) and
     (rollHasAdvantage or (allyAdjacent and not(rollHasDisadvantage)))
 
   pure def uncannyDodgeDamage(damage: int): int =

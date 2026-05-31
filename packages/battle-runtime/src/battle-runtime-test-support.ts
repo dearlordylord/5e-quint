@@ -1,7 +1,3 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
-
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
@@ -12,7 +8,6 @@ import { fileURLToPath } from "node:url";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
-import { expect } from "vitest";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -185,8 +180,6 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 
-const execFileAsync = promisify(execFile);
-
 export function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
@@ -243,10 +236,6 @@ export function removeBattleCombatantsRight(
 
 export const partySide = battleCombatantSide("party");
 export const oppositionSide = battleCombatantSide("opposition");
-const battleRuntimeSelfTestSpecPath = fileURLToPath(
-  new URL("../battle-runtime-self-tests.qnt", import.meta.url),
-);
-export const canonicalBattleRuntimeQntSelfTestTimeoutMs = 300_000;
 export const fighterId = combatantId("fighter");
 export const goblinId = combatantId("goblin");
 export const skeletonId = combatantId("skeleton");
@@ -463,24 +452,6 @@ export function subjectName(
     return "druidWildShape";
   }
   return subject.command;
-}
-
-export async function runCanonicalBattleRuntimeQntSelfTests(): Promise<void> {
-  const { stdout } = await execFileAsync(
-    "pnpm",
-    [
-      "exec",
-      "quint",
-      "test",
-      "--backend",
-      "typescript",
-      battleRuntimeSelfTestSpecPath,
-      "--match",
-      "test_",
-    ],
-    { encoding: "utf8" },
-  );
-  expect(stdout).toContain("passing");
 }
 
 export function hidePrerequisites(

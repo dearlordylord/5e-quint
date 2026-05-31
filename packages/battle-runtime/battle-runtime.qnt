@@ -495,7 +495,7 @@ module battleRuntime {
     if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
 
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActor(state) == Goblin and not(state.goblinRechargeAvailable))
+    if (currentActor(state) == Goblin and not(state.goblin.rechargeAvailable))
       Set(StatBlockRechargeRoll)
     else if (currentActorCanAttack(state))
       Set(TargetChoice)
@@ -503,7 +503,7 @@ module battleRuntime {
 
   pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
     {
-      val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighterHidePrerequisite, stealthTotal, 15)
+      val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighter.hidePrerequisite, stealthTotal, 15)
       val advanced = stateWithFighterMovementStep(state, step)
       if (step.hidden)
       {
@@ -567,7 +567,7 @@ module battleRuntime {
       state.goblin.hp > 0,
       goblinLegendaryActionWindowOpen(state),
       state.legendaryActionWindowConsumed,
-      state.goblinLegendaryUsesRemaining,
+      state.goblin.legendaryUsesRemaining,
       2,
     )
 
@@ -575,12 +575,12 @@ module battleRuntime {
     if (goblinCanUseLegendaryAction(state))
       {
         ...state,
-        goblinLegendaryUsesRemaining: battleRuntimeLegendaryUsesAfterUse(
-          state.goblinLegendaryUsesRemaining,
+        goblin: { ...state.goblin, legendaryUsesRemaining: battleRuntimeLegendaryUsesAfterUse(
+          state.goblin.legendaryUsesRemaining,
           2,
           goblinLegendaryActionWindowOpen(state),
           state.goblin.incapacitated,
-        ),
+        ) },
         legendaryActionWindowConsumed: true,
       }
     else
@@ -788,14 +788,14 @@ module battleRuntime {
     { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
 
   pure def readySpell(state: BattleState): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighterReadiedSpellHeld)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighter.readiedSpellHeld)
       state
     else
-      { ...state, fighter: { ...state.fighter, concentrating: true }, actionAvailable: false, fighterReadiedSpellHeld: true }
+      { ...state, fighter: { ...state.fighter, concentrating: true, readiedSpellHeld: true }, actionAvailable: false }
 
   pure def releaseReadiedSpell(state: BattleState): BattleState =
-    if (state.fighterReadiedSpellHeld and not(fighterHasRage(state)))
-      { ...state, fighter: { ...state.fighter, concentrating: false }, fighterReadiedSpellHeld: false }
+    if (state.fighter.readiedSpellHeld and not(fighterHasRage(state)))
+      { ...state, fighter: { ...state.fighter, concentrating: false, readiedSpellHeld: false } }
     else
       state
 

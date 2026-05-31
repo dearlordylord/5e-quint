@@ -44,9 +44,10 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-weapon-attacks.qnt`, when the split follows SRD language and
 avoids duplicate state names or compatibility-wrapper churn.
 Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain
-so test context can be loaded without the full canonical integration spec body;
-`battle-runtime-self-tests.qnt` imports those modules for the Vitest self-test
-lane in one Quint invocation.
+so test context can be loaded without the full canonical integration spec body.
+The opt-in proof lane (`test:qnt-proofs`) discovers every `run`-block `.qnt` by
+content and runs each as its own bounded `quint test`, so a runaway proof fails
+that one module instead of hanging the suite (see CLAUDE.md "QNT proof lane").
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied

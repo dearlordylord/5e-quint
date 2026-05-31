@@ -12,6 +12,10 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  // Continuation-kind variants (e.g. BattleRuntimeMovementContinuation) live in
+  // this leaf; used directly in the module body below, so import it directly —
+  // Quint `.*` imports are not re-exported transitively through battleRuntime.
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
@@ -654,10 +658,10 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     val expired = endTurn(endTurn(readied))
     all {
       assert(readied.fighter.concentrating),
-      assert(readied.fighterReadiedSpellHeld),
+      assert(readied.fighter.readiedSpellHeld),
       assert(not(released.fighter.concentrating)),
-      assert(not(released.fighterReadiedSpellHeld)),
-      assert(not(expired.fighterReadiedSpellHeld)),
+      assert(not(released.fighter.readiedSpellHeld)),
+      assert(not(expired.fighter.readiedSpellHeld)),
     }
   }
 
@@ -704,7 +708,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       assert(movementRemainingForFighter(dashed) == 60),
       assert(disengaged.disengaged),
       assert(dodged.fighter.dodging),
-      assert(readied.fighterReadiedMovementHeld),
+      assert(readied.fighter.readiedMovementHeld),
       assert(helped.fighterHelpAttackGoblinForGoblin),
     }
   }
@@ -1136,7 +1140,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     })
     val resolved = resolveReaction(awaitingReaction, Fighter)
     all {
-      assert(not(resolved.fighterReadiedSpellHeld)),
+      assert(not(resolved.fighter.readiedSpellHeld)),
       assert(not(resolved.fighter.concentrating)),
       assert(not(resolved.fighter.reactionAvailable)),
       assert(resolved.goblin.hp == 3),

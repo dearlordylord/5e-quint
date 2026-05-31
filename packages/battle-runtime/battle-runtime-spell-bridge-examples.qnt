@@ -1,6 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpellBridgeExamples {
+  // Sorcerous Burst damage-type variants used in the asserts below live in this
+  // leaf; import it directly (Quint `.*` imports are not re-exported transitively).
+  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
   import spellInvocationActionSlotCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-action-slot-core"

@@ -9,7 +9,7 @@ module battleRuntimeHidden {
       currentActor(state) == Fighter and
       state.actionAvailable and
       not(state.fighter.unconscious) and
-      state.fighterHidePrerequisite
+      state.fighter.hidePrerequisite
     )
       Set(AbilityCheck)
     else Set()

@@ -137,9 +137,8 @@ module battleRuntimeFighterOngoingFeatures {
     )
       {
         state: {
-          ...setFighterRoundExtendedOngoingFeatureExpiry({ ...state, fighter: breakConcentration(state.fighter) }, state.initiative.round + 1),
+          ...setFighterRoundExtendedOngoingFeatureExpiry({ ...state, fighter: { ...breakConcentration(state.fighter), readiedSpellHeld: false } }, state.initiative.round + 1),
           bonusActionAvailable: false,
-          fighterReadiedSpellHeld: false,
         },
         usesRemaining: usesRemaining - 1,
       }
@@ -165,9 +164,9 @@ module battleRuntimeFighterOngoingFeatures {
               .set(FIGHTER_RAGE_SOURCE_KEY, ActiveFixedDurationOngoingFeature({
                 expiresAtEndOfFighterTurnRound: state.initiative.round + 100,
               })),
+            readiedSpellHeld: false,
           },
           bonusActionAvailable: false,
-          fighterReadiedSpellHeld: false,
         },
         usesRemaining: usesRemaining - 1,
       }

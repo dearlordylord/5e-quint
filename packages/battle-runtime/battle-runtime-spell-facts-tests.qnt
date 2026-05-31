@@ -7,6 +7,10 @@
 
 module battleRuntimeSpellFactsTests {
   import battleRuntime.* from "./battle-runtime"
+  // Sorcerous Burst damage-type variants are used directly in the module body
+  // below; import the leaf that defines them (Quint `.*` imports are not
+  // re-exported transitively through battleRuntime).
+  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
