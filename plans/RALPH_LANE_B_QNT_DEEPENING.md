@@ -37,50 +37,50 @@
     {
       "number": 6,
       "id": "QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT",
-      "status": "done",
+      "status": "ready-for-research",
       "title": "Add after-hit damage riders focused MBT"
     },
     {
       "number": 7,
       "id": "QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT",
-      "status": "done",
+      "status": "ready-for-research",
       "title": "Add weapon-hosted attack and riders focused MBT"
     },
     {
       "number": 8,
       "id": "QNTD-B08-COMMAND-OPTION-FOCUSED-MBT",
-      "status": "done",
+      "status": "blocked",
       "title": "Add Command option and next-turn focused MBT"
     },
     {
       "number": 9,
       "id": "QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT",
-      "status": "done",
+      "status": "blocked",
       "title": "Add Ability Check choice and Search holes focused MBT"
     },
     {
       "number": 10,
       "id": "QNTD-B10-SHOVE-WITNESS-POLICY",
-      "status": "done",
+      "status": "blocked",
       "title": "Decide whether Shove deterministic replay needs focused MBT"
     },
     {
       "number": 11,
       "id": "QNTD-B11-QNT-DEEPENING-CLOSEOUT",
-      "status": "done",
+      "status": "blocked",
       "title": "Close out QNT deepening artifacts and program rollup"
     },
     {
       "number": 12,
       "id": "QNTD-B12-RECURSIVE-NEXT-BATCH",
-      "status": "done",
+      "status": "blocked",
       "title": "Plan the next QNT deepening batch if this lane drains"
     }
   ]
 }
 -->
 
-This was the QNT deepening lane after generator readiness closure.
+This is the next runnable QNT deepening lane after generator readiness closure.
 The current generator-readiness gate is closed: `generator-readiness.jsonl` has
 69 rows, every row is `generation-subset-clean`, and
 `REPORT.md` says there are no missing or `not-assessed` generator-readiness
@@ -90,39 +90,6 @@ This lane is not blocker cleanup. Its goal is to deepen generator confidence by
 turning high-value covered obligations into focused witness shapes and by
 continuing the manual Rust dry-run path without creating generated runtime
 state.
-
-## Closeout Status
-
-Lane B is closed. The generator-readiness gate remains closed:
-`generator-readiness.jsonl` has 69 rows, every row is
-`generation-subset-clean`, and no row carries `blockedBy` or
-`followUpTaskIds`.
-
-Focused MBT witnesses were added for:
-
-- `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`
-- `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`
-- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`
-- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`
-- `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`
-- `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`
-- `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`
-
-Deterministic replay deliberately remains for:
-
-- `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`, because Shove outcome is a closed
-  finite direct reducer-entrypoint fixture with no meaningful cross-step
-  interleaving surface.
-- `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, because positive-Hit-Point damage is a
-  closed finite rule-core replay and already has the current manual Rust dry-run
-  evidence.
-- `SHEET.HP_REST_HIT_DICE.TRANSITIONS`, because Character Sheet HP/rest/Hit
-  Dice transitions are deterministic sheet-boundary projections, with
-  `HIT_POINT_RECOVERY_RUST_DRY_RUN.md` scoped to the pure healing sub-vertical.
-
-No generator-readiness blocker or Rust repair task id was opened by this lane.
-Task 12 created the next coherent batch at
-`plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md`.
 
 ## Context Budget
 
@@ -200,13 +167,13 @@ another MBT run. Run the MBT with the repo timing/background protocol from
 | 3 | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT - Add Enlarge/Reduce creature-size lifecycle focused MBT | done | none | Independent focused MBT promotion. |
 | 4 | QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT - Add Levitate creature lifecycle focused MBT | done | none | Independent focused MBT promotion. |
 | 5 | QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT - Add roll-modifier active effects focused MBT | done | none | Independent focused MBT promotion. |
-| 6 | QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | done | none | Independent focused MBT promotion. |
-| 7 | QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | done | none | Independent focused MBT promotion. |
-| 8 | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT | done | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Completed after the runtime-test-only battle rows drained. |
-| 9 | QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT | done | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Completed after the runtime-test-only battle rows drained. |
-| 10 | QNTD-B10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT | done | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Shove remains covered by deterministic closed-case replay; no focused MBT is required unless the witness-mode policy changes. |
-| 11 | QNTD-B11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup | done | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN, QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW, QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT, QNTD-B10-SHOVE-WITNESS-POLICY | Closed final rollup after all implementation and policy tasks. |
-| 12 | QNTD-B12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains | done | QNTD-B11-QNT-DEEPENING-CLOSEOUT | Created `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md` as the next runnable QNT/Rust generator pilot. |
+| 6 | QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 7 | QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT | ready-for-research | none | Independent focused MBT promotion. |
+| 8 | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT | blocked | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
+| 9 | QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT | blocked | QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | Runs after the runtime-test-only battle rows drain. |
+| 10 | QNTD-B10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT | blocked | QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Runs after deterministic-replay upgrades are decided for Command and Search. |
+| 11 | QNTD-B11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup | blocked | QNTD-B01-HP-RECOVERY-RUST-DRY-RUN, QNTD-B02-HP-RECOVERY-DRY-RUN-REVIEW, QNTD-B03-CREATURE-SIZE-FOCUSED-MBT, QNTD-B04-LEVITATE-CREATURE-FOCUSED-MBT, QNTD-B05-ROLL-MODIFIER-FOCUSED-MBT, QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT, QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, QNTD-B08-COMMAND-OPTION-FOCUSED-MBT, QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT, QNTD-B10-SHOVE-WITNESS-POLICY | Closes after all implementation and policy tasks. |
+| 12 | QNTD-B12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains | blocked | QNTD-B11-QNT-DEEPENING-CLOSEOUT | Keeps the lane recursive after closeout. |
 
 ## Task Details
 
@@ -334,7 +301,7 @@ Acceptance:
 
 ### Task 6 - QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT - Add after-hit damage riders focused MBT
 
-Status: `done`
+Status: `ready-for-research`
 
 Input: `QCP-CS4` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -356,7 +323,7 @@ Acceptance:
 
 ### Task 7 - QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Add weapon-hosted attack and riders focused MBT
 
-Status: `done`
+Status: `ready-for-research`
 
 Input: `QCP-CS5` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -377,7 +344,7 @@ Acceptance:
 
 ### Task 8 - QNTD-B08-COMMAND-OPTION-FOCUSED-MBT - Add Command option and next-turn focused MBT
 
-Status: `done`
+Status: `blocked`
 
 Input: `QCP-CS6` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -400,7 +367,7 @@ Acceptance:
 
 ### Task 9 - QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Add Ability Check choice and Search holes focused MBT
 
-Status: `done`
+Status: `blocked`
 
 Input: `QCP-CS7` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -422,7 +389,7 @@ Acceptance:
 
 ### Task 10 - QNTD-B10-SHOVE-WITNESS-POLICY - Decide whether Shove deterministic replay needs focused MBT
 
-Status: `done`
+Status: `blocked`
 
 Input: `QCP-CS8` from `COMPOSITE_SLICE_CANDIDATES.md`.
 
@@ -445,7 +412,7 @@ Acceptance:
 
 ### Task 11 - QNTD-B11-QNT-DEEPENING-CLOSEOUT - Close out QNT deepening artifacts and program rollup
 
-Status: `done`
+Status: `blocked`
 
 Input: results from Tasks 1-10.
 
@@ -468,21 +435,18 @@ Acceptance:
 
 ### Task 12 - QNTD-B12-RECURSIVE-NEXT-BATCH - Plan the next QNT deepening batch if this lane drains
 
-Status: `done`
+Status: `blocked`
 
 Input: current generated reports and lane closeout after Task 11.
 
 Output:
 
-- Lane B closed, so Task 12 created
-  `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md` with 15 atomic tasks.
-- The next batch starts from the current Hit Point damage and recovery dry runs
-  and deliberately keeps Rust/generator work outside production reducer wiring.
-- No Lane B repair tasks were appended because the generated rules-kernel
-  reports still show 0 open transitional obligations and no generator-readiness
-  blockers.
+- If this lane closes, create the next coherent QNT/generator/Rust deepening
+  plan with 10-20 atomic tasks.
+- If it does not close, append exact repair tasks here instead of ending the
+  run.
 
 Acceptance:
 
 - Ralph has a concrete next plan or concrete repair tasks, never an empty end
-  state. Satisfied by `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md`.
+  state.

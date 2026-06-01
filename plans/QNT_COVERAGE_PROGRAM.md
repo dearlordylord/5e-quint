@@ -37,8 +37,8 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` —
   current manual Rust dry-run evidence.
-- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — closed QNT deepening lane, combining
-  the recovery dry run with focused composite-slice MBT promotion.
+- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — next runnable QNT deepening lane,
+  combining the recovery dry run with focused composite-slice MBT promotion.
 - `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
   background rationale for B coverage closure versus C generator readiness. Do
   not read this by default for ordinary slice tasks.
@@ -84,13 +84,10 @@ Checked source-of-truth artifacts:
 - `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` is the
   current Hit Point recovery manual Rust dry-run vertical, scoped to pure
   healing projection without adding parallel Character Sheet state.
-- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the
-  closed battle composite-slice deepening batch. `QCP-CS1` through `QCP-CS7`
-  gained focused MBT witnesses, and `QCP-CS8` records the Shove deterministic
-  replay policy decision.
-- `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md` is the next runnable
-  QNT/Rust generator pilot, starting from the current Hit Point damage and
-  recovery dry runs.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the next
+  optional battle composite-slice candidates. It also records that current
+  coverage and generator-readiness gates are closed enough for the next phase;
+  the remaining candidates are witness-shape deepening, not blocker cleanup.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
@@ -102,30 +99,19 @@ Active generator and Rust queues:
 - No active generator-readiness blocker queue. `generator-readiness.jsonl`
   currently has 69 rows, all `generation-subset-clean`, with no `blockedBy` or
   `followUpTaskIds` entries.
+- Generator implementation is not an active project concern in this plan. A
+  golden generator-readiness state means the checked QNT inputs are classified,
+  blocker-free, and boundary-mapped for a future consumer; it does not require
+  implementing an emitter or committing generated Rust.
 - The current scoped manual Rust recovery evidence is
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`.
-- The Lane B QNT deepening batch is closed in
-  `plans/RALPH_LANE_B_QNT_DEEPENING.md`. It promoted focused MBT witnesses for:
-  `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`,
-  `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`,
-  `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`,
-  `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`,
-  `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`,
-  `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, and
-  `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`.
-- Deterministic replay deliberately remains the witness shape for closed
-  finite projection or direct-entrypoint fixtures where random interleavings
-  are not the risk. Current named examples are
-  `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`,
-  `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, and
-  `SHEET.HP_REST_HIT_DICE.TRANSITIONS`.
-- No new generator or Rust follow-up is open from Lane B. Any next batch should
-  enter through a runnable plan task id in
-  `plans/RALPH_LANE_C_QNT_RUST_GENERATOR_PILOT.md`.
-- Lane C starts with `QNTR-C01-RUST-PILOT-BOUNDARY` and is scoped to a
-  non-production Rust pilot plus minimal generator target for
-  `SHARED.HIT_POINTS.POSITIVE_DAMAGE` and
-  `SHEET.HP_REST_HIT_DICE.TRANSITIONS`.
+- Optional battle composite-slice deepening candidates are listed in
+  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
+  generator-readiness blockers.
+- The next runnable deepening batch is
+  `plans/RALPH_LANE_B_QNT_DEEPENING.md`. After the recovery dry-run review, its
+  remaining runnable work is `QCP-CS1` through `QCP-CS8` without reopening
+  generator-readiness blocker cleanup.
 - Parked non-runnable ideas remain in
   `plans/QNT_GENERATOR_READINESS_BACKLOG.md`. Reopen them only by carving a
   small coherent batch into a fresh lane plan with current checker-owned inputs.
