@@ -6,13 +6,13 @@ module battleRuntimeMonkFocusTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
 
-  run monk_focus_points_equal_monk_level = all {
+  run test_monk_focus_points_equal_monk_level = all {
     assert(monkFocusPointsAtMonkLevel(1) == 0),
     assert(monkFocusPointsAtMonkLevel(2) == 2),
     assert(monkFocusPointsAtMonkLevel(3) == 3),
   }
 
-  run monk_focus_patient_defense_free_spends_bonus_action_and_disengages = all {
+  run test_monk_focus_patient_defense_free_spends_bonus_action_and_disengages = all {
     val result = monkFocusPatientDefenseFreeFighter(initialState)
     all {
       assert(not(result.bonusActionAvailable)),
@@ -21,7 +21,7 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
-  run monk_focus_patient_defense_focus_spends_bonus_action_and_focus = all {
+  run test_monk_focus_patient_defense_focus_spends_bonus_action_and_focus = all {
     val result = monkFocusPatientDefenseFocusFighter(initialState, 2)
     all {
       assert(not(result.state.bonusActionAvailable)),
@@ -31,7 +31,7 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
-  run monk_focus_step_of_the_wind_free_spends_bonus_action_and_dashes = all {
+  run test_monk_focus_step_of_the_wind_free_spends_bonus_action_and_dashes = all {
     val result = monkFocusStepOfTheWindFreeFighter(initialState, WalkSpeedKind)
     all {
       assert(not(result.bonusActionAvailable)),
@@ -40,7 +40,7 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
-  run monk_focus_step_of_the_wind_focus_spends_and_dashes = all {
+  run test_monk_focus_step_of_the_wind_focus_spends_and_dashes = all {
     val result = monkFocusStepOfTheWindFocusFighter(initialState, 2, WalkSpeedKind)
     all {
       assert(result.state.dashMovementBonus == 30),
@@ -50,7 +50,7 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
-  run monk_focus_flurry_spends_once_and_grants_two_strikes = all {
+  run test_monk_focus_flurry_spends_once_and_grants_two_strikes = all {
     val activated = monkFocusFlurryOfBlowsFighter(initialState, 2)
     val firstStrike = monkFocusFlurryOfBlowsStrike(
       activated.state,
@@ -71,7 +71,7 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
-  run monk_focus_flurry_strike_requires_action_eligible_fighter = all {
+  run test_monk_focus_flurry_strike_requires_action_eligible_fighter = all {
     val activated = monkFocusFlurryOfBlowsFighter(initialState, 2)
     val incapacitatedState = {
       ...activated.state,

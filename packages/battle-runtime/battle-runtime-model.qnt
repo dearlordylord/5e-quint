@@ -3,8 +3,15 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 
 module battleRuntimeModel {
-  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  // This module is the battle-runtime TYPE VOCABULARY. It must stay free of the
+  // bridges' rule-core closure: every simulated *.mbt.qnt driver imports this
+  // module, and a driver pays a per-trace cost proportional to its import closure.
+  // The only names this module needs from the bridges are four plain enums, which
+  // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or
+  // battle-runtime-spell-bridge here — that re-attaches the 30-file closure and
+  // makes every model-importing driver ~100x slower (see the leaf headers).
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
+  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
   type Actor = Fighter | Goblin
   type CombatantSide = PartySide | OppositionSide
@@ -563,6 +570,24 @@ module battleRuntimeModel {
     creatureSize: CreatureSize,
     leftHandUse: HandUse,
     rightHandUse: HandUse,
+    // Per-combatant SRD feature projections (class & monster), runtime
+    // projections like wearingHeavyArmor above; a combatant without a given
+    // feature holds the inert value (DefaultCriticalRange, false, 0).
+    criticalRange: FighterCriticalRange,
+    sneakAttackSupported: bool,
+    sneakAttackUsedThisTurn: bool,
+    extraAttackSupported: bool,
+    extraAttackSlotsRemaining: int,
+    longswordSapMastery: bool,
+    quarterstaffToppleMastery: bool,
+    greataxeCleaveMastery: bool,
+    cleaveExtraAttackUsedThisTurn: bool,
+    readiedSpellHeld: bool,
+    readiedMovementHeld: bool,
+    hidePrerequisite: bool,
+    rechargeAvailable: bool,
+    legendaryUsesRemaining: int,
+    multiattackDispatchesRemaining: int,
   }
 
   type GrappleLink = {
@@ -596,26 +621,11 @@ module battleRuntimeModel {
     jumpDistanceMultiplier: int,
     disengaged: bool,
     lightWeaponAttackMade: bool,
-    fighterReadiedSpellHeld: bool,
-    fighterReadiedMovementHeld: bool,
     fighterHelpAttackGoblinForGoblin: bool,
     grapple: GrappleState,
     interruptStack: List[InterruptFrame],
-    fighterHidePrerequisite: bool,
-    goblinRechargeAvailable: bool,
-    goblinLegendaryUsesRemaining: int,
-    goblinMultiattackDispatchesRemaining: int,
     lastTurnActor: LastTurnActor,
     legendaryActionWindowConsumed: bool,
-    fighterCriticalRange: FighterCriticalRange,
-    fighterSneakAttackSupported: bool,
-    fighterSneakAttackUsedThisTurn: bool,
-    fighterExtraAttackSupported: bool,
-    fighterExtraAttackSlotsRemaining: int,
-    fighterLongswordSapMastery: bool,
-    fighterQuarterstaffToppleMastery: bool,
-    fighterGreataxeCleaveMastery: bool,
-    fighterCleaveExtraAttackUsedThisTurn: bool,
   }
 
   pure def combatantHasFreeHand(combatant: Combatant): bool =
@@ -715,6 +725,21 @@ module battleRuntimeModel {
       creatureSize: Medium,
       leftHandUse: HFree,
       rightHandUse: HMainWeapon,
+      criticalRange: DefaultCriticalRange,
+      sneakAttackSupported: false,
+      sneakAttackUsedThisTurn: false,
+      extraAttackSupported: false,
+      extraAttackSlotsRemaining: 0,
+      longswordSapMastery: false,
+      quarterstaffToppleMastery: false,
+      greataxeCleaveMastery: false,
+      cleaveExtraAttackUsedThisTurn: false,
+      readiedSpellHeld: false,
+      readiedMovementHeld: false,
+      hidePrerequisite: false,
+      rechargeAvailable: false,
+      legendaryUsesRemaining: 0,
+      multiattackDispatchesRemaining: 0,
     },
     goblin: {
       hp: 10,
@@ -743,6 +768,21 @@ module battleRuntimeModel {
       creatureSize: Small,
       leftHandUse: HFree,
       rightHandUse: HFree,
+      criticalRange: DefaultCriticalRange,
+      sneakAttackSupported: false,
+      sneakAttackUsedThisTurn: false,
+      extraAttackSupported: false,
+      extraAttackSlotsRemaining: 0,
+      longswordSapMastery: false,
+      quarterstaffToppleMastery: false,
+      greataxeCleaveMastery: false,
+      cleaveExtraAttackUsedThisTurn: false,
+      readiedSpellHeld: false,
+      readiedMovementHeld: false,
+      hidePrerequisite: false,
+      rechargeAvailable: true,
+      legendaryUsesRemaining: 2,
+      multiattackDispatchesRemaining: 0,
     },
     objectOutlines: Set(),
     lightEmitters: Set(),
@@ -756,26 +796,11 @@ module battleRuntimeModel {
     jumpDistanceMultiplier: 1,
     disengaged: false,
     lightWeaponAttackMade: false,
-    fighterReadiedSpellHeld: false,
-    fighterReadiedMovementHeld: false,
     fighterHelpAttackGoblinForGoblin: false,
     grapple: NoGrapple,
     interruptStack: [],
-    fighterHidePrerequisite: false,
-    goblinRechargeAvailable: true,
-    goblinLegendaryUsesRemaining: 2,
-    goblinMultiattackDispatchesRemaining: 0,
     lastTurnActor: NoTurnEnded,
     legendaryActionWindowConsumed: false,
-    fighterCriticalRange: DefaultCriticalRange,
-    fighterSneakAttackSupported: false,
-    fighterSneakAttackUsedThisTurn: false,
-    fighterExtraAttackSupported: false,
-    fighterExtraAttackSlotsRemaining: 0,
-    fighterLongswordSapMastery: false,
-    fighterQuarterstaffToppleMastery: false,
-    fighterGreataxeCleaveMastery: false,
-    fighterCleaveExtraAttackUsedThisTurn: false,
   }
 
   // The battle runtime receives Initiative counts and the caller-resolved

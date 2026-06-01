@@ -4,29 +4,9 @@ module battleRuntimeInterruptBridge {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
-
-  type BattleRuntimeReactionTrigger =
-    | BattleRuntimeAttackHit
-    | BattleRuntimeAttackDamage
-    | BattleRuntimeSpellCast
-    | BattleRuntimeSaveFailed
-    | BattleRuntimeAfterDamage
-    | BattleRuntimeOpportunityAttack
-
-  type BattleRuntimeReactionProcedure =
-    | BattleRuntimeShieldReactionProcedure
-    | BattleRuntimeCounterspellReactionProcedure
-    | BattleRuntimeOpportunityAttackProcedure
-    | BattleRuntimeReadiedSpellReleaseProcedure
-    | BattleRuntimeDamageInterruptionProcedure
-    | BattleRuntimeNoReactionProcedure
-
-  type BattleRuntimeContinuationKind =
-    | BattleRuntimeAttackDamageContinuation
-    | BattleRuntimeSpellAttackContinuation
-    | BattleRuntimeSaveGateContinuation
-    | BattleRuntimeMovementContinuation
-    | BattleRuntimeAfterDamageContinuation
+  // Reaction-resolution enums live in a leaf so battle-runtime-model can reference
+  // them without importing this bridge's rule-core closure. See the leaf header.
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
 
   type BattleRuntimeReactionDecision =
     | BattleRuntimeInvalidReactionDecision

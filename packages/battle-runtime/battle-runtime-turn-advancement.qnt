@@ -27,6 +27,14 @@ module battleRuntimeTurnAdvancement {
         battleRuntimeStartTurn(movementProjectionForFighter(turnAdvanced, WalkSpeedKind))
       else
         battleRuntimeStartTurn(movementProjectionForGrappledGoblin(turnAdvanced))
+    val advancedFighter = if (nextActor == Fighter)
+      { ...spellDurationAdvanced.fighter, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
+    else
+      spellDurationAdvanced.fighter
+    val advancedGoblin = if (nextActor == Goblin)
+      { ...spellDurationAdvanced.goblin, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
+    else
+      spellDurationAdvanced.goblin
     {
       ...spellDurationAdvanced,
       initiative: advancedInitiative,
@@ -40,31 +48,29 @@ module battleRuntimeTurnAdvancement {
       jumpDistanceMultiplier: 1,
       disengaged: nextActorStep.disengaged,
       lightWeaponAttackMade: false,
-      fighterReadiedSpellHeld: if (spellDurationAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedSpellHeld,
-      fighterReadiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighterReadiedMovementHeld,
       fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) nextActorStep.helpAttackHeld else spellDurationAdvanced.fighterHelpAttackGoblinForGoblin,
-      fighter: if (nextActor == Fighter)
-        { ...spellDurationAdvanced.fighter, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
-      else
-        spellDurationAdvanced.fighter,
-      goblin: if (nextActor == Goblin)
-        { ...spellDurationAdvanced.goblin, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
-      else
-        spellDurationAdvanced.goblin,
-      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else spellDurationAdvanced.goblinLegendaryUsesRemaining,
-      goblinMultiattackDispatchesRemaining: 0,
+      fighter: {
+        ...advancedFighter,
+        readiedSpellHeld: if (spellDurationAdvanced.fighter.readiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighter.readiedSpellHeld,
+        readiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighter.readiedMovementHeld,
+        sneakAttackUsedThisTurn: false,
+        extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighter.extraAttackSlotsRemaining),
+        cleaveExtraAttackUsedThisTurn: false,
+      },
+      goblin: {
+        ...advancedGoblin,
+        legendaryUsesRemaining: if (nextActor == Goblin) 2 else spellDurationAdvanced.goblin.legendaryUsesRemaining,
+        multiattackDispatchesRemaining: 0,
+      },
       lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
       legendaryActionWindowConsumed: false,
-      fighterSneakAttackUsedThisTurn: false,
-      fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighterExtraAttackSlotsRemaining),
-      fighterCleaveExtraAttackUsedThisTurn: false,
     }
   }
 
   pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
     val advanced = endTurn(state)
-    if (currentActor(advanced) == Goblin and not(advanced.goblinRechargeAvailable))
-      { ...advanced, goblinRechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblinRechargeAvailable, 5, roll) }
+    if (currentActor(advanced) == Goblin and not(advanced.goblin.rechargeAvailable))
+      { ...advanced, goblin: { ...advanced.goblin, rechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblin.rechargeAvailable, 5, roll) } }
     else
       advanced
   }

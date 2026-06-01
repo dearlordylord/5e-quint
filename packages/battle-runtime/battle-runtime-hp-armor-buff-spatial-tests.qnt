@@ -92,7 +92,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_weapon_mastery_sap_applies_next_attack_disadvantage_on_selected_sap_weapon_hit = {
-    val mastered = { ...initialState, fighterLongswordSapMastery: true }
+    val mastered = { ...initialState, fighter: { ...initialState.fighter, longswordSapMastery: true } }
     val hit = resolveAttack(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true)
     val goblinTurn = endTurn(hit)
     val fighterNextTurn = endTurn(goblinTurn)
@@ -132,7 +132,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_weapon_mastery_sap_is_gated_by_hit_and_selected_weapon_mastery = {
     val notMasteredHit = resolveAttack(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true)
-    val masteredMiss = resolveAttack({ ...initialState, fighterLongswordSapMastery: true }, 1, 1, fighterWeaponAttackDamageRoll(1), true)
+    val masteredMiss = resolveAttack({ ...initialState, fighter: { ...initialState.fighter, longswordSapMastery: true } }, 1, 1, fighterWeaponAttackDamageRoll(1), true)
     all {
       assert(not(notMasteredHit.goblin.activeEffects.exists(effect => match effect {
         | WeaponMasterySapNextAttackDisadvantage(_) => true
@@ -150,7 +150,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_weapon_mastery_topple_applies_prone_on_selected_topple_weapon_failed_save = {
-    val mastered = { ...initialState, fighterQuarterstaffToppleMastery: true }
+    val mastered = { ...initialState, fighter: { ...initialState.fighter, quarterstaffToppleMastery: true } }
     val failed = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false)
     val succeeded = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true)
     val declined = resolveAttackWithToppleChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, false, false)
@@ -163,7 +163,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_weapon_mastery_topple_is_gated_by_hit_and_selected_weapon_mastery = {
     val notMasteredHit = resolveAttackWithToppleChoice(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false)
-    val masteredMiss = resolveAttackWithToppleChoice({ ...initialState, fighterQuarterstaffToppleMastery: true }, 1, 1, fighterWeaponAttackDamageRoll(1), true, true, false)
+    val masteredMiss = resolveAttackWithToppleChoice({ ...initialState, fighter: { ...initialState.fighter, quarterstaffToppleMastery: true } }, 1, 1, fighterWeaponAttackDamageRoll(1), true, true, false)
     all {
       assert(not(notMasteredHit.goblin.prone)),
       assert(not(masteredMiss.goblin.prone)),
@@ -171,26 +171,26 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_weapon_mastery_cleave_applies_second_hit_weapon_damage_without_positive_ability_modifier = {
-    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val mastered = { ...initialState, fighter: { ...initialState.fighter, greataxeCleaveMastery: true } }
     val result = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
     all {
       assert(result.goblin.hp == 2),
-      assert(result.fighterCleaveExtraAttackUsedThisTurn),
+      assert(result.fighter.cleaveExtraAttackUsedThisTurn),
     }
   }
 
   run test_weapon_mastery_cleave_preserves_negative_ability_modifier = {
-    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val mastered = { ...initialState, fighter: { ...initialState.fighter, greataxeCleaveMastery: true } }
     val result = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(4), true, true, true, 15, 10, 4, -1)
     assert(result.goblin.hp == 0)
   }
 
   run test_weapon_mastery_cleave_is_gated_by_hit_eligibility_and_once_per_turn = {
-    val mastered = { ...initialState, fighterGreataxeCleaveMastery: true }
+    val mastered = { ...initialState, fighter: { ...initialState.fighter, greataxeCleaveMastery: true } }
     val notMastered = resolveAttackWithCleaveChoice(initialState, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
     val primaryMiss = resolveAttackWithCleaveChoice(mastered, 1, 1, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
     val ineligibleSecondTarget = resolveAttackWithCleaveChoice(mastered, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, false, 15, 10, 4, 3)
-    val alreadyUsed = resolveAttackWithCleaveChoice({ ...mastered, fighterCleaveExtraAttackUsedThisTurn: true }, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
+    val alreadyUsed = resolveAttackWithCleaveChoice({ ...mastered, fighter: { ...mastered.fighter, cleaveExtraAttackUsedThisTurn: true } }, 15, 10, fighterWeaponAttackDamageRoll(1), true, true, true, 15, 10, 4, 3)
     all {
       assert(notMastered.goblin.hp == 6),
       assert(primaryMiss.goblin.hp == 10),

@@ -8,6 +8,7 @@ module battleRuntimeWeaponAttacks {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -22,28 +23,24 @@ module battleRuntimeWeaponAttacks {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
-  pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
-    if (state.fighterExtraAttackSlotsRemaining > 0)
-      {
-        ...state,
-        fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterExtraAttack(state.fighterExtraAttackSlotsRemaining),
-      }
+  pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState = {
+    val attacker = combatantForActor(state, Fighter)
+    if (attacker.extraAttackSlotsRemaining > 0)
+      stateWithActorCombatant(state, Fighter, { ...attacker, extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterExtraAttack(attacker.extraAttackSlotsRemaining) })
     else {
       val spent = stateWithFighterMovementStep(
         state,
         battleRuntimeSpendAttackAction(movementProjectionForFighter(state, WalkSpeedKind)),
       )
       if (spent != state)
-      {
-        ...spent,
-        fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterAttackAction(
+        stateWithActorCombatant(spent, Fighter, { ...combatantForActor(spent, Fighter), extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterAttackAction(
           state.actionAvailable,
-          state.fighterExtraAttackSupported,
-        ),
-      }
+          attacker.extraAttackSupported,
+        ) })
       else
         state
     }
+  }
 
   pure def resolveAttack(
     state: BattleState,
@@ -78,20 +75,26 @@ module battleRuntimeWeaponAttacks {
     cleaveDamageRoll: int,
     attackAbilityModifier: int,
   ): BattleState = {
+    val attacker = combatantForActor(state, Fighter)
+    val defender = combatantForActor(state, Goblin)
     val primary = resolveAttack(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded)
     val cleaveAvailable =
-      state.fighterGreataxeCleaveMastery and
-      not(state.fighterCleaveExtraAttackUsedThisTurn) and
-      attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))
+      attacker.greataxeCleaveMastery and
+      not(attacker.cleaveExtraAttackUsedThisTurn) and
+      attackHits(attackTotal, naturalD20, combatantArmorClass(defender), fighterCriticalThreshold(state))
     if (
       cleaveAvailable and
       useCleave and
       cleaveSecondTargetEligible and
-      attackHits(cleaveAttackTotal, cleaveNaturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))
+      attackHits(cleaveAttackTotal, cleaveNaturalD20, combatantArmorClass(defender), fighterCriticalThreshold(state))
     )
-      { ...primary, goblin: applyDamageFromSource(primary.goblin, cleaveSecondHitDamage(cleaveDamageRoll, attackAbilityModifier), if (attackIsCritical(cleaveNaturalD20, fighterCriticalThreshold(state))) 2 else 1, true, OrdinaryDamage, Fighter), fighterCleaveExtraAttackUsedThisTurn: true }
+      stateWithActorCombatants(
+        primary,
+        Goblin, applyDamageFromSource(combatantForActor(primary, Goblin), cleaveSecondHitDamage(cleaveDamageRoll, attackAbilityModifier), if (attackIsCritical(cleaveNaturalD20, fighterCriticalThreshold(state))) 2 else 1, true, OrdinaryDamage, Fighter),
+        Fighter, { ...combatantForActor(primary, Fighter), cleaveExtraAttackUsedThisTurn: true },
+      )
     else if (cleaveAvailable and useCleave and cleaveSecondTargetEligible)
-      { ...primary, fighterCleaveExtraAttackUsedThisTurn: true }
+      stateWithActorCombatant(primary, Fighter, { ...combatantForActor(primary, Fighter), cleaveExtraAttackUsedThisTurn: true })
     else
       primary
   }
@@ -173,43 +176,45 @@ module battleRuntimeWeaponAttacks {
     toppleSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
-  ): BattleState =
-    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Fighter)
+    val defender = combatantForActor(state, Goblin)
+    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or attacker.unconscious or attacker.incapacitated)
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
       val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
       val rageDamage = if (fighterHasRage(revealed)) fighterRageDamageBonus(barbarianLevel) else 0
-      val divineFavorDamage = fighterDivineFavorDamage(damageRoll.divineFavorDamageRoll, revealed.fighter.activeEffects)
+      val divineFavorDamage = fighterDivineFavorDamage(damageRoll.divineFavorDamageRoll, combatantForActor(revealed, Fighter).activeEffects)
       val divineSmiteDamage = damageRoll.divineSmiteDamageRoll
-      val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, revealed.fighter.activeEffects, Goblin)
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
+      val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, combatantForActor(revealed, Fighter).activeEffects, Goblin)
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else if (
         mirrorImageRedirectsAttackRollHit(
-          spent.fighter.activeEffects,
-          spent.goblin.activeEffects,
+          combatantForActor(spent, Fighter).activeEffects,
+          combatantForActor(spent, Goblin).activeEffects,
           attackerPerceivesTargetWithBlindsightOrTruesight,
           mirrorImageDuplicateHighestRoll,
         )
       )
         {
-          ...spent,
-          goblin: combatantAfterMirrorImageAttackRollHit(
-            spent.fighter.activeEffects,
-            spent.goblin,
+          ...stateWithActorCombatant(spent, Goblin, combatantAfterMirrorImageAttackRollHit(
+            combatantForActor(spent, Fighter).activeEffects,
+            combatantForActor(spent, Goblin),
             attackerPerceivesTargetWithBlindsightOrTruesight,
             mirrorImageDuplicateHighestRoll,
-          ),
+          )),
           lightWeaponAttackMade: true,
         }
       else {
-        val damaged = applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter)
-        val sapEffects = if (state.fighterLongswordSapMastery) Set(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })) else Set()
-        val toppled = state.fighterQuarterstaffToppleMastery and forceToppleSave and not(toppleSaveSucceeded)
-        { ...spent, goblin: { ...damaged, prone: damaged.prone or toppled, activeEffects: damaged.activeEffects.union(sapEffects) }, lightWeaponAttackMade: true }
+        val damaged = applyDamageFromSource(defender, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter)
+        val sapEffects = if (attacker.longswordSapMastery) Set(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })) else Set()
+        val toppled = attacker.quarterstaffToppleMastery and forceToppleSave and not(toppleSaveSucceeded)
+        { ...stateWithActorCombatant(spent, Goblin, { ...damaged, prone: damaged.prone or toppled, activeEffects: damaged.activeEffects.union(sapEffects) }), lightWeaponAttackMade: true }
       }
     }
+  }
 
   pure def resolveTrueStrikeWeaponAttack(
     state: BattleState,
@@ -222,21 +227,23 @@ module battleRuntimeWeaponAttacks {
     selectedDamageType: DamageType,
     weaponDamageType: DamageType,
     concentrationSaveSucceeded: bool,
-  ): BattleState =
+  ): BattleState = {
+    val attacker = combatantForActor(state, Fighter)
+    val defender = combatantForActor(state, Goblin)
     if (
       not(state.actionAvailable) or
       currentActor(state) != Fighter or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
+      attacker.unconscious or
+      attacker.incapacitated or
       fighterHasRage(state) or
       not(trueStrikeDamageTypeChoiceIsLegal(selectedDamageType, weaponDamageType))
     )
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))) {
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), fighterCriticalThreshold(state)))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (defender.reactionAvailable and not(defender.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,
@@ -254,8 +261,9 @@ module battleRuntimeWeaponAttacks {
         characterLevel,
         selectedDamageType,
       )
-      { ...rolled, goblin: applyDamageFromSource(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter), actionAvailable: false }
+      { ...stateWithActorCombatant(rolled, Goblin, applyDamageFromSource(defender, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)), actionAvailable: false }
     }
+  }
 
   pure def resolveAttackWithOptionalSneakAttack(
     state: BattleState,
@@ -268,13 +276,15 @@ module battleRuntimeWeaponAttacks {
     allyAdjacent: bool,
     rollHasDisadvantage: bool,
     concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Fighter)
+    val defender = combatantForActor(state, Goblin)
+    if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or attacker.unconscious or attacker.incapacitated)
       state
     else {
       val revealed = recordFighterAttackRoll(revealFighterHidden(state))
       val spent = spendFighterAttackActionOrExtraAttackSlot(revealed)
-      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
+      if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
       else {
         val sneakSelectedAndEligible =
@@ -282,13 +292,16 @@ module battleRuntimeWeaponAttacks {
           fighterSneakAttackEligible(revealed, rollHasAdvantage, allyAdjacent, rollHasDisadvantage)
         val damage = weaponDamageRoll + 3 + (if (sneakSelectedAndEligible) sneakAttackDamageRoll else 0)
         {
-          ...spent,
-          goblin: applyDamageFromSource(state.goblin, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+          ...stateWithActorCombatants(
+            spent,
+            Goblin, applyDamageFromSource(defender, damage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+            Fighter, { ...combatantForActor(spent, Fighter), sneakAttackUsedThisTurn: sneakSelectedAndEligible or combatantForActor(revealed, Fighter).sneakAttackUsedThisTurn },
+          ),
           lightWeaponAttackMade: true,
-          fighterSneakAttackUsedThisTurn: sneakSelectedAndEligible or revealed.fighterSneakAttackUsedThisTurn,
         }
     }
     }
+  }
 
   pure def resolveAttackRecklessly(
     state: BattleState,
@@ -324,45 +337,49 @@ module battleRuntimeWeaponAttacks {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
-  ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Goblin)
+    val defender = combatantForActor(state, Fighter)
+    if (not(state.actionAvailable) or currentActor(state) != Goblin or attacker.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))
       { ...state, actionAvailable: false }
     else if (
       mirrorImageRedirectsAttackRollHit(
-        state.goblin.activeEffects,
-        state.fighter.activeEffects,
+        attacker.activeEffects,
+        defender.activeEffects,
         attackerPerceivesTargetWithBlindsightOrTruesight,
         mirrorImageDuplicateHighestRoll,
       )
     )
       {
-        ...state,
-        fighter: combatantAfterMirrorImageAttackRollHit(
-          state.goblin.activeEffects,
-          state.fighter,
+        ...stateWithActorCombatant(state, Fighter, combatantAfterMirrorImageAttackRollHit(
+          attacker.activeEffects,
+          defender,
           attackerPerceivesTargetWithBlindsightOrTruesight,
           mirrorImageDuplicateHighestRoll,
-        ),
+        )),
         actionAvailable: false,
       }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
-        ...stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
+        ...stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
         actionAvailable: false,
       }
     }
+  }
 
-  pure def resolveGoblinMultiattack(state: BattleState): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
+  pure def resolveGoblinMultiattack(state: BattleState): BattleState = {
+    val attacker = combatantForActor(state, Goblin)
+    if (not(state.actionAvailable) or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else
-      { ...state, actionAvailable: false, goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterFirstAttack }
+      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterFirstAttack }), actionAvailable: false }
+  }
 
   pure def goblinMultiattackDispatchContinuationOpen(state: BattleState): bool =
-    currentActor(state) == Goblin and state.goblinMultiattackDispatchesRemaining > 0
+    currentActor(state) == Goblin and combatantForActor(state, Goblin).multiattackDispatchesRemaining > 0
 
   pure def resolveGoblinMultiattackDispatch(
     state: BattleState,
@@ -389,36 +406,41 @@ module battleRuntimeWeaponAttacks {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
-  ): BattleState =
-    if (state.goblinMultiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or state.goblin.hp == 0)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Goblin)
+    val defender = combatantForActor(state, Fighter)
+    val attackerAfterDispatch = { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(attacker.multiattackDispatchesRemaining) }
+    if (attacker.multiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or attacker.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
-      { ...state, goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining) }
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))
+      stateWithActorCombatant(state, Goblin, attackerAfterDispatch)
     else if (
       mirrorImageRedirectsAttackRollHit(
-        state.goblin.activeEffects,
-        state.fighter.activeEffects,
+        attacker.activeEffects,
+        defender.activeEffects,
         attackerPerceivesTargetWithBlindsightOrTruesight,
         mirrorImageDuplicateHighestRoll,
       )
     )
-      {
-        ...state,
-        fighter: combatantAfterMirrorImageAttackRollHit(
-          state.goblin.activeEffects,
-          state.fighter,
+      stateWithActorCombatants(
+        state,
+        Fighter, combatantAfterMirrorImageAttackRollHit(
+          attacker.activeEffects,
+          defender,
           attackerPerceivesTargetWithBlindsightOrTruesight,
           mirrorImageDuplicateHighestRoll,
         ),
-        goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining),
-      }
+        Goblin, attackerAfterDispatch,
+      )
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      {
-        ...stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
-        goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining),
-      }
+      stateWithActorCombatant(
+        stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
+        Goblin,
+        attackerAfterDispatch,
+      )
     }
+  }
 
   pure def resolveGoblinOpportunityAttack(
     state: BattleState,
@@ -457,32 +479,32 @@ module battleRuntimeWeaponAttacks {
     damageDisposition: DamageDisposition,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
-  ): BattleState =
-    if (state.goblin.hp == 0)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Goblin)
+    val defender = combatantForActor(state, Fighter)
+    if (attacker.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))
       state
     else if (
       mirrorImageRedirectsAttackRollHit(
-        state.goblin.activeEffects,
-        state.fighter.activeEffects,
+        attacker.activeEffects,
+        defender.activeEffects,
         attackerPerceivesTargetWithBlindsightOrTruesight,
         mirrorImageDuplicateHighestRoll,
       )
     )
-      {
-        ...state,
-        fighter: combatantAfterMirrorImageAttackRollHit(
-          state.goblin.activeEffects,
-          state.fighter,
-          attackerPerceivesTargetWithBlindsightOrTruesight,
-          mirrorImageDuplicateHighestRoll,
-        ),
-      }
+      stateWithActorCombatant(state, Fighter, combatantAfterMirrorImageAttackRollHit(
+        attacker.activeEffects,
+        defender,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      ))
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
-      stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition, Goblin))
+      stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition, Goblin))
     }
+  }
 
   pure def resolveGoblinOpportunityAttackWithUncannyDodge(
     state: BattleState,
@@ -490,14 +512,17 @@ module battleRuntimeWeaponAttacks {
     naturalD20: int,
     damageRoll: int,
     concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (state.goblin.hp == 0)
+  ): BattleState = {
+    val attacker = combatantForActor(state, Goblin)
+    val defender = combatantForActor(state, Fighter)
+    if (attacker.hp == 0)
       state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))
       state
     else {
       val adjustedDamage = damageAfterAdjustments(uncannyDodgeDamage(damageRoll + 2), Slashing, fighterRageResistances(state), Set(), Set())
-      stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin))
+      stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin))
     }
+  }
 
 }

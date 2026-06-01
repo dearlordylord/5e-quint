@@ -410,7 +410,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_hide_records_discovery_dc = {
-    val canHide = { ...initialState, fighterHidePrerequisite: true }
+    val canHide = { ...initialState, fighter: { ...initialState.fighter, hidePrerequisite: true } }
     all {
       assert(hideHoles(initialState) == Set()),
       assert(hideHoles(canHide) == Set(AbilityCheck)),
@@ -421,7 +421,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_search_finds_hidden_fighter = {
-    val hidden = endTurn(hideFighter({ ...initialState, fighterHidePrerequisite: true }, 18))
+    val hidden = endTurn(hideFighter({ ...initialState, fighter: { ...initialState.fighter, hidePrerequisite: true } }, 18))
     all {
       assert(searchGoblinForFighter(hidden, 17).fighter.hidden == HiddenByDc(HiddenDc18)),
       assert(searchGoblinForFighter(hidden, 18).fighter.hidden == NotHidden),
@@ -429,7 +429,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_attack_reveals_hidden_fighter = {
-    val hidden = hideFighter({ ...initialState, fighterHidePrerequisite: true }, 18)
+    val hidden = hideFighter({ ...initialState, fighter: { ...initialState.fighter, hidePrerequisite: true } }, 18)
     assert(resolveAttack({ ...hidden, actionAvailable: true }, 1, 1, fighterWeaponAttackDamageRoll(4), true).fighter.hidden == NotHidden)
   }
 
@@ -446,17 +446,17 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {
-    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
+    val spentRecharge = { ...initialState, goblin: { ...initialState.goblin, rechargeAvailable: false } }
     assert(openHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
   }
 
   run test_goblin_recharge_roll_restores_available_part_on_success = {
-    val spentRecharge = { ...initialState, goblinRechargeAvailable: false }
+    val spentRecharge = { ...initialState, goblin: { ...initialState.goblin, rechargeAvailable: false } }
     val failed = endTurnWithGoblinRechargeRoll(spentRecharge, 4)
     val succeeded = endTurnWithGoblinRechargeRoll(spentRecharge, 5)
     all {
-      assert(not(failed.goblinRechargeAvailable)),
-      assert(succeeded.goblinRechargeAvailable),
+      assert(not(failed.goblin.rechargeAvailable)),
+      assert(succeeded.goblin.rechargeAvailable),
     }
   }
 
@@ -476,7 +476,7 @@ module battleRuntimeCoreCombatTests {
     val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
     all {
       assert(goblinCanUseLegendaryAction(afterFighterTurnWithThirdActor)),
-      assert(spent.goblinLegendaryUsesRemaining == 1),
+      assert(spent.goblin.legendaryUsesRemaining == 1),
       assert(not(goblinCanUseLegendaryAction(spent))),
     }
   }
@@ -503,13 +503,13 @@ module battleRuntimeCoreCombatTests {
     val ended = endTurn(multiattack)
     all {
       assert(not(multiattack.actionAvailable)),
-      assert(multiattack.goblinMultiattackDispatchesRemaining == 2),
+      assert(multiattack.goblin.multiattackDispatchesRemaining == 2),
       assert(goblinMultiattackDispatchContinuationOpen(multiattack)),
-      assert(recursive.goblinMultiattackDispatchesRemaining == 2),
-      assert(firstDispatch.goblinMultiattackDispatchesRemaining == 1),
-      assert(secondDispatch.goblinMultiattackDispatchesRemaining == 0),
+      assert(recursive.goblin.multiattackDispatchesRemaining == 2),
+      assert(firstDispatch.goblin.multiattackDispatchesRemaining == 1),
+      assert(secondDispatch.goblin.multiattackDispatchesRemaining == 0),
       assert(not(goblinMultiattackDispatchContinuationOpen(secondDispatch))),
-      assert(ended.goblinMultiattackDispatchesRemaining == 0),
+      assert(ended.goblin.multiattackDispatchesRemaining == 0),
     }
   }
 
@@ -519,8 +519,8 @@ module battleRuntimeCoreCombatTests {
     val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(not(first.actionAvailable)),
-      assert(first.fighterExtraAttackSlotsRemaining == 1),
-      assert(second.fighterExtraAttackSlotsRemaining == 0),
+      assert(first.fighter.extraAttackSlotsRemaining == 1),
+      assert(second.fighter.extraAttackSlotsRemaining == 0),
       assert(third == second),
     }
   }
@@ -530,9 +530,9 @@ module battleRuntimeCoreCombatTests {
     val moved = moveFighter(first, 5, false)
     val second = resolveAttack(moved, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
-      assert(moved.fighterExtraAttackSlotsRemaining == 1),
+      assert(moved.fighter.extraAttackSlotsRemaining == 1),
       assert(moved.fighter.movementSpent == 5),
-      assert(second.fighterExtraAttackSlotsRemaining == 0),
+      assert(second.fighter.extraAttackSlotsRemaining == 0),
     }
   }
 
@@ -540,8 +540,8 @@ module battleRuntimeCoreCombatTests {
     val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
     val ended = endTurn(first)
     all {
-      assert(first.fighterExtraAttackSlotsRemaining == 1),
-      assert(ended.fighterExtraAttackSlotsRemaining == 0),
+      assert(first.fighter.extraAttackSlotsRemaining == 1),
+      assert(ended.fighter.extraAttackSlotsRemaining == 0),
     }
   }
 
@@ -567,7 +567,7 @@ module battleRuntimeCoreCombatTests {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 0),
-      assert(result.fighterSneakAttackUsedThisTurn),
+      assert(result.fighter.sneakAttackUsedThisTurn),
     }
   }
 
@@ -576,9 +576,9 @@ module battleRuntimeCoreCombatTests {
     val disadvantaged = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, false, true, true, true)
     all {
       assert(eligible.goblin.hp == 0),
-      assert(eligible.fighterSneakAttackUsedThisTurn),
+      assert(eligible.fighter.sneakAttackUsedThisTurn),
       assert(disadvantaged.goblin.hp == 3),
-      assert(not(disadvantaged.fighterSneakAttackUsedThisTurn)),
+      assert(not(disadvantaged.fighter.sneakAttackUsedThisTurn)),
     }
   }
 
@@ -586,13 +586,13 @@ module battleRuntimeCoreCombatTests {
     val result = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 20, 20, 2, 9, true, true, false, false, true)
     all {
       assert(result.goblin.hp == 0),
-      assert(result.fighterSneakAttackUsedThisTurn),
+      assert(result.fighter.sneakAttackUsedThisTurn),
     }
   }
 
   run test_sneak_attack_usage_resets_on_next_turn = {
     val used = resolveAttackWithOptionalSneakAttack(withFighterSneakAttack(initialState), 15, 10, 4, 6, true, true, false, false, true)
-    assert(not(endTurn(used).fighterSneakAttackUsedThisTurn))
+    assert(not(endTurn(used).fighter.sneakAttackUsedThisTurn))
   }
 
   run test_reaction_roll_or_damage_reductions = {
@@ -812,7 +812,7 @@ module battleRuntimeCoreCombatTests {
     val raging = startRage(readied, 2).state
     all {
       assert(not(raging.fighter.concentrating)),
-      assert(not(raging.fighterReadiedSpellHeld)),
+      assert(not(raging.fighter.readiedSpellHeld)),
       assert(releaseReadiedSpell(raging) == raging),
     }
   }

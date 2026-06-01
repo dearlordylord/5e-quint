@@ -35,6 +35,37 @@ Former source lane: Ralph lane B, deleted after merge.
 | `B28-MIRROR-IMAGE-READINESS` | Classify Mirror Image hit-interception readiness | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION`, `packages/battle-runtime/battle-runtime-mirror-image.qnt`, and Mirror Image witness. | Classify duplicate pool, interception roll, duplicate destruction, bypass witness, and normal damage continuation readiness. |
 | `B29-MINIMAL-ATTACK-READINESS` | Classify minimal creature attack readiness | `BATTLE.ATTACK.MINIMAL_RESOLUTION`, `packages/battle-runtime/creature-attack.qnt`, and creature attack witness. | Classify whether the pilot creature-vs-creature attack slice is semantic-core, fixture-bound, or blocked for generator use. |
 
+## Parked Oracle-Reliability Tasks (Attack Integration Shell)
+
+Source: 2026-05-29 shell-boundary audit of `battle-runtime-weapon-attacks.qnt`,
+prompted by the cleanroom Rust transcription. Framing: make QNT a better
+language-agnostic test suite — the source any language library is generated from
+and validated against (ADR-0001). Concern order: QNT code first, then TS, then
+the Rust witness.
+
+Audit verdict (reopen context): the shell already composes over rule-core via
+bridges (`battle-runtime-attack-facts`: `attackHits` = `resolveAttackRoll`;
+`applyDamageFromSource` wraps the shared `applyResolvedDamageToPositiveHitPoints`).
+The defect is fixture-pinned *state*, not duplicated rules: `BattleState { fighter,
+goblin }`, `fighter*`-prefixed capability fields, `GrappleState =
+FighterGrapplesGoblin`, and the parallel `resolveAttack*`/`resolveGoblin*` families
+(downstream of the named slots). This shape propagates into every generated target
+and hurts generation, so O1 de-fixtures the state — it does not remove duplication.
+
+Concern order is **O1 then O2** (QNT code before Rust-witness code). O1 is the
+deliverable — improving the QNT test suite — and is already protected by the
+existing TS MBT lane (QNT↔TS parity via quint-connect), so it needs no new
+instrument first. O2 broadens validation to the multi-language case with a native
+Rust quint-connect witness and is the lowest-priority code here. O1 overlaps the
+parked `B28-MIRROR-IMAGE-READINESS` and `B29-MINIMAL-ATTACK-READINESS` rows above
+(same fixture-bound-vs-semantic-core question, applied to the weapon-attack shell
+rather than `creature-attack.qnt`); reopen them together, do not duplicate.
+
+| Task | Title | Depends on | Input | Output |
+| --- | --- | --- | --- | --- |
+| `O2-NONTS-PARITY-LANE` | Native Rust quint-connect witness in the cleanroom | — | native Rust quint-connect (the first-class lib the TS `@firfi/quint-connect` port copies); copied `cleanroom-input/qnt/**.mbt.qnt` driver specs; cleanroom AGENTS.md verification-lane admission | A native Rust quint-connect harness driving the cleanroom engine against the copied `.mbt.qnt` specs, replacing the cleanroom's hand-transcription parity (`// Source:` + literal asserts, 0 quint executions) with executed conformance. Validates the main-repo MBT approach (the cleanroom's sole purpose) and measures QNT-as-test-suite quality, surfacing the gaps O1-class work fixes. Lowest-priority code in this group. |
+| `O1-ATTACK-SHELL-DEFIXTURE` | De-fixture BattleState/Combatant/GrappleState | overlaps `B28`, `B29` | `battle-runtime-model.qnt` (`BattleState`, `Combatant`, `GrappleState`); `battle-runtime-weapon-attacks.qnt`; bridges + TS reducers + 72 MBT drivers | Staged behaviour-preserving migration of the fixture shape (rules already factored, so this removes fixture *state*, not duplication): (1) move `fighter*` capability/turn fields onto `Combatant`; (2) generalize the `fighter`/`goblin` slots to combatant addressing; (3) collapse `resolveGoblin*` and `GrappleState`. Each step gated by the existing TS battle MBT; reviewer-loop + RAW convergence. **Status 2026-05-30:** (1)+(2) delivered and proof-validated — capability/turn fields live on `Combatant`, and `weapon-attacks.qnt` addresses combatants through the `combatantForActor`/`stateWithActorCombatant` seam (no signature/TS/MBT changes). (3) reassessed and declined as premature: the families are now cleanly addressed and their shared logic is already factored into helpers, so merging the legitimately-asymmetric PC-vs-monster attack procedures would over-parameterize, not deepen. Remaining: the `GrappleState` (`FighterGrapplesGoblin`) de-fixture is a separate cross-layer item (QNT movement + 2 MBT drivers + 32 TS files), reopen on demand. |
+
 ## Reopen Checklist
 
 - Start from `plans/QNT_COVERAGE_PROGRAM.md` and

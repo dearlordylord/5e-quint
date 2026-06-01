@@ -2,6 +2,9 @@
 
 module battleRuntimeSpellBridge {
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
+  // Sorcerous Burst damage-choice enum lives in a leaf so battle-runtime-model can
+  // reference it without importing this bridge's closure. See the leaf header.
+  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
   import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
   import spellInvocationActionSlotCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-action-slot-core"
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
@@ -150,15 +153,6 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeSpellAttackSequenceNeedsAttackRoll
     | BattleRuntimeSpellAttackSequenceNeedsDamageRoll
     | BattleRuntimeSpellAttackSequenceComplete
-
-  type BattleRuntimeSorcerousBurstDamageTypeChoice =
-    | BattleRuntimeSorcerousBurstAcidDamage
-    | BattleRuntimeSorcerousBurstColdDamage
-    | BattleRuntimeSorcerousBurstFireDamage
-    | BattleRuntimeSorcerousBurstLightningDamage
-    | BattleRuntimeSorcerousBurstPoisonDamage
-    | BattleRuntimeSorcerousBurstPsychicDamage
-    | BattleRuntimeSorcerousBurstThunderDamage
 
   type BattleRuntimeSleepRepeatSaveLifecycle =
     | BattleRuntimeNoSleepRepeatSaveLifecycle
