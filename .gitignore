@@ -22,6 +22,8 @@ node_modules/
 .ralph_backup_*
 coverage/
 dist/
+target/
+crates/*/target/
 __pycache__/
 _apalache-out/
 qa_generated.qnt
