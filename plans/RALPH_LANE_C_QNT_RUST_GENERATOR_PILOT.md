@@ -7,25 +7,25 @@
     {
       "number": 1,
       "id": "QNTR-C01-RUST-PILOT-BOUNDARY",
-      "status": "done",
+      "status": "ready-for-research",
       "title": "Define the first Rust pilot boundary from existing HP dry runs"
     },
     {
       "number": 2,
       "id": "QNTR-C02-HP-DAMAGE-RUST-MANUAL",
-      "status": "done",
+      "status": "blocked-on-QNTR-C01-RUST-PILOT-BOUNDARY",
       "title": "Hand-code the positive-Hit-Point damage Rust pilot slice"
     },
     {
       "number": 3,
       "id": "QNTR-C03-HP-DAMAGE-RUST-PARITY",
-      "status": "ready-for-research",
+      "status": "blocked-on-QNTR-C02-HP-DAMAGE-RUST-MANUAL",
       "title": "Add Rust parity fixtures for positive-Hit-Point damage"
     },
     {
       "number": 4,
       "id": "QNTR-C04-HP-RECOVERY-RUST-MANUAL",
-      "status": "ready-for-research",
+      "status": "blocked-on-QNTR-C01-RUST-PILOT-BOUNDARY",
       "title": "Hand-code the pure healing Rust pilot slice"
     },
     {
@@ -189,10 +189,10 @@ another MBT run. Run MBT with the repo timing/background protocol from
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | QNTR-C01-RUST-PILOT-BOUNDARY - Define the first Rust pilot boundary from existing HP dry runs | done | none | Established `crates/qnt-rust-pilot` as pilot evidence with `cargo test --manifest-path crates/qnt-rust-pilot/Cargo.toml`; no production wiring, generated runtime state, or ABI commitment. |
-| 2 | QNTR-C02-HP-DAMAGE-RUST-MANUAL - Hand-code the positive-Hit-Point damage Rust pilot slice | done | QNTR-C01-RUST-PILOT-BOUNDARY | Added the manual Rust positive-Hit-Point damage slice from `SHARED.HIT_POINTS.POSITIVE_DAMAGE`. |
-| 3 | QNTR-C03-HP-DAMAGE-RUST-PARITY - Add Rust parity fixtures for positive-Hit-Point damage | ready-for-research | QNTR-C02-HP-DAMAGE-RUST-MANUAL | Proves the hand-coded slice against the closed QNT replay cases. |
-| 4 | QNTR-C04-HP-RECOVERY-RUST-MANUAL - Hand-code the pure healing Rust pilot slice | ready-for-research | QNTR-C01-RUST-PILOT-BOUNDARY | Uses the existing pure-healing subset of `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
+| 1 | QNTR-C01-RUST-PILOT-BOUNDARY - Define the first Rust pilot boundary from existing HP dry runs | ready-for-research | none | Establishes crate/location, command shape, and no-production-wiring boundary before code appears. |
+| 2 | QNTR-C02-HP-DAMAGE-RUST-MANUAL - Hand-code the positive-Hit-Point damage Rust pilot slice | blocked-on-QNTR-C01-RUST-PILOT-BOUNDARY | QNTR-C01-RUST-PILOT-BOUNDARY | Uses the existing `SHARED.HIT_POINTS.POSITIVE_DAMAGE` dry run. |
+| 3 | QNTR-C03-HP-DAMAGE-RUST-PARITY - Add Rust parity fixtures for positive-Hit-Point damage | blocked-on-QNTR-C02-HP-DAMAGE-RUST-MANUAL | QNTR-C02-HP-DAMAGE-RUST-MANUAL | Proves the hand-coded slice against the closed QNT replay cases. |
+| 4 | QNTR-C04-HP-RECOVERY-RUST-MANUAL - Hand-code the pure healing Rust pilot slice | blocked-on-QNTR-C01-RUST-PILOT-BOUNDARY | QNTR-C01-RUST-PILOT-BOUNDARY | Uses the existing pure-healing subset of `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
 | 5 | QNTR-C05-HP-RECOVERY-RUST-PARITY - Add Rust parity fixtures for pure Hit Point healing | blocked-on-QNTR-C04-HP-RECOVERY-RUST-MANUAL | QNTR-C04-HP-RECOVERY-RUST-MANUAL | Proves recovery reset, cap, and positive-Hit-Point Unconscious recovery behavior. |
 | 6 | QNTR-C06-RUST-PILOT-DRY-RUN-REVIEW - Review Rust pilot slices for projection and connascence gaps | blocked-on-QNTR-C03-HP-DAMAGE-RUST-PARITY-QNTR-C05-HP-RECOVERY-RUST-PARITY | QNTR-C03-HP-DAMAGE-RUST-PARITY, QNTR-C05-HP-RECOVERY-RUST-PARITY | Decides whether the hand-coded Rust shape is generator-worthy or needs repairs. |
 | 7 | QNTR-C07-GENERATOR-SUBSET-CONTRACT - Turn the HP dry-run subset into a checked generator contract | blocked-on-QNTR-C06-RUST-PILOT-DRY-RUN-REVIEW | QNTR-C06-RUST-PILOT-DRY-RUN-REVIEW | Adds a durable minimal subset contract rather than inferring from prose. |
@@ -209,7 +209,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 
 ### Task 1 - QNTR-C01-RUST-PILOT-BOUNDARY
 
-Status: `done`
+Status: `ready-for-research`
 
 Input:
 
@@ -221,13 +221,11 @@ Input:
 
 Output:
 
-- Pilot crate: `crates/qnt-rust-pilot`.
-- Command: `cargo test --manifest-path crates/qnt-rust-pilot/Cargo.toml`.
-- Boundary recorded in `crates/qnt-rust-pilot/README.md`: Rust is pilot
-  evidence only, with no TS reducer calls, generated runtime state, or ABI
-  commitment.
-- Shared HP scalar and `CreatureVitals` shapes are mapped in the crate README;
-  Death Saving Throw and recovery marker shapes remain for Task 4.
+- Decide the pilot Rust crate or artifact location and command shape.
+- Record that Rust is pilot evidence only in this lane: no TS reducer calls, no
+  generated runtime state, and no ABI commitment.
+- Map the shared `CreatureVitals`, Hit Point scalar, Death Saving Throw, and
+  recovery marker shapes that Tasks 2 and 4 will share.
 
 Acceptance:
 
@@ -238,7 +236,7 @@ Acceptance:
 
 ### Task 2 - QNTR-C02-HP-DAMAGE-RUST-MANUAL
 
-Status: `done`
+Status: `blocked-on-QNTR-C01-RUST-PILOT-BOUNDARY`
 
 Input:
 
@@ -250,16 +248,15 @@ Input:
 
 Output:
 
-- Hand-coded the Rust pilot version of the positive-Hit-Point damage transition
-  from the dry run in `crates/qnt-rust-pilot/src/hit_points.rs`.
-- Added typed constructors for legal vitals and narrowed
-  positive-Hit-Point damage admission.
-- Kept damage-at-0-HP and production reducer integration out of scope.
+- Hand-code the Rust pilot version of the positive-Hit-Point damage transition
+  from the dry run.
+- Use constructors for legal vitals and narrowed positive-Hit-Point damage
+  admission.
+- Keep damage-at-0-HP and production reducer integration out of scope.
 
 Acceptance:
 
-- Rust code compiles with the command chosen by Task 1:
-  `cargo test --manifest-path crates/qnt-rust-pilot/Cargo.toml`.
+- Rust code compiles with the command chosen by Task 1.
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
