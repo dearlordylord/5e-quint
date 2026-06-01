@@ -15,13 +15,13 @@ const runProofs = process.env.RUN_QNT_PROOFS === "1";
 // The `> 0` guard also catches the silent trap where discovery breaks and the
 // opt-in lane reports green having executed nothing. See CLAUDE.md
 // "QNT proof lane (run consciously)" for why this lane is conscious-only.
-test("QNT proof lane is opt-in -- run `pnpm test:qnt-proofs` consciously", () => {
+test("QNT proof lane is opt-in -- run `pnpm test:qnt-proofs` to check SRD parity", () => {
   expect(proofModules.length).toBeGreaterThan(0);
   if (!runProofs) {
     console.warn(
-      `[qnt-proofs] ${proofModules.length} proof modules are NOT run by ` +
-        "`pnpm test`. Run `pnpm test:qnt-proofs` consciously; each module is " +
-        "bounded, so a runaway proof fails that module instead of hanging.",
+      `[qnt-proofs] ${proofModules.length} SRD-parity proof modules are not ` +
+        "run by `pnpm test` (they are slow). Run `pnpm test:qnt-proofs` before " +
+        "merging spec or proof changes to check the specs still match the SRD.",
     );
   }
 });
