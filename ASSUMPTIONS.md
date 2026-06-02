@@ -1,8 +1,17 @@
 # Modeling Assumptions
 
-The spec (`creature.qnt`) maintains direct feature parity with the SRD. Formalizing prose rules into a state machine sometimes requires making explicit what the SRD leaves implicit — adding events the rules assume (END_TURN), connecting constraints that follow logically but aren't stated verbatim (slot expenditure requires ability to act), or choosing a formalization where the architecture demands one (single-creature time tracking). These modeling decisions are documented here. They are curated by the project owner, kept minimal, and stay close to RAW.
+The active package-local specs and shared rule-core slices maintain direct
+feature parity with the SRD. Formalizing prose rules into a state machine
+sometimes requires making explicit what the SRD leaves implicit, such as adding
+events the rules assume, connecting constraints that follow logically but are
+not stated verbatim, or choosing a formalization where the architecture demands
+one. These modeling decisions are documented here. They are curated by the
+project owner, kept minimal, and stay close to RAW.
 
-Each entry records the assumption, rules justification, and what changed in both Quint and XState.
+Each entry records the assumption, rules justification, and what changed. Older
+entries may name deleted root QNT restore files as historical implementation
+locations; those restore files are recoverable from git history but are not
+active verification authority.
 
 ## A1: Spell slot expenditure and starting concentration require ability to act
 
