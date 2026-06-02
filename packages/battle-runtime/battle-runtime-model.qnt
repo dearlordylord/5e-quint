@@ -527,15 +527,16 @@ module battleRuntimeModel {
         expiresAtEndOfFighterTurnRound: int,
       })
 
-  type ActiveOngoingFeatureOccurrences = int -> ActiveOngoingFeatureOccurrence
+  type ActiveOngoingFeatureOccurrences = {
+    rage: ActiveOngoingFeatureOccurrence,
+    recklessAttack: ActiveOngoingFeatureOccurrence,
+  }
 
-  pure val FIGHTER_RAGE_SOURCE_KEY = 1
-  pure val FIGHTER_RECKLESS_ATTACK_SOURCE_KEY = 2
   pure val NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES: ActiveOngoingFeatureOccurrences =
-    Map(
-      FIGHTER_RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
-      FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
-    )
+    {
+      rage: NoActiveOngoingFeatureOccurrence,
+      recklessAttack: NoActiveOngoingFeatureOccurrence,
+    }
 
   type Combatant = {
     hp: int,

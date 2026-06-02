@@ -9,10 +9,10 @@ module battleRuntimeFighterOngoingFeatures {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
 
   pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
-    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RAGE_SOURCE_KEY)
+    state.fighter.activeOngoingFeatureOccurrences.rage
 
   pure def fighterRecklessAttackOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
-    state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY)
+    state.fighter.activeOngoingFeatureOccurrences.recklessAttack
 
   pure def fighterHasRage(state: BattleState): bool =
     fighterRageOccurrence(state) != NoActiveOngoingFeatureOccurrence
@@ -40,8 +40,10 @@ module battleRuntimeFighterOngoingFeatures {
       ...state,
       fighter: {
         ...state.fighter,
-        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(FIGHTER_RAGE_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+        activeOngoingFeatureOccurrences: {
+          ...state.fighter.activeOngoingFeatureOccurrences,
+          rage: NoActiveOngoingFeatureOccurrence,
+        },
       },
     }
 
@@ -50,8 +52,10 @@ module battleRuntimeFighterOngoingFeatures {
       ...state,
       fighter: {
         ...state.fighter,
-        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, NoActiveOngoingFeatureOccurrence),
+        activeOngoingFeatureOccurrences: {
+          ...state.fighter.activeOngoingFeatureOccurrences,
+          recklessAttack: NoActiveOngoingFeatureOccurrence,
+        },
       },
     }
 
@@ -91,14 +95,16 @@ module battleRuntimeFighterOngoingFeatures {
         ...state,
         fighter: {
           ...state.fighter,
-          activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-            .set(FIGHTER_RAGE_SOURCE_KEY, if (state.fighter.unconscious)
+          activeOngoingFeatureOccurrences: {
+            ...state.fighter.activeOngoingFeatureOccurrences,
+            rage: if (state.fighter.unconscious)
               NoActiveOngoingFeatureOccurrence
             else
               match fighterRageOccurrence(state) {
                 | ActiveRoundExtendedOngoingFeature(_) => NoActiveOngoingFeatureOccurrence
                 | _ => fighterRageOccurrence(state)
-              }),
+              },
+          },
         },
       }
     else
@@ -116,11 +122,13 @@ module battleRuntimeFighterOngoingFeatures {
       ...state,
       fighter: {
         ...state.fighter,
-        activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-          .set(FIGHTER_RAGE_SOURCE_KEY, ActiveRoundExtendedOngoingFeature({
+        activeOngoingFeatureOccurrences: {
+          ...state.fighter.activeOngoingFeatureOccurrences,
+          rage: ActiveRoundExtendedOngoingFeature({
             expiresAtEndOfFighterTurnRound: if (round > maxRound) maxRound else round,
             maxExpiresRound: maxRound,
-          })),
+          }),
+        },
       },
     }
   }
@@ -160,10 +168,12 @@ module battleRuntimeFighterOngoingFeatures {
           ...state,
           fighter: {
             ...breakConcentration(state.fighter),
-            activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-              .set(FIGHTER_RAGE_SOURCE_KEY, ActiveFixedDurationOngoingFeature({
+            activeOngoingFeatureOccurrences: {
+              ...state.fighter.activeOngoingFeatureOccurrences,
+              rage: ActiveFixedDurationOngoingFeature({
                 expiresAtEndOfFighterTurnRound: state.initiative.round + 100,
-              })),
+              }),
+            },
             readiedSpellHeld: false,
           },
           bonusActionAvailable: false,
@@ -222,8 +232,10 @@ module battleRuntimeFighterOngoingFeatures {
         ...state,
         fighter: {
           ...state.fighter,
-          activeOngoingFeatureOccurrences: state.fighter.activeOngoingFeatureOccurrences
-            .set(FIGHTER_RECKLESS_ATTACK_SOURCE_KEY, ActiveStartOfTurnOngoingFeature),
+          activeOngoingFeatureOccurrences: {
+            ...state.fighter.activeOngoingFeatureOccurrences,
+            recklessAttack: ActiveStartOfTurnOngoingFeature,
+          },
         },
       }
     else
@@ -231,4 +243,44 @@ module battleRuntimeFighterOngoingFeatures {
 
   pure def goblinAttackAgainstFighterHasAdvantage(state: BattleState): bool =
     battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(fighterHasRecklessAttack(state))
+
+  run test_fighter_ongoing_feature_occurrences_have_exact_rage_slot = {
+    val rage = ActiveRoundExtendedOngoingFeature({
+      expiresAtEndOfFighterTurnRound: 2,
+      maxExpiresRound: 101,
+    })
+    val raging = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeOngoingFeatureOccurrences: {
+          ...initialState.fighter.activeOngoingFeatureOccurrences,
+          rage: rage,
+        },
+      },
+    }
+    all {
+      assert(fighterRageOccurrence(raging) == rage),
+      assert(fighterRecklessAttackOccurrence(raging) == NoActiveOngoingFeatureOccurrence),
+      assert(fighterHasRage(raging)),
+    }
+  }
+
+  run test_fighter_ongoing_feature_occurrences_have_exact_reckless_attack_slot = {
+    val reckless = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeOngoingFeatureOccurrences: {
+          ...initialState.fighter.activeOngoingFeatureOccurrences,
+          recklessAttack: ActiveStartOfTurnOngoingFeature,
+        },
+      },
+    }
+    all {
+      assert(fighterRageOccurrence(reckless) == NoActiveOngoingFeatureOccurrence),
+      assert(fighterRecklessAttackOccurrence(reckless) == ActiveStartOfTurnOngoingFeature),
+      assert(fighterHasRecklessAttack(reckless)),
+    }
+  }
 }
