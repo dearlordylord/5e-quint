@@ -114,14 +114,12 @@ Generator readiness is a separate axis from parity. A QNT owner that is shaped
 as semantic core (suitable input for a future QNT-to-Rust generator) is
 recorded distinctly from a QNT owner that is proof-only.
 
-Root `battle.qnt`, `creature.qnt`, `dndTest.qnt`, `character.qnt`,
-`character-creation.qnt`, `character-creation-spell-data.qnt`,
-`battleTraversalTest.qnt`, and `surface-runtime-correction-initiative.qnt` are
-archived restore source material under `plans/LARGE_FILE_DOMAIN_SPLIT_PLAN.md`
-policy. They are not the active verification corpus and not a gate for any
-runtime behavior. The QA pipeline still references `creature.qnt` as its
-assertion-generation prompt input (see `scripts/qa/QA_README.md`); that lane
-is separate from development verification.
+The previous root QNT monoliths were archived restore source material under
+`plans/LARGE_FILE_DOMAIN_SPLIT_PLAN.md` policy and have been removed from the
+worktree. They remain recoverable from git history, but they are not the active
+verification corpus and not a gate for any runtime behavior. The old QA
+assertion-generation lane that prompted against the root creature spec is also
+retired; see `scripts/qa/QA_README.md`.
 
 ## Authored Content
 
@@ -372,9 +370,8 @@ integration shell:
   integration shell for `@dnd/battle-runtime`.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
-- Root `battle.qnt` / `creature.qnt` / `dndTest.qnt` and other root `.qnt`
-  files are archived restore source material, not the active authority for any
-  runtime.
+- The deleted root `.qnt` files are historical restore material recoverable
+  from git history, not the active authority for any runtime.
 
 Runtime correctness mechanisms:
 

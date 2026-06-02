@@ -29,6 +29,7 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
+  spellSlotLevel,
 } from "@dnd/shared/types";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import cureWoundsInput from "../../surface/content/cure_wounds.json";
@@ -67,6 +68,7 @@ import {
   type SpellInvocationRef,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 
 const ruleCoreSpellMbtHoles = [
   "TargetChoice",
@@ -188,6 +190,7 @@ type SelectedUnitIdentityReplay = {
 };
 
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
+const magicMissileLevelOneRepeatedEffectCount = 3;
 
 const selectedUnitIdentityReplays = [
   {
@@ -578,6 +581,18 @@ function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
   return unitId;
 }
 
+function magicMissileRepeatedDamageAllocationRef(): SpellInvocationRef {
+  const facts = repeatedDamageAllocationAdmissionFacts({
+    selectedSlotLevel: spellSlotLevel(1),
+    repeatedEffectCount: magicMissileLevelOneRepeatedEffectCount,
+  });
+  return spellSlotInvocationRef(
+    recordSelectedUnitRuntimeBoundaryId("magic_missile"),
+    facts.selectedSlotLevel,
+    "repeatedDamageAllocation",
+  );
+}
+
 function createRuleCoreSpellDriver() {
   return defineDriver(driverSchema, () => {
     let state = spellBattle();
@@ -637,11 +652,7 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({
             state,
             subject: actionSpellSubject(
-              spellSlotInvocationRef(
-                recordSelectedUnitRuntimeBoundaryId("magic_missile"),
-                1,
-                "repeatedDamageAllocation",
-              ),
+              magicMissileRepeatedDamageAllocationRef(),
             ),
             fills: [],
           }),
@@ -651,11 +662,7 @@ function createRuleCoreSpellDriver() {
         state = spellBattle();
         resetProjection();
         const subject = actionSpellSubject(
-          spellSlotInvocationRef(
-            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
-            1,
-            "repeatedDamageAllocation",
-          ),
+          magicMissileRepeatedDamageAllocationRef(),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
@@ -831,11 +838,7 @@ function createRuleCoreSpellDriver() {
         });
         resetProjection();
         const subject = actionSpellSubject(
-          spellSlotInvocationRef(
-            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
-            1,
-            "repeatedDamageAllocation",
-          ),
+          magicMissileRepeatedDamageAllocationRef(),
         );
         const target = requireHole(
           resolveBattleSubject({ state, subject, fills: [] }),
@@ -881,11 +884,7 @@ function createRuleCoreSpellDriver() {
         resolveSubject({
           tag: "actionSpell",
           actorId: casterId,
-          invocation: spellSlotInvocationRef(
-            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
-            1,
-            "repeatedDamageAllocation",
-          ),
+          invocation: magicMissileRepeatedDamageAllocationRef(),
           mode: { tag: "ready", trigger: "attackHit" },
         });
       },
@@ -897,11 +896,7 @@ function createRuleCoreSpellDriver() {
           subject: {
             tag: "actionSpell",
             actorId: casterId,
-            invocation: spellSlotInvocationRef(
-              recordSelectedUnitRuntimeBoundaryId("magic_missile"),
-              1,
-              "repeatedDamageAllocation",
-            ),
+            invocation: magicMissileRepeatedDamageAllocationRef(),
             mode: { tag: "ready", trigger: "attackHit" },
           },
           fills: [],
@@ -1992,7 +1987,9 @@ function projectRuleCoreSpellState(input: {
         ? target.zeroHpLifecycle.deathSaves.failures
         : 0,
     spellSlotSpentThisTurn:
-      input.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      input.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(input.state, casterId),
     activeEffectKind: activeEffectKind(input.state),
     readiedHeld: snapshot.readiedResponses.spells.some(

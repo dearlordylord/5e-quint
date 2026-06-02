@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module unitFeatureActionCountCoreExamples {
+  import attackActionAdditionalAttacks.* from "./attack-action-additional-attacks"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
 
@@ -33,30 +34,87 @@ module unitFeatureActionCountCoreExamples {
   run test_extra_attack_spends_one_action_and_resolves_two_attack_slots = {
     val first = takeAttackActionWithAttackCountScaling(
       initialAttackActionAttackCountState,
-      { additionalAttacks: 1 }
+      { additionalAttacks: OneAdditionalAttack }
     )
     val second = resolveExtraAttackSlot(first.state)
     all {
       assert(first.actionWasSpent),
       assert(first.attackWasResolved),
       assert(not(first.state.actionAvailable)),
-      assert(first.state.extraAttackSlotOpen),
+      assert(first.state.additionalAttacksRemaining == OneAdditionalAttack),
       assert(not(second.actionWasSpent)),
       assert(second.attackWasResolved),
-      assert(not(second.state.extraAttackSlotOpen)),
+      assert(second.state.additionalAttacksRemaining == NoAdditionalAttacks),
       assert(second.state.attacksResolved == 2),
+    }
+  }
+
+  run test_attack_action_without_extra_attack_resolves_one_attack_slot = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: NoAdditionalAttacks }
+    )
+    val rejected = resolveExtraAttackSlot(first.state)
+    all {
+      assert(first.actionWasSpent),
+      assert(first.attackWasResolved),
+      assert(first.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(first.state.attacksResolved == 1),
+      assert(not(rejected.attackWasResolved)),
+      assert(rejected.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(rejected.state.attacksResolved == 1),
+    }
+  }
+
+  run test_two_extra_attacks_decrease_one_at_a_time = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: TwoAdditionalAttacks }
+    )
+    val second = resolveExtraAttackSlot(first.state)
+    val third = resolveExtraAttackSlot(second.state)
+    val rejected = resolveExtraAttackSlot(third.state)
+    all {
+      assert(first.state.additionalAttacksRemaining == TwoAdditionalAttacks),
+      assert(second.state.additionalAttacksRemaining == OneAdditionalAttack),
+      assert(third.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(third.state.attacksResolved == 3),
+      assert(not(rejected.attackWasResolved)),
+      assert(rejected.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(rejected.state.attacksResolved == 3),
+    }
+  }
+
+  run test_three_extra_attacks_decrease_one_at_a_time = {
+    val first = takeAttackActionWithAttackCountScaling(
+      initialAttackActionAttackCountState,
+      { additionalAttacks: ThreeAdditionalAttacks }
+    )
+    val second = resolveExtraAttackSlot(first.state)
+    val third = resolveExtraAttackSlot(second.state)
+    val fourth = resolveExtraAttackSlot(third.state)
+    val rejected = resolveExtraAttackSlot(fourth.state)
+    all {
+      assert(first.state.additionalAttacksRemaining == ThreeAdditionalAttacks),
+      assert(second.state.additionalAttacksRemaining == TwoAdditionalAttacks),
+      assert(third.state.additionalAttacksRemaining == OneAdditionalAttack),
+      assert(fourth.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(fourth.state.attacksResolved == 4),
+      assert(not(rejected.attackWasResolved)),
+      assert(rejected.state.additionalAttacksRemaining == NoAdditionalAttacks),
+      assert(rejected.state.attacksResolved == 4),
     }
   }
 
   run test_extra_attack_allows_movement_between_attack_slots = {
     val first = takeAttackActionWithAttackCountScaling(
       initialAttackActionAttackCountState,
-      { additionalAttacks: 1 }
+      { additionalAttacks: OneAdditionalAttack }
     )
     val moved = moveDuringAttackActionAttackCount(first.state)
     val second = resolveExtraAttackSlot(moved)
     all {
-      assert(moved.extraAttackSlotOpen),
+      assert(moved.additionalAttacksRemaining == OneAdditionalAttack),
       assert(moved.movementSegmentsTaken == 1),
       assert(second.attackWasResolved),
       assert(second.state.attacksResolved == 2),
@@ -66,31 +124,26 @@ module unitFeatureActionCountCoreExamples {
   run test_extra_attack_end_turn_closes_unspent_slot = {
     val first = takeAttackActionWithAttackCountScaling(
       initialAttackActionAttackCountState,
-      { additionalAttacks: 1 }
+      { additionalAttacks: OneAdditionalAttack }
     )
     val ended = endTurnDuringAttackActionAttackCount(first.state)
     val rejected = resolveExtraAttackSlot(ended)
     all {
-      assert(not(ended.extraAttackSlotOpen)),
+      assert(ended.additionalAttacksRemaining == NoAdditionalAttacks),
       assert(ended.turnEnded),
       assert(not(rejected.attackWasResolved)),
       assert(rejected.state.attacksResolved == 1),
     }
   }
 
-  run test_extra_attack_profile_rejects_adjacent_additional_counts = {
-    val admitted = takeAttackActionWithAttackCountScaling(
-      initialAttackActionAttackCountState,
-      { additionalAttacks: 1 }
-    )
-    val rejected = takeAttackActionWithAttackCountScaling(
-      initialAttackActionAttackCountState,
-      { additionalAttacks: 2 }
-    )
+  run test_extra_attack_profile_rejects_unmodeled_additional_counts = {
+    val admitted = admitAttackActionAdditionalAttacks(3)
+    val rejected = admitAttackActionAdditionalAttacks(4)
     all {
-      assert(admitted.attackWasResolved),
-      assert(not(rejected.attackWasResolved)),
-      assert(rejected.state.actionAvailable),
+      assert(admitted == SupportedAdditionalAttackCount({
+        additionalAttacks: ThreeAdditionalAttacks,
+      })),
+      assert(rejected == UnsupportedAdditionalAttackCount),
     }
   }
 }

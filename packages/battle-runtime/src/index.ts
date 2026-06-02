@@ -512,6 +512,7 @@ export {
   type BattleShapeShiftReversionOwner,
   type BattleShapeShiftReversionResult,
   type BattleShapeShiftSource,
+  type BattleShapeShiftRuntimeOwner,
   type BattleShapeShiftedRuntimeState,
   type BattleShapeShiftTrueFormFacts,
 } from "./battle-reducer/shape-shifting.ts";

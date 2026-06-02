@@ -139,12 +139,12 @@ Task PBA13E adds a repo-local guard:
 `pnpm check:authored-id-dispatch`
 
 The command runs `scripts/check-authored-id-dispatch-boundary.cjs` and derives
-the forbidden authored-id set from `packages/surface/content/*.json` by
-collecting top-level record `id` values and nested authored reference fields
-ending in `Id` (excluding protocol-only `holeId`). It then fails when those
-authored ids are used as semantic dispatch in production source outside
-explicit boundary allowlists. This keeps enforcement durable as new
-Unit/Spell/Stat Block ids are added.
+the forbidden authored-identity set from `packages/surface/content/*.json` by
+collecting top-level record `id` values, nested authored reference fields ending
+in `Id` (excluding protocol-only `holeId`), and Spell record names/provenance
+sections. It then fails when those identities are used as semantic dispatch in
+production source outside explicit boundary allowlists. This keeps enforcement
+durable as new Unit/Spell/Stat Block ids and Spell records are added.
 
 Allowed boundaries:
 

@@ -262,7 +262,7 @@ Task PBA13E adds a repo-local guard:
 
 `pnpm check:authored-id-dispatch`
 
-The guard derives forbidden authored ids from `packages/surface/content/*.json` by collecting top-level record `id` values and nested authored reference fields ending in `Id` (excluding protocol-only `holeId`), then fails when those ids appear as semantic dispatch in production source outside explicit boundary allowlists. This package keeps a narrow allowlist for `src/phase1-manifest.ts` and `src/support-gates.ts` because those files own the current support-profile boundary for admitted Unit ids and option ids.
+The guard derives forbidden authored identities from `packages/surface/content/*.json` by collecting top-level record `id` values, nested authored reference fields ending in `Id` (excluding protocol-only `holeId`), and Spell record names/provenance sections, then fails when those identities appear as semantic dispatch in production source outside explicit boundary allowlists. This package keeps a narrow allowlist for `src/phase1-manifest.ts` and `src/support-gates.ts` because those files own the current support-profile boundary for admitted Unit ids and option ids.
 
 Do not add authored-identity semantic branches to `discovery.ts`, `fill-reducer.ts`, or `finalization.ts`. Authored identity includes ids, names, slugs, source/provenance sections, and recognizable catalog labels. These modules must derive runtime behavior from Surface reader shapes and support-profile entries, then pass narrowed values forward.
 

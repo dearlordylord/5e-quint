@@ -20,6 +20,7 @@ module spellReadiedSpellResponseCore {
   type ReadiedSpellHeldEffect =
     | NoReadiedSpellHeldEffect
     | HeldReadiedSpellEffect({ profile: SpellDefinitionProfile })
+    | HeldRepeatedDamageAllocationReadiedSpellEffect
 
   type ReadiedSpellProcedureState = {
     reaction: ReactionProtocolState,
@@ -29,6 +30,7 @@ module spellReadiedSpellResponseCore {
   type ReadiedSpellRelease =
     | NoReadiedSpellRelease
     | ReleasedReadiedSpell({ profile: SpellDefinitionProfile })
+    | ReleasedRepeatedDamageAllocationReadiedSpell
 
   type ReadiedSpellReleaseResult = {
     readiedSpell: ReadiedSpellProcedureState,
@@ -60,12 +62,14 @@ module spellReadiedSpellResponseCore {
   pure def isHeldReadiedSpellEffect(effect: ReadiedSpellHeldEffect): bool =
     match effect {
       | HeldReadiedSpellEffect(_) => true
+      | HeldRepeatedDamageAllocationReadiedSpellEffect => true
       | NoReadiedSpellHeldEffect => false
     }
 
   pure def legalReadiedSpellHeldEffect(effect: ReadiedSpellHeldEffect): bool =
     match effect {
       | HeldReadiedSpellEffect(v) => readiedSpellProfileAdmitted(v.profile)
+      | HeldRepeatedDamageAllocationReadiedSpellEffect => true
       | NoReadiedSpellHeldEffect => true
     }
 
@@ -77,6 +81,7 @@ module spellReadiedSpellResponseCore {
   pure def legalReadiedSpellRelease(release: ReadiedSpellRelease): bool =
     match release {
       | ReleasedReadiedSpell(v) => readiedSpellProfileAdmitted(v.profile)
+      | ReleasedRepeatedDamageAllocationReadiedSpell => true
       | NoReadiedSpellRelease => true
     }
 
@@ -88,6 +93,7 @@ module spellReadiedSpellResponseCore {
         } else {
           NoReadiedSpellRelease
         }
+      | HeldRepeatedDamageAllocationReadiedSpellEffect => ReleasedRepeatedDamageAllocationReadiedSpell
       | NoReadiedSpellHeldEffect => NoReadiedSpellRelease
     }
 
@@ -147,6 +153,48 @@ module spellReadiedSpellResponseCore {
           startConcentration(state.reaction.concentration, Reactor, canConcentrate)
         ),
         heldEffect: held,
+      },
+      held: true,
+      slotExpended: slotExpended,
+    }
+  }
+
+  pure def holdRepeatedDamageAllocationReadiedSpellResponse(
+    spellcasting: SpellcastingProcedureState,
+    state: ReadiedSpellProcedureState,
+    facts: RepeatedDamageAllocationInvocationFacts,
+    triggerSelected: bool,
+    canConcentrate: bool
+  ): ReadiedSpellHoldResult = {
+    val resourceFacts = repeatedDamageAllocationInvocationResourceFacts(facts)
+    val invocation = resolveSpellInvocationResourceWithActionCost(
+      spellcasting,
+      resourceFacts,
+      StandardActionCost(ReadyAction)
+    )
+    val admitted = all {
+      triggerSelected,
+      canConcentrate,
+      resourceFacts.invocationAction == ActionTimeSpellInvocation,
+      invocation.admitted,
+    }
+    val slotExpended = admitted and invocation.slotExpended
+    if (not(admitted)) {
+      spellcasting: spellcasting,
+      readiedSpell: state,
+      held: false,
+      slotExpended: false,
+    } else {
+      spellcasting: invocation.state,
+      readiedSpell: {
+        reaction: state.reaction.with(
+          "reactor",
+          state.reaction.reactor.with("turn", invocation.state.turn)
+        ).with(
+          "concentration",
+          startConcentration(state.reaction.concentration, Reactor, canConcentrate)
+        ),
+        heldEffect: HeldRepeatedDamageAllocationReadiedSpellEffect,
       },
       held: true,
       slotExpended: slotExpended,

@@ -136,7 +136,6 @@ module spellProcedureProfilesInductive {
 
   action doSpellInvocation = {
     nondet profile = Set(
-      MagicMissileSpellProfile,
       RayOfFrostSpellProfile,
       AcidSplashSpellProfile,
       HealingWordSpellProfile,
@@ -297,7 +296,6 @@ module spellProcedureProfilesInductive {
 
   action doReadiedSpell = {
     nondet profile = Set(
-      MagicMissileSpellProfile,
       RayOfFrostSpellProfile,
       AcidSplashSpellProfile,
       CureWoundsSpellProfile,

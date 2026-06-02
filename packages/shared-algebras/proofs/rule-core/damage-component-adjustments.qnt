@@ -20,62 +20,12 @@ module damageComponentAdjustments {
     | SlashingDamage
     | ThunderDamage
 
-  type DamageByType = {
-    acid: int,
-    bludgeoning: int,
-    cold: int,
-    fire: int,
-    force: int,
-    lightning: int,
-    necrotic: int,
-    piercing: int,
-    poison: int,
-    psychic: int,
-    radiant: int,
-    slashing: int,
-    thunder: int,
-  }
+  type DamageByType = RuleDamageType -> int
 
   type DamageAdjustmentFacts = {
-    immuneAcid: bool,
-    immuneBludgeoning: bool,
-    immuneCold: bool,
-    immuneFire: bool,
-    immuneForce: bool,
-    immuneLightning: bool,
-    immuneNecrotic: bool,
-    immunePiercing: bool,
-    immunePoison: bool,
-    immunePsychic: bool,
-    immuneRadiant: bool,
-    immuneSlashing: bool,
-    immuneThunder: bool,
-    resistantAcid: bool,
-    resistantBludgeoning: bool,
-    resistantCold: bool,
-    resistantFire: bool,
-    resistantForce: bool,
-    resistantLightning: bool,
-    resistantNecrotic: bool,
-    resistantPiercing: bool,
-    resistantPoison: bool,
-    resistantPsychic: bool,
-    resistantRadiant: bool,
-    resistantSlashing: bool,
-    resistantThunder: bool,
-    vulnerableAcid: bool,
-    vulnerableBludgeoning: bool,
-    vulnerableCold: bool,
-    vulnerableFire: bool,
-    vulnerableForce: bool,
-    vulnerableLightning: bool,
-    vulnerableNecrotic: bool,
-    vulnerablePiercing: bool,
-    vulnerablePoison: bool,
-    vulnerablePsychic: bool,
-    vulnerableRadiant: bool,
-    vulnerableSlashing: bool,
-    vulnerableThunder: bool,
+    immunities: Set[RuleDamageType],
+    resistances: Set[RuleDamageType],
+    vulnerabilities: Set[RuleDamageType],
   }
 
   type DamagePair = {
@@ -85,113 +35,67 @@ module damageComponentAdjustments {
     secondAmount: int,
   }
 
-  pure def emptyDamageByType: DamageByType = {
-    acid: 0,
-    bludgeoning: 0,
-    cold: 0,
-    fire: 0,
-    force: 0,
-    lightning: 0,
-    necrotic: 0,
-    piercing: 0,
-    poison: 0,
-    psychic: 0,
-    radiant: 0,
-    slashing: 0,
-    thunder: 0,
-  }
+  pure def emptyDamageByType: DamageByType = Map(
+    AcidDamage -> 0,
+    BludgeoningDamage -> 0,
+    ColdDamage -> 0,
+    FireDamage -> 0,
+    ForceDamage -> 0,
+    LightningDamage -> 0,
+    NecroticDamage -> 0,
+    PiercingDamage -> 0,
+    PoisonDamage -> 0,
+    PsychicDamage -> 0,
+    RadiantDamage -> 0,
+    SlashingDamage -> 0,
+    ThunderDamage -> 0
+  )
 
   pure def noDamageAdjustmentFacts: DamageAdjustmentFacts = {
-    immuneAcid: false,
-    immuneBludgeoning: false,
-    immuneCold: false,
-    immuneFire: false,
-    immuneForce: false,
-    immuneLightning: false,
-    immuneNecrotic: false,
-    immunePiercing: false,
-    immunePoison: false,
-    immunePsychic: false,
-    immuneRadiant: false,
-    immuneSlashing: false,
-    immuneThunder: false,
-    resistantAcid: false,
-    resistantBludgeoning: false,
-    resistantCold: false,
-    resistantFire: false,
-    resistantForce: false,
-    resistantLightning: false,
-    resistantNecrotic: false,
-    resistantPiercing: false,
-    resistantPoison: false,
-    resistantPsychic: false,
-    resistantRadiant: false,
-    resistantSlashing: false,
-    resistantThunder: false,
-    vulnerableAcid: false,
-    vulnerableBludgeoning: false,
-    vulnerableCold: false,
-    vulnerableFire: false,
-    vulnerableForce: false,
-    vulnerableLightning: false,
-    vulnerableNecrotic: false,
-    vulnerablePiercing: false,
-    vulnerablePoison: false,
-    vulnerablePsychic: false,
-    vulnerableRadiant: false,
-    vulnerableSlashing: false,
-    vulnerableThunder: false,
+    immunities: Set(),
+    resistances: Set(),
+    vulnerabilities: Set(),
   }
 
   pure def legalDamageByType(amounts: DamageByType): bool = all {
-    amounts.acid >= 0,
-    amounts.bludgeoning >= 0,
-    amounts.cold >= 0,
-    amounts.force >= 0,
-    amounts.fire >= 0,
-    amounts.lightning >= 0,
-    amounts.necrotic >= 0,
-    amounts.piercing >= 0,
-    amounts.poison >= 0,
-    amounts.psychic >= 0,
-    amounts.radiant >= 0,
-    amounts.slashing >= 0,
-    amounts.thunder >= 0,
+    damageAmountForType(amounts, AcidDamage) >= 0,
+    damageAmountForType(amounts, BludgeoningDamage) >= 0,
+    damageAmountForType(amounts, ColdDamage) >= 0,
+    damageAmountForType(amounts, FireDamage) >= 0,
+    damageAmountForType(amounts, ForceDamage) >= 0,
+    damageAmountForType(amounts, LightningDamage) >= 0,
+    damageAmountForType(amounts, NecroticDamage) >= 0,
+    damageAmountForType(amounts, PiercingDamage) >= 0,
+    damageAmountForType(amounts, PoisonDamage) >= 0,
+    damageAmountForType(amounts, PsychicDamage) >= 0,
+    damageAmountForType(amounts, RadiantDamage) >= 0,
+    damageAmountForType(amounts, SlashingDamage) >= 0,
+    damageAmountForType(amounts, ThunderDamage) >= 0,
   }
 
   pure def damageAmountForType(amounts: DamageByType, damageType: RuleDamageType): int =
-    if (damageType == AcidDamage) amounts.acid
-    else if (damageType == BludgeoningDamage) amounts.bludgeoning
-    else if (damageType == ColdDamage) amounts.cold
-    else if (damageType == FireDamage) amounts.fire
-    else if (damageType == ForceDamage) amounts.force
-    else if (damageType == LightningDamage) amounts.lightning
-    else if (damageType == NecroticDamage) amounts.necrotic
-    else if (damageType == PiercingDamage) amounts.piercing
-    else if (damageType == PoisonDamage) amounts.poison
-    else if (damageType == PsychicDamage) amounts.psychic
-    else if (damageType == RadiantDamage) amounts.radiant
-    else if (damageType == SlashingDamage) amounts.slashing
-    else amounts.thunder
+    amounts.get(damageType)
 
   pure def addDamageAmountForType(
     amounts: DamageByType,
     damageType: RuleDamageType,
     rawAmount: int
   ): DamageByType =
-    if (damageType == AcidDamage) amounts.with("acid", amounts.acid + nonnegative(rawAmount))
-    else if (damageType == BludgeoningDamage) amounts.with("bludgeoning", amounts.bludgeoning + nonnegative(rawAmount))
-    else if (damageType == ColdDamage) amounts.with("cold", amounts.cold + nonnegative(rawAmount))
-    else if (damageType == FireDamage) amounts.with("fire", amounts.fire + nonnegative(rawAmount))
-    else if (damageType == ForceDamage) amounts.with("force", amounts.force + nonnegative(rawAmount))
-    else if (damageType == LightningDamage) amounts.with("lightning", amounts.lightning + nonnegative(rawAmount))
-    else if (damageType == NecroticDamage) amounts.with("necrotic", amounts.necrotic + nonnegative(rawAmount))
-    else if (damageType == PiercingDamage) amounts.with("piercing", amounts.piercing + nonnegative(rawAmount))
-    else if (damageType == PoisonDamage) amounts.with("poison", amounts.poison + nonnegative(rawAmount))
-    else if (damageType == PsychicDamage) amounts.with("psychic", amounts.psychic + nonnegative(rawAmount))
-    else if (damageType == RadiantDamage) amounts.with("radiant", amounts.radiant + nonnegative(rawAmount))
-    else if (damageType == SlashingDamage) amounts.with("slashing", amounts.slashing + nonnegative(rawAmount))
-    else amounts.with("thunder", amounts.thunder + nonnegative(rawAmount))
+    match damageType {
+      | AcidDamage => amounts.set(AcidDamage, damageAmountForType(amounts, AcidDamage) + nonnegative(rawAmount))
+      | BludgeoningDamage => amounts.set(BludgeoningDamage, damageAmountForType(amounts, BludgeoningDamage) + nonnegative(rawAmount))
+      | ColdDamage => amounts.set(ColdDamage, damageAmountForType(amounts, ColdDamage) + nonnegative(rawAmount))
+      | FireDamage => amounts.set(FireDamage, damageAmountForType(amounts, FireDamage) + nonnegative(rawAmount))
+      | ForceDamage => amounts.set(ForceDamage, damageAmountForType(amounts, ForceDamage) + nonnegative(rawAmount))
+      | LightningDamage => amounts.set(LightningDamage, damageAmountForType(amounts, LightningDamage) + nonnegative(rawAmount))
+      | NecroticDamage => amounts.set(NecroticDamage, damageAmountForType(amounts, NecroticDamage) + nonnegative(rawAmount))
+      | PiercingDamage => amounts.set(PiercingDamage, damageAmountForType(amounts, PiercingDamage) + nonnegative(rawAmount))
+      | PoisonDamage => amounts.set(PoisonDamage, damageAmountForType(amounts, PoisonDamage) + nonnegative(rawAmount))
+      | PsychicDamage => amounts.set(PsychicDamage, damageAmountForType(amounts, PsychicDamage) + nonnegative(rawAmount))
+      | RadiantDamage => amounts.set(RadiantDamage, damageAmountForType(amounts, RadiantDamage) + nonnegative(rawAmount))
+      | SlashingDamage => amounts.set(SlashingDamage, damageAmountForType(amounts, SlashingDamage) + nonnegative(rawAmount))
+      | ThunderDamage => amounts.set(ThunderDamage, damageAmountForType(amounts, ThunderDamage) + nonnegative(rawAmount))
+    }
 
   pure def aggregateDamagePair(pair: DamagePair): DamageByType =
     addDamageAmountForType(
@@ -207,55 +111,60 @@ module damageComponentAdjustments {
     facts: DamageAdjustmentFacts,
     damageType: RuleDamageType
   ): bool =
-    if (damageType == AcidDamage) facts.immuneAcid
-    else if (damageType == BludgeoningDamage) facts.immuneBludgeoning
-    else if (damageType == ColdDamage) facts.immuneCold
-    else if (damageType == FireDamage) facts.immuneFire
-    else if (damageType == ForceDamage) facts.immuneForce
-    else if (damageType == LightningDamage) facts.immuneLightning
-    else if (damageType == NecroticDamage) facts.immuneNecrotic
-    else if (damageType == PiercingDamage) facts.immunePiercing
-    else if (damageType == PoisonDamage) facts.immunePoison
-    else if (damageType == PsychicDamage) facts.immunePsychic
-    else if (damageType == RadiantDamage) facts.immuneRadiant
-    else if (damageType == SlashingDamage) facts.immuneSlashing
-    else facts.immuneThunder
+    facts.immunities.contains(damageType)
 
   pure def damageTypeIsResistant(
     facts: DamageAdjustmentFacts,
     damageType: RuleDamageType
   ): bool =
-    if (damageType == AcidDamage) facts.resistantAcid
-    else if (damageType == BludgeoningDamage) facts.resistantBludgeoning
-    else if (damageType == ColdDamage) facts.resistantCold
-    else if (damageType == FireDamage) facts.resistantFire
-    else if (damageType == ForceDamage) facts.resistantForce
-    else if (damageType == LightningDamage) facts.resistantLightning
-    else if (damageType == NecroticDamage) facts.resistantNecrotic
-    else if (damageType == PiercingDamage) facts.resistantPiercing
-    else if (damageType == PoisonDamage) facts.resistantPoison
-    else if (damageType == PsychicDamage) facts.resistantPsychic
-    else if (damageType == RadiantDamage) facts.resistantRadiant
-    else if (damageType == SlashingDamage) facts.resistantSlashing
-    else facts.resistantThunder
+    facts.resistances.contains(damageType)
 
   pure def damageTypeIsVulnerable(
     facts: DamageAdjustmentFacts,
     damageType: RuleDamageType
   ): bool =
-    if (damageType == AcidDamage) facts.vulnerableAcid
-    else if (damageType == BludgeoningDamage) facts.vulnerableBludgeoning
-    else if (damageType == ColdDamage) facts.vulnerableCold
-    else if (damageType == FireDamage) facts.vulnerableFire
-    else if (damageType == ForceDamage) facts.vulnerableForce
-    else if (damageType == LightningDamage) facts.vulnerableLightning
-    else if (damageType == NecroticDamage) facts.vulnerableNecrotic
-    else if (damageType == PiercingDamage) facts.vulnerablePiercing
-    else if (damageType == PoisonDamage) facts.vulnerablePoison
-    else if (damageType == PsychicDamage) facts.vulnerablePsychic
-    else if (damageType == RadiantDamage) facts.vulnerableRadiant
-    else if (damageType == SlashingDamage) facts.vulnerableSlashing
-    else facts.vulnerableThunder
+    facts.vulnerabilities.contains(damageType)
+
+  pure def adjustedDamageAmountForType(
+    amounts: DamageByType,
+    facts: DamageAdjustmentFacts,
+    damageType: RuleDamageType
+  ): int =
+    match damageType {
+      | AcidDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, AcidDamage), AcidDamage, facts)
+      | BludgeoningDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, BludgeoningDamage), BludgeoningDamage, facts)
+      | ColdDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, ColdDamage), ColdDamage, facts)
+      | FireDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, FireDamage), FireDamage, facts)
+      | ForceDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, ForceDamage), ForceDamage, facts)
+      | LightningDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, LightningDamage), LightningDamage, facts)
+      | NecroticDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, NecroticDamage), NecroticDamage, facts)
+      | PiercingDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, PiercingDamage), PiercingDamage, facts)
+      | PoisonDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, PoisonDamage), PoisonDamage, facts)
+      | PsychicDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, PsychicDamage), PsychicDamage, facts)
+      | RadiantDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, RadiantDamage), RadiantDamage, facts)
+      | SlashingDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, SlashingDamage), SlashingDamage, facts)
+      | ThunderDamage => damageAmountAfterTargetAdjustments(damageAmountForType(amounts, ThunderDamage), ThunderDamage, facts)
+    }
+
+  pure def totalDamageContribution(
+    amounts: DamageByType,
+    damageType: RuleDamageType
+  ): int =
+    match damageType {
+      | AcidDamage => damageAmountForType(amounts, AcidDamage)
+      | BludgeoningDamage => damageAmountForType(amounts, BludgeoningDamage)
+      | ColdDamage => damageAmountForType(amounts, ColdDamage)
+      | FireDamage => damageAmountForType(amounts, FireDamage)
+      | ForceDamage => damageAmountForType(amounts, ForceDamage)
+      | LightningDamage => damageAmountForType(amounts, LightningDamage)
+      | NecroticDamage => damageAmountForType(amounts, NecroticDamage)
+      | PiercingDamage => damageAmountForType(amounts, PiercingDamage)
+      | PoisonDamage => damageAmountForType(amounts, PoisonDamage)
+      | PsychicDamage => damageAmountForType(amounts, PsychicDamage)
+      | RadiantDamage => damageAmountForType(amounts, RadiantDamage)
+      | SlashingDamage => damageAmountForType(amounts, SlashingDamage)
+      | ThunderDamage => damageAmountForType(amounts, ThunderDamage)
+    }
 
   pure def damageAmountAfterTargetAdjustments(
     amount: int,
@@ -275,26 +184,36 @@ module damageComponentAdjustments {
   pure def damageByTypeAfterTargetAdjustments(
     amounts: DamageByType,
     facts: DamageAdjustmentFacts
-  ): DamageByType = {
-    acid: damageAmountAfterTargetAdjustments(amounts.acid, AcidDamage, facts),
-    bludgeoning: damageAmountAfterTargetAdjustments(amounts.bludgeoning, BludgeoningDamage, facts),
-    cold: damageAmountAfterTargetAdjustments(amounts.cold, ColdDamage, facts),
-    fire: damageAmountAfterTargetAdjustments(amounts.fire, FireDamage, facts),
-    force: damageAmountAfterTargetAdjustments(amounts.force, ForceDamage, facts),
-    lightning: damageAmountAfterTargetAdjustments(amounts.lightning, LightningDamage, facts),
-    necrotic: damageAmountAfterTargetAdjustments(amounts.necrotic, NecroticDamage, facts),
-    piercing: damageAmountAfterTargetAdjustments(amounts.piercing, PiercingDamage, facts),
-    poison: damageAmountAfterTargetAdjustments(amounts.poison, PoisonDamage, facts),
-    psychic: damageAmountAfterTargetAdjustments(amounts.psychic, PsychicDamage, facts),
-    radiant: damageAmountAfterTargetAdjustments(amounts.radiant, RadiantDamage, facts),
-    slashing: damageAmountAfterTargetAdjustments(amounts.slashing, SlashingDamage, facts),
-    thunder: damageAmountAfterTargetAdjustments(amounts.thunder, ThunderDamage, facts),
-  }
+  ): DamageByType = Map(
+    AcidDamage -> adjustedDamageAmountForType(amounts, facts, AcidDamage),
+    BludgeoningDamage -> adjustedDamageAmountForType(amounts, facts, BludgeoningDamage),
+    ColdDamage -> adjustedDamageAmountForType(amounts, facts, ColdDamage),
+    FireDamage -> adjustedDamageAmountForType(amounts, facts, FireDamage),
+    ForceDamage -> adjustedDamageAmountForType(amounts, facts, ForceDamage),
+    LightningDamage -> adjustedDamageAmountForType(amounts, facts, LightningDamage),
+    NecroticDamage -> adjustedDamageAmountForType(amounts, facts, NecroticDamage),
+    PiercingDamage -> adjustedDamageAmountForType(amounts, facts, PiercingDamage),
+    PoisonDamage -> adjustedDamageAmountForType(amounts, facts, PoisonDamage),
+    PsychicDamage -> adjustedDamageAmountForType(amounts, facts, PsychicDamage),
+    RadiantDamage -> adjustedDamageAmountForType(amounts, facts, RadiantDamage),
+    SlashingDamage -> adjustedDamageAmountForType(amounts, facts, SlashingDamage),
+    ThunderDamage -> adjustedDamageAmountForType(amounts, facts, ThunderDamage)
+  )
 
   pure def totalDamageByType(amounts: DamageByType): int =
-    amounts.acid + amounts.bludgeoning + amounts.cold + amounts.fire + amounts.force
-      + amounts.lightning + amounts.necrotic + amounts.piercing + amounts.poison
-      + amounts.psychic + amounts.radiant + amounts.slashing + amounts.thunder
+    totalDamageContribution(amounts, AcidDamage)
+      + totalDamageContribution(amounts, BludgeoningDamage)
+      + totalDamageContribution(amounts, ColdDamage)
+      + totalDamageContribution(amounts, FireDamage)
+      + totalDamageContribution(amounts, ForceDamage)
+      + totalDamageContribution(amounts, LightningDamage)
+      + totalDamageContribution(amounts, NecroticDamage)
+      + totalDamageContribution(amounts, PiercingDamage)
+      + totalDamageContribution(amounts, PoisonDamage)
+      + totalDamageContribution(amounts, PsychicDamage)
+      + totalDamageContribution(amounts, RadiantDamage)
+      + totalDamageContribution(amounts, SlashingDamage)
+      + totalDamageContribution(amounts, ThunderDamage)
 
   pure def totalDamageAfterTargetAdjustments(
     amounts: DamageByType,

@@ -1,4 +1,4 @@
-import type { Size, SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 
 import type {
   BattleActiveEffect,
@@ -15,73 +15,29 @@ export type BattleShapeShiftTrueFormFacts = {
   readonly kind: "combatantBaseState";
 };
 
-export type BattleShapeShiftSource =
-  | {
-      readonly kind: "classFeature";
-      readonly sourceCombatantId: CombatantId;
-      readonly sourceUnitId: UnitRecord["id"];
-    }
-  | {
-      readonly kind: "spellEffect";
-      readonly sourceCombatantId: CombatantId;
-      readonly sourceSpellId: SpellRecord["id"];
-    }
-  | {
-      readonly kind: "statBlockShapechanger";
-      readonly sourceCombatantId: CombatantId;
-    };
+export type BattleShapeShiftSource = {
+  readonly kind: "classFeature";
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceUnitId: UnitRecord["id"];
+};
 
 export type BattleShapeShiftReplacementFormFacts = {
   readonly kind: "runtimeCreatureForm";
   readonly creatureSize: Size;
 };
 
-export type BattleShapeShiftReversionOwner =
-  | {
-      readonly kind: "druidWildShapeActiveEffect";
-      readonly effect: Extract<
-        BattleActiveEffect,
-        { readonly kind: "druidWildShapeForm" }
-      >;
-    }
-  | {
-      readonly kind: "spellTransformationActiveEffect";
-    }
-  | {
-      readonly kind: "statBlockShapechangerRuntime";
-    };
+export type BattleShapeShiftReversionOwner = {
+  readonly kind: "druidWildShapeActiveEffect";
+  readonly effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "druidWildShapeForm" }
+  >;
+};
 
-export type BattleShapeShiftRuntimeOwner =
-  | {
-      readonly source: Extract<
-        BattleShapeShiftSource,
-        { readonly kind: "classFeature" }
-      >;
-      readonly reversionOwner: Extract<
-        BattleShapeShiftReversionOwner,
-        { readonly kind: "druidWildShapeActiveEffect" }
-      >;
-    }
-  | {
-      readonly source: Extract<
-        BattleShapeShiftSource,
-        { readonly kind: "spellEffect" }
-      >;
-      readonly reversionOwner: Extract<
-        BattleShapeShiftReversionOwner,
-        { readonly kind: "spellTransformationActiveEffect" }
-      >;
-    }
-  | {
-      readonly source: Extract<
-        BattleShapeShiftSource,
-        { readonly kind: "statBlockShapechanger" }
-      >;
-      readonly reversionOwner: Extract<
-        BattleShapeShiftReversionOwner,
-        { readonly kind: "statBlockShapechangerRuntime" }
-      >;
-    };
+export type BattleShapeShiftRuntimeOwner = {
+  readonly source: BattleShapeShiftSource;
+  readonly reversionOwner: BattleShapeShiftReversionOwner;
+};
 
 export type BattleShapeShiftedRuntimeState =
   | {
@@ -101,11 +57,6 @@ export type BattleShapeShiftReversionResult =
       readonly tag: "missingCombatant";
       readonly state: BattleState;
       readonly combatantId: CombatantId;
-    }
-  | {
-      readonly tag: "unsupportedShapeShiftSource";
-      readonly state: BattleState;
-      readonly source: BattleShapeShiftSource;
     };
 
 const TRUE_FORM_FACTS: BattleShapeShiftTrueFormFacts = {
@@ -183,13 +134,6 @@ export function revertShapeShiftedRuntimeState(input: {
     { readonly kind: "shapeShifted" }
   >;
 }): BattleShapeShiftReversionResult {
-  if (input.shapeShift.reversionOwner.kind !== "druidWildShapeActiveEffect") {
-    return {
-      tag: "unsupportedShapeShiftSource",
-      state: input.state,
-      source: input.shapeShift.source,
-    };
-  }
   const combatantId = input.shapeShift.reversionOwner.effect.sourceCombatantId;
   if (!input.state.combatants.has(combatantId)) {
     return {

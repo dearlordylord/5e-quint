@@ -1091,6 +1091,56 @@ function runSelfTest() {
     `Expected wrong run target issue, got ${JSON.stringify(wrongRunTargetResult.issues)}`,
   );
 
+  // A witness that delegates run()/stateCheck() to a local run-helper, naming the
+  // spec it passes, must satisfy the parity checks without an inline run() call.
+  writeFile(
+    path.join(root, "sample-witness-helper.ts"),
+    [
+      "import { run, stateCheck } from '@firfi/quint-connect';",
+      "export function defineSampleWitness(config) {",
+      "  const helperStateCheck = stateCheck(() => ({}), () => undefined);",
+      "  void run({ spec: config.specFile, step: 'step', stateCheck: helperStateCheck });",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(root, "sample.mbt.test.ts"),
+    [
+      "// KERNEL-COVERAGE: parity-witness BATTLE.SAMPLE",
+      "import { defineSampleWitness } from './sample-witness-helper.ts';",
+      "defineSampleWitness({",
+      "  specFile: path.resolve(import.meta.dirname, './sample.mbt.qnt'),",
+      "});",
+    ].join("\n") + "\n",
+  );
+  const delegatedRunHelperResult = buildKernelCoverage({ root });
+  for (const fragment of [
+    "does not call quint-connect run()",
+    "does not define a stateCheck()",
+    "does not run sample.mbt.qnt with step step and stateCheck",
+  ]) {
+    assert.ok(
+      !delegatedRunHelperResult.issues.some((issue) =>
+        issue.includes(fragment),
+      ),
+      `Delegated run-helper parity witness should pass (${fragment}); got ${JSON.stringify(delegatedRunHelperResult.issues)}`,
+    );
+  }
+  // Restore the prior witness content so downstream scenarios see prior state.
+  writeFile(
+    path.join(root, "sample.mbt.test.ts"),
+    [
+      "// KERNEL-COVERAGE: parity-witness BATTLE.SAMPLE",
+      "import { run, stateCheck } from '@firfi/quint-connect';",
+      "const sampleStateCheck = stateCheck(() => ({}), () => undefined);",
+      "void run({",
+      "  spec: path.resolve(import.meta.dirname, './wrong.mbt.qnt'),",
+      "  step: 'wrongStep',",
+      "  stateCheck: sampleStateCheck,",
+      "});",
+    ].join("\n") + "\n",
+  );
+
   writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     [

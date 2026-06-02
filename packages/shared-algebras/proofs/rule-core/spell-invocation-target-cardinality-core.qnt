@@ -4,13 +4,11 @@
 module spellInvocationTargetCardinalityCore {
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
-  import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
 
   // RAW anchors:
   // - Spells/Gaining-and-Casting.md: Targets and Using a Higher-Level Spell Slot.
   // - Spells/Descriptions-A-D.md: Acid Splash.
-  // - Spells/Descriptions-M-P.md: Magic Missile, Mass Cure Wounds, and Mass
-  //   Healing Word.
+  // - Spells/Descriptions-M-P.md: Mass Cure Wounds and Mass Healing Word.
   // - UBIQUITOUS_LANGUAGE.md: Spell Definition and Spell Invocation.
 
   pure def spellInvocationTargetCardinality(
@@ -18,10 +16,6 @@ module spellInvocationTargetCardinalityCore {
     slotLevel: int
   ): SpellInvocationTargetCardinality =
     if (profile == AcidSplashSpellProfile) SpellInvocationOpenUpperTargets({ minimumTargetCount: 1 })
-    else if (profile == MagicMissileSpellProfile) SpellInvocationBoundedTargets({
-      minimumTargetCount: 1,
-      maximumTargetCount: magicMissileDartCount(slotLevel),
-    })
     else if (profile == MassHealingWordSpellProfile or profile == MassCureWoundsSpellProfile) SpellInvocationBoundedTargets({
       minimumTargetCount: 1,
       maximumTargetCount: 6,

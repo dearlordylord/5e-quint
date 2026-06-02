@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeExtraAttackMbt {
+  var qExtraAttackAdditionalAttacks: int
   var qSkeletonHp: int
   var qActionAvailable: bool
   var qExtraAttackSlotsAvailable: int
@@ -10,6 +11,7 @@ module battleRuntimeExtraAttackMbt {
   var qTurnEnded: bool
 
   action recordProjection(
+    extraAttackAdditionalAttacks: int,
     skeletonHp: int,
     actionAvailable: bool,
     extraAttackSlotsAvailable: int,
@@ -18,6 +20,7 @@ module battleRuntimeExtraAttackMbt {
     lastInvalidReason: str,
     turnEnded: bool,
   ): bool = all {
+    qExtraAttackAdditionalAttacks' = extraAttackAdditionalAttacks,
     qSkeletonHp' = skeletonHp,
     qActionAvailable' = actionAvailable,
     qExtraAttackSlotsAvailable' = extraAttackSlotsAvailable,
@@ -27,42 +30,98 @@ module battleRuntimeExtraAttackMbt {
     qTurnEnded' = turnEnded,
   }
 
-  action init = recordProjection(13, true, 0, 0, "init", "", false)
+  action initOneAdditionalAttack =
+    recordProjection(1, 13, true, 0, 0, "init", "", false)
+
+  action initTwoAdditionalAttacks =
+    recordProjection(2, 13, true, 0, 0, "init", "", false)
+
+  action initThreeAdditionalAttacks =
+    recordProjection(3, 13, true, 0, 0, "init", "", false)
+
+  action init = initOneAdditionalAttack
 
   action doResolveFirstExtraAttackMiss = all {
     qActionAvailable,
     qExtraAttackSlotsAvailable == 0,
+    qExtraAttackAdditionalAttacks.in(Set(1, 2, 3)),
     not(qTurnEnded),
-    recordProjection(qSkeletonHp, false, 1, qMovementSpentFeet, "resolved", "", false),
+    recordProjection(
+      qExtraAttackAdditionalAttacks,
+      qSkeletonHp,
+      false,
+      qExtraAttackAdditionalAttacks,
+      qMovementSpentFeet,
+      "resolved",
+      "",
+      false
+    ),
   }
 
   action doMoveBetweenExtraAttackSlots = all {
     not(qActionAvailable),
-    qExtraAttackSlotsAvailable == 1,
+    qExtraAttackSlotsAvailable > 0,
     qMovementSpentFeet == 0,
     not(qTurnEnded),
-    recordProjection(qSkeletonHp, false, 1, 5, "resolved", "", false),
+    recordProjection(
+      qExtraAttackAdditionalAttacks,
+      qSkeletonHp,
+      false,
+      qExtraAttackSlotsAvailable,
+      5,
+      "resolved",
+      "",
+      false
+    ),
   }
 
   action doResolveSecondExtraAttackMiss = all {
     not(qActionAvailable),
-    qExtraAttackSlotsAvailable == 1,
+    qExtraAttackSlotsAvailable > 0,
+    qMovementSpentFeet == 5,
     not(qTurnEnded),
-    recordProjection(qSkeletonHp, false, 0, qMovementSpentFeet, "resolved", "", false),
+    recordProjection(
+      qExtraAttackAdditionalAttacks,
+      qSkeletonHp,
+      false,
+      qExtraAttackSlotsAvailable - 1,
+      qMovementSpentFeet,
+      "resolved",
+      "",
+      false
+    ),
   }
 
   action doRejectThirdExtraAttack = all {
     not(qActionAvailable),
     qExtraAttackSlotsAvailable == 0,
     not(qTurnEnded),
-    recordProjection(qSkeletonHp, false, 0, qMovementSpentFeet, "invalid", "staleSubject", false),
+    recordProjection(
+      qExtraAttackAdditionalAttacks,
+      qSkeletonHp,
+      false,
+      0,
+      qMovementSpentFeet,
+      "invalid",
+      "staleSubject",
+      false
+    ),
   }
 
   action doEndTurnClosesExtraAttackSlot = all {
     not(qActionAvailable),
-    qExtraAttackSlotsAvailable == 1,
+    qExtraAttackSlotsAvailable > 0,
     not(qTurnEnded),
-    recordProjection(qSkeletonHp, true, 0, qMovementSpentFeet, "resolved", "", true),
+    recordProjection(
+      qExtraAttackAdditionalAttacks,
+      qSkeletonHp,
+      true,
+      0,
+      qMovementSpentFeet,
+      "resolved",
+      "",
+      true
+    ),
   }
 
   action step = any {
@@ -70,6 +129,18 @@ module battleRuntimeExtraAttackMbt {
     doMoveBetweenExtraAttackSlots,
     doResolveSecondExtraAttackMiss,
     doRejectThirdExtraAttack,
+    doEndTurnClosesExtraAttackSlot,
+  }
+
+  action stepSpendAllSlots = any {
+    doResolveFirstExtraAttackMiss,
+    doMoveBetweenExtraAttackSlots,
+    doResolveSecondExtraAttackMiss,
+    doRejectThirdExtraAttack,
+  }
+
+  action stepEndTurnAfterOpeningSlots = any {
+    doResolveFirstExtraAttackMiss,
     doEndTurnClosesExtraAttackSlot,
   }
 }

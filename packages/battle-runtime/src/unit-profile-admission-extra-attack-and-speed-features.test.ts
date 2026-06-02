@@ -17,9 +17,13 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
+  attackRollFill,
+  attackTargetFill,
   movementFill,
   requireHole,
+  requireResultHole,
   resolveWeaponAttack,
+  weaponAttackSubject,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   extraAttackBattle,
@@ -55,6 +59,10 @@ import type {
   BattleState,
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
+import type { ClassFeatureExtraAttackActionResource } from "./battle-reducer/battle-runtime-protocol.ts";
+
+const syntheticExtraAttackCounts = [1, 2, 3] as const;
+type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
 
 describe("QMBT37 deterministic Extra Attack admission", () => {
   test.each([
@@ -118,6 +126,82 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
     });
   });
 
+  test.each(syntheticExtraAttackCounts)(
+    "one Attack action preserves %i additional attack slot(s)",
+    (additionalAttacks) => {
+      const state = extraAttackBattle([
+        syntheticExtraAttackBattleUnitRef(additionalAttacks),
+      ]);
+      const first = resolveWeaponAttackMiss(state);
+      expect(first).toMatchObject({ tag: "resolved" });
+      if (first.tag !== "resolved") {
+        throw new Error("Expected Attack action to resolve.");
+      }
+      expect(classFeatureExtraAttackSlotCount(first.state)).toBe(
+        additionalAttacks,
+      );
+
+      let currentState = first.state;
+      for (
+        let expectedRemaining = additionalAttacks - 1;
+        expectedRemaining >= 0;
+        expectedRemaining -= 1
+      ) {
+        const result = resolveWeaponAttackMiss(currentState);
+        expect(result).toMatchObject({ tag: "resolved" });
+        if (result.tag !== "resolved") {
+          throw new Error("Expected Extra Attack slot to resolve.");
+        }
+        expect(classFeatureExtraAttackSlotCount(result.state)).toBe(
+          expectedRemaining,
+        );
+        currentState = result.state;
+      }
+      expect(discoverBattleActs(currentState)).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            subject: expect.objectContaining({
+              tag: "action",
+              action: "attack",
+            }),
+          }),
+        ]),
+      );
+    },
+  );
+
+  test.each(syntheticExtraAttackCounts)(
+    "End Turn closes %i unspent additional attack slot(s)",
+    (additionalAttacks) => {
+      const state = extraAttackBattle([
+        syntheticExtraAttackBattleUnitRef(additionalAttacks),
+      ]);
+      const first = resolveWeaponAttack(state, "Longsword");
+      expect(first).toMatchObject({ tag: "resolved" });
+      if (first.tag !== "resolved") {
+        throw new Error("Expected Attack action to resolve.");
+      }
+      expect(classFeatureExtraAttackSlotCount(first.state)).toBe(
+        additionalAttacks,
+      );
+
+      const ended = resolveBattleSubject({
+        state: first.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "endTurn",
+        },
+        fills: [],
+      });
+      expect(ended).toMatchObject({ tag: "resolved" });
+      if (ended.tag !== "resolved") {
+        throw new Error("Expected End Turn to resolve.");
+      }
+      expect(classFeatureExtraAttackSlotCount(ended.state)).toBe(0);
+    },
+  );
+
   test("multiclass Extra Attack features do not stack into more than one added slot", () => {
     const state = extraAttackBattle([
       extraAttackBattleUnitRef(fighterExtraAttackUnitId),
@@ -159,6 +243,32 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       ]),
     );
   });
+
+  test.each([
+    ["lower-count ref first", [1, 3]],
+    ["higher-count ref first", [3, 1]],
+  ] as const)(
+    "mixed Extra Attack counts use the strongest profile with %s",
+    (_label, additionalAttackCounts) => {
+      const state = extraAttackBattle(
+        additionalAttackCounts.map((additionalAttacks) =>
+          syntheticExtraAttackBattleUnitRef(additionalAttacks),
+        ),
+      );
+      const first = resolveWeaponAttackMiss(state);
+      expect(first).toMatchObject({ tag: "resolved" });
+      if (first.tag !== "resolved") {
+        throw new Error("Expected Attack action to resolve.");
+      }
+
+      expect(classFeatureExtraAttackSlotCount(first.state)).toBe(3);
+      expect(classFeatureExtraAttackSourceUnitIds(first.state)).toEqual([
+        "test_synthetic_attack_count_3",
+        "test_synthetic_attack_count_3",
+        "test_synthetic_attack_count_3",
+      ]);
+    },
+  );
 
   test("Movement may occur between Extra Attack attack slots", () => {
     const state = extraAttackBattle([extraAttackBattleUnitRef()]);
@@ -277,7 +387,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
     });
   });
 
-  test("adjacent scale_attack_count additional values stay unsupported", () => {
+  test("scale_attack_count values above the modeled SRD count stay unsupported", () => {
     const unit = unitLibrary.requireUnit(fighterExtraAttackUnitId);
     expect(unit.kind).toBe("class_feature");
     if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
@@ -285,10 +395,10 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
     }
     const adjacentUnit: UnitRecord = {
       ...unit,
-      id: "test_extra_attack_additional_2",
+      id: "test_extra_attack_additional_4",
       mechanics: {
         ...unit.mechanics,
-        grants: [{ kind: "scale_attack_count", additional: 2 }],
+        grants: [{ kind: "scale_attack_count", additional: 4 }],
       },
     };
 
@@ -301,11 +411,116 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
       Either.left({
         tag: "battleUnitSupportProfileIssue",
         message:
-          "Unsupported battle Attack action attack-count scaling Unit hook: test_extra_attack_additional_2.",
+          "Unsupported battle Attack action attack-count scaling Unit hook: test_extra_attack_additional_4.",
       }),
     );
   });
 });
+
+function syntheticExtraAttackBattleUnitRef(
+  additionalAttacks: SyntheticExtraAttackCount,
+): Parameters<typeof extraAttackBattle>[0][number] {
+  const unit = syntheticExtraAttackUnit(additionalAttacks);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: unit.id,
+      supportProfiles: [{ ...extraAttackSupportProfile, additionalAttacks }],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function syntheticExtraAttackUnit(
+  additionalAttacks: SyntheticExtraAttackCount,
+): UnitRecord {
+  const unit = unitLibrary.requireUnit(fighterExtraAttackUnitId);
+  expect(unit.kind).toBe("class_feature");
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    throw new Error("Expected passive Fighter Extra Attack Unit.");
+  }
+  return {
+    ...unit,
+    id: `test_synthetic_attack_count_${additionalAttacks}`,
+    name: `Synthetic Attack Count ${additionalAttacks}`,
+    description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
+    provenance: {
+      kind: "srd-5.2.1",
+      section: fighterExtraAttackProvenanceSection(additionalAttacks),
+    },
+    mechanics: {
+      ...unit.mechanics,
+      grants: [{ kind: "scale_attack_count", additional: additionalAttacks }],
+    },
+  };
+}
+
+function fighterExtraAttackProvenanceSection(
+  additionalAttacks: SyntheticExtraAttackCount,
+): string {
+  if (additionalAttacks === 1) return "Classes/Fighter#Extra Attack";
+  if (additionalAttacks === 2) return "Classes/Fighter#Two Extra Attacks";
+  return "Classes/Fighter#Three Extra Attacks";
+}
+
+function classFeatureExtraAttackSlotCount(state: BattleState): number {
+  return snapshotBattle(state).turn.actionResources.filter(
+    (resource) =>
+      resource.source === "classFeatureExtraAttack" &&
+      resource.sourceOwnerId === spellCasterId,
+  ).length;
+}
+
+function classFeatureExtraAttackSourceUnitIds(
+  state: BattleState,
+): readonly string[] {
+  return snapshotBattle(state).turn.actionResources
+    .filter(isSpellCasterClassFeatureExtraAttackResource)
+    .map((resource) => resource.sourceUnitId);
+}
+
+function isSpellCasterClassFeatureExtraAttackResource(
+  resource: ReturnType<typeof snapshotBattle>["turn"]["actionResources"][number],
+): resource is ClassFeatureExtraAttackActionResource {
+  return (
+    resource.source === "classFeatureExtraAttack" &&
+    resource.sourceOwnerId === spellCasterId
+  );
+}
+
+function resolveWeaponAttackMiss(state: BattleState): ReturnType<
+  typeof resolveBattleSubject
+> {
+  const subject = weaponAttackSubject("Longsword");
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+      ],
+    }),
+    "attackRoll",
+  );
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+      attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+    ],
+  });
+}
 
 describe("QMBT40 deterministic Fast Movement admission", () => {
   test("barbarian_fast_movement is admitted as a passive Speed bonus while not wearing Heavy armor", () => {

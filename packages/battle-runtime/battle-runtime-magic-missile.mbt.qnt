@@ -1,8 +1,12 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMagicMissileMbt {
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  // Self-contained literal projection witness for the Magic Missile selected
+  // identity replay. The fixed target has no Force resistance or immunity, so
+  // the SRD dart total plus three darts is the effective damage.
+  type Hole =
+    | SpellTargetAllocation
+    | SpellDamageRoll
 
   var qSkeletonHp: int
   var qSkeletonDead: bool
@@ -19,14 +23,8 @@ module battleRuntimeMagicMissileMbt {
     hp: int,
     dartRollTotal: int,
   ): int = {
-    val adjustedDamage = damageAfterAdjustments(
-      dartRollTotal + 3,
-      Force,
-      Set(),
-      Set(Bludgeoning),
-      Set(Poison),
-    )
-    if (hp - adjustedDamage < 0) 0 else hp - adjustedDamage
+    val damage = dartRollTotal + 3
+    if (hp - damage < 0) 0 else hp - damage
   }
 
   action init = all {

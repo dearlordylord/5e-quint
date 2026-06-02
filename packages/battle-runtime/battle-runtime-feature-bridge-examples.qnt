@@ -4,6 +4,7 @@ module battleRuntimeFeatureBridgeExamples {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
   import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
   import unitFeatureRageRecklessCore.* from "../shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core"
@@ -21,10 +22,16 @@ module battleRuntimeFeatureBridgeExamples {
       assert(battleRuntimeRageDamageBonus(16) == 4),
       assert(battleRuntimeChampionCriticalThreshold(false) == 20),
       assert(battleRuntimeChampionCriticalThreshold(true) == 19),
-      assert(battleRuntimeExtraAttackSlotsAfterAttackAction(true, true) == 1),
-      assert(battleRuntimeExtraAttackSlotsAfterAttackAction(true, false) == 0),
-      assert(battleRuntimeExtraAttackSlotsAfterExtraAttack(1) == 0),
-      assert(battleRuntimeExtraAttackSlotsAfterEndTurn(1) == 0),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterAttackAction(true, OneAdditionalAttack)) == 1),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterAttackAction(true, TwoAdditionalAttacks)) == 2),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterAttackAction(true, ThreeAdditionalAttacks)) == 3),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterAttackAction(true, NoAdditionalAttacks)) == 0),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterExtraAttack(OneAdditionalAttack)) == 0),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterExtraAttack(TwoAdditionalAttacks)) == 1),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterExtraAttack(ThreeAdditionalAttacks)) == 2),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterEndTurn(OneAdditionalAttack)) == 0),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterEndTurn(TwoAdditionalAttacks)) == 0),
+      assert(attackActionAdditionalAttackCount(battleRuntimeExtraAttackSlotsAfterEndTurn(ThreeAdditionalAttacks)) == 0),
       assert(battleRuntimeRagePreventsSpellcasting(true)),
       assert(not(battleRuntimeRagePreventsSpellcasting(false))),
       assert(battleRuntimeRageGrantsResistance(true, RageBludgeoningDamage)),

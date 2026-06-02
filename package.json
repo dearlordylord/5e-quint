@@ -5,6 +5,7 @@
     "prepare": "husky",
     "dev": "turbo dev --filter=@dnd/app",
     "check:authored-id-dispatch": "node scripts/check-authored-id-dispatch-boundary.cjs",
+    "check:qa-generated-identity": "python3 scripts/qa/generate_assertions.py --self-test",
     "check:mbt-driver-closure": "node scripts/check-mbt-driver-closure.cjs",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
@@ -14,7 +15,7 @@
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:mbt-driver-closure && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

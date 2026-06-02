@@ -68,6 +68,10 @@ import type {
   EffectAtom,
 } from "./unit-profile-admission-test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import {
+  repeatedDamageAllocationInvocationFacts,
+  repeatedDamageAllocationInvocationResourceFacts,
+} from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
 
@@ -89,7 +93,8 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    expect(spellActInvocation(act)).toEqual(
+    const invocation = spellActInvocation(act);
+    expect(invocation).toEqual(
       expect.objectContaining({
         procedure: "repeatedDamageAllocation",
         spell,
@@ -105,6 +110,30 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         rangeFeet: 120,
       }),
     );
+    if (invocation.procedure !== "repeatedDamageAllocation") {
+      throw new Error("Expected repeated-damage-allocation invocation.");
+    }
+    expect(
+      repeatedDamageAllocationInvocationResourceFacts(
+        repeatedDamageAllocationInvocationFacts({
+          invocation,
+          targetCount: 1,
+          targetsAreValid: true,
+        }),
+      ),
+    ).toMatchObject({
+      invocationAction: "magicAction",
+      hasSpellAccess: true,
+      selectedSlotLevel: 1,
+      slotSpend: { tag: "spellSlot", minimumSlotLevel: 1 },
+      targetCount: 1,
+      targetCardinality: {
+        tag: "bounded",
+        minimumTargetCount: 1,
+        maximumTargetCount: 3,
+      },
+      targetsAreValid: true,
+    });
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "spellTargetAllocation",
@@ -910,7 +939,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
+    const expiredCombatants = tickDurationEffects(
+      nearlyExpiredCombatants,
+    ).value;
 
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(spellCasterId)?.activeEffects).toEqual([]);

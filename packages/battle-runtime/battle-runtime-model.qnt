@@ -10,6 +10,7 @@ module battleRuntimeModel {
   // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or
   // battle-runtime-spell-bridge here — that re-attaches the 30-file closure and
   // makes every model-importing driver ~100x slower (see the leaf headers).
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
@@ -21,7 +22,7 @@ module battleRuntimeModel {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | ScorchingRay | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | ShiningSmite | FaerieFire | AnimalFriendship | CharmPerson | CalmEmotions | BlindnessDeafness | ProtectionFromEvilAndGood | ProtectionFromPoison | LesserRestoration | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | SpiderClimb | Fly | Barkskin | Heroism | Aid | Bane | Bless | Guidance | PassWithoutTrace | EnhanceAbility | Enthrall | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | MagicWeapon | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | ContinualFlame | FlameBlade | TrueStrike | Grease | FogCloud | Darkness | AntimagicField | Web | SpikeGrowth | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter | MistyStep | Blur | MirrorImage | HoldPerson | MindSpike | AlterSelf | DragonsBreath | SeeInvisibility
+  type SpellInvocation = RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | ScorchingRay | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | ShiningSmite | FaerieFire | AnimalFriendship | CharmPerson | CalmEmotions | BlindnessDeafness | ProtectionFromEvilAndGood | ProtectionFromPoison | LesserRestoration | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | SpiderClimb | Fly | Barkskin | Heroism | Aid | Bane | Bless | Guidance | PassWithoutTrace | EnhanceAbility | Enthrall | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | MagicWeapon | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | ContinualFlame | FlameBlade | TrueStrike | Grease | FogCloud | Darkness | AntimagicField | Web | SpikeGrowth | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter | MistyStep | Blur | MirrorImage | HoldPerson | MindSpike | AlterSelf | DragonsBreath | SeeInvisibility
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackSequenceInvocation =
@@ -527,15 +528,16 @@ module battleRuntimeModel {
         expiresAtEndOfFighterTurnRound: int,
       })
 
-  type ActiveOngoingFeatureOccurrences = int -> ActiveOngoingFeatureOccurrence
+  type ActiveOngoingFeatureOccurrences = {
+    rage: ActiveOngoingFeatureOccurrence,
+    recklessAttack: ActiveOngoingFeatureOccurrence,
+  }
 
-  pure val FIGHTER_RAGE_SOURCE_KEY = 1
-  pure val FIGHTER_RECKLESS_ATTACK_SOURCE_KEY = 2
   pure val NO_ACTIVE_ONGOING_FEATURE_OCCURRENCES: ActiveOngoingFeatureOccurrences =
-    Map(
-      FIGHTER_RAGE_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
-      FIGHTER_RECKLESS_ATTACK_SOURCE_KEY -> NoActiveOngoingFeatureOccurrence,
-    )
+    {
+      rage: NoActiveOngoingFeatureOccurrence,
+      recklessAttack: NoActiveOngoingFeatureOccurrence,
+    }
 
   type Combatant = {
     hp: int,
@@ -572,12 +574,13 @@ module battleRuntimeModel {
     rightHandUse: HandUse,
     // Per-combatant SRD feature projections (class & monster), runtime
     // projections like wearingHeavyArmor above; a combatant without a given
-    // feature holds the inert value (DefaultCriticalRange, false, 0).
+    // feature holds its inert value, such as DefaultCriticalRange, false, or
+    // NoAdditionalAttacks.
     criticalRange: FighterCriticalRange,
     sneakAttackSupported: bool,
     sneakAttackUsedThisTurn: bool,
-    extraAttackSupported: bool,
-    extraAttackSlotsRemaining: int,
+    extraAttackAdditionalAttacks: AttackActionAdditionalAttacks,
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks,
     longswordSapMastery: bool,
     quarterstaffToppleMastery: bool,
     greataxeCleaveMastery: bool,
@@ -599,10 +602,15 @@ module battleRuntimeModel {
     | NoGrapple
     | FighterGrapplesGoblin(GrappleLink)
 
+  type InitiativeStillToAct = {
+    actor: Actor,
+    waiting: List[Actor],
+  }
+
   type Initiative = {
     round: int,
     alreadyActed: List[Actor],
-    stillToAct: List[Actor],
+    stillToAct: InitiativeStillToAct,
   }
 
   type BattleState = {
@@ -697,7 +705,7 @@ module battleRuntimeModel {
     | AttackReplayComplete
 
   pure val initialState: BattleState = {
-    initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Goblin] },
+    initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Goblin] } },
     fighter: {
       hp: 12,
       maxHp: 12,
@@ -728,8 +736,8 @@ module battleRuntimeModel {
       criticalRange: DefaultCriticalRange,
       sneakAttackSupported: false,
       sneakAttackUsedThisTurn: false,
-      extraAttackSupported: false,
-      extraAttackSlotsRemaining: 0,
+      extraAttackAdditionalAttacks: NoAdditionalAttacks,
+      extraAttackSlotsRemaining: NoAdditionalAttacks,
       longswordSapMastery: false,
       quarterstaffToppleMastery: false,
       greataxeCleaveMastery: false,
@@ -771,8 +779,8 @@ module battleRuntimeModel {
       criticalRange: DefaultCriticalRange,
       sneakAttackSupported: false,
       sneakAttackUsedThisTurn: false,
-      extraAttackSupported: false,
-      extraAttackSlotsRemaining: 0,
+      extraAttackAdditionalAttacks: NoAdditionalAttacks,
+      extraAttackSlotsRemaining: NoAdditionalAttacks,
       longswordSapMastery: false,
       quarterstaffToppleMastery: false,
       greataxeCleaveMastery: false,
@@ -808,6 +816,6 @@ module battleRuntimeModel {
   // authoritative once battle starts.
   pure val callerOrderedTieInitialState: BattleState = {
     ...initialState,
-    initiative: { round: 1, alreadyActed: [], stillToAct: [Goblin, Fighter] },
+    initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Goblin, waiting: [Fighter] } },
   }
 }

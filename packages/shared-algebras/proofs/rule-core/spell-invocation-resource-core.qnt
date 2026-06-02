@@ -37,6 +37,14 @@ module spellInvocationResourceCore {
     targetsAreValid: bool,
   }
 
+  type RepeatedDamageAllocationInvocationFacts = {
+    hasSpellAccess: bool,
+    selectedSlotLevel: int,
+    targetCount: int,
+    targetsAreValid: bool,
+    repeatedEffectCount: int,
+  }
+
   type SpellcastingProcedureState = {
     turn: TurnProcedureState,
     slotLedger: SpellSlotLedger,
@@ -183,9 +191,49 @@ module spellInvocationResourceCore {
       spellActionCost(facts.invocationAction)
     )
 
+  pure def repeatedDamageAllocationInvocationResourceFacts(
+    facts: RepeatedDamageAllocationInvocationFacts
+  ): SpellInvocationResourceFacts = {
+    invocationAction: ActionTimeSpellInvocation,
+    hasSpellAccess: facts.hasSpellAccess,
+    slotSpend: SpellInvocationWithSlot({ minimumSlotLevel: 1 }),
+    selectedSlotLevel: facts.selectedSlotLevel,
+    targetCount: facts.targetCount,
+    targetCardinality: SpellInvocationBoundedTargets({
+      minimumTargetCount: 1,
+      maximumTargetCount: facts.repeatedEffectCount,
+    }),
+    targetsAreValid: facts.targetsAreValid,
+  }
+
+  pure def legalRepeatedDamageAllocationInvocationFacts(
+    facts: RepeatedDamageAllocationInvocationFacts
+  ): bool =
+    legalSpellInvocationResourceFacts(
+      repeatedDamageAllocationInvocationResourceFacts(facts)
+    )
+
+  pure def resolveRepeatedDamageAllocationInvocation(
+    state: SpellcastingProcedureState,
+    facts: RepeatedDamageAllocationInvocationFacts
+  ): SpellInvocationResult =
+    resolveSpellInvocationResource(
+      state,
+      repeatedDamageAllocationInvocationResourceFacts(facts)
+    )
+
   pure def spellInvocationResourceCanAffectTargets(
     invocation: SpellInvocationResult,
     facts: SpellInvocationResourceFacts
   ): bool =
     invocation.admitted and facts.targetsAreValid
+
+  pure def repeatedDamageAllocationInvocationCanAffectTargets(
+    invocation: SpellInvocationResult,
+    facts: RepeatedDamageAllocationInvocationFacts
+  ): bool =
+    spellInvocationResourceCanAffectTargets(
+      invocation,
+      repeatedDamageAllocationInvocationResourceFacts(facts)
+    )
 }

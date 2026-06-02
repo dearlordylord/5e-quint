@@ -27,9 +27,7 @@ export type MoonbeamSaveTrigger = (typeof MOONBEAM_SAVE_TRIGGERS)[number];
 
 const MOONBEAM_SHAPE_SHIFT_STATES = [
   "trueForm",
-  "supportedShapeShifted",
-  "unsupportedSpellShapeShifted",
-  "unsupportedStatBlockShapechanger",
+  "shapeShifted",
   "shapeShiftSuppressedTrueForm",
 ] as const;
 export type MoonbeamShapeShiftState =
@@ -285,7 +283,7 @@ function applyMoonbeamShapeShiftRider(
   }
   return Match.value(state.targetShapeShift).pipe(
     Match.when("trueForm", () => state),
-    Match.when("supportedShapeShifted", () => {
+    Match.when("shapeShifted", () => {
       const targetShapeShift: MoonbeamShapeShiftState =
         "shapeShiftSuppressedTrueForm";
       return {
@@ -293,8 +291,6 @@ function applyMoonbeamShapeShiftRider(
         targetShapeShift,
       };
     }),
-    Match.when("unsupportedSpellShapeShifted", () => state),
-    Match.when("unsupportedStatBlockShapechanger", () => state),
     Match.when("shapeShiftSuppressedTrueForm", () => state),
     Match.exhaustive,
   );

@@ -3,6 +3,7 @@
 module battleRuntimeCoreCombatTests {
   import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
@@ -11,6 +12,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
@@ -471,7 +473,7 @@ module battleRuntimeCoreCombatTests {
   run test_legendary_action_window_after_another_non_current_turn = {
     val afterFighterTurnWithThirdActor = endTurn({
       ...initialState,
-      initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Fighter, Goblin] },
+      initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Fighter, Goblin] } },
     })
     val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
     all {
@@ -485,7 +487,7 @@ module battleRuntimeCoreCombatTests {
     all {
       assert(currentActor(callerOrderedTieInitialState) == Goblin),
       assert(
-        endTurn(endTurn(callerOrderedTieInitialState)).initiative.stillToAct == [Goblin, Fighter]
+        initiativeStillToActActors(endTurn(endTurn(callerOrderedTieInitialState)).initiative) == [Goblin, Fighter]
       ),
     }
   }
@@ -519,8 +521,8 @@ module battleRuntimeCoreCombatTests {
     val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(not(first.actionAvailable)),
-      assert(first.fighter.extraAttackSlotsRemaining == 1),
-      assert(second.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 0),
       assert(third == second),
     }
   }
@@ -530,9 +532,9 @@ module battleRuntimeCoreCombatTests {
     val moved = moveFighter(first, 5, false)
     val second = resolveAttack(moved, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
-      assert(moved.fighter.extraAttackSlotsRemaining == 1),
+      assert(attackActionAdditionalAttackCount(moved.fighter.extraAttackSlotsRemaining) == 1),
       assert(moved.fighter.movementSpent == 5),
-      assert(second.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 0),
     }
   }
 
@@ -540,8 +542,36 @@ module battleRuntimeCoreCombatTests {
     val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
     val ended = endTurn(first)
     all {
-      assert(first.fighter.extraAttackSlotsRemaining == 1),
-      assert(ended.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(ended.fighter.extraAttackSlotsRemaining) == 0),
+    }
+  }
+
+  run test_class_feature_extra_attack_preserves_two_additional_attacks = {
+    val first = resolveAttack(withFighterExtraAttackAdditionalAttacks(initialState, TwoAdditionalAttacks), 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val second = resolveAttack(first, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fourth = resolveAttack(third, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    all {
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 2),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(third.fighter.extraAttackSlotsRemaining) == 0),
+      assert(fourth == third),
+    }
+  }
+
+  run test_class_feature_extra_attack_preserves_three_additional_attacks = {
+    val first = resolveAttack(withFighterExtraAttackAdditionalAttacks(initialState, ThreeAdditionalAttacks), 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val second = resolveAttack(first, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fourth = resolveAttack(third, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fifth = resolveAttack(fourth, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    all {
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 3),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 2),
+      assert(attackActionAdditionalAttackCount(third.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(fourth.fighter.extraAttackSlotsRemaining) == 0),
+      assert(fifth == fourth),
     }
   }
 
@@ -1018,8 +1048,15 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_spell_invocation_slot_spend_distinguishes_prepared_spell_from_cantrip = {
+    val magicMissileResourceFacts = repeatedDamageAllocationInvocationResourceFacts({
+      hasSpellAccess: true,
+      selectedSlotLevel: 1,
+      targetCount: 1,
+      targetsAreValid: true,
+      repeatedEffectCount: magicMissileDartCount(1),
+    })
     all {
-      assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
+      assert(expendedSlotsAfterSpellInvocationResource(magicMissileResourceFacts, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
       assert(expendedSlotsAfterInvocation(PoisonSpray, 0) == 0),

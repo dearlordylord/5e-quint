@@ -35,13 +35,14 @@ module spellProcedureProfilesExamples {
       "slotLedger",
       initialSpellSlotLedger.with("slotLevel", 2)
     )
-    val invocation = resolveSpellInvocation(higherSlotState, {
-      profile: MagicMissileSpellProfile,
+    val invocationFacts = {
       hasSpellAccess: true,
       selectedSlotLevel: 2,
       targetCount: 4,
       targetsAreValid: true,
-    })
+      repeatedEffectCount: magicMissileDartCount(2),
+    }
+    val invocation = resolveRepeatedDamageAllocationInvocation(higherSlotState, invocationFacts)
     val damage = resolveMagicMissileDamage({
       slotLevel: 2,
       allocatedDarts: 4,
@@ -54,8 +55,8 @@ module spellProcedureProfilesExamples {
     })
     all {
       assert(invocation.admitted),
-      assert(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 4)),
-      assert(not(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 5))),
+      assert(legalRepeatedDamageAllocationInvocationFacts(invocationFacts)),
+      assert(not(legalRepeatedDamageAllocationInvocationFacts(invocationFacts.with("targetCount", 5)))),
       assert(magicMissileSlotLevelLegal(2)),
       assert(not(magicMissileSlotLevelLegal(0))),
       assert(magicMissileDartCount(2) == 4),
@@ -477,17 +478,17 @@ module spellProcedureProfilesExamples {
 
   run test_invalid_spell_targets_still_spend_resources_without_target_effect = {
     val facts = {
-      profile: MagicMissileSpellProfile,
       hasSpellAccess: true,
       selectedSlotLevel: 1,
       targetCount: 1,
       targetsAreValid: false,
+      repeatedEffectCount: magicMissileDartCount(1),
     }
-    val invocation = resolveSpellInvocation(initialSpellcastingProcedureState, facts)
+    val invocation = resolveRepeatedDamageAllocationInvocation(initialSpellcastingProcedureState, facts)
     all {
       assert(invocation.admitted),
       assert(invocation.slotExpended),
-      assert(not(spellInvocationCanAffectTargets(invocation, facts))),
+      assert(not(repeatedDamageAllocationInvocationCanAffectTargets(invocation, facts))),
     }
   }
 
@@ -499,15 +500,15 @@ module spellProcedureProfilesExamples {
       targetCount: 1,
       targetsAreValid: true,
     })
-    val second = resolveSpellInvocation(first.state.with(
+    val second = resolveRepeatedDamageAllocationInvocation(first.state.with(
       "turn",
       first.state.turn.with("actionQuota", ActionAvailable)
     ), {
-      profile: MagicMissileSpellProfile,
       hasSpellAccess: true,
       selectedSlotLevel: 1,
       targetCount: 1,
       targetsAreValid: true,
+      repeatedEffectCount: magicMissileDartCount(1),
     })
     all {
       assert(first.admitted),
@@ -739,15 +740,15 @@ module spellProcedureProfilesExamples {
   }
 
   run test_readied_spell_response_dissipates_if_concentration_breaks = {
-    val held = holdReadiedSpellResponse(
+    val held = holdRepeatedDamageAllocationReadiedSpellResponse(
       initialSpellcastingProcedureState,
       initialReadiedSpellProcedureState,
       {
-        profile: MagicMissileSpellProfile,
         hasSpellAccess: true,
         selectedSlotLevel: 1,
         targetCount: 1,
         targetsAreValid: true,
+        repeatedEffectCount: magicMissileDartCount(1),
       },
       true,
       true

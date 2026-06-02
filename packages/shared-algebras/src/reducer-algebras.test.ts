@@ -31,6 +31,7 @@ import {
   insertByInitiative,
   nextInitiative,
   removeFromInitiative,
+  swapInitialInitiativeScores,
   type InitiativeEntry,
   type InitiativeStack,
 } from "./initiative-algebra.ts";
@@ -200,6 +201,17 @@ describe("initiative-algebra", () => {
     expect(inserted.status).toBe("ok");
     if (inserted.status !== "ok") return;
     expect(initiativeOrder(inserted.stack)).toEqual(["c1", "cx", "c2"]);
+  });
+
+  it("rejects initial Initiative score swaps when either actor is absent", () => {
+    const stack = initialInitiativeStack();
+
+    expect(
+      Option.isNone(swapInitialInitiativeScores(stack, "missing", "c1")),
+    ).toBe(true);
+    expect(
+      Option.isNone(swapInitialInitiativeScores(stack, "c1", "missing")),
+    ).toBe(true);
   });
 });
 

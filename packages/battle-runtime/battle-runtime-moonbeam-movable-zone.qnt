@@ -15,7 +15,7 @@
 //   creature's space, a creature enters it, or a creature ends its turn there,
 //   and limits that save to once per creature per turn.
 // - Spells/Descriptions-M-P.md lines 456-458: failed saves deal Radiant
-//   damage and revert supported shape-shifted creatures, successful saves take
+//   damage and revert admitted shape-shifted creatures, successful saves take
 //   half damage only, and higher-level slots add 1d10 damage per slot level.
 // - Rules-Glossary.md lines 309-313, 696-704, 869-876: Cylinder,
 //   Magic Action, and Shape-Shifting.
@@ -25,7 +25,7 @@
 // Intentionally out of scope:
 //   - table-owned placement, route, line of sight, and area membership
 //   - Cylinder point identity and dim-light presentation projection
-//   - full shape-shift catalog behavior for unsupported spell/stat-block forms
+//   - spell/stat-block shape-shift sources until their restoration owners are admitted
 //   - initiative order, broad turn sequencing, and reaction windows
 
 module battleRuntimeMoonbeamMovableZone {
@@ -50,9 +50,7 @@ module battleRuntimeMoonbeamMovableZone {
 
   type MoonbeamShapeShiftState =
     | MoonbeamTrueForm
-    | MoonbeamSupportedShapeShifted
-    | MoonbeamUnsupportedSpellShapeShifted
-    | MoonbeamUnsupportedStatBlockShapechanger
+    | MoonbeamShapeShifted
     | MoonbeamShapeShiftSuppressedTrueForm
 
   type MoonbeamMovableZone =
@@ -168,13 +166,11 @@ module battleRuntimeMoonbeamMovableZone {
     else
       match state.targetShapeShift {
         | MoonbeamTrueForm => state
-        | MoonbeamSupportedShapeShifted =>
+        | MoonbeamShapeShifted =>
           {
             ...state,
             targetShapeShift: MoonbeamShapeShiftSuppressedTrueForm,
           }
-        | MoonbeamUnsupportedSpellShapeShifted => state
-        | MoonbeamUnsupportedStatBlockShapechanger => state
         | MoonbeamShapeShiftSuppressedTrueForm => state
       }
 

@@ -5,6 +5,7 @@
 
 module unitFeatureActionCountCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
+  import attackActionAdditionalAttacks.* from "./attack-action-additional-attacks"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
@@ -30,16 +31,22 @@ module unitFeatureActionCountCore {
     actionWasTaken: bool,
   }
 
+  type AttackActionAdditionalAttacksAdmission =
+    | UnsupportedAdditionalAttackCount
+    | SupportedAdditionalAttackCount({
+      additionalAttacks: AttackActionAdditionalAttacks,
+    })
+
   type AttackActionAttackCountState = {
     actionAvailable: bool,
-    extraAttackSlotOpen: bool,
+    additionalAttacksRemaining: AttackActionAdditionalAttacks,
     attacksResolved: int,
     movementSegmentsTaken: int,
     turnEnded: bool,
   }
 
   type AttackActionAttackCountFacts = {
-    additionalAttacks: int,
+    additionalAttacks: AttackActionAdditionalAttacks,
   }
 
   type AttackActionAttackCountResult = {
@@ -50,15 +57,49 @@ module unitFeatureActionCountCore {
 
   pure def initialAttackActionAttackCountState: AttackActionAttackCountState = {
     actionAvailable: true,
-    extraAttackSlotOpen: false,
+    additionalAttacksRemaining: NoAdditionalAttacks,
     attacksResolved: 0,
     movementSegmentsTaken: 0,
     turnEnded: false,
   }
 
+  pure def admitAttackActionAdditionalAttacks(
+    rawAdditionalAttacks: int
+  ): AttackActionAdditionalAttacksAdmission =
+    if (rawAdditionalAttacks == 0)
+      SupportedAdditionalAttackCount({ additionalAttacks: NoAdditionalAttacks })
+    else if (rawAdditionalAttacks == 1)
+      SupportedAdditionalAttackCount({ additionalAttacks: OneAdditionalAttack })
+    else if (rawAdditionalAttacks == 2)
+      SupportedAdditionalAttackCount({ additionalAttacks: TwoAdditionalAttacks })
+    else if (rawAdditionalAttacks == 3)
+      SupportedAdditionalAttackCount({ additionalAttacks: ThreeAdditionalAttacks })
+    else UnsupportedAdditionalAttackCount
+
+  pure def legalAttackActionAdditionalAttacks(
+    additionalAttacks: AttackActionAdditionalAttacks
+  ): bool =
+    additionalAttacks.in(Set(
+      NoAdditionalAttacks,
+      OneAdditionalAttack,
+      TwoAdditionalAttacks,
+      ThreeAdditionalAttacks
+    ))
+
+  pure def decrementAdditionalAttacks(
+    additionalAttacks: AttackActionAdditionalAttacks
+  ): AttackActionAdditionalAttacks =
+    match additionalAttacks {
+      | NoAdditionalAttacks => NoAdditionalAttacks
+      | OneAdditionalAttack => NoAdditionalAttacks
+      | TwoAdditionalAttacks => OneAdditionalAttack
+      | ThreeAdditionalAttacks => TwoAdditionalAttacks
+    }
+
   pure def legalAttackActionAttackCountFacts(
     facts: AttackActionAttackCountFacts
-  ): bool = facts.additionalAttacks == 1
+  ): bool =
+    legalAttackActionAdditionalAttacks(facts.additionalAttacks)
 
   pure def takeAttackActionWithAttackCountScaling(
     state: AttackActionAttackCountState,
@@ -67,14 +108,14 @@ module unitFeatureActionCountCore {
     val admitted = all {
       legalAttackActionAttackCountFacts(facts),
       state.actionAvailable,
-      not(state.extraAttackSlotOpen),
+      state.additionalAttacksRemaining == NoAdditionalAttacks,
       not(state.turnEnded),
     }
     {
       state:
         if (admitted) {
           state.with("actionAvailable", false)
-            .with("extraAttackSlotOpen", true)
+            .with("additionalAttacksRemaining", facts.additionalAttacks)
             .with("attacksResolved", state.attacksResolved + 1)
         } else state,
       actionWasSpent: admitted,
@@ -86,13 +127,16 @@ module unitFeatureActionCountCore {
     state: AttackActionAttackCountState
   ): AttackActionAttackCountResult = {
     val admitted = all {
-      state.extraAttackSlotOpen,
+      state.additionalAttacksRemaining != NoAdditionalAttacks,
       not(state.turnEnded),
     }
     {
       state:
         if (admitted) {
-          state.with("extraAttackSlotOpen", false)
+          state.with(
+            "additionalAttacksRemaining",
+            decrementAdditionalAttacks(state.additionalAttacksRemaining)
+          )
             .with("attacksResolved", state.attacksResolved + 1)
         } else state,
       actionWasSpent: false,
@@ -109,7 +153,8 @@ module unitFeatureActionCountCore {
   pure def endTurnDuringAttackActionAttackCount(
     state: AttackActionAttackCountState
   ): AttackActionAttackCountState =
-    state.with("extraAttackSlotOpen", false).with("turnEnded", true)
+    state.with("additionalAttacksRemaining", NoAdditionalAttacks)
+      .with("turnEnded", true)
 
   pure def legalActionSurgeState(state: ActionSurgeState): bool = all {
     legalFeatureUsePool(state.pool),

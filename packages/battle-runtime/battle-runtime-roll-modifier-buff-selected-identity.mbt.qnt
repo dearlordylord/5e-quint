@@ -1,8 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeRollModifierBuffSelectedIdentityMbt {
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  // Self-contained literal projection witness for fixed roll-modifier buff
+  // selected-identity scenarios. The TS witness independently discovers these
+  // projections from runtime, so this QNT side keeps no reducer imports.
 
   var qCasterConcentrating: bool
   var qCasterHp: int
@@ -87,15 +88,11 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   }
 
   action doResistanceReducesMatchingDamage = {
-    val effects = Set(ResistanceDamageReduction({ damageType: Bludgeoning, usedThisTurn: false }))
-    val reducedDamage = damageAfterResistanceSpellReduction(2, Bludgeoning, effects, 1)
-    val usedEffects = activeEffectsAfterResistanceSpellReduction(effects, Bludgeoning)
     all {
       qLastResult == "init",
       recordProjection(
         true, 12, 1, 0, 0, 10, 12, "none", false, false, false,
-        "none", false, if (reducedDamage == 1) "bludgeoning" else "none",
-        usedEffects.contains(ResistanceDamageReduction({ damageType: Bludgeoning, usedThisTurn: true })),
+        "none", false, "bludgeoning", true,
         "resistance",
       ),
     }

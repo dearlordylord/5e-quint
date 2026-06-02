@@ -743,6 +743,83 @@ function extractRunTargets(rootPath, ownerPath, witnessText) {
     .filter((target) => target !== undefined);
 }
 
+// Read the text of a witness's directly-imported local (./ or ../) modules so a
+// parity run delegated to a shared helper is visible to the parity checks.
+function witnessLocalImportTexts(rootPath, ownerPath, witnessText) {
+  const ownerDir = path.dirname(path.join(rootPath, ownerPath));
+  const texts = [];
+  const importPattern = /from\s+(["'])(\.[^"']+)\1/g;
+  for (
+    let match = importPattern.exec(witnessText);
+    match !== null;
+    match = importPattern.exec(witnessText)
+  ) {
+    const specifier = match[2];
+    const candidates = specifier.endsWith(".ts")
+      ? [specifier]
+      : [`${specifier}.ts`, `${specifier}/index.ts`];
+    for (const candidate of candidates) {
+      const absolute = path.resolve(ownerDir, candidate);
+      if (fs.existsSync(absolute) && fs.statSync(absolute).isFile()) {
+        texts.push(fs.readFileSync(absolute, "utf8"));
+        break;
+      }
+    }
+  }
+  return texts;
+}
+
+// True when the witness runs its declared spec/step with a stateCheck, either
+// inline or by naming the spec and delegating run() to a local run-helper.
+function declaresParityRunTarget(rootPath, witness, witnessText, helperTexts) {
+  const inlineTargets = extractRunTargets(
+    rootPath,
+    witness.ownerPath,
+    witnessText,
+  );
+  if (
+    inlineTargets.some(
+      (target) =>
+        target.specPath === witness.qntSpecPath &&
+        target.step === witness.stepAction &&
+        target.hasStateCheck,
+    )
+  ) {
+    return true;
+  }
+  const helperRunsDeclaredStep = helperTexts.some((text) =>
+    runObjectBodies(text).some(
+      (body) =>
+        extractRunStepLiteral(body) === witness.stepAction &&
+        /\bstateCheck\s*:/.test(body),
+    ),
+  );
+  if (!helperRunsDeclaredStep) return false;
+  return witnessNamesSpecPath(
+    rootPath,
+    witness.ownerPath,
+    witnessText,
+    witness.qntSpecPath,
+  );
+}
+
+// True when the witness text contains a relative .qnt path literal that resolves
+// to the declared parity spec (e.g. the specFile passed to a run-helper).
+function witnessNamesSpecPath(rootPath, ownerPath, witnessText, qntSpecPath) {
+  const ownerDir = path.dirname(path.join(rootPath, ownerPath));
+  const specLiteralPattern = /(["'])(\.[^"']*\.qnt)\1/g;
+  for (
+    let match = specLiteralPattern.exec(witnessText);
+    match !== null;
+    match = specLiteralPattern.exec(witnessText)
+  ) {
+    if (repoPath(rootPath, path.resolve(ownerDir, match[2])) === qntSpecPath) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function validateWitness(witness, context) {
   const issues = [];
   if (!isRecord(witness)) return [`${context} must be an object.`];
@@ -1570,12 +1647,22 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
       witness.kind === "focused-mbt" ||
       witness.kind === "deterministic-qnt-replay"
     ) {
-      if (!/\brun\s*\(/.test(witnessText)) {
+      // A witness may call quint-connect run()/stateCheck() inline, or delegate to
+      // a local run-helper module (e.g. a shared selected-identity witness factory)
+      // that wraps them. Follow the witness's relative imports so a helper-delegated
+      // parity run is recognised instead of reported as a false missing run().
+      const helperTexts = witnessLocalImportTexts(
+        rootPath,
+        witness.ownerPath,
+        witnessText,
+      );
+      const parityTexts = [witnessText, ...helperTexts];
+      if (!parityTexts.some((text) => /\brun\s*\(/.test(text))) {
         issues.push(
           `${obligation.id} parity witness ${witness.ownerPath} does not call quint-connect run().`,
         );
       }
-      if (!/\bstateCheck\s*\(/.test(witnessText)) {
+      if (!parityTexts.some((text) => /\bstateCheck\s*\(/.test(text))) {
         issues.push(
           `${obligation.id} parity witness ${witness.ownerPath} does not define a stateCheck().`,
         );
@@ -1584,18 +1671,14 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
         typeof witness.qntSpecPath === "string" &&
         typeof witness.stepAction === "string"
       ) {
-        const runTargets = extractRunTargets(
-          rootPath,
-          witness.ownerPath,
-          witnessText,
-        );
-        const hasDeclaredRunTarget = runTargets.some(
-          (target) =>
-            target.specPath === witness.qntSpecPath &&
-            target.step === witness.stepAction &&
-            target.hasStateCheck,
-        );
-        if (!hasDeclaredRunTarget) {
+        if (
+          !declaresParityRunTarget(
+            rootPath,
+            witness,
+            witnessText,
+            helperTexts,
+          )
+        ) {
           issues.push(
             `${obligation.id} parity witness ${witness.ownerPath} does not run ${witness.qntSpecPath} with step ${witness.stepAction} and stateCheck.`,
           );

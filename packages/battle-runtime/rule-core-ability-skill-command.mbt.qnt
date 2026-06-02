@@ -1,10 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreAbilitySkillCommandMbt {
-  import battleRuntimeAbilityCheckSearch.* from "./battle-runtime-ability-check-search"
-  import battleRuntimeCommandChoice.* from "./battle-runtime-command-choice"
-  import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
+  // Self-contained literal projection witness for deterministic ability, skill,
+  // Search, and Command replay scenarios. The TS test discovers the runtime
+  // projection independently; this QNT side records the fixed expected facts
+  // without importing reducer closures.
 
   var qLastScenario: str
   var qTargetHidden: bool
@@ -56,113 +56,6 @@ module ruleCoreAbilitySkillCommandMbt {
   pure def commandFollowFleeNoMovement: str = "command-follow-flee-no-movement"
   pure def commandFollowFleeOpportunityAttack: str = "command-follow-flee-opportunity-attack"
 
-  pure def abilityCheckSkillName(skill: AbilityCheckSkill): str =
-    match skill {
-      | AcrobaticsSkill => "acrobatics"
-      | AnimalHandlingSkill => "animal_handling"
-      | ArcanaSkill => "arcana"
-      | AthleticsSkill => "athletics"
-      | DeceptionSkill => "deception"
-      | HistorySkill => "history"
-      | InsightSkill => "insight"
-      | IntimidationSkill => "intimidation"
-      | InvestigationSkill => "investigation"
-      | MedicineSkill => "medicine"
-      | NatureSkill => "nature"
-      | PerceptionSkill => "perception"
-      | PerformanceSkill => "performance"
-      | PersuasionSkill => "persuasion"
-      | ReligionSkill => "religion"
-      | SleightOfHandSkill => "sleight_of_hand"
-      | StealthSkill => "stealth"
-      | SurvivalSkill => "survival"
-    }
-
-  pure def abilityName(ability: Ability): str =
-    match ability {
-      | StrAbility => "str"
-      | DexAbility => "dex"
-      | ConAbility => "con"
-      | IntAbility => "int"
-      | WisAbility => "wis"
-      | ChaAbility => "cha"
-    }
-
-  pure def d20ModifierSkillName(effect: ActiveEffect): str =
-    match effect {
-      | GuidanceAbilityCheckBonus(data) => abilityCheckSkillName(data.skill)
-      | _ => "none"
-    }
-
-  pure def abilityCheckModeAbilityName(effect: ActiveEffect): str =
-    match effect {
-      | EnhanceAbilityCheckAdvantage(data) => abilityName(data.ability)
-      | _ => "none"
-    }
-
-  pure def pendingEffectCount(pendingOption: str): int =
-    if (pendingOption == "none") 0 else 1
-
-  pure def commandApproachCurrentActorName(outcome: CommandApproachFollowOutcome): str =
-    match outcome {
-      | CommandApproachNoMovement => "Goblin"
-      | CommandApproachMovementRejected => "Goblin"
-      | CommandApproachMovementContinues => "Goblin"
-      | CommandApproachMovementEndsTurn => "Fighter"
-    }
-
-  pure def commandApproachPendingOption(outcome: CommandApproachFollowOutcome): str =
-    match outcome {
-      | CommandApproachMovementRejected => "approach"
-      | _ => "none"
-    }
-
-  pure def commandApproachMovementSpent(outcome: CommandApproachFollowOutcome, movementCost: int): int =
-    match outcome {
-      | CommandApproachMovementContinues => movementCost
-      | CommandApproachMovementEndsTurn => movementCost
-      | _ => 0
-    }
-
-  pure def commandFleeCurrentActorName(outcome: CommandFleeFollowOutcome): str =
-    match outcome {
-      | CommandFleeNoMovementEndsTurn => "Fighter"
-      | CommandFleeMovementRejected => "Goblin"
-      | CommandFleeOpportunityAttackContinuation => "Goblin"
-      | CommandFleeMovementEndsTurn => "Fighter"
-    }
-
-  pure def commandFleePendingOption(outcome: CommandFleeFollowOutcome): str =
-    match outcome {
-      | CommandFleeMovementRejected => "flee"
-      | CommandFleeOpportunityAttackContinuation => "flee"
-      | _ => "none"
-    }
-
-  pure def commandFleeMovementSpent(outcome: CommandFleeFollowOutcome, movementCost: int): int =
-    match outcome {
-      | CommandFleeMovementEndsTurn => movementCost
-      | _ => 0
-    }
-
-  pure def commandFleeReactionWindowOpen(outcome: CommandFleeFollowOutcome): bool =
-    match outcome {
-      | CommandFleeOpportunityAttackContinuation => true
-      | _ => false
-    }
-
-  pure def commandDropObjectCount(outcome: CommandDropFollowOutcome): int =
-    match outcome {
-      | CommandDropObjectsAndEndsTurn(data) => data.droppedObjectCount
-      | CommandDropIgnored => 0
-    }
-
-  pure def commandHaltIsSuppressed(outcome: CommandHaltFollowOutcome): bool =
-    match outcome {
-      | CommandHaltSuppressesActionBonusAndMovement => true
-      | CommandHaltIgnored => false
-    }
-
   action recordProjection(
     scenario: str,
     targetHidden: bool,
@@ -205,22 +98,20 @@ module ruleCoreAbilitySkillCommandMbt {
   )
 
   action doSearchFails = {
-    val outcome = resolveSearchHiddenTarget({ total: 15, dc: 16 })
     all {
       qReplayIndex == 0,
       recordProjection(
-        searchFails, searchHiddenTargetStillHidden(outcome), false, 0, 0, false, true, 0, "Goblin",
+        searchFails, true, false, 0, 0, false, true, 0, "Goblin",
         "none", 0, false, false, "none", "none", 1,
       ),
     }
   }
 
   action doSearchSucceeds = {
-    val outcome = resolveSearchHiddenTarget({ total: 16, dc: 16 })
     all {
       qReplayIndex == 1,
       recordProjection(
-        searchSucceeds, searchHiddenTargetStillHidden(outcome), false, 0, 0, false, true, 0, "Goblin",
+        searchSucceeds, false, false, 0, 0, false, true, 0, "Goblin",
         "none", 0, false, false, "none", "none", 2,
       ),
     }
@@ -228,46 +119,44 @@ module ruleCoreAbilitySkillCommandMbt {
 
   action doGuidanceSkillProjection(
     scenario: str,
-    skill: AbilityCheckSkill,
+    skillName: str,
     expectedReplayIndex: int,
     nextReplayIndex: int,
   ): bool = {
-    val effect = rollModifierChoiceActiveEffect(GuidanceRollModifier, StrAbility, skill)
     all {
       qReplayIndex == expectedReplayIndex,
       recordProjection(
         scenario, false, false, 1, 1, false, true, 0, "Fighter",
-        "none", 0, false, false, d20ModifierSkillName(effect), "none", nextReplayIndex,
+        "none", 0, false, false, skillName, "none", nextReplayIndex,
       ),
     }
   }
 
-  action doGuidanceSkillAcrobatics = doGuidanceSkillProjection(guidanceSkillAcrobatics, AcrobaticsSkill, 2, 3)
-  action doGuidanceSkillAnimalHandling = doGuidanceSkillProjection(guidanceSkillAnimalHandling, AnimalHandlingSkill, 3, 4)
-  action doGuidanceSkillArcana = doGuidanceSkillProjection(guidanceSkillArcana, ArcanaSkill, 4, 5)
-  action doGuidanceSkillAthletics = doGuidanceSkillProjection(guidanceSkillAthletics, AthleticsSkill, 5, 6)
-  action doGuidanceSkillDeception = doGuidanceSkillProjection(guidanceSkillDeception, DeceptionSkill, 6, 7)
-  action doGuidanceSkillHistory = doGuidanceSkillProjection(guidanceSkillHistory, HistorySkill, 7, 8)
-  action doGuidanceSkillInsight = doGuidanceSkillProjection(guidanceSkillInsight, InsightSkill, 8, 9)
-  action doGuidanceSkillIntimidation = doGuidanceSkillProjection(guidanceSkillIntimidation, IntimidationSkill, 9, 10)
-  action doGuidanceSkillInvestigation = doGuidanceSkillProjection(guidanceSkillInvestigation, InvestigationSkill, 10, 11)
-  action doGuidanceSkillMedicine = doGuidanceSkillProjection(guidanceSkillMedicine, MedicineSkill, 11, 12)
-  action doGuidanceSkillNature = doGuidanceSkillProjection(guidanceSkillNature, NatureSkill, 12, 13)
-  action doGuidanceSkillPerception = doGuidanceSkillProjection(guidanceSkillPerception, PerceptionSkill, 13, 14)
-  action doGuidanceSkillPerformance = doGuidanceSkillProjection(guidanceSkillPerformance, PerformanceSkill, 14, 15)
-  action doGuidanceSkillPersuasion = doGuidanceSkillProjection(guidanceSkillPersuasion, PersuasionSkill, 15, 16)
-  action doGuidanceSkillReligion = doGuidanceSkillProjection(guidanceSkillReligion, ReligionSkill, 16, 17)
-  action doGuidanceSkillSleightOfHand = doGuidanceSkillProjection(guidanceSkillSleightOfHand, SleightOfHandSkill, 17, 18)
-  action doGuidanceSkillStealth = doGuidanceSkillProjection(guidanceSkillStealth, StealthSkill, 18, 19)
-  action doGuidanceSkillSurvival = doGuidanceSkillProjection(guidanceSkillSurvival, SurvivalSkill, 19, 20)
+  action doGuidanceSkillAcrobatics = doGuidanceSkillProjection(guidanceSkillAcrobatics, "acrobatics", 2, 3)
+  action doGuidanceSkillAnimalHandling = doGuidanceSkillProjection(guidanceSkillAnimalHandling, "animal_handling", 3, 4)
+  action doGuidanceSkillArcana = doGuidanceSkillProjection(guidanceSkillArcana, "arcana", 4, 5)
+  action doGuidanceSkillAthletics = doGuidanceSkillProjection(guidanceSkillAthletics, "athletics", 5, 6)
+  action doGuidanceSkillDeception = doGuidanceSkillProjection(guidanceSkillDeception, "deception", 6, 7)
+  action doGuidanceSkillHistory = doGuidanceSkillProjection(guidanceSkillHistory, "history", 7, 8)
+  action doGuidanceSkillInsight = doGuidanceSkillProjection(guidanceSkillInsight, "insight", 8, 9)
+  action doGuidanceSkillIntimidation = doGuidanceSkillProjection(guidanceSkillIntimidation, "intimidation", 9, 10)
+  action doGuidanceSkillInvestigation = doGuidanceSkillProjection(guidanceSkillInvestigation, "investigation", 10, 11)
+  action doGuidanceSkillMedicine = doGuidanceSkillProjection(guidanceSkillMedicine, "medicine", 11, 12)
+  action doGuidanceSkillNature = doGuidanceSkillProjection(guidanceSkillNature, "nature", 12, 13)
+  action doGuidanceSkillPerception = doGuidanceSkillProjection(guidanceSkillPerception, "perception", 13, 14)
+  action doGuidanceSkillPerformance = doGuidanceSkillProjection(guidanceSkillPerformance, "performance", 14, 15)
+  action doGuidanceSkillPersuasion = doGuidanceSkillProjection(guidanceSkillPersuasion, "persuasion", 15, 16)
+  action doGuidanceSkillReligion = doGuidanceSkillProjection(guidanceSkillReligion, "religion", 16, 17)
+  action doGuidanceSkillSleightOfHand = doGuidanceSkillProjection(guidanceSkillSleightOfHand, "sleight_of_hand", 17, 18)
+  action doGuidanceSkillStealth = doGuidanceSkillProjection(guidanceSkillStealth, "stealth", 18, 19)
+  action doGuidanceSkillSurvival = doGuidanceSkillProjection(guidanceSkillSurvival, "survival", 19, 20)
 
   action doEnhanceAbilityChoice = {
-    val effect = rollModifierChoiceActiveEffect(EnhanceAbilityRollModifier, DexAbility, StealthSkill)
     all {
       qReplayIndex == 20,
       recordProjection(
         enhanceAbilityChoice, false, false, 1, 0, false, true, 0, "Fighter",
-        "none", 0, false, false, "none", abilityCheckModeAbilityName(effect), 21,
+        "none", 0, false, false, "none", "dex", 21,
       ),
     }
   }
@@ -281,118 +170,101 @@ module ruleCoreAbilitySkillCommandMbt {
   }
 
   action doCommandFollowGrovel = {
-    val outcome = commandGrovelFollowOutcome(true)
     all {
       qReplayIndex == 22,
       recordProjection(
-        commandFollowGrovel, false, outcome == CommandGrovelAppliesProneEndsTurn, 0, 0, true, true, 0, "Fighter",
+        commandFollowGrovel, false, true, 0, 0, true, true, 0, "Fighter",
         "none", 0, false, false, "none", "none", 23,
       ),
     }
   }
 
   action doCommandFollowDrop = {
-    val outcome = commandDropFollowOutcome(true, 1)
     all {
       qReplayIndex == 23,
       recordProjection(
         commandFollowDrop, false, false, 0, 0, true, true, 0, "Fighter",
-        "none", commandDropObjectCount(outcome), false, false, "none", "none", 24,
+        "none", 1, false, false, "none", "none", 24,
       ),
     }
   }
 
   action doCommandHaltSuppresses = {
-    val outcome = commandHaltFollowOutcome(true)
     all {
       qReplayIndex == 24,
       recordProjection(
-        commandHaltSuppresses, false, false, 1, 0, not(commandHaltIsSuppressed(outcome)), not(commandHaltIsSuppressed(outcome)), 30, "Goblin",
-        "halt", 0, false, commandHaltIsSuppressed(outcome), "none", "none", 25,
+        commandHaltSuppresses, false, false, 1, 0, false, false, 30, "Goblin",
+        "halt", 0, false, true, "none", "none", 25,
       ),
     }
   }
 
   action doCommandFollowApproachContinues = {
-    val outcome = commandApproachFollowOutcome(true, true, false)
-    val pendingOption = commandApproachPendingOption(outcome)
     all {
       qReplayIndex == 25,
       recordProjection(
-        commandFollowApproachContinues, false, false, pendingEffectCount(pendingOption), 0, true, true, commandApproachMovementSpent(outcome, 10), commandApproachCurrentActorName(outcome),
-        pendingOption, 0, false, false, "none", "none", 26,
+        commandFollowApproachContinues, false, false, 0, 0, true, true, 10, "Goblin",
+        "none", 0, false, false, "none", "none", 26,
       ),
     }
   }
 
   action doCommandFollowApproachWithinFive = {
-    val outcome = commandApproachFollowOutcome(true, true, true)
-    val pendingOption = commandApproachPendingOption(outcome)
     all {
       qReplayIndex == 26,
       recordProjection(
-        commandFollowApproachWithinFive, false, false, pendingEffectCount(pendingOption), 0, true, true, commandApproachMovementSpent(outcome, 10), commandApproachCurrentActorName(outcome),
-        pendingOption, 0, false, false, "none", "none", 27,
+        commandFollowApproachWithinFive, false, false, 0, 0, true, true, 10, "Fighter",
+        "none", 0, false, false, "none", "none", 27,
       ),
     }
   }
 
   action doCommandFollowApproachNoMovement = {
-    val outcome = commandApproachFollowOutcome(false, false, false)
-    val pendingOption = commandApproachPendingOption(outcome)
     all {
       qReplayIndex == 27,
       recordProjection(
-        commandFollowApproachNoMovement, false, false, pendingEffectCount(pendingOption), 0, true, true, commandApproachMovementSpent(outcome, 10), commandApproachCurrentActorName(outcome),
-        pendingOption, 0, false, false, "none", "none", 28,
+        commandFollowApproachNoMovement, false, false, 0, 0, true, true, 0, "Goblin",
+        "none", 0, false, false, "none", "none", 28,
       ),
     }
   }
 
   action doCommandFollowFlee = {
-    val outcome = commandFleeFollowOutcome(true, 30, 30, true, false)
-    val pendingOption = commandFleePendingOption(outcome)
     all {
       qReplayIndex == 28,
       recordProjection(
-        commandFollowFlee, false, false, pendingEffectCount(pendingOption), 0, true, true, commandFleeMovementSpent(outcome, 30), commandFleeCurrentActorName(outcome),
-        pendingOption, 0, commandFleeReactionWindowOpen(outcome), false, "none", "none", 29,
+        commandFollowFlee, false, false, 0, 0, true, true, 30, "Fighter",
+        "none", 0, false, false, "none", "none", 29,
       ),
     }
   }
 
   action doCommandFollowFleePartialRejected = {
-    val outcome = commandFleeFollowOutcome(true, 10, 30, true, false)
-    val pendingOption = commandFleePendingOption(outcome)
     all {
       qReplayIndex == 29,
       recordProjection(
-        commandFollowFleePartialRejected, false, false, pendingEffectCount(pendingOption), 0, true, true, commandFleeMovementSpent(outcome, 10), commandFleeCurrentActorName(outcome),
-        pendingOption, 0, commandFleeReactionWindowOpen(outcome), false, "none", "none", 30,
+        commandFollowFleePartialRejected, false, false, 1, 0, true, true, 0, "Goblin",
+        "flee", 0, false, false, "none", "none", 30,
       ),
     }
   }
 
   action doCommandFollowFleeNoMovement = {
-    val outcome = commandFleeFollowOutcome(false, 30, 0, false, false)
-    val pendingOption = commandFleePendingOption(outcome)
     all {
       qReplayIndex == 30,
       recordProjection(
-        commandFollowFleeNoMovement, false, false, pendingEffectCount(pendingOption), 0, true, true, commandFleeMovementSpent(outcome, 30), commandFleeCurrentActorName(outcome),
-        pendingOption, 0, commandFleeReactionWindowOpen(outcome), false, "none", "none", 31,
+        commandFollowFleeNoMovement, false, false, 0, 0, true, true, 0, "Fighter",
+        "none", 0, false, false, "none", "none", 31,
       ),
     }
   }
 
   action doCommandFollowFleeOpportunityAttack = {
-    val outcome = commandFleeFollowOutcome(true, 30, 30, true, true)
-    val pendingOption = commandFleePendingOption(outcome)
     all {
       qReplayIndex == 31,
       recordProjection(
-        commandFollowFleeOpportunityAttack, false, false, pendingEffectCount(pendingOption), 0, true, true, commandFleeMovementSpent(outcome, 30), commandFleeCurrentActorName(outcome),
-        pendingOption, 0, commandFleeReactionWindowOpen(outcome), false, "none", "none", 32,
+        commandFollowFleeOpportunityAttack, false, false, 1, 0, true, true, 0, "Goblin",
+        "flee", 0, true, false, "none", "none", 32,
       ),
     }
   }

@@ -235,9 +235,16 @@ export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly kind: typeof PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE;
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
 };
+export const BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS = [
+  1,
+  2,
+  3,
+] as const satisfies ReadonlyArray<number>;
+export type BattleAttackActionAdditionalAttacks =
+  (typeof BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS)[number];
 export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
-  readonly additionalAttacks: 1;
+  readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
 };
 type ThresholdTierDieAmount = Extract<
   DiceAmount,
@@ -1624,7 +1631,7 @@ export type SupportedUnitFeatureProfile =
   | {
       readonly kind: "attackActionAttackCountScaling";
       readonly unit: UnitRecord;
-      readonly additionalAttacks: 1;
+      readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
     }
   | {
       readonly kind: "zeroHitPointReplacement";
@@ -3193,7 +3200,7 @@ export function attackActionAttackCountScalingProfileForUnit(
   const [effect, ...extraEffects] = unit.mechanics.grants;
   if (
     effect?.kind !== "scale_attack_count" ||
-    effect.additional !== 1 ||
+    !isBattleAttackActionAdditionalAttacks(effect.additional) ||
     extraEffects.length > 0 ||
     unit.mechanics.condition !== undefined ||
     unit.mechanics.operations !== undefined ||
@@ -3204,8 +3211,16 @@ export function attackActionAttackCountScalingProfileForUnit(
   return {
     kind: "attackActionAttackCountScaling",
     unit,
-    additionalAttacks: 1,
+    additionalAttacks: effect.additional,
   };
+}
+
+function isBattleAttackActionAdditionalAttacks(
+  additionalAttacks: number,
+): additionalAttacks is BattleAttackActionAdditionalAttacks {
+  return BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS.some(
+    (supported) => supported === additionalAttacks,
+  );
 }
 
 export function passiveArmorClassBonusProfileForUnit(

@@ -36,6 +36,13 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import {
+  legalRepeatedDamageAllocationInvocationFacts,
+  repeatedDamageAllocationAdmissionFactsForInvocation,
+  repeatedDamageAllocationInvocationCanAffectTargets,
+  repeatedDamageAllocationInvocationFacts,
+  repeatedDamageAllocationTargetCardinality,
+} from "./spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {
   spellId,
@@ -436,7 +443,9 @@ export function spellTargetAllocationHole(
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `${invocation.spell.name} target allocation`,
     spell: invocation,
-    allocationCount: invocation.targeting.repeatedEffectCount,
+    allocationCount: repeatedDamageAllocationTargetCardinality(
+      repeatedDamageAllocationAdmissionFactsForInvocation(invocation),
+    ).maximumTargetCount,
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
@@ -926,8 +935,21 @@ export function validateSpellTargetAllocation(
     (total, allocation) => total + allocation.count,
     0,
   );
-  if (allocatedCount !== invocation.targeting.repeatedEffectCount) {
-    return `${invocation.spell.name} target allocation must assign exactly ${invocation.targeting.repeatedEffectCount} repeated effects.`;
+  const invocationFacts = repeatedDamageAllocationInvocationFacts({
+    invocation,
+    targetCount: allocations.length,
+    targetsAreValid: true,
+  });
+  const targetCardinality =
+    repeatedDamageAllocationTargetCardinality(invocationFacts);
+  if (!legalRepeatedDamageAllocationInvocationFacts(invocationFacts)) {
+    return `${invocation.spell.name} target allocation must choose between ${targetCardinality.minimumTargetCount} and ${targetCardinality.maximumTargetCount} target entries.`;
+  }
+  if (!repeatedDamageAllocationInvocationCanAffectTargets(invocationFacts)) {
+    return "Spell target allocation entries must be combatants within the selected spell's supported range.";
+  }
+  if (allocatedCount !== targetCardinality.maximumTargetCount) {
+    return `${invocation.spell.name} target allocation must assign exactly ${targetCardinality.maximumTargetCount} repeated effects.`;
   }
   return null;
 }

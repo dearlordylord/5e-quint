@@ -8,6 +8,7 @@ module battleRuntimeSpellInvocation {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
 
   pure def battleTurnSpellSlotUseActor(slotUse: BattleTurnSpellSlotUse): Actor =
     match slotUse {
@@ -71,9 +72,17 @@ module battleRuntimeSpellInvocation {
     else
       expendedSpellSlots
 
+  pure def expendedSlotsAfterSpellInvocationResource(
+    facts: SpellInvocationResourceFacts,
+    expendedSpellSlots: int,
+  ): int =
+    if (spellInvocationResourceRequiresSlot(facts))
+      expendedSpellSlots + 1
+    else
+      expendedSpellSlots
+
   pure def spellInvocationSpendsSpellSlot(invocation: SpellInvocation): bool =
     match invocation {
-      | MagicMissile => true
       | RayOfFrost => false
       | AcidSplash => false
       | PoisonSpray => false

@@ -9,7 +9,7 @@ module battleRuntimeDragonsBreathTests {
   pure def goblinTurnState(state: BattleState): BattleState =
     {
       ...state,
-      initiative: { round: 1, alreadyActed: [Fighter], stillToAct: [Goblin] },
+      initiative: { round: 1, alreadyActed: [Fighter], stillToAct: { actor: Goblin, waiting: [] } },
       actionAvailable: true,
       bonusActionAvailable: true,
       spellSlotUsesThisTurn: Set(),

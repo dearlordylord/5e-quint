@@ -15,7 +15,7 @@ module battleRuntimeTurnAdvancement {
   pure def endTurn(state: BattleState): BattleState = {
     val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
     val advancedInitiative = nextInitiative(featureChecked.initiative)
-    val nextActor = advancedInitiative.stillToAct[0]
+    val nextActor = advancedInitiative.stillToAct.actor
     val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
     val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)
       tickRoundDurationSpellEffects(featureAdvanced)
