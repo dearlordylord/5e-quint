@@ -80,11 +80,12 @@ How this plan differs from the superseded approach:
 
 Adopted with this staging to manage the two sequencing risks:
 
-1. **`perception.ts` is DEFERRED.** `ACTIVE_PLAN.md` links
-   `PRD_BATTLE_LIGHT_OBSCUREMENT_WITNESSES.md`; light/obscurement is under active
-   feature development, so the perception projection is a moving target. Land
-   `types.ts` and `lifecycle.ts` now; extract `perception.ts` only after the light
-   PRD work settles.
+1. **`perception.ts` is DEFERRED.** The light/obscurement/sight boundary is
+   recorded in
+   [docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md](../docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md);
+   that work has largely landed, so the perception projection had been a moving
+   target. Land `types.ts` and `lifecycle.ts` now; re-evaluate `perception.ts`
+   extraction against ADR-0004 before pulling that seam.
 2. **`types.ts` relocation is the FIRST step (tracer bullet).** It is
    behaviour-preserving and typecheck-gated, so it de-risks the module boundary
    before the semantics-adjacent `lifecycle.ts` seam inversion.
