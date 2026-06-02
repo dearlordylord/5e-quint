@@ -1,15 +1,21 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning
 // UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning doMagicalCunningRecoversPactSlots doRejectMagicalCunningWithoutExpendedPactSlots
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
+// KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS.TABLE_DERIVATION
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import {
   abilityScoreAssignment,
   classUnitId,
+  classSpellcastingCreationAtLevel,
+  isListPreparedSpellcastingCreation,
+  isPactMagicSpellcastingCreation,
+  isWizardSpellcastingCreation,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -242,7 +248,7 @@ function createSlotDriver() {
 function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
   const result = createFreshCharacterSheet({
     characterId: characterSheetId("character:slot-mismatch"),
-    build: wizardSlotBuild({ wizardAdvancements: 0 }),
+    build: wizardSlotBuild({ wizardAdvancements: 1 }),
     maximumHp: Hp(12),
     currentHp: Hp(12),
     tempHp: Hp(0),
@@ -274,8 +280,6 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
     characterId: characterSheetId("character:pact-mismatch"),
     build: warlockMagicalCunningBuild({
       warlockAdvancements: 1,
-      pactSlotCount: 2,
-      pactSlotLevel: 1,
     }),
     maximumHp: Hp(12),
     currentHp: Hp(12),
@@ -404,8 +408,7 @@ function interruptLongRestWithShortRestSlotBenefitsProjection(): SlotProjection 
 function magicalCunningRecoversPactSlotsProjection(): SlotProjection {
   const sheet = warlockMagicalCunningSheet({
     characterIdText: "character:magical-cunning",
-    pactSlotCount: 2,
-    pactSlotLevel: 1,
+    warlockAdvancements: 1,
     pactExpended: 2,
   });
   const recovered = requireRight(
@@ -421,8 +424,7 @@ function magicalCunningRecoversPactSlotsProjection(): SlotProjection {
 function rejectMagicalCunningWithoutExpendedPactSlotsProjection(): SlotProjection {
   const sheet = warlockMagicalCunningSheet({
     characterIdText: "character:magical-cunning-no-expended",
-    pactSlotCount: 1,
-    pactSlotLevel: 1,
+    warlockAdvancements: 1,
     pactExpended: 0,
   });
   const result = completeMagicalCunningRite({ sheet, unitLibrary });
@@ -573,17 +575,14 @@ function sorcererWarlockLongRestSheet(): CharacterSheet {
 
 function warlockMagicalCunningSheet(input: {
   readonly characterIdText: string;
-  readonly pactSlotCount: number;
-  readonly pactSlotLevel: number;
+  readonly warlockAdvancements: number;
   readonly pactExpended: number;
 }): CharacterSheet {
   return requireRight(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: warlockMagicalCunningBuild({
-        warlockAdvancements: 1,
-        pactSlotCount: input.pactSlotCount,
-        pactSlotLevel: input.pactSlotLevel,
+        warlockAdvancements: input.warlockAdvancements,
       }),
       maximumHp: Hp(12),
       currentHp: Hp(12),
@@ -599,6 +598,7 @@ function warlockMagicalCunningSheet(input: {
 function wizardSlotBuild(input: {
   readonly wizardAdvancements: number;
 }): CharacterBuild {
+  const wizardLevel = input.wizardAdvancements + 1;
   return {
     ...baseBuild({
       startingClass: "class_wizard",
@@ -621,13 +621,10 @@ function wizardSlotBuild(input: {
       slotPools: {
         spellcasting: {
           kind: "spellcasting",
-          slots:
-            input.wizardAdvancements >= 3
-              ? [
-                  { spellLevel: 1, count: 4 },
-                  { spellLevel: 2, count: 3 },
-                ]
-              : [{ spellLevel: 1, count: 3 }],
+          slots: requireSpellcastingSlotsForClassLevel(
+            "class_wizard",
+            wizardLevel,
+          ),
         },
       },
     },
@@ -635,6 +632,7 @@ function wizardSlotBuild(input: {
 }
 
 function wizardWarlockSlotBuild(): CharacterBuild {
+  const pactSlots = requirePactMagicSlotsForWarlockLevel(1);
   return {
     ...baseBuild({
       startingClass: "class_wizard",
@@ -661,12 +659,12 @@ function wizardWarlockSlotBuild(): CharacterBuild {
       slotPools: {
         spellcasting: {
           kind: "spellcasting",
-          slots: [{ spellLevel: 1, count: 2 }],
+          slots: requireSpellcastingSlotsForClassLevel("class_wizard", 1),
         },
         pactMagic: {
           kind: "pactMagic",
-          slotLevel: 1,
-          count: 1,
+          slotLevel: pactSlots.spellLevel,
+          count: pactSlots.count,
         },
       },
     },
@@ -674,6 +672,7 @@ function wizardWarlockSlotBuild(): CharacterBuild {
 }
 
 function wizard4BuildWithPactSlots(): CharacterBuild {
+  const pactSlots = requirePactMagicSlotsForWarlockLevel(1);
   return {
     ...baseBuild({
       startingClass: "class_wizard",
@@ -701,15 +700,12 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
       slotPools: {
         spellcasting: {
           kind: "spellcasting",
-          slots: [
-            { spellLevel: 1, count: 4 },
-            { spellLevel: 2, count: 3 },
-          ],
+          slots: requireSpellcastingSlotsForClassLevel("class_wizard", 4),
         },
         pactMagic: {
           kind: "pactMagic",
-          slotLevel: 1,
-          count: 1,
+          slotLevel: pactSlots.spellLevel,
+          count: pactSlots.count,
         },
       },
     },
@@ -718,9 +714,9 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
 
 function warlockMagicalCunningBuild(input: {
   readonly warlockAdvancements: number;
-  readonly pactSlotCount: number;
-  readonly pactSlotLevel: number;
 }): CharacterBuild {
+  const warlockLevel = input.warlockAdvancements + 1;
+  const pactSlots = requirePactMagicSlotsForWarlockLevel(warlockLevel);
   return {
     ...baseBuild({
       startingClass: "class_warlock",
@@ -743,8 +739,8 @@ function warlockMagicalCunningBuild(input: {
       slotPools: {
         pactMagic: {
           kind: "pactMagic",
-          slotLevel: input.pactSlotLevel,
-          count: input.pactSlotCount,
+          slotLevel: pactSlots.spellLevel,
+          count: pactSlots.count,
         },
       },
     },
@@ -752,6 +748,7 @@ function warlockMagicalCunningBuild(input: {
 }
 
 function sorcererWarlockSlotBuild(): CharacterBuild {
+  const pactSlots = requirePactMagicSlotsForWarlockLevel(2);
   return {
     ...baseBuild({
       startingClass: "class_sorcerer",
@@ -779,12 +776,12 @@ function sorcererWarlockSlotBuild(): CharacterBuild {
       slotPools: {
         spellcasting: {
           kind: "spellcasting",
-          slots: [{ spellLevel: 1, count: 3 }],
+          slots: requireSpellcastingSlotsForClassLevel("class_sorcerer", 2),
         },
         pactMagic: {
           kind: "pactMagic",
-          slotLevel: 1,
-          count: 2,
+          slotLevel: pactSlots.spellLevel,
+          count: pactSlots.count,
         },
       },
     },
@@ -825,6 +822,59 @@ function baseBuild(input: {
       loadout: {},
     },
   };
+}
+
+function requireSpellcastingSlotsForClassLevel(
+  classId: "class_sorcerer" | "class_wizard",
+  level: number,
+): readonly {
+  readonly spellLevel: number;
+  readonly count: number;
+}[] {
+  const projected = requireClassSpellcastingAtLevel(classId, level);
+  if (
+    isWizardSpellcastingCreation(projected) ||
+    isListPreparedSpellcastingCreation(projected)
+  ) {
+    return projected.spellSlotProjection.slots;
+  }
+  throw new Error(
+    `Expected ${classId} to project ordinary Spell Slots at class level ${level}.`,
+  );
+}
+
+function requirePactMagicSlotsForWarlockLevel(level: number): {
+  readonly spellLevel: number;
+  readonly count: number;
+} {
+  const projected = requireClassSpellcastingAtLevel("class_warlock", level);
+  if (isPactMagicSpellcastingCreation(projected)) {
+    return {
+      spellLevel: projected.pactSlotProjection.spellLevel,
+      count: projected.pactSlotProjection.count,
+    };
+  }
+  throw new Error(
+    `Expected class_warlock to project Pact Magic slots at class level ${level}.`,
+  );
+}
+
+function requireClassSpellcastingAtLevel(
+  classId: "class_sorcerer" | "class_warlock" | "class_wizard",
+  level: number,
+) {
+  const facts = readClassCreationFacts(unitLibrary.requireUnit(classId));
+  if (facts.tag !== "readable" || !("spellcasting" in facts.value)) {
+    throw new Error(`Expected readable spellcasting facts for ${classId}.`);
+  }
+  const projected = classSpellcastingCreationAtLevel(
+    facts.value.spellcasting,
+    level,
+  );
+  if (projected !== undefined) return projected;
+  throw new Error(
+    `Expected ${classId} spellcasting progression at class level ${level}.`,
+  );
 }
 
 function initialProjection(): SlotProjection {
@@ -1043,7 +1093,11 @@ function compareSlotState(
   try {
     expect(runtime).toEqual(quint);
   } catch (error) {
-    if (error instanceof Error) throw new Error(error.message);
+    if (error instanceof Error) {
+      throw new Error(
+        `${runtime.lastResult}: ${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
     throw error;
   }
   return true;

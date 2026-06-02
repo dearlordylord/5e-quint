@@ -2795,7 +2795,7 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
   Schema.filter(
     (spellcasting) => {
       if (
-        spellcasting.cantripAccess.choose !==
+        spellcasting.cantripAccess.choose >
           spellcasting.cantripAccess.spellIds.length ||
         spellcasting.spellbookAccess.choose >
           spellcasting.spellbookAccess.spells.length ||

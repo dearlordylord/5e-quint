@@ -1,8 +1,11 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
+// KERNEL-COVERAGE: qnt-owner SHEET.SPELL_SLOTS.TABLE_DERIVATION
 
 module characterSheetSpellSlotsPactSlotsMbt {
+  import spellSlotTable.* from "../shared-algebras/proofs/rule-core/spell-slot-table"
+
   var qLastResult: str
   var qAccepted: bool
   var qMessage: str
@@ -63,6 +66,27 @@ module characterSheetSpellSlotsPactSlotsMbt {
     magicalCunningUsedSinceLongRest: false,
   }
 
+  pure def ordinarySlotsFromTable(
+    table: OrdinarySpellSlotTable,
+    level1Expended: int,
+    level2Expended: int,
+    createdLevel1Capacity: int,
+    createdLevel1Expended: int,
+  ): OrdinarySpellSlotFacts = {
+    level1Capacity: table.level1Capacity,
+    level1Expended: level1Expended,
+    level2Capacity: table.level2Capacity,
+    level2Expended: level2Expended,
+    createdLevel1Capacity: createdLevel1Capacity,
+    createdLevel1Expended: createdLevel1Expended,
+  }
+
+  pure def pactSlotsFromTable(table: PactMagicSlotTable, expended: int): PactSlotFacts = {
+    slotLevel: table.slotLevel,
+    capacity: table.capacity,
+    expended: expended,
+  }
+
   pure def recoverPactSlots(sheet: SheetSlotFacts): SheetSlotFacts =
     sheet.with("pact", sheet.pact.with("expended", 0))
 
@@ -90,55 +114,22 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   pure def wizardWarlockSpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 2,
-      level1Expended: 1,
-      level2Capacity: 0,
-      level2Expended: 0,
-      createdLevel1Capacity: 0,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 1,
-      expended: 1,
-    },
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelOne), 1, 0, 0, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelOne), 1),
     arcaneRecoveryUsedSinceLongRest: false,
     magicalCunningUsedSinceLongRest: false,
   }
 
   pure def wizardArcaneRecoverySpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 4,
-      level1Expended: 2,
-      level2Capacity: 3,
-      level2Expended: 1,
-      createdLevel1Capacity: 0,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 1,
-      expended: 1,
-    },
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelFour), 2, 1, 0, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelOne), 1),
     arcaneRecoveryUsedSinceLongRest: false,
     magicalCunningUsedSinceLongRest: false,
   }
 
   pure def sorcererWarlockLongRestSpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 3,
-      level1Expended: 2,
-      level2Capacity: 0,
-      level2Expended: 0,
-      createdLevel1Capacity: 1,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 2,
-      expended: 1,
-    },
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelTwo), 2, 0, 1, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 1),
     arcaneRecoveryUsedSinceLongRest: false,
     magicalCunningUsedSinceLongRest: false,
   }
@@ -176,7 +167,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "ordinary-capacity-mismatch-rejected",
       false,
       "Spell Slot state does not match build capacity for level 1.",
-      emptySlotFacts.with("ordinary", noOrdinarySpellSlots.with("level1Capacity", 3)),
+      emptySlotFacts.with(
+        "ordinary",
+        ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelTwo), 0, 0, 0, 0)
+      ),
       1,
     ),
   }
@@ -187,7 +181,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "pact-expenditure-over-capacity-rejected",
       false,
       "Pact Slot state must match Pact Magic build capacity.",
-      emptySlotFacts.with("pact", { slotLevel: 1, capacity: 2, expended: 3 }),
+      emptySlotFacts.with(
+        "pact",
+        pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 3)
+      ),
       2,
     ),
   }
@@ -264,7 +261,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "magical-cunning-recovers-pact-slots",
       true,
       "none",
-      applyMagicalCunning(emptySlotFacts.with("pact", { slotLevel: 1, capacity: 2, expended: 2 })),
+      applyMagicalCunning(emptySlotFacts.with(
+        "pact",
+        pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 2)
+      )),
       9,
     ),
   }
@@ -275,7 +275,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "magical-cunning-no-expended-pact-slots-rejected",
       false,
       "Magical Cunning must recover expended Pact Slots.",
-      emptySlotFacts.with("pact", { slotLevel: 1, capacity: 1, expended: 0 }),
+      emptySlotFacts.with(
+        "pact",
+        pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 0)
+      ),
       10,
     ),
   }

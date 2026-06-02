@@ -200,7 +200,7 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 3,
             kind: "known_cantrips",
-            spellIds: ["light", "fire_bolt", "ray_of_frost"],
+            spellIds: ["light", "fire_bolt", "ray_of_frost", "minor_illusion"],
           },
           spellbookAccess: {
             choose: 6,
@@ -214,8 +214,13 @@ describe("character-creation Surface records", () => {
               { spellId: "sleep", spellLevel: 1 },
               { spellId: "thunderwave", spellLevel: 1 },
               { spellId: "chromatic_orb", spellLevel: 1 },
+              { spellId: "continual_flame", spellLevel: 2 },
+              { spellId: "darkness", spellLevel: 2 },
+              { spellId: "gust_of_wind", spellLevel: 2 },
               { spellId: "mirror_image", spellLevel: 2 },
               { spellId: "misty_step", spellLevel: 2 },
+              { spellId: "scorching_ray", spellLevel: 2 },
+              { spellId: "shatter", spellLevel: 2 },
             ],
           },
           preparedAccess: {
@@ -230,8 +235,13 @@ describe("character-creation Surface records", () => {
               "sleep",
               "thunderwave",
               "chromatic_orb",
+              "continual_flame",
+              "darkness",
+              "gust_of_wind",
               "mirror_image",
               "misty_step",
+              "scorching_ray",
+              "shatter",
             ],
           },
           spellSlotProjection: {
@@ -262,6 +272,16 @@ describe("character-creation Surface records", () => {
               spellSlots: [
                 { count: 4, spellLevel: 1 },
                 { count: 2, spellLevel: 2 },
+              ],
+            },
+            {
+              atLevel: 4,
+              cantripCount: 4,
+              spellbookSpellCount: 12,
+              preparedSpellCount: 7,
+              spellSlots: [
+                { count: 4, spellLevel: 1 },
+                { count: 3, spellLevel: 2 },
               ],
             },
           ],
