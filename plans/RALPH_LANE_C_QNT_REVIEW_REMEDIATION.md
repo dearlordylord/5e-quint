@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "QRFR-C08-TURN-ORDER-EXACT-SHAPES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace positional turn-order assumptions with exact or total state shapes"
     },
     {
@@ -247,7 +247,7 @@ protocol when the Ralph runner supports it.
 | 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | done | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Shared-algebras proof baseline is green; no inactive/archive exclusions were required. |
 | 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | done | none | Local connascence fix. |
 | 7 | QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape | done | none | Removes partial map convention. |
-| 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | ready-for-research | none | Removes list-position convention. |
+| 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | done | none | Removes list-position convention. |
 | 9 | QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core | ready-for-research | none | Rule-core first. |
 | 10 | QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests | blocked | QRFR-C09-EXTRA-ATTACK-RULE-CORE | Integration and parity after rule-core shape exists. |
 | 11 | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts | ready-for-research | none | Needed because current sources may lack restoration facts. |
@@ -439,7 +439,7 @@ Acceptance:
 
 ### Task 8 - QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

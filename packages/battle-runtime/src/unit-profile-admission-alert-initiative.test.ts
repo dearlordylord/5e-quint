@@ -256,6 +256,23 @@ describe("L12G deterministic Alert Initiative admission", () => {
     });
   });
 
+  test("Initiative Swap rejects absent source and ally combatants", () => {
+    const setup = alertBattleSetup();
+
+    expectSwapRejected({
+      setup,
+      sourceId: combatantId("absent-alert-source"),
+      allyId: alertAllyId,
+      allyWilling: true,
+    });
+    expectSwapRejected({
+      setup,
+      sourceId: alertSourceId,
+      allyId: combatantId("absent-alert-ally"),
+      allyWilling: true,
+    });
+  });
+
   test("Initiative Swap timing is restricted to the initial setup workflow", () => {
     const setup = alertBattleSetup();
 
