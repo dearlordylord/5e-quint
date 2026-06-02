@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make generic battle-runtime QNT Initiative nonempty or total"
     }
   ]
@@ -266,7 +266,7 @@ protocol when the Ralph runner supports it.
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | done | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | Enforce at `scripts/qa/generate_assertions.py` materialization boundaries; no manual edit to `qa_generated.qnt`. |
 | 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | done | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Result recorded below; one residual QNT initiative state-shape issue assigned to QRFR-C21. |
 | 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | blocked | QRFR-C19-SECOND-PASS-QNT-RESCAN, QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY | Prevents hidden findings from being dropped after the residual QNT initiative fix lands. |
-| 21 | QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total | ready-for-research | QRFR-C19-SECOND-PASS-QNT-RESCAN | Follow-up from the second-pass rescan: generic QNT turn-order still admits empty `stillToAct` while direct consumers index `[0]`. |
+| 21 | QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total | done | QRFR-C19-SECOND-PASS-QNT-RESCAN | Follow-up from the second-pass rescan: generic QNT turn-order still admits empty `stillToAct` while direct consumers index `[0]`. |
 
 ## Task Details
 
@@ -849,7 +849,7 @@ RAW and ubiquitous-language check:
 
 ### Task 21 - QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C19-SECOND-PASS-QNT-RESCAN
 
