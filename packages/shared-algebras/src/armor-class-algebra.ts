@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import { Brand, Match } from "effect";
 import { ABILITIES, Integer } from "@dnd/shared/types";
 import type {

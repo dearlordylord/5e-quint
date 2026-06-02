@@ -1,8 +1,11 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import { Option } from "effect";
 
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
+import armorChainShirtInput from "../../content/armor_chain_shirt.json";
+import armorLeatherInput from "../../content/armor_leather.json";
 import aidInput from "../../content/aid.json";
 import alertInput from "../../content/alert.json";
 import alterSelfInput from "../../content/alter_self.json";
@@ -646,6 +649,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     webInput,
     holdPersonInput,
     armorChainMailInput,
+    armorChainShirtInput,
+    armorLeatherInput,
     equipmentShieldInput,
     weaponClubInput,
     weaponDaggerInput,

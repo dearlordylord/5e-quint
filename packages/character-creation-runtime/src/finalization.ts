@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
+// KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection
@@ -821,15 +822,37 @@ export function buildCharacterBuild(input: {
   });
 }
 
-function fixedHitPointsAfterLevelOne(
-  hitPointDie: number,
-  constitutionScore: number,
-): number {
-  // Current support profile admits fixed HP gains after level 1. Rolled HP needs
-  // an explicit creation choice before it can finalize.
+type CharacterHitPointMaximumFacts = {
+  readonly startingHitPointDie: number;
+  readonly constitutionModifier: number;
+  readonly fixedHigherLevelHitPointDice: readonly number[];
+  readonly hitPointMaximumBonus: number;
+};
+
+function fixedHigherLevelHitPointGain(input: {
+  readonly hitPointDie: number;
+  readonly constitutionModifier: number;
+}): number {
   return Math.max(
     1,
-    Math.floor(hitPointDie / 2) + 1 + abilityModifier(constitutionScore),
+    Math.floor(input.hitPointDie / 2) + 1 + input.constitutionModifier,
+  );
+}
+
+function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
+  return (
+    facts.startingHitPointDie +
+    facts.constitutionModifier +
+    facts.fixedHigherLevelHitPointDice.reduce(
+      (total, hitPointDie) =>
+        total +
+        fixedHigherLevelHitPointGain({
+          hitPointDie,
+          constitutionModifier: facts.constitutionModifier,
+        }),
+      0,
+    ) +
+    facts.hitPointMaximumBonus
   );
 }
 
@@ -864,20 +887,18 @@ export function characterBuildHitPoints(
     return Either.left(classFeatureMaximumBonus.left);
   }
 
-  const maximum =
-    startingClassFacts.hitPointDie +
-    abilityModifier(build.abilityScores.con) +
-    build.progression.advancements.reduce((total, advancement) => {
-      const facts = classFactsByUnitId.right.get(advancement.classUnitId);
-      return facts == null
-        ? total
-        : total +
-            fixedHitPointsAfterLevelOne(
-              facts.hitPointDie,
-              build.abilityScores.con,
-            );
-    }, 0) +
-    classFeatureMaximumBonus.right;
+  const constitutionModifier = abilityModifier(build.abilityScores.con);
+  const maximum = normalHitPointMaximum({
+    startingHitPointDie: startingClassFacts.hitPointDie,
+    constitutionModifier,
+    fixedHigherLevelHitPointDice: build.progression.advancements.flatMap(
+      (advancement) => {
+        const facts = classFactsByUnitId.right.get(advancement.classUnitId);
+        return facts == null ? [] : [facts.hitPointDie];
+      },
+    ),
+    hitPointMaximumBonus: classFeatureMaximumBonus.right,
+  });
 
   return Either.right({
     maximum: hp(maximum),
