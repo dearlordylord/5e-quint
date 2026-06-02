@@ -1,0 +1,783 @@
+# Ralph Lane C: QNT Review Remediation
+
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "QRFR-C01-REVIEW-RULES-AUTHORITY",
+      "status": "ready-for-research",
+      "title": "Correct review rules to package-local QNT authority"
+    },
+    {
+      "number": 2,
+      "id": "QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS",
+      "status": "ready-for-research",
+      "title": "Make the MBT closure checker reject forbidden imports"
+    },
+    {
+      "number": 3,
+      "id": "QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR",
+      "status": "blocked",
+      "title": "Repair or classify existing MBT driver closure violations"
+    },
+    {
+      "number": 4,
+      "id": "QRFR-C04-SHARED-QNT-PROOF-DISCOVERY",
+      "status": "ready-for-research",
+      "title": "Add self-discovering shared-algebras QNT proof runner"
+    },
+    {
+      "number": 5,
+      "id": "QRFR-C05-SHARED-QNT-PROOF-BASELINE",
+      "status": "blocked",
+      "title": "Make the discovered shared-algebras proof baseline attributable and green"
+    },
+    {
+      "number": 6,
+      "id": "QRFR-C06-DAMAGE-TYPE-TOTALITY",
+      "status": "ready-for-research",
+      "title": "Make damage type projection exhaustive and total"
+    },
+    {
+      "number": 7,
+      "id": "QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE",
+      "status": "ready-for-research",
+      "title": "Replace fighter ongoing feature partial map state with exact shape"
+    },
+    {
+      "number": 8,
+      "id": "QRFR-C08-TURN-ORDER-EXACT-SHAPES",
+      "status": "ready-for-research",
+      "title": "Replace positional turn-order assumptions with exact or total state shapes"
+    },
+    {
+      "number": 9,
+      "id": "QRFR-C09-EXTRA-ATTACK-RULE-CORE",
+      "status": "ready-for-research",
+      "title": "Model SRD Extra Attack counts in rule-core"
+    },
+    {
+      "number": 10,
+      "id": "QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY",
+      "status": "blocked",
+      "title": "Thread Extra Attack counts through battle-runtime QNT and parity tests"
+    },
+    {
+      "number": 11,
+      "id": "QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN",
+      "status": "ready-for-research",
+      "title": "Design executable Moonbeam shapeshift reversion facts"
+    },
+    {
+      "number": 12,
+      "id": "QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY",
+      "status": "blocked",
+      "title": "Implement Moonbeam shapeshift reversion parity"
+    },
+    {
+      "number": 13,
+      "id": "QRFR-C13-AUTHORED-IDENTITY-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit spell authored-identity dispatch and select the pilot vertical"
+    },
+    {
+      "number": 14,
+      "id": "QRFR-C14-PROCEDURE-FACT-PILOT-QNT",
+      "status": "blocked",
+      "title": "Replace authored spell dispatch with procedure facts in the pilot QNT vertical"
+    },
+    {
+      "number": 15,
+      "id": "QRFR-C15-PROCEDURE-FACT-PILOT-TS",
+      "status": "blocked",
+      "title": "Thread the pilot procedure facts through TS runtime and parity bridge"
+    },
+    {
+      "number": 16,
+      "id": "QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL",
+      "status": "blocked",
+      "title": "Add a production guardrail against authored-identity runtime dispatch"
+    },
+    {
+      "number": 17,
+      "id": "QRFR-C17-QA-GENERATED-IDENTITY-POLICY",
+      "status": "ready-for-research",
+      "title": "Define the QA generated QNT authored-identity boundary"
+    },
+    {
+      "number": 18,
+      "id": "QRFR-C18-QA-GENERATED-IDENTITY-GATE",
+      "status": "blocked",
+      "title": "Enforce the QA generated QNT SRD-only or synthetic-identity policy"
+    },
+    {
+      "number": 19,
+      "id": "QRFR-C19-SECOND-PASS-QNT-RESCAN",
+      "status": "blocked",
+      "title": "Run the second-pass QNT rescan after remediation"
+    },
+    {
+      "number": 20,
+      "id": "QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Close the lane or create the next remediation batch"
+    }
+  ]
+}
+-->
+
+This lane turns `plans/QNT_REVIEW_FINDINGS_REMEDIATION_PLAN.md` into a Ralph
+queue. The task split is reliability-driven: each task owns one durable
+invariant, one executable guardrail, or one SRD parity vertical. Tasks are not
+split merely by file count.
+
+## Source Findings
+
+Read this plan first, then read only the linked source finding summary:
+
+- `plans/QNT_REVIEW_FINDINGS_REMEDIATION_PLAN.md`
+- `.claude/review-rules.md`
+- `AGENTS.md` or the task-provided project instructions
+
+The originating review found these important issues:
+
+- Extra Attack count is collapsed to a boolean-style slot.
+- Moonbeam shapeshift reversion no-ops for modeled but unsupported shapeshift
+  sources.
+- Production spell runtime semantics dispatch on authored spell identity.
+- MBT driver closure enforcement does not directly reject forbidden imports.
+- Some QNT states rely on partial maps or positional list conventions.
+- Damage type projection uses fallback meaning instead of exhaustive totality.
+- Shared-algebras proof execution is hand-maintained despite many run blocks.
+- Generated QA QNT contains non-SRD authored identities.
+- Review rules still point at archived root QNT authority.
+
+## Context Budget
+
+Ralph agents should not recursively read old lanes. For each task, read:
+
+- This file.
+- `plans/QNT_REVIEW_FINDINGS_REMEDIATION_PLAN.md`.
+- The exact QNT, TS, script, SRD, and language files named by the task.
+- `.claude/review-rules.md` only for review-rule or review-loop tasks.
+- `UBIQUITOUS_LANGUAGE.md` and the relevant `.references/srd-5.2.1/` passages
+  before any rule behavior change.
+
+Do not read archived root QNT as an active parity authority. Root `battle.qnt`,
+`creature.qnt`, and `dndTest.qnt` are restoration source material only unless
+the task explicitly says otherwise.
+
+## Lane Rules
+
+- Before starting each task, run the Ralph task-base check: log the declared
+  base ref, log `HEAD`, and run
+  `git merge-base --is-ancestor <Base SHA> HEAD`. If the check fails, stop and
+  report the branch-base mismatch.
+- Use pnpm only. Never use npm.
+- Do not introduce workaround adapters to preserve internal boundaries. If a
+  lower layer needs a better shape, change that layer and update the bridge.
+- Before adding any field, search the repo for the same fact. Do not duplicate
+  state that can be referenced or projected.
+- Make invalid states unrepresentable before accepting a data-shape fix.
+- Production runtime semantics must not dispatch on PHB+ authored identity.
+  SRD authored identity may appear at content, selected-identity, fixture, and
+  documented admission boundaries, but runtime reducers should consume typed
+  facts.
+- Treat MBT as scarce. Do not run battle MBT for exploration. Run it only after
+  integrated behavior changes are complete and only with the repository MBT
+  observation protocol.
+
+## Reliability Split Rules
+
+The queue deliberately avoids shallow tasks:
+
+- A checker task must add both enforcement and a regression case.
+- A state-shape task must remove the convention and update all direct consumers.
+- A parity task must update the authoritative QNT owner before or alongside TS
+  runtime behavior.
+- A design task is allowed only when implementation would otherwise invent
+  missing domain facts. Its output must be executable task instructions, not
+  prose uncertainty.
+- A closeout task must rescan the codebase and either prove the lane converged
+  or append concrete follow-up tasks.
+
+## Verification
+
+Every task must include:
+
+- RAW/ubiquitous-language check for modeled rule changes. Read the relevant SRD
+  5.2.1 files under `.references/srd-5.2.1/` and check
+  `UBIQUITOUS_LANGUAGE.md`; record the passages used.
+- Reviewer-loop convergence: RAW traceability, ubiquitous-language/domain
+  language, architecture/connascence, and code review. Fix every reasonable
+  finding, reject only with a concrete reason, and repeat until no reasonable
+  findings remain.
+- `git diff --check`.
+- The narrowest relevant package checks named by the task.
+
+Use these checks when the task touches the relevant areas:
+
+- `pnpm check:mbt-driver-closure`
+- `pnpm check:authored-id-dispatch`
+- `pnpm --filter @dnd/battle-runtime test:qnt-proofs`
+- The new shared-algebras proof command after Task 4 creates it.
+- Focused TS unit tests for changed reducers, bridge modules, or checker code.
+
+For battle-runtime MBT after completed integrated behavior changes:
+
+```sh
+ps aux | grep vitest | grep -v grep
+ps aux | grep quint_evaluator | grep -v grep
+cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts
+```
+
+Run only one MBT instance at a time and use the repository timing/background
+protocol when the Ralph runner supports it.
+
+## DAG / Queue Order
+
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | ready-for-research | none | Small first fix so subsequent review loops use the right authority. |
+| 2 | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports | ready-for-research | none | Guardrail before driver repairs. |
+| 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | blocked | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
+| 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | ready-for-research | none | Guardrail before proof baseline repairs. |
+| 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | blocked | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Repairs real proof fallout from discovery. |
+| 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | ready-for-research | none | Local connascence fix. |
+| 7 | QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape | ready-for-research | none | Removes partial map convention. |
+| 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | ready-for-research | none | Removes list-position convention. |
+| 9 | QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core | ready-for-research | none | Rule-core first. |
+| 10 | QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests | blocked | QRFR-C09-EXTRA-ATTACK-RULE-CORE | Integration and parity after rule-core shape exists. |
+| 11 | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts | ready-for-research | none | Needed because current sources may lack restoration facts. |
+| 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | blocked | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change. |
+| 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | ready-for-research | none | Prevents an unfocused whole-corpus rewrite. |
+| 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | blocked | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first. |
+| 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | blocked | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the QNT shape. |
+| 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | blocked | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
+| 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | ready-for-research | none | Policy before generator enforcement. |
+| 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | blocked | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | No manual edit to `qa_generated.qnt`. |
+| 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | blocked | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
+| 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | blocked | QRFR-C19-SECOND-PASS-QNT-RESCAN | Prevents hidden findings from being dropped. |
+
+## Task Details
+
+### Task 1 - QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority
+
+Status: `ready-for-research`
+
+Input:
+
+- `.claude/review-rules.md`
+- Current project instructions about active QNT authority.
+
+Output:
+
+- Update review rules so code-review agents compare battle behavior against
+  package-local `packages/battle-runtime/battle-runtime.qnt`, package-local
+  QNT slices, and `packages/shared-algebras/proofs/rule-core/`.
+- Keep archived root QNT described only as restoration source material.
+
+Acceptance:
+
+- Review rules no longer name archived root `battle.qnt` as the active parity
+  gate.
+- `git diff --check` is clean.
+
+### Task 2 - QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports
+
+Status: `ready-for-research`
+
+Input:
+
+- `scripts/check-mbt-driver-closure.cjs`
+- Existing `packages/battle-runtime/*.mbt.qnt` files.
+- ADR-0001 MBT driver closure discipline.
+
+Output:
+
+- Extend the checker to reject direct and transitive imports of
+  `battle-runtime-model`, aggregation barrels, and behavioral rule modules from
+  simulated `*.mbt.qnt` drivers unless explicitly allowlisted.
+- Add a regression fixture or self-test that proves the forbidden import case
+  fails for semantic reasons, not only because the closure count is high.
+
+Acceptance:
+
+- `pnpm check:mbt-driver-closure` reports current violations or passes with
+  only documented allowlist entries.
+- The checker failure message identifies the offending driver and forbidden
+  import path.
+- `git diff --check` is clean.
+
+### Task 3 - QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations
+
+Status: `blocked`
+
+Depends on: QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS
+
+Input:
+
+- Checker output from Task 2.
+- Drivers flagged by the checker.
+- `docs/adr/0001-forest-of-qnt-slices.md`.
+
+Output:
+
+- Convert deterministic drivers to literal projection witnesses when they only
+  import broad modules for values that can be captured as literals.
+- Keep computed-oracle drivers only where expected projection genuinely depends
+  on reducer-computed mutable state.
+- Record each remaining allowlist entry with a concrete reason and shrink any
+  obsolete allowlist debt.
+
+Acceptance:
+
+- `pnpm check:mbt-driver-closure` is green.
+- Remaining allowlist entries are few, named, and justified.
+- No driver grows its transitive closure as part of the repair.
+
+### Task 4 - QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/shared-algebras/package.json`
+- Existing battle-runtime QNT proof runner pattern.
+- Shared QNT files under `packages/shared-algebras/proofs/`.
+
+Output:
+
+- Add a shared-algebras proof runner that discovers `.qnt` files containing
+  `run` blocks.
+- Run each proof module independently with a bounded timeout and attributable
+  failure output.
+- Add an opt-in package script for the proof lane.
+
+Acceptance:
+
+- The new proof command discovers run-block files without a hand-maintained
+  import list.
+- A failing module would be reported by file path.
+- `git diff --check` is clean.
+
+### Task 5 - QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green
+
+Status: `blocked`
+
+Depends on: QRFR-C04-SHARED-QNT-PROOF-DISCOVERY
+
+Input:
+
+- The proof command created in Task 4.
+- Every shared-algebras QNT file discovered by that command.
+
+Output:
+
+- Run the discovered proof lane.
+- Fix proof-runner integration issues and stale run-block failures that are
+  clearly caused by active shared-algebras drift.
+- If a discovered proof is intentionally archived or not active, move it out of
+  the active proof path or document the boundary in a checker-visible way.
+
+Acceptance:
+
+- The shared-algebras proof command is green or has only explicitly documented
+  inactive/archive exclusions.
+- Each exclusion has a reason stronger than "currently failing".
+- `git diff --check` is clean.
+
+### Task 6 - QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`
+- Relevant TS mirror or parity files if any.
+
+Output:
+
+- Replace fallback `else` meaning for damage types with exhaustive `match` or a
+  total damage-type-indexed structure.
+- Keep one source of truth for the damage type set.
+- Update focused tests or proof blocks so a new damage type would create a
+  visible obligation.
+
+Acceptance:
+
+- No damage type branch is represented only by final fallback behavior.
+- Adding a new `RuleDamageType` would fail typecheck, proof, or tests until the
+  new branch is handled.
+- Relevant QNT proof or focused package test is green.
+
+### Task 7 - QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/battle-runtime/battle-runtime-model.qnt`
+- `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt`
+- TS bridge/runtime files that project active ongoing feature occurrences.
+
+Output:
+
+- Replace the integer-keyed occurrence map convention with an exact record or
+  domain variant that makes required occurrence slots explicit.
+- Update all direct consumers so ordinary execution no longer relies on `.get`
+  of conventionally required keys.
+
+Acceptance:
+
+- The QNT state cannot represent the old missing-required-key state.
+- Focused QNT proofs or package tests cover both expected occurrence slots.
+- `pnpm --filter @dnd/battle-runtime test:qnt-proofs` is green if QNT proofs
+  are touched.
+
+### Task 8 - QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/battle-runtime/battle-runtime-turn-order.qnt`
+- Alert initiative QNT/TS bridge files that assume three entries or fallback
+  positions.
+
+Output:
+
+- Replace unchecked `stillToAct[0]`, exact-three-list, and absent-actor fallback
+  conventions with exact domain shapes or total helper functions.
+- Localize any remaining strong positional connascence in one helper whose
+  contract is executable.
+
+Acceptance:
+
+- Turn-order logic cannot silently choose a fallback actor position when the
+  actor is absent.
+- Alert ordering tests or proofs cover present actor, absent actor, and
+  expected exact-shape cases.
+- Relevant focused tests and `git diff --check` are green.
+
+### Task 9 - QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core
+
+Status: `ready-for-research`
+
+Input:
+
+- `.references/srd-5.2.1/Classes/`
+- `UBIQUITOUS_LANGUAGE.md`
+- `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt`
+
+Output:
+
+- Replace the boolean extra-attack slot model with an SRD-backed count model.
+- Admit only counts that correspond to modeled SRD feature facts.
+- Add proof/test cases for zero, one, two, and three additional attacks.
+
+Acceptance:
+
+- Rule-core can represent every SRD-supported Extra Attack count.
+- The count decreases one attack at a time and cannot go negative.
+- Relevant QNT proof or focused test is green.
+
+### Task 10 - QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests
+
+Status: `blocked`
+
+Depends on: QRFR-C09-EXTRA-ATTACK-RULE-CORE
+
+Input:
+
+- Task 9 rule-core output.
+- `packages/battle-runtime/battle-runtime-model.qnt`
+- `packages/battle-runtime/battle-runtime-feature-bridge.qnt`
+- `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt`
+- Affected TS runtime and MBT bridge files.
+
+Output:
+
+- Preserve extra attack remaining count through battle-runtime state, bridge,
+  attack action use, and turn-end reset.
+- Remove boolean projections that collapse `> 0` to open/closed where count is
+  semantically needed.
+- Add focused parity tests for one, two, and three additional attack cases.
+
+Acceptance:
+
+- Battle-runtime QNT and TS agree for every modeled count.
+- `pnpm --filter @dnd/battle-runtime test:qnt-proofs` is green.
+- Run battle MBT only if the integrated behavior changed and focused checks are
+  already green.
+
+### Task 11 - QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts
+
+Status: `ready-for-research`
+
+Input:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt`
+- `packages/battle-runtime/battle-runtime-shape-shifting.qnt`
+- Related TS runtime state for shapeshift restoration.
+
+Output:
+
+- Identify the minimal runtime facts needed for Moonbeam to revert every
+  modeled shapeshift source to true form.
+- Decide which unsupported states should become unrepresentable at admission
+  versus which should gain restoration facts.
+- Write the implementation handoff into this plan or a focused design note.
+
+Acceptance:
+
+- The next implementation task has exact fields/types to add or remove.
+- The design distinguishes provenance, structured input, and runtime projection.
+- No proposed field duplicates an existing fact without a documented search.
+
+### Task 12 - QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity
+
+Status: `blocked`
+
+Depends on: QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN
+
+Input:
+
+- Task 11 design output.
+- Active Moonbeam and shapeshift QNT/TS owners.
+
+Output:
+
+- Implement Moonbeam failed-save reversion using executable shapeshift facts.
+- Remove ordinary unsupported no-op handling for creatures already known to be
+  shapeshifted when the SRD says they revert.
+- Add focused QNT/TS parity coverage for every modeled shapeshift source.
+
+Acceptance:
+
+- A failed Moonbeam save reverts every admitted shapeshifted source.
+- Unsupported or missing-restoration states are rejected before reducer
+  execution, not discovered as ordinary no-op behavior.
+- Relevant focused tests and QNT proofs are green.
+
+### Task 13 - QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/battle-runtime/battle-runtime-model.qnt`
+- `packages/battle-runtime/battle-runtime-spell-invocation.qnt`
+- Spell profile rule-core files under
+  `packages/shared-algebras/proofs/rule-core/`
+- Existing `pnpm check:authored-id-dispatch` implementation and output.
+
+Output:
+
+- Classify current authored spell identity uses as content/selection/admission
+  boundary, test/fixture, or production runtime dispatch.
+- Pick one pilot vertical with enough coverage to prove typed procedure facts
+  without attempting a whole-corpus rewrite.
+- Record exact source files, reducer paths, bridge paths, and tests for the
+  pilot.
+
+Acceptance:
+
+- Pilot choice has a concrete reason and bounded file list.
+- The audit identifies at least one production runtime dispatch to remove.
+- No implementation code changes are required in this task beyond recording the
+  executable handoff.
+
+### Task 14 - QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical
+
+Status: `blocked`
+
+Depends on: QRFR-C13-AUTHORED-IDENTITY-AUDIT
+
+Input:
+
+- Task 13 pilot handoff.
+- Pilot QNT owner and related rule-core profile files.
+
+Output:
+
+- Define typed procedure/profile facts for the pilot.
+- Change the pilot QNT reducer or projection logic to dispatch on those facts
+  rather than authored spell-name variants.
+- Keep authored identity only at documented admission or selection boundaries.
+
+Acceptance:
+
+- The pilot QNT can execute the same behavior without production rule branches
+  on authored spell names.
+- QNT proof or focused QNT test for the pilot is green.
+- The new fact shape does not duplicate existing runtime state.
+
+### Task 15 - QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge
+
+Status: `blocked`
+
+Depends on: QRFR-C14-PROCEDURE-FACT-PILOT-QNT
+
+Input:
+
+- Task 14 QNT output.
+- Pilot TS reducer, parser/admission boundary, and MBT bridge files.
+
+Output:
+
+- Parse or admit the pilot authored spell selection into typed procedure facts.
+- Update TS runtime and MBT bridge code to consume those facts.
+- Remove pilot production runtime branches on authored spell identity.
+
+Acceptance:
+
+- TS and QNT parity for the pilot remains green.
+- Existing selected-identity tests still retain identity at allowed boundaries.
+- `pnpm check:authored-id-dispatch` is no worse, and ideally reports one fewer
+  production runtime dispatch.
+
+### Task 16 - QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch
+
+Status: `blocked`
+
+Depends on: QRFR-C15-PROCEDURE-FACT-PILOT-TS
+
+Input:
+
+- Task 13 audit categories.
+- Task 15 pilot pattern.
+- Existing authored-id dispatch checker.
+
+Output:
+
+- Extend the checker or review rule so production runtime reducers cannot add
+  new authored spell-name dispatch outside documented boundaries.
+- Allow SRD identity in content, selected-identity, fixtures, and explicit
+  admission files without weakening production checks.
+
+Acceptance:
+
+- The checker catches a representative production reducer branch on spell name.
+- Allowed boundary uses do not fail the checker.
+- `pnpm check:authored-id-dispatch` is green or has only documented pre-existing
+  debt outside the pilot scope.
+
+### Task 17 - QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary
+
+Status: `ready-for-research`
+
+Input:
+
+- `scripts/qa/QA_README.md`
+- QA generator inputs and materialization path.
+- `qa_generated.qnt`
+- Project PHB+ authored-identity rules.
+
+Output:
+
+- Decide whether generated QA QNT is publishable source, disposable generated
+  output, or private local scratch.
+- Define the required SRD-only or synthetic-identity policy for materialized QA
+  QNT.
+- Identify the generator or boundary file where enforcement belongs.
+
+Acceptance:
+
+- The policy is recorded in the QA docs or this lane with exact enforcement
+  location.
+- The task does not hand-edit `qa_generated.qnt`.
+- The policy distinguishes SRD provenance from structured input and runtime
+  projection.
+
+### Task 18 - QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy
+
+Status: `blocked`
+
+Depends on: QRFR-C17-QA-GENERATED-IDENTITY-POLICY
+
+Input:
+
+- Task 17 policy.
+- QA generator or materialization boundary selected by Task 17.
+
+Output:
+
+- Add generator filtering, synthetic renaming, artifact relocation, or a scan
+  gate according to the Task 17 policy.
+- Add a small regression test or script check for a non-SRD authored identity.
+- Leave `qa_generated.qnt` alone unless Task 17 explicitly reclassifies it as a
+  generated output that should be regenerated by the pipeline.
+
+Acceptance:
+
+- A PHB+ authored name in materialized QA QNT fails the new gate or is replaced
+  by a visibly synthetic identity during generation.
+- SRD QA materialization still works.
+- Relevant QA checks and `git diff --check` are green.
+
+### Task 19 - QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation
+
+Status: `blocked`
+
+Depends on:
+
+- QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR
+- QRFR-C05-SHARED-QNT-PROOF-BASELINE
+- QRFR-C06-DAMAGE-TYPE-TOTALITY
+- QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE
+- QRFR-C08-TURN-ORDER-EXACT-SHAPES
+- QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY
+- QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY
+- QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL
+- QRFR-C18-QA-GENERATED-IDENTITY-GATE
+
+Input:
+
+- Completed outputs from Tasks 1-18.
+- The same review lenses used for the original two-pass review.
+
+Output:
+
+- Rescan active package-local QNT, rule-core QNT, MBT drivers, proof wiring,
+  authored-identity boundaries, and QA generated identity boundaries.
+- Compare the rescan against the original findings.
+- Append concrete follow-up Ralph tasks here if any important issue remains.
+
+Acceptance:
+
+- The rescan covers the codebase at least once after remediation, with explicit
+  notes for each original finding.
+- No reasonable important finding remains unassigned.
+- All relevant static gates from the Verification section are green or have
+  concrete follow-up tasks.
+
+### Task 20 - QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch
+
+Status: `blocked`
+
+Depends on: QRFR-C19-SECOND-PASS-QNT-RESCAN
+
+Input:
+
+- Task 19 rescan output.
+- Current git status and all plan files changed by this lane.
+
+Output:
+
+- If the lane converged, mark completed tasks and update
+  `plans/QNT_REVIEW_FINDINGS_REMEDIATION_PLAN.md` with final disposition.
+- If the lane did not converge, create the next Ralph lane or append exact
+  follow-up tasks here.
+- Keep Ralph from ending with hidden QNT review debt.
+
+Acceptance:
+
+- Ralph has either a closed, converged lane or a concrete next runnable queue.
+- No broad prose-only backlog remains for unresolved important findings.
+- `git diff --check` is clean.
