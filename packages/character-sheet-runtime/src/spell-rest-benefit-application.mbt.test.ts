@@ -40,6 +40,7 @@ type SpellRestBenefitProjection = {
   readonly slotSpent: boolean;
   readonly shortRestBenefitApplied: boolean;
   readonly healingApplied: boolean;
+  readonly healingDiceCount: number;
   readonly longRestLockoutStored: boolean;
   readonly replayIndex: number;
 };
@@ -96,6 +97,7 @@ const selectedUnitIdentityReplays = [
           slotSpent: false,
           shortRestBenefitApplied: false,
           healingApplied: false,
+          healingDiceCount: 0,
           longRestLockoutStored: true,
           replayIndex: 2,
         },
@@ -188,6 +190,7 @@ function initialProjection(): SpellRestBenefitProjection {
     slotSpent: false,
     shortRestBenefitApplied: false,
     healingApplied: false,
+    healingDiceCount: 0,
     longRestLockoutStored: false,
     replayIndex: 0,
   };
@@ -196,6 +199,7 @@ function initialProjection(): SpellRestBenefitProjection {
 function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
   const caster = prayerCaster();
   const recipient = woundedFighter("character:prayer-recipient");
+  const healingRolls = [DieRollResult(5), DieRollResult(6)] as const;
   const result = requireRight(
     applyCharacterSheetSpellRestBenefit({
       caster,
@@ -209,7 +213,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
           spendHitDice: [
             { classUnitId: "class_fighter", roll: DieRollResult(4) },
           ],
-          healingRolls: [DieRollResult(5), DieRollResult(6)],
+          healingRolls,
         },
       ],
     }),
@@ -225,6 +229,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
     healingApplied:
       characterSheetCurrentHp(recipientAfter) >
       characterSheetCurrentHp(recipient),
+    healingDiceCount: healingRolls.length,
     longRestLockoutStored: hasPrayerOfHealingLockout(recipientAfter),
     replayIndex: 1,
   };
@@ -255,6 +260,7 @@ function projectPrayerOfHealingRecipientLockoutRejection(): SpellRestBenefitProj
     slotSpent: false,
     shortRestBenefitApplied: false,
     healingApplied: false,
+    healingDiceCount: 0,
     longRestLockoutStored: hasPrayerOfHealingLockout(lockedRecipient),
     replayIndex: 2,
   };
@@ -411,6 +417,10 @@ function normalizeSpellRestBenefitQuintState(
       "qShortRestBenefitApplied",
     ),
     healingApplied: booleanField(state["qHealingApplied"], "qHealingApplied"),
+    healingDiceCount: numberFromQuintInt(
+      state["qHealingDiceCount"],
+      "qHealingDiceCount",
+    ),
     longRestLockoutStored: booleanField(
       state["qLongRestLockoutStored"],
       "qLongRestLockoutStored",
