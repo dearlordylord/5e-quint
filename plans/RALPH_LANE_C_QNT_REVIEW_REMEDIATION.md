@@ -109,13 +109,13 @@
     {
       "number": 18,
       "id": "QRFR-C18-QA-GENERATED-IDENTITY-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enforce the QA generated QNT SRD-only or synthetic-identity policy"
     },
     {
       "number": 19,
       "id": "QRFR-C19-SECOND-PASS-QNT-RESCAN",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Run the second-pass QNT rescan after remediation"
     },
     {
@@ -257,8 +257,8 @@ protocol when the Ralph runner supports it.
 | 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | done | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the Task 14 QNT fact shape. |
 | 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | done | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | done | none | QA generated QNT is disposable generated output; enforcement belongs in `generate_one()` and `rebuild_qnt()`. |
-| 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | ready-for-research | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | Enforce at `scripts/qa/generate_assertions.py` materialization boundaries; no manual edit to `qa_generated.qnt`. |
-| 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | blocked | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
+| 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | done | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | Enforce at `scripts/qa/generate_assertions.py` materialization boundaries; no manual edit to `qa_generated.qnt`. |
+| 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | ready-for-research | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
 | 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | blocked | QRFR-C19-SECOND-PASS-QNT-RESCAN | Prevents hidden findings from being dropped. |
 
 ## Task Details
@@ -716,7 +716,7 @@ Acceptance:
 
 ### Task 18 - QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C17-QA-GENERATED-IDENTITY-POLICY
 
@@ -744,7 +744,7 @@ Acceptance:
 
 ### Task 19 - QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 

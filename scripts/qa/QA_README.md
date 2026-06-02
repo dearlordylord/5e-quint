@@ -80,6 +80,15 @@ rewrite it to synthetic identity before either file is written. Normal
 development must not hand-edit `qa_generated.qnt`; fix the generator or delete
 the offending cache fragment and regenerate.
 
+The scan list for real non-SRD official names lives in the ignored private file
+`.references/qa/non_srd_authored_identities.txt`, one identity per line. Do not
+commit that file or copy its entries into publishable source. The materialization
+gate fails closed when that file is unavailable, so a clean checkout cannot
+silently write QA QNT without the private scan input. Run
+`pnpm check:qa-generated-identity` for the lightweight synthetic regression
+check that missing scan input fails closed and private blocked identities are
+rejected before QA QNT is written.
+
 ## LLM invocation
 
 Classification:
