@@ -189,25 +189,11 @@ module battleRuntimeMoonbeamMovableZoneMbt {
     recordNextState(resolveMoonbeamSpellCleanup(currentMoonbeamMovableZoneState)),
   }
 
-  action doSupportedShapeShift = all {
+  action doShapeShift = all {
     if (qTargetShapeShift == MoonbeamShapeShiftSuppressedTrueForm)
       recordNextState(currentMoonbeamMovableZoneState)
     else
-      recordNextState({ ...currentMoonbeamMovableZoneState, targetShapeShift: MoonbeamSupportedShapeShifted }),
-  }
-
-  action doUnsupportedSpellShapeShift = all {
-    if (qTargetShapeShift == MoonbeamShapeShiftSuppressedTrueForm)
-      recordNextState(currentMoonbeamMovableZoneState)
-    else
-      recordNextState({ ...currentMoonbeamMovableZoneState, targetShapeShift: MoonbeamUnsupportedSpellShapeShifted }),
-  }
-
-  action doUnsupportedStatBlockShapechanger = all {
-    if (qTargetShapeShift == MoonbeamShapeShiftSuppressedTrueForm)
-      recordNextState(currentMoonbeamMovableZoneState)
-    else
-      recordNextState({ ...currentMoonbeamMovableZoneState, targetShapeShift: MoonbeamUnsupportedStatBlockShapechanger }),
+      recordNextState({ ...currentMoonbeamMovableZoneState, targetShapeShift: MoonbeamShapeShifted }),
   }
 
   action step = any {
@@ -218,8 +204,6 @@ module battleRuntimeMoonbeamMovableZoneMbt {
     doResetSavedThisTurn,
     doCylinderExit,
     doSpellCleanup,
-    doSupportedShapeShift,
-    doUnsupportedSpellShapeShift,
-    doUnsupportedStatBlockShapechanger,
+    doShapeShift,
   }
 }

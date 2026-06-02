@@ -5,13 +5,6 @@ module battleRuntimeShapeShifting {
   // or Polymorph specifies the replacement form, ongoing effects carry over
   // unless said otherwise, and the creature reverts to true form if it dies.
   type ClassFeatureShapeShiftSource = { sourceCombatantId: str, sourceUnitId: str }
-  type SpellEffectShapeShiftSource = { sourceCombatantId: str, sourceSpellId: str }
-  type StatBlockShapechangerSource = { sourceCombatantId: str }
-
-  type ShapeShiftSource =
-    ClassFeatureShapeShift(ClassFeatureShapeShiftSource)
-  | SpellEffectShapeShift(SpellEffectShapeShiftSource)
-  | StatBlockShapechanger(StatBlockShapechangerSource)
 
   type ShapeShiftedReplacementFormFacts = {
     armorClass: int,
@@ -32,14 +25,6 @@ module battleRuntimeShapeShifting {
       source: ClassFeatureShapeShiftSource,
       replacementForm: ShapeShiftedReplacementFormFacts,
     })
-  | SpellEffectShapeShifted({
-      source: SpellEffectShapeShiftSource,
-      replacementForm: ShapeShiftedReplacementFormFacts,
-    })
-  | StatBlockShapechangerShapeShifted({
-      source: StatBlockShapechangerSource,
-      replacementForm: ShapeShiftedReplacementFormFacts,
-    })
 
   type DruidWildShapeRuntimeState =
     DruidWildShapeTrueForm
@@ -50,33 +35,27 @@ module battleRuntimeShapeShifting {
 
   type ShapeShiftReversionResult =
     ShapeShiftAlreadyTrueForm
-  | ShapeShiftReverted({ state: ShapeShiftedRuntimeState })
-  | UnsupportedShapeShiftSource({ source: ShapeShiftSource })
+  | ShapeShiftRevertedToTrueForm
 
   pure def isShapeShifted(shapeShiftState: ShapeShiftedRuntimeState): bool =
     match shapeShiftState {
       | TrueForm => false
       | ClassFeatureShapeShifted(_) => true
-      | SpellEffectShapeShifted(_) => true
-      | StatBlockShapechangerShapeShifted(_) => true
     }
 
   pure def revertShapeShiftedRuntimeState(shapeShiftState: ShapeShiftedRuntimeState): ShapeShiftReversionResult =
     match shapeShiftState {
       | TrueForm => ShapeShiftAlreadyTrueForm
-      | ClassFeatureShapeShifted(_) => ShapeShiftReverted({ state: TrueForm })
-      | SpellEffectShapeShifted(data) => UnsupportedShapeShiftSource({ source: SpellEffectShapeShift(data.source) })
-      | StatBlockShapechangerShapeShifted(data) => UnsupportedShapeShiftSource({ source: StatBlockShapechanger(data.source) })
+      | ClassFeatureShapeShifted(_) => ShapeShiftRevertedToTrueForm
     }
 
-  pure def shapeShiftStateAfterSupportedReversion(shapeShiftState: ShapeShiftedRuntimeState): ShapeShiftedRuntimeState =
+  pure def shapeShiftStateAfterReversion(shapeShiftState: ShapeShiftedRuntimeState): ShapeShiftedRuntimeState =
     match revertShapeShiftedRuntimeState(shapeShiftState) {
       | ShapeShiftAlreadyTrueForm => TrueForm
-      | ShapeShiftReverted(data) => data.state
-      | UnsupportedShapeShiftSource(_) => shapeShiftState
+      | ShapeShiftRevertedToTrueForm => TrueForm
     }
 
-  pure def druidWildShapeStateAfterSupportedReversion(shapeShiftState: DruidWildShapeRuntimeState): DruidWildShapeRuntimeState =
+  pure def druidWildShapeStateAfterReversion(shapeShiftState: DruidWildShapeRuntimeState): DruidWildShapeRuntimeState =
     match shapeShiftState {
       | DruidWildShapeTrueForm => DruidWildShapeTrueForm
       | DruidWildShapeShifted(_) => DruidWildShapeTrueForm
@@ -101,35 +80,21 @@ module battleRuntimeShapeShifting {
     wisdomSavingThrowModifier: 0,
   }
 
-  run test_spell_shape_shift_source_reversion_is_explicit_followup = {
-    val source = {
-      sourceCombatantId: "synthetic_shape_caster",
-      sourceSpellId: "synthetic_shape_spell",
-    }
-    val replacement = SpellEffectShapeShifted({
-      source: source,
+  run test_every_admitted_shape_shift_state_is_reversible = {
+    val classFeatureReplacement = ClassFeatureShapeShifted({
+      source: {
+        sourceCombatantId: "synthetic_shape_druid",
+        sourceUnitId: "synthetic_wild_shape_feature",
+      },
       replacementForm: syntheticLargeFastFormFacts,
     })
-    val result = revertShapeShiftedRuntimeState(replacement)
     all {
-      assert(isShapeShifted(replacement)),
-      assert(result == UnsupportedShapeShiftSource({ source: SpellEffectShapeShift(source) })),
-      assert(shapeShiftStateAfterSupportedReversion(replacement) == replacement),
-    }
-  }
-
-  run test_stat_block_shapechanger_source_is_distinct_from_spell_source = {
-    val source = {
-      sourceCombatantId: "synthetic_shapechanger",
-    }
-    val replacement = StatBlockShapechangerShapeShifted({
-      source: source,
-      replacementForm: { ...syntheticLargeFastFormFacts, creatureSize: "small" },
-    })
-    all {
-      assert(isShapeShifted(replacement)),
-      assert(replacement != TrueForm),
-      assert(revertShapeShiftedRuntimeState(replacement) == UnsupportedShapeShiftSource({ source: StatBlockShapechanger(source) })),
+      assert(not(isShapeShifted(TrueForm))),
+      assert(isShapeShifted(classFeatureReplacement)),
+      assert(revertShapeShiftedRuntimeState(TrueForm) == ShapeShiftAlreadyTrueForm),
+      assert(revertShapeShiftedRuntimeState(classFeatureReplacement) == ShapeShiftRevertedToTrueForm),
+      assert(shapeShiftStateAfterReversion(TrueForm) == TrueForm),
+      assert(shapeShiftStateAfterReversion(classFeatureReplacement) == TrueForm),
     }
   }
 }

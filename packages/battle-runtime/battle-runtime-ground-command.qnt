@@ -618,13 +618,11 @@ module battleRuntimeGroundCommand {
       match revertShapeShiftedRuntimeState(targetShapeShiftState) {
         | ShapeShiftAlreadyTrueForm =>
             { state: state, targetShapeShiftState: TrueForm }
-        | ShapeShiftReverted(data) =>
+        | ShapeShiftRevertedToTrueForm =>
             {
               state: markMoonbeamShapeShiftSuppressed(state, targetActor, areaId),
-              targetShapeShiftState: data.state,
+              targetShapeShiftState: TrueForm,
             }
-        | UnsupportedShapeShiftSource(_) =>
-            { state: state, targetShapeShiftState: targetShapeShiftState }
       }
 
   pure def moonbeamDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =

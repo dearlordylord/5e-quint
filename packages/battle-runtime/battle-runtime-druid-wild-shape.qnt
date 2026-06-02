@@ -206,14 +206,14 @@ module battleRuntimeDruidWildShape {
     if (canDismissForm(state)) {
       bonusActionAvailable: false,
       usesRemaining: state.usesRemaining,
-      activeForm: druidWildShapeStateAfterSupportedReversion(state.activeForm),
+      activeForm: druidWildShapeStateAfterReversion(state.activeForm),
       tempHp: state.tempHp,
     } else state
 
   pure def revertForm(state: DruidWildShapeProjection): DruidWildShapeProjection = {
     bonusActionAvailable: state.bonusActionAvailable,
     usesRemaining: state.usesRemaining,
-    activeForm: druidWildShapeStateAfterSupportedReversion(state.activeForm),
+    activeForm: druidWildShapeStateAfterReversion(state.activeForm),
     tempHp: state.tempHp,
   }
 

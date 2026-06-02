@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement Moonbeam shapeshift reversion parity"
     },
     {
@@ -251,7 +251,7 @@ protocol when the Ralph runner supports it.
 | 9 | QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core | done | none | Rule-core first. |
 | 10 | QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests | done | QRFR-C09-EXTRA-ATTACK-RULE-CORE | Integration and parity after rule-core shape exists. |
 | 11 | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts | done | none | Design note identifies the admitted reversion owner and implementation shape. |
-| 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | ready-for-research | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change; consume the Task 11 design note. |
+| 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | done | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change; consumed the Task 11 design note. |
 | 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | ready-for-research | none | Prevents an unfocused whole-corpus rewrite. |
 | 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | blocked | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first. |
 | 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | blocked | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the QNT shape. |
@@ -542,7 +542,7 @@ Acceptance:
 
 ### Task 12 - QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN
 

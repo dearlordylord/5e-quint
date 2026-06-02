@@ -65,9 +65,7 @@ const driverSchema = {
   doResetSavedThisTurn: {},
   doCylinderExit: {},
   doSpellCleanup: {},
-  doSupportedShapeShift: {},
-  doUnsupportedSpellShapeShift: {},
-  doUnsupportedStatBlockShapechanger: {},
+  doShapeShift: {},
   step: {},
 } as const;
 
@@ -107,25 +105,9 @@ function createMoonbeamMovableZoneDriver() {
       doSpellCleanup: () => {
         state = resolveMoonbeamSpellCleanup(state);
       },
-      doSupportedShapeShift: () => {
+      doShapeShift: () => {
         if (state.targetShapeShift !== "shapeShiftSuppressedTrueForm") {
-          state = { ...state, targetShapeShift: "supportedShapeShifted" };
-        }
-      },
-      doUnsupportedSpellShapeShift: () => {
-        if (state.targetShapeShift !== "shapeShiftSuppressedTrueForm") {
-          state = {
-            ...state,
-            targetShapeShift: "unsupportedSpellShapeShifted",
-          };
-        }
-      },
-      doUnsupportedStatBlockShapechanger: () => {
-        if (state.targetShapeShift !== "shapeShiftSuppressedTrueForm") {
-          state = {
-            ...state,
-            targetShapeShift: "unsupportedStatBlockShapechanger",
-          };
+          state = { ...state, targetShapeShift: "shapeShifted" };
         }
       },
       step: () => {},
@@ -188,8 +170,8 @@ describe("Moonbeam movable zone MBT parity", () => {
     ).toBe(5);
   });
 
-  it("reverts supported shape-shift on failed save and clears suppression on exit", () => {
-    const targetShapeShift: MoonbeamShapeShiftState = "supportedShapeShifted";
+  it("reverts admitted shape-shift on failed save and clears suppression on exit", () => {
+    const targetShapeShift: MoonbeamShapeShiftState = "shapeShifted";
     const cast = {
       ...resolveMoonbeamCast(initialState(2), 2),
       targetShapeShift,
@@ -349,13 +331,7 @@ function moonbeamShapeShiftStateFromQuint(
 ): MoonbeamShapeShiftState {
   const tag = quintVariantTag(raw);
   if (tag === "MoonbeamTrueForm") return "trueForm";
-  if (tag === "MoonbeamSupportedShapeShifted") return "supportedShapeShifted";
-  if (tag === "MoonbeamUnsupportedSpellShapeShifted") {
-    return "unsupportedSpellShapeShifted";
-  }
-  if (tag === "MoonbeamUnsupportedStatBlockShapechanger") {
-    return "unsupportedStatBlockShapechanger";
-  }
+  if (tag === "MoonbeamShapeShifted") return "shapeShifted";
   if (tag === "MoonbeamShapeShiftSuppressedTrueForm") {
     return "shapeShiftSuppressedTrueForm";
   }
