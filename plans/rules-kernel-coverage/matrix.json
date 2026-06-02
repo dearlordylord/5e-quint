@@ -617,6 +617,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/creature-size-change-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-creature-size-change-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -657,6 +663,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/levitated-creature-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-levitated-creature-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -1893,6 +1905,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -9530,23 +9543,34 @@
     "unit-feature.bardic-inspiration-failed-d20-test",
     "unit-feature.bardic-inspiration-grant",
     "unit-feature.bonus-action-dash-temporary-hit-points",
+    "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.druid-wild-shape-known-form",
+    "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",
     "unit-feature.first-attack-roll-reckless-advantage",
+    "unit-feature.hunters-prey",
     "unit-feature.initiative-proficiency-and-swap",
     "unit-feature.innate-sorcery-activation",
+    "unit-feature.magic-action-area-save-damage-healing",
+    "unit-feature.magic-action-healing-pool",
     "unit-feature.martial-arts-attack-projection",
     "unit-feature.metamagic-cast-governor-quickened",
     "unit-feature.monk-focus-battle-options",
+    "unit-feature.open-hand-technique",
+    "unit-feature.paladin-sacred-weapon",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-ranged-attack-roll-bonus",
     "unit-feature.passive-saving-throw-roll-mode",
     "unit-feature.passive-speed-bonus",
     "unit-feature.passive-speed-kind-grants",
+    "unit-feature.potent-cantrip",
     "unit-feature.reaction-roll-or-damage-reduction",
+    "unit-feature.remarkable-athlete",
+    "unit-feature.rogue-steady-aim",
     "unit-feature.save-damage-replacement",
     "unit-feature.self-bonus-action-healing",
+    "unit-feature.spell-slot-healing-modifier",
     "unit-feature.weapon-critical-range-19",
     "unit-feature.weapon-damage-dice-roll-choice",
     "unit-feature.weapon-mastery-cleave",
