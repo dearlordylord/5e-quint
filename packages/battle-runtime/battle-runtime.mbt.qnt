@@ -1,8 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMbt {
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeModel.* from "./battle-runtime-model"
+  // Self-contained literal projection witness for the promoted bounded battle
+  // replay. This driver asserts the fixed Skeleton weapon-damage outcomes
+  // directly instead of importing the damage reducer and model barrel.
+  type Hole =
+    | TargetChoice
+    | AttackRoll
+    | DamageRoll
 
   var qSkeletonHp: int
   var qSkeletonDead: bool
@@ -20,14 +25,8 @@ module battleRuntimeMbt {
     hp: int,
     damageRoll: int,
   ): int = {
-    val adjustedDamage = damageAfterAdjustments(
-      damageRoll + rogueAttackModifier,
-      Piercing,
-      Set(),
-      Set(Bludgeoning),
-      Set(Poison),
-    )
-    if (hp - adjustedDamage < 0) 0 else hp - adjustedDamage
+    val damage = damageRoll + rogueAttackModifier
+    if (hp - damage < 0) 0 else hp - damage
   }
 
   action init = all {

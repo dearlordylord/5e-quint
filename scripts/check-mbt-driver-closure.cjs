@@ -55,7 +55,13 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
 //     REPL, then assert them). adrenaline-rush / death-saving-throw / sleep-repeat-save
 //     / bardic-inspiration / monk-martial-arts were migrated this way; do the rest.
 const ALLOWLIST = {
+  "battle-runtime-direct-condition-lifecycle.mbt.qnt": "computed oracle: condition source, duration, slot, and concentration projections depend on mutable lifecycle state",
+  "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt": "computed oracle: active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "computed oracle: attack-roll mode depends on mutable bypass/advantage state",
+  "battle-runtime-mirror-image-hit-interception.mbt.qnt": "computed oracle: duplicate interception depends on mutable remaining-duplicate count and attack context",
+  "battle-runtime-moonbeam-movable-zone.mbt.qnt": "computed oracle: zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
+  "battle-runtime-warding-bond-damage-sharing.mbt.qnt": "computed oracle: shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
+  "creature-attack.mbt.qnt": "computed oracle: attacker choice and hit result mutate the two-creature hit point state",
   "rule-core-stat-block-controls.mbt.qnt": "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
   "battle-runtime-starry-wisp-object.mbt.qnt": "convertible but projects complex ObjectDamageOutcome/LightEmitter records",
   "rule-core-spells.mbt.qnt": "convertible: ~33-action fixed-outcome rule-core spell tracer",

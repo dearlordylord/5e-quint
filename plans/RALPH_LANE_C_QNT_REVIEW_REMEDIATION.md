@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair or classify existing MBT driver closure violations"
     },
     {
@@ -242,7 +242,7 @@ protocol when the Ralph runner supports it.
 | ---: | --- | --- | --- | --- |
 | 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | done | none | Small first fix so subsequent review loops use the right authority. |
 | 2 | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports | done | none | Guardrail before driver repairs. |
-| 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | ready-for-research | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
+| 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | done | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
 | 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | ready-for-research | none | Guardrail before proof baseline repairs. |
 | 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | blocked | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Repairs real proof fallout from discovery. |
 | 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | ready-for-research | none | Local connascence fix. |
@@ -313,7 +313,7 @@ Acceptance:
 
 ### Task 3 - QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS
 
