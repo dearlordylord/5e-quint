@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "QRFR-C04-SHARED-QNT-PROOF-DISCOVERY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add self-discovering shared-algebras QNT proof runner"
     },
     {
       "number": 5,
       "id": "QRFR-C05-SHARED-QNT-PROOF-BASELINE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Make the discovered shared-algebras proof baseline attributable and green"
     },
     {
@@ -243,8 +243,8 @@ protocol when the Ralph runner supports it.
 | 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | done | none | Small first fix so subsequent review loops use the right authority. |
 | 2 | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports | done | none | Guardrail before driver repairs. |
 | 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | done | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
-| 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | ready-for-research | none | Guardrail before proof baseline repairs. |
-| 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | blocked | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Repairs real proof fallout from discovery. |
+| 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | done | none | Guardrail before proof baseline repairs. |
+| 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | ready-for-research | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Repairs real proof fallout from discovery. |
 | 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | ready-for-research | none | Local connascence fix. |
 | 7 | QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape | ready-for-research | none | Removes partial map convention. |
 | 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | ready-for-research | none | Removes list-position convention. |
@@ -340,7 +340,7 @@ Acceptance:
 
 ### Task 4 - QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -365,7 +365,7 @@ Acceptance:
 
 ### Task 5 - QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QRFR-C04-SHARED-QNT-PROOF-DISCOVERY
 

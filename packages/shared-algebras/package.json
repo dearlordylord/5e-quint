@@ -31,12 +31,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:qnt-proofs": "RUN_QNT_PROOFS=1 vitest run src/shared-algebras-qnt-proofs.test.ts",
     "test:deterministic": "vitest run src/ability-score-algebra.test.ts src/character-advancement-algebra.test.ts src/multiclass-prerequisite-algebra.test.ts src/movement-cost-algebra.test.ts src/reducer-algebras.test.ts src/spell-save-gate-algebra.test.ts src/spell-slot-expenditure-algebra.test.ts src/speed-algebra.test.ts",
     "test:mbt": "vitest run src/reducer-algebras.mbt.test.ts",
-    "proof:multiclass": "pnpm exec quint test --match \"mc_\" proofs/multiclass-prerequisite-algebra.qnt",
     "proof:inductive": "export PATH=\"$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH\"; pnpm exec quint verify proofs/action-economy-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1 && pnpm exec quint verify proofs/conditions-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1 && pnpm exec quint verify proofs/death-saves-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1",
     "proof:initiative": "pnpm exec quint run proofs/initiative-algebra-invariant.qnt --invariant invariant --max-samples 2000 --max-steps 40",
-    "proof:quint": "pnpm run proof:multiclass && pnpm run proof:inductive && pnpm run proof:initiative"
+    "proof:quint": "pnpm run test:qnt-proofs && pnpm run proof:inductive && pnpm run proof:initiative"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",
