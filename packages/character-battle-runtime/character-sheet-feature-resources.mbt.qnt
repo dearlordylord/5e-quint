@@ -3,9 +3,11 @@
 // KERNEL-COVERAGE: qnt-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 
 module characterSheetFeatureResourcesMbt {
-  import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
-  import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
-  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
+  import featureResourceHitPointHealing.* from "../shared-algebras/proofs/rule-core/feature-resource-hit-point-healing"
+  import featureResourcePool.* from "../shared-algebras/proofs/rule-core/feature-resource-pool"
+  import fontOfMagicResource.* from "../shared-algebras/proofs/rule-core/font-of-magic-resource"
+  import layOnHandsResource.* from "../shared-algebras/proofs/rule-core/lay-on-hands-resource"
+  import uncannyMetabolismResource.* from "../shared-algebras/proofs/rule-core/uncanny-metabolism-resource"
 
   var qLastResult: str
   var qAccepted: bool
@@ -47,11 +49,6 @@ module characterSheetFeatureResourcesMbt {
     metamagicSharedResourceExpended: int,
   }
 
-  type RecoveredHitPoints = {
-    currentHp: int,
-    temporaryHitPoints: int,
-  }
-
   pure def emptyFeatureResourceFacts: SheetFeatureResourceFacts = {
     sourceCurrentHp: 0,
     targetCurrentHp: 0,
@@ -71,52 +68,145 @@ module characterSheetFeatureResourcesMbt {
     metamagicSharedResourceExpended: 0,
   }
 
-  pure def applySheetHitPointRecovery(currentHp: int, hitPointMaximum: int, temporaryHitPoints: int, rawHealing: int): RecoveredHitPoints = {
-    val healed = applyHitPointHealing({
-      kind: PlayerCharacter,
-      hitPoints: currentHp,
-      hitPointMaximum: hitPointMaximum,
-      temporaryHitPoints: temporaryHitPoints,
-      dead: false,
-      unconscious: false,
-    }, resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery, rawHealing)
-    {
-      currentHp: healed.vitals.hitPoints,
-      temporaryHitPoints: healed.vitals.temporaryHitPoints,
-    }
+  pure def featureResourcePool(capacity: int, expended: int): ResourcePoolFacts = {
+    capacity: capacity,
+    expended: expended,
   }
 
-  pure def recoverTargetHitPoints(sheet: SheetFeatureResourceFacts, hitPointMaximum: int, rawHealing: int): SheetFeatureResourceFacts = {
-    val recovered = applySheetHitPointRecovery(sheet.targetCurrentHp, hitPointMaximum, 0, rawHealing)
-    sheet.with("targetCurrentHp", recovered.currentHp)
+  pure def targetHitPointFacts(
+    sheet: SheetFeatureResourceFacts,
+    hitPointMaximum: int,
+  ): FeatureResourceHitPointFacts = {
+    currentHitPoints: sheet.targetCurrentHp,
+    hitPointMaximum: hitPointMaximum,
+    temporaryHitPoints: 0,
   }
 
-  pure def recoverSourceHitPoints(sheet: SheetFeatureResourceFacts, hitPointMaximum: int, rawHealing: int): SheetFeatureResourceFacts = {
-    val recovered = applySheetHitPointRecovery(sheet.sourceCurrentHp, hitPointMaximum, sheet.temporaryHitPoints, rawHealing)
+  pure def sourceHitPointFacts(
+    sheet: SheetFeatureResourceFacts,
+    hitPointMaximum: int,
+  ): FeatureResourceHitPointFacts = {
+    currentHitPoints: sheet.sourceCurrentHp,
+    hitPointMaximum: hitPointMaximum,
+    temporaryHitPoints: sheet.temporaryHitPoints,
+  }
+
+  pure def layOnHandsPool(sheet: SheetFeatureResourceFacts): ResourcePoolFacts =
+    featureResourcePool(sheet.layOnHandsCapacity, sheet.layOnHandsExpended)
+
+  pure def sorceryPointPool(sheet: SheetFeatureResourceFacts): ResourcePoolFacts =
+    featureResourcePool(sheet.sorceryPointCapacity, sheet.sorceryPointExpended)
+
+  pure def createdLevel3SlotPool(sheet: SheetFeatureResourceFacts): ResourcePoolFacts =
+    featureResourcePool(sheet.createdLevel3Capacity, sheet.createdLevel3Expended)
+
+  pure def ordinaryLevel2SlotPool(sheet: SheetFeatureResourceFacts): ResourcePoolFacts =
+    featureResourcePool(2, sheet.ordinaryLevel2Expended)
+
+  pure def withLayOnHandsPool(
+    sheet: SheetFeatureResourceFacts,
+    pool: ResourcePoolFacts,
+  ): SheetFeatureResourceFacts =
     sheet
-      .with("sourceCurrentHp", recovered.currentHp)
-      .with("temporaryHitPoints", recovered.temporaryHitPoints)
+      .with("layOnHandsCapacity", pool.capacity)
+      .with("layOnHandsExpended", pool.expended)
+
+  pure def withSorceryPointPool(
+    sheet: SheetFeatureResourceFacts,
+    pool: ResourcePoolFacts,
+  ): SheetFeatureResourceFacts =
+    sheet
+      .with("sorceryPointCapacity", pool.capacity)
+      .with("sorceryPointExpended", pool.expended)
+
+  pure def withCreatedLevel3SlotPool(
+    sheet: SheetFeatureResourceFacts,
+    pool: ResourcePoolFacts,
+  ): SheetFeatureResourceFacts =
+    sheet
+      .with("createdLevel3Capacity", pool.capacity)
+      .with("createdLevel3Expended", pool.expended)
+
+  pure def featureResourceRestState(sheet: SheetFeatureResourceFacts): FeatureResourceRestState = {
+    layOnHandsPool: layOnHandsPool(sheet),
+    wildShapeExpended: sheet.druidWildShapeExpended,
+    monkFocusExpended: sheet.monkFocusExpended,
+    sorceryPoints: sorceryPointPool(sheet),
+    createdSpellSlots: createdLevel3SlotPool(sheet),
+    uncannyUsedSinceLongRest: sheet.uncannyUsedSinceLongRest,
+  }
+
+  pure def withFeatureResourceRestState(
+    sheet: SheetFeatureResourceFacts,
+    restState: FeatureResourceRestState,
+  ): SheetFeatureResourceFacts =
+    withCreatedLevel3SlotPool(
+      withSorceryPointPool(
+        withLayOnHandsPool(sheet, restState.layOnHandsPool)
+          .with("druidWildShapeExpended", restState.wildShapeExpended)
+          .with("monkFocusExpended", restState.monkFocusExpended)
+          .with("uncannyUsedSinceLongRest", restState.uncannyUsedSinceLongRest),
+        restState.sorceryPoints),
+      restState.createdSpellSlots)
+
+  pure def applyLayOnHandsToSheet(
+    sheet: SheetFeatureResourceFacts,
+    targetHitPointMaximum: int,
+    restoredHitPoints: int,
+    removedConditionCount: int,
+  ): SheetFeatureResourceFacts = {
+    val applied = applyLayOnHandsResource(
+      layOnHandsPool(sheet),
+      targetHitPointFacts(sheet, targetHitPointMaximum),
+      restoredHitPoints,
+      removedConditionCount,
+    )
+    withLayOnHandsPool(sheet, applied.healingPool)
+      .with("targetCurrentHp", applied.targetHitPoints.currentHitPoints)
+      .with("targetPoisoned", if (applied.conditionRemoved) false else sheet.targetPoisoned)
   }
 
   pure def completeLongRestFeatureResources(sheet: SheetFeatureResourceFacts): SheetFeatureResourceFacts =
-    sheet
-      .with("layOnHandsExpended", 0)
-      .with("druidWildShapeExpended", 0)
-      .with("monkFocusExpended", 0)
-      .with("sorceryPointExpended", 0)
-      .with("createdLevel3Capacity", 0)
-      .with("createdLevel3Expended", 0)
-      .with("uncannyUsedSinceLongRest", false)
+    withFeatureResourceRestState(sheet, completeLongRestFeatureResourceRestState(featureResourceRestState(sheet)))
 
   pure def shortRestFeatureResources(sheet: SheetFeatureResourceFacts): SheetFeatureResourceFacts =
-    sheet
-      .with("druidWildShapeExpended", if (sheet.druidWildShapeExpended > 0) sheet.druidWildShapeExpended - 1 else 0)
-      .with("monkFocusExpended", 0)
+    withFeatureResourceRestState(sheet, completeShortRestFeatureResourceRestState(featureResourceRestState(sheet)))
 
-  pure def useUncannyMetabolism(sheet: SheetFeatureResourceFacts, maximumHp: int, monkLevel: int, martialArtsRoll: int): SheetFeatureResourceFacts =
-    recoverSourceHitPoints(sheet, maximumHp, monkLevel + martialArtsRoll)
-      .with("monkFocusExpended", 0)
-      .with("uncannyUsedSinceLongRest", true)
+  pure def useUncannyMetabolism(sheet: SheetFeatureResourceFacts, maximumHp: int, monkLevel: int, martialArtsRoll: int): SheetFeatureResourceFacts = {
+    val applied = applyUncannyMetabolism(
+      featureResourcePool(2, sheet.monkFocusExpended),
+      sourceHitPointFacts(sheet, maximumHp),
+      monkLevel,
+      martialArtsRoll,
+    )
+    sheet
+      .with("sourceCurrentHp", applied.hitPoints.currentHitPoints)
+      .with("temporaryHitPoints", applied.hitPoints.temporaryHitPoints)
+      .with("monkFocusExpended", applied.focusPoints.expended)
+      .with("uncannyUsedSinceLongRest", applied.usedSinceLongRest)
+  }
+
+  pure def createFontOfMagicLevel3SlotOnSheet(sheet: SheetFeatureResourceFacts): SheetFeatureResourceFacts = {
+    val created = createFontOfMagicSpellSlot(
+      sorceryPointPool(sheet),
+      createdLevel3SlotPool(sheet),
+      3,
+    )
+    withCreatedLevel3SlotPool(
+      withSorceryPointPool(sheet, created.sorceryPoints),
+      created.createdSpellSlot)
+  }
+
+  pure def convertFontOfMagicLevel2SlotToPointsOnSheet(sheet: SheetFeatureResourceFacts): SheetFeatureResourceFacts = {
+    val converted = convertFontOfMagicSlotToSorceryPoints(
+      sorceryPointPool(sheet),
+      2,
+      ordinaryLevel2SlotPool(sheet),
+      featureResourcePool(0, 0),
+    )
+    withSorceryPointPool(sheet, converted.sorceryPoints)
+      .with("ordinaryLevel2Expended", converted.ordinarySpellSlot.expended)
+  }
 
   action recordProjection(
     lastResult: str,
@@ -156,18 +246,19 @@ module characterSheetFeatureResourcesMbt {
       "lay-on-hands-restores-hp-and-removes-poisoned",
       true,
       "none",
-      recoverTargetHitPoints(emptyFeatureResourceFacts
+      applyLayOnHandsToSheet(emptyFeatureResourceFacts
         .with("sourceCurrentHp", 12)
         .with("targetCurrentHp", 3)
-        .with("targetPoisoned", false)
+        .with("targetPoisoned", true)
         .with("layOnHandsCapacity", 10)
-        .with("layOnHandsExpended", 7), 10, 2),
+        .with("layOnHandsExpended", 0), 10, 2, 1),
       1,
     ),
   }
 
   action doRejectLayOnHandsOverspend = all {
     qReplayIndex == 1,
+    not(canApplyLayOnHandsResource(featureResourcePool(5, 0), 1, 1)),
     recordProjection(
       "lay-on-hands-overspend-rejected",
       false,
@@ -184,6 +275,11 @@ module characterSheetFeatureResourcesMbt {
 
   action doLongRestClearsLayOnHandsPool = all {
     qReplayIndex == 2,
+    legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
+      .with("sourceCurrentHp", 12)
+      .with("targetCurrentHp", 12)
+      .with("layOnHandsCapacity", 5)
+      .with("layOnHandsExpended", 4))),
     recordProjection(
       "long-rest-clears-lay-on-hands-pool",
       true,
@@ -199,6 +295,9 @@ module characterSheetFeatureResourcesMbt {
 
   action doShortRestRecoversUseCountPools = all {
     qReplayIndex == 3,
+    legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
+      .with("druidWildShapeExpended", 2)
+      .with("monkFocusExpended", 2))),
     recordProjection(
       "short-rest-recovers-use-count-pools",
       true,
@@ -212,6 +311,10 @@ module characterSheetFeatureResourcesMbt {
 
   action doLongRestClearsPointPoolAndUseState = all {
     qReplayIndex == 4,
+    legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
+      .with("sorceryPointCapacity", 2)
+      .with("sorceryPointExpended", 2)
+      .with("uncannyUsedSinceLongRest", true))),
     recordProjection(
       "long-rest-clears-point-pool-and-use-state",
       true,
@@ -226,20 +329,22 @@ module characterSheetFeatureResourcesMbt {
 
   action doFontOfMagicSlotToPoints = all {
     qReplayIndex == 5,
+    canConvertFontOfMagicSlotToSorceryPoints(featureResourcePool(3, 3), 2, featureResourcePool(2, 1), featureResourcePool(0, 0)),
     recordProjection(
       "font-of-magic-slot-to-points",
       true,
       "none",
-      emptyFeatureResourceFacts
+      convertFontOfMagicLevel2SlotToPointsOnSheet(emptyFeatureResourceFacts
         .with("sorceryPointCapacity", 3)
-        .with("sorceryPointExpended", 1)
-        .with("ordinaryLevel2Expended", 2),
+        .with("sorceryPointExpended", 3)
+        .with("ordinaryLevel2Expended", 1)),
       6,
     ),
   }
 
   action doRejectFontOfMagicAmbiguousSlotSource = all {
     qReplayIndex == 6,
+    fontOfMagicSpellSlotSourceRequiresChoice(featureResourcePool(2, 0), featureResourcePool(1, 0)),
     recordProjection(
       "font-of-magic-ambiguous-slot-source-rejected",
       false,
@@ -255,21 +360,23 @@ module characterSheetFeatureResourcesMbt {
 
   action doFontOfMagicPointsToSlot = all {
     qReplayIndex == 7,
+    canCreateFontOfMagicSpellSlot(featureResourcePool(5, 0), featureResourcePool(0, 0), 5, 3),
     recordProjection(
       "font-of-magic-points-to-slot",
       true,
       "none",
-      emptyFeatureResourceFacts
+      createFontOfMagicLevel3SlotOnSheet(emptyFeatureResourceFacts
         .with("sorceryPointCapacity", 5)
-        .with("sorceryPointExpended", 5)
-        .with("createdLevel3Capacity", 1)
-        .with("createdLevel3Expended", 0),
+        .with("sorceryPointExpended", 0)
+        .with("createdLevel3Capacity", 0)
+        .with("createdLevel3Expended", 0)),
       8,
     ),
   }
 
   action doRejectFontOfMagicInsufficientPoints = all {
     qReplayIndex == 8,
+    not(canCreateFontOfMagicSpellSlot(featureResourcePool(3, 1), featureResourcePool(0, 0), 3, 2)),
     recordProjection(
       "font-of-magic-insufficient-points-rejected",
       false,
@@ -323,6 +430,7 @@ module characterSheetFeatureResourcesMbt {
 
   action doRejectUncannyMetabolismRepeatUse = all {
     qReplayIndex == 12,
+    not(canUseUncannyMetabolism(true)),
     recordProjection(
       "uncanny-metabolism-repeat-use-rejected",
       false,
