@@ -602,10 +602,15 @@ module battleRuntimeModel {
     | NoGrapple
     | FighterGrapplesGoblin(GrappleLink)
 
+  type InitiativeStillToAct = {
+    actor: Actor,
+    waiting: List[Actor],
+  }
+
   type Initiative = {
     round: int,
     alreadyActed: List[Actor],
-    stillToAct: List[Actor],
+    stillToAct: InitiativeStillToAct,
   }
 
   type BattleState = {
@@ -700,7 +705,7 @@ module battleRuntimeModel {
     | AttackReplayComplete
 
   pure val initialState: BattleState = {
-    initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Goblin] },
+    initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Goblin] } },
     fighter: {
       hp: 12,
       maxHp: 12,
@@ -811,6 +816,6 @@ module battleRuntimeModel {
   // authoritative once battle starts.
   pure val callerOrderedTieInitialState: BattleState = {
     ...initialState,
-    initiative: { round: 1, alreadyActed: [], stillToAct: [Goblin, Fighter] },
+    initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Goblin, waiting: [Fighter] } },
   }
 }

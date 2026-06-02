@@ -473,7 +473,7 @@ module battleRuntimeCoreCombatTests {
   run test_legendary_action_window_after_another_non_current_turn = {
     val afterFighterTurnWithThirdActor = endTurn({
       ...initialState,
-      initiative: { round: 1, alreadyActed: [], stillToAct: [Fighter, Fighter, Goblin] },
+      initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Fighter, Goblin] } },
     })
     val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
     all {
@@ -487,7 +487,7 @@ module battleRuntimeCoreCombatTests {
     all {
       assert(currentActor(callerOrderedTieInitialState) == Goblin),
       assert(
-        endTurn(endTurn(callerOrderedTieInitialState)).initiative.stillToAct == [Goblin, Fighter]
+        initiativeStillToActActors(endTurn(endTurn(callerOrderedTieInitialState)).initiative) == [Goblin, Fighter]
       ),
     }
   }

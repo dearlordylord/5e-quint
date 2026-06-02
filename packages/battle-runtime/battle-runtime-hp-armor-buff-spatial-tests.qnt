@@ -420,7 +420,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
       assert(currentActor(result) == Fighter),
       assert(result.initiative.round == 2),
       assert(result.initiative.alreadyActed == []),
-      assert(result.initiative.stillToAct == [Fighter, Goblin]),
+      assert(initiativeStillToActActors(result.initiative) == [Fighter, Goblin]),
     }
   }
 

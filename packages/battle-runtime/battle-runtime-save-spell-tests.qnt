@@ -776,7 +776,7 @@ module battleRuntimeSaveSpellTests {
     val rejectedCasterArea = resolveEntangle(initialState, true, false)
     val entangled = resolveEntangle(initialState, false, false)
     val broken = breakConcentrationSpellEffects(entangled, Fighter)
-    val escaped = escapeEntangle({ ...entangled, initiative: { round: 1, alreadyActed: List(Fighter), stillToAct: List(Goblin) }, actionAvailable: true }, true)
+    val escaped = escapeEntangle({ ...entangled, initiative: { round: 1, alreadyActed: List(Fighter), stillToAct: { actor: Goblin, waiting: List() } }, actionAvailable: true }, true)
     all {
       assert(not(rejectedCasterArea.goblin.activeEffects.contains(EntangleRestrained))),
       assert(entangled.fighter.concentrating),
@@ -1237,7 +1237,7 @@ module battleRuntimeSaveSpellTests {
     val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val nextRoundFighterTurn = {
       ...slept,
-      initiative: { round: 2, alreadyActed: List(), stillToAct: List(Fighter, Goblin) },
+      initiative: { round: 2, alreadyActed: List(), stillToAct: { actor: Fighter, waiting: List(Goblin) } },
       actionAvailable: true,
     }
     val shaken = shakeAwakeFromSleep(nextRoundFighterTurn, Goblin, true)

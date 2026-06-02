@@ -11,7 +11,7 @@ module battleRuntimeSleepHideousLaughter {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
-    actor != currentActor(state) and state.initiative.stillToAct.length() > 1
+    actor != currentActor(state) and initiativeStillToActCount(state.initiative) > 1
 
   pure def sleepRepeatAtRound(state: BattleState, target: Actor): int =
     if (actorHasTurnLaterThisRound(state, target))

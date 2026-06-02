@@ -565,11 +565,11 @@ module battleRuntimeSpellFactsTests {
       assert(hexDurationTicks(4) == 28800),
       assert(hexDurationTicks(5) == 86400),
       assert(activeEffectsContainTransferableHex(
-        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: List(Fighter, Goblin), alreadyActed: List() } },
+        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: { actor: Fighter, waiting: List(Goblin) }, alreadyActed: List() } },
         Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: TransferAvailableAfterTurn({ actor: Fighter, round: 1 }), durationTicks: 600 }))
       ) == false),
       assert(activeEffectsContainTransferableHex(
-        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: List(Goblin), alreadyActed: List(Fighter) } },
+        { ...initialState, initiative: { ...initialState.initiative, round: 1, stillToAct: { actor: Goblin, waiting: List() }, alreadyActed: List(Fighter) } },
         Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: TransferAvailableAfterTurn({ actor: Fighter, round: 1 }), durationTicks: 600 }))
       )),
       assert(resolveRayOfFrostWithDamageRoll({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })) }, goblin: { ...initialState.goblin, reactionAvailable: false } }, 15, 10, fighterSpellAttackDamageRollWithHuntersMark(4, 6), true).goblin.hp == 0),

@@ -38,6 +38,10 @@ module battleRuntimeTurnOrder {
     | AlertInitiativeSwapUnavailable
     | AlertInitiativeSwapped(AlertInitiative)
 
+  type InitiativeStillToActInputResult =
+    | InitiativeStillToActAccepted(InitiativeStillToAct)
+    | InitiativeStillToActRejectedEmpty
+
   pure val alertInitialScoredInitiative: AlertInitiative = {
     round: 1,
     alreadyActed: [],
@@ -49,7 +53,28 @@ module battleRuntimeTurnOrder {
   }
 
   pure def currentActor(state: BattleState): Actor =
-    state.initiative.stillToAct[0]
+    state.initiative.stillToAct.actor
+
+  pure def initiativeStillToActActors(initiative: Initiative): List[Actor] =
+    [initiative.stillToAct.actor].concat(initiative.stillToAct.waiting)
+
+  pure def initiativeStillToActCount(initiative: Initiative): int =
+    1 + initiative.stillToAct.waiting.length()
+
+  pure def initiativeStillToActFromInput(actors: List[Actor]): InitiativeStillToActInputResult =
+    if (actors.length() == 0)
+      InitiativeStillToActRejectedEmpty
+    else
+      InitiativeStillToActAccepted({
+        actor: actors[0],
+        waiting: actors.slice(1, actors.length()),
+      })
+
+  pure def initiativeStillToActAfterRoundWrap(alreadyActed: List[Actor], actor: Actor): InitiativeStillToAct =
+    match initiativeStillToActFromInput(alreadyActed.append(actor)) {
+      | InitiativeStillToActAccepted(stillToAct) => stillToAct
+      | InitiativeStillToActRejectedEmpty => { actor: actor, waiting: [] }
+    }
 
   pure def currentActorCanAttack(state: BattleState): bool =
     (state.actionAvailable or (currentActor(state) == Fighter and hasAttackActionAdditionalAttacks(state.fighter.extraAttackSlotsRemaining))) and
@@ -59,14 +84,24 @@ module battleRuntimeTurnOrder {
     )
 
   pure def nextInitiative(initiative: Initiative): Initiative = {
-    val current = initiative.stillToAct[0]
-    val remaining = initiative.stillToAct.slice(1, initiative.stillToAct.length())
+    val current = initiative.stillToAct.actor
+    val remaining = initiative.stillToAct.waiting
     val acted = initiative.alreadyActed.append(current)
 
-    if (remaining.length() == 0)
-      { round: initiative.round + 1, alreadyActed: [], stillToAct: acted }
-    else
-      { round: initiative.round, alreadyActed: acted, stillToAct: remaining }
+    match initiativeStillToActFromInput(remaining) {
+      | InitiativeStillToActAccepted(stillToAct) =>
+          {
+            round: initiative.round,
+            alreadyActed: acted,
+            stillToAct: stillToAct,
+          }
+      | InitiativeStillToActRejectedEmpty =>
+          {
+            round: initiative.round + 1,
+            alreadyActed: [],
+            stillToAct: initiativeStillToActAfterRoundWrap(initiative.alreadyActed, current),
+          }
+    }
   }
 
   // RAW Alert: immediately after rolling Initiative, swap once with one willing
@@ -239,6 +274,34 @@ module battleRuntimeTurnOrder {
       assert(ordered.first.initiative == alertInitialScoredInitiative.scores.allyInitiative),
       assert(ordered.second.initiative == alertInitialScoredInitiative.scores.enemyInitiative),
       assert(ordered.third.initiative == alertInitialScoredInitiative.scores.sourceInitiative),
+    }
+  }
+
+  run test_generic_initiative_advances_to_waiting_actor = {
+    val advanced = nextInitiative(initialState.initiative)
+    all {
+      assert(advanced.round == 1),
+      assert(advanced.alreadyActed == [Fighter]),
+      assert(advanced.stillToAct == { actor: Goblin, waiting: [] }),
+      assert(initiativeStillToActActors(advanced) == [Goblin]),
+    }
+  }
+
+  run test_generic_initiative_wraps_to_next_round_order = {
+    val goblinTurn = nextInitiative(initialState.initiative)
+    val nextRound = nextInitiative(goblinTurn)
+    all {
+      assert(nextRound.round == 2),
+      assert(nextRound.alreadyActed == []),
+      assert(nextRound.stillToAct == { actor: Fighter, waiting: [Goblin] }),
+      assert(initiativeStillToActActors(nextRound) == [Fighter, Goblin]),
+    }
+  }
+
+  run test_generic_initiative_rejects_empty_input_queue = {
+    all {
+      assert(initiativeStillToActFromInput([]) == InitiativeStillToActRejectedEmpty),
+      assert(initiativeStillToActFromInput([Goblin]) == InitiativeStillToActAccepted({ actor: Goblin, waiting: [] })),
     }
   }
 }
