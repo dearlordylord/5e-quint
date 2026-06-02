@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 
 module battleRuntimeWeaponAttacks {
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
@@ -25,7 +26,7 @@ module battleRuntimeWeaponAttacks {
 
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState = {
     val attacker = combatantForActor(state, Fighter)
-    if (attacker.extraAttackSlotsRemaining > 0)
+    if (hasAttackActionAdditionalAttacks(attacker.extraAttackSlotsRemaining))
       stateWithActorCombatant(state, Fighter, { ...attacker, extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterExtraAttack(attacker.extraAttackSlotsRemaining) })
     else {
       val spent = stateWithFighterMovementStep(
@@ -35,7 +36,7 @@ module battleRuntimeWeaponAttacks {
       if (spent != state)
         stateWithActorCombatant(spent, Fighter, { ...combatantForActor(spent, Fighter), extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterAttackAction(
           state.actionAvailable,
-          attacker.extraAttackSupported,
+          attacker.extraAttackAdditionalAttacks,
         ) })
       else
         state

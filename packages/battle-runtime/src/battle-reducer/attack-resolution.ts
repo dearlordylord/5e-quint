@@ -66,6 +66,7 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ongoingFeatureSpellModifierSourceClassName,
+  type BattleAttackActionAdditionalAttacks,
 } from "../unit-feature-support.ts";
 
 import {
@@ -2103,23 +2104,34 @@ export function classFeatureExtraAttackForActor(
   actor: BattleCreatureState | undefined,
 ): {
   readonly unitId: UnitRecord["id"];
-  readonly additionalAttacks: 1;
+  readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
 } | null {
   if (actor?.origin.kind !== "character") return null;
+  let strongest:
+    | {
+        readonly unitId: UnitRecord["id"];
+        readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
+      }
+    | null = null;
   for (const unitRef of actor.origin.characterUnitRefs) {
     for (const profile of unitRef.supportProfiles) {
       if (
         typeof profile === "object" &&
         profile.kind === ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
       ) {
-        return {
-          unitId: unitRef.unitId,
-          additionalAttacks: profile.additionalAttacks,
-        };
+        if (
+          strongest === null ||
+          profile.additionalAttacks > strongest.additionalAttacks
+        ) {
+          strongest = {
+            unitId: unitRef.unitId,
+            additionalAttacks: profile.additionalAttacks,
+          };
+        }
       }
     }
   }
-  return null;
+  return strongest;
 }
 
 export function openClassFeatureExtraAttackResource(input: {

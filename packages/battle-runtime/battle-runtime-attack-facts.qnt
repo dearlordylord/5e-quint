@@ -2,6 +2,7 @@
 
 module battleRuntimeAttackFacts {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
@@ -30,7 +31,13 @@ module battleRuntimeAttackFacts {
     { ...state, fighter: { ...state.fighter, sneakAttackSupported: true } }
 
   pure def withFighterExtraAttack(state: BattleState): BattleState =
-    { ...state, fighter: { ...state.fighter, extraAttackSupported: true } }
+    withFighterExtraAttackAdditionalAttacks(state, OneAdditionalAttack)
+
+  pure def withFighterExtraAttackAdditionalAttacks(
+    state: BattleState,
+    additionalAttacks: AttackActionAdditionalAttacks,
+  ): BattleState =
+    { ...state, fighter: { ...state.fighter, extraAttackAdditionalAttacks: additionalAttacks } }
 
   pure def withGoblinHp(state: BattleState, hp: int, tempHp: int): BattleState =
     { ...state, goblin: { ...state.goblin, hp: hp, tempHp: tempHp } }

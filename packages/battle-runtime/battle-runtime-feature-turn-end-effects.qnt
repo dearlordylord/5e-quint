@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling
 
 module battleRuntimeFeatureTurnEndEffects {
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
 
   // RAW trace:
@@ -15,19 +16,19 @@ module battleRuntimeFeatureTurnEndEffects {
 
   pure def battleRuntimeAttackCountState(
     actionAvailable: bool,
-    extraAttackSlotsRemaining: int
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
   ): AttackActionAttackCountState = {
     actionAvailable: actionAvailable,
-    extraAttackSlotOpen: extraAttackSlotsRemaining > 0,
+    additionalAttacksRemaining: extraAttackSlotsRemaining,
     attacksResolved: 0,
     movementSegmentsTaken: 0,
     turnEnded: false,
   }
 
   pure def battleRuntimeExtraAttackSlotsAfterEndTurn(
-    extraAttackSlotsRemaining: int
-  ): int = {
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
+  ): AttackActionAdditionalAttacks = {
     val ended = endTurnDuringAttackActionAttackCount(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
-    if (ended.extraAttackSlotOpen) 1 else 0
+    ended.additionalAttacksRemaining
   }
 }

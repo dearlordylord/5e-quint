@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module unitFeatureActionCountCoreExamples {
+  import attackActionAdditionalAttacks.* from "./attack-action-additional-attacks"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
 

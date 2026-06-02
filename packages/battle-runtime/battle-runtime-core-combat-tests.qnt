@@ -3,6 +3,7 @@
 module battleRuntimeCoreCombatTests {
   import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
@@ -519,8 +520,8 @@ module battleRuntimeCoreCombatTests {
     val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
       assert(not(first.actionAvailable)),
-      assert(first.fighter.extraAttackSlotsRemaining == 1),
-      assert(second.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 0),
       assert(third == second),
     }
   }
@@ -530,9 +531,9 @@ module battleRuntimeCoreCombatTests {
     val moved = moveFighter(first, 5, false)
     val second = resolveAttack(moved, 1, 1, fighterWeaponAttackDamageRoll(0), true)
     all {
-      assert(moved.fighter.extraAttackSlotsRemaining == 1),
+      assert(attackActionAdditionalAttackCount(moved.fighter.extraAttackSlotsRemaining) == 1),
       assert(moved.fighter.movementSpent == 5),
-      assert(second.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 0),
     }
   }
 
@@ -540,8 +541,36 @@ module battleRuntimeCoreCombatTests {
     val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)
     val ended = endTurn(first)
     all {
-      assert(first.fighter.extraAttackSlotsRemaining == 1),
-      assert(ended.fighter.extraAttackSlotsRemaining == 0),
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(ended.fighter.extraAttackSlotsRemaining) == 0),
+    }
+  }
+
+  run test_class_feature_extra_attack_preserves_two_additional_attacks = {
+    val first = resolveAttack(withFighterExtraAttackAdditionalAttacks(initialState, TwoAdditionalAttacks), 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val second = resolveAttack(first, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fourth = resolveAttack(third, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    all {
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 2),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(third.fighter.extraAttackSlotsRemaining) == 0),
+      assert(fourth == third),
+    }
+  }
+
+  run test_class_feature_extra_attack_preserves_three_additional_attacks = {
+    val first = resolveAttack(withFighterExtraAttackAdditionalAttacks(initialState, ThreeAdditionalAttacks), 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val second = resolveAttack(first, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val third = resolveAttack(second, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fourth = resolveAttack(third, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    val fifth = resolveAttack(fourth, 1, 1, fighterWeaponAttackDamageRoll(0), true)
+    all {
+      assert(attackActionAdditionalAttackCount(first.fighter.extraAttackSlotsRemaining) == 3),
+      assert(attackActionAdditionalAttackCount(second.fighter.extraAttackSlotsRemaining) == 2),
+      assert(attackActionAdditionalAttackCount(third.fighter.extraAttackSlotsRemaining) == 1),
+      assert(attackActionAdditionalAttackCount(fourth.fighter.extraAttackSlotsRemaining) == 0),
+      assert(fifth == fourth),
     }
   }
 

@@ -10,6 +10,7 @@ module battleRuntimeModel {
   // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or
   // battle-runtime-spell-bridge here — that re-attaches the 30-file closure and
   // makes every model-importing driver ~100x slower (see the leaf headers).
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
@@ -573,12 +574,13 @@ module battleRuntimeModel {
     rightHandUse: HandUse,
     // Per-combatant SRD feature projections (class & monster), runtime
     // projections like wearingHeavyArmor above; a combatant without a given
-    // feature holds the inert value (DefaultCriticalRange, false, 0).
+    // feature holds its inert value, such as DefaultCriticalRange, false, or
+    // NoAdditionalAttacks.
     criticalRange: FighterCriticalRange,
     sneakAttackSupported: bool,
     sneakAttackUsedThisTurn: bool,
-    extraAttackSupported: bool,
-    extraAttackSlotsRemaining: int,
+    extraAttackAdditionalAttacks: AttackActionAdditionalAttacks,
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks,
     longswordSapMastery: bool,
     quarterstaffToppleMastery: bool,
     greataxeCleaveMastery: bool,
@@ -729,8 +731,8 @@ module battleRuntimeModel {
       criticalRange: DefaultCriticalRange,
       sneakAttackSupported: false,
       sneakAttackUsedThisTurn: false,
-      extraAttackSupported: false,
-      extraAttackSlotsRemaining: 0,
+      extraAttackAdditionalAttacks: NoAdditionalAttacks,
+      extraAttackSlotsRemaining: NoAdditionalAttacks,
       longswordSapMastery: false,
       quarterstaffToppleMastery: false,
       greataxeCleaveMastery: false,
@@ -772,8 +774,8 @@ module battleRuntimeModel {
       criticalRange: DefaultCriticalRange,
       sneakAttackSupported: false,
       sneakAttackUsedThisTurn: false,
-      extraAttackSupported: false,
-      extraAttackSlotsRemaining: 0,
+      extraAttackAdditionalAttacks: NoAdditionalAttacks,
+      extraAttackSlotsRemaining: NoAdditionalAttacks,
       longswordSapMastery: false,
       quarterstaffToppleMastery: false,
       greataxeCleaveMastery: false,

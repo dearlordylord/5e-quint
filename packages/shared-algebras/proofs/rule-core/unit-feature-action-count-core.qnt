@@ -5,6 +5,7 @@
 
 module unitFeatureActionCountCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
+  import attackActionAdditionalAttacks.* from "./attack-action-additional-attacks"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
@@ -29,12 +30,6 @@ module unitFeatureActionCountCore {
     actionSurge: ActionSurgeState,
     actionWasTaken: bool,
   }
-
-  type AttackActionAdditionalAttacks =
-    | NoAdditionalAttacks
-    | OneAdditionalAttack
-    | TwoAdditionalAttacks
-    | ThreeAdditionalAttacks
 
   type AttackActionAdditionalAttacksAdmission =
     | UnsupportedAdditionalAttackCount

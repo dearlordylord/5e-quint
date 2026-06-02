@@ -6,6 +6,7 @@
 
 module battleRuntimeTurnOrder {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
 
   type AlertActor = AlertSource | AlertAlly | AlertEnemy
 
@@ -51,7 +52,7 @@ module battleRuntimeTurnOrder {
     state.initiative.stillToAct[0]
 
   pure def currentActorCanAttack(state: BattleState): bool =
-    (state.actionAvailable or (currentActor(state) == Fighter and state.fighter.extraAttackSlotsRemaining > 0)) and
+    (state.actionAvailable or (currentActor(state) == Fighter and hasAttackActionAdditionalAttacks(state.fighter.extraAttackSlotsRemaining))) and
     (
       (currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated)) or
       (currentActor(state) == Goblin and state.goblin.hp > 0)

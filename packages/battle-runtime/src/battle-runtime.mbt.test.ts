@@ -360,6 +360,9 @@ const magicMissileDriverSchema = {
 
 const extraAttackDriverSchema = {
   init: {},
+  initOneAdditionalAttack: {},
+  initTwoAdditionalAttacks: {},
+  initThreeAdditionalAttacks: {},
   doResolveFirstExtraAttackMiss: {},
   doMoveBetweenExtraAttackSlots: {},
   doResolveSecondExtraAttackMiss: {},
@@ -434,7 +437,11 @@ const spiritualWeaponDriverSchema = {
 
 type ExtraAttackDriverAction = Exclude<
   keyof typeof extraAttackDriverSchema,
-  "init" | "step"
+  | "init"
+  | "initOneAdditionalAttack"
+  | "initTwoAdditionalAttacks"
+  | "initThreeAdditionalAttacks"
+  | "step"
 >;
 type AdrenalineRushDriverAction = Exclude<
   keyof typeof adrenalineRushDriverSchema,
@@ -446,6 +453,22 @@ const extraAttackSelectedUnitIds = [
   "ranger_extra_attack",
 ] as const;
 type ExtraAttackSelectedUnitId = (typeof extraAttackSelectedUnitIds)[number];
+const extraAttackMbtAdditionalAttackCounts = [1, 2, 3] as const;
+type ExtraAttackMbtAdditionalAttackCount =
+  (typeof extraAttackMbtAdditionalAttackCounts)[number];
+const syntheticExtraAttackMbtUnitIds = [
+  "test_synthetic_attack_count_2",
+  "test_synthetic_attack_count_3",
+] as const;
+type SyntheticExtraAttackMbtUnitId =
+  (typeof syntheticExtraAttackMbtUnitIds)[number];
+type ExtraAttackMbtUnitId =
+  | ExtraAttackSelectedUnitId
+  | SyntheticExtraAttackMbtUnitId;
+type ExtraAttackMbtInitAction =
+  | "initOneAdditionalAttack"
+  | "initTwoAdditionalAttacks"
+  | "initThreeAdditionalAttacks";
 type SelectedUnitIdentityReplaySequence<
   ActionName extends string,
   Projection,
@@ -795,16 +818,18 @@ function createBattleRuntimeDriver() {
 }
 
 function createExtraAttackDriver(
-  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+  unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
 ) {
   return defineDriver(extraAttackDriverSchema, () => {
     let state = extraAttackBattle(unitId);
+    let currentUnitId = unitId;
     let subject: BattleSubject = fighterAttackSubject();
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
-    function reset(): void {
-      state = extraAttackBattle(unitId);
+    function resetUnit(nextUnitId: ExtraAttackMbtUnitId): void {
+      currentUnitId = nextUnitId;
+      state = extraAttackBattle(nextUnitId);
       subject = fighterAttackSubject();
       lastResult = "init";
       lastInvalidReason = "";
@@ -826,7 +851,7 @@ function createExtraAttackDriver(
     }
 
     function resolveAttackMiss(): void {
-      recordExtraAttackBoundaryFromState(state, unitId);
+      recordExtraAttackBoundaryFromState(state, currentUnitId);
       subject = fighterAttackSubject();
       const target = requireHole(
         discoverAttackHoles(state, subject),
@@ -847,11 +872,22 @@ function createExtraAttackDriver(
           ],
         }),
       );
-      recordExtraAttackBoundaryFromState(state, unitId);
+      recordExtraAttackBoundaryFromState(state, currentUnitId);
     }
 
     return {
-      init: reset,
+      init: () => {
+        resetUnit(unitId);
+      },
+      initOneAdditionalAttack: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(1));
+      },
+      initTwoAdditionalAttacks: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(2));
+      },
+      initThreeAdditionalAttacks: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(3));
+      },
       doResolveFirstExtraAttackMiss: resolveAttackMiss,
       doMoveBetweenExtraAttackSlots: () => {
         subject = moveSubject();
@@ -1861,21 +1897,45 @@ describe("battle-runtime MBT", () => {
     });
   }, 120_000);
 
-  it("replays Extra Attack action spend, interleaved Movement, and slot closure", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-extra-attack.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createExtraAttackDriver(),
-      backend: "typescript",
-      nTraces: promotedMbtTraces,
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: extraAttackStateCheck,
-    });
-  }, 120_000);
+  it.each(extraAttackMbtAdditionalAttackCounts)(
+    "replays Extra Attack count %i slot spending",
+    async (additionalAttacks) => {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../battle-runtime-extra-attack.mbt.qnt",
+        ),
+        init: extraAttackMbtInitAction(additionalAttacks),
+        step: "stepSpendAllSlots",
+        driver: createExtraAttackDriver(),
+        backend: "typescript",
+        nTraces: promotedMbtTraces,
+        maxSteps: focusedMbtMaxSteps(additionalAttacks + 3),
+        stateCheck: extraAttackStateCheck,
+      });
+    },
+    120_000,
+  );
+
+  it.each(extraAttackMbtAdditionalAttackCounts)(
+    "replays Extra Attack count %i end-turn slot closure",
+    async (additionalAttacks) => {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../battle-runtime-extra-attack.mbt.qnt",
+        ),
+        init: extraAttackMbtInitAction(additionalAttacks),
+        step: "stepEndTurnAfterOpeningSlots",
+        driver: createExtraAttackDriver(),
+        backend: "typescript",
+        nTraces: promotedMbtTraces,
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: extraAttackStateCheck,
+      });
+    },
+    120_000,
+  );
 
   it("replays Orc Adrenaline Rush Bonus Action Dash and Temporary Hit Points", async () => {
     await run({
@@ -2093,7 +2153,7 @@ function projectExtraAttackMbtState(input: {
 
 function recordExtraAttackBoundaryFromState(
   state: BattleState,
-  unitId: ExtraAttackSelectedUnitId,
+  unitId: ExtraAttackMbtUnitId,
 ): void {
   if (
     state.currentTurnResources.actionResources.some(
@@ -2575,7 +2635,7 @@ function fighterVsSkeletonBattle(): BattleState {
 }
 
 function extraAttackBattle(
-  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+  unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
 ): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-extra-attack"),
@@ -2584,6 +2644,64 @@ function extraAttackBattle(
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function extraAttackMbtUnitIdForAdditionalAttacks(
+  additionalAttacks: ExtraAttackMbtAdditionalAttackCount,
+): ExtraAttackMbtUnitId {
+  if (additionalAttacks === 1) return "fighter_extra_attack";
+  if (additionalAttacks === 2) return "test_synthetic_attack_count_2";
+  return "test_synthetic_attack_count_3";
+}
+
+function extraAttackMbtInitAction(
+  additionalAttacks: ExtraAttackMbtAdditionalAttackCount,
+): ExtraAttackMbtInitAction {
+  if (additionalAttacks === 1) return "initOneAdditionalAttack";
+  if (additionalAttacks === 2) return "initTwoAdditionalAttacks";
+  return "initThreeAdditionalAttacks";
+}
+
+function extraAttackMbtUnit(unitId: ExtraAttackMbtUnitId): UnitRecord {
+  if (unitId === "test_synthetic_attack_count_2") {
+    return syntheticExtraAttackMbtUnit(2);
+  }
+  if (unitId === "test_synthetic_attack_count_3") {
+    return syntheticExtraAttackMbtUnit(3);
+  }
+  return unitLibrary.requireUnit(unitId);
+}
+
+function syntheticExtraAttackMbtUnit(
+  additionalAttacks: Exclude<ExtraAttackMbtAdditionalAttackCount, 1>,
+): UnitRecord {
+  const unit = unitLibrary.requireUnit("fighter_extra_attack");
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    throw new Error("Expected passive Fighter Extra Attack Unit.");
+  }
+  return {
+    ...unit,
+    id: `test_synthetic_attack_count_${additionalAttacks}`,
+    name: `Synthetic Attack Count ${additionalAttacks}`,
+    description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
+    provenance: {
+      kind: "srd-5.2.1",
+      section:
+        additionalAttacks === 2
+          ? "Classes/Fighter#Two Extra Attacks"
+          : "Classes/Fighter#Three Extra Attacks",
+    },
+    mechanics: {
+      ...unit.mechanics,
+      grants: [{ kind: "scale_attack_count", additional: additionalAttacks }],
+    },
+  };
+}
+
+function extraAttackMbtClassLevel(unitId: ExtraAttackMbtUnitId): number {
+  if (unitId === "test_synthetic_attack_count_2") return 11;
+  if (unitId === "test_synthetic_attack_count_3") return 20;
+  return 5;
 }
 
 function adrenalineRushBattle(): BattleState {
@@ -2789,9 +2907,9 @@ function rogueCreatureInit(input: {
 
 function extraAttackCreatureInit(input: {
   readonly initiative: number;
-  readonly unitId: ExtraAttackSelectedUnitId;
+  readonly unitId: ExtraAttackMbtUnitId;
 }): BattleCreatureInit {
-  const unit = unitLibrary.requireUnit(input.unitId);
+  const unit = extraAttackMbtUnit(input.unitId);
   if (unit.kind !== "class_feature") {
     throw new Error("Expected Extra Attack class-feature Unit.");
   }
@@ -2804,7 +2922,12 @@ function extraAttackCreatureInit(input: {
       kind: "character",
       characterId: characterId(`extra-attack-${unit.className}-character`),
       characterUnitRefs: [extraAttackUnitRef(unit)],
-      classLevels: [{ className: unit.className, level: 5 }],
+      classLevels: [
+        {
+          className: unit.className,
+          level: extraAttackMbtClassLevel(input.unitId),
+        },
+      ],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),

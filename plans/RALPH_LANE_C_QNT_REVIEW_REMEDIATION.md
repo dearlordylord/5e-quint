@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thread Extra Attack counts through battle-runtime QNT and parity tests"
     },
     {
@@ -249,7 +249,7 @@ protocol when the Ralph runner supports it.
 | 7 | QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape | done | none | Removes partial map convention. |
 | 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | done | none | Removes list-position convention. |
 | 9 | QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core | done | none | Rule-core first. |
-| 10 | QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests | ready-for-research | QRFR-C09-EXTRA-ATTACK-RULE-CORE | Integration and parity after rule-core shape exists. |
+| 10 | QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests | done | QRFR-C09-EXTRA-ATTACK-RULE-CORE | Integration and parity after rule-core shape exists. |
 | 11 | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts | ready-for-research | none | Needed because current sources may lack restoration facts. |
 | 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | blocked | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change. |
 | 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | ready-for-research | none | Prevents an unfocused whole-corpus rewrite. |
@@ -486,7 +486,7 @@ Acceptance:
 
 ### Task 10 - QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY - Thread Extra Attack counts through battle-runtime QNT and parity tests
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C09-EXTRA-ATTACK-RULE-CORE
 

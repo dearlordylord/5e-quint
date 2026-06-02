@@ -3,6 +3,7 @@
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
@@ -54,20 +55,20 @@ module battleRuntimeFeatureBridge {
 
   pure def battleRuntimeExtraAttackSlotsAfterAttackAction(
     actionAvailable: bool,
-    extraAttackSupported: bool
-  ): int = {
+    additionalAttacks: AttackActionAdditionalAttacks
+  ): AttackActionAdditionalAttacks = {
     val result = takeAttackActionWithAttackCountScaling(
-      battleRuntimeAttackCountState(actionAvailable, 0),
-      { additionalAttacks: if (extraAttackSupported) 1 else 0 },
+      battleRuntimeAttackCountState(actionAvailable, NoAdditionalAttacks),
+      { additionalAttacks: additionalAttacks },
     )
-    if (result.state.extraAttackSlotOpen) 1 else 0
+    result.state.additionalAttacksRemaining
   }
 
   pure def battleRuntimeExtraAttackSlotsAfterExtraAttack(
-    extraAttackSlotsRemaining: int
-  ): int = {
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
+  ): AttackActionAdditionalAttacks = {
     val result = resolveExtraAttackSlot(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
-    if (result.state.extraAttackSlotOpen) 1 else 0
+    result.state.additionalAttacksRemaining
   }
 
   pure def battleRuntimeRagePreventsSpellcasting(active: bool): bool =
