@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "QRFR-C01-REVIEW-RULES-AUTHORITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Correct review rules to package-local QNT authority"
     },
     {
@@ -240,7 +240,7 @@ protocol when the Ralph runner supports it.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | ready-for-research | none | Small first fix so subsequent review loops use the right authority. |
+| 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | done | none | Small first fix so subsequent review loops use the right authority. |
 | 2 | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports | ready-for-research | none | Guardrail before driver repairs. |
 | 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | blocked | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
 | 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | ready-for-research | none | Guardrail before proof baseline repairs. |
@@ -265,7 +265,7 @@ protocol when the Ralph runner supports it.
 
 ### Task 1 - QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

@@ -49,11 +49,17 @@ because it is in support code.
 
 ## Quint And Runtime Parity
 
-Review combat behavior against the authoritative Quint model.
+Review combat behavior against the active package-local Quint authority:
+`packages/battle-runtime/battle-runtime.qnt`, the relevant package-local QNT
+slices it uses, and the reusable rule-core slices in
+`packages/shared-algebras/proofs/rule-core/`. Root `battle.qnt`,
+`creature.qnt`, `dndTest.qnt`, and other root QNT files are archived
+restoration source material only when a task explicitly asks for archive
+restoration work; they are not active parity gates.
 
 Flag:
 
-- XState or TypeScript behavior that diverges from `battle.qnt` without a corresponding spec change;
+- XState or TypeScript behavior that diverges from the relevant package-local QNT or rule-core authority without a corresponding spec change;
 - changes to fields mapped by MBT bridges without checking the relevant parity tests;
 - duplicated rule logic between Quint, TS, bridge code, and UI that should be shared, derived, or explicitly projected;
 - exploratory battle MBT runs that violate the repo's MBT cost rules.
