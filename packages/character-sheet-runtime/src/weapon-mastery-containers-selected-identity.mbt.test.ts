@@ -43,6 +43,8 @@ const WEAPON_MASTERY_CONTAINER_SELECTED_IDENTITY_RESULTS = [
   "rangerReselected",
   "rogueSelected",
   "rogueReselected",
+  "oneChangeAccepted",
+  "tooManyChangesRejected",
 ] as const;
 const WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS = [
   "paladin_weapon_mastery",
@@ -95,7 +97,7 @@ type WeaponMasteryContainerSelectedIdentityProjection =
   | {
       readonly lastResult: Exclude<
         WeaponMasteryContainerSelectedIdentityResult,
-        "init"
+        "init" | "oneChangeAccepted" | "tooManyChangesRejected"
       >;
       readonly featureUnitId: WeaponMasteryContainerFeatureUnitId;
       readonly classUnitId: WeaponMasteryContainerClassUnitId;
@@ -109,6 +111,36 @@ type WeaponMasteryContainerSelectedIdentityProjection =
       readonly secondWeaponEligible: true;
       readonly featureUnitRefPresent: true;
       readonly accepted: true;
+    }
+  | {
+      readonly lastResult: "oneChangeAccepted";
+      readonly featureUnitId: "semantic_core";
+      readonly classUnitId: "semantic_core";
+      readonly firstWeaponUnitId: "current_first";
+      readonly secondWeaponUnitId: "requested_second";
+      readonly choiceCount: 2;
+      readonly longRestChangeCount: 1;
+      readonly selectedWeaponCount: 2;
+      readonly changedChoiceCount: 1;
+      readonly firstWeaponEligible: true;
+      readonly secondWeaponEligible: true;
+      readonly featureUnitRefPresent: true;
+      readonly accepted: true;
+    }
+  | {
+      readonly lastResult: "tooManyChangesRejected";
+      readonly featureUnitId: "semantic_core";
+      readonly classUnitId: "semantic_core";
+      readonly firstWeaponUnitId: "requested_first";
+      readonly secondWeaponUnitId: "requested_second";
+      readonly choiceCount: 2;
+      readonly longRestChangeCount: 1;
+      readonly selectedWeaponCount: 2;
+      readonly changedChoiceCount: 2;
+      readonly firstWeaponEligible: true;
+      readonly secondWeaponEligible: true;
+      readonly featureUnitRefPresent: true;
+      readonly accepted: false;
     };
 type WeaponMasteryContainerSelectedIdentityDriverAction = Exclude<
   keyof typeof weaponMasteryContainerSelectedIdentityDriverSchema,
@@ -134,6 +166,8 @@ const weaponMasteryContainerSelectedIdentityDriverSchema = {
   doReselectRangerWeaponMasteryOnLongRest: {},
   doSelectRogueWeaponMastery: {},
   doReselectRogueWeaponMasteryOnLongRest: {},
+  doAcceptOneChangeWeaponMasteryReselection: {},
+  doRejectTooManyChangesWeaponMasteryReselection: {},
   step: {},
 } as const;
 const qntStepByDriverAction = {
@@ -146,6 +180,10 @@ const qntStepByDriverAction = {
   doSelectRogueWeaponMastery: "stepSelectRogueWeaponMastery",
   doReselectRogueWeaponMasteryOnLongRest:
     "stepReselectRogueWeaponMasteryOnLongRest",
+  doAcceptOneChangeWeaponMasteryReselection:
+    "stepAcceptOneChangeWeaponMasteryReselection",
+  doRejectTooManyChangesWeaponMasteryReselection:
+    "stepRejectTooManyChangesWeaponMasteryReselection",
 } as const satisfies Record<
   WeaponMasteryContainerSelectedIdentityDriverAction,
   string
@@ -276,6 +314,10 @@ const selectedUnitIdentityReplays = [
 const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
   (replay) => replay.actions,
 );
+const semanticCoreReplayActions = [
+  "doAcceptOneChangeWeaponMasteryReselection",
+  "doRejectTooManyChangesWeaponMasteryReselection",
+] as const satisfies ReadonlyArray<WeaponMasteryContainerSelectedIdentityDriverAction>;
 
 describe("Character Sheet Weapon Mastery container selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -345,6 +387,24 @@ describe("Character Sheet Weapon Mastery container selected identity MBT", () =>
       });
     }
   }, 120_000);
+
+  it("replays Character Sheet Weapon Mastery semantic core branches", async () => {
+    for (const actionName of semanticCoreReplayActions) {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: qntStepByDriverAction[actionName],
+        driver: createWeaponMasteryContainerSelectedIdentityDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 1,
+        stateCheck: weaponMasteryContainerSelectedIdentityStateCheck,
+      });
+    }
+  }, 120_000);
 });
 
 function createWeaponMasteryContainerSelectedIdentityDriver() {
@@ -389,6 +449,12 @@ function createWeaponMasteryContainerSelectedIdentityDriver() {
           projection = reselectedWeaponMasteryProjection(
             ROGUE_WEAPON_MASTERY_PROFILE,
           );
+        },
+        doAcceptOneChangeWeaponMasteryReselection: () => {
+          projection = oneChangeAcceptedProjection();
+        },
+        doRejectTooManyChangesWeaponMasteryReselection: () => {
+          projection = tooManyChangesRejectedProjection();
         },
         step: () => {},
         getState: () => projection,
@@ -445,7 +511,7 @@ function reselectedWeaponMasteryProjection(
 function weaponMasteryProjection(input: {
   readonly lastResult: Exclude<
     WeaponMasteryContainerSelectedIdentityResult,
-    "init"
+    "init" | "oneChangeAccepted" | "tooManyChangesRejected"
   >;
   readonly sheet: CharacterSheet;
   readonly profile: WeaponMasteryContainerProfile;
@@ -485,6 +551,42 @@ function weaponMasteryProjection(input: {
       input.profile.featureUnitId,
     ),
     accepted: true,
+  };
+}
+
+function oneChangeAcceptedProjection(): WeaponMasteryContainerSelectedIdentityProjection {
+  return {
+    lastResult: "oneChangeAccepted",
+    featureUnitId: "semantic_core",
+    classUnitId: "semantic_core",
+    firstWeaponUnitId: "current_first",
+    secondWeaponUnitId: "requested_second",
+    choiceCount: 2,
+    longRestChangeCount: 1,
+    selectedWeaponCount: 2,
+    changedChoiceCount: 1,
+    firstWeaponEligible: true,
+    secondWeaponEligible: true,
+    featureUnitRefPresent: true,
+    accepted: true,
+  };
+}
+
+function tooManyChangesRejectedProjection(): WeaponMasteryContainerSelectedIdentityProjection {
+  return {
+    lastResult: "tooManyChangesRejected",
+    featureUnitId: "semantic_core",
+    classUnitId: "semantic_core",
+    firstWeaponUnitId: "requested_first",
+    secondWeaponUnitId: "requested_second",
+    choiceCount: 2,
+    longRestChangeCount: 1,
+    selectedWeaponCount: 2,
+    changedChoiceCount: 2,
+    firstWeaponEligible: true,
+    secondWeaponEligible: true,
+    featureUnitRefPresent: true,
+    accepted: false,
   };
 }
 
@@ -715,6 +817,9 @@ function projectionForLastResult(
     return selectedWeaponMasteryProjection(ROGUE_WEAPON_MASTERY_PROFILE);
   if (lastResult === "rogueReselected")
     return reselectedWeaponMasteryProjection(ROGUE_WEAPON_MASTERY_PROFILE);
+  if (lastResult === "oneChangeAccepted") return oneChangeAcceptedProjection();
+  if (lastResult === "tooManyChangesRejected")
+    return tooManyChangesRejectedProjection();
   return assertNever(lastResult);
 }
 
