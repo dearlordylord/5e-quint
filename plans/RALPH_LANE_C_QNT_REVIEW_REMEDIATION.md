@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close the lane or create the next remediation batch"
     },
     {
@@ -265,7 +265,7 @@ protocol when the Ralph runner supports it.
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | done | none | QA generated QNT is disposable generated output; enforcement belongs in `generate_one()` and `rebuild_qnt()`. |
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | done | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | Enforce at `scripts/qa/generate_assertions.py` materialization boundaries; no manual edit to `qa_generated.qnt`. |
 | 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | done | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Result recorded below; one residual QNT initiative state-shape issue assigned to QRFR-C21. |
-| 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | ready-for-research | QRFR-C19-SECOND-PASS-QNT-RESCAN, QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY | Prevents hidden findings from being dropped after the residual QNT initiative fix lands. |
+| 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | done | QRFR-C19-SECOND-PASS-QNT-RESCAN, QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY | Lane C converged; no next remediation batch is required for the original QNT review findings. |
 | 21 | QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total | done | QRFR-C19-SECOND-PASS-QNT-RESCAN | Follow-up from the second-pass rescan: generic QNT turn-order still admits empty `stillToAct` while direct consumers index `[0]`. |
 
 ## Task Details
@@ -884,9 +884,24 @@ Acceptance:
 - `pnpm --filter @dnd/battle-runtime test:qnt-proofs` and `git diff --check`
   are green.
 
+Result:
+
+- `packages/battle-runtime/battle-runtime-model.qnt` now represents
+  `Initiative.stillToAct` as an exact current-actor plus waiting-actors shape.
+- `battle-runtime-turn-order.qnt` and
+  `battle-runtime-turn-advancement.qnt` no longer read `stillToAct[0]`; current
+  actor access goes through `stillToAct.actor`.
+- Raw initiative list admission rejects empty input, and focused generic QNT
+  run blocks cover normal advancement, round wraparound, and empty input
+  rejection.
+- Verification from Task 21: `pnpm --filter @dnd/battle-runtime
+  test:qnt-proofs` passed, and `git diff --check` passed. `pnpm quality`
+  stopped at the known unrelated baseline lint failure in
+  `packages/mcp/src/battle-tools.ts` line 439 (`max-lines`).
+
 ### Task 20 - QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -912,3 +927,44 @@ Acceptance:
 - Ralph has either a closed, converged lane or a concrete next runnable queue.
 - No broad prose-only backlog remains for unresolved important findings.
 - `git diff --check` is clean.
+
+Result:
+
+- Lane C is closed as converged. Task 19 found one residual QRF-5 issue, and
+  Task 21 remediated it with an exact generic Initiative current-actor shape.
+- No next Ralph remediation batch is required for the original QNT review
+  findings.
+- The source remediation plan at
+  `plans/QNT_REVIEW_FINDINGS_REMEDIATION_PLAN.md` is marked completed with a
+  final disposition table for all original QRF findings.
+- The only unresolved verification noise is the known unrelated broad
+  `pnpm quality` baseline lint failure in `packages/mcp/src/battle-tools.ts`
+  line 439 (`max-lines`). It is outside the QNT review remediation ownership
+  surface and is not a hidden QNT review finding.
+
+Closeout verification:
+
+- Task-base check passed for base ref
+  `ralph/qnt-review-remediation-20260602T040235Z/integration`, `HEAD`, and Base
+  SHA `9d0691a3a16d130da5875cdf58d9059538d81f8f`.
+- `rg "stillToAct\\[0\\]" packages/battle-runtime/battle-runtime-model.qnt
+  packages/battle-runtime/battle-runtime-turn-order.qnt
+  packages/battle-runtime/battle-runtime-turn-advancement.qnt` found no
+  unchecked current-actor reads in the Task 21 ownership surface.
+- `git diff --check` passed.
+- `pnpm quality` was run for the requested broad verification and stopped at
+  the known unrelated MCP `max-lines` baseline failure.
+
+Final original-finding disposition:
+
+| Finding | Closeout disposition |
+| --- | --- |
+| QRF-1 MBT closure gate | Converged. The checker rejects forbidden direct and transitive imports and keeps any allowed computed-oracle or migration entries explicit. |
+| QRF-2 Extra Attack counts | Converged. Rule-core, battle-runtime QNT, TS admission, and the MBT bridge preserve SRD-supported additional-attack counts. |
+| QRF-3 Moonbeam shape-shift reversion | Converged for admitted runtime states. Moonbeam reversion uses executable shape-shift restoration facts with unsupported shifted states kept out of ordinary admission. |
+| QRF-4 authored spell identity dispatch | Converged for this lane. The pilot uses typed procedure facts and the authored-identity dispatch checker is green. |
+| QRF-5 partial and positional QNT state | Converged. Task 21 closed the residual generic Initiative empty-list/current-actor indexing issue after Task 19's rescan. |
+| QRF-6 damage type totality | Converged. Damage type projection is explicit and total rather than fallback-based. |
+| QRF-7 shared QNT proofs | Converged. Shared-algebras proof execution is self-discovering, bounded, and attributable. |
+| QRF-8 QA generated identity policy | Converged. Generated QA materialization enforces the SRD-only or visibly synthetic identity policy. |
+| QRF-9 review authority | Converged. Review rules point at active package-local QNT and rule-core authority; root QNT remains archived restore material only. |

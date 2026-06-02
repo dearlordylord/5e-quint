@@ -1,6 +1,6 @@
 # QNT Review Findings Remediation Plan
 
-Status: proposed
+Status: completed by Ralph Lane C
 
 This plan converts the two-pass QNT review findings into implementation work. It
 focuses on active package-local Quint and rule-core slices, not archived root
@@ -15,55 +15,55 @@ risks, and proof/test wiring.
     {
       "id": "QRF-1-MBT-CLOSURE-GATE",
       "title": "Make the MBT driver closure checker enforce forbidden imports",
-      "status": "todo",
+      "status": "done",
       "priority": "high"
     },
     {
       "id": "QRF-2-EXTRA-ATTACK-COUNTS",
       "title": "Represent SRD Extra Attack counts instead of a boolean slot",
-      "status": "todo",
+      "status": "done",
       "priority": "high"
     },
     {
       "id": "QRF-3-MOONBEAM-SHAPESHIFT",
       "title": "Model Moonbeam shape-shift reversion for every supported shape-shift source",
-      "status": "todo",
+      "status": "done",
       "priority": "high"
     },
     {
       "id": "QRF-4-AUTHORED-IDENTITY-PILOT",
       "title": "Start replacing runtime spell-name dispatch with typed procedure facts",
-      "status": "todo",
+      "status": "done",
       "priority": "high"
     },
     {
       "id": "QRF-5-QNT-STATE-SHAPES",
       "title": "Replace partial and positional QNT state conventions with exact domain shapes",
-      "status": "todo",
+      "status": "done",
       "priority": "medium"
     },
     {
       "id": "QRF-6-DAMAGE-TYPE-TOTALITY",
       "title": "Make damage type projection exhaustive and total",
-      "status": "todo",
+      "status": "done",
       "priority": "medium"
     },
     {
       "id": "QRF-7-SHARED-QNT-PROOFS",
       "title": "Add self-discovering shared-algebras QNT proof execution",
-      "status": "todo",
+      "status": "done",
       "priority": "medium"
     },
     {
       "id": "QRF-8-QA-GENERATED-POLICY",
       "title": "Prevent non-SRD authored identity from materializing in generated QA QNT",
-      "status": "todo",
+      "status": "done",
       "priority": "medium"
     },
     {
       "id": "QRF-9-REVIEW-RULES-AUTHORITY",
       "title": "Correct review rules to point at active package-local QNT authority",
-      "status": "todo",
+      "status": "done",
       "priority": "low"
     }
   ]
@@ -87,6 +87,43 @@ risks, and proof/test wiring.
 - Do not run battle-runtime MBT for exploration.
 - Do not edit `qa_generated.qnt` as a normal development fix. Address the
   generator, publishing boundary, or artifact policy instead.
+
+## Final Disposition
+
+Ralph Lane C completed the remediation queue and closed without a next batch.
+Task 19's second-pass rescan found one residual issue under QRF-5: generic
+package-local battle-runtime QNT Initiative still admitted an empty
+`stillToAct` list while turn-order code read the current actor by position.
+Task 21 replaced that state shape with an exact current-actor plus waiting-actor
+queue, removed the unchecked current-actor list reads, and added focused QNT run
+blocks for normal advancement, round wraparound, and empty input rejection.
+
+All original QNT review findings now have concrete converged disposition:
+
+| Finding | Final disposition |
+| --- | --- |
+| QRF-1 MBT closure gate | Done. Forbidden direct and transitive MBT driver imports are enforced by `pnpm check:mbt-driver-closure`; any remaining allowed entries are checker-visible and classified. |
+| QRF-2 Extra Attack counts | Done. Rule-core, battle-runtime QNT, TS admission, and MBT bridge surfaces preserve SRD-supported additional-attack counts instead of collapsing them to a boolean. |
+| QRF-3 Moonbeam shape-shift reversion | Done for admitted runtime states. Moonbeam reversion uses executable true-form restoration facts, and unsupported shifted states are not admitted as ordinary executable Moonbeam states. |
+| QRF-4 authored spell identity dispatch | Done for the lane's pilot and guardrail. Runtime repeated-damage allocation uses typed procedure facts, and `pnpm check:authored-id-dispatch` guards against reintroducing production authored-identity dispatch outside documented boundaries. |
+| QRF-5 partial and positional QNT state | Done. Fighter ongoing features, Alert initiative, turn order, and generic battle-runtime Initiative now use exact or total state shapes for the reviewed conventions. |
+| QRF-6 damage type totality | Done. Damage type projection uses explicit total keyed representation rather than fallback meaning. |
+| QRF-7 shared QNT proofs | Done. Shared-algebras QNT proof execution is self-discovering, bounded, and attributable. |
+| QRF-8 QA generated identity policy | Done. QA generated materialization enforces SRD-only or visibly synthetic authored identity and is covered by a lightweight gate. |
+| QRF-9 review authority | Done. `.claude/review-rules.md` points reviewers at active package-local QNT and rule-core authority; archived root QNT is restoration source material only. |
+
+Closeout verification recorded for the lane:
+
+- Task 19 rescan gates passed for authored identity dispatch, QA generated
+  identity, MBT driver closure, rules-kernel coverage, shared-algebras QNT
+  proofs, battle-runtime QNT proofs, and `git diff --check`.
+- Task 21 battle-runtime QNT proofs and `git diff --check` passed after the
+  residual Initiative shape fix.
+- Task 20 `git diff --check` passed after the closeout documentation update.
+- Broad `pnpm quality` remains blocked by a known unrelated baseline lint
+  failure in `packages/mcp/src/battle-tools.ts` line 439 (`max-lines`). That
+  failure is outside this QNT review remediation ownership surface and is not a
+  hidden QNT review finding.
 
 ## Findings and Solutions
 
@@ -299,14 +336,13 @@ work before it is considered done:
   `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`.
   Do not use MBT for exploration, and run only one MBT instance at a time.
 
-## Risks
+## Closed Risks And Residual Notes
 
-- QRF-4 is broad. Keep it vertical-slice based, or it will become an
-  uncontrolled rewrite.
-- QRF-3 may expose missing true-form restoration data. If so, model the domain
-  fact directly rather than adding adapter state.
-- QRF-1 may temporarily increase visible MBT debt. That is acceptable if each
-  allowlist entry is explicit, reasoned, and shrinking.
-- QRF-8 may require deciding whether generated QA artifacts are source,
-  disposable build output, or private local scratch. Make that boundary explicit
-  before changing the artifact.
+- QRF-4 remains intentionally vertical-slice based. Future spell-profile
+  expansions should follow the typed procedure-fact pattern and the authored
+  identity dispatch guardrail, but no unresolved issue from this review lane
+  requires a new Ralph batch.
+- QRF-1 still exposes allowed MBT driver entries through the checker. They are
+  visible guardrail state, not hidden review debt.
+- Broad `pnpm quality` has an unrelated MCP max-lines baseline failure recorded
+  above. Do not treat that baseline as QNT remediation scope.
