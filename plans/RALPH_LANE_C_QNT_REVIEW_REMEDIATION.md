@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add a production guardrail against authored-identity runtime dispatch"
     },
     {
@@ -255,7 +255,7 @@ protocol when the Ralph runner supports it.
 | 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | done | none | Pilot selected: Magic Missile repeated-damage-allocation handoff in `plans/AUTHORED_IDENTITY_SPELL_AUDIT.md`. |
 | 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | done | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first; used the Task 13 Magic Missile handoff. |
 | 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | done | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the Task 14 QNT fact shape. |
-| 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | ready-for-research | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
+| 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | done | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | ready-for-research | none | Policy before generator enforcement. |
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | blocked | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | No manual edit to `qa_generated.qnt`. |
 | 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | blocked | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
@@ -663,7 +663,7 @@ Result:
 
 ### Task 16 - QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C15-PROCEDURE-FACT-PILOT-TS
 
