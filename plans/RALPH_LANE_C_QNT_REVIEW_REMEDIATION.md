@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "QRFR-C06-DAMAGE-TYPE-TOTALITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make damage type projection exhaustive and total"
     },
     {
@@ -245,7 +245,7 @@ protocol when the Ralph runner supports it.
 | 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | done | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
 | 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | done | none | Guardrail before proof baseline repairs. |
 | 5 | QRFR-C05-SHARED-QNT-PROOF-BASELINE - Make the discovered shared-algebras proof baseline attributable and green | done | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY | Shared-algebras proof baseline is green; no inactive/archive exclusions were required. |
-| 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | ready-for-research | none | Local connascence fix. |
+| 6 | QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total | done | none | Local connascence fix. |
 | 7 | QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE - Replace fighter ongoing feature partial map state with exact shape | ready-for-research | none | Removes partial map convention. |
 | 8 | QRFR-C08-TURN-ORDER-EXACT-SHAPES - Replace positional turn-order assumptions with exact or total state shapes | ready-for-research | none | Removes list-position convention. |
 | 9 | QRFR-C09-EXTRA-ATTACK-RULE-CORE - Model SRD Extra Attack counts in rule-core | ready-for-research | none | Rule-core first. |
@@ -391,7 +391,7 @@ Acceptance:
 
 ### Task 6 - QRFR-C06-DAMAGE-TYPE-TOTALITY - Make damage type projection exhaustive and total
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
