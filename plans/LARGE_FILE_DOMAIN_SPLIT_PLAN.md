@@ -36,19 +36,20 @@ Tracked files over 1,000 lines:
 - 81 are `scripts/content-surface-survey/results-srd/**` generated survey
   outputs.
 - 92 are other source, spec, test, or script files.
-- After excluding reference corpus, plans, generated survey outputs,
-  `qa_generated.qnt`, and `pnpm-lock.yaml`, 88 active files remain over 1,000
-  lines.
+- After excluding reference corpus, plans, generated survey outputs, and
+  `pnpm-lock.yaml`, 88 active files remained over 1,000 lines at the time of
+  the scan. The old root QNT artifacts called out below have since been removed
+  from the worktree.
 
 Do not manually split these classes of files:
 
 - reference corpus: `.references/**`;
 - generated or aggregate artifacts: `plans/raw-coverage/*.json*`,
-  `plans/unit-profile-coverage/*.json*`, `qa_generated.qnt`,
+  `plans/unit-profile-coverage/*.json*`,
   `scripts/content-surface-survey/results-srd/**`, generated trace outputs;
 - lockfiles;
-- archived restore-source material unless a restore task explicitly targets it:
-  root `battle.qnt`, root `creature.qnt`, and root `dndTest.qnt`.
+- deleted root QNT restore-source material unless a restore task explicitly
+  recovers it from git history.
 
 For generated artifacts, prefer changing the generator to emit shards or an
 index when agents need context. Do not hand-edit generated outputs just to lower

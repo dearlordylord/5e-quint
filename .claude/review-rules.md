@@ -52,10 +52,9 @@ because it is in support code.
 Review combat behavior against the active package-local Quint authority:
 `packages/battle-runtime/battle-runtime.qnt`, the relevant package-local QNT
 slices it uses, and the reusable rule-core slices in
-`packages/shared-algebras/proofs/rule-core/`. Root `battle.qnt`,
-`creature.qnt`, `dndTest.qnt`, and other root QNT files are archived
-restoration source material only when a task explicitly asks for archive
-restoration work; they are not active parity gates.
+`packages/shared-algebras/proofs/rule-core/`. Deleted root QNT files are
+historical restoration material recoverable from git history only when a task
+explicitly asks for archive restoration work; they are not active parity gates.
 
 Flag:
 
