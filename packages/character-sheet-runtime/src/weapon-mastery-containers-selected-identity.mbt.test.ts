@@ -69,11 +69,11 @@ type WeaponMasteryContainerProfile = {
   readonly featureUnitId: WeaponMasteryContainerFeatureUnitId;
   readonly selectedResult: Exclude<
     WeaponMasteryContainerSelectedIdentityResult,
-    "init"
+    "init" | "oneChangeAccepted" | "tooManyChangesRejected"
   >;
   readonly reselectedResult: Exclude<
     WeaponMasteryContainerSelectedIdentityResult,
-    "init"
+    "init" | "oneChangeAccepted" | "tooManyChangesRejected"
   >;
   readonly selectedWeaponUnitIds: WeaponMasteryWeaponPair;
   readonly reselectedWeaponUnitIds: WeaponMasteryWeaponPair;
