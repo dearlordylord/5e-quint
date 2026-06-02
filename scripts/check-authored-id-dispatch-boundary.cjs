@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const assert = require("node:assert/strict");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const PACKAGES_ROOT = path.join(REPO_ROOT, "packages");
@@ -14,7 +15,7 @@ const EXCLUDED_PATH_RULES = [
   {
     reason: "test-fixture-boundary",
     pattern:
-      /(?:\.test\.[cm]?tsx?$|\.mbt\.test\.[cm]?tsx?$|\/test-support\/|\/__tests__\/)/,
+      /(?:\.test\.[cm]?tsx?$|\.mbt\.test\.[cm]?tsx?$|\/test-support\/|\/__tests__\/|\/[^/]*(?:test|fixture)-support\.[cm]?tsx?$)/,
   },
   {
     reason: "non-source-artifact",
@@ -116,8 +117,12 @@ function classifyPath(relativePath, rules) {
   return null;
 }
 
-function hasIdLikeToken(text) {
-  return /\b(?:id|[A-Za-z_$][\w$]*Id)\b/.test(text);
+function hasAuthoredIdentitySelector(text) {
+  return (
+    /\b(?:id|[A-Za-z_$][\w$]*Id|name|[A-Za-z_$][\w$]*Name|section|[A-Za-z_$][\w$]*Section)\b/.test(
+      text,
+    ) || isAuthoredIdentityFieldExpression(text)
+  );
 }
 
 function isAuthoredIdentityFieldExpression(text) {
@@ -153,6 +158,15 @@ function extractParenthesizedExpression(text, openIndex) {
     return null;
   }
 
+  const closeIndex = findMatchingParenIndex(text, openIndex);
+  return closeIndex == null ? null : text.slice(openIndex + 1, closeIndex);
+}
+
+function findMatchingParenIndex(text, openIndex) {
+  if (openIndex < 0 || text[openIndex] !== "(") {
+    return null;
+  }
+
   let depth = 0;
   for (let i = openIndex; i < text.length; i += 1) {
     const char = text[i];
@@ -163,7 +177,7 @@ function extractParenthesizedExpression(text, openIndex) {
     if (char === ")") {
       depth -= 1;
       if (depth === 0) {
-        return text.slice(openIndex + 1, i);
+        return i;
       }
     }
   }
@@ -171,20 +185,20 @@ function extractParenthesizedExpression(text, openIndex) {
   return null;
 }
 
-function collectAuthoredIds() {
+function collectAuthoredIdentityLiterals() {
   if (!fs.existsSync(SURFACE_CONTENT_ROOT)) {
     throw new Error(
       "authored-id boundary check: surface content directory not found",
     );
   }
 
-  const ids = new Set();
+  const identityLiterals = new Set();
   const malformedContentFiles = [];
 
-  function collectIdsFromValue(value, depth) {
+  function collectReferenceIdsFromValue(value) {
     if (Array.isArray(value)) {
       for (const item of value) {
-        collectIdsFromValue(item, depth + 1);
+        collectReferenceIdsFromValue(item);
       }
       return;
     }
@@ -194,18 +208,17 @@ function collectAuthoredIds() {
     }
 
     for (const [key, nestedValue] of Object.entries(value)) {
-      const isTopLevelRecordId = depth === 0 && key === "id";
       const isAuthoredReferenceId = key.endsWith("Id") && key !== "holeId";
 
       if (
-        (isTopLevelRecordId || isAuthoredReferenceId) &&
+        isAuthoredReferenceId &&
         typeof nestedValue === "string" &&
         nestedValue.length > 0
       ) {
-        ids.add(nestedValue);
+        identityLiterals.add(nestedValue);
       }
 
-      collectIdsFromValue(nestedValue, depth + 1);
+      collectReferenceIdsFromValue(nestedValue);
     }
   }
 
@@ -217,14 +230,35 @@ function collectAuthoredIds() {
     const content = fs.readFileSync(filePath, "utf8");
     try {
       const parsed = JSON.parse(content);
-      collectIdsFromValue(parsed, 0);
+      if (parsed != null && typeof parsed === "object") {
+        if (typeof parsed.id === "string" && parsed.id.length > 0) {
+          identityLiterals.add(parsed.id);
+        }
+        if (
+          parsed.kind === "spell" &&
+          typeof parsed.name === "string" &&
+          parsed.name.length > 0
+        ) {
+          identityLiterals.add(parsed.name);
+        }
+        if (
+          parsed.kind === "spell" &&
+          parsed.provenance != null &&
+          typeof parsed.provenance === "object" &&
+          typeof parsed.provenance.section === "string" &&
+          parsed.provenance.section.length > 0
+        ) {
+          identityLiterals.add(parsed.provenance.section);
+        }
+      }
+      collectReferenceIdsFromValue(parsed);
     } catch {
       malformedContentFiles.push(relativePath);
     }
   }
 
   return {
-    ids,
+    identityLiterals,
     malformedContentFiles,
   };
 }
@@ -242,7 +276,7 @@ function collectDispatchContainerUsages(content) {
 
     const container = match[1];
     const argument = match[2] ?? "";
-    if (container == null || !hasIdLikeToken(argument)) {
+    if (container == null || !hasAuthoredIdentitySelector(argument)) {
       continue;
     }
 
@@ -263,7 +297,7 @@ function collectDispatchContainerUsages(content) {
 
     const container = match[1];
     const indexExpression = match[2] ?? "";
-    if (container == null || !hasIdLikeToken(indexExpression)) {
+    if (container == null || !hasAuthoredIdentitySelector(indexExpression)) {
       continue;
     }
 
@@ -317,7 +351,9 @@ function collectLocalAuthoredContainerMap(
   authoredAlternation,
   literalAliases,
 ) {
-  const authoredTokenRegex = new RegExp(`\\b(${authoredAlternation})\\b`);
+  const authoredTokenRegex = new RegExp(
+    `(["'\\x60])(${authoredAlternation})\\1`,
+  );
   const declarationRegex =
     /\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([\s\S]*?)(?=;|\n\s*(?:(?:export\s+)?(?:const|let|var|function|class|type|interface|enum)\b)|$)/g;
   const localContainers = new Map();
@@ -339,10 +375,10 @@ function collectLocalAuthoredContainerMap(
 
     const authoredMatch = authoredTokenRegex.exec(initializer);
     if (authoredMatch != null) {
-      const literal = authoredMatch[1] ?? "";
+      const literal = authoredMatch[2] ?? "";
       localContainers.set(variableName, {
         literal,
-        index: initializerStart + authoredMatch.index,
+        index: initializerStart + authoredMatch.index + 1,
         source: "literal",
       });
       continue;
@@ -567,7 +603,7 @@ function collectComparisonViolations(
 
     const identifierExpression = match[1] ?? "";
     const literal = match[4] ?? "";
-    if (!hasIdLikeToken(identifierExpression)) {
+    if (!hasAuthoredIdentitySelector(identifierExpression)) {
       continue;
     }
 
@@ -594,7 +630,7 @@ function collectComparisonViolations(
 
     const literal = match[2] ?? "";
     const identifierExpression = match[4] ?? "";
-    if (!hasIdLikeToken(identifierExpression)) {
+    if (!hasAuthoredIdentitySelector(identifierExpression)) {
       continue;
     }
 
@@ -620,7 +656,7 @@ function collectComparisonViolations(
     const identifierExpression = match[1] ?? "";
     const aliasName = match[3] ?? "";
     const literal = literalAliases.get(aliasName);
-    if (literal == null || !hasIdLikeToken(identifierExpression)) {
+    if (literal == null || !hasAuthoredIdentitySelector(identifierExpression)) {
       continue;
     }
 
@@ -646,7 +682,7 @@ function collectComparisonViolations(
     const aliasName = match[1] ?? "";
     const identifierExpression = match[3] ?? "";
     const literal = literalAliases.get(aliasName);
-    if (literal == null || !hasIdLikeToken(identifierExpression)) {
+    if (literal == null || !hasAuthoredIdentitySelector(identifierExpression)) {
       continue;
     }
 
@@ -754,7 +790,7 @@ function collectSwitchViolations(
     const literal = match[2] ?? "";
     const caseIndex = match.index;
     const expression = switchExpressionBeforeCase(content, caseIndex);
-    if (expression == null || !hasIdLikeToken(expression)) {
+    if (expression == null || !hasAuthoredIdentitySelector(expression)) {
       continue;
     }
 
@@ -784,7 +820,7 @@ function collectSwitchViolations(
 
     const caseIndex = match.index;
     const expression = switchExpressionBeforeCase(content, caseIndex);
-    if (expression == null || !hasIdLikeToken(expression)) {
+    if (expression == null || !hasAuthoredIdentitySelector(expression)) {
       continue;
     }
 
@@ -797,6 +833,105 @@ function collectSwitchViolations(
         detail: `switch(${expression.trim()}) case ${aliasName}`,
       },
     });
+  }
+
+  return violations;
+}
+
+function collectEffectMatchViolations(
+  content,
+  relativePath,
+  authoredAlternation,
+  literalAliases,
+) {
+  const violations = [];
+  const matchValueRegex = /\bMatch\s*\.\s*value\s*\(/g;
+
+  for (;;) {
+    const matchValue = matchValueRegex.exec(content);
+    if (matchValue == null) {
+      break;
+    }
+
+    const valueOpenIndex = content.indexOf("(", matchValue.index);
+    const valueExpression = extractParenthesizedExpression(
+      content,
+      valueOpenIndex,
+    );
+    if (
+      valueExpression == null ||
+      !hasAuthoredIdentitySelector(valueExpression)
+    ) {
+      continue;
+    }
+
+    const valueCloseIndex = findMatchingParenIndex(content, valueOpenIndex);
+    if (valueCloseIndex == null) {
+      continue;
+    }
+
+    const afterValue = content.slice(valueCloseIndex + 1);
+    const pipeMatch = /^\s*\.\s*pipe\s*\(/.exec(afterValue);
+    if (pipeMatch == null) {
+      continue;
+    }
+
+    const pipeOpenIndex =
+      valueCloseIndex + 1 + pipeMatch[0].lastIndexOf("(");
+    const pipeCloseIndex = findMatchingParenIndex(content, pipeOpenIndex);
+    if (pipeCloseIndex == null) {
+      continue;
+    }
+
+    const pipeBody = content.slice(pipeOpenIndex + 1, pipeCloseIndex);
+    const pipeBodyStart = pipeOpenIndex + 1;
+
+    const whenLiteralRegex = new RegExp(
+      `\\bMatch\\s*\\.\\s*when\\s*\\(\\s*(["'\\x60])(${authoredAlternation})\\1`,
+      "g",
+    );
+    for (;;) {
+      const whenMatch = whenLiteralRegex.exec(pipeBody);
+      if (whenMatch == null) {
+        break;
+      }
+
+      const literal = whenMatch[2] ?? "";
+      violations.push({
+        relativePath,
+        line: lineNumberForIndex(content, pipeBodyStart + whenMatch.index),
+        literal,
+        context: {
+          kind: "effect-match-identity-branch",
+          detail: `Match.value(${valueExpression.trim()}).pipe(Match.when("${literal}", ...))`,
+        },
+      });
+    }
+
+    const whenAliasRegex =
+      /\bMatch\s*\.\s*when\s*\(\s*([A-Za-z_$][\w$]*)\b/g;
+    for (;;) {
+      const whenMatch = whenAliasRegex.exec(pipeBody);
+      if (whenMatch == null) {
+        break;
+      }
+
+      const aliasName = whenMatch[1] ?? "";
+      const literal = literalAliases.get(aliasName);
+      if (literal == null) {
+        continue;
+      }
+
+      violations.push({
+        relativePath,
+        line: lineNumberForIndex(content, pipeBodyStart + whenMatch.index),
+        literal,
+        context: {
+          kind: "effect-match-identity-branch-alias",
+          detail: `Match.value(${valueExpression.trim()}).pipe(Match.when(${aliasName}, ...)) -> ${aliasName}="${literal}"`,
+        },
+      });
+    }
   }
 
   return violations;
@@ -959,6 +1094,12 @@ function findViolationsForFile(
       authoredAlternation,
       allLiteralAliases,
     ),
+    ...collectEffectMatchViolations(
+      content,
+      relativePath,
+      authoredAlternation,
+      allLiteralAliases,
+    ),
     ...collectDispatchContainerViolations(
       content,
       relativePath,
@@ -1009,13 +1150,119 @@ function buildAuthoredExportIndex(
   return exportedByFile;
 }
 
+function buildAuthoredAlternation(identityLiterals) {
+  return Array.from(identityLiterals)
+    .sort(
+      (left, right) => right.length - left.length || left.localeCompare(right),
+    )
+    .map((id) => escapeForRegExp(id))
+    .join("|");
+}
+
+function runSelfTest() {
+  const authoredAlternation = buildAuthoredAlternation(
+    new Set([
+      "magic_missile",
+      "Magic Missile",
+      "Spells/Descriptions-M-P#Magic Missile",
+    ]),
+  );
+
+  const productionBranch = [
+    "export function productionSpellDispatch(invocation) {",
+    '  if (invocation.spell.name === "Magic Missile") return "spell-name-comparison";',
+    "  switch (invocation.spell.name) {",
+    '    case "Magic Missile": return "spell-name-switch";',
+    "  }",
+    '  const spellNames = ["Magic Missile"];',
+    "  if (spellNames.includes(invocation.spell.name)) return \"spell-name-container\";",
+    "  Match.value(invocation.spell.name).pipe(",
+    '    Match.when("Magic Missile", () => "spell-name-effect-match"),',
+    "    Match.exhaustive,",
+    "  );",
+    '  if (invocation.spell.provenance.section === "Spells/Descriptions-M-P#Magic Missile") return "section-comparison";',
+    "  return null;",
+    "}",
+  ].join("\n");
+
+  const productionViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/representative-spell-dispatch.ts",
+    productionBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  const productionKinds = new Set(
+    productionViolations.map((violation) => violation.context.kind),
+  );
+
+  assert(
+    productionKinds.has("authored-identity-field-comparison"),
+    `Self-test failed: spell.name comparison was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+  assert(
+    productionKinds.has("switch-id-branch"),
+    `Self-test failed: spell.name switch branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+  assert(
+    productionKinds.has("dispatch-container"),
+    `Self-test failed: spell.name container dispatch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+  assert(
+    productionKinds.has("effect-match-identity-branch"),
+    `Self-test failed: effect/Match spell.name branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+
+  const selectedIdentityProjection = [
+    "export function selectedIdentityProjection(invocation) {",
+    "  return {",
+    "    spellId: invocation.spell.id,",
+    "    label: invocation.spell.name,",
+    "  };",
+    "}",
+  ].join("\n");
+
+  const selectedIdentityViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/selected-identity-projection.ts",
+    selectedIdentityProjection,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert.deepEqual(
+    selectedIdentityViolations,
+    [],
+    `Self-test failed: selected identity projection should not be a dispatch violation. Got ${JSON.stringify(selectedIdentityViolations)}`,
+  );
+
+  assert.equal(
+    classifyPath(
+      "packages/battle-runtime/src/unit-profile-admission-spell-fill-support.ts",
+      ALLOWLIST_PATH_RULES,
+    ),
+    "battle-runtime-unit-profile-admission-test-support-boundary",
+  );
+  assert.equal(
+    classifyPath(
+      "packages/battle-runtime/src/battle-reducer/spells-discovery.test.ts",
+      EXCLUDED_PATH_RULES,
+    ),
+    "test-fixture-boundary",
+  );
+}
+
 function main() {
+  runSelfTest();
+
   if (!fs.existsSync(PACKAGES_ROOT)) {
     console.error("authored-id boundary check: packages directory not found");
     process.exit(1);
   }
 
-  const { ids: authoredIds, malformedContentFiles } = collectAuthoredIds();
+  const {
+    identityLiterals: authoredIdentityLiterals,
+    malformedContentFiles,
+  } = collectAuthoredIdentityLiterals();
   if (malformedContentFiles.length > 0) {
     console.error(
       "authored-id boundary check: malformed surface content file(s):",
@@ -1026,19 +1273,16 @@ function main() {
     process.exit(1);
   }
 
-  if (authoredIds.size === 0) {
+  if (authoredIdentityLiterals.size === 0) {
     console.error(
-      "authored-id boundary check: no authored ids discovered from surface content",
+      "authored-id boundary check: no authored identity literals discovered from surface content",
     );
     process.exit(1);
   }
 
-  const authoredAlternation = Array.from(authoredIds)
-    .sort(
-      (left, right) => right.length - left.length || left.localeCompare(right),
-    )
-    .map((id) => escapeForRegExp(id))
-    .join("|");
+  const authoredAlternation = buildAuthoredAlternation(
+    authoredIdentityLiterals,
+  );
 
   const sourceFiles = listFiles(PACKAGES_ROOT)
     .map((filePath) =>
@@ -1119,7 +1363,9 @@ function main() {
   );
 
   console.log("authored-identity dispatch boundary check passed");
-  console.log(`authored ids discovered: ${authoredIds.size}`);
+  console.log(
+    `authored identity literals discovered: ${authoredIdentityLiterals.size}`,
+  );
   console.log(`checked source files: ${stats.checked}`);
   console.log(`excluded files: ${excludedTotal}`);
   console.log(`allowlisted files: ${allowlistedTotal}`);
