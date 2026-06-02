@@ -1,8 +1,12 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
+// KERNEL-COVERAGE: qnt-owner SHEET.SPELL_SLOTS.TABLE_DERIVATION
 
 module characterSheetSpellSlotsPactSlotsMbt {
+  import spellSlotTable.* from "../shared-algebras/proofs/rule-core/spell-slot-table"
+  import spellSlotTransitions.* from "../shared-algebras/proofs/rule-core/spell-slot-transitions"
+
   var qLastResult: str
   var qAccepted: bool
   var qMessage: str
@@ -19,129 +23,56 @@ module characterSheetSpellSlotsPactSlotsMbt {
   var qMagicalCunningUsedSinceLongRest: bool
   var qReplayIndex: int
 
-  type OrdinarySpellSlotFacts = {
-    level1Capacity: int,
-    level1Expended: int,
-    level2Capacity: int,
-    level2Expended: int,
-    createdLevel1Capacity: int,
-    createdLevel1Expended: int,
-  }
-
-  type PactSlotFacts = {
-    slotLevel: int,
-    capacity: int,
-    expended: int,
-  }
-
-  type SheetSlotFacts = {
-    ordinary: OrdinarySpellSlotFacts,
-    pact: PactSlotFacts,
-    arcaneRecoveryUsedSinceLongRest: bool,
-    magicalCunningUsedSinceLongRest: bool,
-  }
-
-  pure def noOrdinarySpellSlots: OrdinarySpellSlotFacts = {
-    level1Capacity: 0,
-    level1Expended: 0,
-    level2Capacity: 0,
-    level2Expended: 0,
-    createdLevel1Capacity: 0,
-    createdLevel1Expended: 0,
-  }
-
-  pure def noPactSlots: PactSlotFacts = {
-    slotLevel: 0,
-    capacity: 0,
-    expended: 0,
-  }
-
-  pure def emptySlotFacts: SheetSlotFacts = {
-    ordinary: noOrdinarySpellSlots,
-    pact: noPactSlots,
+  pure def shortRestPactSpentSlots: SheetSlotFacts = {
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelOne), 1, 0, 0, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelOne), 1),
     arcaneRecoveryUsedSinceLongRest: false,
     magicalCunningUsedSinceLongRest: false,
   }
 
-  pure def recoverPactSlots(sheet: SheetSlotFacts): SheetSlotFacts =
-    sheet.with("pact", sheet.pact.with("expended", 0))
+  pure def arcaneRecoveryLevel2SpentSlots: SheetSlotFacts = {
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelFour), 2, 1, 0, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelOne), 1),
+    arcaneRecoveryUsedSinceLongRest: false,
+    magicalCunningUsedSinceLongRest: false,
+  }
 
-  pure def completeLongRestSlotBenefits(sheet: SheetSlotFacts): SheetSlotFacts =
-    sheet
-      .with("ordinary", sheet.ordinary
+  pure def longRestCreatedSlotSpentSlots: SheetSlotFacts = {
+    ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelTwo), 2, 0, 1, 0),
+    pact: pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 1),
+    arcaneRecoveryUsedSinceLongRest: false,
+    magicalCunningUsedSinceLongRest: false,
+  }
+
+  pure def mismatchedOrdinaryLevel1Capacity: SheetSlotFacts =
+    emptySlotFacts.with(
+      "ordinary",
+      ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelTwo), 0, 0, 0, 0)
+    )
+
+  pure def pactSlotExpendedOverCapacity: SheetSlotFacts =
+    emptySlotFacts.with(
+      "pact",
+      pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 3)
+    )
+
+  pure def magicalCunningSpentPactSlots: SheetSlotFacts =
+    emptySlotFacts.with(
+      "pact",
+      pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 2)
+    )
+
+  pure def magicalCunningFreshPactSlots: SheetSlotFacts =
+    emptySlotFacts.with(
+      "pact",
+      pactSlotsFromTable(pactMagicSpellSlotTable(PactMagicLevelTwo), 0)
+    )
+
+  pure def arcaneRecoveryNoExpendedOrdinarySlots: SheetSlotFacts =
+    arcaneRecoveryLevel2SpentSlots
+      .with("ordinary", arcaneRecoveryLevel2SpentSlots.ordinary
         .with("level1Expended", 0)
-        .with("level2Expended", 0)
-        .with("createdLevel1Capacity", 0)
-        .with("createdLevel1Expended", 0))
-      .with("pact", sheet.pact.with("expended", 0))
-      .with("arcaneRecoveryUsedSinceLongRest", false)
-      .with("magicalCunningUsedSinceLongRest", false)
-
-  pure def applyArcaneRecoveryLevel2(sheet: SheetSlotFacts): SheetSlotFacts =
-    sheet
-      .with("ordinary", sheet.ordinary.with("level2Expended", sheet.ordinary.level2Expended - 1))
-      .with("arcaneRecoveryUsedSinceLongRest", true)
-
-  pure def applyMagicalCunning(sheet: SheetSlotFacts): SheetSlotFacts = {
-    val recovered = (sheet.pact.capacity + 1) / 2
-    sheet
-      .with("pact", sheet.pact.with("expended", if (sheet.pact.expended - recovered < 0) 0 else sheet.pact.expended - recovered))
-      .with("magicalCunningUsedSinceLongRest", true)
-  }
-
-  pure def wizardWarlockSpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 2,
-      level1Expended: 1,
-      level2Capacity: 0,
-      level2Expended: 0,
-      createdLevel1Capacity: 0,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 1,
-      expended: 1,
-    },
-    arcaneRecoveryUsedSinceLongRest: false,
-    magicalCunningUsedSinceLongRest: false,
-  }
-
-  pure def wizardArcaneRecoverySpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 4,
-      level1Expended: 2,
-      level2Capacity: 3,
-      level2Expended: 1,
-      createdLevel1Capacity: 0,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 1,
-      expended: 1,
-    },
-    arcaneRecoveryUsedSinceLongRest: false,
-    magicalCunningUsedSinceLongRest: false,
-  }
-
-  pure def sorcererWarlockLongRestSpent: SheetSlotFacts = {
-    ordinary: {
-      level1Capacity: 3,
-      level1Expended: 2,
-      level2Capacity: 0,
-      level2Expended: 0,
-      createdLevel1Capacity: 1,
-      createdLevel1Expended: 0,
-    },
-    pact: {
-      slotLevel: 1,
-      capacity: 2,
-      expended: 1,
-    },
-    arcaneRecoveryUsedSinceLongRest: false,
-    magicalCunningUsedSinceLongRest: false,
-  }
+        .with("level2Expended", 0))
 
   action recordProjection(
     lastResult: str,
@@ -176,9 +107,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "ordinary-capacity-mismatch-rejected",
       false,
       "Spell Slot state does not match build capacity for level 1.",
-      emptySlotFacts.with("ordinary", noOrdinarySpellSlots.with("level1Capacity", 3)),
+      mismatchedOrdinaryLevel1Capacity,
       1,
     ),
+    not(ordinaryLevel1CapacityMatches(mismatchedOrdinaryLevel1Capacity, 3)),
   }
 
   action doRejectPactSlotExpenditureOverCapacity = all {
@@ -187,9 +119,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "pact-expenditure-over-capacity-rejected",
       false,
       "Pact Slot state must match Pact Magic build capacity.",
-      emptySlotFacts.with("pact", { slotLevel: 1, capacity: 2, expended: 3 }),
+      pactSlotExpendedOverCapacity,
       2,
     ),
+    not(pactSlotExpenditureWithinCapacity(pactSlotExpendedOverCapacity)),
   }
 
   action doShortRestRestoresPactSlotsOnly = all {
@@ -198,7 +131,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "short-rest-restores-pact-slots-only",
       true,
       "none",
-      recoverPactSlots(wizardWarlockSpent),
+      recoverPactSlots(shortRestPactSpentSlots),
       3,
     ),
   }
@@ -209,9 +142,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "short-rest-arcane-recovery-refunds-ordinary-spell-slot",
       true,
       "none",
-      applyArcaneRecoveryLevel2(recoverPactSlots(wizardArcaneRecoverySpent)),
+      applyArcaneRecovery(recoverPactSlots(arcaneRecoveryLevel2SpentSlots), 0, 1),
       4,
     ),
+    canRecoverOrdinarySpellSlots(recoverPactSlots(arcaneRecoveryLevel2SpentSlots), 0, 1),
   }
 
   action doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots = all {
@@ -220,7 +154,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "long-rest-restores-ordinary-pact-and-clears-created-slots",
       true,
       "none",
-      completeLongRestSlotBenefits(sorcererWarlockLongRestSpent),
+      completeLongRestSlotBenefits(longRestCreatedSlotSpentSlots),
       5,
     ),
   }
@@ -231,7 +165,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "short-rest-interrupted-no-slot-benefit",
       true,
       "none",
-      wizardWarlockSpent,
+      shortRestPactSpentSlots,
       6,
     ),
   }
@@ -242,7 +176,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "long-rest-interrupted-before-one-hour-no-slot-benefit",
       true,
       "none",
-      wizardWarlockSpent,
+      shortRestPactSpentSlots,
       7,
     ),
   }
@@ -253,7 +187,7 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "long-rest-interrupted-with-short-rest-slot-benefits",
       true,
       "none",
-      recoverPactSlots(wizardWarlockSpent),
+      recoverPactSlots(shortRestPactSpentSlots),
       8,
     ),
   }
@@ -264,9 +198,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "magical-cunning-recovers-pact-slots",
       true,
       "none",
-      applyMagicalCunning(emptySlotFacts.with("pact", { slotLevel: 1, capacity: 2, expended: 2 })),
+      applyMagicalCunning(magicalCunningSpentPactSlots),
       9,
     ),
+    canApplyMagicalCunning(magicalCunningSpentPactSlots),
   }
 
   action doRejectMagicalCunningWithoutExpendedPactSlots = all {
@@ -275,9 +210,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "magical-cunning-no-expended-pact-slots-rejected",
       false,
       "Magical Cunning must recover expended Pact Slots.",
-      emptySlotFacts.with("pact", { slotLevel: 1, capacity: 1, expended: 0 }),
+      magicalCunningFreshPactSlots,
       10,
     ),
+    not(canApplyMagicalCunning(magicalCunningFreshPactSlots)),
   }
 
   action doRejectArcaneRecoveryPactSlotRefund = all {
@@ -286,12 +222,10 @@ module characterSheetSpellSlotsPactSlotsMbt {
       "arcane-recovery-pact-slot-refund-rejected",
       false,
       "Arcane Recovery cannot refund more Spell Slots than are expended.",
-      wizardArcaneRecoverySpent
-        .with("ordinary", wizardArcaneRecoverySpent.ordinary
-          .with("level1Expended", 0)
-          .with("level2Expended", 0)),
+      arcaneRecoveryNoExpendedOrdinarySlots,
       11,
     ),
+    not(canRecoverOrdinarySpellSlots(arcaneRecoveryNoExpendedOrdinarySlots, 1, 0)),
   }
 
   action step = any {

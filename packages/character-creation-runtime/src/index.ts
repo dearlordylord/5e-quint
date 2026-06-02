@@ -1,4 +1,11 @@
 export {
+  classSpellcastingCreationAtLevel,
+  isListPreparedSpellcastingCreation,
+  isPactMagicSpellcastingCreation,
+  isWizardSpellcastingCreation,
+} from "./class-spellcasting.ts";
+
+export {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   CHARACTER_CLASS_LEVELS,

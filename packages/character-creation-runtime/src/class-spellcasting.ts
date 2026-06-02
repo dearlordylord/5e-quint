@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS.TABLE_DERIVATION
 import type {
   ClassSpellcastingCreation,
   ListPreparedSpellcastingProgressionCreation,

@@ -31,7 +31,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Wizard.md:3-25,31-36,56-82,94-114,134-190"
+    "section": "Classes/Wizard.md:3-25,31-38,56-82,94-114,134-190"
   },
   "savingThrowProficiencies": ["int", "wis"],
   "skillProficiencyChoice": {
@@ -54,7 +54,7 @@
       },
       "choose": 3,
       "kind": "known_cantrips",
-      "spellIds": ["light", "fire_bolt", "ray_of_frost"]
+      "spellIds": ["light", "fire_bolt", "ray_of_frost", "minor_illusion"]
     },
     "featureLevel": 1,
     "kind": "wizard_spellcasting_creation",
@@ -202,6 +202,22 @@
           }
         ],
         "spellbookSpellCount": 10
+      },
+      {
+        "atLevel": 4,
+        "cantripCount": 4,
+        "preparedSpellCount": 7,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          }
+        ],
+        "spellbookSpellCount": 12
       }
     ]
   },

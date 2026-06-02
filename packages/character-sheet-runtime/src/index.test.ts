@@ -4229,7 +4229,30 @@ describe("Character Sheet runtime", () => {
       _tag: "Left",
       left: {
         message:
-          "Spellbook ritual invocation requires a spellbook Ritual Access feature.",
+          "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
+      },
+    });
+  });
+
+  test("rejects spellbook Ritual access when the feature is not granted by the spellbook source", () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:ritual-feature-wrong-source",
+      spellbook: ["detect_magic"],
+      spellcastingSourceUnitId: "class_fighter",
+    });
+
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: "detect_magic",
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
       },
     });
   });
@@ -4260,6 +4283,7 @@ function spellbookRitualSheet(input: {
   readonly spellbook: readonly string[];
   readonly preparedSpells?: readonly string[];
   readonly startingClass?: string;
+  readonly spellcastingSourceUnitId?: string;
 }): CharacterSheet {
   return requireRight(
     createFreshCharacterSheet({
@@ -4277,7 +4301,7 @@ function spellbookRitualSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: input.spellcastingSourceUnitId ?? "class_wizard",
               spellcastingAbility: "int",
               cantrips: [],
               spellbook: input.spellbook,

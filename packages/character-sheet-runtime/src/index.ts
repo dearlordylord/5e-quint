@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
+// KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
@@ -2328,25 +2329,17 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
   if (!isSpellcastingBuild(input.build)) {
     return Either.right([]);
   }
-  const feature = optionalSpellbookRitualAccessFeatureForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  if (feature.right === null) return Either.right([]);
 
   const accesses: CharacterSheetSpellbookRitualAccess[] = [];
   for (const source of input.build.spellcasting.sources) {
     if (source.spellbook.length === 0) continue;
-    const sourceClassName = classUnitIdToClassName({
+    const feature = optionalSpellbookRitualAccessFeatureForSource({
+      build: input.build,
       unitLibrary: input.unitLibrary,
-      classUnitId: source.sourceUnitId,
+      sourceUnitId: source.sourceUnitId,
     });
-    if (Either.isLeft(sourceClassName) || sourceClassName.right !== "wizard") {
-      return characterSheetIssue(
-        "Spellbook Ritual Access must be attached to the Wizard spellcasting source.",
-      );
-    }
+    if (Either.isLeft(feature)) return Either.left(feature.left);
+    if (feature.right === null) continue;
     for (const spellId of source.spellbook) {
       const spell = getRequiredUnit(input.unitLibrary, spellId);
       if (Either.isLeft(spell)) return Either.left(spell.left);
@@ -3599,49 +3592,78 @@ function characterSheetSpellbookRitualAccessForSpell(
       "Ritual spell invocation requires a ritual-tagged Spell Definition.",
     );
   }
-  const source = input.build.spellcasting.sources.find((candidate) =>
+  const spellbookSources = input.build.spellcasting.sources.filter((candidate) =>
     candidate.spellbook.some((spellId) => spellId === input.spellId),
   );
-  if (source === undefined) {
+  if (spellbookSources.length === 0) {
     return characterSheetIssue(messages.missingSpellbookMessage);
   }
-  const sourceClassName = classUnitIdToClassName({
-    unitLibrary: input.unitLibrary,
-    classUnitId: source.sourceUnitId,
-  });
-  if (Either.isLeft(sourceClassName) || sourceClassName.right !== "wizard") {
-    return characterSheetIssue(
-      "Spellbook Ritual Access must be attached to the Wizard spellcasting source.",
-    );
+  for (const source of spellbookSources) {
+    const feature = optionalSpellbookRitualAccessFeatureForSource({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      sourceUnitId: source.sourceUnitId,
+    });
+    if (Either.isLeft(feature)) return Either.left(feature.left);
+    if (feature.right === null) continue;
+    return Either.right({
+      tag: "spellbookRitual",
+      spell: spell.right,
+      spellcastingSourceUnitId: source.sourceUnitId,
+      featureUnitId: feature.right.id,
+    });
   }
-  const feature = spellbookRitualAccessFeatureForBuild(
+  return characterSheetIssue(
+    "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
+  );
+}
+
+function optionalSpellbookRitualAccessFeatureForSource(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly sourceUnitId: UnitRecord["id"];
+}): Either.Either<
+  CharacterSheetSpellbookRitualFeature | null,
+  CharacterSheetIssue
+> {
+  const feature = optionalSpellbookRitualAccessFeatureForBuild(
     input.build,
     input.unitLibrary,
   );
   if (Either.isLeft(feature)) return Either.left(feature.left);
-  return Either.right({
-    tag: "spellbookRitual",
-    spell: spell.right,
-    spellcastingSourceUnitId: source.sourceUnitId,
+  if (feature.right === null) return Either.right(null);
+  const sourceGrantsFeature = classSourceGrantsFeatureAtBuildLevel({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.sourceUnitId,
     featureUnitId: feature.right.id,
   });
+  if (Either.isLeft(sourceGrantsFeature)) {
+    return Either.left(sourceGrantsFeature.left);
+  }
+  return Either.right(sourceGrantsFeature.right ? feature.right : null);
 }
 
-function spellbookRitualAccessFeatureForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<CharacterSheetSpellbookRitualFeature, CharacterSheetIssue> {
-  const feature = optionalSpellbookRitualAccessFeatureForBuild(
-    build,
-    unitLibrary,
+function classSourceGrantsFeatureAtBuildLevel(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: UnitRecord["id"];
+  readonly featureUnitId: UnitRecord["id"];
+}): Either.Either<boolean, CharacterSheetIssue> {
+  const classUnit = getRequiredUnit(input.unitLibrary, input.classUnitId);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable") return Either.right(false);
+  const classLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
   );
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  if (feature.right === null) {
-    return characterSheetIssue(
-      "Spellbook ritual invocation requires a spellbook Ritual Access feature.",
-    );
-  }
-  return Either.right(feature.right);
+  return Either.right(
+    facts.value.featureGrants.some(
+      (grant) =>
+        grant.unitId === input.featureUnitId && grant.level <= classLevel,
+    ),
+  );
 }
 
 function optionalSpellbookRitualAccessFeatureForBuild(

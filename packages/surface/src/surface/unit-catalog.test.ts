@@ -226,6 +226,8 @@ const requiredFirstVerticalUnitIds = [
   "invisibility",
   "rope_trick",
   "armor_chain_mail",
+  "armor_chain_shirt",
+  "armor_leather",
   "equipment_shield",
   "weapon_dagger",
   "weapon_greataxe",

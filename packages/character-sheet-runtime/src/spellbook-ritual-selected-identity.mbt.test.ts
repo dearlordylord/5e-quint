@@ -35,6 +35,9 @@ const spellbookRitualSelectedIdentityDriverSchema = {
   init: {},
   doInvokeSpellbookRitual: {},
   doRejectPreparedOnlyRitual: {},
+  doRejectNonRitualSpellbookSpell: {},
+  doRejectMissingRitualAccessFeature: {},
+  doRejectNonLeveledRitualSpellbookSpell: {},
   step: {},
 } as const;
 type SpellbookRitualSelectedIdentityDriverAction = Exclude<
@@ -47,6 +50,11 @@ type SpellbookRitualFeatureProjection = {
   readonly spellId: typeof DETECT_MAGIC_SPELL_ID;
   readonly spellcastingSourceUnitId: typeof WIZARD_CLASS_UNIT_ID;
 };
+type SpellbookRitualSemanticCoreFeatureProjection = {
+  readonly featureUnitId: "none";
+  readonly spellId: "none";
+  readonly spellcastingSourceUnitId: "none";
+};
 type SpellbookRitualAccessProjection =
   | {
       readonly kind: "spellbook";
@@ -55,12 +63,17 @@ type SpellbookRitualAccessProjection =
   | {
       readonly kind: "prepared_only";
       readonly feature: SpellbookRitualFeatureProjection;
+    }
+  | {
+      readonly kind: "semantic_rejected";
+      readonly feature: SpellbookRitualSemanticCoreFeatureProjection;
     };
 type AcceptedSpellbookRitualInvocationProjection = {
   readonly accepted: true;
   readonly spellSlotCostKind: "none";
   readonly preparationRequirement: "not_required";
   readonly requiredSpellAccess: "spellbook";
+  readonly additionalCastingTimeMinutes: 10;
   readonly requiresReadingSpellbook: true;
   readonly firstLevelSpellSlotsExpended: 0;
 };
@@ -86,6 +99,19 @@ type SpellbookRitualSelectedIdentityProjection =
         SpellbookRitualAccessProjection,
         { readonly kind: "prepared_only" }
       >;
+      readonly invocation: RejectedSpellbookRitualInvocationProjection;
+    }
+  | {
+      readonly lastResult:
+        | "non_ritual_rejected"
+        | "missing_feature_rejected"
+        | "non_leveled_rejected";
+      readonly access: Extract<
+        SpellbookRitualAccessProjection,
+        { readonly kind: "semantic_rejected" }
+      >;
+      readonly spellbookContainsRitual: boolean;
+      readonly preparedContainsRitual: false;
       readonly invocation: RejectedSpellbookRitualInvocationProjection;
     };
 type InitialSpellbookRitualSelectedIdentityProjection = Extract<
@@ -144,6 +170,10 @@ const selectedUnitIdentityReplays = [
 const qntStepByDriverAction = {
   doInvokeSpellbookRitual: "stepInvokeSpellbookRitual",
   doRejectPreparedOnlyRitual: "stepRejectPreparedOnlyRitual",
+  doRejectNonRitualSpellbookSpell: "stepRejectNonRitualSpellbookSpell",
+  doRejectMissingRitualAccessFeature: "stepRejectMissingRitualAccessFeature",
+  doRejectNonLeveledRitualSpellbookSpell:
+    "stepRejectNonLeveledRitualSpellbookSpell",
 } as const satisfies Record<
   SpellbookRitualSelectedIdentityDriverAction,
   string
@@ -151,6 +181,11 @@ const qntStepByDriverAction = {
 const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
   (replay) => replay.actions,
 );
+const semanticCoreReplayActions = [
+  "doRejectNonRitualSpellbookSpell",
+  "doRejectMissingRitualAccessFeature",
+  "doRejectNonLeveledRitualSpellbookSpell",
+] as const satisfies ReadonlyArray<SpellbookRitualSelectedIdentityDriverAction>;
 
 describe("Character Sheet spellbook ritual selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -220,6 +255,24 @@ describe("Character Sheet spellbook ritual selected identity MBT", () => {
       });
     }
   }, 120_000);
+
+  it("replays Character Sheet spellbook ritual semantic core branches", async () => {
+    for (const actionName of semanticCoreReplayActions) {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: qntStepByDriverAction[actionName],
+        driver: createSpellbookRitualSelectedIdentityDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 1,
+        stateCheck: spellbookRitualSelectedIdentityStateCheck,
+      });
+    }
+  }, 120_000);
 });
 
 function createSpellbookRitualSelectedIdentityDriver() {
@@ -238,6 +291,15 @@ function createSpellbookRitualSelectedIdentityDriver() {
       },
       doRejectPreparedOnlyRitual: () => {
         projection = rejectPreparedOnlyRitualProjection();
+      },
+      doRejectNonRitualSpellbookSpell: () => {
+        projection = semanticRejectedProjection("non_ritual_rejected");
+      },
+      doRejectMissingRitualAccessFeature: () => {
+        projection = semanticRejectedProjection("missing_feature_rejected");
+      },
+      doRejectNonLeveledRitualSpellbookSpell: () => {
+        projection = semanticRejectedProjection("non_leveled_rejected");
       },
       step: () => {},
       getState: () => projection,
@@ -332,6 +394,7 @@ function projectAcceptedSpellbookRitual(
       spellSlotCostKind: invocation.spellSlotCost.kind,
       preparationRequirement: invocation.preparationRequirement,
       requiredSpellAccess: invocation.requiredSpellAccess,
+      additionalCastingTimeMinutes: invocation.additionalCastingTimeMinutes,
       requiresReadingSpellbook: invocation.requiresReadingSpellbook,
       firstLevelSpellSlotsExpended: firstLevelSpellSlotsExpended(sheet),
     },
@@ -452,6 +515,7 @@ function invokedProjection(): InvokedSpellbookRitualSelectedIdentityProjection {
       spellSlotCostKind: "none",
       preparationRequirement: "not_required",
       requiredSpellAccess: "spellbook",
+      additionalCastingTimeMinutes: 10,
       requiresReadingSpellbook: true,
       firstLevelSpellSlotsExpended: 0,
     },
@@ -465,6 +529,39 @@ function preparedOnlyRejectedProjection(): PreparedOnlyRejectedSpellbookRitualSe
       kind: "prepared_only",
       feature: spellbookRitualFeatureProjection(),
     },
+    invocation: {
+      accepted: false,
+      firstLevelSpellSlotsExpended: 0,
+    },
+  };
+}
+
+function semanticRejectedProjection(
+  lastResult:
+    | "non_ritual_rejected"
+    | "missing_feature_rejected"
+    | "non_leveled_rejected",
+): Extract<
+  SpellbookRitualSelectedIdentityProjection,
+  {
+    readonly lastResult:
+      | "non_ritual_rejected"
+      | "missing_feature_rejected"
+      | "non_leveled_rejected";
+  }
+> {
+  return {
+    lastResult,
+    access: {
+      kind: "semantic_rejected",
+      feature: {
+        featureUnitId: "none",
+        spellId: "none",
+        spellcastingSourceUnitId: "none",
+      },
+    },
+    spellbookContainsRitual: lastResult !== "non_ritual_rejected",
+    preparedContainsRitual: false,
     invocation: {
       accepted: false,
       firstLevelSpellSlotsExpended: 0,
@@ -506,6 +603,7 @@ function normalizeSpellbookRitualSelectedIdentityQuintState(
     assertStringField(state, "qSpellSlotCostKind", "none");
     assertStringField(state, "qPreparationRequirement", "none");
     assertStringField(state, "qRequiredSpellAccess", "none");
+    assertNumberField(state, "qAdditionalCastingTimeMinutes", 0);
     assertBooleanField(state, "qSpellbookContainsRitual", false);
     assertBooleanField(state, "qPreparedContainsRitual", false);
     assertBooleanField(state, "qInvocationAccepted", false);
@@ -513,10 +611,7 @@ function normalizeSpellbookRitualSelectedIdentityQuintState(
     assertNumberField(state, "qFirstLevelSpellSlotsExpended", 0);
     return initialProjection();
   }
-  const projection =
-    lastResult === "invoked"
-      ? invokedProjection()
-      : preparedOnlyRejectedProjection();
+  const projection = projectionForLastResult(lastResult);
   assertStringField(
     state,
     "qFeatureUnitId",
@@ -531,12 +626,20 @@ function normalizeSpellbookRitualSelectedIdentityQuintState(
   assertBooleanField(
     state,
     "qSpellbookContainsRitual",
-    projection.access.kind === "spellbook",
+    projection.lastResult === "non_ritual_rejected" ||
+      projection.lastResult === "missing_feature_rejected" ||
+      projection.lastResult === "non_leveled_rejected"
+      ? projection.spellbookContainsRitual
+      : projection.access.kind === "spellbook",
   );
   assertBooleanField(
     state,
     "qPreparedContainsRitual",
-    projection.access.kind === "prepared_only",
+    projection.lastResult === "non_ritual_rejected" ||
+      projection.lastResult === "missing_feature_rejected" ||
+      projection.lastResult === "non_leveled_rejected"
+      ? projection.preparedContainsRitual
+      : projection.access.kind === "prepared_only",
   );
   assertBooleanField(
     state,
@@ -564,6 +667,11 @@ function normalizeSpellbookRitualSelectedIdentityQuintState(
       "qRequiredSpellAccess",
       projection.invocation.requiredSpellAccess,
     );
+    assertNumberField(
+      state,
+      "qAdditionalCastingTimeMinutes",
+      projection.invocation.additionalCastingTimeMinutes,
+    );
     assertBooleanField(
       state,
       "qRequiresReadingSpellbook",
@@ -573,9 +681,32 @@ function normalizeSpellbookRitualSelectedIdentityQuintState(
     assertStringField(state, "qSpellSlotCostKind", "none");
     assertStringField(state, "qPreparationRequirement", "none");
     assertStringField(state, "qRequiredSpellAccess", "none");
+    assertNumberField(state, "qAdditionalCastingTimeMinutes", 0);
     assertBooleanField(state, "qRequiresReadingSpellbook", false);
   }
   return projection;
+}
+
+function projectionForLastResult(
+  lastResult: Exclude<
+    SpellbookRitualSelectedIdentityProjection["lastResult"],
+    "init"
+  >,
+): Exclude<
+  SpellbookRitualSelectedIdentityProjection,
+  InitialSpellbookRitualSelectedIdentityProjection
+> {
+  if (lastResult === "invoked") return invokedProjection();
+  if (lastResult === "prepared_only_rejected")
+    return preparedOnlyRejectedProjection();
+  if (
+    lastResult === "non_ritual_rejected" ||
+    lastResult === "missing_feature_rejected" ||
+    lastResult === "non_leveled_rejected"
+  ) {
+    return semanticRejectedProjection(lastResult);
+  }
+  return assertNever(lastResult);
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
@@ -633,10 +764,21 @@ function assertNumberField(
 function mbtLastResult(
   raw: unknown,
 ): SpellbookRitualSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "invoked" || raw === "prepared_only_rejected") {
+  if (
+    raw === "init" ||
+    raw === "invoked" ||
+    raw === "prepared_only_rejected" ||
+    raw === "non_ritual_rejected" ||
+    raw === "missing_feature_rejected" ||
+    raw === "non_leveled_rejected"
+  ) {
     return raw;
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unexpected spellbook Ritual selected identity result ${value}.`);
 }
 
 const spellbookRitualSelectedIdentityStateCheck = stateCheck(

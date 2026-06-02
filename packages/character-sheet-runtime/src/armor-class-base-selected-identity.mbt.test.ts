@@ -31,10 +31,19 @@ const SELECTED_UNARMORED_DEFENSE_UNIT_IDS = [
   BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
   MONK_UNARMORED_DEFENSE_UNIT_ID,
 ] as const;
+const ARMOR_FORMULA_UNIT_IDS = [
+  "armor_leather",
+  "armor_chain_shirt",
+  "armor_chain_mail",
+] as const;
 type ArmorClassAbilityModifier = Extract<
   ArmorClassState["base"],
   { readonly kind: "ability_sum" }
 >["abilityModifiers"][number];
+type ArmorClassArmorBase = Extract<
+  ArmorClassState["base"],
+  { readonly kind: "armor" }
+>;
 const BARBARIAN_UNARMORED_DEFENSE_ABILITY_MODIFIERS = [
   "dex",
   "con",
@@ -45,12 +54,16 @@ const MONK_UNARMORED_DEFENSE_ABILITY_MODIFIERS = [
 ] as const satisfies ReadonlyArray<ArmorClassAbilityModifier>;
 type SelectedUnarmoredDefenseUnitId =
   (typeof SELECTED_UNARMORED_DEFENSE_UNIT_IDS)[number];
+type ArmorFormulaUnitId = (typeof ARMOR_FORMULA_UNIT_IDS)[number];
 
 const armorClassBaseSelectedIdentityDriverSchema = {
   init: {},
   doSelectBarbarianUnarmoredDefense: {},
   doSelectBarbarianUnarmoredDefenseWithShield: {},
   doSelectMonkUnarmoredDefense: {},
+  doProjectLightArmor: {},
+  doProjectMediumArmorDexCap: {},
+  doProjectHeavyArmorWithShield: {},
   step: {},
 } as const;
 type ArmorClassBaseSelectedIdentityDriverAction = Exclude<
@@ -73,7 +86,9 @@ type ArmorClassBaseSelectedIdentityProjection =
     }
   | {
       readonly lastResult: "selected";
-      readonly base: SelectedArmorClassBaseProjection;
+      readonly base:
+        | SelectedArmorClassBaseProjection
+        | ArmorFormulaBaseProjection;
       readonly shieldBonus: number;
       readonly armorClass: number;
     };
@@ -96,6 +111,35 @@ type SelectedArmorClassBaseProjection =
         readonly wis: true;
       };
     };
+type ArmorFormulaBaseProjection =
+  | {
+      readonly source: "armor";
+      readonly sourceUnitId: "armor_leather";
+      readonly category: "light";
+      readonly formula: "light_dex";
+      readonly baseArmorClass: 11;
+      readonly abilityModifiers: {
+        readonly dex: true;
+      };
+    }
+  | {
+      readonly source: "armor";
+      readonly sourceUnitId: "armor_chain_shirt";
+      readonly category: "medium";
+      readonly formula: "medium_dex_max_2";
+      readonly baseArmorClass: 13;
+      readonly abilityModifiers: {
+        readonly dex: true;
+      };
+    }
+  | {
+      readonly source: "armor";
+      readonly sourceUnitId: "armor_chain_mail";
+      readonly category: "heavy";
+      readonly formula: "heavy_fixed";
+      readonly baseArmorClass: 16;
+      readonly abilityModifiers: Record<string, never>;
+    };
 type SelectedBarbarianProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
   { readonly lastResult: "selected" }
@@ -117,7 +161,15 @@ type SelectedMonkProjection = Extract<
 type SelectedUnarmoredDefenseProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
   { readonly lastResult: "selected" }
->;
+> & {
+  readonly base: SelectedArmorClassBaseProjection;
+};
+type ArmorFormulaProjection = Extract<
+  ArmorClassBaseSelectedIdentityProjection,
+  { readonly lastResult: "selected" }
+> & {
+  readonly base: ArmorFormulaBaseProjection;
+};
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly ArmorClassBaseSelectedIdentityDriverAction[];
@@ -128,6 +180,17 @@ type SelectedUnitIdentityReplay = {
   readonly unitId: SelectedUnarmoredDefenseUnitId;
   readonly actions: readonly ArmorClassBaseSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+type ArmorFormulaReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly ArmorClassBaseSelectedIdentityDriverAction[];
+  readonly expected: ArmorFormulaProjection;
+};
+type ArmorFormulaReplay = {
+  readonly taskId: "armor-class-base-formula";
+  readonly unitId: ArmorFormulaUnitId;
+  readonly actions: readonly ArmorClassBaseSelectedIdentityDriverAction[];
+  readonly sequences: readonly ArmorFormulaReplaySequence[];
 };
 
 const unitCatalogResult = buildUnitCatalog({
@@ -183,6 +246,66 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
+const armorFormulaReplays = [
+  {
+    taskId: "armor-class-base-formula",
+    unitId: "armor_leather",
+    actions: ["doProjectLightArmor"],
+    sequences: [
+      {
+        name: "light-armor-adds-full-dexterity-modifier",
+        actions: ["doProjectLightArmor"],
+        expected: armorFormulaProjection({
+          sourceUnitId: "armor_leather",
+          category: "light",
+          formula: "light_dex",
+          baseArmorClass: 11,
+          shieldBonus: 0,
+          armorClass: 13,
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "armor-class-base-formula",
+    unitId: "armor_chain_shirt",
+    actions: ["doProjectMediumArmorDexCap"],
+    sequences: [
+      {
+        name: "medium-armor-caps-dexterity-modifier-at-two",
+        actions: ["doProjectMediumArmorDexCap"],
+        expected: armorFormulaProjection({
+          sourceUnitId: "armor_chain_shirt",
+          category: "medium",
+          formula: "medium_dex_max_2",
+          baseArmorClass: 13,
+          shieldBonus: 0,
+          armorClass: 15,
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "armor-class-base-formula",
+    unitId: "armor_chain_mail",
+    actions: ["doProjectHeavyArmorWithShield"],
+    sequences: [
+      {
+        name: "heavy-armor-uses-fixed-ac-and-trained-shield-bonus",
+        actions: ["doProjectHeavyArmorWithShield"],
+        expected: armorFormulaProjection({
+          sourceUnitId: "armor_chain_mail",
+          category: "heavy",
+          formula: "heavy_fixed",
+          baseArmorClass: 16,
+          shieldBonus: 2,
+          armorClass: 18,
+        }),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<ArmorFormulaReplay>;
+
 describe("Character Sheet Armor Class base selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
@@ -207,6 +330,40 @@ describe("Character Sheet Armor Class base selected identity MBT", () => {
         if (runtime === undefined) {
           throw new Error(
             "Character Sheet Armor Class base selected identity driver must expose getState.",
+          );
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
+  it("replays SRD armor base formulas deterministically", async () => {
+    for (const replay of armorFormulaReplays) {
+      const replayedActions =
+        new Set<ArmorClassBaseSelectedIdentityDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createArmorClassBaseSelectedIdentityDriver()();
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing Character Sheet Armor Class base formula driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error(
+            "Character Sheet Armor Class base formula driver must expose getState.",
           );
         }
         expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
@@ -259,6 +416,25 @@ function createArmorClassBaseSelectedIdentityDriver() {
       doSelectMonkUnarmoredDefense: () => {
         projection = selectedMonkUnarmoredDefenseProjection();
       },
+      doProjectLightArmor: () => {
+        projection = armorFormulaProjectionForBuild({
+          armor: "armor_leather",
+          shield: false,
+        });
+      },
+      doProjectMediumArmorDexCap: () => {
+        projection = armorFormulaProjectionForBuild({
+          armor: "armor_chain_shirt",
+          shield: false,
+          dexterityScore: 16,
+        });
+      },
+      doProjectHeavyArmorWithShield: () => {
+        projection = armorFormulaProjectionForBuild({
+          armor: "armor_chain_mail",
+          shield: true,
+        });
+      },
       step: () => {},
       getState: () => projection,
     };
@@ -307,6 +483,29 @@ function selectedMonkUnarmoredDefenseProjection(): SelectedMonkProjection {
   );
 }
 
+function armorFormulaProjectionForBuild(input: {
+  readonly armor: ArmorFormulaUnitId;
+  readonly shield: boolean;
+  readonly dexterityScore?: number;
+}): ArmorFormulaProjection {
+  return projectArmorClassArmorFormulaState(
+    requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          armor: input.armor,
+          shield: input.shield,
+          ...(input.dexterityScore === undefined
+            ? {}
+            : { dexterityScore: input.dexterityScore }),
+        }),
+        unitLibrary,
+      }),
+    ),
+    input.armor,
+  );
+}
+
 function initialProjection(): ArmorClassBaseSelectedIdentityProjection {
   return {
     lastResult: "init",
@@ -318,6 +517,102 @@ function initialProjection(): ArmorClassBaseSelectedIdentityProjection {
     shieldBonus: 0,
     armorClass: 12,
   };
+}
+
+function armorFormulaProjection(input: {
+  readonly sourceUnitId: "armor_leather";
+  readonly category: "light";
+  readonly formula: "light_dex";
+  readonly baseArmorClass: 11;
+  readonly shieldBonus: number;
+  readonly armorClass: number;
+}): ArmorFormulaProjection;
+function armorFormulaProjection(input: {
+  readonly sourceUnitId: "armor_chain_shirt";
+  readonly category: "medium";
+  readonly formula: "medium_dex_max_2";
+  readonly baseArmorClass: 13;
+  readonly shieldBonus: number;
+  readonly armorClass: number;
+}): ArmorFormulaProjection;
+function armorFormulaProjection(input: {
+  readonly sourceUnitId: "armor_chain_mail";
+  readonly category: "heavy";
+  readonly formula: "heavy_fixed";
+  readonly baseArmorClass: 16;
+  readonly shieldBonus: number;
+  readonly armorClass: number;
+}): ArmorFormulaProjection;
+function armorFormulaProjection(input: {
+  readonly sourceUnitId: ArmorFormulaUnitId;
+  readonly category: ArmorClassArmorBase["category"];
+  readonly formula: ArmorClassArmorBase["formula"]["kind"];
+  readonly baseArmorClass: number;
+  readonly shieldBonus: number;
+  readonly armorClass: number;
+}): ArmorFormulaProjection {
+  return {
+    lastResult: "selected",
+    base: armorFormulaBaseProjection(input),
+    shieldBonus: input.shieldBonus,
+    armorClass: input.armorClass,
+  };
+}
+
+function armorFormulaBaseProjection(input: {
+  readonly sourceUnitId: ArmorFormulaUnitId;
+  readonly category: ArmorClassArmorBase["category"];
+  readonly formula: ArmorClassArmorBase["formula"]["kind"];
+  readonly baseArmorClass: number;
+}): ArmorFormulaBaseProjection {
+  if (
+    input.sourceUnitId === "armor_leather" &&
+    input.category === "light" &&
+    input.formula === "light_dex" &&
+    input.baseArmorClass === 11
+  ) {
+    return {
+      source: "armor",
+      sourceUnitId: input.sourceUnitId,
+      category: input.category,
+      formula: input.formula,
+      baseArmorClass: input.baseArmorClass,
+      abilityModifiers: { dex: true },
+    };
+  }
+  if (
+    input.sourceUnitId === "armor_chain_shirt" &&
+    input.category === "medium" &&
+    input.formula === "medium_dex_max_2" &&
+    input.baseArmorClass === 13
+  ) {
+    return {
+      source: "armor",
+      sourceUnitId: input.sourceUnitId,
+      category: input.category,
+      formula: input.formula,
+      baseArmorClass: input.baseArmorClass,
+      abilityModifiers: { dex: true },
+    };
+  }
+  if (
+    input.sourceUnitId === "armor_chain_mail" &&
+    input.category === "heavy" &&
+    input.formula === "heavy_fixed" &&
+    input.baseArmorClass === 16
+  ) {
+    return {
+      source: "armor",
+      sourceUnitId: input.sourceUnitId,
+      category: input.category,
+      formula: input.formula,
+      baseArmorClass: input.baseArmorClass,
+      abilityModifiers: {},
+    };
+  }
+  throw new Error(
+    `Unexpected Armor Class armor formula projection ${input.sourceUnitId}/${input.category}/${input.formula}.`,
+  );
 }
 
 function selectedBarbarianProjection(input: {
@@ -356,8 +651,17 @@ function selectedMonkProjection(input: {
 function armorClassBuild(input: {
   readonly startingClass: string;
   readonly advancements?: readonly string[];
+  readonly armor?: ArmorFormulaUnitId;
   readonly shield: boolean;
+  readonly dexterityScore?: number;
 }): CharacterBuild {
+  const armorItemId =
+    input.armor === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "armor",
+          unitId: requireRight(characterEquipmentItemUnitId(input.armor)),
+        });
   const shieldItemId =
     input.shield === true
       ? characterEquipmentItemId({
@@ -383,7 +687,7 @@ function armorClassBuild(input: {
     abilityScores: requireRight(
       abilityScoreAssignment({
         str: 13,
-        dex: 14,
+        dex: input.dexterityScore ?? 14,
         con: 13,
         int: 8,
         wis: 16,
@@ -393,11 +697,18 @@ function armorClassBuild(input: {
     proficiencyChoices: [],
     features: [],
     equipment: {
-      owned:
-        shieldItemId === undefined
+      owned: [
+        ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }],
-      loadout: shieldItemId === undefined ? {} : { shield: shieldItemId },
+          : [{ itemId: armorItemId, unitId: input.armor }]),
+        ...(shieldItemId === undefined
+          ? []
+          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+      ],
+      loadout: {
+        ...(armorItemId === undefined ? {} : { armor: armorItemId }),
+        ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
     },
   };
 }
@@ -424,15 +735,94 @@ function projectArmorClassBaseSelectedIdentityState(
       `Expected selected Armor Class base source ${expectedSourceUnitId}, got ${base.sourceUnitId}.`,
     );
   }
-  const shieldBonus = state.bonuses
-    .filter((bonus) => bonus.kind === "shield")
-    .reduce((total, bonus) => total + Number(bonus.bonus), 0);
   return {
     lastResult: "selected",
     base,
-    shieldBonus,
+    shieldBonus: projectedShieldBonus(state),
     armorClass: Number(currentArmorClass(state)),
   };
+}
+
+function projectArmorClassArmorFormulaState(
+  state: ArmorClassState,
+  expectedSourceUnitId: "armor_leather",
+): ArmorFormulaProjection;
+function projectArmorClassArmorFormulaState(
+  state: ArmorClassState,
+  expectedSourceUnitId: "armor_chain_shirt",
+): ArmorFormulaProjection;
+function projectArmorClassArmorFormulaState(
+  state: ArmorClassState,
+  expectedSourceUnitId: "armor_chain_mail",
+): ArmorFormulaProjection;
+function projectArmorClassArmorFormulaState(
+  state: ArmorClassState,
+  expectedSourceUnitId: ArmorFormulaUnitId,
+): ArmorFormulaProjection;
+function projectArmorClassArmorFormulaState(
+  state: ArmorClassState,
+  expectedSourceUnitId: ArmorFormulaUnitId,
+): ArmorFormulaProjection {
+  const base = requireArmorBase(state.base);
+  if (
+    expectedSourceUnitId === "armor_leather" &&
+    base.category === "light" &&
+    base.formula.kind === "light_dex" &&
+    base.formula.base === 11
+  ) {
+    return armorFormulaProjection({
+      sourceUnitId: expectedSourceUnitId,
+      category: base.category,
+      formula: base.formula.kind,
+      baseArmorClass: 11,
+      shieldBonus: projectedShieldBonus(state),
+      armorClass: Number(currentArmorClass(state)),
+    });
+  }
+  if (
+    expectedSourceUnitId === "armor_chain_shirt" &&
+    base.category === "medium" &&
+    base.formula.kind === "medium_dex_max_2" &&
+    base.formula.base === 13
+  ) {
+    return armorFormulaProjection({
+      sourceUnitId: expectedSourceUnitId,
+      category: base.category,
+      formula: base.formula.kind,
+      baseArmorClass: 13,
+      shieldBonus: projectedShieldBonus(state),
+      armorClass: Number(currentArmorClass(state)),
+    });
+  }
+  if (
+    expectedSourceUnitId === "armor_chain_mail" &&
+    base.category === "heavy" &&
+    base.formula.kind === "heavy_fixed" &&
+    base.formula.ac === 16
+  ) {
+    return armorFormulaProjection({
+      sourceUnitId: expectedSourceUnitId,
+      category: base.category,
+      formula: base.formula.kind,
+      baseArmorClass: 16,
+      shieldBonus: projectedShieldBonus(state),
+      armorClass: Number(currentArmorClass(state)),
+    });
+  }
+  throw new Error(
+    `Expected ${expectedSourceUnitId} Armor Class formula, got ${base.category}/${base.formula.kind}.`,
+  );
+}
+
+function requireArmorBase(base: ArmorClassState["base"]): ArmorClassArmorBase {
+  if (base.kind === "armor") return base;
+  throw new Error(`Expected armor Armor Class base, got ${base.kind}.`);
+}
+
+function projectedShieldBonus(state: ArmorClassState): number {
+  return state.bonuses
+    .filter((bonus) => bonus.kind === "shield")
+    .reduce((total, bonus) => total + Number(bonus.bonus), 0);
 }
 
 function requireUnarmoredDefenseBase(
@@ -532,6 +922,70 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
     assertNumberField(state, "qArmorClass", 12);
     return initialProjection();
   }
+  const baseSource = stringField(state, "qBaseSource");
+  if (baseSource === "armor") {
+    const sourceUnitId = armorFormulaUnitIdField(state);
+    const baseArmorClass = numberFromQuintInt(
+      state["qBaseArmorClass"],
+      "qBaseArmorClass",
+    );
+    const shieldBonus = numberFromQuintInt(
+      state["qShieldBonus"],
+      "qShieldBonus",
+    );
+    const armorClass = numberFromQuintInt(state["qArmorClass"], "qArmorClass");
+    if (
+      sourceUnitId === "armor_leather" &&
+      baseArmorClass === 11
+    ) {
+      assertBooleanField(state, "qUsesDex", true);
+      assertBooleanField(state, "qUsesCon", false);
+      assertBooleanField(state, "qUsesWis", false);
+      return armorFormulaProjection({
+        sourceUnitId,
+        category: "light",
+        formula: "light_dex",
+        baseArmorClass,
+        shieldBonus,
+        armorClass,
+      });
+    }
+    if (
+      sourceUnitId === "armor_chain_shirt" &&
+      baseArmorClass === 13
+    ) {
+      assertBooleanField(state, "qUsesDex", true);
+      assertBooleanField(state, "qUsesCon", false);
+      assertBooleanField(state, "qUsesWis", false);
+      return armorFormulaProjection({
+        sourceUnitId,
+        category: "medium",
+        formula: "medium_dex_max_2",
+        baseArmorClass,
+        shieldBonus,
+        armorClass,
+      });
+    }
+    if (
+      sourceUnitId === "armor_chain_mail" &&
+      baseArmorClass === 16
+    ) {
+      assertBooleanField(state, "qUsesDex", false);
+      assertBooleanField(state, "qUsesCon", false);
+      assertBooleanField(state, "qUsesWis", false);
+      return armorFormulaProjection({
+        sourceUnitId,
+        category: "heavy",
+        formula: "heavy_fixed",
+        baseArmorClass,
+        shieldBonus,
+        armorClass,
+      });
+    }
+    throw new Error(
+      `Unexpected Armor Class armor formula ${sourceUnitId}/${baseArmorClass}.`,
+    );
+  }
   const sourceUnitId = selectedUnarmoredDefenseUnitIdField(state);
   assertStringField(state, "qBaseSource", "unarmored_defense");
   assertBooleanField(state, "qUsesDex", true);
@@ -578,6 +1032,20 @@ function selectedUnarmoredDefenseUnitIdField(
   if (isSelectedUnarmoredDefenseUnitId(sourceUnitId)) return sourceUnitId;
   throw new Error(
     `Unexpected selected Unarmored Defense Unit ${sourceUnitId}.`,
+  );
+}
+
+function armorFormulaUnitIdField(
+  state: Readonly<Record<string, unknown>>,
+): ArmorFormulaUnitId {
+  const sourceUnitId = stringField(state, "qSourceUnitId");
+  if (isArmorFormulaUnitId(sourceUnitId)) return sourceUnitId;
+  throw new Error(`Unexpected Armor Class armor Unit ${sourceUnitId}.`);
+}
+
+function isArmorFormulaUnitId(unitId: string): unitId is ArmorFormulaUnitId {
+  return ARMOR_FORMULA_UNIT_IDS.some(
+    (armorFormulaUnitId) => armorFormulaUnitId === unitId,
   );
 }
 
