@@ -15,33 +15,23 @@ module damageComponentAdjustmentsInductive {
   var qPoison: int
   var qTotal: int
 
-  pure def qDamageByType: DamageByType = {
-    acid: 0,
-    bludgeoning: 0,
-    cold: 0,
-    fire: qFire,
-    force: 0,
-    lightning: 0,
-    necrotic: 0,
-    piercing: 0,
-    poison: qPoison,
-    psychic: 0,
-    radiant: 0,
-    slashing: qSlashing,
-    thunder: 0,
-  }
+  pure def qDamageByType: DamageByType =
+    emptyDamageByType
+      .set(FireDamage, qFire)
+      .set(PoisonDamage, qPoison)
+      .set(SlashingDamage, qSlashing)
 
   pure def factsForFixture(fixture: AdjustmentFixture): DamageAdjustmentFacts =
     if (fixture == SlashingResistance)
-      noDamageAdjustmentFacts.with("resistantSlashing", true)
+      noDamageAdjustmentFacts.with("resistances", Set(SlashingDamage))
     else if (fixture == FireVulnerability)
-      noDamageAdjustmentFacts.with("vulnerableFire", true)
+      noDamageAdjustmentFacts.with("vulnerabilities", Set(FireDamage))
     else if (fixture == PoisonImmunity)
-      noDamageAdjustmentFacts.with("immunePoison", true)
+      noDamageAdjustmentFacts.with("immunities", Set(PoisonDamage))
     else if (fixture == SlashingResistanceFireVulnerability)
       noDamageAdjustmentFacts
-        .with("resistantSlashing", true)
-        .with("vulnerableFire", true)
+        .with("resistances", Set(SlashingDamage))
+        .with("vulnerabilities", Set(FireDamage))
     else noDamageAdjustmentFacts
 
   action init = all {
@@ -52,9 +42,9 @@ module damageComponentAdjustmentsInductive {
   }
 
   action recordDamageByType(amounts: DamageByType): bool = all {
-    qSlashing' = amounts.slashing,
-    qFire' = amounts.fire,
-    qPoison' = amounts.poison,
+    qSlashing' = damageAmountForType(amounts, SlashingDamage),
+    qFire' = damageAmountForType(amounts, FireDamage),
+    qPoison' = damageAmountForType(amounts, PoisonDamage),
     qTotal' = totalDamageByType(amounts),
   }
 
