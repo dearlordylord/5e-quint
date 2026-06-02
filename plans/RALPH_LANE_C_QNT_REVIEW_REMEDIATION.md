@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "QRFR-C19-SECOND-PASS-QNT-RESCAN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Run the second-pass QNT rescan after remediation"
     },
     {
@@ -123,6 +123,12 @@
       "id": "QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH",
       "status": "blocked",
       "title": "Close the lane or create the next remediation batch"
+    },
+    {
+      "number": 21,
+      "id": "QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY",
+      "status": "ready-for-research",
+      "title": "Make generic battle-runtime QNT Initiative nonempty or total"
     }
   ]
 }
@@ -258,8 +264,9 @@ protocol when the Ralph runner supports it.
 | 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | done | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | done | none | QA generated QNT is disposable generated output; enforcement belongs in `generate_one()` and `rebuild_qnt()`. |
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | done | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | Enforce at `scripts/qa/generate_assertions.py` materialization boundaries; no manual edit to `qa_generated.qnt`. |
-| 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | ready-for-research | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
-| 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | blocked | QRFR-C19-SECOND-PASS-QNT-RESCAN | Prevents hidden findings from being dropped. |
+| 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | done | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Result recorded below; one residual QNT initiative state-shape issue assigned to QRFR-C21. |
+| 20 | QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch | blocked | QRFR-C19-SECOND-PASS-QNT-RESCAN, QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY | Prevents hidden findings from being dropped after the residual QNT initiative fix lands. |
+| 21 | QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total | ready-for-research | QRFR-C19-SECOND-PASS-QNT-RESCAN | Follow-up from the second-pass rescan: generic QNT turn-order still admits empty `stillToAct` while direct consumers index `[0]`. |
 
 ## Task Details
 
@@ -744,7 +751,7 @@ Acceptance:
 
 ### Task 19 - QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -778,15 +785,118 @@ Acceptance:
 - All relevant static gates from the Verification section are green or have
   concrete follow-up tasks.
 
-### Task 20 - QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch
+Result:
 
-Status: `blocked`
+- Scope: active package-local QNT, shared rule-core QNT, MBT driver closure,
+  proof wiring, authored-identity boundaries, and QA generated identity
+  boundaries after QRFR-C01 through QRFR-C18.
+- All original findings are converged except the generic QNT Initiative
+  nonempty/totality shape under QRF-5. The residual issue is assigned to
+  QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY.
+- Battle MBT was not run. Task 19 made no integrated behavior change, and the
+  repo instructions reserve battle MBT for completed behavior changes.
+
+Verification snapshot:
+
+- `pnpm check:authored-id-dispatch`: passed. The checker discovered 1004
+  authored identity literals, checked 319 source files, excluded 250 test or
+  artifact files, and found only the 11 documented boundary allowlist usages.
+- `pnpm check:qa-generated-identity`: passed. The QA generated identity
+  self-test rejects private non-SRD authored identity and fail-closes missing
+  blocklist materialization.
+- `pnpm check:mbt-driver-closure`: passed. The gate still tracks 11
+  grandfathered drivers for migration or computed-oracle classification.
+- `pnpm rules-kernel-coverage:check`: passed with 97 obligations.
+- `pnpm --filter @dnd/shared-algebras test:qnt-proofs`: passed, 23 tests in
+  34.80 seconds.
+- `pnpm --filter @dnd/battle-runtime test:qnt-proofs`: passed, 36 tests in
+  421.17 seconds.
+- `git diff --check`: passed.
+- `pnpm quality`: stopped at an unrelated baseline lint failure in
+  `packages/mcp/src/battle-tools.ts` line 439 (`max-lines`). The task touched
+  only planning docs, so broad verification was stopped per Ralph instructions.
+
+Original finding disposition:
+
+| Finding | Second-pass disposition |
+| --- | --- |
+| QRF-1 MBT closure gate | Converged for enforcement. `scripts/check-mbt-driver-closure.cjs` directly rejects forbidden direct and transitive imports, self-tests a forbidden `battle-runtime-model` fixture, and the gate passes. The 11 remaining grandfathered drivers are checker-visible and reasoned as computed-oracle or convertible debt. |
+| QRF-2 Extra Attack counts | Converged. Rule-core models `NoAdditionalAttacks`, `OneAdditionalAttack`, `TwoAdditionalAttacks`, and `ThreeAdditionalAttacks`; examples cover zero, one, two, and three additional attacks plus unsupported counts. Battle-runtime QNT, TS admission, and MBT bridge surfaces preserve counts rather than collapsing to a boolean. |
+| QRF-3 Moonbeam shape-shift reversion | Converged for admitted runtime states. The executable shape-shift owner is Druid Wild Shape active-effect restoration; unsupported spell/stat-block shifted states are not admitted as ordinary executable states. Moonbeam local state no longer has unsupported shifted branches, and proofs/tests cover admitted reversion. |
+| QRF-4 authored spell identity dispatch | Converged for the pilot and guardrail. The repeated-damage-allocation pilot uses procedure facts, and `pnpm check:authored-id-dispatch` passed. Remaining spell names and ids are in presentation, selection, source-ref, or documented admission boundaries rather than production identity dispatch per the current checker. |
+| QRF-5 partial and positional QNT state | Partially converged. Fighter ongoing feature occurrences now use exact named slots, and Alert initiative uses exact named score records. A residual generic battle-runtime QNT initiative issue remains: `battle-runtime-model.qnt` still represents `Initiative.stillToAct` as `List[Actor]`, while `battle-runtime-turn-order.qnt` and `battle-runtime-turn-advancement.qnt` index `[0]`. This is assigned to QRFR-C21. |
+| QRF-6 damage type totality | Converged. Damage by type is keyed by `RuleDamageType`, projection uses explicit matches and total maps, and Thunder is no longer an implicit final fallback. |
+| QRF-7 shared QNT proofs | Converged. `packages/shared-algebras/src/shared-algebras-qnt-proofs.ts` discovers run-block modules, runs each module independently with a timeout, and the opt-in proof lane is green. |
+| QRF-8 QA generated identity policy | Converged. `scripts/qa/generate_assertions.py` enforces the SRD-only or visibly synthetic identity boundary at cache-fragment and `qa_generated.qnt` materialization, with a self-test behind `pnpm check:qa-generated-identity`. |
+| QRF-9 review authority | Converged. `.claude/review-rules.md` points reviewers at package-local `packages/battle-runtime/battle-runtime.qnt`, package-local QNT slices, and `packages/shared-algebras/proofs/rule-core/`, while root QNT remains archived restore material only. |
+
+Reviewer loop:
+
+- Round 1 finding: residual QRF-5 generic QNT initiative shape found and
+  assigned to QRFR-C21.
+- Round 2 finding: no additional important unassigned issues found after
+  rerunning the same lenses over MBT closure, proof discovery, authored
+  identity guardrails, QA materialization, damage totality, Extra Attack count
+  parity, and Moonbeam shape-shift admission.
+
+RAW and ubiquitous-language check:
+
+- No new rule behavior was implemented in Task 19.
+- The rescan rechecked the relevant source anchors used by the remediations:
+  SRD 5.2.1 `Rules-Glossary.md` for Attack action, Moving between Attacks,
+  Initiative, and Shape-Shifting; `UBIQUITOUS_LANGUAGE.md` for Initiative,
+  Attack action resources, Multiattack/Extra Attack, and damage terminology.
+
+### Task 21 - QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY - Make generic battle-runtime QNT Initiative nonempty or total
+
+Status: `ready-for-research`
 
 Depends on: QRFR-C19-SECOND-PASS-QNT-RESCAN
 
 Input:
 
+- Task 19 rescan result above.
+- `packages/battle-runtime/battle-runtime-model.qnt`
+- `packages/battle-runtime/battle-runtime-turn-order.qnt`
+- `packages/battle-runtime/battle-runtime-turn-advancement.qnt`
+- `packages/shared-algebras/src/initiative-algebra.ts`
+- `packages/shared-algebras/proofs/initiative-algebra-invariant.qnt`
+
+Output:
+
+- Make the generic battle-runtime QNT `Initiative` shape mirror the runtime
+  invariant that there is always a current actor, or route all current-actor
+  access through a total result shape that makes empty initiative unrepresentable
+  at reducer call sites.
+- Replace direct `stillToAct[0]` reads in generic package-local QNT turn-order
+  and turn-advancement code with the new exact or total shape.
+- Keep the Alert-specific exact named initiative score model intact.
+
+Acceptance:
+
+- `BattleState.initiative` in active package-local QNT cannot represent a
+  normal battle state with no current actor unless that state is carried by an
+  explicit terminal/no-current-actor variant.
+- `battle-runtime-turn-order.qnt` and `battle-runtime-turn-advancement.qnt` no
+  longer rely on unchecked list indexing for current actor selection.
+- Focused QNT run blocks cover normal advancement, round wraparound, and the
+  rejected or terminal empty-initiative case.
+- `pnpm --filter @dnd/battle-runtime test:qnt-proofs` and `git diff --check`
+  are green.
+
+### Task 20 - QRFR-C20-LANE-CLOSEOUT-OR-NEXT-BATCH - Close the lane or create the next remediation batch
+
+Status: `blocked`
+
+Depends on:
+
+- QRFR-C19-SECOND-PASS-QNT-RESCAN
+- QRFR-C21-BATTLE-RUNTIME-QNT-INITIATIVE-NONEMPTY
+
+Input:
+
 - Task 19 rescan output.
+- Task 21 residual state-shape output.
 - Current git status and all plan files changed by this lane.
 
 Output:
