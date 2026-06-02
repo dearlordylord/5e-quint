@@ -46,6 +46,40 @@ Corpus (SE, Reddit, Sage Advice, sageadvice.eu, Errata)
 
 If a ruling can't be encoded with the spec's existing functions (e.g., Wild Shape isn't modeled), Sonnet outputs `// SKIP: <reason>` instead of a fake test.
 
+## Authored-identity boundary
+
+`qa_generated.qnt` is disposable generated output, not a source of truth and not
+part of normal development verification. The private corpus and cached LLM
+fragments under `.references/qa/` are local scratch. Any QNT materialized at the
+repository root is still project material, so regeneration must not copy PHB+
+authored identity into it.
+
+Generated QA QNT may contain only:
+
+- SRD authored identity whose provenance is the repo's redistributable SRD
+  corpus.
+- Visibly synthetic renamed identity for non-SRD mechanics examples.
+- Runtime projection facts derived from the formal spec, such as concrete rolls,
+  hit points, conditions, counters, and procedure inputs.
+
+Generated QA QNT must not contain real PHB+ ids, names, slugs, prose labels,
+source headings, page references, or recognizable official catalog identity.
+Community posts, Sage Advice pages, D&D Beyond pages, and other downloaded data
+are structured input for classification and assertion generation only; they are
+not provenance for shipped or materialized rules content. If a generated test
+keeps an input URL for traceability, it must be treated as a structured-input
+trace link, not as rules provenance. Runtime projection facts are
+execution-facing test data and must not be used to smuggle authored identity into
+the artifact.
+
+Enforcement belongs in `scripts/qa/generate_assertions.py` at the materialization
+boundary: `generate_one()` before writing cache fragments to
+`.references/qa/cache/assertions/`, and `rebuild_qnt()` before writing
+`qa_generated.qnt`. The checker should reject non-SRD authored identity or
+rewrite it to synthetic identity before either file is written. Normal
+development must not hand-edit `qa_generated.qnt`; fix the generator or delete
+the offending cache fragment and regenerate.
+
 ## LLM invocation
 
 Classification:
