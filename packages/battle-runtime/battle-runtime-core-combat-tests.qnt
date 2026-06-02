@@ -12,6 +12,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
@@ -1047,8 +1048,15 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_spell_invocation_slot_spend_distinguishes_prepared_spell_from_cantrip = {
+    val magicMissileResourceFacts = repeatedDamageAllocationInvocationResourceFacts({
+      hasSpellAccess: true,
+      selectedSlotLevel: 1,
+      targetCount: 1,
+      targetsAreValid: true,
+      repeatedEffectCount: magicMissileDartCount(1),
+    })
     all {
-      assert(expendedSlotsAfterInvocation(MagicMissile, 0) == 1),
+      assert(expendedSlotsAfterSpellInvocationResource(magicMissileResourceFacts, 0) == 1),
       assert(expendedSlotsAfterInvocation(RayOfFrost, 0) == 0),
       assert(expendedSlotsAfterInvocation(AcidSplash, 0) == 0),
       assert(expendedSlotsAfterInvocation(PoisonSpray, 0) == 0),

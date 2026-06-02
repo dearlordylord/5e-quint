@@ -95,12 +95,12 @@ module ruleCoreSpellsMbt {
   )
 
   action doMagicMissileLow = {
-    val invocation = resolveSpellInvocation(initialSpellcastingProcedureState, {
-      profile: MagicMissileSpellProfile,
+    val invocation = resolveRepeatedDamageAllocationInvocation(initialSpellcastingProcedureState, {
       hasSpellAccess: true,
       selectedSlotLevel: 1,
       targetCount: 1,
       targetsAreValid: true,
+      repeatedEffectCount: magicMissileDartCount(1),
     })
     val damage = resolveMagicMissileDamage({
       slotLevel: 1,
@@ -432,15 +432,15 @@ module ruleCoreSpellsMbt {
   )
 
   action doReadySpellHold = {
-    val held = holdReadiedSpellResponse(
+    val held = holdRepeatedDamageAllocationReadiedSpellResponse(
       initialSpellcastingProcedureState,
       initialReadiedSpellProcedureState,
       {
-        profile: MagicMissileSpellProfile,
         hasSpellAccess: true,
         selectedSlotLevel: 1,
         targetCount: 1,
         targetsAreValid: true,
+        repeatedEffectCount: magicMissileDartCount(1),
       },
       true,
       true

@@ -85,13 +85,13 @@
     {
       "number": 14,
       "id": "QRFR-C14-PROCEDURE-FACT-PILOT-QNT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace authored spell dispatch with procedure facts in the pilot QNT vertical"
     },
     {
       "number": 15,
       "id": "QRFR-C15-PROCEDURE-FACT-PILOT-TS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Thread the pilot procedure facts through TS runtime and parity bridge"
     },
     {
@@ -253,8 +253,8 @@ protocol when the Ralph runner supports it.
 | 11 | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN - Design executable Moonbeam shapeshift reversion facts | done | none | Design note identifies the admitted reversion owner and implementation shape. |
 | 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | done | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change; consumed the Task 11 design note. |
 | 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | done | none | Pilot selected: Magic Missile repeated-damage-allocation handoff in `plans/AUTHORED_IDENTITY_SPELL_AUDIT.md`. |
-| 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | ready-for-research | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first; use the Task 13 Magic Missile handoff. |
-| 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | blocked | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the QNT shape. |
+| 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | done | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first; used the Task 13 Magic Missile handoff. |
+| 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | ready-for-research | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the Task 14 QNT fact shape. |
 | 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | blocked | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | ready-for-research | none | Policy before generator enforcement. |
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | blocked | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | No manual edit to `qa_generated.qnt`. |
@@ -601,7 +601,7 @@ Result:
 
 ### Task 14 - QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C13-AUTHORED-IDENTITY-AUDIT
 
@@ -625,9 +625,15 @@ Acceptance:
 - QNT proof or focused QNT test for the pilot is green.
 - The new fact shape does not duplicate existing runtime state.
 
+Result:
+
+- Magic Missile repeated-damage-allocation invocation/resource dispatch uses
+  typed repeated-damage-allocation facts in QNT; authored spell identity remains
+  outside the pilot production resource/cardinality branch.
+
 ### Task 15 - QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QRFR-C14-PROCEDURE-FACT-PILOT-QNT
 
