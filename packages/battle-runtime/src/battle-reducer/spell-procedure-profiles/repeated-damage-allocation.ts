@@ -54,6 +54,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { repeatedDamageAllocationAdmissionFacts } from "./repeated-damage-allocation-facts.ts";
 
 type RepeatedDamageAllocationInvocation = Extract<
   SupportedSpellInvocation,
@@ -109,17 +110,19 @@ function admitRepeatedDamageAllocation(
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
+      const facts = repeatedDamageAllocationAdmissionFacts({
+        selectedSlotLevel: slot.spellLevel,
+        repeatedEffectCount: repeatedEffectCountForSlotLevel(slot.spellLevel),
+      });
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: { tag: "spellSlot", slotLevel: facts.selectedSlotLevel },
           procedure: "repeatedDamageAllocation",
           spell,
           targeting: {
             kind: "repeatedEffectTargetAllocation",
-            repeatedEffectCount: repeatedEffectCountForSlotLevel(
-              slot.spellLevel,
-            ),
+            repeatedEffectCount: facts.repeatedEffectCount,
           },
           damage: {
             expr: damageExpr,

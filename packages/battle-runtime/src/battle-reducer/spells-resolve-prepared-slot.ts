@@ -61,6 +61,11 @@ import {
   validateSpellTargetAllocation,
 } from "./spells-holes-fills.ts";
 import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
+import {
+  repeatedDamageAllocationActionKind,
+  repeatedDamageAllocationInvocationFacts,
+  repeatedDamageAllocationInvocationResourceFacts,
+} from "./spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
@@ -297,11 +302,7 @@ export function resolvePreparedSlotSpellAct(input: {
   }
   const damageRoll = input.fillSet.damageRoll;
   const damageValidation =
-    validateSpellDamageFill(
-      damageRoll,
-      input.invocation,
-      false,
-    ) ??
+    validateSpellDamageFill(damageRoll, input.invocation, false) ??
     validatePreparedSlotSpellDamageGroups(
       damageRoll,
       targetAllocation.allocations,
@@ -348,7 +349,10 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
   const damageAmountByAllocationIndex = new Map<number, number>();
-  for (const [allocationIndex, allocation] of targetAllocation.allocations.entries()) {
+  for (const [
+    allocationIndex,
+    allocation,
+  ] of targetAllocation.allocations.entries()) {
     const target = input.input.state.combatants.get(allocation.targetId);
     if (target === undefined) {
       continue;
@@ -609,7 +613,18 @@ export function resolvePreparedSlotSpellAct(input: {
     };
   }
 
-  const spent = spendAction(damaged.currentTurnResources, "magic");
+  const invocationResourceFacts =
+    repeatedDamageAllocationInvocationResourceFacts(
+      repeatedDamageAllocationInvocationFacts({
+        invocation: input.invocation,
+        targetCount: targetAllocation.allocations.length,
+        targetsAreValid: true,
+      }),
+    );
+  const spent = spendAction(
+    damaged.currentTurnResources,
+    repeatedDamageAllocationActionKind(invocationResourceFacts),
+  );
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -631,7 +646,7 @@ export function resolvePreparedSlotSpellAct(input: {
   const slotted = expendSpellSlot(
     damaged,
     input.actorId,
-    input.invocation.resource.slotLevel,
+    invocationResourceFacts.selectedSlotLevel,
   );
   const nextState = {
     ...slotted,

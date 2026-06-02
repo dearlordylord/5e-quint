@@ -91,13 +91,13 @@
     {
       "number": 15,
       "id": "QRFR-C15-PROCEDURE-FACT-PILOT-TS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thread the pilot procedure facts through TS runtime and parity bridge"
     },
     {
       "number": 16,
       "id": "QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add a production guardrail against authored-identity runtime dispatch"
     },
     {
@@ -254,8 +254,8 @@ protocol when the Ralph runner supports it.
 | 12 | QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY - Implement Moonbeam shapeshift reversion parity | done | QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN | QNT and TS behavior change; consumed the Task 11 design note. |
 | 13 | QRFR-C13-AUTHORED-IDENTITY-AUDIT - Audit spell authored-identity dispatch and select the pilot vertical | done | none | Pilot selected: Magic Missile repeated-damage-allocation handoff in `plans/AUTHORED_IDENTITY_SPELL_AUDIT.md`. |
 | 14 | QRFR-C14-PROCEDURE-FACT-PILOT-QNT - Replace authored spell dispatch with procedure facts in the pilot QNT vertical | done | QRFR-C13-AUTHORED-IDENTITY-AUDIT | QNT owner change first; used the Task 13 Magic Missile handoff. |
-| 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | ready-for-research | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the Task 14 QNT fact shape. |
-| 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | blocked | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
+| 15 | QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge | done | QRFR-C14-PROCEDURE-FACT-PILOT-QNT | Runtime and bridge follow the Task 14 QNT fact shape. |
+| 16 | QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch | ready-for-research | QRFR-C15-PROCEDURE-FACT-PILOT-TS | Enforces the new pattern after one pilot proves it. |
 | 17 | QRFR-C17-QA-GENERATED-IDENTITY-POLICY - Define the QA generated QNT authored-identity boundary | ready-for-research | none | Policy before generator enforcement. |
 | 18 | QRFR-C18-QA-GENERATED-IDENTITY-GATE - Enforce the QA generated QNT SRD-only or synthetic-identity policy | blocked | QRFR-C17-QA-GENERATED-IDENTITY-POLICY | No manual edit to `qa_generated.qnt`. |
 | 19 | QRFR-C19-SECOND-PASS-QNT-RESCAN - Run the second-pass QNT rescan after remediation | blocked | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR, QRFR-C05-SHARED-QNT-PROOF-BASELINE, QRFR-C06-DAMAGE-TYPE-TOTALITY, QRFR-C07-FIGHTER-ONGOING-STATE-SHAPE, QRFR-C08-TURN-ORDER-EXACT-SHAPES, QRFR-C10-EXTRA-ATTACK-BATTLE-PARITY, QRFR-C12-MOONBEAM-SHAPESHIFT-PARITY, QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL, QRFR-C18-QA-GENERATED-IDENTITY-GATE | Required reliability pass after the fixes land. |
@@ -633,7 +633,7 @@ Result:
 
 ### Task 15 - QRFR-C15-PROCEDURE-FACT-PILOT-TS - Thread the pilot procedure facts through TS runtime and parity bridge
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: QRFR-C14-PROCEDURE-FACT-PILOT-QNT
 
@@ -655,9 +655,15 @@ Acceptance:
 - `pnpm check:authored-id-dispatch` is no worse, and ideally reports one fewer
   production runtime dispatch.
 
+Result:
+
+- The TS pilot uses `repeated-damage-allocation-facts.ts` to thread repeated
+  damage allocation procedure facts through admission, target cardinality,
+  runtime action/slot spend, and the focused rule-core spell MBT bridge.
+
 ### Task 16 - QRFR-C16-AUTHORED-IDENTITY-GUARDRAIL - Add a production guardrail against authored-identity runtime dispatch
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: QRFR-C15-PROCEDURE-FACT-PILOT-TS
 
