@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "BRQNT-DS05-ELDRITCH-BLAST-MBT-SPLIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Extract Eldritch Blast MBT into its focused TS driver"
     }
   ]
@@ -154,7 +154,7 @@ only with a concrete reason, and repeat until no reasonable findings remain.
 | 2 | BRQNT-DS02-SLEEP-REPEAT-SAVE-MBT-SPLIT - Extract Sleep repeat-save MBT into its focused TS driver | done | First marker-heavy spell lifecycle slice after the pilot extraction. |
 | 3 | BRQNT-DS03-SPIRITUAL-WEAPON-MBT-SPLIT - Extract Spiritual Weapon MBT into its focused TS driver | done | Spell-hosted attack proxy slice with force-position holes and repeat attack. |
 | 4 | BRQNT-DS04-STARRY-WISP-OBJECT-MBT-SPLIT - Extract Starry Wisp object MBT into its focused TS driver | done | Object-target and object-damage spell attack slice. |
-| 5 | BRQNT-DS05-ELDRITCH-BLAST-MBT-SPLIT - Extract Eldritch Blast MBT into its focused TS driver | ready-for-implementation-after-light-research | Beam sequencing slice using selected SRD structured input and focused target projection. |
+| 5 | BRQNT-DS05-ELDRITCH-BLAST-MBT-SPLIT - Extract Eldritch Blast MBT into its focused TS driver | done | Beam sequencing slice using selected SRD structured input and focused target projection. |
 
 ## Task Details
 
@@ -336,7 +336,7 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/s
 
 ### Task 5 - BRQNT-DS05-ELDRITCH-BLAST-MBT-SPLIT - Extract Eldritch Blast MBT into its focused TS driver
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Move the Eldritch Blast MBT driver code out of
 `packages/battle-runtime/src/battle-runtime.mbt.test.ts` into:
