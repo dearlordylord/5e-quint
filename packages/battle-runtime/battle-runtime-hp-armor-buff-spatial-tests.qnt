@@ -2,7 +2,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 
 module battleRuntimeHpArmorBuffSpatialTests {
-  import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -17,6 +16,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
+  import battleRuntimeArmorSpellResolution.* from "./battle-runtime-armor-spell-resolution"
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -37,6 +37,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
   import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
+  import battleRuntimeWeaponHitTurnEffects.* from "./battle-runtime-weapon-hit-turn-effects"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
@@ -432,7 +433,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_armor_of_shadows_mage_armor_spends_action_not_spell_slot = {
-    val result = resolveArmorOfShadowsMageArmor(initialState)
+    val result = resolveArmorOfShadowsMageArmorSpell(initialState)
     all {
       assert(result.fighter.activeEffects.contains(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
@@ -442,7 +443,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_armor_of_shadows_mage_armor_rejects_heavy_armored_self = {
     val armored = { ...initialState, fighter: { ...initialState.fighter, wearingHeavyArmor: true } }
-    val result = resolveArmorOfShadowsMageArmor(armored)
+    val result = resolveArmorOfShadowsMageArmorSpell(armored)
     all {
       assert(not(activeEffectsContainMageArmor(result.fighter.activeEffects))),
       assert(result.actionAvailable),
@@ -452,7 +453,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_armor_of_shadows_mage_armor_replaces_existing_effect_duration = {
     val protected = { ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(mageArmorActiveEffect(1)) } }
-    val result = resolveArmorOfShadowsMageArmor(protected)
+    val result = resolveArmorOfShadowsMageArmorSpell(protected)
     all {
       assert(result.fighter.activeEffects == Set(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
@@ -462,7 +463,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_mage_armor_expires_after_duration_tick = {
     val nearlyExpired = {
-      ...resolveArmorOfShadowsMageArmor(initialState),
+      ...resolveArmorOfShadowsMageArmorSpell(initialState),
       fighter: {
         ...initialState.fighter,
         activeEffects: Set(mageArmorActiveEffect(1)),
@@ -1023,7 +1024,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_ensnaring_strike_after_weapon_hit_restrains_damages_and_escapes = {
     val ensnared = resolveEnsnaringStrikeAfterWeaponHit(initialState, 1, false)
-    val damaged = endTurnWithEnsnaringStrikeDamage(ensnared, 4, true)
+    val damaged = endTurnWithEnsnaringStrikeOngoingDamage(ensnared, 4, true)
     val escaped = escapeEnsnaringStrike(damaged, true, false)
     val helperTurn = endTurn(damaged)
     val helperWithoutReach = escapeEnsnaringStrike(helperTurn, true, false)
@@ -1050,8 +1051,8 @@ module battleRuntimeHpArmorBuffSpatialTests {
 
   run test_searing_smite_after_hit_burns_and_constitution_save_ends = {
     val seared = resolveSearingSmiteAfterMeleeHit(initialState, 3, 6, false, true)
-    val stillBurning = endTurnWithSearingSmiteDamageAndSave(seared, 9, false, true)
-    val ended = endTurnWithSearingSmiteDamageAndSave(seared, 9, true, true)
+    val stillBurning = endTurnWithSearingSmiteOngoingDamageAndSave(seared, 9, false, true)
+    val ended = endTurnWithSearingSmiteOngoingDamageAndSave(seared, 9, true, true)
     all {
       assert(seared.goblin.hp == initialState.goblin.hp - 6),
       assert(seared.goblin.activeEffects.contains(SearingSmiteBurning({ damageDice: 3, durationTicks: searingSmiteDurationTicks }))),

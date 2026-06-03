@@ -7,6 +7,7 @@ module battleRuntimeFighterOngoingFeatures {
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
     state.fighter.activeOngoingFeatureOccurrences.rage
@@ -208,6 +209,43 @@ module battleRuntimeFighterOngoingFeatures {
       setFighterRoundExtendedOngoingFeatureExpiry(state, state.initiative.round + 1)
     else
       state
+
+  pure def grantFighterActionSurge(
+    state: BattleState,
+    usesRemaining: int,
+    usedThisTurn: bool,
+  ): ActionSurgeResult =
+    if (currentActor(state) == Fighter and usesRemaining > 0 and not(usedThisTurn))
+      {
+        state: { ...state, actionAvailable: true },
+        usesRemaining: usesRemaining - 1,
+        usedThisTurn: true,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining, usedThisTurn: usedThisTurn }
+
+  pure def resolveFighterSecondWind(
+    state: BattleState,
+    usesRemaining: int,
+    healingRoll: int,
+    fighterLevel: int,
+  ): SecondWindResult =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      usesRemaining > 0 and
+      not(state.fighter.unconscious)
+    )
+      {
+        state: {
+          ...state,
+          fighter: applyHealing(state.fighter, healingRoll + fighterLevel),
+          bonusActionAvailable: false,
+        },
+        usesRemaining: usesRemaining - 1,
+      }
+    else
+      { state: state, usesRemaining: usesRemaining }
 
   pure def recordFighterAttackRoll(state: BattleState): BattleState =
     { ...battleStateAfterTargetActionEarlyEndForActor(extendRageWithAttackRoll(state, Goblin), Fighter), attackRollMadeThisTurn: true }

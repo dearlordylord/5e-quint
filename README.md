@@ -70,8 +70,10 @@ identity cannot be copied into publishable code.
 contracts for Units, Stat Blocks, spells, class features, and related content.
 
 **Battle runtime** (`packages/battle-runtime`) — Unit/StatBlock-backed battle
-reducer behavior. `packages/battle-runtime/battle-runtime.qnt` is the active
-battle proof/spec authority.
+reducer behavior. Battle QNT authority is distributed across shared rule-core
+slices, package-local focused slices, and focused MBT/proof witnesses.
+`packages/battle-runtime/battle-runtime.qnt` remains a full-shell fixture and
+compatibility aggregation while focused witnesses replace broad-shell ownership.
 
 **Character runtimes** (`packages/character-creation-runtime`,
 `packages/character-sheet-runtime`, `packages/character-battle-runtime`) —

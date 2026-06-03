@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMirrorImageTests {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"

@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSaveSpellTests {
-  import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -14,6 +13,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
@@ -40,6 +40,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
@@ -86,7 +87,7 @@ module battleRuntimeSaveSpellTests {
         activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
       },
     }
-    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1, StrAbility, StealthSkill)
+    val result = resolveRollModifierChoiceSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
@@ -101,7 +102,7 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_pass_without_trace_applies_stealth_bonus_to_chosen_aura_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2, StrAbility, StealthSkill)
+    val result = resolveRollModifierChoiceSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus)),
@@ -111,7 +112,7 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_pass_without_trace_requires_caster_in_selected_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2, StrAbility, StealthSkill)
+    val result = resolveRollModifierChoiceSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2, StrAbility, StealthSkill)
     all {
       assert(result == initialState),
       assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
@@ -120,19 +121,19 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_enthrall_applies_perception_penalty_to_failed_wisdom_save_targets = {
-    val result = resolveRollModifierSpell(initialState, EnthrallRollModifier, Set(Fighter, Goblin), Set(Goblin), 2, StrAbility, PerceptionSkill)
+    val result = resolveRollModifierChoiceSpell(initialState, EnthrallRollModifier, Set(Fighter, Goblin), Set(Goblin), 2, StrAbility, PerceptionSkill)
     all {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(EnthrallPerceptionPenalty))),
       assert(result.goblin.activeEffects.contains(EnthrallPerceptionPenalty)),
-      assert(rollModifierPassivePerceptionDelta(result.goblin.activeEffects) == -10),
+      assert(passivePerceptionModifierDelta(result.goblin.activeEffects) == -10),
       assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
     }
   }
 
   run test_enhance_ability_upcast_applies_per_target_ability_advantage = {
     val result =
-      resolveRollModifierSpellWithTargetAbilities(
+      resolveRollModifierChoiceSpellWithTargetAbilities(
         initialState,
         EnhanceAbilityRollModifier,
         Set(Fighter, Goblin),
@@ -154,7 +155,7 @@ module battleRuntimeSaveSpellTests {
 
   run test_guidance_preserves_existing_turn_spell_slot_guard = {
     val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
-    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility, StealthSkill)
+    val result = resolveRollModifierChoiceSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill }))),
@@ -1229,7 +1230,7 @@ module battleRuntimeSaveSpellTests {
       ...initialState,
       fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin),
     }
-    val stood = standFighterFromProne(laughedAtFighter)
+    val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
     assert(stood == laughedAtFighter)
   }
 

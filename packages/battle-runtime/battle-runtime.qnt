@@ -81,6 +81,7 @@ module battleRuntime {
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
+  import battleRuntimeArmorSpellResolution.* from "./battle-runtime-armor-spell-resolution"
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -88,19 +89,24 @@ module battleRuntime {
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeCombatHoles.* from "./battle-runtime-combat-holes"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
+  import battleRuntimeLegendaryActions.* from "./battle-runtime-legendary-actions"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeConditionSpellResolution.* from "./battle-runtime-condition-spell-resolution"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
   import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
+  import battleRuntimeWeaponHitTurnEffects.* from "./battle-runtime-weapon-hit-turn-effects"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
@@ -108,8 +114,8 @@ module battleRuntime {
   import battleRuntimeProtectionFromPoison.* from "./battle-runtime-protection-from-poison"
   import battleRuntimeDirectConditionRemoval.* from "./battle-runtime-direct-condition-removal"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
-  import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeWardingBond.* from "./battle-runtime-warding-bond"
@@ -486,105 +492,26 @@ module battleRuntime {
   //   Attitude/social state with damage and witness-allies early-end facts,
   //   not battle-owned condition state in this runtime.
   //
-  // This is the canonical package-local spec for implemented
-  // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
-  // proof and restore source material; it is not the place to add new
-  // @dnd/battle-runtime behavior.
+  // Full-shell fixture for implemented @dnd/battle-runtime behavior. New
+  // fixture-specific helpers should live in focused modules.
 
   pure def attackTargetAc(state: BattleState): int =
-    if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
+    combatAttackTargetArmorClass(state)
 
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActor(state) == Goblin and not(state.goblin.rechargeAvailable))
-      Set(StatBlockRechargeRoll)
-    else if (currentActorCanAttack(state))
-      Set(TargetChoice)
-    else Set()
-
-  pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
-    {
-      val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighter.hidePrerequisite, stealthTotal, 15)
-      val advanced = stateWithFighterMovementStep(state, step)
-      if (step.hidden)
-      {
-        ...advanced,
-        fighter: { ...advanced.fighter, hidden: totalToHiddenState(stealthTotal) },
-      }
-      else
-        { ...advanced, fighter: { ...advanced.fighter, hidden: NotHidden } }
-    }
-
-  pure def searchGoblinForFighter(state: BattleState, perceptionTotal: int): BattleState =
-    match state.fighter.hidden {
-      | NotHidden => {
-          val step = battleRuntimeSearch(movementProjectionForGrappledGoblin(state), false, perceptionTotal, 0)
-          { ...state, actionAvailable: step.actionAvailable, bonusActionAvailable: step.bonusActionAvailable }
-        }
-      | HiddenByDc(dc) => {
-          val step = battleRuntimeSearch(
-            movementProjectionForGrappledGoblin(state).with("hidden", true),
-            true,
-            perceptionTotal,
-            hiddenDiscoveryDcValue(dc),
-          )
-          {
-            ...state,
-            actionAvailable: step.actionAvailable,
-            bonusActionAvailable: step.bonusActionAvailable,
-        fighter: {
-          ...state.fighter,
-              hidden: if (step.hidden) state.fighter.hidden else NotHidden,
-        },
-      }
-        }
-    }
+    combatOpenHoles(state)
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
-    if (not(currentActorCanAttack(state)))
-      Set()
-    else match replay {
-      | AttackNeedsTarget => Set(TargetChoice)
-      | AttackNeedsAttackRoll => Set(AttackRoll)
-      | AttackRollFilled(roll) =>
-          if (not(attackHits(roll.attackTotal, roll.naturalD20, attackTargetAc(state), attackCriticalThreshold(state, currentActor(state)))))
-            Set()
-          else {
-            val attacker = combatantForActor(state, currentActor(state))
-            val target = combatantForActor(state, if (currentActor(state) == Fighter) Goblin else Fighter)
-            if (mirrorImageRequiresDuplicateRollForAttackRollHit(attacker.activeEffects, target.activeEffects, false))
-              Set(MirrorImageDuplicateRoll)
-            else
-              Set(DamageRoll)
-          }
-      | AttackReplayComplete => Set()
-    }
+    combatAttackReplayHoles(state, replay)
 
   pure def goblinLegendaryActionWindowOpen(state: BattleState): bool =
-    state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
+    goblinLegendaryActionWindowIsOpen(state)
 
   pure def goblinCanUseLegendaryAction(state: BattleState): bool =
-    battleRuntimeCanUseLegendaryAction(
-      state.goblin.hp > 0,
-      goblinLegendaryActionWindowOpen(state),
-      state.legendaryActionWindowConsumed,
-      state.goblin.legendaryUsesRemaining,
-      2,
-    )
+    goblinLegendaryActionAvailable(state)
 
   pure def useGoblinLegendaryAction(state: BattleState): BattleState =
-    if (goblinCanUseLegendaryAction(state))
-      {
-        ...state,
-        goblin: { ...state.goblin, legendaryUsesRemaining: battleRuntimeLegendaryUsesAfterUse(
-          state.goblin.legendaryUsesRemaining,
-          2,
-          goblinLegendaryActionWindowOpen(state),
-          state.goblin.incapacitated,
-        ) },
-        legendaryActionWindowConsumed: true,
-      }
-    else
-      state
+    spendGoblinLegendaryAction(state)
 
   pure def resolveHellishRebukeAfterDamageReaction(
     state: BattleState,
@@ -593,326 +520,91 @@ module battleRuntime {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    if (
-      continuation.damaged == continuation.damager or
-      continuation.slotLevel < 1 or
-      not(reactorCanReact(state, continuation.damaged)) or
-      not(canActorExpendSpellSlotThisTurn(state, continuation.damaged))
+    resolveHellishRebukeAfterDamage(
+      state,
+      continuation,
+      savingThrowSucceeded,
+      damageRoll,
+      concentrationSaveSucceeded,
     )
-      state
-    else {
-      val afterReactionSpend = spendReaction(state, continuation.damaged)
-      val damagedTarget = match continuation.damager {
-        | Fighter => {
-            ...afterReactionSpend,
-            fighter: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.fighter,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-        | Goblin => {
-            ...afterReactionSpend,
-            goblin: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.goblin,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-      }
-      commitActorSpellSlotUse(damagedTarget, continuation.damaged)
-    }
 
-  pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
-    stateAfterDecliningReactionOffer(state, reactor)
-  }
+  pure def declineReaction(state: BattleState, reactor: Actor): BattleState =
+    declineBattleReaction(state, reactor)
 
   pure def declineReactionAndResume(state: BattleState, reactor: Actor): BattleState =
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      val top = state.interruptStack[state.interruptStack.length() - 1]
-      match top {
-        | PendingReaction(frame) => {
-            val afterDecision = declineReaction(state, reactor)
-            if (reactionDecisionClosedFrame(state, afterDecision))
-              resumeReactionContinuation(afterDecision, frame.continuation)
-            else
-              afterDecision
-          }
-        | _ => state
-      }
-    }
+    declineReactionOfferAndResume(state, reactor)
 
   pure def stateAfterResumingSpellCastReaction(
     state: BattleState,
     frame: PendingReactionFrame,
   ): BattleState =
-    match frame.procedure {
-      | CounterspellReactionProcedure(counterspell) =>
-          if (
-            frame.trigger == SpellCast and
-              counterspell.triggeringSpellUsesSlot and
-              (not(pendingCounterspellTakesEffect(counterspell)) or
-                not(pendingCounterspellEndsTriggeringSpell(counterspell)))
-          )
-            commitActorSpellSlotUse(state, counterspell.triggeringCaster)
-          else
-            state
-      | _ => state
-    }
+    stateAfterResumingSpellCastReactionResolution(state, frame)
 
   pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      match (state.interruptStack[state.interruptStack.length() - 1]) {
-        | PendingReaction(frame) => {
-            val decision = battleRuntimeTakeReactionDecision(
-              battleRuntimeReactionTrigger(frame.trigger),
-              battleRuntimeReactionProcedure(frame.procedure),
-              frame.eligibleReactors.contains(reactor),
-              frame.offeredReactors.contains(reactor),
-              reactorCanReact(state, reactor),
-              not(reactionProcedureRequiresSpellSlot(frame.procedure)) or
-                canActorExpendSpellSlotThisTurn(state, reactor),
-              reactionFrameCompleteAfterOffering(frame, reactor),
-            )
-            match (decision) {
-              | BattleRuntimeTookReaction(_) => {
-                  val afterReactionSpend = spendReaction(state, reactor)
-                  val afterReactionProcedure =
-                    match frame.trigger {
-                      | OpportunityAttack => resolveGoblinOpportunityAttack(afterReactionSpend, 20, 18, 4, true)
-                      | AttackHit => if (frame.procedure == ReadiedSpellReleaseReactionProcedure) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
-	                      | SpellCast =>
-	                          match frame.procedure {
-	                            | ShieldReactionProcedure => castShieldReactionSpell(afterReactionSpend, reactor)
-	                            | CounterspellReactionProcedure(_) => castCounterspellReactionSpell(afterReactionSpend, reactor, frame)
-	                            | _ => afterReactionSpend
-	                          }
-                      | _ => releaseReadiedSpell(afterReactionSpend)
-	                    }
-	                  val spellCastEnded =
-	                    reactionProcedureEndsSpellCastInState(afterReactionSpend, reactor, frame.procedure)
-	                  val closedStack = afterReactionProcedure.interruptStack.slice(0, afterReactionProcedure.interruptStack.length() - 1)
-	                  val afterDecision =
-	                    if (spellCastEnded)
-	                      { ...afterReactionProcedure, interruptStack: closedStack }
-	                    else
-	                      declineReaction(afterReactionProcedure, reactor)
-		                  if (
-		                    reactionDecisionClosedFrame(state, afterDecision)
-		                      and not(spellCastEnded)
-		                  ) {
-	                    val resumed = resumeReactionContinuation(afterDecision, frame.continuation)
-	                    stateAfterResumingSpellCastReaction(resumed, frame)
-	                  }
-	                  else
-	                    afterDecision
-                }
-              | _ => state
-            }
-          }
-        | _ => state
-      }
-    }
+    resolveReactionOffer(state, reactor)
 
   pure def openAttackDamageConcentration(state: BattleState, continuation: AttackDamageConcentrationContinuation, damage: int): BattleState =
-    { ...state, interruptStack: state.interruptStack.append(PendingAttackDamageConcentration({ continuation: continuation, damage: damage })) }
+    openBattleAttackDamageConcentration(state, continuation, damage)
 
   pure def resolveAttackDamageConcentration(state: BattleState, concentrationSaveSucceeded: bool): BattleState =
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      val top = state.interruptStack[state.interruptStack.length() - 1]
-      match top {
-        | PendingAttackDamageConcentration(frame) => {
-            val rest = { ...state, interruptStack: state.interruptStack.slice(0, state.interruptStack.length() - 1) }
-            match frame.continuation {
-              | ResumeAttackDamageToGoblin => { ...rest, goblin: applyDamageFromSource(rest.goblin, frame.damage, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter), actionAvailable: false }
-            }
-          }
-        | _ => state
-      }
-    }
+    resolveBattleAttackDamageConcentration(state, concentrationSaveSucceeded)
 
   pure def resumeReactionContinuation(state: BattleState, continuation: ReactionContinuation): BattleState =
-    match continuation {
-      | ResumeAttack(attack) =>
-          if (state.goblin.concentrating and attack.damage > 0)
-            openAttackDamageConcentration(state, ResumeAttackDamageToGoblin, attack.damage)
-          else
-            { ...state, goblin: applyDamageFromSource(state.goblin, attack.damage, 1, true, OrdinaryDamage, Fighter), actionAvailable: false }
-      | ResumeRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
-      | ResumePoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
-      | ResumeChillTouch => resolveChillTouch(state, 15, 10, 6, true)
-      | ResumeTrueStrikeWeaponAttack => resolveTrueStrikeWeaponAttack(state, 15, 10, 4, 5, 3, 5, Radiant, Slashing, true)
-      | ResumeProduceFlameHurl => resolveProduceFlameHurl(state, 15, 10, 5, true)
-      | ResumeFlameBladeAttack => resolveFlameBladeAttack(state, 15, 10, 6, true)
-      | ResumeIceKnife => resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
-      | ResumeSaveGateDamage => resolveAcidSplash(state, false, true, 4, true, true)
-      | ResumeAfterDamage => state
-      | ResumeHellishRebukeAfterDamage(_) => state
-      | ResumeMovement(movement) => applyFighterMovementWithSpeedKind(state, movement.speedKind, movement.movementCost)
-      | ResumeCommandFleeMovement(movement) => followCommandFlee(state, movement.speedKind, movement.movementCost, false)
-      | ResumeDissonantWhispersMovementThenAfterDamage(_) => openDissonantWhispersAfterDamageSequence(state)
-    }
+    resumeBattleReactionContinuation(state, continuation)
 
   pure def applyMageArmor(target: Combatant): Combatant =
-    {
-      ...target,
-      activeEffects: activeEffectsWithoutMageArmor(target.activeEffects).union(Set(mageArmorActiveEffect(mageArmorDurationTicks))),
-    }
+    combatantWithMageArmor(target)
 
   pure def resolveArmorOfShadowsMageArmor(state: BattleState): BattleState =
-    if (
-      not(state.actionAvailable) or
-      currentActor(state) != Fighter or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state) or
-      state.fighter.wearingHeavyArmor
-    )
-      state
-    else
-      { ...state, fighter: applyMageArmor(state.fighter), actionAvailable: false }
+    resolveArmorOfShadowsMageArmorSpell(state)
 
   pure def targetDonsArmor(target: Combatant): Combatant =
-    { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
+    combatantAfterDonningArmor(target)
 
   pure def readySpell(state: BattleState): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighter.readiedSpellHeld)
-      state
-    else
-      { ...state, fighter: { ...state.fighter, concentrating: true, readiedSpellHeld: true }, actionAvailable: false }
+    readyFighterReadiedSpell(state)
 
   pure def releaseReadiedSpell(state: BattleState): BattleState =
-    if (state.fighter.readiedSpellHeld and not(fighterHasRage(state)))
-      { ...state, fighter: { ...state.fighter, concentrating: false, readiedSpellHeld: false } }
-    else
-      state
+    releaseFighterReadiedSpell(state)
 
   pure def invisibilityMaxTargets(slotLevel: int): int =
-    if (slotLevel >= 2) 1 + (slotLevel - 2) else 0
+    invisibilityConditionMaxTargets(slotLevel)
 
   pure def resolveInvisibilitySpell(state: BattleState, targets: Set[Actor], slotLevel: int): BattleState =
-    if (
-      currentActor(state) != Fighter or
-      not(state.actionAvailable) or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state) or
-      not(canExpendSpellSlotThisTurn(state)) or
-      slotLevel < 2 or
-      targets.size() < 1 or
-      targets.size() > invisibilityMaxTargets(slotLevel)
-    )
-      state
-    else {
-      val afterCasterEarlyEnd = battleStateAfterTargetActionEarlyEndForActor(state, Fighter)
-      val withoutPrior = breakConcentrationSpellEffects(afterCasterEarlyEnd, Fighter)
-      val withTargets = {
-        ...withoutPrior,
-        fighter: if (targets.contains(Fighter))
-          combatantWithInvisibilityCondition(withoutPrior.fighter, Fighter)
-        else
-          withoutPrior.fighter,
-        goblin: if (targets.contains(Goblin))
-          combatantWithInvisibilityCondition(withoutPrior.goblin, Fighter)
-        else
-          withoutPrior.goblin,
-        actionAvailable: false,
-      }
-      commitActorSpellSlotUse({
-        ...withTargets,
-        fighter: { ...withTargets.fighter, concentrating: true },
-      }, Fighter)
-    }
+    resolveInvisibilityConditionSpell(state, targets, slotLevel)
 
   pure def resolveSanctuarySpell(state: BattleState, target: Actor): BattleState =
-    if (
-      currentActor(state) != Fighter or
-      not(state.bonusActionAvailable) or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state) or
-      not(canExpendSpellSlotThisTurn(state))
-    )
-      state
-    else {
-      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
-      val targetCombatant = combatantForActor(afterCasterEarlyEnd, target)
-      stateWithActorCombatant(
-        commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter),
-        target,
-        combatantWithSanctuaryWard(targetCombatant, Fighter),
-      )
-    }
+    resolveSanctuaryWardSpell(state, target)
 
   pure def standFighterFromProne(state: BattleState): BattleState = {
-    if (combatantHasHideousLaughter(state.fighter))
-      state
-    else {
-      val step = battleRuntimeStandFromProne(movementProjectionForFighter(state, WalkSpeedKind))
-      stateWithFighterMovementStep(state, step)
-    }
+    standFighterFromProneUnlessHideousLaughter(state)
   }
 
   pure def endTurnWithEnsnaringStrikeDamage(
     state: BattleState,
     damageRoll: int,
     concentrationSaveSucceeded: bool,
-  ): BattleState = {
-    val advanced = endTurn(state)
-    val damageDice = ensnaringStrikeDamageDice(advanced.goblin.activeEffects)
-    if (currentActor(advanced) == Goblin and damageDice > 0)
-      { ...advanced, goblin: applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter) }
-    else
-      advanced
-  }
+  ): BattleState =
+    endTurnWithEnsnaringStrikeOngoingDamage(state, damageRoll, concentrationSaveSucceeded)
 
   pure def endTurnWithSearingSmiteDamageAndSave(
     state: BattleState,
     damageRoll: int,
     saveSucceeded: bool,
     concentrationSaveSucceeded: bool,
-  ): BattleState = {
-    val advanced = endTurn(state)
-    val damageDice = searingSmiteDamageDice(advanced.goblin.activeEffects)
-    if (currentActor(advanced) == Goblin and damageDice > 0)
-      {
-        val damagedGoblin = applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
-        {
-          ...advanced,
-          goblin: if (saveSucceeded)
-            { ...damagedGoblin, activeEffects: activeEffectsWithoutSearingSmite(damagedGoblin.activeEffects) }
-          else
-            damagedGoblin,
-        }
-      }
-    else
-      advanced
-  }
+  ): BattleState =
+    endTurnWithSearingSmiteOngoingDamageAndSave(
+      state,
+      damageRoll,
+      saveSucceeded,
+      concentrationSaveSucceeded,
+    )
 
   pure def resolveThaumaturgyBoomingVoice(state: BattleState, activeOneMinuteEffectCount: int): BattleState =
     resolveFighterThaumaturgyBoomingVoice(state, currentActor(state), activeOneMinuteEffectCount, fighterHasRage(state))
 
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
-    match invocation {
-      | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
-      | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
-      | GuidanceRollModifier => 1
-      | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
-      | EnhanceAbilityRollModifier => 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
-      | EnthrallRollModifier => Set(Fighter, Goblin).size()
-    }
+    rollModifierChoiceMaximumTargets(invocation, slotLevel)
 
   pure def rollModifierActiveEffect(
     invocation: RollModifierSpell,
@@ -925,17 +617,13 @@ module battleRuntime {
     passivePerceptionModifierDelta(effects)
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
-    invocation == BaneRollModifier or invocation == EnthrallRollModifier
+    rollModifierChoiceRequiresFailedSave(invocation)
 
   pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
-    invocation != GuidanceRollModifier
+    rollModifierChoiceSpendsLevelOneSlot(invocation)
 
-  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool = {
-    val targetCount = selectedTargets.size()
-    targetCount >= 1 and
-      targetCount <= rollModifierMaximumTargets(invocation, slotLevel) and
-      (invocation != PassWithoutTraceRollModifier or selectedTargets.contains(Fighter))
-  }
+  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool =
+    rollModifierChoiceSelectedTargetsValid(invocation, selectedTargets, slotLevel)
 
   pure def rollModifierTargetedState(
     state: BattleState,
@@ -961,11 +649,14 @@ module battleRuntime {
     goblinAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
-    {
-      ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, fighterAbility, chosenSkill))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, goblinAbility, chosenSkill))) } else state.goblin,
-    }
+    rollModifierChoiceTargetedStateWithTargetAbilities(
+      state,
+      invocation,
+      targets,
+      fighterAbility,
+      goblinAbility,
+      chosenSkill,
+    )
 
   pure def resolveRollModifierSpellWithTargetAbilities(
     state: BattleState,
@@ -976,45 +667,17 @@ module battleRuntime {
     fighterAbility: Ability,
     goblinAbility: Ability,
     chosenSkill: AbilityCheckSkill,
-  ): BattleState = {
-    val affectedTargets =
-      if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
-    if (
-      currentActor(state) == Fighter and
-      rollModifierSelectedTargetsValid(invocation, selectedTargets, slotLevel) and
-      failedSaveTargets.forall(target => selectedTargets.contains(target)) and
-      state.actionAvailable and
-      (not(rollModifierSpendsLevelOneSlot(invocation)) or canExpendSpellSlotThisTurn(state)) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    ) {
-      val concentrationBase = {
-        ...state,
-        fighter: breakConcentration(state.fighter),
-        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
-      }
-      val effected = rollModifierTargetedStateWithTargetAbilities(
-        concentrationBase,
-        invocation,
-        affectedTargets,
-        fighterAbility,
-        goblinAbility,
-        chosenSkill,
-      )
-      val resolved = {
-        ...effected,
-        fighter: { ...effected.fighter, concentrating: true },
-        actionAvailable: false,
-      }
-      if (rollModifierSpendsLevelOneSlot(invocation))
-        commitActorSpellSlotUse(resolved, Fighter)
-      else
-        resolved
-    } else {
-      state
-    }
-  }
+  ): BattleState =
+    resolveRollModifierChoiceSpellWithTargetAbilities(
+      state,
+      invocation,
+      selectedTargets,
+      failedSaveTargets,
+      slotLevel,
+      fighterAbility,
+      goblinAbility,
+      chosenSkill,
+    )
 
   pure def resolveRollModifierSpell(
     state: BattleState,
@@ -1025,13 +688,12 @@ module battleRuntime {
     chosenAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
-    resolveRollModifierSpellWithTargetAbilities(
+    resolveRollModifierChoiceSpell(
       state,
       invocation,
       selectedTargets,
       failedSaveTargets,
       slotLevel,
-      chosenAbility,
       chosenAbility,
       chosenSkill,
     )
@@ -1041,14 +703,7 @@ module battleRuntime {
     usesRemaining: int,
     usedThisTurn: bool,
   ): ActionSurgeResult =
-    if (currentActor(state) == Fighter and usesRemaining > 0 and not(usedThisTurn))
-      {
-        state: { ...state, actionAvailable: true },
-        usesRemaining: usesRemaining - 1,
-        usedThisTurn: true,
-      }
-    else
-      { state: state, usesRemaining: usesRemaining, usedThisTurn: usedThisTurn }
+    grantFighterActionSurge(state, usesRemaining, usedThisTurn)
 
   pure def resolveSecondWind(
     state: BattleState,
@@ -1056,22 +711,7 @@ module battleRuntime {
     healingRoll: int,
     fighterLevel: int,
   ): SecondWindResult =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      usesRemaining > 0 and
-      not(state.fighter.unconscious)
-    )
-      {
-        state: {
-          ...state,
-          fighter: applyHealing(state.fighter, healingRoll + fighterLevel),
-          bonusActionAvailable: false,
-        },
-        usesRemaining: usesRemaining - 1,
-      }
-    else
-      { state: state, usesRemaining: usesRemaining }
+    resolveFighterSecondWind(state, usesRemaining, healingRoll, fighterLevel)
 
 
 }

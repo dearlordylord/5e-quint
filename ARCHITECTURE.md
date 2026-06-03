@@ -85,12 +85,14 @@ Three layers:
   invocation, slot expenditure, damage projection, save gates, hit-point
   lifecycle, reactions/concentration, movement, stat-block controls, and
   unit-feature procedures. These are the composable semantic pieces.
-- **Package-local QNT** per promoted runtime — e.g.
-  `packages/battle-runtime/battle-runtime.qnt` plus per-domain bridge modules
-  (`battle-runtime-movement-bridge.qnt`, `*-concentration-bridge.qnt`,
-  `*-interrupt-bridge.qnt`, `*-stat-block-bridge.qnt`,
-  `*-feature-bridge.qnt`, `*-spell-bridge.qnt`). Bridges connect package state
-  to rule-core facts. QNT and TypeScript do not call each other at runtime;
+- **Package-local QNT** per promoted runtime — focused battle-runtime slices
+  plus per-domain bridge modules (`battle-runtime-movement-bridge.qnt`,
+  `*-concentration-bridge.qnt`, `*-interrupt-bridge.qnt`,
+  `*-stat-block-bridge.qnt`, `*-feature-bridge.qnt`, `*-spell-bridge.qnt`).
+  Bridges connect package state to rule-core facts.
+  `packages/battle-runtime/battle-runtime.qnt` remains a full-shell fixture and
+  compatibility aggregation, not a whole-battle MBT generation input. QNT and
+  TypeScript do not call each other at runtime;
   they connect through verification harnesses (see
   `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`).
 - **Focused MBT/parity/replay witnesses** as separate `*.mbt.qnt` and
@@ -357,17 +359,18 @@ MCP package details live in `packages/mcp/README.md`.
 Quint specs are correctness references for runtime behavior. The QNT corpus is
 a forest of small slices (see **QNT Verification Shape** above and
 `docs/adr/0001-forest-of-qnt-slices.md`). For Unit/StatBlock-backed battle
-behavior, `@dnd/battle-runtime` is the active semantic authority and
-`packages/battle-runtime/battle-runtime.qnt` is its canonical package-local
-integration shell:
+behavior, `@dnd/battle-runtime` is the active runtime semantic authority, and
+QNT authority is distributed across shared rule-core slices, package-local
+focused slices, and focused witnesses:
 
 - Reusable mechanics live in
   `packages/shared-algebras/proofs/rule-core/` — spell invocation, slot
   expenditure, damage projection, hit-point lifecycle, reactions/concentration,
   movement, stat-block controls, unit-feature procedures. Package-local QNT
   bridges into these slices instead of restating their semantics.
-- `packages/battle-runtime/battle-runtime.qnt` is the canonical package-local
-  integration shell for `@dnd/battle-runtime`.
+- `packages/battle-runtime/battle-runtime.qnt` is a full-shell fixture and
+  compatibility aggregation module for `@dnd/battle-runtime`; new QNT ownership
+  should prefer focused slices and witnesses.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
 - The deleted root `.qnt` files are historical restore material recoverable

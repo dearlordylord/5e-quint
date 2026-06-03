@@ -1040,9 +1040,10 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 
 ## Parity
 
-`@dnd/battle-runtime` is the active semantic authority for new promoted
-Unit/StatBlock-backed battle work. `battle-runtime.qnt` is the canonical
-package-local spec for this runtime's implemented subset.
+`@dnd/battle-runtime` is the active runtime semantic authority for new promoted
+Unit/StatBlock-backed battle work. QNT authority is distributed across shared
+rule-core slices, package-local focused slices, and focused witnesses.
+`battle-runtime.qnt` remains a full-shell fixture and compatibility aggregation.
 
 Archived restore-source packages are not active authorities for this runtime.
 
@@ -1188,32 +1189,37 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
   Uncanny Dodge projections through public battle-runtime reducer APIs.
-- `battle-runtime.qnt` - canonical package-local spec for the implemented
-  subset.
+- `battle-runtime.qnt` - full-shell fixture and compatibility aggregation for
+  the implemented subset.
 - `battle-runtime-model.qnt` - shared package-local QNT vocabulary and state
-  model used by the canonical spec and focused QNT verification lanes.
+  model used by the full-shell fixture and focused QNT verification lanes.
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
-  helpers imported by the canonical spec.
+  helpers imported by focused witnesses and full-shell proof modules.
 - `battle-runtime-druid-wild-shape.qnt` - Druid Wild Shape form assumption,
   replacement, Temporary Hit Points, Beast stat-block projection, spellcasting
-  gate, and reversion helpers imported by the canonical spec.
+  gate, and reversion helpers imported by focused witnesses and full-shell proof
+  modules.
 - `battle-runtime-light.qnt` - light-source duration, illumination, sight
   obscurement, spell light projection, and Light/Dancing Lights/Produce
-  Flame/Shillelagh reducers imported by the canonical spec.
+  Flame/Shillelagh reducers imported by focused witnesses and full-shell proof
+  modules.
 - `battle-runtime-creature-type-protection.qnt` - Protection from Evil and Good
   creature-type scoping, condition prevention, and possession prevention
-  helpers imported by the canonical spec.
+  helpers imported by focused witnesses and full-shell proof modules.
 - `battle-runtime-armor-class.qnt` - Armor Class and Mage Armor projection
-  helpers imported by the canonical spec.
+  helpers imported by focused witnesses and full-shell proof modules.
+- `battle-runtime-armor-spell-resolution.qnt` - Armor-of-Shadows Mage Armor
+  battle-state resolution that composes Armor Class projection with action,
+  turn-owner, and Rage gates.
 - `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
   one-minute effect count, and self ability-check Advantage helpers imported by
-  the canonical spec.
+  focused witnesses and full-shell proof modules.
 - `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
-  Words d20-test helpers imported by the canonical spec and focused Bardic
-  selected-identity lane.
+  Words d20-test helpers imported by focused witnesses and full-shell proof
+  modules.
 - `battle-runtime-hit-points.qnt` - Hit Point damage, healing, stabilization,
   zero-Hit-Point, Knock Out, drop-to-zero, and Death Saving Throw lifecycle
-  helpers imported by the canonical spec and focused death-save lane.
+  helpers imported by focused witnesses and full-shell proof modules.
 - `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime-damage-adjustments.qnt` - damage type projection,
@@ -1252,6 +1258,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
   Ensnaring Strike, and Searing Smite damage/effect rider projections and
   after-hit spell reducers.
+- `battle-runtime-weapon-hit-turn-effects.qnt` - turn-advancement composition
+  for after-hit riders whose SRD effects apply when the affected target's turn
+  starts.
 - `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
   Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
   hooks.
@@ -1280,10 +1289,11 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   hosted weapon attack, Stat Block attack, Multiattack, and Opportunity Attack
   reducers.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
-  so the canonical integration spec stays focused on reducer behavior. Run them
-  via the opt-in proof lane, `pnpm --filter @dnd/battle-runtime test:qnt-proofs`
-  (each `run`-block module runs as its own bounded `quint test`; see CLAUDE.md
-  "QNT proof lane (run consciously)").
+  so each proof module can be checked without treating one battle shell as the
+  architectural center. Run them via the opt-in proof lane,
+  `pnpm --filter @dnd/battle-runtime test:qnt-proofs` (each `run`-block module
+  runs as its own bounded `quint test`; see CLAUDE.md "QNT proof lane (run
+  consciously)").
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

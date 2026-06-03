@@ -5,13 +5,14 @@ battle protocol for package callers: initialize combatants, discover battle
 subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
 `@dnd/battle-runtime` is the semantic authority for Unit/StatBlock-backed battle
-behavior. `battle-runtime.qnt` is its canonical package-local integration spec:
-it owns BattleState projection, holes/replay, interrupt windows, effect cleanup
-hooks, and compatibility wrappers. Generic SRD procedure semantics that are not
-specific to the reducer protocol should live in shared rule-core QNT algebras
-and be projected into the package-local spec.
+behavior. Its QNT authority is distributed: generic SRD procedure semantics live
+in shared rule-core QNT algebras, package-local focused slices project those
+facts into battle reducer protocol, and focused MBT/proof witnesses connect the
+modeled obligations to TypeScript behavior. `battle-runtime.qnt` remains a
+full-shell fixture and compatibility aggregation, but it should not accumulate
+new fixture-specific battle helpers.
 
-`battle-runtime.qnt` cannot become a pure import-only facade. Quint names
+`battle-runtime.qnt` cannot become a pure import-only facade in one step. Quint names
 imported by a child module are not re-exported through a parent `import child.*`
 facade, so moved public QNT names need explicit wrappers or focused specs need
 to import narrower modules directly. Keep package-local integration vocabulary
@@ -21,8 +22,9 @@ variants in package-local QNT model modules, starting with
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
-`battle-runtime-armor-class.qnt`, `battle-runtime-thaumaturgy.qnt`, and
-`battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
+`battle-runtime-armor-class.qnt`,
+`battle-runtime-armor-spell-resolution.qnt`, `battle-runtime-thaumaturgy.qnt`,
+and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
 `battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
 `battle-runtime-spell-invocation.qnt`, `battle-runtime-spell-attack.qnt`,
 `battle-runtime-chained-spell-attack.qnt`, and
@@ -32,7 +34,8 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
 `battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and
 `battle-runtime-jump-movement.qnt`, and
-`battle-runtime-weapon-hit-spell-riders.qnt`, and
+`battle-runtime-weapon-hit-spell-riders.qnt`,
+`battle-runtime-weapon-hit-turn-effects.qnt`, and
 `battle-runtime-fighter-ongoing-features.qnt`, and
 `battle-runtime-timed-effects.qnt`, and
 `battle-runtime-attack-facts.qnt`, `battle-runtime-hidden.qnt`, and
@@ -44,7 +47,8 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-weapon-attacks.qnt`, when the split follows SRD language and
 avoids duplicate state names or compatibility-wrapper churn.
 Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain
-so test context can be loaded without the full canonical integration spec body.
+so test context can be loaded without treating one battle shell as the
+architectural center.
 The opt-in proof lane (`test:qnt-proofs`) discovers every `run`-block `.qnt` by
 content and runs each as its own bounded `quint test`, so a runaway proof fails
 that one module instead of hanging the suite (see CLAUDE.md "QNT proof lane").

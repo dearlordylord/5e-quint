@@ -30,6 +30,15 @@ module battleRuntimeArmorClass {
       })
       .fold(0, (highest, durationTicks) => if (highest > durationTicks) highest else durationTicks)
 
+  pure def combatantWithMageArmor(target: Combatant): Combatant =
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutMageArmor(target.activeEffects).union(Set(mageArmorActiveEffect(mageArmorDurationTicks))),
+    }
+
+  pure def combatantAfterDonningArmor(target: Combatant): Combatant =
+    { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
+
   pure def combatantArmorClass(combatant: Combatant): int =
     activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)
 

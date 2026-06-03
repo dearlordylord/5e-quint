@@ -6,7 +6,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-creature-size-change
 
 module battleRuntimeSpellFactsTests {
-  import battleRuntime.* from "./battle-runtime"
   // Sorcerous Burst damage-type variants are used directly in the module body
   // below; import the leaf that defines them (Quint `.*` imports are not
   // re-exported transitively through battleRuntime).
@@ -26,6 +25,7 @@ module battleRuntimeSpellFactsTests {
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
+  import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -118,24 +118,33 @@ module battleRuntimeSpellFactsTests {
       },
     }
     val expiredEnlarge = tickRoundDurationSpellEffects(expiringEnlarge)
+    val thaumaturgyPriorEffect = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)),
+      },
+    }
+    val thaumaturgyActor = currentActor(initialState)
+    val thaumaturgyRagePreventsSpellcasting = fighterHasRage(initialState)
     all {
-      assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
-      assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
-      assert(rollModifierMaximumTargets(GuidanceRollModifier, 0) == 1),
-      assert(rollModifierMaximumTargets(PassWithoutTraceRollModifier, 2) == 2),
-      assert(rollModifierMaximumTargets(EnthrallRollModifier, 2) == 2),
-      assert(rollModifierRequiresFailedSave(BaneRollModifier)),
-      assert(rollModifierRequiresFailedSave(EnthrallRollModifier)),
-      assert(not(rollModifierRequiresFailedSave(BlessRollModifier))),
-      assert(rollModifierMaximumTargets(EnhanceAbilityRollModifier, 2) == 1),
-      assert(rollModifierMaximumTargets(EnhanceAbilityRollModifier, 3) == 2),
-      assert(rollModifierActiveEffect(BaneRollModifier, StrAbility, StealthSkill) == BaneD20RollPenalty),
-      assert(rollModifierActiveEffect(BlessRollModifier, StrAbility, StealthSkill) == BlessD20RollBonus),
-      assert(rollModifierActiveEffect(GuidanceRollModifier, StrAbility, StealthSkill) == GuidanceAbilityCheckBonus({ skill: StealthSkill })),
-      assert(rollModifierActiveEffect(PassWithoutTraceRollModifier, StrAbility, StealthSkill) == PassWithoutTraceStealthBonus),
-      assert(rollModifierActiveEffect(EnhanceAbilityRollModifier, DexAbility, StealthSkill) == EnhanceAbilityCheckAdvantage({ ability: DexAbility })),
-      assert(rollModifierActiveEffect(EnthrallRollModifier, DexAbility, StealthSkill) == EnthrallPerceptionPenalty),
-      assert(rollModifierPassivePerceptionDelta(Set(EnthrallPerceptionPenalty)) == -10),
+      assert(rollModifierChoiceMaximumTargets(BlessRollModifier, 2) == 4),
+      assert(rollModifierChoiceMaximumTargets(BaneRollModifier, 3) == 5),
+      assert(rollModifierChoiceMaximumTargets(GuidanceRollModifier, 0) == 1),
+      assert(rollModifierChoiceMaximumTargets(PassWithoutTraceRollModifier, 2) == 2),
+      assert(rollModifierChoiceMaximumTargets(EnthrallRollModifier, 2) == 2),
+      assert(rollModifierChoiceRequiresFailedSave(BaneRollModifier)),
+      assert(rollModifierChoiceRequiresFailedSave(EnthrallRollModifier)),
+      assert(not(rollModifierChoiceRequiresFailedSave(BlessRollModifier))),
+      assert(rollModifierChoiceMaximumTargets(EnhanceAbilityRollModifier, 2) == 1),
+      assert(rollModifierChoiceMaximumTargets(EnhanceAbilityRollModifier, 3) == 2),
+      assert(rollModifierChoiceActiveEffect(BaneRollModifier, StrAbility, StealthSkill) == BaneD20RollPenalty),
+      assert(rollModifierChoiceActiveEffect(BlessRollModifier, StrAbility, StealthSkill) == BlessD20RollBonus),
+      assert(rollModifierChoiceActiveEffect(GuidanceRollModifier, StrAbility, StealthSkill) == GuidanceAbilityCheckBonus({ skill: StealthSkill })),
+      assert(rollModifierChoiceActiveEffect(PassWithoutTraceRollModifier, StrAbility, StealthSkill) == PassWithoutTraceStealthBonus),
+      assert(rollModifierChoiceActiveEffect(EnhanceAbilityRollModifier, DexAbility, StealthSkill) == EnhanceAbilityCheckAdvantage({ ability: DexAbility })),
+      assert(rollModifierChoiceActiveEffect(EnthrallRollModifier, DexAbility, StealthSkill) == EnthrallPerceptionPenalty),
+      assert(passivePerceptionModifierDelta(Set(EnthrallPerceptionPenalty)) == -10),
       assert(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode) == CreatureSizeChange({
         source: Fighter,
         mode: EnlargeCreatureMode,
@@ -555,10 +564,10 @@ module battleRuntimeSpellFactsTests {
       assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, WisAbility, IntimidationSkill) == NormalAbilityCheck),
       assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, ChaAbility, PerceptionSkill) == NormalAbilityCheck),
       assert(requiredAbilityCheckRollMode(DisadvantageAbilityCheck, AdvantageAbilityCheck) == NormalAbilityCheck),
-      assert(resolveThaumaturgyBoomingVoice(initialState, 2).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
-      assert(not(resolveThaumaturgyBoomingVoice(initialState, 3).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter)))),
-      assert(resolveThaumaturgyBoomingVoice({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)) } }, 3).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
-      assert(resolveThaumaturgyBoomingVoice({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)) } }, 0).actionAvailable),
+      assert(resolveFighterThaumaturgyBoomingVoice(initialState, thaumaturgyActor, 2, thaumaturgyRagePreventsSpellcasting).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
+      assert(not(resolveFighterThaumaturgyBoomingVoice(initialState, thaumaturgyActor, 3, thaumaturgyRagePreventsSpellcasting).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter)))),
+      assert(resolveFighterThaumaturgyBoomingVoice(thaumaturgyPriorEffect, thaumaturgyActor, 3, thaumaturgyRagePreventsSpellcasting).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
+      assert(resolveFighterThaumaturgyBoomingVoice(thaumaturgyPriorEffect, thaumaturgyActor, 0, thaumaturgyRagePreventsSpellcasting).actionAvailable),
       assert(hexDurationTicks(1) == 3600),
       assert(hexDurationTicks(2) == 14400),
       assert(hexDurationTicks(3) == 28800),
