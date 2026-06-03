@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-independent-attack-sequence
 
 module battleRuntimeSpellAttackTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"

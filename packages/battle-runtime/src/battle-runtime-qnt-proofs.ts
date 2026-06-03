@@ -29,9 +29,9 @@ export function discoverProofModuleNames(): readonly string[] {
     .sort();
 }
 
-// ~2.5x headroom over the slowest healthy module (measured: the full-shell
-// slices each run their own plus transitively-imported `test_` blocks in
-// ~2-2.5 min on the typescript backend) while still bounding a state-explosion
+// ~2.5x headroom over the slowest healthy focused slices, which each run their
+// own plus transitively-imported `test_` blocks in ~2-2.5 min on the TypeScript
+// backend, while still bounding a state-explosion
 // blow-up: the whole quint process tree is hard-killed at this deadline, so a
 // runaway search surfaces as one module's failure instead of a hang that
 // swallows a whole working day unnoticed.

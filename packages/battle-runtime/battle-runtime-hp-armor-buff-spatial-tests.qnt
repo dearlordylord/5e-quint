@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-jump-movement-replacement spell.invocation-magic-weapon-enhancement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-self-teleport spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.scalar-buff
 
 module battleRuntimeHpArmorBuffSpatialTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"

@@ -99,7 +99,7 @@ Concentration or duration ending. Required output: supported-profile or
 profile-subset-supported Unit claim, deterministic admission/projection evidence,
 focused runtime tests for each admitted shape including damage-type choice and
 cleanup, selected-identity evidence if required by the coverage lane, generated
-coverage artifacts, and promoted `packages/battle-runtime/battle-runtime.qnt`
+coverage artifacts, and promoted focused package-local battle-runtime QNT
 parity without authored-identity dispatch.
 
 ## Reviewer Loop

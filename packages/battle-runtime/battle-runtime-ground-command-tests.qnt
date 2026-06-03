@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-magical-darkness-point-origin spell.invocation-moonbeam-movable-zone spell.invocation-web-restraint-hazard
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spike-growth-movement-hazard

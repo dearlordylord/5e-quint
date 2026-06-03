@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-transformation-mode
 
 module battleRuntimeSelfTransformationTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

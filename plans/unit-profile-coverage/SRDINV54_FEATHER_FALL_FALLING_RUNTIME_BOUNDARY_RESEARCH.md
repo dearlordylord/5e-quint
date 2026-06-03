@@ -88,7 +88,7 @@ cannot admit a falling-trigger event without a smaller enabling task.
 
 Recommended scope for that slice:
 
-- add the falling-trigger Reaction to `packages/battle-runtime/battle-runtime.qnt`
+- add the falling-trigger Reaction to focused package-local battle-runtime QNT
   and the TypeScript runtime trigger vocabulary;
 - discover and resolve Feather Fall as a Reaction Spell Invocation with
   caller-supplied trigger, range, and falling target facts;

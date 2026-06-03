@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 
 module battleRuntimeWeaponAttacks {

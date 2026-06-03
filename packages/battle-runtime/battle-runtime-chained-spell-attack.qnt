@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-chained-attack-damage
 
 module battleRuntimeChainedSpellAttack {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

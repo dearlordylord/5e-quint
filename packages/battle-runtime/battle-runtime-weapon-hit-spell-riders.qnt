@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-magic-weapon-enhancement spell.invocation-weapon-damage-rider
 
 module battleRuntimeWeaponHitSpellRiders {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

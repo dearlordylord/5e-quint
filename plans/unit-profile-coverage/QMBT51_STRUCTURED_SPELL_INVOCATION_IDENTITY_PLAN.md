@@ -56,7 +56,7 @@ Local RAW and project-language anchors to read before implementation:
   Focus`.
 - `.references/srd-5.2.1/Playing-the-Game.md`, action, Bonus Action, Reaction,
   spell attacks, damage, healing, and Hit Point restoration anchors already used
-  by `battle-runtime.qnt`.
+  by focused package-local battle-runtime QNT.
 
 Existing code anchors:
 
@@ -67,7 +67,7 @@ Existing code anchors:
   `sameBattleSubject`.
 - `packages/battle-runtime/src/character-battle-resources.ts`, character
   spellcasting state.
-- `packages/battle-runtime/battle-runtime.qnt`, promoted spell behavior and
+- focused package-local battle-runtime QNT, promoted spell behavior and
   spell-slot state.
 - `packages/character-battle-runtime/src/battle-character-build-projection.ts`,
   current flattening from character spellcasting into battle spellcasting.
@@ -222,7 +222,7 @@ Branding strategy:
 
 6. Update Quint and MBT bridge expectations.
 
-   Keep promoted behavior equivalent, but update `battle-runtime.qnt`, package
+   Keep promoted behavior equivalent, but update focused package-local battle-runtime QNT, package
    local MBT projections, and deterministic tests so spell subjects and
    invocation identity use structured refs rather than encoded strings.
 

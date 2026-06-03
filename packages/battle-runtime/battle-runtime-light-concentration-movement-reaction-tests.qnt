@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-object-light spell.invocation-sanctuary-targeting-interdiction spell.invocation-spell-created-held-object spell.reaction-hellish-rebuke
 
 module battleRuntimeLightConcentrationMovementReactionTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"

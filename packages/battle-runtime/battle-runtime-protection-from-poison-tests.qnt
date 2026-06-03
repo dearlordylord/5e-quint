@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-removal-protection
 
 module battleRuntimeProtectionFromPoisonTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

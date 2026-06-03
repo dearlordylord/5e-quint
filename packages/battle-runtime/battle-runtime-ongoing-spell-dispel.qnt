@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 
 module battleRuntimeOngoingSpellDispel {
   import battleRuntimeModel.* from "./battle-runtime-model"

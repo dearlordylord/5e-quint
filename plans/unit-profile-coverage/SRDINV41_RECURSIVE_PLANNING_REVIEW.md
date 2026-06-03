@@ -26,7 +26,7 @@ Generated inventory metrics from
 
 The review found one checker-visible dependency-batch gap that must remain
 visible: Hellish Rebuke has focused runtime tests and package documentation
-from SRDINV36, but the promoted `battle-runtime.qnt` model does not yet own a
+from SRDINV36, but the promoted focused package-local battle-runtime QNT model does not yet own a
 Hellish Rebuke or save-gated after-damage Reaction damage branch. SRDINV41
 therefore keeps Hellish Rebuke as `catalog-installed-owner-evidence-required`
 rather than promoting a QNT proof, completed runtime-parity claim, or supported

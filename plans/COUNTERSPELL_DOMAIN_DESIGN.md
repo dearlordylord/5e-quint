@@ -233,7 +233,7 @@ higher-slot field name needs domain cleanup before runtime promotion.
 
 ## Implementation Order
 
-1. Update `packages/battle-runtime/battle-runtime.qnt` first with
+1. Update the focused package-local battle-runtime QNT owner first with
    `SpellBeingCast`, current-turn per-creature slot claims, and recursive
    Counterspell chain semantics.
 2. Add package-local Quint tests for the domain cases below before translating

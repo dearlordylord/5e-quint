@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle spell.reaction-counterspell
 
 module battleRuntimeCoreCombatTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"

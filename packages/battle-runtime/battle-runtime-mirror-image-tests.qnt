@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-mirror-image-hit-interception
 
 module battleRuntimeMirrorImageTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

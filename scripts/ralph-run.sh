@@ -2115,7 +2115,7 @@ const fileFamilies = {
     "plans/unit-profile-coverage/*"
   ],
   "runtime-promotion": [
-    "packages/battle-runtime/battle-runtime.qnt",
+    "packages/battle-runtime/*.qnt",
     "packages/battle-runtime/src/**",
     "packages/battle-runtime/src/*test.ts",
     "packages/battle-runtime/README.md",

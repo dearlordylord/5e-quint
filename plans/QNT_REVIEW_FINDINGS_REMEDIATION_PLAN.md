@@ -291,7 +291,7 @@ runtime behavior against archived root `battle.qnt`, while current project
 instructions make package-local QNT and rule-core the active authority.
 
 Obvious solution: yes. Update the review rule text to name the active authority:
-`packages/battle-runtime/battle-runtime.qnt`, package-local QNT slices, and
+focused package-local battle-runtime QNT slices and
 `packages/shared-algebras/proofs/rule-core/`.
 
 Acceptance:

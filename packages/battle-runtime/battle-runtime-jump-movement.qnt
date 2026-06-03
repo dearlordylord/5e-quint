@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-jump-movement-replacement
 
 module battleRuntimeJumpMovement {
   import battleRuntimeModel.* from "./battle-runtime-model"

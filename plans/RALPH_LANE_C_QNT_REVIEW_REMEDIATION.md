@@ -282,8 +282,8 @@ Input:
 Output:
 
 - Update review rules so code-review agents compare battle behavior against
-  package-local `packages/battle-runtime/battle-runtime.qnt`, package-local
-  QNT slices, and `packages/shared-algebras/proofs/rule-core/`.
+  focused package-local QNT slices and
+  `packages/shared-algebras/proofs/rule-core/`.
 - Keep archived root QNT described only as restoration source material.
 
 Acceptance:
@@ -828,7 +828,7 @@ Original finding disposition:
 | QRF-6 damage type totality | Converged. Damage by type is keyed by `RuleDamageType`, projection uses explicit matches and total maps, and Thunder is no longer an implicit final fallback. |
 | QRF-7 shared QNT proofs | Converged. `packages/shared-algebras/src/shared-algebras-qnt-proofs.ts` discovers run-block modules, runs each module independently with a timeout, and the opt-in proof lane is green. |
 | QRF-8 QA generated identity policy | Converged. `scripts/qa/generate_assertions.py` enforces the SRD-only or visibly synthetic identity boundary at cache-fragment and `qa_generated.qnt` materialization, with a self-test behind `pnpm check:qa-generated-identity`. |
-| QRF-9 review authority | Converged. `.claude/review-rules.md` points reviewers at package-local `packages/battle-runtime/battle-runtime.qnt`, package-local QNT slices, and `packages/shared-algebras/proofs/rule-core/`, while root QNT remains archived restore material only. |
+| QRF-9 review authority | Converged. `.claude/review-rules.md` points reviewers at focused package-local QNT slices and `packages/shared-algebras/proofs/rule-core/`, while root QNT remains archived restore material only. |
 
 Reviewer loop:
 

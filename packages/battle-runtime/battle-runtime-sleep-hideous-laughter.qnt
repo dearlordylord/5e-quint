@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSleepHideousLaughter {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

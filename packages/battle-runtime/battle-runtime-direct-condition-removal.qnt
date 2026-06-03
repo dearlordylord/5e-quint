@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition-removal
 
 module battleRuntimeDirectConditionRemoval {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"

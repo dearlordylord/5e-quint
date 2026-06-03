@@ -89,9 +89,8 @@ Use this decision rule for every new authored battle ability:
 
 When a new procedure family is required, put generic SRD procedure semantics in
 the relevant rule-core QNT algebra when one exists or can be deepened. Keep
-`battle-runtime.qnt` responsible for package-local projection, reducer protocol
-composition, holes/replay, concentration or effect cleanup hooks, focused smoke
-checks, compatibility wrappers for broad imports, and small package-local bridge
+package-local battle projection in focused QNT slices that compose reducer
+protocol, holes/replay, concentration or effect cleanup hooks, and small bridge
 modules that project `BattleState` facts into shared rule-core contracts.
 Current bridge examples cover movement/action/grapple, concentration DCs,
 Reaction-window take/decline decisions, stat-block resource controls, and
@@ -1042,8 +1041,9 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 
 `@dnd/battle-runtime` is the active runtime semantic authority for new promoted
 Unit/StatBlock-backed battle work. QNT authority is distributed across shared
-rule-core slices, package-local focused slices, and focused witnesses.
-`battle-runtime.qnt` remains a full-shell fixture and compatibility aggregation.
+rule-core slices, package-local focused slices, and focused witnesses. There is
+no package-local full-shell aggregation spec; ownership lives with the focused
+slice or witness that models the rule.
 
 Archived restore-source packages are not active authorities for this runtime.
 
@@ -1053,7 +1053,7 @@ Promoted battle-runtime proof is intentionally layered:
 
 - small reusable reducer algebras stay covered by modular Quint MBT in the
   shared algebra packages;
-- `battle-runtime.qnt` stays the package-local deterministic reference for the
+- focused package-local QNT slices stay the deterministic references for the
   implemented runtime subset, but self-tests are not enough for long-term
   composed reducer proof;
 - broad Surface, Unit, Spell, and Stat Block catalog coverage defaults to
@@ -1096,13 +1096,13 @@ Keep these facts separate when changing battle behavior:
 - semantic authority: promoted `@dnd/battle-runtime`;
 - feature breadth: unimplemented SRD behavior is future width work;
 - proof depth: runtime behavior is checked here by reducer tests and
-  `battle-runtime.qnt`;
+  focused package-local QNT slices and MBT witnesses;
 - content encoding: Surface `UnitRecord` and `StatBlockRecord` remain authored
   content, not runtime state or provenance labels.
 
 When changing promoted battle behavior, update `src/index.ts`, focused reducer
-tests, and `battle-runtime.qnt` together. Record intentional modeling choices
-with an SRD citation or `ASSUMPTIONS.md` entry.
+tests, and the focused package-local QNT owner or MBT witness together. Record
+intentional modeling choices with an SRD citation or `ASSUMPTIONS.md` entry.
 
 ## RAW Traceability
 
@@ -1189,37 +1189,32 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
   Uncanny Dodge projections through public battle-runtime reducer APIs.
-- `battle-runtime.qnt` - full-shell fixture and compatibility aggregation for
-  the implemented subset.
 - `battle-runtime-model.qnt` - shared package-local QNT vocabulary and state
-  model used by the full-shell fixture and focused QNT verification lanes.
+  model used by focused QNT verification lanes.
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
-  helpers imported by focused witnesses and full-shell proof modules.
+  helpers imported by focused witnesses and proof modules.
 - `battle-runtime-druid-wild-shape.qnt` - Druid Wild Shape form assumption,
   replacement, Temporary Hit Points, Beast stat-block projection, spellcasting
-  gate, and reversion helpers imported by focused witnesses and full-shell proof
-  modules.
+  gate, and reversion helpers imported by focused witnesses and proof modules.
 - `battle-runtime-light.qnt` - light-source duration, illumination, sight
   obscurement, spell light projection, and Light/Dancing Lights/Produce
-  Flame/Shillelagh reducers imported by focused witnesses and full-shell proof
-  modules.
+  Flame/Shillelagh reducers imported by focused witnesses and proof modules.
 - `battle-runtime-creature-type-protection.qnt` - Protection from Evil and Good
   creature-type scoping, condition prevention, and possession prevention
-  helpers imported by focused witnesses and full-shell proof modules.
+  helpers imported by focused witnesses and proof modules.
 - `battle-runtime-armor-class.qnt` - Armor Class and Mage Armor projection
-  helpers imported by focused witnesses and full-shell proof modules.
+  helpers imported by focused witnesses and proof modules.
 - `battle-runtime-armor-spell-resolution.qnt` - Armor-of-Shadows Mage Armor
   battle-state resolution that composes Armor Class projection with action,
   turn-owner, and Rage gates.
 - `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
   one-minute effect count, and self ability-check Advantage helpers imported by
-  focused witnesses and full-shell proof modules.
+  focused witnesses and proof modules.
 - `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
-  Words d20-test helpers imported by focused witnesses and full-shell proof
-  modules.
+  Words d20-test helpers imported by focused witnesses and proof modules.
 - `battle-runtime-hit-points.qnt` - Hit Point damage, healing, stabilization,
   zero-Hit-Point, Knock Out, drop-to-zero, and Death Saving Throw lifecycle
-  helpers imported by focused witnesses and full-shell proof modules.
+  helpers imported by focused witnesses and proof modules.
 - `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime-damage-adjustments.qnt` - damage type projection,

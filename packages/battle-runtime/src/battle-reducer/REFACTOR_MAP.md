@@ -534,4 +534,4 @@ When extracting `types_and_schemas` (cluster A) split: `BattleReactionFrame`/`Ba
 `packages/battle-runtime/src/battle-reducer.ts` already has 31 fewer LOC than master (30,566 vs 30,597) and imports from `./battle-reducer/{domain-constants,domain-helpers}.ts`. The barrel `./battle-reducer/index.ts` re-exports those. Future passes should follow this pattern: create new file under `battle-reducer/`, delete original block from `battle-reducer.ts`, add import + re-export from barrel.
 
 ### Test infrastructure
-Not investigated (out of scope). The plan asserts behavior is preserved; vitest battle-runtime suite must pass after each pass. MBT runs (battle-runtime.qnt parity) are expensive — defer until a coherent multi-cluster batch is complete.
+Not investigated (out of scope). The plan asserts behavior is preserved; vitest battle-runtime suite must pass after each pass. Focused QNT/MBT parity runs are expensive — defer until a coherent multi-cluster batch is complete.

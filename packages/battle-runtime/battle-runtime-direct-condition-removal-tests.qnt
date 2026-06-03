@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition-removal
 
 module battleRuntimeDirectConditionRemovalTests {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"

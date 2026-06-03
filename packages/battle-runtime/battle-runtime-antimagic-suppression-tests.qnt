@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-antimagic-field-ongoing-spell-suppression
 
 module battleRuntimeAntimagicSuppressionTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

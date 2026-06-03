@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-contact-damage spell.invocation-ongoing-spell-ending
 
 module battleRuntimeObjectContactDamageTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

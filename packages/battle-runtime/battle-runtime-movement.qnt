@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-expeditious-retreat-dash spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.bonus-action-dash-temporary-hit-points
 
 module battleRuntimeMovement {

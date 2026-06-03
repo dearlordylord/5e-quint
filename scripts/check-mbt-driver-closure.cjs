@@ -32,7 +32,6 @@ const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
 
 const AGGREGATION_BARRELS = {
-  "packages/battle-runtime/battle-runtime.qnt": "battle-runtime aggregation barrel",
   "packages/battle-runtime/battle-runtime-model.qnt": "battle-runtime type-model barrel",
 };
 

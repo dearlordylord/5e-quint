@@ -19,13 +19,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 113,
-          "numerator": 104,
-          "percent": "92%"
+          "numerator": 107,
+          "percent": "94.7%"
         },
         "openGapRows": {
           "denominator": 113,
-          "numerator": 9,
-          "percent": "8%"
+          "numerator": 6,
+          "percent": "5.3%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -39,84 +39,6 @@
         }
       },
       "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bane"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bless"
-        },
         {
           "evidenceStatus": "gap",
           "gaps": [
@@ -257,45 +179,6 @@
           "runtime": "battle",
           "tag": "obligation-evidence",
           "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "guidance"
         },
         {
           "evidenceStatus": "gap",
@@ -788,13 +671,8 @@
           "unitId": "animal_friendship"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -807,11 +685,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
@@ -827,13 +718,8 @@
           "unitId": "bane"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -846,11 +732,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
@@ -2758,13 +2657,8 @@
           "unitId": "grease"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -2777,11 +2671,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
@@ -7647,13 +7554,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 114,
-          "numerator": 104,
-          "percent": "91.2%"
+          "numerator": 107,
+          "percent": "93.9%"
         },
         "openGapRows": {
           "denominator": 114,
-          "numerator": 10,
-          "percent": "8.8%"
+          "numerator": 7,
+          "percent": "6.1%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -7667,84 +7574,6 @@
         }
       },
       "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bane"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bless"
-        },
         {
           "evidenceStatus": "gap",
           "gaps": [
@@ -7885,45 +7714,6 @@
           "runtime": "battle",
           "tag": "obligation-evidence",
           "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-roll-modifier",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "guidance"
         },
         {
           "evidenceStatus": "gap",
@@ -8463,13 +8253,8 @@
           "unitId": "animal_friendship"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -8482,11 +8267,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
@@ -8502,13 +8300,8 @@
           "unitId": "bane"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -8521,11 +8314,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
@@ -10433,13 +10239,8 @@
           "unitId": "grease"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
           "obligationStatus": "covered",
@@ -10452,11 +10253,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-roll-modifier",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",

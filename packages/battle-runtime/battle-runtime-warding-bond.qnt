@@ -1,4 +1,6 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-warding-bond-linked-effect
 module battleRuntimeWardingBond {
   import battleRuntimeModel.* from "./battle-runtime-model"
 

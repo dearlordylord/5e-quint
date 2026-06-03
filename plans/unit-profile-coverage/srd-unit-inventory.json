@@ -192,6 +192,7 @@
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
       ],
       "issues": [
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellbookRitualAccessFeatureForBuild: packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
         "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades runtimeProjection evidence reference points to missing symbol characterBuildOwnsJackOfAllTradesFeature: packages/character-sheet-runtime/src/index.ts:characterBuildOwnsJackOfAllTradesFeature"
       ]
     },
@@ -29307,8 +29308,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; SRDINV26 Character Sheet spellbook ritual invocation runtime; Wizard Ritual Adept is read from the installed Surface class-feature record and projected as a Character Sheet ritual spell invocation. The runtime derives eligibility from existing CharacterBuild spellbook Spell Access and the Surface Spell Definition ritual tag, admits spellbook rituals without requiring preparation or spending a Spell Slot, rejects prepared-only spells, rejects non-ritual Spell Definitions, and rejects spellbook ritual invocation without the spellbook Ritual Access feature.",
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV91B at packages/character-sheet-runtime/src/index.test.ts",
           "status": "owner evidence present"
         }
       ],

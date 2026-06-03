@@ -8,16 +8,13 @@ subjects, replay caller fills, resolve state transitions, and expose snapshots.
 behavior. Its QNT authority is distributed: generic SRD procedure semantics live
 in shared rule-core QNT algebras, package-local focused slices project those
 facts into battle reducer protocol, and focused MBT/proof witnesses connect the
-modeled obligations to TypeScript behavior. `battle-runtime.qnt` remains a
-full-shell fixture and compatibility aggregation, but it should not accumulate
-new fixture-specific battle helpers.
+modeled obligations to TypeScript behavior. There is no current package-local
+full-shell aggregation spec; focused specs import the narrower modules they use
+directly.
 
-`battle-runtime.qnt` cannot become a pure import-only facade in one step. Quint names
-imported by a child module are not re-exported through a parent `import child.*`
-facade, so moved public QNT names need explicit wrappers or focused specs need
-to import narrower modules directly. Keep package-local integration vocabulary
-such as `Actor`, `Combatant`, `BattleState`, `ActiveEffect`, `Hole`, and replay
-variants in package-local QNT model modules, starting with
+Keep package-local integration vocabulary such as `Actor`, `Combatant`,
+`BattleState`, `ActiveEffect`, `Hole`, and replay variants in package-local QNT
+model modules, starting with
 `battle-runtime-model.qnt`, and let focused specs direct-import those modules
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
@@ -357,9 +354,9 @@ flowchart TD
   can take Reactions; resolution forgoes one Warlock attack and spends the
   familiar's Reaction while replaying the familiar attack through the shared
   Attack path.
-- The package-local `battle-runtime.qnt` spec constrains this implemented
-  subset. Old root `battle.qnt` remains broad legacy/Core proof and restore
-  source material, not the target for new runtime behavior.
+- Focused package-local QNT slices constrain this implemented subset. Old root
+  `battle.qnt` remains broad legacy/Core proof and restore source material, not
+  the target for new runtime behavior.
 - The first integrated promoted MBT is
   `src/battle-runtime.mbt.test.ts` plus `battle-runtime.mbt.qnt`. It targets the
   public weapon Attack reducer path against Skeleton and does not require MBT
@@ -391,8 +388,8 @@ restoration pressure, not as active package architecture:
   damage profiles.
 
 Future restorations belong in `@dnd/battle-runtime` implementation,
-package-local deterministic tests, and `battle-runtime.qnt`. Restore SRD
-procedure families through battle subjects, support gates, battle-owned
+package-local deterministic tests, and focused package-local QNT specs. Restore
+SRD procedure families through battle subjects, support gates, battle-owned
 holes/fills, reducer state, and package-local specs. Do not revive Correction as
 the promoted owner, keep a parallel Correction reducer, or reintroduce projected
 executable vocabulary.

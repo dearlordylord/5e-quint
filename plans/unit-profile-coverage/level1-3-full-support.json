@@ -1265,7 +1265,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand anatomy, unsupported Stat Block action sections, attack prose riders, multi-component damage, Stat Block non-Attack actions, and active-form handoff persistence or a typed cross-session boundary. Owner: battle-runtime, character-battle-runtime, and package-local battle-runtime.qnt parity. Required output: Supported Unit profile with focused runtime tests, generated owner evidence, and package-local promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS: Project the remaining non-D20 SRD replacement and retention matrix for Wild Shape beyond Character Sheet resource/known-form facts and promoted battle D20 facts, including senses, communication/anatomy restrictions, active-form duration across non-battle time, and other non-D20 rules that depend on the Beast Stat Block versus retained Character Sheet facts. Owner: shared shape-shifting statistics projection and session persistence. Required output: Supported runtime profile and focused tests for shared shape-shifted statistics and active-form persistence without duplicating true-form or Stat Block facts.",
+      "reason": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand anatomy, unsupported Stat Block action sections, attack prose riders, multi-component damage, Stat Block non-Attack actions, and active-form handoff persistence or a typed cross-session boundary. Owner: battle-runtime, character-battle-runtime, and focused package-local QNT/MBT parity. Required output: Supported Unit profile with focused runtime tests, generated owner evidence, and package-local promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS: Project the remaining non-D20 SRD replacement and retention matrix for Wild Shape beyond Character Sheet resource/known-form facts and promoted battle D20 facts, including senses, communication/anatomy restrictions, active-form duration across non-battle time, and other non-D20 rules that depend on the Beast Stat Block versus retained Character Sheet facts. Owner: shared shape-shifting statistics projection and session persistence. Required output: Supported runtime profile and focused tests for shared shape-shifted statistics and active-form persistence without duplicating true-form or Stat Block facts.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -6474,7 +6474,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -6496,7 +6496,7 @@
             "profileId": "spell.invocation-self-transformation-mode",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-self-transformation.qnt"
             ]
           }
         ],
@@ -6518,7 +6518,7 @@
             "profileId": "spell.creature-type-protection-and-charm",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
             ]
           }
         ],
@@ -6540,7 +6540,7 @@
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
             ]
           }
         ],
@@ -6778,7 +6778,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -6800,7 +6800,7 @@
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
             ]
           }
         ],
@@ -6822,7 +6822,7 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
             ]
           }
         ],
@@ -6968,7 +6968,7 @@
             "profileId": "spell.invocation-chained-attack-damage",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt"
             ]
           },
           {
@@ -7053,7 +7053,7 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
             ]
           }
         ],
@@ -7075,7 +7075,7 @@
             "profileId": "spell.invocation-command-halt-grovel",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           },
           {
@@ -7091,7 +7091,7 @@
             "profileId": "spell.invocation-command-drop-held-object",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           },
           {
@@ -7107,7 +7107,7 @@
             "profileId": "spell.invocation-command-approach-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           },
           {
@@ -7123,7 +7123,7 @@
             "profileId": "spell.invocation-command-flee-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           }
         ],
@@ -7167,7 +7167,7 @@
             "profileId": "spell.invocation-dancing-lights-movable-dim-light",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-light.qnt"
             ]
           }
         ],
@@ -7223,7 +7223,7 @@
             "profileId": "spell.invocation-forced-reaction-movement",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-movement.qnt"
             ]
           }
         ],
@@ -7245,7 +7245,7 @@
             "profileId": "spell.invocation-weapon-damage-rider",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
             ]
           }
         ],
@@ -7267,7 +7267,7 @@
             "profileId": "spell.invocation-after-hit-damage",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
             ]
           }
         ],
@@ -7367,7 +7367,7 @@
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack.qnt"
             ]
           }
         ],
@@ -7389,7 +7389,7 @@
             "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt"
             ]
           }
         ],
@@ -7411,7 +7411,7 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
             ]
           }
         ],
@@ -7439,7 +7439,7 @@
             "profileId": "spell.invocation-expeditious-retreat-dash",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-movement.qnt"
             ]
           }
         ],
@@ -7461,7 +7461,7 @@
             "profileId": "spell.invocation-attack-roll-advantage-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
             ]
           }
         ],
@@ -7483,7 +7483,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -7511,7 +7511,7 @@
             "profileId": "spell.invocation-feather-fall-mitigation",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-feather-fall.qnt"
             ]
           }
         ],
@@ -7701,7 +7701,7 @@
             "profileId": "spell.invocation-spell-created-held-object",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-light.qnt"
             ]
           }
         ],
@@ -7741,7 +7741,7 @@
             "profileId": "spell.invocation-flaming-sphere-hazard-ram",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
             ]
           }
         ],
@@ -7763,7 +7763,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           }
         ],
@@ -7791,7 +7791,7 @@
             "profileId": "spell.invocation-grease-ground-hazard",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           }
         ],
@@ -7813,7 +7813,7 @@
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
             ]
           }
         ],
@@ -7908,7 +7908,7 @@
             "profileId": "spell.invocation-object-contact-damage",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
             ]
           }
         ],
@@ -7936,7 +7936,7 @@
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
             ]
           },
           {
@@ -7980,7 +7980,7 @@
             "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -8002,7 +8002,7 @@
             "profileId": "spell.invocation-marked-damage-rider",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-marked-riders.qnt"
             ]
           }
         ],
@@ -8024,7 +8024,7 @@
             "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
             ]
           }
         ],
@@ -8046,7 +8046,7 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
             ]
           }
         ],
@@ -8068,7 +8068,7 @@
             "profileId": "spell.invocation-marked-damage-rider",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-marked-riders.qnt"
             ]
           }
         ],
@@ -8169,7 +8169,7 @@
             "profileId": "spell.invocation-direct-condition",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
             ]
           }
         ],
@@ -8197,7 +8197,7 @@
             "profileId": "spell.invocation-jump-movement-replacement",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-jump-movement.qnt"
             ]
           }
         ],
@@ -8219,7 +8219,7 @@
             "profileId": "spell.invocation-direct-condition-removal",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt"
             ]
           }
         ],
@@ -8241,7 +8241,7 @@
             "profileId": "spell.invocation-object-light",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-light.qnt"
             ]
           }
         ],
@@ -8263,7 +8263,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -8387,7 +8387,7 @@
             "profileId": "spell.invocation-magic-weapon-enhancement",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
             ]
           }
         ],
@@ -8409,7 +8409,7 @@
             "profileId": "spell.invocation-mirror-image-hit-interception",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-mirror-image.qnt"
             ]
           }
         ],
@@ -8431,7 +8431,7 @@
             "profileId": "spell.invocation-self-teleport",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-self-teleport.qnt"
             ]
           }
         ],
@@ -8558,7 +8558,11 @@
             ],
             "profileId": "character-sheet.class-feature-long-rest-use-state",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+              "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt"
+            ]
           },
           {
             "joinStatus": "covered",
@@ -8572,7 +8576,12 @@
             ],
             "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
+              "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+              "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt"
+            ]
           }
         ],
         "unitId": "monk_uncanny_metabolism"
@@ -8612,7 +8621,12 @@
             ],
             "profileId": "character-sheet.healing-resource-action",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
+              "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+              "packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt"
+            ]
           }
         ],
         "unitId": "paladin_lay_on_hands"
@@ -8633,7 +8647,7 @@
             "profileId": "spell.invocation-after-hit-damage",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
             ]
           }
         ],
@@ -8668,7 +8682,10 @@
             ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
           }
         ],
         "unitId": "paladin_weapon_mastery"
@@ -8762,7 +8779,7 @@
             "profileId": "spell.invocation-held-light-emitter",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-light.qnt"
             ]
           }
         ],
@@ -8784,7 +8801,7 @@
             "profileId": "spell.creature-type-protection-and-charm",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
             ]
           }
         ],
@@ -8806,7 +8823,7 @@
             "profileId": "spell.invocation-condition-removal-protection",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
             ]
           }
         ],
@@ -8861,7 +8878,10 @@
             ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
           }
         ],
         "unitId": "ranger_weapon_mastery"
@@ -9027,7 +9047,7 @@
             "profileId": "spell.invocation-damage-reduction",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
             ]
           }
         ],
@@ -9127,7 +9147,10 @@
             ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
           }
         ],
         "unitId": "rogue_weapon_mastery"
@@ -9199,7 +9222,7 @@
             "profileId": "spell.invocation-sanctuary-targeting-interdiction",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-sanctuary.qnt"
             ]
           }
         ],
@@ -9221,7 +9244,7 @@
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack.qnt"
             ]
           }
         ],
@@ -9243,7 +9266,7 @@
             "profileId": "spell.invocation-after-hit-timed-damage-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt"
             ]
           }
         ],
@@ -9350,7 +9373,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -9372,7 +9395,7 @@
             "profileId": "spell.invocation-weapon-attack-override",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
             ]
           }
         ],
@@ -9394,7 +9417,7 @@
             "profileId": "spell.invocation-after-hit-damage-illumination",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
             ]
           }
         ],
@@ -9467,7 +9490,7 @@
             "profileId": "spell.invocation-sleep-target-admission",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
             ]
           },
           {
@@ -9483,7 +9506,7 @@
             "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
             ]
           }
         ],
@@ -9575,7 +9598,7 @@
             "profileId": "spell.invocation-make-stable",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-hit-points.qnt"
             ]
           }
         ],
@@ -9597,7 +9620,7 @@
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
             ]
           }
         ],
@@ -9697,7 +9720,7 @@
             "profileId": "spell.invocation-spell-hosted-weapon-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
             ]
           }
         ],
@@ -9770,7 +9793,7 @@
             "profileId": "spell.invocation-warding-bond-linked-effect",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-warding-bond.qnt"
             ]
           }
         ],
@@ -9846,7 +9869,7 @@
             "profileId": "spell.invocation-web-restraint-hazard",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime.qnt"
+              "packages/battle-runtime/battle-runtime-ground-command.qnt"
             ]
           }
         ],
@@ -9887,7 +9910,10 @@
             ],
             "profileId": "character-sheet.spellbook-ritual-invocation",
             "profileKind": "character-sheet",
-            "qntOwners": []
+            "qntOwners": [
+              "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+              "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt"
+            ]
           }
         ],
         "unitId": "wizard_ritual_adept"

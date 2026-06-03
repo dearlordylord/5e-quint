@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm
 
 module battleRuntimeCreatureTypeProtection {
   import battleRuntimeModel.* from "./battle-runtime-model"

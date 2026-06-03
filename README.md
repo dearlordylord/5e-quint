@@ -11,7 +11,7 @@ A package workspace for the active runtimes:
 graph TD
     SRD["SRD 5.2.1"] -.-> SURFACE["@dnd/surface authored Units and Stat Blocks"]
     SURFACE --> CCR["@dnd/character-creation-runtime"]
-    SURFACE --> BR["@dnd/battle-runtime + battle-runtime.qnt"]
+    SURFACE --> BR["@dnd/battle-runtime + focused battle QNT"]
     CCR --> CSR["@dnd/character-sheet-runtime"]
     CSR --> CBR["@dnd/character-battle-runtime"]
     BR --> MCP["@dnd/mcp"]
@@ -72,8 +72,6 @@ contracts for Units, Stat Blocks, spells, class features, and related content.
 **Battle runtime** (`packages/battle-runtime`) — Unit/StatBlock-backed battle
 reducer behavior. Battle QNT authority is distributed across shared rule-core
 slices, package-local focused slices, and focused MBT/proof witnesses.
-`packages/battle-runtime/battle-runtime.qnt` remains a full-shell fixture and
-compatibility aggregation while focused witnesses replace broad-shell ownership.
 
 **Character runtimes** (`packages/character-creation-runtime`,
 `packages/character-sheet-runtime`, `packages/character-battle-runtime`) —

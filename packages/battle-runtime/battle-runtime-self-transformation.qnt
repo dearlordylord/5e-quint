@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 
 module battleRuntimeSelfTransformation {
   import battleRuntimeModel.* from "./battle-runtime-model"

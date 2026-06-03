@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-direct-condition spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-save-gated-condition-immunity spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSaveSpellTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"

@@ -89,11 +89,10 @@ Three layers:
   plus per-domain bridge modules (`battle-runtime-movement-bridge.qnt`,
   `*-concentration-bridge.qnt`, `*-interrupt-bridge.qnt`,
   `*-stat-block-bridge.qnt`, `*-feature-bridge.qnt`, `*-spell-bridge.qnt`).
-  Bridges connect package state to rule-core facts.
-  `packages/battle-runtime/battle-runtime.qnt` remains a full-shell fixture and
-  compatibility aggregation, not a whole-battle MBT generation input. QNT and
-  TypeScript do not call each other at runtime;
-  they connect through verification harnesses (see
+  Bridges connect package state to rule-core facts. There is no current
+  package-local full-shell aggregation spec; focused specs import the narrower
+  modules they use directly. QNT and TypeScript do not call each other at
+  runtime; they connect through verification harnesses (see
   `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`).
 - **Focused MBT/parity/replay witnesses** as separate `*.mbt.qnt` and
   `*.mbt.test.ts` drivers per obligation, profile, or selected identity. No
@@ -368,9 +367,9 @@ focused slices, and focused witnesses:
   expenditure, damage projection, hit-point lifecycle, reactions/concentration,
   movement, stat-block controls, unit-feature procedures. Package-local QNT
   bridges into these slices instead of restating their semantics.
-- `packages/battle-runtime/battle-runtime.qnt` is a full-shell fixture and
-  compatibility aggregation module for `@dnd/battle-runtime`; new QNT ownership
-  should prefer focused slices and witnesses.
+- Focused package-local battle-runtime QNT slices and witnesses constrain
+  `@dnd/battle-runtime`; no current full-shell aggregation spec owns promoted
+  behavior.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
 - The deleted root `.qnt` files are historical restore material recoverable
@@ -398,7 +397,7 @@ Proof layers for the promoted path are package-owned:
 | Authored Surface records and catalogs | `@dnd/surface` | Decode/reader tests, trace review, provenance/cross-collection constraints, and table-driven catalog contract tests. | A new record family or structural reader changes runtime-visible meaning. |
 | Reusable rule mechanic | `@dnd/shared-algebras` `proofs/rule-core/` slice | Stateless contract module plus stateful inductive proof machine (`*-inductive.qnt`); integration MBT through a package-local bridge where the mechanic is composed at scale. | A new reusable procedure family is introduced or an existing slice's state transitions change. |
 | Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, package-local QNT, and package-local randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
-| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored `battle-runtime.qnt` self-tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
+| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored focused package-local QNT tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
 | Selected composed battle-runtime flows | `@dnd/battle-runtime` | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, plus the broad `battle-runtime.mbt.qnt` as one bounded-fixture integration witness. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
 | MCP runtime composition | `@dnd/mcp` | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions. | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
 

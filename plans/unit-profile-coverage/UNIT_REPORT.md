@@ -8,15 +8,15 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 272 Units |
+| Installed collection inventory count | 274 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 271/507 | 53.5% |
+| Authored Surface Unit catalog admission | 273/507 | 53.8% |
 | Authored Surface executable catalog admission | 226/422 | 53.6% |
-| Installed Unit profile classification coverage | 272/272 | 100% |
+| Installed Unit profile classification coverage | 272/274 | 99.3% |
 | Supported executable Unit coverage | 148/227 | 65.2% |
 | QNT profile modeling coverage | 96/96 | 100% |
 | QNT proof coverage | 96/96 | 100% |
@@ -310,7 +310,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | magic_item | 71 | `cloak_of_protection`, `magic_item_amulet_of_health`, `magic_item_bag_of_holding`, `magic_item_bracers_of_defense`, `magic_item_brazier_of_commanding_fire_elementals`, `magic_item_brooch_of_shielding`, `magic_item_censer_of_controlling_air_elementals`, `magic_item_chime_of_opening`, `magic_item_cloak_of_arachnida`, `magic_item_cloak_of_protection`, `magic_item_crystal_ball_of_mind_reading`, `magic_item_cube_of_force`, `magic_item_eyes_of_minute_seeing`, `magic_item_folding_boat`, `magic_item_gauntlets_of_ogre_power`, `magic_item_gem_of_seeing`, `magic_item_goggles_of_night`, `magic_item_hat_of_disguise`, `magic_item_headband_of_intellect`, `magic_item_helm_of_comprehending_languages`, `magic_item_helm_of_teleportation`, `magic_item_instant_fortress`, `magic_item_javelin_of_lightning`, `magic_item_manual_of_gainful_exercise`, `magic_item_manual_of_quickness_of_action`, `magic_item_medallion_of_thoughts`, `magic_item_necklace_of_fireballs`, `magic_item_periapt_of_proof_against_poison`, `magic_item_potion_of_animal_friendship`, `magic_item_potion_of_clairvoyance`, `magic_item_potion_of_climbing`, `magic_item_potion_of_flying`, `magic_item_potion_of_giant_strength`, `magic_item_potion_of_heroism`, `magic_item_potion_of_invisibility`, `magic_item_potion_of_invulnerability`, `magic_item_potion_of_water_breathing`, `potion_of_healing`, `magic_item_quarterstaff_of_the_acrobat`, `magic_item_ring_of_invisibility`, `magic_item_ring_of_jumping`, `magic_item_ring_of_protection`, `magic_item_ring_of_resistance`, `ring_of_swimming`, `ring_of_telekinesis`, `ring_of_three_wishes`, `magic_item_ring_of_warmth`, `magic_item_ring_of_water_walking`, `magic_item_robe_of_the_archmagi`, `magic_item_rod_of_alertness`, `magic_item_rod_of_resurrection`, `magic_item_rod_of_rulership`, `magic_item_slippers_of_spider_climbing`, `magic_item_sovereign_glue`, `magic_item_staff_of_charming`, `magic_item_staff_of_fire`, `magic_item_staff_of_healing`, `magic_item_staff_of_power`, `magic_item_staff_of_the_woodlands`, `magic_item_stone_of_controlling_earth_elementals`, `magic_item_stone_of_good_luck_luckstone`, `magic_item_tome_of_clear_thought`, `magic_item_tome_of_leadership_and_influence`, `magic_item_tome_of_understanding`, `magic_item_wand_of_fear`, `magic_item_wand_of_fireballs`, `magic_item_wand_of_lightning_bolts`, `magic_item_wand_of_magic_detection`, `magic_item_wand_of_magic_missiles`, `magic_item_wand_of_paralysis`, `magic_item_wand_of_polymorph` |
 | weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | class_feature | 23 | `barbarian_ability_score_improvement_l4`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_contact_patron`, `wizard_ability_score_improvement_l4` |
-| armor | 11 | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
+| armor | 9 | `armor_breastplate`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
 | shield_template | 2 | `magic_item_sentinel_shield`, `magic_item_shield_1_2_or_3` |
@@ -321,7 +321,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | ---: | --- | --- |
 | srd-candidate | QMBT14-QMBT16 | 94 | spell: 94 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
-| non-runtime-authored-data | no promoted runtime lane | 40 | weapon: 29, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
+| non-runtime-authored-data | no promoted runtime lane | 38 | weapon: 29, armor: 9 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 23 | class_feature: 23 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
@@ -336,10 +336,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `arcane_lock` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/arcane_lock.json` |
 | `arcane_sword` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/arcane_sword.json` |
 | `armor_breastplate` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_breastplate.json` |
-| `armor_chain_shirt` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_chain_shirt.json` |
 | `armor_half_plate_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_half_plate_armor.json` |
 | `armor_hide_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_hide_armor.json` |
-| `armor_leather` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_leather.json` |
 | `armor_padded_armor` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_padded_armor.json` |
 | `armor_plate` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_plate.json` |
 | `armor_ring_mail` | non-runtime-authored-data | no promoted runtime lane | armor | no | `packages/surface/content/armor_ring_mail.json` |
@@ -577,10 +575,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `arcane_lock` | spell | yes | `packages/surface/content/arcane_lock.json` |
 | `arcane_sword` | spell | yes | `packages/surface/content/arcane_sword.json` |
 | `armor_breastplate` | armor | no | `packages/surface/content/armor_breastplate.json` |
-| `armor_chain_shirt` | armor | no | `packages/surface/content/armor_chain_shirt.json` |
 | `armor_half_plate_armor` | armor | no | `packages/surface/content/armor_half_plate_armor.json` |
 | `armor_hide_armor` | armor | no | `packages/surface/content/armor_hide_armor.json` |
-| `armor_leather` | armor | no | `packages/surface/content/armor_leather.json` |
 | `armor_padded_armor` | armor | no | `packages/surface/content/armor_padded_armor.json` |
 | `armor_plate` | armor | no | `packages/surface/content/armor_plate.json` |
 | `armor_ring_mail` | armor | no | `packages/surface/content/armor_ring_mail.json` |
@@ -1308,6 +1304,8 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated battle-visible Charmed condition application and cleanup; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
+| `armor_chain_shirt` | missing |  |
+| `armor_leather` | missing |  |
 | `equipment_shield` | unsupported-profile | Shield equipment AC data is authored but not represented as an executable Unit profile row. |
 | `weapon_club` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_dagger` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
@@ -1362,6 +1360,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | srd-5.2.1 | unassigned | unsupported-profile | 100 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_barbarian_path_of_the_berserker`, `subclass_bard_college_of_lore`, `subclass_cleric_life_domain`, `subclass_druid_circle_of_the_land`, `subclass_fighter_champion`, `subclass_monk_warrior_of_the_open_hand`, `subclass_paladin_oath_of_devotion`, `subclass_ranger_hunter`, `subclass_rogue_thief`, `subclass_sorcerer_draconic_sorcery`, `subclass_warlock_fiend_patron`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `feat_magic_initiate_cleric`, `feat_magic_initiate_wizard`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `animal_messenger`, `arcanists_magic_aura`, `augury`, `darkvision`, `find_traps`, `knock`, `locate_animals_or_plants`, `locate_object`, `rope_trick`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `magic_mouth`, `silence`, `suggestion`, `zone_of_truth`, `minor_illusion`, `alarm`, `arcane_lock`, `barbarian_ability_score_improvement_l4`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_words_of_creation`, `clairvoyance`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `find_steed`, `gentle_repose`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `tongues`, `warlock_contact_patron`, `water_breathing`, `wizard_ability_score_improvement_l4` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 32 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_expertise`, `cleric_life_domain_spells`, `druid_wild_shape`, `druid_wild_companion`, `monk_monks_focus`, `ranger_favored_enemy`, `ranger_fighting_style`, `rogue_fast_hands`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `sorcerer_draconic_spells`, `warlock_fiend_spells`, `wizard_evocation_savant`, `paladin_fighting_style`, `paladin_oath_of_devotion_spells`, `calm_emotions`, `enlarge_reduce`, `enthrall`, `fireball`, `find_familiar`, `gust_of_wind`, `levitate`, `pass_without_trace`, `prayer_of_healing`, `thaumaturgy`, `mind_spike`, `moonbeam`, `fly`, `spike_growth`, `charm_person` |
 | srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | missing | 2 | `armor_chain_shirt`, `armor_leather` |
 | srd-5.2.1 | Antimagic Field prevention boundaries plus broader ongoing Spell Effect occurrence model | profile-subset-supported | 1 | `antimagic_field` |
 | srd-5.2.1 | battle-runtime Channel Divinity healing pool owner plus promoted Quint parity | profile-subset-supported | 1 | `cleric_preserve_life` |
 | srd-5.2.1 | battle-runtime initiative, ability-check, attack-critical, movement, and Opportunity Attack owners plus promoted Quint parity | profile-subset-supported | 1 | `fighter_remarkable_athlete` |

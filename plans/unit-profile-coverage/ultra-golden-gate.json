@@ -72,8 +72,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 32,
-              "numerator": 32
+              "denominator": 37,
+              "numerator": 37
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -94,7 +94,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
-              "focused-mbt": 37,
+              "focused-mbt": 38,
               "runtime-test": 14
             }
           },
@@ -333,8 +333,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 32,
-              "numerator": 32
+              "denominator": 38,
+              "numerator": 38
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -355,7 +355,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
-              "focused-mbt": 37,
+              "focused-mbt": 38,
               "runtime-test": 14
             }
           },
@@ -597,8 +597,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 50,
-              "numerator": 50
+              "denominator": 56,
+              "numerator": 56
             },
             "qntCoveredObligations": {
               "denominator": 66,
@@ -619,7 +619,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 54,
+              "focused-mbt": 55,
               "runtime-test": 21
             }
           },

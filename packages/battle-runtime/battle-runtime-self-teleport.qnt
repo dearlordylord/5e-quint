@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-teleport
 
 module battleRuntimeSelfTeleport {
   import battleRuntimeModel.* from "./battle-runtime-model"

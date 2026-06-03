@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-counterspell spell.reaction-hellish-rebuke
 
 module battleRuntimeReactionResolution {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"

@@ -102,7 +102,7 @@ Scope:
 - derive the save DC from the attack ability modifier and the attacker's
   Proficiency Bonus;
 - apply Prone on failed Constitution save and no effect on success;
-- update `packages/battle-runtime/battle-runtime.qnt`, runtime reducer code,
+- update focused package-local battle-runtime QNT, runtime reducer code,
   focused tests, character-battle projection tests, and Unit evidence.
 
 Out of scope:
@@ -131,7 +131,7 @@ Scope:
   on hit without adding a positive ability modifier, while preserving a negative
   ability modifier;
 - enforce once-per-turn Cleave use in battle state;
-- update `packages/battle-runtime/battle-runtime.qnt`, runtime reducer code,
+- update focused package-local battle-runtime QNT, runtime reducer code,
   focused tests, character-battle projection tests, and Unit evidence.
 
 Out of scope:
