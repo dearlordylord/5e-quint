@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit remaining full-shell proof consumers and append the next implementation batch"
     },
     {
       "number": 7,
       "id": "BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Move save-spell proof module off the full-shell battleRuntime import"
     }
   ]
@@ -122,8 +122,8 @@ reasonable findings remain.
 | 3 | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS - Move spell-facts proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS | Migrate a one-test proof module with broader spell fact imports. |
 | 4 | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS - Move object-contact-damage proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS | Migrate a medium proof module after the small modules have landed. |
 | 5 | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present | done | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS | The file was already direct-imported; proof still passed. |
-| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | blocked | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS | Refresh the inventory after the replacement implementation task lands. |
-| 7 | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Replacement task for the next actual full-shell consumer. |
+| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | ready-for-research | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS | Refresh the inventory after the replacement implementation task lands. |
+| 7 | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Replacement task for the next actual full-shell consumer. |
 
 ## Task Details
 
@@ -256,7 +256,7 @@ Finding:
 
 ### Task 6 - BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Refresh the remaining full-shell consumer inventory:
 
@@ -274,7 +274,7 @@ Acceptance:
 
 ### Task 7 - BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Move `packages/battle-runtime/battle-runtime-save-spell-tests.qnt` off:
 

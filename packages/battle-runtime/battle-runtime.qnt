@@ -109,6 +109,7 @@ module battleRuntime {
   import battleRuntimeDirectConditionRemoval.* from "./battle-runtime-direct-condition-removal"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeWardingBond.* from "./battle-runtime-warding-bond"
@@ -816,12 +817,7 @@ module battleRuntime {
     }
 
   pure def standFighterFromProne(state: BattleState): BattleState = {
-    if (combatantHasHideousLaughter(state.fighter))
-      state
-    else {
-      val step = battleRuntimeStandFromProne(movementProjectionForFighter(state, WalkSpeedKind))
-      stateWithFighterMovementStep(state, step)
-    }
+    standFighterFromProneUnlessHideousLaughter(state)
   }
 
   pure def endTurnWithEnsnaringStrikeDamage(
@@ -909,11 +905,14 @@ module battleRuntime {
     goblinAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
-    {
-      ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, fighterAbility, chosenSkill))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, goblinAbility, chosenSkill))) } else state.goblin,
-    }
+    rollModifierChoiceTargetedStateWithTargetAbilities(
+      state,
+      invocation,
+      targets,
+      fighterAbility,
+      goblinAbility,
+      chosenSkill,
+    )
 
   pure def resolveRollModifierSpellWithTargetAbilities(
     state: BattleState,
@@ -924,45 +923,17 @@ module battleRuntime {
     fighterAbility: Ability,
     goblinAbility: Ability,
     chosenSkill: AbilityCheckSkill,
-  ): BattleState = {
-    val affectedTargets =
-      if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
-    if (
-      currentActor(state) == Fighter and
-      rollModifierSelectedTargetsValid(invocation, selectedTargets, slotLevel) and
-      failedSaveTargets.forall(target => selectedTargets.contains(target)) and
-      state.actionAvailable and
-      (not(rollModifierSpendsLevelOneSlot(invocation)) or canExpendSpellSlotThisTurn(state)) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    ) {
-      val concentrationBase = {
-        ...state,
-        fighter: breakConcentration(state.fighter),
-        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
-      }
-      val effected = rollModifierTargetedStateWithTargetAbilities(
-        concentrationBase,
-        invocation,
-        affectedTargets,
-        fighterAbility,
-        goblinAbility,
-        chosenSkill,
-      )
-      val resolved = {
-        ...effected,
-        fighter: { ...effected.fighter, concentrating: true },
-        actionAvailable: false,
-      }
-      if (rollModifierSpendsLevelOneSlot(invocation))
-        commitActorSpellSlotUse(resolved, Fighter)
-      else
-        resolved
-    } else {
-      state
-    }
-  }
+  ): BattleState =
+    resolveRollModifierChoiceSpellWithTargetAbilities(
+      state,
+      invocation,
+      selectedTargets,
+      failedSaveTargets,
+      slotLevel,
+      fighterAbility,
+      goblinAbility,
+      chosenSkill,
+    )
 
   pure def resolveRollModifierSpell(
     state: BattleState,
@@ -973,13 +944,12 @@ module battleRuntime {
     chosenAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
-    resolveRollModifierSpellWithTargetAbilities(
+    resolveRollModifierChoiceSpell(
       state,
       invocation,
       selectedTargets,
       failedSaveTargets,
       slotLevel,
-      chosenAbility,
       chosenAbility,
       chosenSkill,
     )
