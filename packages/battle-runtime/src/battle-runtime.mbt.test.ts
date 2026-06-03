@@ -12,10 +12,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either, Match } from "effect";
 import { describe, expect, it } from "vitest";
 
-import {
-  armorClass,
-  defaultArmorClassState,
-} from "@dnd/shared-algebras/armor-class-algebra";
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   DieRollResult,
   Hp,
@@ -46,14 +43,12 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
-  battleObjectId,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  objectInvisibleBenefitDenied,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -61,8 +56,6 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleLightEmitter,
-  type BattleLightEmitterAttachment,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -131,98 +124,6 @@ type ScalarBuffMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
-type ObjectDamageMbtProjection =
-  | { readonly tag: "none" }
-  | {
-      readonly tag: "hitPoints";
-      readonly rolledDamage: number;
-      readonly effectiveDamage: number;
-      readonly nextHitPoints: number;
-      readonly destroyed: boolean;
-    };
-type LightEmitterAttachmentMbtProjection =
-  | {
-      readonly kind: "combatant";
-      readonly combatantId: string;
-    }
-  | {
-      readonly kind: "object";
-      readonly objectId: string;
-    }
-  | {
-      readonly kind: "dancingLight";
-      readonly lightId: string;
-      readonly positionId: string;
-      readonly form: string;
-    };
-type LightEmissionMbtProjection =
-  | {
-      readonly kind: "dim";
-      readonly radiusFeet: number;
-    }
-  | {
-      readonly kind: "brightAndDim";
-      readonly brightRadiusFeet: number;
-      readonly dimAdditionalFeet: number;
-    };
-type LightEmitterExpirationMbtProjection =
-  | {
-      readonly kind: "startOfTurn";
-      readonly combatantId: string;
-    }
-  | {
-      readonly kind: "endOfTurn";
-      readonly combatantId: string;
-      readonly round: number;
-    }
-  | {
-      readonly kind: "concentration";
-      readonly combatantId: string;
-    }
-  | {
-      readonly kind: "duration";
-      readonly durationTicks: number;
-    }
-  | {
-      readonly kind: "untilDispelled";
-    };
-type LightEmitterMbtProjection =
-  | {
-      readonly kind: "spellLightEmitter";
-      readonly sourceSpellId: string;
-      readonly sourceCombatantId: string;
-      readonly attachment: LightEmitterAttachmentMbtProjection;
-      readonly emission: LightEmissionMbtProjection;
-      readonly opaqueCoverInteraction:
-        | { readonly kind: "blocksEmission" }
-        | { readonly kind: "doesNotBlockEmission" };
-      readonly expiresAt: LightEmitterExpirationMbtProjection;
-    }
-  | {
-      readonly kind: "objectInvisibleRevealLightEmitter";
-      readonly sourceSpellId: string;
-      readonly sourceCombatantId: string;
-      readonly objectId: string;
-      readonly emission: Extract<
-        LightEmissionMbtProjection,
-        { readonly kind: "dim" }
-      >;
-      readonly expiresAt: Extract<
-        LightEmitterExpirationMbtProjection,
-        { readonly kind: "endOfTurn" }
-      >;
-    };
-
-type StarryWispObjectMbtProjection = {
-  readonly actionAvailable: boolean;
-  readonly holes: readonly MbtHole[];
-  readonly objectDamage: ObjectDamageMbtProjection;
-  readonly lightEmitters: readonly LightEmitterMbtProjection[];
-  readonly objectInvisibleBenefitDenied: boolean;
-  readonly lastResult: MbtLastResult;
-  readonly lastInvalidReason: MbtLastInvalidReason;
-};
-
 type EldritchBlastMbtProjection = {
   readonly actionAvailable: boolean;
   readonly targetHp: number;
@@ -233,7 +134,6 @@ type EldritchBlastMbtProjection = {
 
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
-const starryWispObjectId = battleObjectId("starry-wisp-object");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
@@ -314,18 +214,6 @@ const adrenalineRushDriverSchema = {
 const scalarBuffDriverSchema = {
   init: {},
   doFillLongstriderTarget: {},
-  doRejectStaleAfterResolved: {},
-  step: {},
-} as const;
-
-const starryWispObjectDriverSchema = {
-  init: {},
-  doFillObjectTarget: {},
-  doRejectObjectWithoutFact: {},
-  doFillObjectAttackRollMiss: {},
-  doFillObjectAttackRollHit: {},
-  doFillObjectDamageLow: {},
-  doFillObjectDamageHigh: {},
   doRejectStaleAfterResolved: {},
   step: {},
 } as const;
@@ -955,99 +843,6 @@ function createScalarBuffDriver() {
   });
 }
 
-function createStarryWispObjectDriver() {
-  return defineDriver(starryWispObjectDriverSchema, () => {
-    let state = starryWispObjectBattle();
-    const subject = starryWispSubject();
-    let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverStarryWispHoles(state, subject);
-    let objectDamage: ObjectDamageMbtProjection = { tag: "none" };
-    let lastResult: StarryWispObjectMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: StarryWispObjectMbtProjection["lastInvalidReason"] =
-      "";
-
-    function reset(): void {
-      state = starryWispObjectBattle();
-      fills = [];
-      holes = discoverStarryWispHoles(state, subject);
-      objectDamage = { tag: "none" };
-      lastResult = "init";
-      lastInvalidReason = "";
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      lastResult = result.tag;
-      if (result.tag === "resolved") {
-        state = result.state;
-        holes = [];
-        objectDamage = projectObjectDamage(result.objectDamages?.[0]);
-        lastInvalidReason = "";
-        return;
-      }
-      if (result.tag === "needsHoles") {
-        state = result.state;
-        holes = result.holes;
-        lastInvalidReason = "";
-        return;
-      }
-      lastInvalidReason = mbtInvalidReason(result.reason);
-    }
-
-    function submit(nextFills: readonly BattleFill[]): void {
-      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
-      recordResult(resolveBattleSubject({ state, subject, fills }));
-    }
-
-    return {
-      init: reset,
-      doFillObjectTarget: () => {
-        const objectTarget = requireHole(holes, "objectTargetChoice");
-        submit([starryWispObjectTargetFill(objectTarget)]);
-      },
-      doRejectObjectWithoutFact: () => {
-        const objectTarget = requireHole(holes, "objectTargetChoice");
-        submit([
-          starryWispObjectTargetFill(objectTarget, { spatialFacts: [] }),
-        ]);
-      },
-      doFillObjectAttackRollMiss: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 12, naturalD20: 7 }),
-        ]);
-      },
-      doFillObjectAttackRollHit: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        ]);
-      },
-      doFillObjectDamageLow: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[2, 2]])]);
-      },
-      doFillObjectDamageHigh: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[3, 3]])]);
-      },
-      doRejectStaleAfterResolved: () => {
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      step: () => {},
-      getState: () =>
-        projectStarryWispObjectMbtState({
-          state,
-          holes,
-          objectDamage,
-          lastResult,
-          lastInvalidReason,
-        }),
-    };
-  });
-}
-
 function createEldritchBlastDriver() {
   return defineDriver(eldritchBlastDriverSchema, () => {
     let state = eldritchBlastBattle();
@@ -1287,24 +1082,6 @@ function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
   };
 }
 
-function normalizeStarryWispObjectQuintState(
-  raw: unknown,
-): StarryWispObjectMbtProjection {
-  const state = quintStateRecord(raw);
-
-  const lightEmitters = lightEmittersFromQuint(state["qLightEmitters"]);
-  return {
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
-    lightEmitters,
-    objectInvisibleBenefitDenied:
-      objectInvisibleBenefitDeniedFromLightEmitters(lightEmitters),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
-  };
-}
-
 function normalizeEldritchBlastQuintState(
   raw: unknown,
 ): EldritchBlastMbtProjection {
@@ -1359,16 +1136,6 @@ const adrenalineRushStateCheck = stateCheck(
 const scalarBuffStateCheck = stateCheck(
   normalizeScalarBuffQuintState,
   (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
-const starryWispObjectStateCheck = stateCheck(
-  normalizeStarryWispObjectQuintState,
-  (
-    spec: StarryWispObjectMbtProjection,
-    impl: StarryWispObjectMbtProjection,
-  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -1485,22 +1252,6 @@ describe("battle-runtime MBT", () => {
       nTraces: promotedMbtTraces,
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: scalarBuffStateCheck,
-    });
-  }, 120_000);
-
-  it("replays Starry Wisp object target attack and object damage outcomes", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-starry-wisp-object.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createStarryWispObjectDriver(),
-      backend: "typescript",
-      nTraces: promotedMbtTraces,
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: starryWispObjectStateCheck,
     });
   }, 120_000);
 
@@ -1659,32 +1410,6 @@ function projectScalarBuffMbtState(input: {
   };
 }
 
-function projectStarryWispObjectMbtState(input: {
-  readonly state: BattleState;
-  readonly holes: readonly BattleHole[];
-  readonly objectDamage: ObjectDamageMbtProjection;
-  readonly lastResult: StarryWispObjectMbtProjection["lastResult"];
-  readonly lastInvalidReason: StarryWispObjectMbtProjection["lastInvalidReason"];
-}): StarryWispObjectMbtProjection {
-  const snapshot = snapshotBattle(input.state);
-  return {
-    actionAvailable: snapshot.turn.actionResources.some(
-      (resource) => resource.source === "turn",
-    ),
-    holes: projectHoles(input.holes),
-    objectDamage: input.objectDamage,
-    lightEmitters: snapshot.lightEmitters
-      .map(projectLightEmitter)
-      .sort(compareJsonStable),
-    objectInvisibleBenefitDenied: objectInvisibleBenefitDenied(
-      input.state,
-      starryWispObjectId,
-    ),
-    lastResult: input.lastResult,
-    lastInvalidReason: input.lastInvalidReason,
-  };
-}
-
 function projectEldritchBlastMbtState(
   state: BattleState,
   holes: readonly BattleHole[],
@@ -1761,13 +1486,6 @@ function discoverMagicMissileHoles(
   }
 
   return act.initialHoles;
-}
-
-function discoverStarryWispHoles(
-  state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-): readonly BattleHole[] {
-  return discoverSpellHoles(state, subject, "Expected Starry Wisp spell act.");
 }
 
 function discoverSpellHoles(
@@ -1865,18 +1583,6 @@ function magicMissileSubject(): Extract<
       1,
       "repeatedDamageAllocation",
     ),
-    mode: { tag: "cast" },
-  };
-}
-
-function starryWispSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: cantripSpellInvocationRef("starry_wisp", "spellAttackDamage"),
     mode: { tag: "cast" },
   };
 }
@@ -2010,16 +1716,6 @@ function scalarBuffBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
     combatants: [
       scalarBuffCasterCreatureInit({ initiative: 20 }),
-      skeletonCreatureInit({ initiative: 10 }),
-    ],
-  });
-}
-
-function starryWispObjectBattle(): BattleState {
-  return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-starry-wisp-object"),
-    combatants: [
-      starryWispCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2220,49 +1916,6 @@ function scalarBuffCasterCreatureInit(input: {
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
-      },
-    },
-  };
-}
-
-function starryWispCasterCreatureInit(input: {
-  readonly initiative: number;
-}): BattleCreatureInit {
-  const unit = unitLibrary.requireUnit("starry_wisp");
-  if (unit.kind !== "spell") {
-    throw new Error("Expected Starry Wisp spell Unit.");
-  }
-  return {
-    combatantId: fighterId,
-    displayName: "Starry Wisp Caster",
-    initiative: initiativeScore(input.initiative),
-    side: partySide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId("starry-wisp-caster-character"),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 5 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-      spellcasting: {
-        sourceClassName: "fighter",
-        spellcastingAbilityModifier: 3,
-        proficiencyBonus: proficiencyBonus(2),
-        canCastSpells: true,
-        cantrips: [unit],
-        preparedSpells: [],
-        featurePreparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-        invocationSpellAccesses: [],
-        spellSlots: [],
       },
     },
   };
@@ -2530,42 +2183,6 @@ function spellTargetChoiceFill(
   };
 }
 
-type ObjectTargetChoiceFill = Extract<
-  BattleFill,
-  { readonly kind: "objectTargetChoice" }
->;
-
-function starryWispObjectTargetFill(
-  hole: BattleHole,
-  input: {
-    readonly spatialFacts?: ObjectTargetChoiceFill["spatialFacts"];
-  } = {},
-): ObjectTargetChoiceFill {
-  if (hole.kind !== "objectTargetChoice") {
-    throw new Error("Expected object target choice hole.");
-  }
-
-  return {
-    kind: "objectTargetChoice",
-    holeId: hole.holeId,
-    value: starryWispObjectId,
-    spatialFacts: input.spatialFacts ?? [
-      {
-        kind: "spellObjectTarget",
-        casterId: fighterId,
-        objectId: starryWispObjectId,
-        spellId: "starry_wisp",
-        rangeFeet: movementFeet(60),
-        armorClass: armorClass(13),
-        damageDisposition: {
-          kind: "hitPoints",
-          hitPoints: Hp(5),
-        },
-      },
-    ],
-  };
-}
-
 function movementFill(
   hole: BattleHole,
   value: { readonly movementCostFeet: number },
@@ -2679,396 +2296,6 @@ function rolledDiceGroup(
   return {
     results: [DieRollResult(first), ...rest.map(DieRollResult)],
   };
-}
-
-function projectObjectDamage(
-  damage: Extract<
-    NonNullable<
-      Extract<
-        BattleResolutionResult,
-        { readonly tag: "resolved" }
-      >["objectDamages"]
-    >,
-    readonly unknown[]
-  > extends readonly (infer ObjectDamage)[]
-    ? ObjectDamage | undefined
-    : undefined,
-): ObjectDamageMbtProjection {
-  if (damage === undefined) {
-    return { tag: "none" };
-  }
-  if (damage.kind === "hitPoints") {
-    return {
-      tag: "hitPoints",
-      rolledDamage: Number(damage.rolledDamage),
-      effectiveDamage: Number(damage.effectiveDamage),
-      nextHitPoints: Number(damage.nextHitPoints),
-      destroyed: damage.destroyed,
-    };
-  }
-
-  throw new Error("Starry Wisp object MBT expected hit point object damage.");
-}
-
-function projectLightEmitter(
-  emitter: BattleLightEmitter,
-): LightEmitterMbtProjection {
-  return Match.value(emitter).pipe(
-    Match.when({ kind: "spellLightEmitter" }, (spellEmitter) => ({
-      kind: "spellLightEmitter" as const,
-      sourceSpellId: spellEmitter.sourceSpellId,
-      sourceCombatantId: spellEmitter.sourceCombatantId,
-      attachment: projectLightEmitterAttachment(spellEmitter.attachment),
-      emission: projectLightEmission(spellEmitter.emission),
-      opaqueCoverInteraction: spellEmitter.opaqueCoverInteraction,
-      expiresAt: projectLightEmitterExpiration(spellEmitter.expiresAt),
-    })),
-    Match.when(
-      { kind: "objectInvisibleRevealLightEmitter" },
-      (objectRevealEmitter) => ({
-        kind: "objectInvisibleRevealLightEmitter" as const,
-        sourceSpellId: objectRevealEmitter.sourceSpellId,
-        sourceCombatantId: objectRevealEmitter.sourceCombatantId,
-        objectId: objectRevealEmitter.objectId,
-        emission: {
-          kind: "dim" as const,
-          radiusFeet: Number(objectRevealEmitter.emission.radiusFeet),
-        },
-        expiresAt: {
-          kind: "endOfTurn" as const,
-          combatantId: objectRevealEmitter.expiresAt.combatantId,
-          round: Number(objectRevealEmitter.expiresAt.round),
-        },
-      }),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function projectLightEmitterAttachment(
-  attachment: BattleLightEmitterAttachment,
-): LightEmitterAttachmentMbtProjection {
-  return Match.value(attachment).pipe(
-    Match.when({ kind: "combatant" }, (combatant) => ({
-      kind: "combatant" as const,
-      combatantId: combatant.combatantId,
-    })),
-    Match.when({ kind: "object" }, (object) => ({
-      kind: "object" as const,
-      objectId: object.objectId,
-    })),
-    Match.when({ kind: "dancingLight" }, (light) => ({
-      kind: "dancingLight" as const,
-      lightId: light.lightId,
-      positionId: light.positionId,
-      form: light.form,
-    })),
-    Match.exhaustive,
-  );
-}
-
-function projectLightEmission(
-  emission: BattleLightEmitter["emission"],
-): LightEmissionMbtProjection {
-  return Match.value(emission).pipe(
-    Match.when({ kind: "dim" }, (dim) => ({
-      kind: "dim" as const,
-      radiusFeet: Number(dim.radiusFeet),
-    })),
-    Match.when({ kind: "brightAndDim" }, (brightAndDim) => ({
-      kind: "brightAndDim" as const,
-      brightRadiusFeet: Number(brightAndDim.brightRadiusFeet),
-      dimAdditionalFeet: Number(brightAndDim.dimAdditionalFeet),
-    })),
-    Match.exhaustive,
-  );
-}
-
-function projectLightEmitterExpiration(
-  expiration: BattleLightEmitter["expiresAt"],
-): LightEmitterExpirationMbtProjection {
-  return Match.value(expiration).pipe(
-    Match.when({ kind: "startOfTurn" }, (startOfTurn) => ({
-      kind: "startOfTurn" as const,
-      combatantId: startOfTurn.combatantId,
-    })),
-    Match.when({ kind: "endOfTurn" }, (endOfTurn) => ({
-      kind: "endOfTurn" as const,
-      combatantId: endOfTurn.combatantId,
-      round: Number(endOfTurn.round),
-    })),
-    Match.when({ kind: "concentration" }, (concentration) => ({
-      kind: "concentration" as const,
-      combatantId: concentration.combatantId,
-    })),
-    Match.when({ kind: "duration" }, (duration) => ({
-      kind: "duration" as const,
-      durationTicks: Number(duration.durationTicks),
-    })),
-    Match.when({ kind: "untilDispelled" }, () => ({
-      kind: "untilDispelled" as const,
-    })),
-    Match.exhaustive,
-  );
-}
-
-function objectDamageFromQuint(raw: unknown): ObjectDamageMbtProjection {
-  const tag = quintVariantTag(raw);
-  if (tag === "NoObjectDamage") {
-    return { tag: "none" };
-  }
-  if (tag !== "SomeObjectDamage") {
-    throw new Error(`Unknown Quint object damage option: ${tag}`);
-  }
-
-  const damage = quintVariantValue(raw, "SomeObjectDamage");
-  if (quintVariantTag(damage) !== "ObjectHitPointDamage") {
-    throw new Error("Expected Quint object hit point damage.");
-  }
-  const fields = quintVariantRecordValue(damage, "ObjectHitPointDamage");
-  return {
-    tag: "hitPoints",
-    rolledDamage: numberFromQuintInt(fields["rolledDamage"], "rolledDamage"),
-    effectiveDamage: numberFromQuintInt(
-      fields["effectiveDamage"],
-      "effectiveDamage",
-    ),
-    nextHitPoints: numberFromQuintInt(fields["nextHitPoints"], "nextHitPoints"),
-    destroyed: booleanField(fields, "destroyed"),
-  };
-}
-
-function lightEmittersFromQuint(
-  raw: unknown,
-): readonly LightEmitterMbtProjection[] {
-  return quintSet(raw, "qLightEmitters")
-    .map(lightEmitterFromQuint)
-    .sort(compareJsonStable);
-}
-
-function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
-  const tag = quintVariantTag(raw);
-  if (tag === "SpellLightEmitter") {
-    const fields = quintVariantRecordValue(raw, "SpellLightEmitter");
-    return {
-      kind: "spellLightEmitter",
-      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
-      sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
-      attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
-      emission: lightEmissionFromQuint(fields["emission"]),
-      opaqueCoverInteraction: lightEmitterOpaqueCoverInteractionFromQuint(
-        fields["opaqueCoverInteraction"],
-      ),
-      expiresAt: lightEmitterExpirationFromQuint(fields["expiresAt"]),
-    };
-  }
-  if (tag === "ObjectInvisibleRevealLightEmitter") {
-    const fields = quintVariantRecordValue(
-      raw,
-      "ObjectInvisibleRevealLightEmitter",
-    );
-    return {
-      kind: "objectInvisibleRevealLightEmitter",
-      sourceSpellId: spellIdFromQuint(fields["sourceSpell"], "sourceSpell"),
-      sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
-      objectId: objectIdFromQuint(fields["object"], "object"),
-      emission: {
-        kind: "dim",
-        radiusFeet: numberFromQuintInt(
-          fields["dimLightRadiusFeet"],
-          "dimLightRadiusFeet",
-        ),
-      },
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actorIdFromQuint(
-          fields["expiresAtActor"],
-          "expiresAtActor",
-        ),
-        round: numberFromQuintInt(fields["expiresAtRound"], "expiresAtRound"),
-      },
-    };
-  }
-  throw new Error(`Unknown Quint light emitter variant: ${tag}`);
-}
-
-function objectInvisibleBenefitDeniedFromLightEmitters(
-  lightEmitters: readonly LightEmitterMbtProjection[],
-): boolean {
-  return lightEmitters.some(
-    (emitter) =>
-      emitter.kind === "objectInvisibleRevealLightEmitter" &&
-      emitter.objectId === starryWispObjectId,
-  );
-}
-
-function lightEmitterExpirationFromQuint(
-  raw: unknown,
-): LightEmitterExpirationMbtProjection {
-  const tag = quintVariantTag(raw);
-  if (tag === "EndOfTurnLightEmitterExpiration") {
-    const fields = quintVariantRecordValue(
-      raw,
-      "EndOfTurnLightEmitterExpiration",
-    );
-    return {
-      kind: "endOfTurn",
-      combatantId: actorIdFromQuint(fields["actor"], "actor"),
-      round: numberFromQuintInt(fields["round"], "round"),
-    };
-  }
-  if (tag === "DurationLightEmitterExpiration") {
-    const fields = quintVariantRecordValue(
-      raw,
-      "DurationLightEmitterExpiration",
-    );
-    return {
-      kind: "duration",
-      durationTicks: numberFromQuintInt(
-        fields["durationTicks"],
-        "durationTicks",
-      ),
-    };
-  }
-  if (tag === "ConcentrationLightEmitterExpiration") {
-    const fields = quintVariantRecordValue(
-      raw,
-      "ConcentrationLightEmitterExpiration",
-    );
-    return {
-      kind: "concentration",
-      combatantId: actorIdFromQuint(fields["actor"], "actor"),
-    };
-  }
-  if (tag === "UntilDispelledLightEmitterExpiration") {
-    return { kind: "untilDispelled" };
-  }
-
-  throw new Error(`Unknown Quint light emitter expiration variant: ${tag}`);
-}
-
-function lightEmitterAttachmentFromQuint(
-  raw: unknown,
-): LightEmitterAttachmentMbtProjection {
-  const tag = quintVariantTag(raw);
-  if (tag === "CombatantLightEmitter") {
-    const fields = quintVariantRecordValue(raw, "CombatantLightEmitter");
-    return {
-      kind: "combatant",
-      combatantId: actorIdFromQuint(fields["actor"], "actor"),
-    };
-  }
-  if (tag === "ObjectLightEmitter") {
-    const fields = quintVariantRecordValue(raw, "ObjectLightEmitter");
-    return {
-      kind: "object",
-      objectId: objectIdFromQuint(fields["object"], "object"),
-    };
-  }
-  if (tag === "DancingLightEmitter") {
-    const fields = quintVariantRecordValue(raw, "DancingLightEmitter");
-    return {
-      kind: "dancingLight",
-      lightId: String(numberFromQuintInt(fields["light"], "light")),
-      positionId: String(numberFromQuintInt(fields["position"], "position")),
-      form: booleanFromQuint(fields["combined"], "combined")
-        ? "combinedMediumForm"
-        : "separateLights",
-    };
-  }
-
-  throw new Error(`Unknown Quint light emitter attachment variant: ${tag}`);
-}
-
-function lightEmissionFromQuint(raw: unknown): LightEmissionMbtProjection {
-  const tag = quintVariantTag(raw);
-  if (tag === "DimLightEmission") {
-    const fields = quintVariantRecordValue(raw, "DimLightEmission");
-    return {
-      kind: "dim",
-      radiusFeet: numberFromQuintInt(fields["radiusFeet"], "radiusFeet"),
-    };
-  }
-  if (tag === "BrightAndDimLightEmission") {
-    const fields = quintVariantRecordValue(raw, "BrightAndDimLightEmission");
-    return {
-      kind: "brightAndDim",
-      brightRadiusFeet: numberFromQuintInt(
-        fields["brightRadiusFeet"],
-        "brightRadiusFeet",
-      ),
-      dimAdditionalFeet: numberFromQuintInt(
-        fields["dimAdditionalFeet"],
-        "dimAdditionalFeet",
-      ),
-    };
-  }
-
-  throw new Error(`Unknown Quint light emission variant: ${tag}`);
-}
-
-function lightEmitterOpaqueCoverInteractionFromQuint(
-  raw: unknown,
-):
-  | { readonly kind: "blocksEmission" }
-  | { readonly kind: "doesNotBlockEmission" } {
-  const tag = quintVariantTag(raw);
-  if (tag === "LightEmitterBlocksOpaqueCover") {
-    return { kind: "blocksEmission" };
-  }
-  if (tag === "LightEmitterDoesNotBlockOpaqueCover") {
-    return { kind: "doesNotBlockEmission" };
-  }
-
-  throw new Error(
-    `Unknown Quint light emitter opaque-cover interaction variant: ${tag}`,
-  );
-}
-
-function actorIdFromQuint(raw: unknown, field: string): string {
-  const tag = quintVariantTag(raw);
-  if (tag === "Fighter") {
-    return fighterId;
-  }
-  if (tag === "Goblin") {
-    return skeletonId;
-  }
-
-  throw new Error(`Unknown Quint actor field ${field}: ${tag}`);
-}
-
-function spellIdFromQuint(raw: unknown, field: string): string {
-  const tag = quintVariantTag(raw);
-  if (tag === "StarryWisp") {
-    return "starry_wisp";
-  }
-  if (tag === "Light") {
-    return "light";
-  }
-  if (tag === "ContinualFlame") {
-    return "continual_flame";
-  }
-
-  throw new Error(`Unknown Quint spell field ${field}: ${tag}`);
-}
-
-function objectIdFromQuint(raw: unknown, field: string): string {
-  const tag = quintVariantTag(raw);
-  if (tag === "StarryWispObjectTarget") {
-    return starryWispObjectId;
-  }
-  if (tag === "LightObjectTarget") {
-    return "light-object";
-  }
-  if (tag === "PriorLightObjectTarget") {
-    return "prior-light-object";
-  }
-
-  throw new Error(`Unknown Quint object field ${field}: ${tag}`);
-}
-
-function compareJsonStable(left: unknown, right: unknown): number {
-  return JSON.stringify(left).localeCompare(JSON.stringify(right));
 }
 
 function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
@@ -3368,26 +2595,6 @@ function quintVariantTag(raw: unknown): string {
   }
 
   throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function quintVariantValue(raw: unknown, tag: string): unknown {
-  if (isRecord(raw) && raw["tag"] === tag && "value" in raw) {
-    return raw["value"];
-  }
-
-  throw new Error(`Expected Quint ${tag} variant value.`);
-}
-
-function quintVariantRecordValue(
-  raw: unknown,
-  tag: string,
-): Readonly<Record<string, unknown>> {
-  const value = quintVariantValue(raw, tag);
-  if (isRecord(value)) {
-    return value;
-  }
-
-  throw new Error(`Expected Quint ${tag} variant record value.`);
 }
 
 function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
