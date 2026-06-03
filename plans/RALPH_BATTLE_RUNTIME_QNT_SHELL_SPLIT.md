@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit remaining full-shell proof consumers and append the next implementation batch"
     },
     {
@@ -45,6 +45,42 @@
       "id": "BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS",
       "status": "done",
       "title": "Move save-spell proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 8,
+      "id": "BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Move self-transformation proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 9,
+      "id": "BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS",
+      "status": "blocked",
+      "title": "Move spell-attack proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 10,
+      "id": "BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS",
+      "status": "blocked",
+      "title": "Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 11,
+      "id": "BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS",
+      "status": "blocked",
+      "title": "Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 12,
+      "id": "BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS",
+      "status": "blocked",
+      "title": "Move ground-command proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 13,
+      "id": "BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS",
+      "status": "blocked",
+      "title": "Move core-combat proof module off the full-shell battleRuntime import"
     }
   ]
 }
@@ -122,8 +158,14 @@ reasonable findings remain.
 | 3 | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS - Move spell-facts proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS | Migrate a one-test proof module with broader spell fact imports. |
 | 4 | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS - Move object-contact-damage proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS | Migrate a medium proof module after the small modules have landed. |
 | 5 | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present | done | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS | The file was already direct-imported; proof still passed. |
-| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | ready-for-research | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS | Refresh the inventory after the replacement implementation task lands. |
+| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | done | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS | Remaining full-shell proof consumer inventory is refreshed below. |
 | 7 | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Replacement task for the next actual full-shell consumer. |
+| 8 | BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS - Move self-transformation proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT | Smallest remaining full-shell proof consumer; use it to continue the direct-import pattern. |
+| 9 | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS - Move spell-attack proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS | Medium remaining proof consumer after the small self-transformation file lands. |
+| 10 | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS | Large movement/reaction proof consumer; preserve shell wrapper compatibility while moving direct imports. |
+| 11 | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS | Large mixed proof consumer; split only missing shell-only helpers into focused owners. |
+| 12 | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS - Move ground-command proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS | Large command/area proof consumer; classify missing dependencies before moving helpers. |
+| 13 | BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS | Final broad combat proof consumer in the refreshed inventory. |
 
 ## Task Details
 
@@ -256,7 +298,7 @@ Finding:
 
 ### Task 6 - BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Refresh the remaining full-shell consumer inventory:
 
@@ -271,6 +313,20 @@ Acceptance:
   consumers remain.
 - Do not mark the lane complete while broad-shell consumers remain unless the
   plan names a concrete owner-decision blocker.
+
+Finding:
+
+- Remaining full-shell proof consumers after Task 7: 6.
+- Files:
+  - `packages/battle-runtime/battle-runtime-self-transformation-tests.qnt`
+  - `packages/battle-runtime/battle-runtime-spell-attack-tests.qnt`
+  - `packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt`
+  - `packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt`
+  - `packages/battle-runtime/battle-runtime-ground-command-tests.qnt`
+  - `packages/battle-runtime/battle-runtime-core-combat-tests.qnt`
+
+Tasks 8-13 are the next implementation batch. Task 8 is ready now; later tasks
+remain blocked only to keep the queue sequential and reviewable.
 
 ### Task 7 - BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import
 
@@ -293,6 +349,153 @@ Acceptance:
   ```sh
   cd packages/battle-runtime
   pnpm exec quint test --backend typescript --match "test_" battle-runtime-save-spell-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 8 - BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS - Move self-transformation proof module off the full-shell battleRuntime import
+
+Status: `ready-for-implementation-after-light-research`
+
+Move `packages/battle-runtime/battle-runtime-self-transformation-tests.qnt`
+off:
+
+```qnt
+import battleRuntime.* from "./battle-runtime"
+```
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No self-transformation rule logic is duplicated in the test module.
+- If the proof depends on a shell-only helper, move that helper to the focused
+  self-transformation owner or classify why it must remain shell compatibility.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-self-transformation-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 9 - BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS - Move spell-attack proof module off the full-shell battleRuntime import
+
+Status: `blocked`
+
+Depends on Task 8. Move
+`packages/battle-runtime/battle-runtime-spell-attack-tests.qnt` off the
+full-shell import.
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No spell-attack, chained-attack, save-gated, or reaction rule logic is
+  duplicated in the test module.
+- Any missing dependency currently available only through `battle-runtime.qnt`
+  is moved to the focused owner that owns the rule or fixture state.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-spell-attack-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 10 - BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import
+
+Status: `blocked`
+
+Depends on Task 9. Move
+`packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt`
+off the full-shell import.
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No movement, concentration, light, or reaction rule logic is duplicated in the
+  test module.
+- Shell compatibility wrappers remain in `battle-runtime.qnt` only when another
+  not-yet-migrated proof still imports them through the shell.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-light-concentration-movement-reaction-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 11 - BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import
+
+Status: `blocked`
+
+Depends on Task 10. Move
+`packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt` off the
+full-shell import.
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No hit point, armor, buff, spatial, or weapon feature rule logic is duplicated
+  in the test module.
+- Missing shell-only dependencies are classified as model vocabulary, bridge
+  projection, scenario fixture, or compatibility wrapper before moving helpers.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-hp-armor-buff-spatial-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 12 - BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS - Move ground-command proof module off the full-shell battleRuntime import
+
+Status: `blocked`
+
+Depends on Task 11. Move
+`packages/battle-runtime/battle-runtime-ground-command-tests.qnt` off the
+full-shell import.
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No command, ground hazard, or area effect rule logic is duplicated in the test
+  module.
+- Missing shell-only dependencies are moved to focused owners only after
+  classifying their domain owner.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-ground-command-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+### Task 13 - BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import
+
+Status: `blocked`
+
+Depends on Task 12. Move
+`packages/battle-runtime/battle-runtime-core-combat-tests.qnt` off the
+full-shell import.
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- No core combat, action economy, hiding/search, or scenario fixture rule logic
+  is duplicated in the test module.
+- If this is the last full-shell proof consumer, audit remaining shell
+  compatibility wrappers and plan the next safe cleanup step rather than doing a
+  broad deletion in this task.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-core-combat-tests.qnt
   ```
 
 - `pnpm check:mbt-driver-closure` passes from the workspace root.
