@@ -34,10 +34,11 @@ but does not itself set Speed to 0, so Haste's end rider needs an explicit Speed
 and not present in `plans/unit-profile-coverage/unit-claims.jsonl`. The active
 Unit matrix therefore has no Haste row to mark supported or unsupported.
 
-Legacy root Quint files mention Haste, but AGENTS.md makes
-`packages/battle-runtime/battle-runtime.qnt` the authority for promoted
-Unit/StatBlock-backed battle behavior. The promoted package-local model and
-runtime do not currently claim a Haste Unit profile.
+Legacy root Quint files mention Haste, but promoted Unit/StatBlock-backed battle
+behavior is owned by `@dnd/battle-runtime` and its distributed QNT evidence:
+shared rule-core slices, package-local focused slices, and focused witnesses.
+The promoted package-local model and runtime do not currently claim a Haste Unit
+profile.
 
 Existing reusable pieces:
 

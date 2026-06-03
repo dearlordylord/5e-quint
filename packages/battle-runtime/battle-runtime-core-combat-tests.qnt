@@ -42,6 +42,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
+  import battleRuntimeHideSearchFixture.* from "./battle-runtime-hide-search-fixture"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"

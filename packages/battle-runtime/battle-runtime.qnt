@@ -108,7 +108,6 @@ module battleRuntime {
   import battleRuntimeProtectionFromPoison.* from "./battle-runtime-protection-from-poison"
   import battleRuntimeDirectConditionRemoval.* from "./battle-runtime-direct-condition-removal"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
-  import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
@@ -486,10 +485,8 @@ module battleRuntime {
   //   Attitude/social state with damage and witness-allies early-end facts,
   //   not battle-owned condition state in this runtime.
   //
-  // This is the canonical package-local spec for implemented
-  // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
-  // proof and restore source material; it is not the place to add new
-  // @dnd/battle-runtime behavior.
+  // Full-shell fixture for implemented @dnd/battle-runtime behavior. New
+  // fixture-specific helpers should live in focused modules.
 
   pure def attackTargetAc(state: BattleState): int =
     if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
@@ -500,44 +497,6 @@ module battleRuntime {
     else if (currentActorCanAttack(state))
       Set(TargetChoice)
     else Set()
-
-  pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
-    {
-      val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighter.hidePrerequisite, stealthTotal, 15)
-      val advanced = stateWithFighterMovementStep(state, step)
-      if (step.hidden)
-      {
-        ...advanced,
-        fighter: { ...advanced.fighter, hidden: totalToHiddenState(stealthTotal) },
-      }
-      else
-        { ...advanced, fighter: { ...advanced.fighter, hidden: NotHidden } }
-    }
-
-  pure def searchGoblinForFighter(state: BattleState, perceptionTotal: int): BattleState =
-    match state.fighter.hidden {
-      | NotHidden => {
-          val step = battleRuntimeSearch(movementProjectionForGrappledGoblin(state), false, perceptionTotal, 0)
-          { ...state, actionAvailable: step.actionAvailable, bonusActionAvailable: step.bonusActionAvailable }
-        }
-      | HiddenByDc(dc) => {
-          val step = battleRuntimeSearch(
-            movementProjectionForGrappledGoblin(state).with("hidden", true),
-            true,
-            perceptionTotal,
-            hiddenDiscoveryDcValue(dc),
-          )
-          {
-            ...state,
-            actionAvailable: step.actionAvailable,
-            bonusActionAvailable: step.bonusActionAvailable,
-        fighter: {
-          ...state.fighter,
-              hidden: if (step.hidden) state.fighter.hidden else NotHidden,
-        },
-      }
-        }
-    }
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
     if (not(currentActorCanAttack(state)))
