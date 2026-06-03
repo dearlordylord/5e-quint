@@ -61,13 +61,13 @@
     {
       "number": 10,
       "id": "BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import"
     },
     {
       "number": 11,
       "id": "BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import"
     },
     {
@@ -162,8 +162,8 @@ reasonable findings remain.
 | 7 | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Replacement task for the next actual full-shell consumer. |
 | 8 | BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS - Move self-transformation proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT | Smallest remaining full-shell proof consumer; use it to continue the direct-import pattern. |
 | 9 | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS - Move spell-attack proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-08-SELF-TRANSFORMATION-PROOF-IMPORTS | Medium remaining proof consumer after the small self-transformation file lands. |
-| 10 | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS | Large movement/reaction proof consumer; preserve shell wrapper compatibility while moving direct imports. |
-| 11 | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS | Large mixed proof consumer; split only missing shell-only helpers into focused owners. |
+| 10 | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS | Large movement/reaction proof consumer; preserve shell wrapper compatibility while moving direct imports. |
+| 11 | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS | Large mixed proof consumer; split only missing shell-only helpers into focused owners. |
 | 12 | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS - Move ground-command proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS | Large command/area proof consumer; classify missing dependencies before moving helpers. |
 | 13 | BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import | blocked | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS | Final broad combat proof consumer in the refreshed inventory. |
 
@@ -405,7 +405,7 @@ Acceptance:
 
 ### Task 10 - BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on Task 9. Move
 `packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt`
@@ -429,7 +429,7 @@ Acceptance:
 
 ### Task 11 - BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on Task 10. Move
 `packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt` off the

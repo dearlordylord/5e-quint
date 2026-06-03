@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeLightConcentrationMovementReactionTests {
-  import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -28,6 +27,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
@@ -38,6 +38,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeConditionSpellResolution.* from "./battle-runtime-condition-spell-resolution"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
@@ -45,6 +46,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
@@ -653,8 +655,8 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_readied_spell_uses_concentration_until_release_or_next_turn = {
-    val readied = readySpell(initialState)
-    val released = releaseReadiedSpell(readied)
+    val readied = readyFighterReadiedSpell(initialState)
+    val released = releaseFighterReadiedSpell(readied)
     val expired = endTurn(endTurn(readied))
     all {
       assert(readied.fighter.concentrating),
@@ -740,7 +742,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_stand_from_prone_spends_half_speed_movement = {
     val prone = { ...initialState, fighter: { ...initialState.fighter, prone: true } }
-    val stood = standFighterFromProne(prone)
+    val stood = standFighterFromProneUnlessHideousLaughter(prone)
     all {
       assert(stood.fighter.movementSpent == 15),
       assert(not(stood.fighter.prone)),
@@ -900,10 +902,10 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_hellish_rebuke_after_damage_reaction_resolves_save_damage_and_spend = {
     val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 2 }
-    val failedSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, false, 3, true)
-    val successfulSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, true, 5, true)
+    val failedSave = resolveHellishRebukeAfterDamage(initialState, continuation, false, 3, true)
+    val successfulSave = resolveHellishRebukeAfterDamage(initialState, continuation, true, 5, true)
     val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
-    val offTurnResolved = resolveHellishRebukeAfterDamageReaction(goblinTurnSpentSlot, continuation, false, 3, true)
+    val offTurnResolved = resolveHellishRebukeAfterDamage(goblinTurnSpentSlot, continuation, false, 3, true)
     all {
       assert(hellishRebukeDamageDice(1) == 2),
       assert(hellishRebukeDamageDice(2) == 3),
@@ -926,10 +928,10 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     val noSlot = commitActorSpellSlotUse(initialState, Fighter)
     val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 1 }
     all {
-      assert(resolveHellishRebukeAfterDamageReaction(noReaction, continuation, false, 3, true) == noReaction),
-      assert(resolveHellishRebukeAfterDamageReaction(noSlot, continuation, false, 3, true) == noSlot),
-      assert(resolveHellishRebukeAfterDamageReaction(initialState, { damager: Fighter, damaged: Fighter, slotLevel: 1 }, false, 3, true) == initialState),
-      assert(resolveHellishRebukeAfterDamageReaction(initialState, { damager: Goblin, damaged: Fighter, slotLevel: 0 }, false, 3, true) == initialState),
+      assert(resolveHellishRebukeAfterDamage(noReaction, continuation, false, 3, true) == noReaction),
+      assert(resolveHellishRebukeAfterDamage(noSlot, continuation, false, 3, true) == noSlot),
+      assert(resolveHellishRebukeAfterDamage(initialState, { damager: Fighter, damaged: Fighter, slotLevel: 1 }, false, 3, true) == initialState),
+      assert(resolveHellishRebukeAfterDamage(initialState, { damager: Goblin, damaged: Fighter, slotLevel: 0 }, false, 3, true) == initialState),
     }
   }
 
@@ -1059,7 +1061,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       })
     ) {
       | DissonantWhispersOpportunityAttackWindow(awaiting) => {
-          val resumed = declineReactionAndResume(awaiting, Fighter)
+          val resumed = declineReactionOfferAndResume(awaiting, Fighter)
           all {
             assert(resumed.fighter.reactionAvailable),
             assert(not(resumed.goblin.reactionAvailable)),
@@ -1080,8 +1082,8 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   run test_reaction_decision_contract_rejects_unavailable_reaction = {
     val awaiting = moveFighter({ ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }, 5, 10 > 5)
     all {
-      assert(resolveReaction(awaiting, Goblin) == awaiting),
-      assert(declineReactionAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+      assert(resolveReactionOffer(awaiting, Goblin) == awaiting),
+      assert(declineReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
     }
   }
 
@@ -1093,7 +1095,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       offeredReactors: Set(),
       continuation: ResumeAfterDamage,
     })
-    val resolved = resolveReaction(awaitingReaction, Fighter)
+    val resolved = resolveReactionOffer(awaitingReaction, Fighter)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -1102,7 +1104,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_declined_opportunity_attack_resumes_movement = {
     val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resumed = declineReactionAndResume(awaiting, Goblin)
+    val resumed = declineReactionOfferAndResume(awaiting, Goblin)
     all {
       assert(resumed.interruptStack == []),
       assert(resumed.fighter.movementSpent == 5),
@@ -1112,7 +1114,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
     val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(resolved.goblin.reactionAvailable == false),
@@ -1130,7 +1132,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_resolved_reaction_releases_readied_spell_and_resumes_attack_continuation = {
-    val readied = { ...readySpell(initialState), actionAvailable: true }
+    val readied = { ...readyFighterReadiedSpell(initialState), actionAvailable: true }
     val awaitingReaction = openReactionWindow(readied, {
       trigger: AttackHit,
       procedure: ReadiedSpellReleaseReactionProcedure,
@@ -1138,7 +1140,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       offeredReactors: Set(),
       continuation: ResumeAttack({ damage: 7 }),
     })
-    val resolved = resolveReaction(awaitingReaction, Fighter)
+    val resolved = resolveReactionOffer(awaitingReaction, Fighter)
     all {
       assert(not(resolved.fighter.readiedSpellHeld)),
       assert(not(resolved.fighter.concentrating)),
@@ -1150,7 +1152,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_sanctuary_targeting_interdiction_trigger_scope = {
-    val warded = resolveSanctuarySpell(initialState, Goblin)
+    val warded = resolveSanctuaryWardSpell(initialState, Goblin)
     all {
       assert(activeEffectsContainSanctuaryWard(warded.goblin.activeEffects)),
       assert(activeEffectsSanctuaryWardDurationTicks(warded.goblin.activeEffects) == 10),
@@ -1174,7 +1176,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_sanctuary_targeting_interdiction_outcomes = {
-    val warded = resolveSanctuarySpell(initialState, Goblin)
+    val warded = resolveSanctuaryWardSpell(initialState, Goblin)
     all {
       assert(wardInterdictionLosesAttackOrSpell(SanctuaryLoseAttackOrSpell)),
       assert(not(wardInterdictionLosesAttackOrSpell(SanctuarySaveSucceeded))),
@@ -1200,9 +1202,9 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_sanctuary_early_end_lifecycle = {
-    val fighterWarded = resolveSanctuarySpell(initialState, Fighter)
+    val fighterWarded = resolveSanctuaryWardSpell(initialState, Fighter)
     val afterAttackRoll = recordFighterAttackRoll(fighterWarded)
-    val afterSpellCast = resolveSanctuarySpell({ ...fighterWarded, bonusActionAvailable: true, spellSlotUsesThisTurn: Set() }, Goblin)
+    val afterSpellCast = resolveSanctuaryWardSpell({ ...fighterWarded, bonusActionAvailable: true, spellSlotUsesThisTurn: Set() }, Goblin)
     val afterDamage = battleStateAfterSanctuaryEarlyEndForActor(fighterWarded, Fighter)
     all {
       assert(activeEffectsContainSanctuaryWard(fighterWarded.fighter.activeEffects)),
@@ -1214,9 +1216,9 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_invisibility_direct_condition_lifecycle = {
-    val invisible = resolveInvisibilitySpell(initialState, Set(Fighter, Goblin), 3)
+    val invisible = resolveInvisibilityConditionSpell(initialState, Set(Fighter, Goblin), 3)
     val afterAttackRoll = recordFighterAttackRoll(invisible)
-    val afterSpellCast = resolveInvisibilitySpell({ ...invisible, actionAvailable: true, spellSlotUsesThisTurn: Set() }, Set(Goblin), 2)
+    val afterSpellCast = resolveInvisibilityConditionSpell({ ...invisible, actionAvailable: true, spellSlotUsesThisTurn: Set() }, Set(Goblin), 2)
     val afterDamage = battleStateAfterTargetActionEarlyEndForActor(invisible, Fighter)
     val brokenConcentration = breakConcentrationSpellEffects(invisible, Fighter)
     val expired = tickRoundDurationSpellEffects({
