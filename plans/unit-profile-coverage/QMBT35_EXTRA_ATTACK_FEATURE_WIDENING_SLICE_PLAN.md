@@ -93,7 +93,7 @@ Additional candidate RAW checked:
 
 2. Model the QNT profile first.
 
-   Extend the package-local promoted rule-core feature profile proof with a
+   Extend the promoted rule-core feature profile proof with a
    class-feature Attack action count profile. The model should use procedure
    facts rather than authored Unit ids:
 

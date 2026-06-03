@@ -112,7 +112,7 @@ Additional candidate RAW checked:
 
 2. Model the QNT profile first.
 
-   Extend the package-local rule-core feature profile proof with a
+   Extend the rule-core feature profile proof with a
    Dash-coupled Temporary Hit Point profile. Model facts, not Unit ids:
    - Bonus Action availability;
    - Dash as the chosen action;

@@ -13,7 +13,7 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 | support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set. |
 | qnt-generator-readiness | QNT/generator readiness | Every scoped reducer-semantic obligation is covered, and every scoped semantic-core QNT owner is generation-subset-clean with no run-block blocker. |
 | mbt-parity-evidence | MBT/parity evidence | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
-| mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command. |
+| mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the MCP scenario evidence command. |
 
 ## Witness Kind Vocabulary
 
@@ -53,7 +53,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 
 ## MCP Scenario Evidence
 
-MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the package-local command checks that admitted evidence stays tied to executable MCP scenario tests.
+MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the MCP scenario evidence command checks that admitted evidence stays tied to executable MCP scenario tests.
 
 | Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |
 | --- | --- | --- | --- | --- | --- |

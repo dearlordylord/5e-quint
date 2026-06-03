@@ -36,8 +36,8 @@ Unit matrix therefore has no Haste row to mark supported or unsupported.
 
 Legacy root Quint files mention Haste, but promoted Unit/StatBlock-backed battle
 behavior is owned by `@dnd/battle-runtime` and its distributed QNT evidence:
-shared rule-core slices, package-local focused slices, and focused witnesses.
-The promoted package-local model and runtime do not currently claim a Haste Unit
+shared rule-core slices, focused runtime slices, and focused witnesses.
+The promoted model and runtime do not currently claim a Haste Unit
 profile.
 
 Existing reusable pieces:

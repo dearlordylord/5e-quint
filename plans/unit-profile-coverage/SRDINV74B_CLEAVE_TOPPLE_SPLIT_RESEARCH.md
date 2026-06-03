@@ -47,8 +47,7 @@ encode the SRD mechanics with typed `on_hit_trigger` mechanics:
   prone`, and success `none`.
 
 That means this is not currently a Surface shape gap. The missing work is the
-promoted runtime boundary: catalog admission/support profiles, package-local
-Quint facts, runtime reducer/projection, character-battle projection from
+promoted runtime boundary: catalog admission/support profiles, Quint facts, runtime reducer/projection, character-battle projection from
 selected Weapon Mastery choices, focused tests, and Unit evidence.
 
 The current promoted path admits only Sap:
@@ -102,7 +101,7 @@ Scope:
 - derive the save DC from the attack ability modifier and the attacker's
   Proficiency Bonus;
 - apply Prone on failed Constitution save and no effect on success;
-- update focused package-local battle-runtime QNT, runtime reducer code,
+- update focused battle-runtime QNT, runtime reducer code,
   focused tests, character-battle projection tests, and Unit evidence.
 
 Out of scope:
@@ -131,7 +130,7 @@ Scope:
   on hit without adding a positive ability modifier, while preserving a negative
   ability modifier;
 - enforce once-per-turn Cleave use in battle state;
-- update focused package-local battle-runtime QNT, runtime reducer code,
+- update focused battle-runtime QNT, runtime reducer code,
   focused tests, character-battle projection tests, and Unit evidence.
 
 Out of scope:

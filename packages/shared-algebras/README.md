@@ -88,18 +88,18 @@ Keep coverage goals distinct:
 
 Shared reducer behavior is proved in this package, not by restoring old Core
 MBT. State-transition semantic algebras need focused deterministic TypeScript
-tests plus one package-local proof lane. Pure scalar helpers, parsers, and
+tests plus one package proof lane. Pure scalar helpers, parsers, and
 Surface adapters use deterministic contract tests unless they grow reducer
 state.
 
-| Algebra                           | Classification                                  | Package-local parity lane                                                                                                                                                                        |
+| Algebra                           | Classification                                  | Parity lane                                                                                                                                                                        |
 | --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `action-economy-algebra`          | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/action-economy-algebra-inductive.qnt`      |
 | `conditions-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/conditions-algebra-inductive.qnt`          |
 | `death-saves-algebra`             | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/death-saves-algebra-inductive.qnt`         |
 | `initiative-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; simulation-checked invariant in `proofs/initiative-algebra-invariant.qnt` |
 | `runtime-hole-algebra`            | replay identity vocabulary                      | no reducer transition owner here; consuming runtimes test fill/replay semantics at their own boundary                                                                                            |
-| `elapsed-time-algebra`            | shared elapsed-time scalar/projection re-export | deterministic coverage remains with `@dnd/shared/elapsed-time`; add package-local tests here only if this package owns new elapsed-time reducer state                                            |
+| `elapsed-time-algebra`            | shared elapsed-time scalar/projection re-export | deterministic coverage remains with `@dnd/shared/elapsed-time`; add package tests here only if this package owns new elapsed-time reducer state                                            |
 | `multiclass-prerequisite-algebra` | pure SRD prerequisite algebra                   | deterministic tests in `src/multiclass-prerequisite-algebra.test.ts`; Quint examples in `proofs/multiclass-prerequisite-algebra.qnt`                                                             |
 | `ability-score-algebra`           | parser/validation algebra                       | deterministic parser and assignment tests in `src/ability-score-algebra.test.ts`                                                                                                                 |
 | `character-advancement-algebra`   | pure progression projection algebra             | deterministic projection tests in `src/character-advancement-algebra.test.ts`                                                                                                                    |
@@ -110,7 +110,7 @@ state.
 
 Do not add integrated battle-runtime MBT for another authored Unit, Spell, or
 Stat Block when the behavior uses one of the reducer families above unchanged.
-Use package-local algebra proof here plus deterministic catalog contract tests
+Use algebra proof here plus deterministic catalog contract tests
 in the owning authored-data package.
 
 ## Quint Rule Core
@@ -132,7 +132,7 @@ Point clamping, monster death at 0 Hit Points, and player-character instant
 death from massive damage. Damage at 0 Hit Points belongs to a separate Death
 Saving Throw failure procedure.
 
-The package-local rule-core README tracks the active QCORE proof modules,
+The rule-core README tracks the active QCORE proof modules,
 including the later composition slices for zero-HP lifecycle, recovery, damage
 adjustment, attack damage, action/turn procedures, movement, spatial facts, and
 grapple.

@@ -591,7 +591,7 @@ gates are runtime implementation boundaries for the currently modeled vertical.
 
 ## Function Call Inventory
 
-The diagrams above intentionally include most of the package-local runtime
+The diagrams above intentionally include most of the runtime
 functions. This inventory groups them by responsibility.
 
 | Responsibility            | Functions                                                                                                                                                                                                                                                                                                                                                                                                                      |

@@ -49,7 +49,7 @@ const layerDefinitions = [
     id: layerId.mcpScenarioEvidence,
     label: "MCP scenario evidence",
     criterion:
-      "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command.",
+      "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the MCP scenario evidence command.",
   },
 ];
 
@@ -1480,7 +1480,7 @@ function renderUltraGoldenGate(gate) {
     "",
     "## MCP Scenario Evidence",
     "",
-    "MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the package-local command checks that admitted evidence stays tied to executable MCP scenario tests.",
+    "MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the MCP scenario evidence command checks that admitted evidence stays tied to executable MCP scenario tests.",
     "",
     "| Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |",
     "| --- | --- | --- | --- | --- | --- |",

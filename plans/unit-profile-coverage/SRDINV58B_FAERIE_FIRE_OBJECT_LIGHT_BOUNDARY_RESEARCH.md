@@ -103,7 +103,7 @@ Scope:
 - deny Invisible-condition benefits for affected objects if an object-target
   Invisible-benefit boundary exists in the same slice or already exists;
 - clear object outline projections when the caster's Concentration ends;
-- update package-local QNT, runtime projection, focused tests, and Unit
+- update focused QNT, runtime projection, focused tests, and Unit
   evidence before claiming the object outline branch as supported.
 
 Out of scope:

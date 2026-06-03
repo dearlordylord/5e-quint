@@ -8,7 +8,7 @@
       "number": 1,
       "id": "QRFR-C01-REVIEW-RULES-AUTHORITY",
       "status": "done",
-      "title": "Correct review rules to package-local QNT authority"
+      "title": "Correct review rules to active QNT authority"
     },
     {
       "number": 2,
@@ -246,7 +246,7 @@ protocol when the Ralph runner supports it.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority | done | none | Small first fix so subsequent review loops use the right authority. |
+| 1 | QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to active QNT authority | done | none | Small first fix so subsequent review loops use the right authority. |
 | 2 | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS - Make the MBT closure checker reject forbidden imports | done | none | Guardrail before driver repairs. |
 | 3 | QRFR-C03-MBT-DRIVER-CLOSURE-REPAIR - Repair or classify existing MBT driver closure violations | done | QRFR-C02-MBT-CLOSURE-FORBIDDEN-IMPORTS | Makes the new gate pass without hiding debt. |
 | 4 | QRFR-C04-SHARED-QNT-PROOF-DISCOVERY - Add self-discovering shared-algebras QNT proof runner | done | none | Guardrail before proof baseline repairs. |
@@ -270,7 +270,7 @@ protocol when the Ralph runner supports it.
 
 ## Task Details
 
-### Task 1 - QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to package-local QNT authority
+### Task 1 - QRFR-C01-REVIEW-RULES-AUTHORITY - Correct review rules to active QNT authority
 
 Status: `done`
 
@@ -282,7 +282,7 @@ Input:
 Output:
 
 - Update review rules so code-review agents compare battle behavior against
-  focused package-local QNT slices and
+  focused QNT slices and
   `packages/shared-algebras/proofs/rule-core/`.
 - Keep archived root QNT described only as restoration source material.
 
@@ -772,7 +772,7 @@ Input:
 
 Output:
 
-- Rescan active package-local QNT, rule-core QNT, MBT drivers, proof wiring,
+- Rescan active QNT, rule-core QNT, MBT drivers, proof wiring,
   authored-identity boundaries, and QA generated identity boundaries.
 - Compare the rescan against the original findings.
 - Append concrete follow-up Ralph tasks here if any important issue remains.
@@ -787,7 +787,7 @@ Acceptance:
 
 Result:
 
-- Scope: active package-local QNT, shared rule-core QNT, MBT driver closure,
+- Scope: active QNT, shared rule-core QNT, MBT driver closure,
   proof wiring, authored-identity boundaries, and QA generated identity
   boundaries after QRFR-C01 through QRFR-C18.
 - All original findings are converged except the generic QNT Initiative
@@ -828,7 +828,7 @@ Original finding disposition:
 | QRF-6 damage type totality | Converged. Damage by type is keyed by `RuleDamageType`, projection uses explicit matches and total maps, and Thunder is no longer an implicit final fallback. |
 | QRF-7 shared QNT proofs | Converged. `packages/shared-algebras/src/shared-algebras-qnt-proofs.ts` discovers run-block modules, runs each module independently with a timeout, and the opt-in proof lane is green. |
 | QRF-8 QA generated identity policy | Converged. `scripts/qa/generate_assertions.py` enforces the SRD-only or visibly synthetic identity boundary at cache-fragment and `qa_generated.qnt` materialization, with a self-test behind `pnpm check:qa-generated-identity`. |
-| QRF-9 review authority | Converged. `.claude/review-rules.md` points reviewers at focused package-local QNT slices and `packages/shared-algebras/proofs/rule-core/`, while root QNT remains archived restore material only. |
+| QRF-9 review authority | Converged. `.claude/review-rules.md` points reviewers at focused QNT slices and `packages/shared-algebras/proofs/rule-core/`, while root QNT remains archived restore material only. |
 
 Reviewer loop:
 
@@ -868,13 +868,13 @@ Output:
   invariant that there is always a current actor, or route all current-actor
   access through a total result shape that makes empty initiative unrepresentable
   at reducer call sites.
-- Replace direct `stillToAct[0]` reads in generic package-local QNT turn-order
+- Replace direct `stillToAct[0]` reads in generic focused QNT turn-order
   and turn-advancement code with the new exact or total shape.
 - Keep the Alert-specific exact named initiative score model intact.
 
 Acceptance:
 
-- `BattleState.initiative` in active package-local QNT cannot represent a
+- `BattleState.initiative` in active QNT cannot represent a
   normal battle state with no current actor unless that state is carried by an
   explicit terminal/no-current-actor variant.
 - `battle-runtime-turn-order.qnt` and `battle-runtime-turn-advancement.qnt` no
@@ -967,4 +967,4 @@ Final original-finding disposition:
 | QRF-6 damage type totality | Converged. Damage type projection is explicit and total rather than fallback-based. |
 | QRF-7 shared QNT proofs | Converged. Shared-algebras proof execution is self-discovering, bounded, and attributable. |
 | QRF-8 QA generated identity policy | Converged. Generated QA materialization enforces the SRD-only or visibly synthetic identity policy. |
-| QRF-9 review authority | Converged. Review rules point at active package-local QNT and rule-core authority; root QNT remains archived restore material only. |
+| QRF-9 review authority | Converged. Review rules point at active QNT and rule-core authority; root QNT remains archived restore material only. |

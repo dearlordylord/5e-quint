@@ -6,7 +6,7 @@ import argparse
 RETIRED_MESSAGE = (
     "Root-QNT QA assertion tests are retired because the generated root QNT "
     "artifact and its archived prompt spec were removed from the worktree. "
-    "Use package-local QNT proofs, MBT drivers, and runtime tests for active "
+    "Use focused QNT proofs, MBT drivers, and runtime tests for active "
     "verification."
 )
 

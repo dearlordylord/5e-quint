@@ -233,10 +233,10 @@ higher-slot field name needs domain cleanup before runtime promotion.
 
 ## Implementation Order
 
-1. Update the focused package-local battle-runtime QNT owner first with
+1. Update the focused battle-runtime QNT owner first with
    `SpellBeingCast`, current-turn per-creature slot claims, and recursive
    Counterspell chain semantics.
-2. Add package-local Quint tests for the domain cases below before translating
+2. Add focused Quint tests for the domain cases below before translating
    the behavior into TypeScript.
 3. Update battle-runtime TypeScript types and codecs to match the promoted
    Quint state and reaction frame shape.

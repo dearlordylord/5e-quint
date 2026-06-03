@@ -3,7 +3,7 @@
 This document used to describe performance workarounds for the deleted root
 `battle` and `creature` QNT monoliths. That lane is retired.
 
-Active MBT troubleshooting now belongs with the package-local drivers and the
+Active MBT troubleshooting now belongs with the focused drivers and the
 closure discipline documented in:
 
 - [CLAUDE.md](CLAUDE.md)

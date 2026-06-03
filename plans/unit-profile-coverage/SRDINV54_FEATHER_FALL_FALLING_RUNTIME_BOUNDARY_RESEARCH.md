@@ -88,7 +88,7 @@ cannot admit a falling-trigger event without a smaller enabling task.
 
 Recommended scope for that slice:
 
-- add the falling-trigger Reaction to focused package-local battle-runtime QNT
+- add the falling-trigger Reaction to focused battle-runtime QNT
   and the TypeScript runtime trigger vocabulary;
 - discover and resolve Feather Fall as a Reaction Spell Invocation with
   caller-supplied trigger, range, and falling target facts;
@@ -96,7 +96,7 @@ Recommended scope for that slice:
 - expose the active 60-foot-per-round descent cap as an effect projection;
 - resolve caller-supplied landing events by clearing the target's effect,
   preventing falling damage, and suppressing the Falling hazard Prone outcome;
-- add focused admission/reducer tests plus package-local QNT parity evidence
+- add focused admission/reducer tests plus focused QNT parity evidence
   before claiming Unit support.
 
 Out of scope for that slice:

@@ -3,7 +3,7 @@
 Status: completed by Ralph Lane C
 
 This plan converts the two-pass QNT review findings into implementation work. It
-focuses on active package-local Quint and rule-core slices, not archived root
+focuses on active Quint and rule-core slices, not archived root
 QNT. The review used the installed `quint-spec` skill and separate sub-agent
 passes over battle-runtime QNT, shared rule-core QNT, SRD/authored-identity
 risks, and proof/test wiring.
@@ -62,7 +62,7 @@ risks, and proof/test wiring.
     },
     {
       "id": "QRF-9-REVIEW-RULES-AUTHORITY",
-      "title": "Correct review rules to point at active package-local QNT authority",
+      "title": "Correct review rules to point at active QNT authority",
       "status": "done",
       "priority": "low"
     }
@@ -92,7 +92,7 @@ risks, and proof/test wiring.
 
 Ralph Lane C completed the remediation queue and closed without a next batch.
 Task 19's second-pass rescan found one residual issue under QRF-5: generic
-package-local battle-runtime QNT Initiative still admitted an empty
+focused battle-runtime QNT Initiative still admitted an empty
 `stillToAct` list while turn-order code read the current actor by position.
 Task 21 replaced that state shape with an exact current-actor plus waiting-actor
 queue, removed the unchecked current-actor list reads, and added focused QNT run
@@ -110,7 +110,7 @@ All original QNT review findings now have concrete converged disposition:
 | QRF-6 damage type totality | Done. Damage type projection uses explicit total keyed representation rather than fallback meaning. |
 | QRF-7 shared QNT proofs | Done. Shared-algebras QNT proof execution is self-discovering, bounded, and attributable. |
 | QRF-8 QA generated identity policy | Done. QA generated materialization enforces SRD-only or visibly synthetic authored identity and is covered by a lightweight gate. |
-| QRF-9 review authority | Done. `.claude/review-rules.md` points reviewers at active package-local QNT and rule-core authority; archived root QNT is restoration source material only. |
+| QRF-9 review authority | Done. `.claude/review-rules.md` points reviewers at active QNT and rule-core authority; archived root QNT is restoration source material only. |
 
 Closeout verification recorded for the lane:
 
@@ -288,10 +288,10 @@ Acceptance:
 
 Finding: `.claude/review-rules.md` still instructs reviewers to compare
 runtime behavior against archived root `battle.qnt`, while current project
-instructions make package-local QNT and rule-core the active authority.
+instructions make QNT and rule-core the active authority.
 
 Obvious solution: yes. Update the review rule text to name the active authority:
-focused package-local battle-runtime QNT slices and
+focused battle-runtime QNT slices and
 `packages/shared-algebras/proofs/rule-core/`.
 
 Acceptance:
@@ -329,7 +329,7 @@ work before it is considered done:
 - QNT proofs: for battle-runtime QNT or proof changes, run
   `pnpm --filter @dnd/battle-runtime test:qnt-proofs`. For shared-algebras proof
   runner work, run the new shared proof command once it exists.
-- Focused tests: prefer package-local focused tests for changed reducers,
+- Focused tests: prefer focused tests for changed reducers,
   bridges, and rule-core slices.
 - MBT: only after completed integrated battle-runtime behavior changes, run the
   package MBT lane once with the repository protocol:

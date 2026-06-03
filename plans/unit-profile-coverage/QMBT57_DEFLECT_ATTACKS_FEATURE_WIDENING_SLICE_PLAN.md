@@ -123,7 +123,7 @@ Additional candidate RAW checked:
 
 2. Model the QNT profile first.
 
-   Extend the package-local promoted rule-core feature profile proof with
+   Extend the promoted rule-core feature profile proof with
    facts for:
 
    - attack hit by attack roll;

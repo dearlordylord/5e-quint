@@ -380,7 +380,7 @@ module battleRuntimeModel {
     | BattlePendingSpellSlotUse(Actor)
     | BattleCommittedSpellSlotUse(Actor)
 
-  // This package-local Quint battle model has exactly two actors. Since a
+  // This Quint battle model has exactly two actors. Since a
   // creature spends its Reaction to cast Counterspell before that spell can be
   // countered, the only recursive Counterspell spell-cast opportunity
   // representable in this two-actor model is the other actor countering that
@@ -416,7 +416,7 @@ module battleRuntimeModel {
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
   // Continuations carry the replay lane interrupted by a Reaction window. This
-  // package-local QNT keeps representative deterministic fills for those lanes;
+  // model keeps representative deterministic fills for those lanes;
   // TypeScript carries the caller-provided fills in the runtime frame.
   type ReactionContinuation =
     | ResumeAttack({ damage: int })

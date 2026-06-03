@@ -329,7 +329,7 @@ The decider prompt also instructs agents to avoid broad formatters for docs-only
 
 Every implementer, reviewer, and decider prompt includes the repo MBT guard: check for existing `vitest` and `quint_evaluator` processes before any MBT run, kill stale `quint_evaluator` processes, and never launch a second MBT while one is alive.
 
-Ralph task runs must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, use the package-local promoted command specified by the plan unless the task explicitly requires a higher tier.
+Ralph task runs must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, use the promoted MBT command specified by the plan unless the task explicitly requires a higher tier.
 
 Broad verification is diagnostic, not an automatic scope-expander. When lint/typecheck/test commands surface known pre-existing failures outside the touched ownership surface, agents should record that baseline noise and stop widening the task into repo-wide cleanup. Only failures caused by the task diff itself should be fixed inside that task; unrelated cleanup belongs in a separate task or sidecar investigation. Prompt behavior is intentionally strict here: once an agent confirms the failure is unrelated baseline noise, it should stop broad verification immediately instead of continuing to chase `pnpm quality`.
 

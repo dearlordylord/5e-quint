@@ -217,8 +217,7 @@ The file remains the canonical promoted spec, but it has accumulated domain
 vocabulary, BattleState fixtures, active effects, turn hooks, reactions,
 attacks, spell families, familiar lifecycle, object/light/obscurement, and
 run tests. The May 11 split already proved the right direction: generic SRD
-procedure semantics go to `shared-algebras/proofs/rule-core`, and package-local
-QNT owns projection, integration, holes, replay, and smoke checks.
+procedure semantics go to `shared-algebras/proofs/rule-core`, and battle-runtime QNT owns projection, integration, holes, replay, and smoke checks.
 
 Solution:
 
@@ -228,10 +227,10 @@ inventory and move behavior by semantic owner:
 - `battle-runtime-find-familiar-lifecycle.qnt`: familiar summon, dismissal,
   reappearance, zero-HP disappearance, telepathy, shared senses, touch spell
   delivery, Pact of the Chain reaction attack. This is a good early candidate
-  because it is package-local but conceptually narrow.
+  because it is battle-runtime-specific but conceptually narrow.
 - `battle-runtime-object-light-obscurement.qnt`: Object Target, Light Emitter,
   Illumination, Sight Obscurement, object outline/ignition/damage facts.
-- `battle-runtime-attack-replay.qnt`: package-local attack replay checkpoints,
+- `battle-runtime-attack-replay.qnt`: battle-runtime attack replay checkpoints,
   critical range wrappers, weapon mastery integration, Sneak Attack integration,
   attack-hit and after-damage reaction openings. Generic roll/damage math stays
   in rule-core.
@@ -252,7 +251,7 @@ MBT should import narrower QNT modules directly when possible.
 Benefits:
 
 - QNT context becomes procedure-family context.
-- Broad package-local QNT stops being the first place every promoted spell or
+- Broad battle-runtime QNT stops being the first place every promoted spell or
   feature lands.
 - Model-checking cost can be managed through focused entrypoints instead of a
   single wider state machine.
@@ -686,8 +685,7 @@ Mechanical checks:
   `pnpm --filter @dnd/surface typecheck` and
   `pnpm --filter @dnd/surface test`.
 - For MCP test splits, run `pnpm --filter @dnd/mcp test`.
-- For Character Creation and Character Sheet splits, run the package-local
-  `typecheck` and `test` scripts.
+- For Character Creation and Character Sheet splits, run the package `typecheck` and `test` scripts.
 
 MBT discipline:
 

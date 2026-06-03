@@ -83,7 +83,7 @@ Scope:
 - create failed-save pending next-turn Spell Effects for selected targets;
 - on the affected target's next turn, apply Prone and then resolve the existing
   end-turn boundary;
-- update focused package-local battle-runtime QNT, runtime projection, focused tests, README, and
+- update focused battle-runtime QNT, runtime projection, focused tests, README, and
   unit evidence before claiming support.
 
 Out of scope:

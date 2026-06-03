@@ -71,7 +71,7 @@
 - Primary Ability and shared-algebra prerequisite facts:
   - `packageOwner`: `@dnd/shared-algebras`.
   - `closureKind`: `owner-evidence-only`.
-  - Owner notes: `multiclassPrerequisiteFromPrimaryAbilities` and `MULTICLASS_PREREQUISITES` derive multiclass prerequisite facts from installed SRD class container Primary Ability expressions. `shared-algebra-owner-evidence.json` records deterministic TypeScript tests and package-local Quint examples for this boundary.
+  - Owner notes: `multiclassPrerequisiteFromPrimaryAbilities` and `MULTICLASS_PREREQUISITES` derive multiclass prerequisite facts from installed SRD class container Primary Ability expressions. `shared-algebra-owner-evidence.json` records deterministic TypeScript tests and Quint examples for this boundary.
 
 ## Decision
 

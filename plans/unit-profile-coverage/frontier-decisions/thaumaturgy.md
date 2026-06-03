@@ -180,7 +180,7 @@ executable:
 `Promote Thaumaturgy Booming Voice Ability Check Advantage`
 
 - author/admit a SRD-provenance `thaumaturgy` Surface UnitRecord;
-- add package-local Quint and runtime support for the Action cantrip invocation
+- add Quint and runtime support for the Action cantrip invocation
   choosing Booming Voice and storing a self 1-minute non-concentration effect;
 - add a typed Charisma (Intimidation) Ability Check or Influence witness that
   projects Advantage and respects normal Advantage/Disadvantage cancellation;

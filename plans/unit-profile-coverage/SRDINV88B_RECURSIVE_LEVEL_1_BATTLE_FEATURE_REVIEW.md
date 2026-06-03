@@ -37,7 +37,7 @@ owner decisions.
 ## SRDINV88A Review
 
 `dancing_lights` now has deterministic admission/projection evidence and
-package-local QNT/runtime parity for the supported battle slice:
+QNT/runtime parity for the supported battle slice:
 
 - Magic Action cantrip invocation.
 - Concentration up to 1 minute.

@@ -7,9 +7,9 @@ the worktree.
 
 Active verification now lives in:
 
-- package-local QNT specs such as `packages/battle-runtime/*.qnt`;
+- focused QNT specs such as `packages/battle-runtime/*.qnt`;
 - shared rule-core QNT under `packages/shared-algebras/proofs/rule-core/`;
-- focused package-local MBT and runtime tests.
+- focused MBT and runtime tests.
 
 ## Current Commands
 
@@ -32,7 +32,7 @@ without materializing a root QNT artifact.
 
 ## Authored-Identity Boundary
 
-Generated QA QNT, if a future task reintroduces a package-local assertion lane,
+Generated QA QNT, if a future task reintroduces a focused assertion lane,
 may contain only:
 
 - SRD authored identity whose provenance is the repo's redistributable SRD
@@ -56,4 +56,4 @@ commit that file or copy its entries into publishable source.
 The previous root-QNT assertion generator, generated artifact, and process docs
 remain recoverable from git history if a future task needs to mine them for
 examples. Do not restore them as active verification gates without first
-rewiring them to package-local QNT authority.
+rewiring them to active QNT authority.

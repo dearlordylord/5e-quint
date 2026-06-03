@@ -85,7 +85,7 @@ Round 2 architecture and connascence pass:
   changes to the exact supported Line shape are localized.
 - Added codec support for `selfOriginLine` save-gated damage invocations so the
   narrowed runtime shape remains serializable.
-- Added package-local Quint profile facts for the concrete Lightning Bolt
+- Added Quint profile facts for the concrete Lightning Bolt
   invocation to keep runtime support and promoted profile modeling aligned.
 
 ## Verification Notes

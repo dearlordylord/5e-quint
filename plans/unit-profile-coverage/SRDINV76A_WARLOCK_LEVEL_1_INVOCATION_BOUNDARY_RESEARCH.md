@@ -149,7 +149,7 @@ Scope:
   donning armor;
 - reject non-self targets and armored self targets before creating the Spell
   Effect;
-- update character-battle projection, package-local QNT if the spell
+- update character-battle projection, focused QNT if the spell
   invocation resource model changes, focused tests, and Unit evidence.
 
 Out of scope:
@@ -169,7 +169,7 @@ Scope:
   Concentration;
 - ensure ordinary Constitution Saving Throws and other Saving Throws are
   unaffected;
-- update package-local QNT, Concentration save tests, character-battle
+- update focused QNT, Concentration save tests, character-battle
   projection tests, and Unit evidence.
 
 Out of scope:

@@ -89,7 +89,7 @@ No missing profile, evidence, or rules-kernel accounting was found.
 - Rules-kernel obligation evidence:
   `plans/rules-kernel-coverage/obligations.jsonl` marks the Dispel Magic
   ongoing spell ending obligation covered, cites local RAW and ubiquitous
-  language evidence, and names focused package-local battle-runtime QNT,
+  language evidence, and names focused battle-runtime QNT,
   `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts`,
   and `packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts`
   as owners or witness.

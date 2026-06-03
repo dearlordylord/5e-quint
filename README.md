@@ -71,7 +71,7 @@ contracts for Units, Stat Blocks, spells, class features, and related content.
 
 **Battle runtime** (`packages/battle-runtime`) — Unit/StatBlock-backed battle
 reducer behavior. Battle QNT authority is distributed across shared rule-core
-slices, package-local focused slices, and focused MBT/proof witnesses.
+slices, focused runtime slices, and focused MBT/proof witnesses.
 
 **Character runtimes** (`packages/character-creation-runtime`,
 `packages/character-sheet-runtime`, `packages/character-battle-runtime`) —

@@ -129,7 +129,7 @@ Additional candidate RAW checked:
 
 3. Model the QNT profile first.
 
-   Extend the package-local promoted rule-core feature profile proof with a
+   Extend the promoted rule-core feature profile proof with a
    miss-to-hit replacement profile. Model facts, not Unit ids:
 
    - attack roll natural d20 and total;

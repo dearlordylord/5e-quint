@@ -127,7 +127,7 @@ runnable tasks.
 
 ## Verification Guidance
 
-Implementation tasks should use focused package-local runtime tests first.
+Implementation tasks should use focused runtime tests first.
 Battle-runtime MBT is appropriate only after a behavior-changing Sleep
 implementation is complete and should use the Tier 1 protocol from
 `AGENTS.md`.

@@ -102,8 +102,7 @@ describe `battle-runtime.qnt` as a full-shell fixture and compatibility
 aggregation rather than a whole-battle authority.
 
 This lane should keep shrinking direct `import battleRuntime.* from
-"./battle-runtime"` consumers. Prefer direct imports of focused package-local
-QNT slices and scenario-specific fixture modules. Do not add new full-shell
+"./battle-runtime"` consumers. Prefer direct imports of focused QNT slices and scenario-specific fixture modules. Do not add new full-shell
 helpers to `battle-runtime.qnt`.
 
 Declared Base SHA for every task in this lane:
@@ -130,7 +129,7 @@ owns branch repair.
   runtime behavior. These tasks should be QNT proof import migrations only.
 - Keep changes focused. Do not rename `battle-runtime.qnt` in this lane.
 - Do not copy rule logic into proof modules to avoid imports. If a proof depends
-  on reducer-like package-local QNT behavior, import the focused owner module.
+  on reducer-like QNT behavior, import the focused owner module.
 - If a module cannot be migrated cleanly without a behavior split, update this
   plan with a narrower follow-up task rather than forcing a broad refactor.
 - Preserve RAW behavior. Before moving rule semantics rather than fixture
@@ -525,7 +524,7 @@ Finding:
   returns no matches.
 - The shell still contains compatibility wrappers for names moved into focused
   owners. Task 14 is the next cleanup pass; it should audit wrapper call sites
-  and remove or rename wrappers only when no remaining package-local consumer
+  and remove or rename wrappers only when no remaining QNT consumer
   depends on them.
 
 ### Task 14 - BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT - Audit battle-runtime compatibility wrappers after proof consumers are migrated
@@ -539,7 +538,7 @@ Acceptance:
 
 - Inventory shell-defined wrappers whose implementation is only delegation to a
   focused owner.
-- For each wrapper, classify whether it is still needed by package-local QNT,
+- For each wrapper, classify whether it is still needed by focused QNT,
   a TS/MBT bridge, or no active consumer.
 - Remove wrappers only when there is no active consumer; otherwise update this
   plan with the remaining owner and reason.

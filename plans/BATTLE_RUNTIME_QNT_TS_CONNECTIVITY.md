@@ -12,7 +12,7 @@ trace checkpoint contract.
 ```mermaid
 flowchart TB
   subgraph QNT["QNT proof/spec layer"]
-    BRQ["packages/battle-runtime/battle-runtime.qnt<br/>broad package-local integration shell"]
+    BRQ["packages/battle-runtime/battle-runtime.qnt<br/>broad battle-runtime integration shell"]
     TraceQ["battle-runtime-public-trace-contract.qnt<br/>public checkpoint order, no BattleState diffs"]
 
     subgraph Bridges["battle-runtime QNT bridge modules"]
@@ -227,7 +227,7 @@ flowchart TB
 - Solid arrows mean a real code import/export/delegation path.
 - Dotted arrows mean a verification relationship, not a production dependency.
 - The broad QNT file is still connected, but its intended role is integration:
-  package-local state, replay, reaction windows, mutation, and smoke checks.
+  battle-runtime state, replay, reaction windows, mutation, and smoke checks.
 - Rule-core QNT owns reusable SRD procedure facts.
 - TypeScript owns concrete public fill payloads, authored content shape, and
   production reducer execution.

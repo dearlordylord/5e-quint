@@ -280,14 +280,14 @@ that rest boundary.
 
 ## Parity
 
-`character-creation-runtime-slice.qnt` is the deterministic package-local Quint
+`character-creation-runtime-slice.qnt` is the deterministic Quint
 parity model. It models draft state, stable hole ids, atomic batch fill,
 rediscovery, and finalization status for the established Fighter manifest path,
 with the supported class-option width reflected at the initial class choice
 boundary. Focused TypeScript tests cover the supported Fighter 2 and Wizard
 1 build projection facts.
 
-`character-creation-runtime.mbt.qnt` is the package-local randomized MBT model.
+`character-creation-runtime.mbt.qnt` is the randomized MBT model.
 It imports the deterministic model and drives fill-batch traces against the
 TypeScript reducer through `src/character-creation-runtime.mbt.test.ts`.
 

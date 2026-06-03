@@ -12473,7 +12473,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted package-local Warding Bond Quint facts cover Magic Action and Spell Slot spend, willing-target/paired-ring/60-foot cast witnesses, a paired bond occurrence, target Armor Class and Saving Throw bonuses, all-damage Resistance, same-amount damage sharing to the caster, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup.",
+      "note": "Promoted Warding Bond Quint facts cover Magic Action and Spell Slot spend, willing-target/paired-ring/60-foot cast witnesses, a paired bond occurrence, target Armor Class and Saving Throw bonuses, all-damage Resistance, same-amount damage sharing to the caster, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup.",
       "profileIds": [
         "spell.invocation-warding-bond-linked-effect"
       ],
@@ -12561,7 +12561,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted package-local Moonbeam Quint facts cover Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable Cylinder effect state with 5-foot radius and 40-foot height, slot-scaled Radiant damage with half damage on a successful Constitution save, once-per-creature-per-turn save limiting across area triggers with turn-bound reset, Magic-action reposition up to 60 feet, and Concentration/duration cleanup.",
+      "note": "Promoted Moonbeam Quint facts cover Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable Cylinder effect state with 5-foot radius and 40-foot height, slot-scaled Radiant damage with half damage on a successful Constitution save, once-per-creature-per-turn save limiting across area triggers with turn-bound reset, Magic-action reposition up to 60 feet, and Concentration/duration cleanup.",
       "profileIds": [
         "spell.invocation-moonbeam-movable-zone"
       ],
@@ -12569,7 +12569,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local QNT self-tests cover the Heat Metal contact-damage slice: catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes.",
+      "note": "Focused battle-runtime tests and QNT self-tests cover the Heat Metal contact-damage slice: catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes.",
       "profileIds": [
         "spell.invocation-object-contact-damage"
       ],
@@ -12721,7 +12721,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused package-local Quint proofs extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering slot-level automatic ending, failed and successful higher-level gating, same-object multi-owner object-target cleanup, and magical-effect targeting by stable occurrence identity while leaving broader generic ongoing spell occurrences deferred.",
+      "note": "Focused Quint proofs extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering slot-level automatic ending, failed and successful higher-level gating, same-object multi-owner object-target cleanup, and magical-effect targeting by stable occurrence identity while leaving broader generic ongoing spell occurrences deferred.",
       "profileIds": [
         "spell.invocation-ongoing-spell-ending"
       ],
@@ -12769,7 +12769,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused package-local Quint proofs extend Antimagic Field suppression from tracked spell-light source effect ids to generic ongoing Spell Effect refs, covering tracked spell-light suppression plus tracked Heat Metal spellObjectContactDamage suppression without deleting the occurrence while duration continues to tick.",
+      "note": "Focused Quint proofs extend Antimagic Field suppression from tracked spell-light source effect ids to generic ongoing Spell Effect refs, covering tracked spell-light suppression plus tracked Heat Metal spellObjectContactDamage suppression without deleting the occurrence while duration continues to tick.",
       "profileIds": [
         "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
@@ -12785,7 +12785,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused package-local Quint proofs extend Antimagic Field ongoing Spell Effect refs to Spiritual Weapon, covering repeat-attack suppression without deleting the tracked occurrence; the shared Antimagic suppression ref helper is model-only and does not infer Emanation origin membership.",
+      "note": "Focused Quint proofs extend Antimagic Field ongoing Spell Effect refs to Spiritual Weapon, covering repeat-attack suppression without deleting the tracked occurrence; the shared Antimagic suppression ref helper is model-only and does not infer Emanation origin membership.",
       "profileIds": [
         "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
@@ -12817,7 +12817,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission tests and package-local QNT self-tests cover See Invisibility Magic Action level-2 Spell Slot casting, one-hour self effect projection, observer-scoped Invisible creature visibility, hidden-state non-bypass, caller-witnessed Invisible object and Ethereal visibility helpers, and duration cleanup.",
+      "note": "Focused battle-runtime admission tests and QNT self-tests cover See Invisibility Magic Action level-2 Spell Slot casting, one-hour self effect projection, observer-scoped Invisible creature visibility, hidden-state non-bypass, caller-witnessed Invisible object and Ethereal visibility helpers, and duration cleanup.",
       "profileIds": [
         "spell.invocation-see-invisible-observer-sight"
       ],
@@ -12833,7 +12833,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup. Automatic geometry remains table-owned, and Search recognition is closed as a runtime-detached table/perception witness boundary.",
+      "note": "Focused battle-runtime tests and Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup. Automatic geometry remains table-owned, and Search recognition is closed as a runtime-detached table/perception witness boundary.",
       "profileIds": [
         "spell.invocation-spike-growth-movement-hazard"
       ],
@@ -13104,7 +13104,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted package-local Moonbeam Quint facts consume the shared ShapeShiftedRuntimeState, project supported failed-save shape-shift reversion to TrueForm, suppress shape-shifting only after supported reversion, preserve shape-shift state on successful saves, and clear suppression on Cylinder exit or spell cleanup.",
+      "note": "Promoted Moonbeam Quint facts consume the shared ShapeShiftedRuntimeState, project supported failed-save shape-shift reversion to TrueForm, suppress shape-shifting only after supported reversion, preserve shape-shift state on successful saves, and clear suppression on Cylinder exit or spell cleanup.",
       "profileIds": [
         "spell.invocation-moonbeam-movable-zone"
       ],
@@ -14367,7 +14367,7 @@
           {
             "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
             "mechanic": "Consume the admitted remarkable-athlete profile during Initiative, Strength (Athletics) checks, and immediately after critical hits without duplicating movement or Opportunity Attack state.",
-            "owner": "battle-runtime initiative/ability-check/attack-critical movement reducers plus package-local Quint parity",
+            "owner": "battle-runtime initiative/ability-check/attack-critical movement reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for roll-mode projection, Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
             "title": "Fighter Remarkable Athlete Runtime"
           }
@@ -15349,7 +15349,7 @@
           {
             "id": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
             "mechanic": "Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity.",
-            "owner": "battle-runtime spell Hit Point restoration reducers plus package-local Quint parity",
+            "owner": "battle-runtime spell Hit Point restoration reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion.",
             "title": "Cleric Disciple Of Life Runtime"
           }
@@ -15542,7 +15542,7 @@
           {
             "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
             "mechanic": "Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap.",
-            "owner": "battle-runtime Unit feature Magic Action resource/healing reducers plus package-local Quint parity",
+            "owner": "battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
             "title": "Cleric Preserve Life Runtime"
           }
@@ -15701,7 +15701,7 @@
           {
             "id": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
             "mechanic": "Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target.",
-            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus package-local Quint parity",
+            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.",
             "title": "Druid Lands Aid Runtime"
           },
@@ -15838,8 +15838,8 @@
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
             "mechanic": "Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand anatomy, unsupported Stat Block action sections, attack prose riders, multi-component damage, Stat Block non-Attack actions, and active-form handoff persistence or a typed cross-session boundary.",
-            "owner": "battle-runtime, character-battle-runtime, and focused package-local QNT/MBT parity",
-            "requiredOutput": "Supported Unit profile with focused runtime tests, generated owner evidence, and package-local promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.",
+            "owner": "battle-runtime, character-battle-runtime, and focused QNT/MBT parity",
+            "requiredOutput": "Supported Unit profile with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.",
             "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
           },
           {
@@ -16633,7 +16633,7 @@
           {
             "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
             "mechanic": "Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success.",
-            "owner": "battle-runtime Flurry of Blows attack-hit reducers plus package-local Quint parity",
+            "owner": "battle-runtime Flurry of Blows attack-hit reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
             "title": "Monk Open Hand Technique Runtime"
           }
@@ -17360,7 +17360,7 @@
           {
             "id": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME",
             "mechanic": "Consume the admitted steady-aim profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf, Speed, and turn-end cleanup state without duplicating movement or action state.",
-            "owner": "battle-runtime unit-feature action and movement reducers plus package-local Quint parity",
+            "owner": "battle-runtime unit-feature action and movement reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for no-movement admission, moved-this-turn rejection, Bonus Action spend, next attack Advantage, Speed 0, and end-turn cleanup.",
             "title": "Rogue Steady Aim Runtime"
           }
@@ -17805,7 +17805,7 @@
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
             "mechanic": "Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources.",
-            "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity",
+            "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.",
             "title": "Sorcerer Metamagic Quickened All Action Spells"
           },
@@ -18242,7 +18242,7 @@
           {
             "id": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
             "mechanic": "Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch.",
-            "owner": "battle-runtime zero-Hit-Point trigger reducers plus package-local Quint parity",
+            "owner": "battle-runtime zero-Hit-Point trigger reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application.",
             "title": "Warlock Dark Ones Blessing Runtime"
           }
@@ -18733,7 +18733,7 @@
           {
             "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
             "mechanic": "Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success.",
-            "owner": "battle-runtime spell attack/save cantrip-damage reducers plus package-local Quint parity",
+            "owner": "battle-runtime spell attack/save cantrip-damage reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
             "title": "Wizard Potent Cantrip Runtime"
           }
@@ -19540,7 +19540,7 @@
           {
             "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
             "mechanic": "Consume the admitted sacred-weapon profile through existing action economy, Paladin Channel Divinity resource, held weapon item state, attack bonus, damage type choice, light emission, and dismissal lifecycle owners.",
-            "owner": "battle-runtime resource/action/item/attack/light reducers plus package-local Quint parity",
+            "owner": "battle-runtime resource/action/item/attack/light reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for activation, resource spend, attack bonus minimum, Radiant choice, light projection, recast/dismiss/not-carried ending, and resource/weapon rejection.",
             "title": "Paladin Sacred Weapon Runtime"
           }
@@ -19824,7 +19824,7 @@
           {
             "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
             "mechanic": "Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state.",
-            "owner": "battle-runtime selected-option attack reducers plus package-local Quint parity",
+            "owner": "battle-runtime selected-option attack reducers plus Quint parity",
             "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
             "title": "Ranger Hunters Prey Runtime"
           }
@@ -28149,14 +28149,14 @@
             "id": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION",
             "mechanic": "Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them.",
             "owner": "shared shape-shifting runtime plus spell active-effect lifecycle owners",
-            "requiredOutput": "Focused spell-transformation runtime tests, package-local promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+            "requiredOutput": "Focused spell-transformation runtime tests, promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
             "title": "Spell Shape-Shift True-Form Reversion Owner"
           },
           {
             "id": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION",
             "mechanic": "Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state.",
             "owner": "shared shape-shifting runtime plus stat-block battle controls",
-            "requiredOutput": "Focused stat-block runtime tests, package-local promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+            "requiredOutput": "Focused stat-block runtime tests, promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
             "title": "Stat Block Shapechanger True-Form Reversion Owner"
           }
         ],

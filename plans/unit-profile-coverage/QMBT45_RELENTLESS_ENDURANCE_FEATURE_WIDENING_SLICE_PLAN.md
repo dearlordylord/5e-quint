@@ -93,7 +93,7 @@ Additional candidate RAW checked:
 
 2. Model the QNT profile first.
 
-   Extend the package-local rule-core feature profile proof with a zero-HP
+   Extend the rule-core feature profile proof with a zero-HP
    replacement profile. Model facts, not Unit ids:
 
    - current Hit Points and Hit Point maximum before damage;

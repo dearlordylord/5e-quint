@@ -48,7 +48,7 @@ than recovering it from spell identity or prose.
 The active Unit matrix still reports `fly` as an `srd-candidate` with
 `not-in-unit-catalog` status. It has no Unit claim, deterministic
 admission/projection evidence, selected-identity evidence, focused runtime test,
-or promoted package-local Quint parity witness.
+or promoted Quint parity witness.
 
 Existing reusable pieces:
 
@@ -63,7 +63,7 @@ Existing reusable pieces:
 
 Non-reusable or incomplete pieces:
 
-- `BattleMovementSpeedKind` and the package-local `MovementSpeedKind` Quint type
+- `BattleMovementSpeedKind` and the `MovementSpeedKind` Quint type
   currently include Walk, Climb, and Swim only. There is no promoted Fly
   movement kind.
 - `BattleSpecialSpeedKind` likewise excludes Fly, so the existing
@@ -114,7 +114,7 @@ invocation profile for Action level-3+ Spell Slot casting, touched willing
 target-list targeting, caster-owned Concentration up to 10 minutes, fixed
 60-foot Fly Speed, hover capability, slot-scaled target count, and cleanup on
 Concentration or duration end. Widen the promoted movement kind vocabulary and
-package-local Quint model to include Fly Speed, and make effective movement and
+Quint model to include Fly Speed, and make effective movement and
 Dash budget projection consume the fixed special Speed without duplicating walk
 Speed or spent Movement state. Required output: supported-profile or
 profile-subset-supported Unit claim, deterministic admission/projection
@@ -159,7 +159,7 @@ Round 2 architecture and connascence pass:
   shape rather than proposing a parallel position or elevation store.
 - The remaining strong coupling is intentional and should be made type-visible
   in the follow-up: `BattleMovementSpeedKind`, `BattleSpecialSpeedKind`, codecs,
-  package-local Quint `MovementSpeedKind`, and movement/Dash discovery must all
+  Quint `MovementSpeedKind`, and movement/Dash discovery must all
   widen together when Fly Speed is promoted.
 
 ## Verification Notes

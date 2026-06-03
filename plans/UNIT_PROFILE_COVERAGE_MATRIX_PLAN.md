@@ -404,7 +404,7 @@ exercise obvious copyright-boundary risks.
 Expand from the tracer to all installed SRD Units and the first tranche of
 Classic non-SRD mechanics-only Units. Keep this matrix as a coverage and
 planning tool, not as an execution registry. Runtime behavior continues to flow
-from authored Surface records through package-local support gates.
+from authored Surface records through runtime support gates.
 
 ### Acceptance Criteria
 

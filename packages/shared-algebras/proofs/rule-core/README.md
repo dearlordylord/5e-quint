@@ -573,7 +573,7 @@ Surface-free.
 ## Focused Runtime MBT Contract
 
 Rule-core runtime parity uses focused QMBT lanes rather than widening the
-package-local battle MBT into the full battle state space.
+full battle MBT into the full battle state space.
 
 - QNT action names should mirror the owned proof action names: `init`, the
   procedure action, and optional `step`.

@@ -89,7 +89,7 @@ Use this decision rule for every new authored battle ability:
 
 When a new procedure family is required, put generic SRD procedure semantics in
 the relevant rule-core QNT algebra when one exists or can be deepened. Keep
-package-local battle projection in focused QNT slices that compose reducer
+battle-runtime projection in focused QNT slices that compose reducer
 protocol, holes/replay, concentration or effect cleanup hooks, and small bridge
 modules that project `BattleState` facts into shared rule-core contracts.
 Current bridge examples cover movement/action/grapple, concentration DCs,
@@ -1041,7 +1041,7 @@ Zero-HP lifecycle is a typed union on each `BattleCreatureState`.
 
 `@dnd/battle-runtime` is the active runtime semantic authority for new promoted
 Unit/StatBlock-backed battle work. QNT authority is distributed across shared
-rule-core slices, package-local focused slices, and focused witnesses. There is
+rule-core slices, focused runtime slices, and focused witnesses. There is
 no package-local full-shell aggregation spec; ownership lives with the focused
 slice or witness that models the rule.
 
@@ -1053,7 +1053,7 @@ Promoted battle-runtime proof is intentionally layered:
 
 - small reusable reducer algebras stay covered by modular Quint MBT in the
   shared algebra packages;
-- focused package-local QNT slices stay the deterministic references for the
+- focused QNT slices stay the deterministic references for the
   implemented runtime subset, but self-tests are not enough for long-term
   composed reducer proof;
 - broad Surface, Unit, Spell, and Stat Block catalog coverage defaults to
@@ -1096,12 +1096,12 @@ Keep these facts separate when changing battle behavior:
 - semantic authority: promoted `@dnd/battle-runtime`;
 - feature breadth: unimplemented SRD behavior is future width work;
 - proof depth: runtime behavior is checked here by reducer tests and
-  focused package-local QNT slices and MBT witnesses;
+  focused QNT slices and MBT witnesses;
 - content encoding: Surface `UnitRecord` and `StatBlockRecord` remain authored
   content, not runtime state or provenance labels.
 
 When changing promoted battle behavior, update `src/index.ts`, focused reducer
-tests, and the focused package-local QNT owner or MBT witness together. Record
+tests, and the focused QNT owner or MBT witness together. Record
 intentional modeling choices with an SRD citation or `ASSUMPTIONS.md` entry.
 
 ## RAW Traceability
@@ -1180,7 +1180,7 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `src/unit-feature-support.ts` - Unit feature support-profile boundary:
   profile types, support gates, and parsers that classify authored Surface
   mechanics into battle-runtime procedure families.
-- `src/index.test.ts` - deterministic reducer tests and package-local Quint
+- `src/index.test.ts` - deterministic reducer tests and focused Quint
   spec checks.
 - `src/battle-runtime.mbt.test.ts` - narrow integrated promoted MBT bridge
   that replays Fighter weapon Attack traces against a Skeleton Stat Block
@@ -1189,7 +1189,7 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
   Uncanny Dodge projections through public battle-runtime reducer APIs.
-- `battle-runtime-model.qnt` - shared package-local QNT vocabulary and state
+- `battle-runtime-model.qnt` - shared battle-runtime QNT vocabulary and state
   model used by focused QNT verification lanes.
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
   helpers imported by focused witnesses and proof modules.
@@ -1283,13 +1283,13 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-weapon-attacks.qnt` - Fighter weapon attack, True Strike
   hosted weapon attack, Stat Block attack, Multiattack, and Opportunity Attack
   reducers.
-- `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
+- `battle-runtime-*-tests.qnt` - QNT self-tests split by domain
   so each proof module can be checked without treating one battle shell as the
   architectural center. Run them via the opt-in proof lane,
   `pnpm --filter @dnd/battle-runtime test:qnt-proofs` (each `run`-block module
   runs as its own bounded `quint test`; see CLAUDE.md "QNT proof lane (run
   consciously)").
-- `battle-runtime.mbt.qnt` - package-local randomized model for the selected
+- `battle-runtime.mbt.qnt` - randomized model for the selected
   integrated promoted MBT path.
 
 Useful checks:

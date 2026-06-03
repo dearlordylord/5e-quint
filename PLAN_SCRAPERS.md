@@ -378,8 +378,7 @@ def main():
 **Effort:** New script (~100 lines). **Yield:** +10-40 entries (low volume, high specificity). **Risk:** Medium (errata format may be hard to parse; entries need Q&A conversion).
 
 Errata entries are not Q&A pairs; they are "before/after" corrections. They
-remain valuable research input for checking whether the active package-local
-specs and runtime model pre-errata behavior.
+remain valuable research input for checking whether the active specs and runtime model pre-errata behavior.
 
 ### Files to create
 
@@ -482,8 +481,7 @@ def main():
 3. **Q&A conversion.** The synthetic Q&A format ("Does X apply?" / "No, errata
    changed it to Y") is designed to trigger the classifier to mark these as
    `is_raw: true`. The old root-QNT assertion generator is retired; a future
-   package-local assertion lane would need to target the active package-local
-   specs and parity witnesses instead.
+   focused assertion lane would need to target the active specs and parity witnesses instead.
 
 ### Pipeline integration
 

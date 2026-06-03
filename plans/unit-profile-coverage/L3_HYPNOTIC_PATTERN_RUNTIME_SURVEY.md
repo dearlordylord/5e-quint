@@ -54,7 +54,7 @@ admission:
 The active Unit matrix reports `hypnotic_pattern` as an `srd-candidate` with
 `not-in-unit-catalog` status. It has no Unit claim, deterministic
 admission/projection evidence, selected-identity evidence, focused runtime
-test, or promoted package-local Quint parity witness.
+test, or promoted Quint parity witness.
 
 Existing reusable pieces:
 
@@ -163,7 +163,7 @@ Round 2 architecture and connascence pass:
   social-control or map-geometry store.
 - The remaining strong coupling is intentional and must be made type-visible in
   the follow-up: Surface effect atoms, battle active-effect cleanup,
-  damage-lifecycle hooks, action-spend commands, codecs, package-local Quint
+  damage-lifecycle hooks, action-spend commands, codecs, Quint
   state, and selected-identity replay projections must all change together when
   the control lifecycle is promoted.
 

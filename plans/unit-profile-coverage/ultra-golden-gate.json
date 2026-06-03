@@ -19,7 +19,7 @@
         "label": "MBT/parity evidence"
       },
       {
-        "criterion": "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command.",
+        "criterion": "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the MCP scenario evidence command.",
         "id": "mcp-scenario-evidence",
         "label": "MCP scenario evidence"
       }

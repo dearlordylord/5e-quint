@@ -42,7 +42,7 @@ catalog admission, or generic roll-modifier support changed.
 - `packages/character-battle-runtime/src/battle-creature-init.ts:216-266`
   reads CharacterBuild proficiencies only for weapon proficiency handoff; it
   does not thread Skill proficiency into battle Ability Check witnesses.
-- focused package-local battle-runtime QNT and
+- focused focused battle-runtime QNT and
   `packages/battle-runtime/src/battle-reducer/*` model some battle Ability
   Check roll-mode/effect witnesses, but those witnesses do not own durable
   Character Sheet skill and Expertise state.

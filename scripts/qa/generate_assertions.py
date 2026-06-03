@@ -19,7 +19,7 @@ PRIVATE_IDENTITY_BLOCKLIST = os.path.join(QA_DIR, "non_srd_authored_identities.t
 RETIRED_MESSAGE = (
     "Root-QNT QA assertion generation is retired. The generator previously "
     "prompted against archived root restore material that has been removed from "
-    "the worktree. Use package-local QNT, rule-core QNT, and package-local "
+    "the worktree. Use focused QNT, rule-core QNT, and "
     "parity tests for active verification."
 )
 

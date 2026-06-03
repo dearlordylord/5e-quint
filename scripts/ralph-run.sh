@@ -1092,7 +1092,7 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
-- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Use package-local promoted MBT commands only when the task explicitly requires them.
+- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Use promoted MBT commands only when the task explicitly requires them.
 - Do not write to the memory system.
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
 
@@ -1276,7 +1276,7 @@ Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
-- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the package-local promoted command unless the task explicitly requires a higher tier.
+- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the promoted MBT command unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
 - Inspect the implementation and review for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
@@ -2075,7 +2075,7 @@ const checklistByType = {
     "Keep unsupported runtime classifications honest."
   ],
   "runtime-promotion": [
-    "Read RAW plus UBIQUITOUS_LANGUAGE and inspect the authoritative package-local QNT/spec owner.",
+    "Read RAW plus UBIQUITOUS_LANGUAGE and inspect the authoritative QNT/spec owner.",
     "Update spec/model and runtime together when behavior changes.",
     "Add focused admission/projection/runtime tests before broad verification.",
     "Run MBT only when the completed behavior change needs integrated parity."

@@ -6,14 +6,14 @@ subjects, replay caller fills, resolve state transitions, and expose snapshots.
 
 `@dnd/battle-runtime` is the semantic authority for Unit/StatBlock-backed battle
 behavior. Its QNT authority is distributed: generic SRD procedure semantics live
-in shared rule-core QNT algebras, package-local focused slices project those
+in shared rule-core QNT algebras, focused runtime slices project those
 facts into battle reducer protocol, and focused MBT/proof witnesses connect the
 modeled obligations to TypeScript behavior. There is no current package-local
 full-shell aggregation spec; focused specs import the narrower modules they use
 directly.
 
-Keep package-local integration vocabulary such as `Actor`, `Combatant`,
-`BattleState`, `ActiveEffect`, `Hole`, and replay variants in package-local QNT
+Keep battle-runtime integration vocabulary such as `Actor`, `Combatant`,
+`BattleState`, `ActiveEffect`, `Hole`, and replay variants in battle-runtime QNT
 model modules, starting with
 `battle-runtime-model.qnt`, and let focused specs direct-import those modules
 when they need the moved names. Domain behavior helpers can live in narrower
@@ -354,7 +354,7 @@ flowchart TD
   can take Reactions; resolution forgoes one Warlock attack and spends the
   familiar's Reaction while replaying the familiar attack through the shared
   Attack path.
-- Focused package-local QNT slices constrain this implemented subset. Old root
+- Focused QNT slices constrain this implemented subset. Old root
   `battle.qnt` remains broad legacy/Core proof and restore source material, not
   the target for new runtime behavior.
 - The first integrated promoted MBT is
@@ -388,8 +388,8 @@ restoration pressure, not as active package architecture:
   damage profiles.
 
 Future restorations belong in `@dnd/battle-runtime` implementation,
-package-local deterministic tests, and focused package-local QNT specs. Restore
-SRD procedure families through battle subjects, support gates, battle-owned
-holes/fills, reducer state, and package-local specs. Do not revive Correction as
+deterministic tests, and focused QNT specs. Restore SRD procedure families
+through battle subjects, support gates, battle-owned holes/fills, reducer
+state, and focused specs. Do not revive Correction as
 the promoted owner, keep a parallel Correction reducer, or reintroduce projected
 executable vocabulary.

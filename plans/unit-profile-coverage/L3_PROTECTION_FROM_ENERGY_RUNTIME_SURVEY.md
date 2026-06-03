@@ -36,7 +36,7 @@ recovering them from spell identity or prose.
 The active Unit matrix still reports `protection_from_energy` as an
 `srd-candidate` with `not-in-unit-catalog` status. It has no Unit claim,
 deterministic admission/projection evidence, selected-identity evidence, focused
-runtime test, or promoted package-local Quint parity witness.
+runtime test, or promoted Quint parity witness.
 
 Existing reusable pieces:
 
@@ -71,7 +71,7 @@ the battle runtime has the target-side active-effect primitive needed for that
 Resistance. The missing owner is a Surface target-shape repair followed by a
 spell invocation/profile admission path for a single duration-bound chosen
 damage-type Resistance spell, plus the Unit catalog claim/evidence and
-package-local Quint/runtime parity.
+Quint/runtime parity.
 
 No companion AI or autonomous-control behavior is involved. The spell does not
 choose actions for the target. Runtime admission must consume typed spell
@@ -99,7 +99,7 @@ Concentration or duration ending. Required output: supported-profile or
 profile-subset-supported Unit claim, deterministic admission/projection evidence,
 focused runtime tests for each admitted shape including damage-type choice and
 cleanup, selected-identity evidence if required by the coverage lane, generated
-coverage artifacts, and promoted focused package-local battle-runtime QNT
+coverage artifacts, and promoted focused battle-runtime QNT
 parity without authored-identity dispatch.
 
 ## Reviewer Loop

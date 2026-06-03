@@ -49,8 +49,8 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 | @dnd/character-creation-runtime  |    | @dnd/battle-runtime      |
 | - drafts, holes, fills           |    | - battle state           |
 | - final CharacterBuild           |    | - battle subjects        |
-| - package-local QNT slice        |    | - holes/fills/replay     |
-+----------------------------------+    | - package-local QNT spec |
+| - focused QNT slice              |    | - holes/fills/replay     |
++----------------------------------+    | - focused QNT specs      |
         |                               +--------------------------+
         v                                          ^
 +----------------------------------+               |
@@ -169,7 +169,7 @@ Character-creation terms live in
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes
-and fills, snapshots, and the package-local battle QNT spec. It consumes
+and fills, snapshots, and focused battle QNT specs. It consumes
 battle-owned creature initialization inputs; it does not import character
 creation runtime state.
 Battle runtime details live in `packages/battle-runtime/README.md`.
@@ -242,8 +242,8 @@ reducer needs another spatial relation, ask the table/caller/session for that
 relation explicitly and name it at the boundary.
 
 Concrete contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` are implemented
-in `@dnd/battle-runtime` and `@dnd/mcp`; the TypeScript and the
-corresponding package-local QNT/tests are canonical for their shapes.
+in `@dnd/battle-runtime` and `@dnd/mcp`; the TypeScript and corresponding
+QNT/tests are canonical for their shapes.
 
 Not every table-owned rule fact is a runtime input. Keep these cases separate:
 
@@ -309,8 +309,8 @@ Use this workflow:
 4. Mirror the formal boundary in TypeScript with the narrowest runtime type that
    can represent only valid states. Do not keep a weaker TS type and repair it
    downstream with adapters, duplicate registries, or parallel state.
-5. Add parity proof at the owning boundary. Reducer packages use package-local
-   QNT tests, focused reducer tests, and focused MBT drivers per obligation or
+5. Add parity proof at the owning boundary. Reducer packages use focused QNT
+   tests, focused reducer tests, and focused MBT drivers per obligation or
    profile. Integrated MBT (e.g., `battle-runtime.mbt.qnt`) is one bounded
    witness, not a coverage gate by itself.
 6. Thread the stronger fact through callers directly. If MCP or another
@@ -331,7 +331,7 @@ weapon, feature, or Stat Block.
 | `@dnd/shared-algebras` | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity. | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers. |
 | `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts. | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance. |
 | `@dnd/battle-runtime` | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
-| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests. | Reducer semantics, authored content rules, package-local QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts. |
+| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests. | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts. |
 
 The composition rule is direct use of owned package APIs, not an adapter layer.
 If a future task needs a lower layer to expose a stronger fact, change that
@@ -359,15 +359,15 @@ Quint specs are correctness references for runtime behavior. The QNT corpus is
 a forest of small slices (see **QNT Verification Shape** above and
 `docs/adr/0001-forest-of-qnt-slices.md`). For Unit/StatBlock-backed battle
 behavior, `@dnd/battle-runtime` is the active runtime semantic authority, and
-QNT authority is distributed across shared rule-core slices, package-local
-focused slices, and focused witnesses:
+QNT authority is distributed across shared rule-core slices, focused runtime
+slices, and focused witnesses:
 
 - Reusable mechanics live in
   `packages/shared-algebras/proofs/rule-core/` — spell invocation, slot
   expenditure, damage projection, hit-point lifecycle, reactions/concentration,
   movement, stat-block controls, unit-feature procedures. Package-local QNT
   bridges into these slices instead of restating their semantics.
-- Focused package-local battle-runtime QNT slices and witnesses constrain
+- Focused battle-runtime QNT slices and witnesses constrain
   `@dnd/battle-runtime`; no current full-shell aggregation spec owns promoted
   behavior.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
@@ -377,7 +377,7 @@ focused slices, and focused witnesses:
 
 Runtime correctness mechanisms:
 
-- Reducer packages use package-local QNT specs plus deterministic reducer
+- Reducer packages use focused QNT specs plus deterministic reducer
   tests, plus focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per
   obligation or profile.
 - Shared rule-core slices use stateless contracts plus stateful inductive
@@ -386,7 +386,7 @@ Runtime correctness mechanisms:
 
 Quint proof must keep the oracle direction explicit. Do not generate Quint
 expected state literals from TypeScript runtime results. Promoted parity is
-Quint-owned through hand-authored package-local QNT tests and MBT traces; TS
+Quint-owned through hand-authored QNT tests and MBT traces; TS
 tests may use RAW-backed expected values, but must not render TS state into
 Quint assertions and treat that as proof.
 
@@ -396,8 +396,8 @@ Proof layers for the promoted path are package-owned:
 | --- | --- | --- | --- |
 | Authored Surface records and catalogs | `@dnd/surface` | Decode/reader tests, trace review, provenance/cross-collection constraints, and table-driven catalog contract tests. | A new record family or structural reader changes runtime-visible meaning. |
 | Reusable rule mechanic | `@dnd/shared-algebras` `proofs/rule-core/` slice | Stateless contract module plus stateful inductive proof machine (`*-inductive.qnt`); integration MBT through a package-local bridge where the mechanic is composed at scale. | A new reusable procedure family is introduced or an existing slice's state transitions change. |
-| Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, package-local QNT, and package-local randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
-| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored focused package-local QNT tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
+| Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, focused QNT, and randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
+| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored focused QNT tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
 | Selected composed battle-runtime flows | `@dnd/battle-runtime` | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, plus the broad `battle-runtime.mbt.qnt` as one bounded-fixture integration witness. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
 | MCP runtime composition | `@dnd/mcp` | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions. | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
 

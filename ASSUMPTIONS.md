@@ -1,6 +1,6 @@
 # Modeling Assumptions
 
-The active package-local specs and shared rule-core slices maintain direct
+The active specs and shared rule-core slices maintain direct
 feature parity with the SRD. Formalizing prose rules into a state machine
 sometimes requires making explicit what the SRD leaves implicit, such as adding
 events the rules assume, connecting constraints that follow logically but are

@@ -121,7 +121,7 @@ Ultra-golden witness kinds are checked vocabulary, not prose labels:
   coverage by itself.
 - `runtime-test`: profile-scoped runtime test evidence for a reducer path that
   already has profile-level QNT proof ownership.
-- `mcp-scenario`: package-local MCP acceptance scenario evidence for
+- `mcp-scenario`: MCP acceptance scenario evidence for
   user-facing tool and workflow flows.
 
 Profile-subset claims may also classify selected-identity expectations for

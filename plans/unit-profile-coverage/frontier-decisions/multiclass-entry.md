@@ -63,7 +63,7 @@
 - Prerequisites:
   - `packageOwner`: `@dnd/shared-algebras`.
   - `closureKind`: `owner-evidence-only`.
-  - Owner notes: `readClassCreationFacts` reads class `primaryAbilities` from installed Surface class records. `multiclassPrerequisiteFromPrimaryAbilities`, `MULTICLASS_PREREQUISITES`, `meetsMulticlassPrerequisite`, and `canMulticlass` derive the SRD threshold-13 prerequisite checks for the new class and all current classes. The shared-algebra owner evidence records deterministic TypeScript tests and package-local Quint examples for this boundary.
+  - Owner notes: `readClassCreationFacts` reads class `primaryAbilities` from installed Surface class records. `multiclassPrerequisiteFromPrimaryAbilities`, `MULTICLASS_PREREQUISITES`, `meetsMulticlassPrerequisite`, and `canMulticlass` derive the SRD threshold-13 prerequisite checks for the new class and all current classes. The shared-algebra owner evidence records deterministic TypeScript tests and Quint examples for this boundary.
 - Multiclass entry grants:
   - `packageOwner`: `@dnd/character-creation-runtime`.
   - `closureKind`: `owner-evidence-only`.

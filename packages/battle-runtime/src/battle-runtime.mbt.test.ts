@@ -165,7 +165,7 @@ const driverSchema = {
 
 const promotedMbtTraces = Number(process.env["MBT_TRACES"] ?? 1);
 
-// These package-local specs are finite scenario witnesses. The promoted
+// These specs are finite scenario witnesses. The promoted
 // command supplies a broad step count, but each witness keeps its domain limit
 // so MBT cannot spend extra steps only replaying stale invalid operations.
 function focusedMbtMaxSteps(domainMaxSteps: number): number {

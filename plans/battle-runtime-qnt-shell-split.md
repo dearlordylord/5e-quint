@@ -3,7 +3,7 @@
 ## Problem
 
 `packages/battle-runtime/battle-runtime.qnt` still behaves like a one-battle
-fixture shell: it imports much of the package-local battle QNT forest and owns
+fixture shell: it imports much of the battle-runtime QNT forest and owns
 some Fighter/Goblin fixture helpers. This conflicts with the documented
 forest-of-slices direction and makes the broad shell look like the active
 whole-battle authority.
@@ -14,7 +14,7 @@ Retire the full shell as an architectural center. New and migrated behavior
 should live in focused modules:
 
 - reusable SRD procedure semantics in `packages/shared-algebras/proofs/rule-core/`;
-- battle-runtime projection and bridge facts in focused package-local `*.qnt`;
+- battle-runtime projection and bridge facts in focused `*.qnt`;
 - bounded fixture helpers in scenario-specific fixture modules;
 - parity evidence in focused `*.mbt.qnt` and `*.mbt.test.ts` witnesses.
 

@@ -8,7 +8,7 @@ pnpm workspace. Never use npm.
 
 This is a greenfield project with no users, no published API, no downstream dependencies. **We own the entire stack — Quint spec, runtime core, TS features, MBT bridge, React UI.** Any layer can change to serve any other layer.
 
-Do not treat internal boundaries as walls. When a lower layer needs a change to support a higher layer, change it — don't work around it with adapters, registries, or parallel data structures. The cost of changing a rule-core slice or focused package-local battle QNT owner and updating the affected MBT bridge is always less than the cost of maintaining a workaround that keeps layers "separate." Design for the system, not for the boundary.
+Do not treat internal boundaries as walls. When a lower layer needs a change to support a higher layer, change it — don't work around it with adapters, registries, or parallel data structures. The cost of changing a rule-core slice or focused battle QNT owner and updating the affected MBT bridge is always less than the cost of maintaining a workaround that keeps layers "separate." Design for the system, not for the boundary.
 
 Concretely: adding a field to `BattleState`, renaming a type in a rule-core slice, restructuring a bridge module — all fine. Update the bridge, run the affected focused MBT, move on.
 
@@ -161,7 +161,7 @@ verification lane. **Treat MBT runs as a scarce resource.**
 - **Debug without re-running when possible:** Once you have a failing trace (seed + action sequence), prefer these over re-running MBT:
   1. Write a focused TS unit test that replays the specific event sequence against package runtime reducers directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
-  3. Trace through the package-local Quint spec logic manually by reading the code.
+  3. Trace through the relevant Quint spec logic manually by reading the code.
 - **Battle-runtime MBT:** use
   `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`
   for completed battle-runtime behavior changes that need integrated MBT.
@@ -225,7 +225,7 @@ Things that cause non-obvious errors, not discoverable by reading code.
 
 ## SRD feature parity (CRITICAL)
 
-The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. The QNT corpus is a forest of small slices (see `docs/adr/0001-forest-of-qnt-slices.md`): reusable rule-core slices in `packages/shared-algebras/proofs/rule-core/`, focused package-local QNT with bridge modules into rule-core, and focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per obligation or profile. Deleted root `.qnt` files are historical restore material recoverable from git history, not active authority for any runtime and not behavior gates. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
+The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. The QNT corpus is a forest of small slices (see `docs/adr/0001-forest-of-qnt-slices.md`): reusable rule-core slices in `packages/shared-algebras/proofs/rule-core/`, focused QNT with bridge modules into rule-core, and focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per obligation or profile. Deleted root `.qnt` files are historical restore material recoverable from git history, not active authority for any runtime and not behavior gates. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
 
 - **Model what the SRD says.** If the SRD doesn't define it, don't model it.
 - **No homebrew, no "reasonable extensions."** If a rule is ambiguous or the formalization requires a choice the SRD doesn't prescribe, document it in `ASSUMPTIONS.md` — don't silently pick an interpretation.
@@ -236,10 +236,10 @@ The Quint specs are a **direct formalization of the SRD** — nothing more, noth
 ## Quint parity (CRITICAL)
 
 Unit/StatBlock-backed battle behavior MUST maintain parity with
-focused package-local battle-runtime QNT slices, the rule-core slices they bridge
+focused battle-runtime QNT slices, the rule-core slices they bridge
 into (`packages/shared-algebras/proofs/rule-core/`), and the
 `@dnd/battle-runtime` parity tests (`packages/battle-runtime/src/*.mbt.test.ts`).
-Reusable mechanics live in rule-core; package-local QNT slices own focused
+Reusable mechanics live in rule-core; focused QNT slices own runtime
 integration. Deleted root QNT files are historical restore material recoverable
 from git history and not a parity gate.
 
@@ -315,8 +315,7 @@ After significant changes, run the normal reviewer loop repeatedly until it conv
 ## Invariant scenario tests
 
 The deleted root `dndTest.qnt` restore source is historical only. Use
-package-local runtime tests and package-local Quint specs for active
-verification.
+runtime tests and active Quint specs for verification.
 
 ## Fuzzing
 
@@ -326,7 +325,7 @@ is not an active verification gate.
 ## QA pipeline
 
 Community Q&A corpus tooling is research-only unless a future task rewires it to
-package-local QNT authority. Full docs: `scripts/qa/QA_README.md`. The old
+active QNT authority. Full docs: `scripts/qa/QA_README.md`. The old
 root-QNT generated assertion artifact was removed from the worktree and is not
 part of development verification.
 
