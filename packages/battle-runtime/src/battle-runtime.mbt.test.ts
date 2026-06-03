@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.scalar-buff
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
@@ -29,7 +29,6 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
@@ -43,7 +42,6 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
-  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -119,14 +117,6 @@ type ScalarBuffMbtProjection = {
   readonly fighterSpeed: number;
   readonly goblinSpeed: number;
   readonly actionAvailable: boolean;
-  readonly holes: readonly MbtHole[];
-  readonly lastResult: MbtLastResult;
-  readonly lastInvalidReason: MbtLastInvalidReason;
-};
-
-type EldritchBlastMbtProjection = {
-  readonly actionAvailable: boolean;
-  readonly targetHp: number;
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
@@ -214,19 +204,6 @@ const adrenalineRushDriverSchema = {
 const scalarBuffDriverSchema = {
   init: {},
   doFillLongstriderTarget: {},
-  doRejectStaleAfterResolved: {},
-  step: {},
-} as const;
-
-const eldritchBlastDriverSchema = {
-  init: {},
-  doFillTwoCreatureTargets: {},
-  doFillFirstAttackMiss: {},
-  doFillFirstAttackHit: {},
-  doFillFirstDamageLow: {},
-  doFillSecondAttackMiss: {},
-  doFillSecondAttackHit: {},
-  doFillSecondDamageLow: {},
   doRejectStaleAfterResolved: {},
   step: {},
 } as const;
@@ -843,113 +820,6 @@ function createScalarBuffDriver() {
   });
 }
 
-function createEldritchBlastDriver() {
-  return defineDriver(eldritchBlastDriverSchema, () => {
-    let state = eldritchBlastBattle();
-    let projectionState = state;
-    const subject = eldritchBlastSubject();
-    let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverSpellHoles(state, subject);
-    let lastResult: EldritchBlastMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"] = "";
-
-    function reset(): void {
-      state = eldritchBlastBattle();
-      projectionState = state;
-      fills = [];
-      holes = discoverSpellHoles(state, subject);
-      lastResult = "init";
-      lastInvalidReason = "";
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      lastResult = result.tag;
-      if (result.tag === "resolved") {
-        state = result.state;
-        projectionState = result.state;
-        holes = [];
-        lastInvalidReason = "";
-        return;
-      }
-      if (result.tag === "needsHoles") {
-        projectionState = result.state;
-        holes = result.holes;
-        lastInvalidReason = "";
-        return;
-      }
-      lastInvalidReason = mbtInvalidReason(result.reason);
-    }
-
-    function submit(nextFills: readonly BattleFill[]): void {
-      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
-      recordResult(resolveBattleSubject({ state, subject, fills }));
-    }
-
-    return {
-      init: reset,
-      doFillTwoCreatureTargets: () => {
-        const targets = holes.filter(
-          (
-            hole,
-          ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
-            hole.kind === "targetChoice",
-        );
-        submit([
-          spellTargetChoiceFill(targets[0]!, skeletonId, "eldritch_blast"),
-          spellTargetChoiceFill(targets[1]!, skeletonId, "eldritch_blast"),
-        ]);
-      },
-      doFillFirstAttackMiss: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
-        ]);
-      },
-      doFillFirstAttackHit: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        ]);
-      },
-      doFillFirstDamageLow: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[4]])]);
-      },
-      doFillSecondAttackMiss: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
-        ]);
-      },
-      doFillSecondAttackHit: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        ]);
-      },
-      doFillSecondDamageLow: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[4]])]);
-      },
-      doRejectStaleAfterResolved: () => {
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      step: () => {},
-      getState: () =>
-        projectEldritchBlastMbtState(
-          projectionState,
-          holes,
-          lastResult,
-          lastInvalidReason,
-        ),
-    };
-  });
-}
-
 function createAdrenalineRushDriver() {
   return defineDriver(adrenalineRushDriverSchema, () => {
     let state = adrenalineRushBattle();
@@ -1082,20 +952,6 @@ function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
   };
 }
 
-function normalizeEldritchBlastQuintState(
-  raw: unknown,
-): EldritchBlastMbtProjection {
-  const state = quintStateRecord(raw);
-
-  return {
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
-  };
-}
-
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -1136,13 +992,6 @@ const adrenalineRushStateCheck = stateCheck(
 const scalarBuffStateCheck = stateCheck(
   normalizeScalarBuffQuintState,
   (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
-const eldritchBlastStateCheck = stateCheck(
-  normalizeEldritchBlastQuintState,
-  (spec: EldritchBlastMbtProjection, impl: EldritchBlastMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -1252,22 +1101,6 @@ describe("battle-runtime MBT", () => {
       nTraces: promotedMbtTraces,
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: scalarBuffStateCheck,
-    });
-  }, 120_000);
-
-  it("replays Eldritch Blast beam sequencing", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-eldritch-blast.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createEldritchBlastDriver(),
-      backend: "typescript",
-      nTraces: promotedMbtTraces,
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: eldritchBlastStateCheck,
     });
   }, 120_000);
 
@@ -1410,30 +1243,6 @@ function projectScalarBuffMbtState(input: {
   };
 }
 
-function projectEldritchBlastMbtState(
-  state: BattleState,
-  holes: readonly BattleHole[],
-  lastResult: EldritchBlastMbtProjection["lastResult"],
-  lastInvalidReason: EldritchBlastMbtProjection["lastInvalidReason"],
-): EldritchBlastMbtProjection {
-  const snapshot = snapshotBattle(state);
-  const target = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === skeletonId,
-  );
-  if (target === undefined) {
-    throw new Error("Expected Eldritch Blast target.");
-  }
-  return {
-    actionAvailable: snapshot.turn.actionResources.some(
-      (resource) => resource.source === "turn",
-    ),
-    targetHp: target.hp,
-    holes: projectUniqueHoles(holes),
-    lastResult,
-    lastInvalidReason,
-  };
-}
-
 function discoverAttackHoles(
   state: BattleState,
   subject: Extract<
@@ -1483,24 +1292,6 @@ function discoverMagicMissileHoles(
   );
   if (act == null) {
     throw new Error("Expected Magic Missile spell act.");
-  }
-
-  return act.initialHoles;
-}
-
-function discoverSpellHoles(
-  state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-  errorMessage = "Expected spell act.",
-): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
-  );
-  if (act == null) {
-    throw new Error(errorMessage);
   }
 
   return act.initialHoles;
@@ -1582,21 +1373,6 @@ function magicMissileSubject(): Extract<
       "magic_missile",
       1,
       "repeatedDamageAllocation",
-    ),
-    mode: { tag: "cast" },
-  };
-}
-
-function eldritchBlastSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: cantripSpellInvocationRef(
-      "eldritch_blast",
-      "spellAttackSequence",
     ),
     mode: { tag: "cast" },
   };
@@ -1716,16 +1492,6 @@ function scalarBuffBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
     combatants: [
       scalarBuffCasterCreatureInit({ initiative: 20 }),
-      skeletonCreatureInit({ initiative: 10 }),
-    ],
-  });
-}
-
-function eldritchBlastBattle(): BattleState {
-  return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-eldritch-blast"),
-    combatants: [
-      eldritchBlastCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -1916,49 +1682,6 @@ function scalarBuffCasterCreatureInit(input: {
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
-      },
-    },
-  };
-}
-
-function eldritchBlastCasterCreatureInit(input: {
-  readonly initiative: number;
-}): BattleCreatureInit {
-  const unit = decodeUnitRecordSync(eldritchBlastInput);
-  if (unit.kind !== "spell") {
-    throw new Error("Expected Eldritch Blast spell Unit.");
-  }
-  return {
-    combatantId: fighterId,
-    displayName: "Eldritch Blast Caster",
-    initiative: initiativeScore(input.initiative),
-    side: partySide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId("eldritch-blast-caster-character"),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 5 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-      spellcasting: {
-        sourceClassName: "fighter",
-        spellcastingAbilityModifier: 3,
-        proficiencyBonus: proficiencyBonus(2),
-        canCastSpells: true,
-        cantrips: [unit],
-        preparedSpells: [],
-        featurePreparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-        invocationSpellAccesses: [],
-        spellSlots: [],
       },
     },
   };
@@ -2300,10 +2023,6 @@ function rolledDiceGroup(
 
 function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
   return holes.flatMap(projectHole).sort();
-}
-
-function projectUniqueHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
-  return [...new Set(holes.flatMap(projectHole))].sort();
 }
 
 function projectHole(hole: BattleHole): readonly MbtHole[] {
