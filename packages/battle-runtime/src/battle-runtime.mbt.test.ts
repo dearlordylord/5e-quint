@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.invocation-spiritual-weapon-attack-proxy spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.scalar-buff
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
@@ -47,7 +47,6 @@ import {
   battleId,
   battleCombatantSide,
   battleObjectId,
-  battleTablePositionId,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
@@ -83,7 +82,6 @@ function startBattleRight(
 
 type MbtHole =
   | "TargetChoice"
-  | "SpiritualWeaponForcePosition"
   | "ObjectTargetChoice"
   | "SpellTargetAllocation"
   | "SavingThrowOutcome"
@@ -233,16 +231,6 @@ type EldritchBlastMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
-type SpiritualWeaponMbtProjection = {
-  readonly targetHp: number;
-  readonly bonusActionAvailable: boolean;
-  readonly casterConcentrating: boolean;
-  readonly forcePositionId: number;
-  readonly holes: readonly MbtHole[];
-  readonly lastResult: MbtLastResult;
-  readonly lastInvalidReason: MbtLastInvalidReason;
-};
-
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
 const starryWispObjectId = battleObjectId("starry-wisp-object");
@@ -266,12 +254,6 @@ if (magicMissileUnit.kind !== "spell") {
   throw new Error("Expected Magic Missile content to decode as a spell Unit.");
 }
 const magicMissileSpell = magicMissileUnit satisfies SpellRecord;
-const spiritualWeaponUnit = unitLibrary.requireUnit("spiritual_weapon");
-if (spiritualWeaponUnit.kind !== "spell") {
-  throw new Error("Expected Spiritual Weapon content to decode as a spell Unit.");
-}
-const spiritualWeaponSpell = spiritualWeaponUnit satisfies SpellRecord;
-
 const driverSchema = {
   init: {},
   doDiscoverAttack: {},
@@ -358,18 +340,6 @@ const eldritchBlastDriverSchema = {
   doFillSecondAttackHit: {},
   doFillSecondDamageLow: {},
   doRejectStaleAfterResolved: {},
-  step: {},
-} as const;
-
-const spiritualWeaponDriverSchema = {
-  init: {},
-  doFillCastTargetAndForce: {},
-  doFillCastAttackHit: {},
-  doFillCastDamageLow: {},
-  doAdvanceToLaterCasterTurn: {},
-  doFillRepeatTargetAndForce: {},
-  doFillRepeatAttackHit: {},
-  doFillRepeatDamageLow: {},
   step: {},
 } as const;
 
@@ -1185,127 +1155,6 @@ function createEldritchBlastDriver() {
   });
 }
 
-function createSpiritualWeaponDriver() {
-  return defineDriver(spiritualWeaponDriverSchema, () => {
-    let state = spiritualWeaponBattle();
-    let subjectStartState = state;
-    let subject: BattleSubject = spiritualWeaponCastSubject();
-    let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverSpiritualWeaponHoles(
-      state,
-      "spiritualWeaponAttackProxy",
-    );
-    let lastResult: SpiritualWeaponMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: SpiritualWeaponMbtProjection["lastInvalidReason"] =
-      "";
-
-    function reset(): void {
-      state = spiritualWeaponBattle();
-      subjectStartState = state;
-      subject = spiritualWeaponCastSubject();
-      fills = [];
-      holes = discoverSpiritualWeaponHoles(
-        state,
-        "spiritualWeaponAttackProxy",
-      );
-      lastResult = "init";
-      lastInvalidReason = "";
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      lastResult = result.tag;
-      if (result.tag === "resolved") {
-        state = result.state;
-        holes = [];
-        lastInvalidReason = "";
-        return;
-      }
-      if (result.tag === "needsHoles") {
-        state = result.state;
-        holes = result.holes;
-        lastInvalidReason = "";
-        return;
-      }
-      lastInvalidReason = mbtInvalidReason(result.reason);
-    }
-
-    function submit(nextFills: readonly BattleFill[]): void {
-      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
-      recordResult(
-        resolveBattleSubject({ state: subjectStartState, subject, fills }),
-      );
-    }
-
-    function fillTargetAndForce(positionId: number): void {
-      const target = requireHole(holes, "targetChoice");
-      const forcePosition = requireHole(holes, "spiritualWeaponForcePosition");
-      submit([
-        spiritualWeaponForcePositionFill(forcePosition, positionId),
-        spiritualWeaponTargetFill(target, positionId),
-      ]);
-    }
-
-    return {
-      init: reset,
-      doFillCastTargetAndForce: () => fillTargetAndForce(1),
-      doFillCastAttackHit: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        ]);
-      },
-      doFillCastDamageLow: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[2]])]);
-      },
-      doAdvanceToLaterCasterTurn: () => {
-        fills = [];
-        subject = endTurnSubjectFor(fighterId);
-        const targetTurn = resolveBattleSubject({ state, subject, fills });
-        if (targetTurn.tag !== "resolved") {
-          recordResult(targetTurn);
-          return;
-        }
-        subject = endTurnSubjectFor(skeletonId);
-        recordResult(
-          resolveBattleSubject({ state: targetTurn.state, subject, fills }),
-        );
-        subjectStartState = state;
-      },
-      doFillRepeatTargetAndForce: () => {
-        subject = spiritualWeaponRepeatSubject(state);
-        subjectStartState = state;
-        holes = discoverSpiritualWeaponHoles(
-          state,
-          "spiritualWeaponRepeatAttack",
-        );
-        fills = [];
-        fillTargetAndForce(2);
-      },
-      doFillRepeatAttackHit: () => {
-        const attackRoll = requireHole(holes, "attackRoll");
-        submit([
-          ...fills,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        ]);
-      },
-      doFillRepeatDamageLow: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[2]])]);
-      },
-      step: () => {},
-      getState: () =>
-        projectSpiritualWeaponMbtState({
-          state,
-          holes,
-          lastResult,
-          lastInvalidReason,
-        }),
-    };
-  });
-}
-
 function createAdrenalineRushDriver() {
   return defineDriver(adrenalineRushDriverSchema, () => {
     let state = adrenalineRushBattle();
@@ -1470,28 +1319,6 @@ function normalizeEldritchBlastQuintState(
   };
 }
 
-function normalizeSpiritualWeaponQuintState(
-  raw: unknown,
-): SpiritualWeaponMbtProjection {
-  const state = quintStateRecord(raw);
-
-  return {
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    bonusActionAvailable: booleanField(
-      state,
-      "qBonusActionAvailable",
-    ),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    forcePositionId: numberFromQuintInt(
-      state["qForcePositionId"],
-      "qForcePositionId",
-    ),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
-  };
-}
-
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -1553,14 +1380,6 @@ const eldritchBlastStateCheck = stateCheck(
     return true;
   },
 );
-const spiritualWeaponStateCheck = stateCheck(
-  normalizeSpiritualWeaponQuintState,
-  (spec: SpiritualWeaponMbtProjection, impl: SpiritualWeaponMbtProjection) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
-
 describe("battle-runtime MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
@@ -1698,22 +1517,6 @@ describe("battle-runtime MBT", () => {
       nTraces: promotedMbtTraces,
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: eldritchBlastStateCheck,
-    });
-  }, 120_000);
-
-  it("replays Spiritual Weapon force placement and later repeat attack", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-spiritual-weapon.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSpiritualWeaponDriver(),
-      backend: "typescript",
-      nTraces: promotedMbtTraces,
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: spiritualWeaponStateCheck,
     });
   }, 120_000);
 
@@ -1906,44 +1709,6 @@ function projectEldritchBlastMbtState(
   };
 }
 
-function projectSpiritualWeaponMbtState(input: {
-  readonly state: BattleState;
-  readonly holes: readonly BattleHole[];
-  readonly lastResult: SpiritualWeaponMbtProjection["lastResult"];
-  readonly lastInvalidReason: SpiritualWeaponMbtProjection["lastInvalidReason"];
-}): SpiritualWeaponMbtProjection {
-  const snapshot = snapshotBattle(input.state);
-  const caster = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === fighterId,
-  );
-  const target = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === skeletonId,
-  );
-  if (caster === undefined || target === undefined) {
-    throw new Error("Expected Spiritual Weapon MBT combatants.");
-  }
-  return {
-    targetHp: target.hp,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
-    casterConcentrating: caster.concentrating,
-    forcePositionId: spiritualWeaponForcePositionId(input.state),
-    holes: projectHoles(input.holes),
-    lastResult: input.lastResult,
-    lastInvalidReason: input.lastInvalidReason,
-  };
-}
-
-function spiritualWeaponForcePositionId(state: BattleState): number {
-  const caster = state.combatants.get(fighterId);
-  const effect = caster?.activeEffects.find(
-    (candidate) => candidate.kind === "spiritualWeapon",
-  );
-  if (effect === undefined || effect.kind !== "spiritualWeapon") {
-    return 0;
-  }
-  return Number(effect.forcePositionId);
-}
-
 function discoverAttackHoles(
   state: BattleState,
   subject: Extract<
@@ -2018,24 +1783,6 @@ function discoverSpellHoles(
   );
   if (act == null) {
     throw new Error(errorMessage);
-  }
-
-  return act.initialHoles;
-}
-
-function discoverSpiritualWeaponHoles(
-  state: BattleState,
-  procedure: "spiritualWeaponAttackProxy" | "spiritualWeaponRepeatAttack",
-): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.actorId === fighterId &&
-      candidate.subject.invocation.spellId === "spiritual_weapon" &&
-      candidate.subject.invocation.procedure === procedure,
-  );
-  if (act === undefined) {
-    throw new Error(`Expected Spiritual Weapon ${procedure} act.`);
   }
 
   return act.initialHoles;
@@ -2161,38 +1908,6 @@ function longstriderSubject(): Extract<
   };
 }
 
-function spiritualWeaponCastSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "bonusActionSpell" }
-> {
-  return {
-    tag: "bonusActionSpell",
-    actorId: fighterId,
-    invocation: spellSlotInvocationRef(
-      "spiritual_weapon",
-      2,
-      "spiritualWeaponAttackProxy",
-    ),
-    mode: { tag: "cast" },
-  };
-}
-
-function spiritualWeaponRepeatSubject(
-  state: BattleState,
-): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.actorId === fighterId &&
-      candidate.subject.invocation.spellId === "spiritual_weapon" &&
-      candidate.subject.invocation.procedure === "spiritualWeaponRepeatAttack",
-  );
-  if (act === undefined || act.subject.tag !== "bonusActionSpell") {
-    throw new Error("Expected Spiritual Weapon repeat act.");
-  }
-  return act.subject;
-}
-
 function moveSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "move" }
@@ -2315,16 +2030,6 @@ function eldritchBlastBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-eldritch-blast"),
     combatants: [
       eldritchBlastCasterCreatureInit({ initiative: 20 }),
-      skeletonCreatureInit({ initiative: 10 }),
-    ],
-  });
-}
-
-function spiritualWeaponBattle(): BattleState {
-  return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-spiritual-weapon"),
-    combatants: [
-      spiritualWeaponCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2515,45 +2220,6 @@ function scalarBuffCasterCreatureInit(input: {
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
-      },
-    },
-  };
-}
-
-function spiritualWeaponCasterCreatureInit(input: {
-  readonly initiative: number;
-}): BattleCreatureInit {
-  return {
-    combatantId: fighterId,
-    displayName: "Spiritual Weapon Caster",
-    initiative: initiativeScore(input.initiative),
-    side: partySide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId("spiritual-weapon-caster-character"),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 3 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-      spellcasting: {
-        sourceClassName: "fighter",
-        spellcastingAbilityModifier: 3,
-        proficiencyBonus: proficiencyBonus(2),
-        canCastSpells: true,
-        cantrips: [],
-        preparedSpells: [spiritualWeaponSpell],
-        featurePreparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-        invocationSpellAccesses: [],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
       },
     },
   };
@@ -2861,57 +2527,6 @@ function spellTargetChoiceFill(
         spellId,
       },
     ],
-  };
-}
-
-function spiritualWeaponTargetFill(
-  hole: BattleHole,
-  forcePositionId: number,
-): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  if (hole.kind !== "targetChoice") {
-    throw new Error("Expected target choice hole.");
-  }
-  const positionId = battleTablePositionId(String(forcePositionId));
-  return {
-    kind: "targetChoice",
-    holeId: hole.holeId,
-    value: skeletonId,
-    spatialFacts: [
-      {
-        kind: "spiritualWeaponTargetWithinForceReach",
-        casterId: fighterId,
-        targetId: skeletonId,
-        spellId: "spiritual_weapon",
-        forcePositionId: positionId,
-        reachFeet: movementFeet(5),
-      },
-    ],
-  };
-}
-
-function spiritualWeaponForcePositionFill(
-  hole: BattleHole,
-  positionId: number,
-): Extract<BattleFill, { readonly kind: "spiritualWeaponForcePosition" }> {
-  if (hole.kind !== "spiritualWeaponForcePosition") {
-    throw new Error("Expected Spiritual Weapon force-position hole.");
-  }
-  const forcePositionId = battleTablePositionId(String(positionId));
-  return {
-    kind: "spiritualWeaponForcePosition",
-    holeId: hole.holeId,
-    value:
-      hole.mode === "cast"
-        ? {
-            mode: "cast",
-            positionId: forcePositionId,
-            distanceFromCasterFeet: movementFeet(60),
-          }
-        : {
-            mode: "reposition",
-            positionId: forcePositionId,
-            moveDistanceFeet: movementFeet(20),
-          },
   };
 }
 
@@ -3508,7 +3123,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     );
   }
   if (hole.kind === "spiritualWeaponForcePosition") {
-    return ["SpiritualWeaponForcePosition"];
+    throw new Error(
+      "Battle runtime aggregate MBT does not model Spiritual Weapon force-position holes.",
+    );
   }
   if (hole.kind === "movableZoneRamMovement") {
     throw new Error(
@@ -3653,7 +3270,6 @@ function holeName(raw: unknown): MbtHole {
   const tag = quintVariantTag(raw);
   if (
     tag === "TargetChoice" ||
-    tag === "SpiritualWeaponForcePosition" ||
     tag === "ObjectTargetChoice" ||
     tag === "SpellTargetAllocation" ||
     tag === "SavingThrowOutcome" ||
