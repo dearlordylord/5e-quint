@@ -79,8 +79,14 @@
     {
       "number": 13,
       "id": "BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Move core-combat proof module off the full-shell battleRuntime import"
+    },
+    {
+      "number": 14,
+      "id": "BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit battle-runtime compatibility wrappers after proof consumers are migrated"
     }
   ]
 }
@@ -165,7 +171,8 @@ reasonable findings remain.
 | 10 | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS - Move light/concentration/movement/reaction proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-09-SPELL-ATTACK-PROOF-IMPORTS | Large movement/reaction proof consumer; preserve shell wrapper compatibility while moving direct imports. |
 | 11 | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS - Move hp/armor/buff/spatial proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-10-LIGHT-CONCENTRATION-MOVEMENT-REACTION-PROOF-IMPORTS | Large mixed proof consumer; split only missing shell-only helpers into focused owners. |
 | 12 | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS - Move ground-command proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-11-HP-ARMOR-BUFF-SPATIAL-PROOF-IMPORTS | Large command/area proof consumer; classify missing dependencies before moving helpers. |
-| 13 | BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS | Final broad combat proof consumer in the refreshed inventory. |
+| 13 | BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-12-GROUND-COMMAND-PROOF-IMPORTS | Final broad combat proof consumer in the refreshed inventory. |
+| 14 | BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT - Audit battle-runtime compatibility wrappers after proof consumers are migrated | ready-for-research | BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS | No proof module imports the shell now; plan the next safe wrapper cleanup without broad deletion. |
 
 ## Task Details
 
@@ -477,7 +484,7 @@ Acceptance:
 
 ### Task 13 - BRQNT-SPLIT-13-CORE-COMBAT-PROOF-IMPORTS - Move core-combat proof module off the full-shell battleRuntime import
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on Task 12. Move
 `packages/battle-runtime/battle-runtime-core-combat-tests.qnt` off the
@@ -498,4 +505,33 @@ Acceptance:
   pnpm exec quint test --backend typescript --match "test_" battle-runtime-core-combat-tests.qnt
   ```
 
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
+
+Finding:
+
+- Full-shell proof consumer inventory after this task: 0.
+- `rg -n 'import battleRuntime\.\* from "\./battle-runtime"' packages/battle-runtime -g'*.qnt'`
+  returns no matches.
+- The shell still contains compatibility wrappers for names moved into focused
+  owners. Task 14 is the next cleanup pass; it should audit wrapper call sites
+  and remove or rename wrappers only when no remaining package-local consumer
+  depends on them.
+
+### Task 14 - BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT - Audit battle-runtime compatibility wrappers after proof consumers are migrated
+
+Status: `ready-for-research`
+
+Now that proof modules no longer import the full shell, audit
+`packages/battle-runtime/battle-runtime.qnt` compatibility wrappers.
+
+Acceptance:
+
+- Inventory shell-defined wrappers whose implementation is only delegation to a
+  focused owner.
+- For each wrapper, classify whether it is still needed by package-local QNT,
+  a TS/MBT bridge, or no active consumer.
+- Remove wrappers only when there is no active consumer; otherwise update this
+  plan with the remaining owner and reason.
+- Keep this task out of broad behavior changes and do not delete
+  `battle-runtime.qnt` wholesale.
 - `pnpm check:mbt-driver-closure` passes from the workspace root.

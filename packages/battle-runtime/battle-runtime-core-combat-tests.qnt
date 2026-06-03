@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeCoreCombatTests {
-  import battleRuntime.* from "./battle-runtime"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -25,6 +24,9 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
+  import battleRuntimeCombatHoles.* from "./battle-runtime-combat-holes"
+  import battleRuntimeLegendaryActions.* from "./battle-runtime-legendary-actions"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
@@ -52,7 +54,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   run test_initial_holes_cover_attack_target = {
-    assert(openHoles(initialState).contains(TargetChoice))
+    assert(combatOpenHoles(initialState).contains(TargetChoice))
   }
 
   run test_mirror_image_duplicate_roll_hole_precedes_attack_damage_hole = {
@@ -62,7 +64,7 @@ module battleRuntimeCoreCombatTests {
     }
     val replay = AttackRollFilled({ attackTotal: 20, naturalD20: 18 })
     all {
-      assert(attackReplayHoles(mirroredGoblin, replay) == Set(MirrorImageDuplicateRoll)),
+      assert(combatAttackReplayHoles(mirroredGoblin, replay) == Set(MirrorImageDuplicateRoll)),
       assert(mirrorImageAttackRollHitReplayHoles(
         initialState.fighter.activeEffects,
         mirroredGoblin.goblin.activeEffects,
@@ -437,20 +439,20 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_attack_replay_asks_for_attack_roll_after_target = {
-    assert(attackReplayHoles(initialState, AttackNeedsAttackRoll) == Set(AttackRoll))
+    assert(combatAttackReplayHoles(initialState, AttackNeedsAttackRoll) == Set(AttackRoll))
   }
 
   run test_attack_replay_asks_for_damage_roll_after_hit = {
-    assert(attackReplayHoles(initialState, AttackRollFilled({ attackTotal: 15, naturalD20: 10 })) == Set(DamageRoll))
+    assert(combatAttackReplayHoles(initialState, AttackRollFilled({ attackTotal: 15, naturalD20: 10 })) == Set(DamageRoll))
   }
 
   run test_goblin_turn_opens_stat_block_attack_target_hole = {
-    assert(openHoles(endTurn(initialState)).contains(TargetChoice))
+    assert(combatOpenHoles(endTurn(initialState)).contains(TargetChoice))
   }
 
   run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {
     val spentRecharge = { ...initialState, goblin: { ...initialState.goblin, rechargeAvailable: false } }
-    assert(openHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
+    assert(combatOpenHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
   }
 
   run test_goblin_recharge_roll_restores_available_part_on_success = {
@@ -466,8 +468,8 @@ module battleRuntimeCoreCombatTests {
   run test_legendary_action_window_excludes_initial_and_own_turn = {
     val goblinTurn = endTurn(initialState)
     all {
-      assert(not(goblinCanUseLegendaryAction(initialState))),
-      assert(not(goblinCanUseLegendaryAction(goblinTurn))),
+      assert(not(goblinLegendaryActionAvailable(initialState))),
+      assert(not(goblinLegendaryActionAvailable(goblinTurn))),
     }
   }
 
@@ -476,11 +478,11 @@ module battleRuntimeCoreCombatTests {
       ...initialState,
       initiative: { round: 1, alreadyActed: [], stillToAct: { actor: Fighter, waiting: [Fighter, Goblin] } },
     })
-    val spent = useGoblinLegendaryAction(afterFighterTurnWithThirdActor)
+    val spent = spendGoblinLegendaryAction(afterFighterTurnWithThirdActor)
     all {
-      assert(goblinCanUseLegendaryAction(afterFighterTurnWithThirdActor)),
+      assert(goblinLegendaryActionAvailable(afterFighterTurnWithThirdActor)),
       assert(spent.goblin.legendaryUsesRemaining == 1),
-      assert(not(goblinCanUseLegendaryAction(spent))),
+      assert(not(goblinLegendaryActionAvailable(spent))),
     }
   }
 
@@ -494,7 +496,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_goblin_attack_replay_uses_fighter_armor_class = {
-    assert(attackReplayHoles(endTurn(initialState), AttackRollFilled({ attackTotal: 19, naturalD20: 10 })) == Set(DamageRoll))
+    assert(combatAttackReplayHoles(endTurn(initialState), AttackRollFilled({ attackTotal: 19, naturalD20: 10 })) == Set(DamageRoll))
   }
 
   run test_stat_block_multiattack_spends_one_attack_action_and_grants_dispatches = {
@@ -679,8 +681,8 @@ module battleRuntimeCoreCombatTests {
 
   run test_attack_damage_concentration_interrupt_resolves_before_damage = {
     val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
-    val pending = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
-    val resolved = resolveAttackDamageConcentration(pending, false)
+    val pending = resumeBattleReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
+    val resolved = resolveBattleAttackDamageConcentration(pending, false)
     all {
       assert(pending.interruptStack.length() == 1),
       assert(pendingReactionFrame(pending.interruptStack[0]) == NoPendingReactionFrame),
@@ -693,7 +695,7 @@ module battleRuntimeCoreCombatTests {
 
   run test_zero_damage_reaction_attack_continuation_does_not_open_concentration_interrupt = {
     val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
-    val resolved = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 0 }))
+    val resolved = resumeBattleReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 0 }))
     all {
       assert(resolved.interruptStack == []),
       assert(resolved.goblin.hp == 10),
@@ -746,18 +748,18 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_action_surge_grants_one_extra_action_and_spends_use = {
-    val result = grantActionSurge({ ...initialState, actionAvailable: false }, 1, false)
+    val result = grantFighterActionSurge({ ...initialState, actionAvailable: false }, 1, false)
     all {
       assert(result.state.actionAvailable),
       assert(result.usesRemaining == 0),
       assert(result.usedThisTurn),
-      assert(grantActionSurge(result.state, result.usesRemaining, result.usedThisTurn) == result),
+      assert(grantFighterActionSurge(result.state, result.usesRemaining, result.usedThisTurn) == result),
     }
   }
 
   run test_second_wind_spends_bonus_action_use_and_heals = {
     val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
-    val result = resolveSecondWind(wounded, 2, 6, 2)
+    val result = resolveFighterSecondWind(wounded, 2, 6, 2)
     all {
       assert(result.state.fighter.hp == 12),
       assert(not(result.state.bonusActionAvailable)),
@@ -839,12 +841,12 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_rage_breaks_readied_spell_hold = {
-    val readied = readySpell(initialState)
+    val readied = readyFighterReadiedSpell(initialState)
     val raging = startRage(readied, 2).state
     all {
       assert(not(raging.fighter.concentrating)),
       assert(not(raging.fighter.readiedSpellHeld)),
-      assert(releaseReadiedSpell(raging) == raging),
+      assert(releaseFighterReadiedSpell(raging) == raging),
     }
   }
 
@@ -859,7 +861,7 @@ module battleRuntimeCoreCombatTests {
 
   run test_shield_reaction_spell_interrupts_spell_attack_hit = {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
@@ -892,7 +894,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveReaction(awaiting, Fighter)
+    val resolved = resolveReactionOffer(awaiting, Fighter)
     all {
       assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -908,7 +910,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    assert(resolveReaction(awaiting, Fighter) == awaiting)
+    assert(resolveReactionOffer(awaiting, Fighter) == awaiting)
   }
 
   run test_counterspell_reaction_spell_ends_spell_cast_window_and_wastes_casting_action = {
@@ -927,7 +929,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -954,7 +956,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -985,7 +987,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -1021,7 +1023,7 @@ module battleRuntimeCoreCombatTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveReaction(awaiting, Goblin)
+    val resolved = resolveReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),

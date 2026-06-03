@@ -88,12 +88,14 @@ module battleRuntime {
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeCombatHoles.* from "./battle-runtime-combat-holes"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
+  import battleRuntimeLegendaryActions.* from "./battle-runtime-legendary-actions"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
@@ -492,61 +494,22 @@ module battleRuntime {
   // fixture-specific helpers should live in focused modules.
 
   pure def attackTargetAc(state: BattleState): int =
-    if (currentActor(state) == Fighter) combatantArmorClass(state.goblin) else combatantArmorClass(state.fighter)
+    combatAttackTargetArmorClass(state)
 
   pure def openHoles(state: BattleState): Set[Hole] =
-    if (currentActor(state) == Goblin and not(state.goblin.rechargeAvailable))
-      Set(StatBlockRechargeRoll)
-    else if (currentActorCanAttack(state))
-      Set(TargetChoice)
-    else Set()
+    combatOpenHoles(state)
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
-    if (not(currentActorCanAttack(state)))
-      Set()
-    else match replay {
-      | AttackNeedsTarget => Set(TargetChoice)
-      | AttackNeedsAttackRoll => Set(AttackRoll)
-      | AttackRollFilled(roll) =>
-          if (not(attackHits(roll.attackTotal, roll.naturalD20, attackTargetAc(state), attackCriticalThreshold(state, currentActor(state)))))
-            Set()
-          else {
-            val attacker = combatantForActor(state, currentActor(state))
-            val target = combatantForActor(state, if (currentActor(state) == Fighter) Goblin else Fighter)
-            if (mirrorImageRequiresDuplicateRollForAttackRollHit(attacker.activeEffects, target.activeEffects, false))
-              Set(MirrorImageDuplicateRoll)
-            else
-              Set(DamageRoll)
-          }
-      | AttackReplayComplete => Set()
-    }
+    combatAttackReplayHoles(state, replay)
 
   pure def goblinLegendaryActionWindowOpen(state: BattleState): bool =
-    state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
+    goblinLegendaryActionWindowIsOpen(state)
 
   pure def goblinCanUseLegendaryAction(state: BattleState): bool =
-    battleRuntimeCanUseLegendaryAction(
-      state.goblin.hp > 0,
-      goblinLegendaryActionWindowOpen(state),
-      state.legendaryActionWindowConsumed,
-      state.goblin.legendaryUsesRemaining,
-      2,
-    )
+    goblinLegendaryActionAvailable(state)
 
   pure def useGoblinLegendaryAction(state: BattleState): BattleState =
-    if (goblinCanUseLegendaryAction(state))
-      {
-        ...state,
-        goblin: { ...state.goblin, legendaryUsesRemaining: battleRuntimeLegendaryUsesAfterUse(
-          state.goblin.legendaryUsesRemaining,
-          2,
-          goblinLegendaryActionWindowOpen(state),
-          state.goblin.incapacitated,
-        ) },
-        legendaryActionWindowConsumed: true,
-      }
-    else
-      state
+    spendGoblinLegendaryAction(state)
 
   pure def resolveHellishRebukeAfterDamageReaction(
     state: BattleState,
@@ -738,14 +701,7 @@ module battleRuntime {
     usesRemaining: int,
     usedThisTurn: bool,
   ): ActionSurgeResult =
-    if (currentActor(state) == Fighter and usesRemaining > 0 and not(usedThisTurn))
-      {
-        state: { ...state, actionAvailable: true },
-        usesRemaining: usesRemaining - 1,
-        usedThisTurn: true,
-      }
-    else
-      { state: state, usesRemaining: usesRemaining, usedThisTurn: usedThisTurn }
+    grantFighterActionSurge(state, usesRemaining, usedThisTurn)
 
   pure def resolveSecondWind(
     state: BattleState,
@@ -753,22 +709,7 @@ module battleRuntime {
     healingRoll: int,
     fighterLevel: int,
   ): SecondWindResult =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      usesRemaining > 0 and
-      not(state.fighter.unconscious)
-    )
-      {
-        state: {
-          ...state,
-          fighter: applyHealing(state.fighter, healingRoll + fighterLevel),
-          bonusActionAvailable: false,
-        },
-        usesRemaining: usesRemaining - 1,
-      }
-    else
-      { state: state, usesRemaining: usesRemaining }
+    resolveFighterSecondWind(state, usesRemaining, healingRoll, fighterLevel)
 
 
 }
