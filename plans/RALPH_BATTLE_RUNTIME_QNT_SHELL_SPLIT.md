@@ -155,6 +155,17 @@ architecture/connascence, and code-review checks. Fix every reasonable finding,
 explicitly reject only findings with a concrete reason, and repeat until no
 reasonable findings remain.
 
+Reviewer-loop correction after Task 13:
+
+- `battle-runtime-armor-class.qnt` remains an Armor Class/Mage Armor projection
+  owner; Armor-of-Shadows battle-state resolution moved to
+  `battle-runtime-armor-spell-resolution.qnt` because it composes action
+  availability, current actor, Rage, and armor gates.
+- `battle-runtime-weapon-hit-spell-riders.qnt` remains the after-hit rider
+  projection/reducer owner; turn-start damage composition moved to
+  `battle-runtime-weapon-hit-turn-effects.qnt` because it composes rider facts
+  with `endTurn`.
+
 ## DAG / Queue Order
 
 | # | Task | Status | Depends On | Purpose |

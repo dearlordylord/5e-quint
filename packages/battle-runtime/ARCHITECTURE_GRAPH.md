@@ -22,8 +22,9 @@ variants in package-local QNT model modules, starting with
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
-`battle-runtime-armor-class.qnt`, `battle-runtime-thaumaturgy.qnt`, and
-`battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
+`battle-runtime-armor-class.qnt`,
+`battle-runtime-armor-spell-resolution.qnt`, `battle-runtime-thaumaturgy.qnt`,
+and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
 `battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
 `battle-runtime-spell-invocation.qnt`, `battle-runtime-spell-attack.qnt`,
 `battle-runtime-chained-spell-attack.qnt`, and
@@ -33,7 +34,8 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
 `battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and
 `battle-runtime-jump-movement.qnt`, and
-`battle-runtime-weapon-hit-spell-riders.qnt`, and
+`battle-runtime-weapon-hit-spell-riders.qnt`,
+`battle-runtime-weapon-hit-turn-effects.qnt`, and
 `battle-runtime-fighter-ongoing-features.qnt`, and
 `battle-runtime-timed-effects.qnt`, and
 `battle-runtime-attack-facts.qnt`, `battle-runtime-hidden.qnt`, and

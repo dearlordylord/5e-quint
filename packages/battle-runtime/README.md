@@ -1208,6 +1208,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   helpers imported by focused witnesses and full-shell proof modules.
 - `battle-runtime-armor-class.qnt` - Armor Class and Mage Armor projection
   helpers imported by focused witnesses and full-shell proof modules.
+- `battle-runtime-armor-spell-resolution.qnt` - Armor-of-Shadows Mage Armor
+  battle-state resolution that composes Armor Class projection with action,
+  turn-owner, and Rage gates.
 - `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
   one-minute effect count, and self ability-check Advantage helpers imported by
   focused witnesses and full-shell proof modules.
@@ -1255,6 +1258,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
   Ensnaring Strike, and Searing Smite damage/effect rider projections and
   after-hit spell reducers.
+- `battle-runtime-weapon-hit-turn-effects.qnt` - turn-advancement composition
+  for after-hit riders whose SRD effects apply when the affected target's turn
+  starts.
 - `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
   Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
   hooks.
