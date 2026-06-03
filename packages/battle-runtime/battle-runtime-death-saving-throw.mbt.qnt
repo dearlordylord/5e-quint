@@ -85,7 +85,8 @@ module battleRuntimeDeathSavingThrowMbt {
     qLastInvalidReason' = "",
   }
 
-  // A roll of 10-19 is one success: successes 2 -> 3, target becomes Stable.
+  // A roll of 10-19 is one success: successes 2 -> 3, target becomes Stable
+  // and death saves reset.
   action doFillDeathSavingThrowSuccess = all {
     qCurrentTurnRole == actorTurnRole,
     qHoles == Set(DeathSavingThrow),
@@ -94,8 +95,8 @@ module battleRuntimeDeathSavingThrowMbt {
     qTargetUnconscious' = true,
     qTargetStable' = true,
     qTargetDead' = false,
-    qTargetDeathSuccesses' = 3,
-    qTargetDeathFailures' = 1,
+    qTargetDeathSuccesses' = 0,
+    qTargetDeathFailures' = 0,
     qHoles' = Set(),
     qLastResult' = "resolved",
     qLastInvalidReason' = "",

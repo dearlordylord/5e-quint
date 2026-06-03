@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spiritual-weapon-attack-proxy spell.scalar-buff
-// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
@@ -92,33 +92,17 @@ type MbtHole =
   | "AttackRoll"
   | "DamageRoll"
   | "SpellDamageRoll"
-  | "DeathSavingThrow"
   | "StatBlockRechargeRoll"
   | "LevitateAltitudeChange"
   | "LevitateInitialRise";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
-type DeathSavingThrowMbtTurnRole = "actor" | "target";
-
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
   readonly actionAvailable: boolean;
   readonly multiattackDispatchesAvailable: number;
   readonly sneakAttackUsedThisTurn: boolean;
-  readonly holes: readonly MbtHole[];
-  readonly lastResult: MbtLastResult;
-  readonly lastInvalidReason: MbtLastInvalidReason;
-};
-
-type DeathSavingThrowMbtProjection = {
-  readonly currentTurnRole: DeathSavingThrowMbtTurnRole;
-  readonly targetHp: number;
-  readonly targetUnconscious: boolean;
-  readonly targetStable: boolean;
-  readonly targetDead: boolean;
-  readonly targetDeathSuccesses: number;
-  readonly targetDeathFailures: number;
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
@@ -277,7 +261,6 @@ type SpiritualWeaponMbtProjection = {
 
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
-const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
 const starryWispObjectId = battleObjectId("starry-wisp-object");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
@@ -326,17 +309,6 @@ const driverSchema = {
   doResolveSkeletonMultiattack: {},
   doRejectRecursiveSkeletonMultiattack: {},
   doSpendSkeletonMultiattackDispatch: {},
-  step: {},
-} as const;
-
-const deathSavingThrowDriverSchema = {
-  init: {},
-  doDiscoverEndTurnDeathSavingThrow: {},
-  doFillDeathSavingThrowNaturalOne: {},
-  doFillDeathSavingThrowFailure: {},
-  doFillDeathSavingThrowSuccess: {},
-  doFillDeathSavingThrowNaturalTwenty: {},
-  doRejectWrongActorEndTurnAfterResolved: {},
   step: {},
 } as const;
 
@@ -1519,84 +1491,6 @@ function createAdrenalineRushDriver() {
   });
 }
 
-function createDeathSavingThrowDriver() {
-  return defineDriver(deathSavingThrowDriverSchema, () => {
-    let state = deathSavingThrowBattle();
-    const subject = endTurnSubject();
-    let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = [];
-    let lastResult: DeathSavingThrowMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: DeathSavingThrowMbtProjection["lastInvalidReason"] =
-      "";
-
-    function reset(): void {
-      state = deathSavingThrowBattle();
-      fills = [];
-      holes = [];
-      lastResult = "init";
-      lastInvalidReason = "";
-    }
-
-    function submit(nextFills: readonly BattleFill[]): void {
-      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
-      const result = resolveBattleSubject({ state, subject, fills });
-      recordResult(result);
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      lastResult = result.tag;
-      if (result.tag === "resolved") {
-        state = result.state;
-        holes = [];
-        lastInvalidReason = "";
-        return;
-      }
-      if (result.tag === "needsHoles") {
-        state = result.state;
-        holes = result.holes;
-        lastInvalidReason = "";
-        return;
-      }
-      lastInvalidReason = mbtInvalidReason(result.reason);
-    }
-
-    function fillDeathSavingThrow(roll: number): void {
-      const deathSavingThrow = requireHole(holes, "deathSavingThrow");
-      submit([deathSavingThrowFill(deathSavingThrow, roll)]);
-    }
-
-    return {
-      init: reset,
-      doDiscoverEndTurnDeathSavingThrow: () => {
-        submit([]);
-      },
-      doFillDeathSavingThrowNaturalOne: () => {
-        fillDeathSavingThrow(1);
-      },
-      doFillDeathSavingThrowFailure: () => {
-        fillDeathSavingThrow(5);
-      },
-      doFillDeathSavingThrowSuccess: () => {
-        fillDeathSavingThrow(10);
-      },
-      doFillDeathSavingThrowNaturalTwenty: () => {
-        fillDeathSavingThrow(20);
-      },
-      doRejectWrongActorEndTurnAfterResolved: () => {
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      step: () => {},
-      getState: () =>
-        projectDeathSavingThrowMbtState({
-          state,
-          holes,
-          lastResult,
-          lastInvalidReason,
-        }),
-    };
-  });
-}
-
 function normalizeQuintState(raw: unknown): MbtProjection {
   const state = quintStateRecord(raw);
 
@@ -1609,34 +1503,6 @@ function normalizeQuintState(raw: unknown): MbtProjection {
       "qMultiattackDispatchesAvailable",
     ),
     sneakAttackUsedThisTurn: booleanField(state, "qSneakAttackUsedThisTurn"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
-  };
-}
-
-function normalizeDeathSavingThrowQuintState(
-  raw: unknown,
-): DeathSavingThrowMbtProjection {
-  const state = quintStateRecord(raw);
-
-  return {
-    currentTurnRole: deathSavingThrowMbtTurnRole(
-      state["qCurrentTurnRole"],
-      "qCurrentTurnRole",
-    ),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    targetUnconscious: booleanField(state, "qTargetUnconscious"),
-    targetStable: booleanField(state, "qTargetStable"),
-    targetDead: booleanField(state, "qTargetDead"),
-    targetDeathSuccesses: numberFromQuintInt(
-      state["qTargetDeathSuccesses"],
-      "qTargetDeathSuccesses",
-    ),
-    targetDeathFailures: numberFromQuintInt(
-      state["qTargetDeathFailures"],
-      "qTargetDeathFailures",
-    ),
     holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
     lastResult: mbtLastResult(state["qLastResult"]),
     lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
@@ -1778,14 +1644,6 @@ function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   return true;
 }
 
-function compareDeathSavingThrowState(
-  spec: DeathSavingThrowMbtProjection,
-  impl: DeathSavingThrowMbtProjection,
-): boolean {
-  expect(impl).toEqual(spec);
-  return true;
-}
-
 function mbtInvalidReason(
   reason: Extract<
     BattleResolutionResult,
@@ -1804,10 +1662,6 @@ function mbtInvalidReason(
 }
 
 const battleRuntimeStateCheck = stateCheck(normalizeQuintState, compareState);
-const deathSavingThrowStateCheck = stateCheck(
-  normalizeDeathSavingThrowQuintState,
-  compareDeathSavingThrowState,
-);
 const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -2033,21 +1887,6 @@ describe("battle-runtime MBT", () => {
     });
   }, 120_000);
 
-  it("replays start-turn Death Saving Throw holes for a Character Build combatant", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-death-saving-throw.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDeathSavingThrowDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 4),
-      maxSteps: focusedMbtMaxSteps(3),
-      stateCheck: deathSavingThrowStateCheck,
-    });
-  }, 120_000);
 });
 
 function projectMbtState(input: {
@@ -2081,38 +1920,6 @@ function projectMbtState(input: {
       (usage) =>
         usage.attackerId === fighterId && usage.unitId === "rogue_sneak_attack",
     ),
-    holes: projectHoles(input.holes),
-    lastResult: input.lastResult,
-    lastInvalidReason: input.lastInvalidReason,
-  };
-}
-
-function projectDeathSavingThrowMbtState(input: {
-  readonly state: BattleState;
-  readonly holes: readonly BattleHole[];
-  readonly lastResult: DeathSavingThrowMbtProjection["lastResult"];
-  readonly lastInvalidReason: DeathSavingThrowMbtProjection["lastInvalidReason"];
-}): DeathSavingThrowMbtProjection {
-  const snapshot = snapshotBattle(input.state);
-  const target = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === deathSavingThrowTargetId,
-  );
-  if (target == null) {
-    throw new Error("Expected Death Saving Throw target in battle snapshot.");
-  }
-  if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
-    throw new Error("Expected target to use Death Saving Throws.");
-  }
-
-  return {
-    currentTurnRole:
-      snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
-    targetHp: target.hp,
-    targetUnconscious: target.conditions.includes("unconscious"),
-    targetStable: target.zeroHpLifecycle.stable,
-    targetDead: target.zeroHpLifecycle.dead,
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
     holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
@@ -2744,39 +2551,6 @@ function eldritchBlastBattle(): BattleState {
   });
 }
 
-function deathSavingThrowBattle(): BattleState {
-  const state = startBattleRight({
-    battleId: battleId("battle-runtime-mbt-death-saving-throw"),
-    combatants: [
-      mbtCharacterCreatureInit({
-        combatantId: fighterId,
-        characterId: "death-saving-throw-actor-character",
-        displayName: "Actor",
-        initiative: 20,
-        currentHp: 12,
-      }),
-      mbtCharacterCreatureInit({
-        combatantId: deathSavingThrowTargetId,
-        characterId: "death-saving-throw-target-character",
-        displayName: "Target",
-        initiative: 10,
-        currentHp: 0,
-        zeroHpLifecycle: {
-          policy: "usesDeathSavingThrows",
-          deathSaves: {
-            deathSaves: { successes: 2, failures: 1 },
-            stable: false,
-            dead: false,
-            hpRegained: false,
-          },
-        },
-      }),
-    ],
-  });
-
-  return state;
-}
-
 function sleepRepeatSaveBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-sleep-repeat-save"),
@@ -2795,44 +2569,6 @@ function spiritualWeaponBattle(): BattleState {
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
-}
-
-function mbtCharacterCreatureInit(input: {
-  readonly combatantId: CombatantId;
-  readonly characterId: string;
-  readonly displayName: string;
-  readonly initiative: number;
-  readonly currentHp: number;
-  readonly zeroHpLifecycle?: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["zeroHpLifecycle"];
-}): BattleCreatureInit {
-  return {
-    combatantId: input.combatantId,
-    displayName: input.displayName,
-    initiative: initiativeScore(input.initiative),
-    side: partySide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId(input.characterId),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 1 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(input.currentHp),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-      ...(input.zeroHpLifecycle === undefined
-        ? {}
-        : { zeroHpLifecycle: input.zeroHpLifecycle }),
-    },
-  };
 }
 
 function endTurnSubject(): Extract<
@@ -4188,7 +3924,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         return "DamageRoll" as const;
       }),
       Match.when({ kind: "deathSavingThrow" }, () => {
-        return "DeathSavingThrow" as const;
+        throw new Error(
+          "Battle runtime aggregate MBT does not model Death Saving Throw holes.",
+        );
       }),
       Match.when({ kind: "statBlockRechargeRoll" }, () => {
         return "StatBlockRechargeRoll" as const;
@@ -4254,7 +3992,6 @@ function holeName(raw: unknown): MbtHole {
     tag === "AttackRoll" ||
     tag === "DamageRoll" ||
     tag === "SpellDamageRoll" ||
-    tag === "DeathSavingThrow" ||
     tag === "StatBlockRechargeRoll" ||
     tag === "LevitateAltitudeChange" ||
     tag === "LevitateInitialRise"
@@ -4263,17 +4000,6 @@ function holeName(raw: unknown): MbtHole {
   }
 
   throw new Error(`Unknown Quint battle hole variant: ${tag}`);
-}
-
-function deathSavingThrowMbtTurnRole(
-  raw: unknown,
-  field: string,
-): DeathSavingThrowMbtTurnRole {
-  if (raw === "actor" || raw === "target") {
-    return raw;
-  }
-
-  throw new Error(`Expected Death Saving Throw MBT turn role field ${field}.`);
 }
 
 function sleepRepeatSaveMbtTurnRole(
@@ -4293,21 +4019,6 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   }
 
   return raw;
-}
-
-function deathSavingThrowFill(
-  hole: BattleHole,
-  roll: number,
-): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
-  if (hole.kind !== "deathSavingThrow") {
-    throw new Error("Expected Death Saving Throw hole.");
-  }
-
-  return {
-    kind: "deathSavingThrow",
-    holeId: hole.holeId,
-    value: DieRollResult(roll),
-  };
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
