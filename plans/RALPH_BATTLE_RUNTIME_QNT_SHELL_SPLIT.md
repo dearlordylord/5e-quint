@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Move See Invisibility proof module off the full-shell battleRuntime import"
     },
     {
@@ -112,7 +112,7 @@ reasonable findings remain.
 | # | Task | Status | Depends On | Purpose |
 | ---: | --- | --- | --- | --- |
 | 1 | BRQNT-SPLIT-01-MIRROR-IMAGE-PROOF-IMPORTS - Move Mirror Image proof module off the full-shell battleRuntime import | done | Completed baseline | Small proof-module migration to establish the pattern after Hide/Search. |
-| 2 | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS - Move See Invisibility proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-01-MIRROR-IMAGE-PROOF-IMPORTS | Second small proof-module migration so the lane proves it can advance. |
+| 2 | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS - Move See Invisibility proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-01-MIRROR-IMAGE-PROOF-IMPORTS | Second small proof-module migration so the lane proves it can advance. |
 | 3 | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS - Move spell-facts proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS | Migrate a one-test proof module with broader spell fact imports. |
 | 4 | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS - Move object-contact-damage proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS | Migrate a medium proof module after the small modules have landed. |
 | 5 | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present | ready-for-implementation-after-light-research | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS | Migrate another medium proof module and remove any newly unused shell import. |
@@ -147,7 +147,7 @@ Completed by commit `7ec02375944001a4d7e334e83e1f942a3afe2aa2`.
 
 ### Task 2 - BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS - Move See Invisibility proof module off the full-shell battleRuntime import
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Move `packages/battle-runtime/battle-runtime-see-invisibility-tests.qnt` off:
 
