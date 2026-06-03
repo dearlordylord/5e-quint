@@ -50,7 +50,7 @@ Finish the already-established battle-runtime QNT/MBT split through deep
 vertical slices. This is not a new architecture. The repo already has focused
 `*.mbt.qnt` specs and many focused `*.mbt.test.ts` drivers. The remaining work
 is to move leftover driver/projection/evidence code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` and away from the
+`retired grouped battle-runtime MBT harness` and away from the
 `battle-runtime.qnt` shell, one behavior at a time.
 
 Each task owns one behavior/profile slice from QNT witness through TS MBT driver
@@ -99,7 +99,7 @@ done if any answer is missing.
    reducer dispatch, `BattleState` mutation, and projection.
 4. No dead shell logic: after the slice moves, `rg` for its driver factory,
    projection type/check, focused MBT spec path, and coverage/evidence markers
-   must show no remaining owner in `src/battle-runtime.mbt.test.ts` except
+   must show no remaining owner in `retired grouped battle-runtime MBT harness` except
    unrelated shared helpers that are still used by remaining slices.
 5. Marker locality: any `KERNEL-COVERAGE`, `UNIT-PROFILE-COVERAGE`,
    `UNIT-IDENTITY-EVIDENCE`, or `UNIT-IDENTITY-MBT-REPLAY` marker for the slice
@@ -182,7 +182,7 @@ only with a concrete reason, and repeat until no reasonable findings remain.
 Status: `done`
 
 Move the Death Saving Throw MBT driver code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` into a new focused test
+`retired grouped battle-runtime MBT harness` into a new focused test
 file:
 
 ```text
@@ -192,7 +192,7 @@ packages/battle-runtime/src/death-saving-throw.mbt.test.ts
 Inputs:
 
 - `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt`
-- `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+- `retired grouped battle-runtime MBT harness`
 - `packages/battle-runtime/src/index.ts`
 - `packages/battle-runtime/src/battle-runtime-test-support.ts`
 
@@ -216,12 +216,12 @@ Acceptance:
   `doFillDeathSavingThrowNaturalOne`, `doFillDeathSavingThrowFailure`,
   `doFillDeathSavingThrowSuccess`, `doFillDeathSavingThrowNaturalTwenty`,
   `doRejectWrongActorEndTurnAfterResolved`, and `step`.
-- `src/battle-runtime.mbt.test.ts` no longer runs
+- `retired grouped battle-runtime MBT harness` no longer runs
   `battle-runtime-death-saving-throw.mbt.qnt` and no longer owns the
   `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` marker.
 - The focused driver calls production entrypoints through `./index.ts`, not a
   test-only reducer clone.
-- `rg "battle-runtime-death-saving-throw|createDeathSavingThrowDriver|DeathSavingThrowMbtProjection|BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE" packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+- `rg "battle-runtime-death-saving-throw|createDeathSavingThrowDriver|DeathSavingThrowMbtProjection|BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE" retired grouped battle-runtime MBT harness`
   returns no slice-owned leftovers.
 
 Verification:
@@ -237,7 +237,7 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/d
 Status: `done`
 
 Move the Sleep repeat-save MBT driver code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` into a new focused test
+`retired grouped battle-runtime MBT harness` into a new focused test
 file:
 
 ```text
@@ -247,7 +247,7 @@ packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts
 Inputs:
 
 - `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-- `packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+- `retired grouped battle-runtime MBT harness`
 - `packages/battle-runtime/src/index.ts`
 - `packages/battle-runtime/src/battle-runtime-test-support.ts`
 
@@ -275,12 +275,12 @@ Acceptance:
   `doEndCasterTurnAfterConcentrationBreak`,
   `doEndTargetTurnAfterConcentrationBreak`, `doDiscoverRepeatSave`,
   `doFillRepeatSaveSuccess`, `doFillRepeatSaveFailure`, and `step`.
-- `src/battle-runtime.mbt.test.ts` no longer runs
+- `retired grouped battle-runtime MBT harness` no longer runs
   `battle-runtime-sleep-repeat-save.mbt.qnt` and no longer owns
   `spell.invocation-sleep-repeat-save-lifecycle`.
 - The focused driver calls production entrypoints through `./index.ts`, not a
   test-only reducer clone.
-- `rg "battle-runtime-sleep-repeat-save|createSleepRepeatSaveDriver|SleepRepeatSaveMbtProjection|spell.invocation-sleep-repeat-save-lifecycle" packages/battle-runtime/src/battle-runtime.mbt.test.ts`
+- `rg "battle-runtime-sleep-repeat-save|createSleepRepeatSaveDriver|SleepRepeatSaveMbtProjection|spell.invocation-sleep-repeat-save-lifecycle" retired grouped battle-runtime MBT harness`
   returns no slice-owned leftovers.
 
 Verification:
@@ -296,7 +296,7 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/s
 Status: `done`
 
 Move the Spiritual Weapon MBT driver code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` into:
+`retired grouped battle-runtime MBT harness` into:
 
 ```text
 packages/battle-runtime/src/spiritual-weapon.mbt.test.ts
@@ -309,7 +309,7 @@ Acceptance:
 - Every action in `battle-runtime-spiritual-weapon.mbt.qnt` has a matching TS
   command.
 - The focused driver calls production entrypoints through `./index.ts`.
-- `src/battle-runtime.mbt.test.ts` no longer references
+- `retired grouped battle-runtime MBT harness` no longer references
   `battle-runtime-spiritual-weapon.mbt.qnt`,
   `createSpiritualWeaponDriver`, `SpiritualWeaponMbtProjection`, or
   `spell.invocation-spiritual-weapon-attack-proxy`.
@@ -327,7 +327,7 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/s
 Status: `done`
 
 Move the Starry Wisp object-target MBT driver code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` into:
+`retired grouped battle-runtime MBT harness` into:
 
 ```text
 packages/battle-runtime/src/starry-wisp-object.mbt.test.ts
@@ -341,7 +341,7 @@ Acceptance:
 - The focused driver calls production entrypoints through `./index.ts`.
 - Any shared light-emitter projection helper is either local to this file or
   moved to existing test support only if another focused driver still uses it.
-- `src/battle-runtime.mbt.test.ts` no longer references
+- `retired grouped battle-runtime MBT harness` no longer references
   `battle-runtime-starry-wisp-object.mbt.qnt`,
   `createStarryWispObjectDriver`, or `StarryWispObjectMbtProjection`.
 
@@ -358,7 +358,7 @@ MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/s
 Status: `done`
 
 Move the Eldritch Blast MBT driver code out of
-`packages/battle-runtime/src/battle-runtime.mbt.test.ts` into:
+`retired grouped battle-runtime MBT harness` into:
 
 ```text
 packages/battle-runtime/src/eldritch-blast.mbt.test.ts
@@ -371,7 +371,7 @@ Acceptance:
 - Every action in `battle-runtime-eldritch-blast.mbt.qnt` has a matching TS
   command.
 - The focused driver calls production entrypoints through `./index.ts`.
-- `src/battle-runtime.mbt.test.ts` no longer references
+- `retired grouped battle-runtime MBT harness` no longer references
   `battle-runtime-eldritch-blast.mbt.qnt`, `createEldritchBlastDriver`, or
   `EldritchBlastMbtProjection`.
 

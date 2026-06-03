@@ -162,9 +162,9 @@ verification lane. **Treat MBT runs as a scarce resource.**
   1. Write a focused TS unit test that replays the specific event sequence against package runtime reducers directly (milliseconds, no Quint).
   2. Read the ITF trace JSON offline to inspect Quint state at each step.
   3. Trace through the relevant Quint spec logic manually by reading the code.
-- **Battle-runtime MBT:** use
-  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`
-  for completed battle-runtime behavior changes that need integrated MBT.
+- **Battle-runtime MBT:** run the focused MBT file for the changed behavior.
+  For the retired grouped fixture set, use
+  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/weapon-attack-skeleton.mbt.test.ts src/magic-missile-allocation.mbt.test.ts src/extra-attack-count.mbt.test.ts src/adrenaline-rush.mbt.test.ts src/scalar-buff.mbt.test.ts`.
 - **Archived MBT/fuzz tiers:** root fuzz and overnight scripts are not active
   verification gates.
   - **Coverage lever is `MBT_TRACES`, not `MBT_MAX_SAMPLES`.** `MBT_TRACES=N` generates N distinct random walks per vitest call. `MBT_MAX_SAMPLES` is a search budget for invariant checking — irrelevant for MBT trace generation (first walk always succeeds). Do not escalate `MBT_MAX_SAMPLES` expecting more coverage.
@@ -215,7 +215,7 @@ Things that cause non-obvious errors, not discoverable by reading code.
 - **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
 - **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
 - **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `pnpm install`).
-- **Fresh worktree battle MBT module resolution:** In a worktree without a primed `.quint-cache`, `battle-runtime.mbt.test.ts` can fail with quint `QNT404` name-resolution errors (e.g. `damageAfterAdjustments`) even though those names exist in the corpus. Suspected missing cache-priming step in worktree setup; reproduce in the main checkout first before treating it as a code regression.
+- **Fresh worktree battle MBT module resolution:** In a worktree without a primed `.quint-cache`, focused battle MBT files can fail with quint `QNT404` name-resolution errors (e.g. `damageAfterAdjustments`) even though those names exist in the corpus. Suspected missing cache-priming step in worktree setup; reproduce in the main checkout first before treating it as a code regression.
 - **Apalache / Java:** JDK 17 is installed at `~/.local/java/jdk-17.0.18+8-jre/`. The Bash tool doesn't source `.zshrc`, so prefix Apalache commands with: `export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH" &&`
 - **Nondet must be bare `oneOf()`:** `nondet x = if (cond) A.oneOf() else B.oneOf()` is a parse error (QNT204). The outermost expression must be `oneOf()` or `apalache::generate` — no wrapping `if`, `val`, or function calls. If you need conditional narrowing, accept the wider set and let the guard filter.
 - **Apalache record sets:** Apalache needs `var.in(Set)` for record-typed vars before field access. Quint's only way to express record sets is nested `map().flatten()` which enumerates the Cartesian product. This works for small records (~7K elements for FighterState) but is infeasible for large records (CreatureState, TurnState). Don't attempt to build VALID\_\*\_STATES for records with 10+ fields or wide integer ranges.

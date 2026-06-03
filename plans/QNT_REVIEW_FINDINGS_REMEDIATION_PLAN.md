@@ -333,7 +333,7 @@ work before it is considered done:
   bridges, and rule-core slices.
 - MBT: only after completed integrated battle-runtime behavior changes, run the
   package MBT lane once with the repository protocol:
-  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`.
+  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/weapon-attack-skeleton.mbt.test.ts`.
   Do not use MBT for exploration, and run only one MBT instance at a time.
 
 ## Closed Risks And Residual Notes

@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 97
-- Covered obligations: 91
+- Total obligations: 99
+- Covered obligations: 93
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 91 |
+| covered | 93 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -23,7 +23,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | shared-algebras | 1 |
 | battle | 71 |
 | character-creation | 13 |
-| character-sheet | 9 |
+| character-sheet | 11 |
 | character-battle | 3 |
 
 ## Obligations
@@ -120,7 +120,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | _outside reducer semantics_ |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | character-sheet | covered | _direct reducer entrypoint_ |
+| `SHEET.HIT_POINTS.MAXIMUM_DERIVATION` | character-sheet | covered | _direct reducer entrypoint_ |
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
+| `SHEET.SPELL_SLOTS.TABLE_DERIVATION` | character-sheet | covered | _direct reducer entrypoint_ |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
 | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access`, `character-sheet.druid-circle-land-spell-access` |
@@ -319,6 +321,11 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
+| `packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt` | semantic-core | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt` | semantic-core | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt` | semantic-core | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt` | semantic-core | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt` | semantic-core | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
 | `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt` | mbt-fixture | `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION`, `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` |
 | `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` |
@@ -328,13 +335,22 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | semantic-core | `CREATION.CHOICE_DISCOVERY_CARDINALITY`, `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` |
 | `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE`, `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` |
 | `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` |
+| `packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt` | semantic-core | `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` |
 | `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt` | mbt-fixture | `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` |
-| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` |
+| `packages/shared-algebras/proofs/rule-core/armor-class-base.qnt` | semantic-core | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt` | mbt-fixture | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` |
 | `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` |
 | `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt` | mbt-fixture | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt` | semantic-core | `SHEET.HIT_POINTS.MAXIMUM_DERIVATION` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt` | mbt-fixture | `SHEET.HIT_POINTS.MAXIMUM_DERIVATION` |
+| `packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt` | semantic-core | `SHEET.SPELL_REST_BENEFIT.APPLICATION` |
 | `packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt` | mbt-fixture | `SHEET.SPELL_REST_BENEFIT.APPLICATION` |
-| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt` | mbt-fixture | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt` | semantic-core | `SHEET.SPELL_SLOTS.TABLE_DERIVATION` |
+| `packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt` | semantic-core | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt` | mbt-fixture | `SHEET.SPELL_SLOTS.TABLE_DERIVATION`, `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` |
+| `packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt` | semantic-core | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` |
 | `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` |
+| `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | semantic-core | `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
@@ -523,6 +539,15 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |  |  |
+| `SHEET.HIT_POINTS.MAXIMUM_DERIVATION` | generation-subset-clean | `import`, `record`, `pure-def`, `int`, `bool`, `list`, `fold`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
+| `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `list`, `fold`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
+| `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `arithmetic`, `pattern-match` |  |  |
+| `SHEET.SPELL_REST_BENEFIT.APPLICATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `list`, `fold`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
+| `SHEET.FEATURE_RESOURCES.TRANSITIONS` | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
+| `SHEET.WEAPON_MASTERY.RESELECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `arithmetic`, `boolean-connective`, `all-block`, `pattern-match`, `list`, `set`, `fold`, `set-operators`, `membership`, `size` |  |  |
+| `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
+| `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
+| `SHEET.SPELL_SLOTS.TABLE_DERIVATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `boolean-connective`, `pattern-match` |  |  |

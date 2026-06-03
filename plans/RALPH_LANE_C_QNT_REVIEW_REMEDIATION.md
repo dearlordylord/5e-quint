@@ -236,7 +236,7 @@ For battle-runtime MBT after completed integrated behavior changes:
 ```sh
 ps aux | grep vitest | grep -v grep
 ps aux | grep quint_evaluator | grep -v grep
-cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts
+cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/weapon-attack-skeleton.mbt.test.ts
 ```
 
 Run only one MBT instance at a time and use the repository timing/background

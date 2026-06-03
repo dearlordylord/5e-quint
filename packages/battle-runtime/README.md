@@ -419,8 +419,8 @@ Fixture bounds:
   than discovering broad authored content;
 - state-space growth should come from the procedure under test, not from
   catalog enumeration or multiple independent actors;
-- integrated `battle-runtime.mbt.test.ts` remains a final selective gate, not a
-  collection point for every rule-core parity trace.
+- the retired grouped MBT harness is split into focused fixture files; do not
+  add new behavior to a broad collection point.
 
 Timing command:
 
@@ -1182,9 +1182,14 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   mechanics into battle-runtime procedure families.
 - `src/index.test.ts` - deterministic reducer tests and focused Quint
   spec checks.
-- `src/battle-runtime.mbt.test.ts` - narrow integrated promoted MBT bridge
-  that replays Fighter weapon Attack traces against a Skeleton Stat Block
-  target through public reducer APIs.
+- `src/weapon-attack-skeleton.mbt.test.ts` - focused weapon Attack/Sneak Attack
+  fixture against a Skeleton Stat Block target through public reducer APIs.
+- `src/magic-missile-allocation.mbt.test.ts` - focused Magic Missile target
+  allocation fixture.
+- `src/extra-attack-count.mbt.test.ts` - focused Extra Attack count and
+  selected-identity fixture.
+- `src/adrenaline-rush.mbt.test.ts` - focused Orc Adrenaline Rush fixture.
+- `src/scalar-buff.mbt.test.ts` - focused Longstrider scalar-buff fixture.
 - `src/rule-core-features.mbt.test.ts` - focused QCORE9 Feature Procedure MBT
   bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
@@ -1289,8 +1294,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   `pnpm --filter @dnd/battle-runtime test:qnt-proofs` (each `run`-block module
   runs as its own bounded `quint test`; see CLAUDE.md "QNT proof lane (run
   consciously)").
-- `battle-runtime.mbt.qnt` - randomized model for the selected
-  integrated promoted MBT path.
+- `battle-runtime-weapon-attack-skeleton.mbt.qnt` - focused randomized model
+  for the selected weapon Attack/Sneak Attack path.
 
 Useful checks:
 
@@ -1299,5 +1304,5 @@ pnpm --filter @dnd/battle-runtime typecheck
 pnpm --filter @dnd/battle-runtime test
 pnpm --filter @dnd/battle-runtime test:qnt-proofs  # opt-in QNT proof lane; not run by `test` (see CLAUDE.md "QNT proof lane")
 MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts
-MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime.mbt.test.ts
+MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-attack-skeleton.mbt.test.ts src/magic-missile-allocation.mbt.test.ts src/extra-attack-count.mbt.test.ts src/adrenaline-rush.mbt.test.ts src/scalar-buff.mbt.test.ts
 ```

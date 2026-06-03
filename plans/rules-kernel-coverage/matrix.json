@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 97,
-    "covered": 91,
+    "total": 99,
+    "covered": 93,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 71,
       "character-creation": 13,
-      "character-sheet": 9,
+      "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 91,
+      "covered": 93,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -136,9 +136,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profiles": [],
@@ -777,7 +777,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Prayer of Healing spell-rest benefit replay is a closed two-case fixture: completed-cast application spends the level-2 Spell Slot, applies caller-supplied Short Rest benefits, heals from the provided rolls, and stores recipient Long Rest lockout; a second application to a locked recipient is rejected before spending another Spell Slot.",
+          "deterministicReplayRationale": "Prayer of Healing spell-rest benefit replay is a closed two-case fixture: completed-cast application spends the level-2 Spell Slot, applies caller-supplied Short Rest benefits, heals from the provided rolls, and stores recipient Long Rest lockout; a second application to a locked recipient is rejected before spending another Spell Slot. The reusable semantic core owns typed spell-rest profile facts, recipient eligibility and Long Rest lockout gates, recipient-count and healing-roll gates, slot-scaled healing dice count, applied/rejected results, and the pre-spend rejection projection; selected spell identity remains fixture evidence.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
@@ -788,6 +788,7 @@
         "character-sheet.spell-rest-benefit-application"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt",
         "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -869,7 +870,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
           "stepAction": "step"
         }
@@ -2043,8 +2044,8 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+          "ownerPath": "packages/battle-runtime/src/weapon-attack-skeleton.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2178,7 +2179,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/death-saving-throw.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
           "stepAction": "step"
         },
@@ -2358,7 +2359,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Armor Class base formula is a scalar projection fixture with explicitly named selected-identity cases; random branch interleavings are not the risk for this obligation.",
+          "deterministicReplayRationale": "Armor Class base formula replay is a closed projection fixture over default unarmored AC, Barbarian and Monk Unarmored Defense, light and medium armor Dexterity formulas, heavy fixed armor, and trained shield bonus. The input space is scalar formula selection over witnessed SRD loadout and selected-feature facts, so random branch interleavings are not the risk at this sheet projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
@@ -2369,14 +2370,24 @@
         "character-sheet.armor-class-base-formula"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt",
         "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/shared-algebras/src/armor-class-algebra.ts",
+        "packages/surface/src/surface/unit-catalog.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Equipment.md#Armor",
+        ".references/srd-5.2.1/Equipment.md#Armor Training",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Unarmored Defense",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 1: Unarmored Defense",
+        "UBIQUITOUS_LANGUAGE.md#Armor Class (AC)",
+        "UBIQUITOUS_LANGUAGE.md#Unarmored Defense"
+      ],
       "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
     },
     {
@@ -2637,7 +2648,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet feature-resource replay is a closed fixture for named resource cases: Lay On Hands spend and Long Rest pool reset, class-feature use-count Short Rest recovery, point-pool Long Rest reset, Font of Magic slot/Sorcery Point conversions and gates, Uncanny Metabolism use-state reset plus Initiative recovery, and Metamagic shared point-pool battle bridge handoff. Random interleavings are not the risk at this sheet resource boundary.",
+          "deterministicReplayRationale": "Character Sheet feature-resource replay is a closed fixture for named resource cases: Lay On Hands spend and Long Rest pool reset, class-feature use-count Short Rest recovery, point-pool Long Rest reset, Font of Magic slot/Sorcery Point conversions and gates, Uncanny Metabolism use-state reset plus Initiative recovery, and Metamagic shared point-pool battle bridge handoff. The reusable semantic cores own generic resource-pool spend/recovery, feature HP healing projection, Lay On Hands pool spend and condition-removal cost, Short Rest/Long Rest resource reset, Font of Magic slot/Sorcery Point conversion gates, and Uncanny Metabolism focus/healing/use-state projection; the replay remains the package-local battle bridge witness. Random interleavings are not the risk at this sheet resource boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
           "qntSpecPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
@@ -2655,6 +2666,11 @@
         "character-sheet.monk-uncanny-metabolism-initiative-recovery"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+        "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
+        "packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt",
+        "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
+        "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt",
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -2678,7 +2694,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet Ability Check Proficiency Bonus replay is a fixed projection fixture for unproficient Jack of All Trades, rounded-down higher-level Jack of All Trades, ordinary skill proficiency, Expertise, the other-Proficiency-Bonus exclusion, and absence of the Bard level-2 feature. Random action interleavings are not the risk at this scalar sheet projection boundary.",
+          "deterministicReplayRationale": "Character Sheet Ability Check Proficiency Bonus replay is a fixed projection fixture for unproficient Jack of All Trades, rounded-down higher-level Jack of All Trades, ordinary skill proficiency, Expertise, the other-Proficiency-Bonus exclusion, and absence of the Bard level-2 feature. The reusable semantic core owns the skill-training, Expertise, Jack of All Trades, and no-other-Proficiency-Bonus precedence; random action interleavings are not the risk at this scalar sheet projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/ability-check-proficiency-bonus.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
@@ -2689,6 +2705,7 @@
         "character-sheet.ability-check-proficiency-bonus"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt",
         "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -2927,11 +2944,43 @@
       "title": "Character Sheet Hit Point healing, Short Rest, Long Rest, interruption, and Hit Point Dice transitions"
     },
     {
+      "id": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Hit Point Maximum replay is a closed formula fixture for level-1 maximum Hit Die, fixed higher-level gain, multiclass later-level gain, minimum 1 later-level gain, and effective maximum after a maximum reduction. The input space is scalar arithmetic over witnessed class Hit Dice and Constitution modifiers, so random branch interleavings are not the risk at this sheet projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt",
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Hit Points",
+        ".references/srd-5.2.1/Character-Creation.md#Level 1 Hit Points by Class",
+        ".references/srd-5.2.1/Character-Creation.md#Fixed Hit Points by Class",
+        ".references/srd-5.2.1/Rules-Glossary.md#Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+      ],
+      "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic maximum bonuses, and maximum reduction"
+    },
+    {
       "id": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet Spell Slot/Pact Slot replay is a closed fixture for slot-capacity validation, ordinary Spell Slot current expenditure, Pact Slot current expenditure, Short Rest Pact Slot recovery, Arcane Recovery ordinary Spell Slot refund, Long Rest ordinary/Pact Slot restoration and created-slot expiry, interrupted-rest no-benefit versus Short Rest benefit outcomes imported from the HP/rest owner, and Magical Cunning Pact Slot recovery. Random interleavings are not the risk at this sheet state boundary.",
+          "deterministicReplayRationale": "Character Sheet Spell Slot/Pact Slot replay is a closed fixture for slot-capacity validation, ordinary Spell Slot current expenditure, Pact Slot current expenditure, Short Rest Pact Slot recovery, Arcane Recovery ordinary Spell Slot refund, Long Rest ordinary/Pact Slot restoration and created-slot expiry, interrupted-rest no-benefit versus Short Rest benefit outcomes imported from the HP/rest owner, and Magical Cunning Pact Slot recovery. The reusable semantic core owns the slot-state facts, validation predicates, rest transition reducers, Arcane Recovery refund reducer, and Magical Cunning recovery count/reducer; random interleavings are not the risk at this sheet state boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
@@ -2943,6 +2992,7 @@
         "character-sheet.short-rest-spell-slot-recovery"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt",
         "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -2962,11 +3012,46 @@
       "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
     },
     {
+      "id": "SHEET.SPELL_SLOTS.TABLE_DERIVATION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Spell Slot table replay is a closed projection fixture over the covered table subset: full-caster levels 1-4, replayed at levels 1, 2, and 4, plus Pact Magic levels 1 and 2. The QNT semantic core computes the table facts, and the TS witness derives matching runtime capacities from existing Surface class spellcasting progression before exercising expenditure and recovery state.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt",
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/class-spellcasting.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/Character-Creation.md#Spell Slots",
+        ".references/srd-5.2.1/Character-Creation.md#Pact Magic",
+        ".references/srd-5.2.1/Classes/Wizard.md#Wizard Features",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Sorcerer Features",
+        ".references/srd-5.2.1/Classes/Warlock.md#Warlock Features",
+        "UBIQUITOUS_LANGUAGE.md#Spell Slot",
+        "UBIQUITOUS_LANGUAGE.md#Pact Slot",
+        "UBIQUITOUS_LANGUAGE.md#Caster Type"
+      ],
+      "title": "Character Sheet ordinary Spell Slot and Pact Magic slot capacity derivation from class spellcasting table level facts"
+    },
+    {
       "id": "SHEET.WEAPON_MASTERY.RESELECTION",
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet Weapon Mastery replay is a closed selected-identity fixture for Paladin, Ranger, and Rogue two-choice projection plus Long Rest reselection. The runtime reads eligible weapon facts and Long Rest change counts from the installed Surface feature and rewrites CharacterBuild selected class-choice refs without adding durable sheet-local Weapon Mastery state; random branch interleavings are not the risk at this projection boundary.",
+          "deterministicReplayRationale": "Character Sheet Weapon Mastery replay keeps selected-identity fixtures for Paladin, Ranger, and Rogue two-choice projection plus Long Rest reselection. The reusable semantic core owns opaque-ref reselection semantics: existing and requested choice count, duplicate rejection, eligible-ref admission, changed-choice derivation, Long Rest change limit, and accepted selected refs. The replay also runs deterministic synthetic semantic-core branches for the one-change accept case and over-limit rejection case while keeping concrete selected Weapon Unit and feature Unit identity evidence at the package boundary. The runtime reads eligible weapon facts and Long Rest change counts from the installed Surface feature and rewrites CharacterBuild selected class-choice refs without adding durable sheet-local Weapon Mastery state; random branch interleavings are not the risk at this projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
@@ -2977,6 +3062,7 @@
         "character-sheet.weapon-mastery-reselection"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
         "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -3000,7 +3086,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet spellbook Ritual replay is a fixed projection fixture for the accepted spellbook Ritual case and the prepared-only rejection case. The runtime projects the invocation from existing CharacterBuild spellbook Spell Access, the installed spellbook Ritual Access feature, and the Surface Spell Definition Ritual tag; it records no separate Ritual list and spends no Spell Slot, so random branch interleavings are not the risk at this projection boundary.",
+          "deterministicReplayRationale": "Character Sheet spellbook Ritual replay keeps selected-identity fixtures for the accepted Wizard Ritual Adept spellbook case and the prepared-only rejection case. The reusable semantic core owns identity-free access facts and invocation projection constants: level-1+ Ritual-tagged Spell Definition, spellbook access path, spellbook Ritual Access feature present for that source, no Spell Slot cost, preparation not required, spellbook access, ten extra casting minutes, and reading from the spellbook. The replay also runs deterministic semantic-core branches for non-Ritual, non-leveled, and missing-feature rejection while concrete Wizard feature, spell, and source identity remain at the package boundary. The runtime projects the invocation from existing CharacterBuild spellbook Spell Access, the installed spellbook Ritual Access feature, and the Surface Spell Definition Ritual tag; it records no separate Ritual list and spends no Spell Slot, so random branch interleavings are not the risk at this projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
@@ -3011,6 +3097,7 @@
         "character-sheet.spellbook-ritual-invocation"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt",
         "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
       ],
       "runtime": "character-sheet",
@@ -5884,7 +5971,47 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt carries generic capacity/expended resource-pool legality, remaining amount, spend, partial recovery, full recovery, Short Rest feature-resource recovery, and Long Rest feature-resource reset semantics for Character Sheet feature resources.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt carries Character Sheet feature-resource Hit Point healing projection through the shared hit-point recovery core without duplicating death-save or temporary-hit-point behavior.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt carries Lay On Hands healing-pool spend, Hit Point restoration, condition-removal cost, and applied projection semantics without binding the core to an authored condition identity.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt carries Font of Magic slot-to-Sorcery-Point conversion, ordinary/created slot-source ambiguity, Sorcery Point affordability, created Spell Slot table cost, level gate, and created-slot projection semantics.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt carries Uncanny Metabolism once-per-Long-Rest gate, Focus Point recovery, Monk-level plus Martial-Arts-roll healing, and used-since-Long-Rest projection semantics.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is a bounded replay owner for feature-resource parity evidence; reusable spend, recovery, reset, conversion, and Uncanny Metabolism semantics live in shared rule-core modules while the Metamagic battle-resource bridge remains package-local composition evidence.",
       "obligationIds": [
         "SHEET.FEATURE_RESOURCES.TRANSITIONS"
       ],
@@ -5960,7 +6087,15 @@
       "role": "selected-identity-trace"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt carries executable Character Sheet Ability Check Proficiency Bonus precedence for skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate.",
+      "obligationIds": [
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is a bounded replay owner for Character Sheet Ability Check Proficiency Bonus parity evidence; the reusable semantics live in packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt.",
       "obligationIds": [
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"
       ],
@@ -5968,12 +6103,20 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt carries executable Character Sheet Armor Class base formula and trained shield bonus semantics for default ability-sum bases, Unarmored Defense, and SRD armor formulas.",
+      "obligationIds": [
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is a bounded replay owner for Character Sheet Armor Class parity evidence; the reusable semantics live in packages/shared-algebras/proofs/rule-core/armor-class-base.qnt.",
       "obligationIds": [
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"
       ],
       "ownerPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
-      "role": "selected-identity-trace"
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is a selected-identity replay owner for class-feature always-prepared Spell Access; it proves retained Surface class-feature identity reaches Character Sheet projection without supplying reusable generator input.",
@@ -5992,7 +6135,31 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt carries executable Character Sheet Hit Point Maximum derivation semantics from class Hit Dice, Constitution modifier, fixed higher-level gains, deterministic maximum bonuses, and maximum reductions.",
+      "obligationIds": [
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is a bounded replay owner for Character Sheet Hit Point Maximum parity evidence; the reusable semantics live in packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt.",
+      "obligationIds": [
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt carries executable Character Sheet spell-rest benefit application semantics from typed profile and recipient facts, including recipient eligibility, Long Rest lockout rejection, healing roll gates, slot-scaled healing dice count, applied/rejected results, and pre-spend rejection projection.",
+      "obligationIds": [
+        "SHEET.SPELL_REST_BENEFIT.APPLICATION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt is a bounded replay owner for spell-rest benefit parity evidence; the reusable semantics live in packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt.",
       "obligationIds": [
         "SHEET.SPELL_REST_BENEFIT.APPLICATION"
       ],
@@ -6000,15 +6167,40 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt carries executable Character Sheet Spell Slot table semantics for the covered full-caster and Pact Magic table subset.",
       "obligationIds": [
+        "SHEET.SPELL_SLOTS.TABLE_DERIVATION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt carries executable Character Sheet Spell Slot, Pact Slot, Arcane Recovery, Long Rest, and Magical Cunning transition semantics.",
+      "obligationIds": [
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is a bounded replay owner for Spell Slot/Pact Slot parity evidence; the reusable transition semantics live in packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt and table-capacity semantics live in packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt.",
+      "obligationIds": [
+        "SHEET.SPELL_SLOTS.TABLE_DERIVATION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
       ],
       "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt carries executable Character Sheet spellbook Ritual access semantics over identity-free facts and returns accepted invocation projection constants or rejection without importing authored Wizard, feature, or Spell identity.",
+      "obligationIds": [
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is a selected-identity replay owner for concrete Wizard Ritual Adept, spell, and source refs; reusable identity-free spellbook Ritual access semantics live in packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt and are exercised by deterministic accept/reject semantic-core branches.",
       "obligationIds": [
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"
       ],
@@ -6016,7 +6208,15 @@
       "role": "selected-identity-trace"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt carries executable Character Sheet Weapon Mastery Long Rest reselection semantics over opaque current, requested, and eligible weapon refs: it derives duplicate, eligibility, and changed-choice facts and returns accepted selected refs or rejection without importing authored Weapon or class-feature identity.",
+      "obligationIds": [
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is a selected-identity replay owner for concrete Weapon Mastery feature and selected Weapon Unit refs; reusable opaque-ref reselection semantics live in packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt and are exercised by deterministic accept/reject semantic-core branches.",
       "obligationIds": [
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
@@ -9211,6 +9411,241 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "list",
+        "fold",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "list",
+        "fold",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "arithmetic",
+        "pattern-match"
+      ],
+      "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "list",
+        "fold",
+        "if-expression",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+      "proofOnly": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
+        "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
+        "packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt",
+        "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
+        "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "arithmetic",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "list",
+        "set",
+        "fold",
+        "set-operators",
+        "membership",
+        "size"
+      ],
+      "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match"
+      ],
+      "obligationId": "SHEET.SPELL_SLOTS.TABLE_DERIVATION",
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt"
       ],
       "status": "generation-subset-clean"
     },

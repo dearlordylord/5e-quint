@@ -195,7 +195,7 @@ TS tests to keep focused:
 - `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`
 - `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts`
 - `packages/battle-runtime/src/reaction-casting-time.mbt.test.ts`
-- `packages/battle-runtime/src/battle-runtime.mbt.test.ts` only if the change
+- `packages/battle-runtime/src/weapon-attack-skeleton.mbt.test.ts` only if the change
   affects the integrated MBT surface and focused checks are already green.
 
 TS implementation note:

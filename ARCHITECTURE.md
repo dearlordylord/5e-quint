@@ -96,8 +96,9 @@ Three layers:
   `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`).
 - **Focused MBT/parity/replay witnesses** as separate `*.mbt.qnt` and
   `*.mbt.test.ts` drivers per obligation, profile, or selected identity. No
-  single integrated battle MBT is the verification gate; the broad
-  `battle-runtime.mbt.qnt` is one bounded-fixture witness among many.
+  single integrated battle MBT is the verification gate;
+  `battle-runtime-weapon-attack-skeleton.mbt.qnt` is one focused
+  bounded-fixture witness among many.
 
 Coverage and accounting live in two registries:
 
@@ -311,8 +312,8 @@ Use this workflow:
    downstream with adapters, duplicate registries, or parallel state.
 5. Add parity proof at the owning boundary. Reducer packages use focused QNT
    tests, focused reducer tests, and focused MBT drivers per obligation or
-   profile. Integrated MBT (e.g., `battle-runtime.mbt.qnt`) is one bounded
-   witness, not a coverage gate by itself.
+   profile. A focused MBT fixture is one bounded witness, not a coverage gate
+   by itself.
 6. Thread the stronger fact through callers directly. If MCP or another
    composition layer needs a stronger lower-layer fact, change the lower layer
    and its proof owner; do not compensate with private MCP state.
@@ -398,7 +399,7 @@ Proof layers for the promoted path are package-owned:
 | Reusable rule mechanic | `@dnd/shared-algebras` `proofs/rule-core/` slice | Stateless contract module plus stateful inductive proof machine (`*-inductive.qnt`); integration MBT through a package-local bridge where the mechanic is composed at scale. | A new reusable procedure family is introduced or an existing slice's state transitions change. |
 | Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, focused QNT, and randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
 | Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored focused QNT tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
-| Selected composed battle-runtime flows | `@dnd/battle-runtime` | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, plus the broad `battle-runtime.mbt.qnt` as one bounded-fixture integration witness. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
+| Selected composed battle-runtime flows | `@dnd/battle-runtime` | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, including `battle-runtime-weapon-attack-skeleton.mbt.qnt` as one bounded fixture. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
 | MCP runtime composition | `@dnd/mcp` | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions. | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
 
 No layer requires MBT per authored Unit, Spell, weapon, feature, or Stat Block.

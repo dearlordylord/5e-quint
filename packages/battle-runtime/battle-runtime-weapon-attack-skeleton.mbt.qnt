@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-module battleRuntimeMbt {
+module battleRuntimeWeaponAttackSkeletonMbt {
   // Self-contained literal projection witness for the promoted bounded battle
   // replay. This driver asserts the fixed Skeleton weapon-damage outcomes
   // directly instead of importing the damage reducer and model barrel.

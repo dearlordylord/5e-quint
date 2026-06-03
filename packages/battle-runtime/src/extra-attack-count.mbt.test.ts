@@ -1,0 +1,160 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling paladin_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling ranger_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+import * as path from "node:path";
+
+import { run } from "@firfi/quint-connect";
+import { describe, expect, it } from "vitest";
+
+import {
+  createExtraAttackDriver,
+  extraAttackMbtAdditionalAttackCounts,
+  extraAttackMbtInitAction,
+  extraAttackStateCheck,
+  focusedMbtMaxSteps,
+  promotedMbtTraces,
+  runSelectedUnitIdentityReplay,
+  type ExtraAttackDriverAction,
+  type ExtraAttackMbtProjection,
+  type ExtraAttackSelectedUnitIdentityReplay,
+  type SelectedUnitIdentityReplaySequence,
+} from "./battle-runtime-mbt-fixtures.ts";
+
+const extraAttackDriverSchema = {
+  init: {},
+  initOneAdditionalAttack: {},
+  initTwoAdditionalAttacks: {},
+  initThreeAdditionalAttacks: {},
+  doResolveFirstExtraAttackMiss: {},
+  doMoveBetweenExtraAttackSlots: {},
+  doResolveSecondExtraAttackMiss: {},
+  doRejectThirdExtraAttack: {},
+  doEndTurnClosesExtraAttackSlot: {},
+  step: {},
+} as const;
+
+const extraAttackSelectedIdentitySequences = [
+  {
+    name: "attack-action-opens-extra-attack-slot",
+    actions: ["doResolveFirstExtraAttackMiss"],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 1,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+  {
+    name: "extra-attack-slot-spent-without-action-cost",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 0,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+] as const satisfies readonly SelectedUnitIdentityReplaySequence<
+  ExtraAttackDriverAction,
+  ExtraAttackMbtProjection
+>[];
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "fighter_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "paladin_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "ranger_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+] as const satisfies ReadonlyArray<ExtraAttackSelectedUnitIdentityReplay>;
+
+describe("Extra Attack count MBT", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      for (const sequence of replay.sequences) {
+        expect(sequence.actions.length).toBeGreaterThan(0);
+      }
+      await runSelectedUnitIdentityReplay(replay);
+    }
+  });
+
+  it.each(extraAttackMbtAdditionalAttackCounts)(
+    "replays Extra Attack count %i slot spending",
+    async (additionalAttacks) => {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../battle-runtime-extra-attack.mbt.qnt",
+        ),
+        init: extraAttackMbtInitAction(additionalAttacks),
+        step: "stepSpendAllSlots",
+        driver: createExtraAttackDriver(
+          "fighter_extra_attack",
+          extraAttackDriverSchema,
+        ),
+        backend: "typescript",
+        nTraces: promotedMbtTraces,
+        maxSteps: focusedMbtMaxSteps(additionalAttacks + 3),
+        stateCheck: extraAttackStateCheck,
+      });
+    },
+    120_000,
+  );
+
+  it.each(extraAttackMbtAdditionalAttackCounts)(
+    "replays Extra Attack count %i end-turn slot closure",
+    async (additionalAttacks) => {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../battle-runtime-extra-attack.mbt.qnt",
+        ),
+        init: extraAttackMbtInitAction(additionalAttacks),
+        step: "stepEndTurnAfterOpeningSlots",
+        driver: createExtraAttackDriver(
+          "fighter_extra_attack",
+          extraAttackDriverSchema,
+        ),
+        backend: "typescript",
+        nTraces: promotedMbtTraces,
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: extraAttackStateCheck,
+      });
+    },
+    120_000,
+  );
+});

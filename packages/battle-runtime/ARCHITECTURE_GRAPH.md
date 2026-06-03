@@ -357,10 +357,10 @@ flowchart TD
 - Focused QNT slices constrain this implemented subset. Old root
   `battle.qnt` remains broad legacy/Core proof and restore source material, not
   the target for new runtime behavior.
-- The first integrated promoted MBT is
-  `src/battle-runtime.mbt.test.ts` plus `battle-runtime.mbt.qnt`. It targets the
-  public weapon Attack reducer path against Skeleton and does not require MBT
-  for every authored Unit or Stat Block.
+- `src/weapon-attack-skeleton.mbt.test.ts` plus
+  `battle-runtime-weapon-attack-skeleton.mbt.qnt` targets the public weapon
+  Attack reducer path against Skeleton as one focused fixture. It does not
+  require MBT for every authored Unit or Stat Block.
 - Focused rule-core MBT lanes use one small `.mbt.qnt` spec and one matching
   driver per QCORE family. They project scalar QCORE-observable facts and call
   production reducer entrypoints instead of duplicating reducer logic. The first

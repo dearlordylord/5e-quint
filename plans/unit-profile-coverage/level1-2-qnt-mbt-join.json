@@ -383,9 +383,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.passive-saving-throw-roll-mode",
@@ -415,9 +415,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -447,9 +447,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.first-attack-roll-reckless-advantage",
@@ -510,9 +510,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -542,9 +542,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.bardic-inspiration-grant",
@@ -2214,9 +2214,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.action-surge-resource",
@@ -2298,9 +2298,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.self-bonus-action-healing",
@@ -2330,9 +2330,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.failed-ability-check-resource-boost",
@@ -4318,9 +4318,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.martial-arts-attack-projection",
@@ -4381,9 +4381,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.passive-speed-bonus",
@@ -5791,9 +5791,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.alternate-action-cost",
@@ -5849,9 +5849,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.attack-damage-rider",
@@ -6744,7 +6744,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
           "stepAction": "step"
         }
@@ -6770,7 +6770,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
           "stepAction": "step"
         }
@@ -6802,9 +6802,9 @@
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
-          "stepAction": "step"
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+          "stepAction": "stepSpendAllSlots"
         }
       ],
       "profileId": "unit-feature.innate-sorcery-activation",

@@ -616,7 +616,7 @@ character runtimes.
 | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` | 4,615 | Split selected identity evidence into light/object sight, forced movement/terrain, and visibility witness files. |
 | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` | 4,132 | Split into scalar buffs, roll modifiers, marked riders, smite/weapon riders, and protection/charm evidence. |
 | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` | 2,204 | Split into attack damage, save-gated damage, burst/chained, and object-target evidence. |
-| `packages/battle-runtime/src/battle-runtime.mbt.test.ts` | 3,740 | Keep as broad MBT shell for now. Extract helper setup only after Tier 1 test split. |
+| retired grouped battle-runtime MBT harness | retired | Split into focused MBT files plus `battle-runtime-mbt-fixtures.ts`; do not recreate a broad shell. |
 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | 2,673 | Split by rule-core feature family if it keeps growing past current feature batches. |
 | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` | 2,199 | Split by spell procedure family after spell QNT modules settle. |
 | `packages/character-creation-runtime/src/finalization.ts` | 2,709 | Split into readiness/support, build identity, proficiencies, spellcasting, equipment/loadout, ability-score increases. |

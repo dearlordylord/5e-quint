@@ -6639,7 +6639,7 @@
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
               "stepAction": "step"
             }
@@ -6649,7 +6649,7 @@
           "qntMbtWitnesses": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
               "stepAction": "step"
             }
@@ -14268,7 +14268,7 @@
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
               "stepAction": "step"
             }
@@ -14278,7 +14278,7 @@
           "qntMbtWitnesses": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+              "ownerPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
               "stepAction": "step"
             }

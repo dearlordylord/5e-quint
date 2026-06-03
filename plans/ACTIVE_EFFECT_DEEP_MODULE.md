@@ -247,7 +247,7 @@ Mechanical checks:
 MBT discipline:
 - No MBT for step 1 (behaviour-preserving; typecheck + focused tests suffice).
 - One battle-MBT run after step 3 only:
-  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`,
+  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/weapon-attack-skeleton.mbt.test.ts`,
   in background with a timing wrapper. Check for zombie `quint_evaluator`
   processes first. Reproduce any failure with the reported seed before fixing.
 

@@ -9,7 +9,7 @@ actions.
 
 | Unit                       | Representative frontier                                                                   | MBT owner                                                    |
 | -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `fighter_extra_attack`     | Attack action count scaling, including Unit-owned extra attack slot creation and spending. | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`     |
+| `fighter_extra_attack`     | Attack action count scaling, including Unit-owned extra attack slot creation and spending. | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts`     |
 | `defense`                  | Passive Armor Class feature projection.                                                   | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_archery`             | Passive ranged Attack Roll bonus projection.                                              | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `orc_relentless_endurance` | Zero-Hit-Point replacement with limited-use Unit ownership.                                | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -51,7 +51,7 @@ than counting the existing runtime-test owner as selected MBT.
 
 ## Verification
 
-- `pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts src/rule-core-spells.mbt.test.ts src/battle-runtime.mbt.test.ts -t "replays selected Unit identities deterministically"`
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts src/rule-core-spells.mbt.test.ts src/extra-attack-count.mbt.test.ts -t "replays selected Unit identities deterministically"`
 - Focused Rule Core Features MBT with prior-run checks and timing wrapper:
   `MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts`
 - `pnpm unit-profile-coverage:check --write`

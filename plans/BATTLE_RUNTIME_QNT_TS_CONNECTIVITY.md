@@ -36,7 +36,7 @@ flowchart TB
     end
 
     subgraph QntMbt["QNT MBT specs"]
-      IntegratedMbtQ["battle-runtime.mbt.qnt<br/>selected integrated weapon attack lane"]
+      IntegratedMbtQ["battle-runtime-weapon-attack-skeleton.mbt.qnt<br/>selected integrated weapon attack lane"]
       FocusedRuntimeMbtQ["battle-runtime-*.mbt.qnt<br/>extra attack, scalar buff, object, eldritch blast,<br/>sleep repeat-save, death saves, magic missile"]
       RuleCoreMbtQ["rule-core-*.mbt.qnt<br/>movement, reactions, features, spells, stat-block controls"]
     end

@@ -1023,7 +1023,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.fighter-fighting-style-advancement-replacement` | L1D2-FIGHTER-FIGHTING-STYLE | `packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts` |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | L1H-FIGHTER-TACTICAL-MIND | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_frenzy` | `unit-feature.attack-damage-rider` | L3-FOLLOWUP-BARBARIAN-FRENZY | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -1064,10 +1064,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
 | `paladin_paladins_smite` | `spell.invocation-after-hit-damage` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
-| `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
-| `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `ranger_roving` | `unit-feature.passive-speed-kind-grants` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `ranger_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
 | `ranger_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
@@ -1076,7 +1076,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `mastery_sap` | `unit-feature.weapon-mastery-sap` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
-| `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | L1H-ORC-ADRENALINE-RUSH | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | L1H-ORC-ADRENALINE-RUSH | `packages/battle-runtime/src/adrenaline-rush.mbt.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `aid` | `spell.scalar-buff` | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts` |
