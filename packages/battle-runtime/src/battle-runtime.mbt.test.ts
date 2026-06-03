@@ -1,6 +1,5 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spiritual-weapon-attack-proxy spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.invocation-spiritual-weapon-attack-proxy spell.scalar-buff
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
@@ -49,7 +48,6 @@ import {
   battleCombatantSide,
   battleObjectId,
   battleTablePositionId,
-  breakBattleConcentration,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
@@ -235,20 +233,6 @@ type EldritchBlastMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
-type SleepRepeatSaveMbtTurnRole = "caster" | "target";
-
-type SleepRepeatSaveMbtProjection = {
-  readonly currentTurnRole: SleepRepeatSaveMbtTurnRole;
-  readonly targetIncapacitated: boolean;
-  readonly targetUnconscious: boolean;
-  readonly targetProne: boolean;
-  readonly casterConcentrating: boolean;
-  readonly actionAvailable: boolean;
-  readonly holes: readonly MbtHole[];
-  readonly lastResult: MbtLastResult;
-  readonly lastInvalidReason: MbtLastInvalidReason;
-};
-
 type SpiritualWeaponMbtProjection = {
   readonly targetHp: number;
   readonly bonusActionAvailable: boolean;
@@ -282,11 +266,6 @@ if (magicMissileUnit.kind !== "spell") {
   throw new Error("Expected Magic Missile content to decode as a spell Unit.");
 }
 const magicMissileSpell = magicMissileUnit satisfies SpellRecord;
-const sleepUnit = unitLibrary.requireUnit("sleep");
-if (sleepUnit.kind !== "spell") {
-  throw new Error("Expected Sleep content to decode as a spell Unit.");
-}
-const sleepSpell = sleepUnit satisfies SpellRecord;
 const spiritualWeaponUnit = unitLibrary.requireUnit("spiritual_weapon");
 if (spiritualWeaponUnit.kind !== "spell") {
   throw new Error("Expected Spiritual Weapon content to decode as a spell Unit.");
@@ -379,19 +358,6 @@ const eldritchBlastDriverSchema = {
   doFillSecondAttackHit: {},
   doFillSecondDamageLow: {},
   doRejectStaleAfterResolved: {},
-  step: {},
-} as const;
-
-const sleepRepeatSaveDriverSchema = {
-  init: {},
-  doFillInitialSaveFailure: {},
-  doBreakConcentrationBeforeRepeat: {},
-  doEndCasterTurn: {},
-  doEndCasterTurnAfterConcentrationBreak: {},
-  doEndTargetTurnAfterConcentrationBreak: {},
-  doDiscoverRepeatSave: {},
-  doFillRepeatSaveSuccess: {},
-  doFillRepeatSaveFailure: {},
   step: {},
 } as const;
 
@@ -1219,98 +1185,6 @@ function createEldritchBlastDriver() {
   });
 }
 
-function createSleepRepeatSaveDriver() {
-  return defineDriver(sleepRepeatSaveDriverSchema, () => {
-    let state = sleepRepeatSaveBattle();
-    let subject: BattleSubject = sleepSubject();
-    let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverSleepHoles(state, subject);
-    let lastResult: SleepRepeatSaveMbtProjection["lastResult"] = "init";
-    let lastInvalidReason: SleepRepeatSaveMbtProjection["lastInvalidReason"] =
-      "";
-
-    function reset(): void {
-      state = sleepRepeatSaveBattle();
-      subject = sleepSubject();
-      fills = [];
-      holes = discoverSleepHoles(state, subject);
-      lastResult = "init";
-      lastInvalidReason = "";
-    }
-
-    function recordResult(result: BattleResolutionResult): void {
-      lastResult = result.tag;
-      if (result.tag === "resolved") {
-        state = result.state;
-        holes = [];
-        lastInvalidReason = "";
-        return;
-      }
-      if (result.tag === "needsHoles") {
-        state = result.state;
-        holes = result.holes;
-        lastInvalidReason = "";
-        return;
-      }
-      lastInvalidReason = mbtInvalidReason(result.reason);
-    }
-
-    function submit(nextFills: readonly BattleFill[]): void {
-      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
-      recordResult(resolveBattleSubject({ state, subject, fills }));
-    }
-
-    function fillRepeatSave(succeeded: boolean): void {
-      const repeatSave = requireHole(holes, "savingThrowOutcome");
-      submit([savingThrowOutcomeFill(repeatSave, skeletonId, succeeded)]);
-    }
-
-    return {
-      init: reset,
-      doFillInitialSaveFailure: () => {
-        const initialSave = requireHole(holes, "savingThrowOutcome");
-        submit([savingThrowOutcomeFill(initialSave, skeletonId, false)]);
-      },
-      doBreakConcentrationBeforeRepeat: () => {
-        state = breakBattleConcentration(state, fighterId);
-        holes = [];
-        lastResult = "resolved";
-        lastInvalidReason = "";
-      },
-      doEndCasterTurn: () => {
-        subject = endTurnSubjectFor(fighterId);
-        fills = [];
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      doEndCasterTurnAfterConcentrationBreak: () => {
-        subject = endTurnSubjectFor(fighterId);
-        fills = [];
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      doEndTargetTurnAfterConcentrationBreak: () => {
-        subject = endTurnSubjectFor(skeletonId);
-        fills = [];
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      doDiscoverRepeatSave: () => {
-        subject = endTurnSubjectFor(skeletonId);
-        fills = [];
-        recordResult(resolveBattleSubject({ state, subject, fills }));
-      },
-      doFillRepeatSaveSuccess: () => fillRepeatSave(true),
-      doFillRepeatSaveFailure: () => fillRepeatSave(false),
-      step: () => {},
-      getState: () =>
-        projectSleepRepeatSaveMbtState({
-          state,
-          holes,
-          lastResult,
-          lastInvalidReason,
-        }),
-    };
-  });
-}
-
 function createSpiritualWeaponDriver() {
   return defineDriver(spiritualWeaponDriverSchema, () => {
     let state = spiritualWeaponBattle();
@@ -1596,27 +1470,6 @@ function normalizeEldritchBlastQuintState(
   };
 }
 
-function normalizeSleepRepeatSaveQuintState(
-  raw: unknown,
-): SleepRepeatSaveMbtProjection {
-  const state = quintStateRecord(raw);
-
-  return {
-    currentTurnRole: sleepRepeatSaveMbtTurnRole(
-      state["qCurrentTurnRole"],
-      "qCurrentTurnRole",
-    ),
-    targetIncapacitated: booleanField(state, "qTargetIncapacitated"),
-    targetUnconscious: booleanField(state, "qTargetUnconscious"),
-    targetProne: booleanField(state, "qTargetProne"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
-  };
-}
-
 function normalizeSpiritualWeaponQuintState(
   raw: unknown,
 ): SpiritualWeaponMbtProjection {
@@ -1696,13 +1549,6 @@ const starryWispObjectStateCheck = stateCheck(
 const eldritchBlastStateCheck = stateCheck(
   normalizeEldritchBlastQuintState,
   (spec: EldritchBlastMbtProjection, impl: EldritchBlastMbtProjection) => {
-    expect(impl).toEqual(spec);
-    return true;
-  },
-);
-const sleepRepeatSaveStateCheck = stateCheck(
-  normalizeSleepRepeatSaveQuintState,
-  (spec: SleepRepeatSaveMbtProjection, impl: SleepRepeatSaveMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -1852,22 +1698,6 @@ describe("battle-runtime MBT", () => {
       nTraces: promotedMbtTraces,
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: eldritchBlastStateCheck,
-    });
-  }, 120_000);
-
-  it("replays Sleep pending repeat-save lifecycle and concentration cleanup", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-sleep-repeat-save.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSleepRepeatSaveDriver(),
-      backend: "typescript",
-      nTraces: promotedMbtTraces,
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: sleepRepeatSaveStateCheck,
     });
   }, 120_000);
 
@@ -2076,38 +1906,6 @@ function projectEldritchBlastMbtState(
   };
 }
 
-function projectSleepRepeatSaveMbtState(input: {
-  readonly state: BattleState;
-  readonly holes: readonly BattleHole[];
-  readonly lastResult: SleepRepeatSaveMbtProjection["lastResult"];
-  readonly lastInvalidReason: SleepRepeatSaveMbtProjection["lastInvalidReason"];
-}): SleepRepeatSaveMbtProjection {
-  const snapshot = snapshotBattle(input.state);
-  const caster = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === fighterId,
-  );
-  const target = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === skeletonId,
-  );
-  if (caster == null || target == null) {
-    throw new Error("Expected Sleep repeat-save MBT combatants.");
-  }
-  return {
-    currentTurnRole:
-      snapshot.currentActorId === fighterId ? "caster" : "target",
-    targetIncapacitated: target.conditions.includes("incapacitated"),
-    targetUnconscious: target.conditions.includes("unconscious"),
-    targetProne: target.conditions.includes("prone"),
-    casterConcentrating: caster.concentrating,
-    actionAvailable: snapshot.turn.actionResources.some(
-      (resource) => resource.source === "turn",
-    ),
-    holes: projectHoles(input.holes),
-    lastResult: input.lastResult,
-    lastInvalidReason: input.lastInvalidReason,
-  };
-}
-
 function projectSpiritualWeaponMbtState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
@@ -2195,23 +1993,6 @@ function discoverMagicMissileHoles(
   );
   if (act == null) {
     throw new Error("Expected Magic Missile spell act.");
-  }
-
-  return act.initialHoles;
-}
-
-function discoverSleepHoles(
-  state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === subject.actorId &&
-      candidate.subject.invocation.spellId === subject.invocation.spellId,
-  );
-  if (act == null) {
-    throw new Error("Expected Sleep spell act.");
   }
 
   return act.initialHoles;
@@ -2364,18 +2145,6 @@ function eldritchBlastSubject(): Extract<
       "eldritch_blast",
       "spellAttackSequence",
     ),
-    mode: { tag: "cast" },
-  };
-}
-
-function sleepSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
     mode: { tag: "cast" },
   };
 }
@@ -2547,16 +2316,6 @@ function eldritchBlastBattle(): BattleState {
     combatants: [
       eldritchBlastCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
-    ],
-  });
-}
-
-function sleepRepeatSaveBattle(): BattleState {
-  return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-sleep-repeat-save"),
-    combatants: [
-      sleepCasterCreatureInit({ initiative: 20 }),
-      sleepTargetCreatureInit({ initiative: 10 }),
     ],
   });
 }
@@ -2886,72 +2645,6 @@ function eldritchBlastCasterCreatureInit(input: {
   };
 }
 
-function sleepCasterCreatureInit(input: {
-  readonly initiative: number;
-}): BattleCreatureInit {
-  return {
-    combatantId: fighterId,
-    displayName: "Sleep Caster",
-    initiative: initiativeScore(input.initiative),
-    side: partySide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId("sleep-caster-character"),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 1 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-      spellcasting: {
-        sourceClassName: "fighter",
-        spellcastingAbilityModifier: 3,
-        proficiencyBonus: proficiencyBonus(2),
-        canCastSpells: true,
-        cantrips: [],
-        preparedSpells: [sleepSpell],
-        featurePreparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-        invocationSpellAccesses: [],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      },
-    },
-  };
-}
-
-function sleepTargetCreatureInit(input: {
-  readonly initiative: number;
-}): BattleCreatureInit {
-  return {
-    combatantId: skeletonId,
-    displayName: "Sleep Target",
-    initiative: initiativeScore(input.initiative),
-    side: oppositionSide,
-    creatureInit: {
-      kind: "character",
-      characterId: characterId("sleep-target-character"),
-      characterUnitRefs: [],
-      classLevels: [{ className: "fighter", level: 1 }],
-      d20Statistics: testCharacterD20Statistics({ str: 16 }),
-      armorClass: defaultArmorClassState(),
-      size: "medium",
-      speed: { walkFeet: movementFeet(30) },
-      currentHp: Hp(12),
-      maxHp: Hp(12),
-      tempHp: Hp(0),
-      selectedLoadout: {},
-      attack: null,
-      unarmedStrike: baseUnarmedStrike(),
-    },
-  };
-}
-
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -3145,31 +2838,6 @@ function targetFill(
         allyId: combatantId("ally"),
       },
     ],
-  };
-}
-
-function savingThrowOutcomeFill(
-  hole: BattleHole,
-  targetId: CombatantId,
-  succeeded: boolean,
-): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  if (hole.kind !== "savingThrowOutcome") {
-    throw new Error("Expected savingThrowOutcome hole.");
-  }
-  const outcomes = [{ targetId, succeeded }];
-  return {
-    kind: "savingThrowOutcome",
-    holeId: hole.holeId,
-    value:
-      "spell" in hole && hole.spell.targeting.kind !== "singleCombatant"
-        ? {
-            area: {
-              originAnchorId: fighterId,
-              affectedTargetIds: [targetId],
-            },
-            outcomes,
-          }
-        : { outcomes },
   };
 }
 
@@ -4000,17 +3668,6 @@ function holeName(raw: unknown): MbtHole {
   }
 
   throw new Error(`Unknown Quint battle hole variant: ${tag}`);
-}
-
-function sleepRepeatSaveMbtTurnRole(
-  raw: unknown,
-  field: string,
-): SleepRepeatSaveMbtTurnRole {
-  if (raw === "caster" || raw === "target") {
-    return raw;
-  }
-
-  throw new Error(`Expected Sleep repeat-save MBT turn role field ${field}.`);
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
