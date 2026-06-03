@@ -864,14 +864,7 @@ module battleRuntime {
     resolveFighterThaumaturgyBoomingVoice(state, currentActor(state), activeOneMinuteEffectCount, fighterHasRage(state))
 
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
-    match invocation {
-      | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
-      | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
-      | GuidanceRollModifier => 1
-      | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
-      | EnhanceAbilityRollModifier => 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
-      | EnthrallRollModifier => Set(Fighter, Goblin).size()
-    }
+    rollModifierChoiceMaximumTargets(invocation, slotLevel)
 
   pure def rollModifierActiveEffect(
     invocation: RollModifierSpell,
@@ -884,17 +877,13 @@ module battleRuntime {
     passivePerceptionModifierDelta(effects)
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
-    invocation == BaneRollModifier or invocation == EnthrallRollModifier
+    rollModifierChoiceRequiresFailedSave(invocation)
 
   pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
-    invocation != GuidanceRollModifier
+    rollModifierChoiceSpendsLevelOneSlot(invocation)
 
-  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool = {
-    val targetCount = selectedTargets.size()
-    targetCount >= 1 and
-      targetCount <= rollModifierMaximumTargets(invocation, slotLevel) and
-      (invocation != PassWithoutTraceRollModifier or selectedTargets.contains(Fighter))
-  }
+  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool =
+    rollModifierChoiceSelectedTargetsValid(invocation, selectedTargets, slotLevel)
 
   pure def rollModifierTargetedState(
     state: BattleState,
