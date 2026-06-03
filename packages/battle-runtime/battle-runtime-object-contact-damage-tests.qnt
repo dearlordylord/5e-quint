@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeObjectContactDamageTests {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
