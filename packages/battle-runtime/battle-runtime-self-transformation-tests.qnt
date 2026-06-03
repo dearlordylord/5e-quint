@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSelfTransformationTests {
-  import battleRuntime.* from "./battle-runtime"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
