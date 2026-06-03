@@ -4,6 +4,8 @@
 
 module battleRuntimeArmorClass {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
 
   pure def mageArmorDurationTicks: int = 8 * 60 * 10
 
@@ -29,6 +31,28 @@ module battleRuntimeArmorClass {
         | _ => 0
       })
       .fold(0, (highest, durationTicks) => if (highest > durationTicks) highest else durationTicks)
+
+  pure def combatantWithMageArmor(target: Combatant): Combatant =
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutMageArmor(target.activeEffects).union(Set(mageArmorActiveEffect(mageArmorDurationTicks))),
+    }
+
+  pure def resolveArmorOfShadowsMageArmorSpell(state: BattleState): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      state.fighter.wearingHeavyArmor
+    )
+      state
+    else
+      { ...state, fighter: combatantWithMageArmor(state.fighter), actionAvailable: false }
+
+  pure def combatantAfterDonningArmor(target: Combatant): Combatant =
+    { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
 
   pure def combatantArmorClass(combatant: Combatant): int =
     activeEffectArmorClass(combatant.ac, combatant.dexMod, combatant.activeEffects)

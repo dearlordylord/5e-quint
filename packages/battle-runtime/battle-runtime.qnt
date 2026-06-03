@@ -588,26 +588,13 @@ module battleRuntime {
     resumeBattleReactionContinuation(state, continuation)
 
   pure def applyMageArmor(target: Combatant): Combatant =
-    {
-      ...target,
-      activeEffects: activeEffectsWithoutMageArmor(target.activeEffects).union(Set(mageArmorActiveEffect(mageArmorDurationTicks))),
-    }
+    combatantWithMageArmor(target)
 
   pure def resolveArmorOfShadowsMageArmor(state: BattleState): BattleState =
-    if (
-      not(state.actionAvailable) or
-      currentActor(state) != Fighter or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state) or
-      state.fighter.wearingHeavyArmor
-    )
-      state
-    else
-      { ...state, fighter: applyMageArmor(state.fighter), actionAvailable: false }
+    resolveArmorOfShadowsMageArmorSpell(state)
 
   pure def targetDonsArmor(target: Combatant): Combatant =
-    { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
+    combatantAfterDonningArmor(target)
 
   pure def readySpell(state: BattleState): BattleState =
     readyFighterReadiedSpell(state)
@@ -632,37 +619,21 @@ module battleRuntime {
     state: BattleState,
     damageRoll: int,
     concentrationSaveSucceeded: bool,
-  ): BattleState = {
-    val advanced = endTurn(state)
-    val damageDice = ensnaringStrikeDamageDice(advanced.goblin.activeEffects)
-    if (currentActor(advanced) == Goblin and damageDice > 0)
-      { ...advanced, goblin: applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter) }
-    else
-      advanced
-  }
+  ): BattleState =
+    endTurnWithEnsnaringStrikeOngoingDamage(state, damageRoll, concentrationSaveSucceeded)
 
   pure def endTurnWithSearingSmiteDamageAndSave(
     state: BattleState,
     damageRoll: int,
     saveSucceeded: bool,
     concentrationSaveSucceeded: bool,
-  ): BattleState = {
-    val advanced = endTurn(state)
-    val damageDice = searingSmiteDamageDice(advanced.goblin.activeEffects)
-    if (currentActor(advanced) == Goblin and damageDice > 0)
-      {
-        val damagedGoblin = applyDamageFromSource(advanced.goblin, damageRoll, 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
-        {
-          ...advanced,
-          goblin: if (saveSucceeded)
-            { ...damagedGoblin, activeEffects: activeEffectsWithoutSearingSmite(damagedGoblin.activeEffects) }
-          else
-            damagedGoblin,
-        }
-      }
-    else
-      advanced
-  }
+  ): BattleState =
+    endTurnWithSearingSmiteOngoingDamageAndSave(
+      state,
+      damageRoll,
+      saveSucceeded,
+      concentrationSaveSucceeded,
+    )
 
   pure def resolveThaumaturgyBoomingVoice(state: BattleState, activeOneMinuteEffectCount: int): BattleState =
     resolveFighterThaumaturgyBoomingVoice(state, currentActor(state), activeOneMinuteEffectCount, fighterHasRage(state))
