@@ -31,14 +31,20 @@
     {
       "number": 5,
       "id": "BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Move direct-condition-removal proof module off the full-shell battleRuntime import"
     },
     {
       "number": 6,
       "id": "BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Audit remaining full-shell proof consumers and append the next implementation batch"
+    },
+    {
+      "number": 7,
+      "id": "BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Move save-spell proof module off the full-shell battleRuntime import"
     }
   ]
 }
@@ -115,8 +121,9 @@ reasonable findings remain.
 | 2 | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS - Move See Invisibility proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-01-MIRROR-IMAGE-PROOF-IMPORTS | Second small proof-module migration so the lane proves it can advance. |
 | 3 | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS - Move spell-facts proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-02-SEE-INVISIBILITY-PROOF-IMPORTS | Migrate a one-test proof module with broader spell fact imports. |
 | 4 | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS - Move object-contact-damage proof module off the full-shell battleRuntime import | done | BRQNT-SPLIT-03-SPELL-FACTS-PROOF-IMPORTS | Migrate a medium proof module after the small modules have landed. |
-| 5 | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present | ready-for-implementation-after-light-research | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS | Migrate another medium proof module and remove any newly unused shell import. |
-| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | ready-for-research | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Refresh the inventory and append the next Ralph-sized batch. |
+| 5 | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present | done | BRQNT-SPLIT-04-OBJECT-CONTACT-PROOF-IMPORTS | The file was already direct-imported; proof still passed. |
+| 6 | BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch | blocked | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS | Refresh the inventory after the replacement implementation task lands. |
+| 7 | BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import | ready-for-implementation-after-light-research | BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS | Replacement task for the next actual full-shell consumer. |
 
 ## Task Details
 
@@ -220,7 +227,7 @@ Acceptance:
 
 ### Task 5 - BRQNT-SPLIT-05-DIRECT-CONDITION-REMOVAL-PROOF-IMPORTS - Move direct-condition-removal proof module off broad full-shell dependency if present
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Move `packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt`
 off any broad full-shell dependency if present, and classify whether it belongs
@@ -241,9 +248,15 @@ Acceptance:
 
 - `pnpm check:mbt-driver-closure` passes from the workspace root.
 
+Finding:
+
+- `packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt`
+  already imports focused owners directly and has no full-shell
+  `battleRuntime` import.
+
 ### Task 6 - BRQNT-SPLIT-06-REMAINING-FULL-SHELL-CONSUMER-AUDIT - Audit remaining full-shell proof consumers and append the next implementation batch
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Refresh the remaining full-shell consumer inventory:
 
@@ -258,3 +271,28 @@ Acceptance:
   consumers remain.
 - Do not mark the lane complete while broad-shell consumers remain unless the
   plan names a concrete owner-decision blocker.
+
+### Task 7 - BRQNT-SPLIT-07-SAVE-SPELL-PROOF-IMPORTS - Move save-spell proof module off the full-shell battleRuntime import
+
+Status: `ready-for-implementation-after-light-research`
+
+Move `packages/battle-runtime/battle-runtime-save-spell-tests.qnt` off:
+
+```qnt
+import battleRuntime.* from "./battle-runtime"
+```
+
+Acceptance:
+
+- The proof module imports focused owners directly.
+- If a dependency is only available through the full shell, classify it as
+  model vocabulary, bridge projection, scenario fixture, or compatibility
+  wrapper before adding or moving helpers.
+- The task-specific proof passes:
+
+  ```sh
+  cd packages/battle-runtime
+  pnpm exec quint test --backend typescript --match "test_" battle-runtime-save-spell-tests.qnt
+  ```
+
+- `pnpm check:mbt-driver-closure` passes from the workspace root.
