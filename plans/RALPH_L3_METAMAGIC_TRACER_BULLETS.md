@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Consolidate Metamagic golden tracer bullet evidence"
     }
   ]
@@ -61,6 +61,38 @@
 Deepen `sorcerer_metamagic` from admitted/profile-subset support toward
 promoted reducer/QNT tracer bullets. Keep each task procedure-shaped and avoid
 rewriting all spell profiles at once.
+
+## Declared Base And Task-Base Check
+
+Declared Base SHA for every task in this lane:
+
+```text
+d05bfd52bf6a5964af9f2a5f88c37d5093256e06
+```
+
+Before starting each task, run and log:
+
+```sh
+git rev-parse HEAD
+git merge-base --is-ancestor d05bfd52bf6a5964af9f2a5f88c37d5093256e06 HEAD
+```
+
+If the ancestor check fails, stop and report the branch-base mismatch. Do not
+repair branch state by rebasing against `master`; the Ralph runner or decider
+owns branch repair.
+
+## DAG / Queue Order
+
+| Order | Task | Status | Depends On | Notes |
+|---:|---|---|---|---|
+| 1 | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS - Promote Quickened Spell for save-gated damage spell procedures | ready-for-implementation-after-light-research | none | Independent Quickened save-damage slice. |
+| 2 | L3META-02-QUICKENED-SPELL-ATTACKS - Promote Quickened Spell for spell attack procedures | ready-for-implementation-after-light-research | none | Independent Quickened spell-attack slice. |
+| 3 | L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES - Promote Quickened Spell for condition and buff action-spell procedures | ready-for-implementation-after-light-research | none | Independent Quickened condition/buff slice. |
+| 4 | L3META-04-CAREFUL-SPELL-SAVE-PROFILES - Promote Careful Spell for supported save profiles | ready-for-implementation-after-light-research | none | Independent save-profile slice. |
+| 5 | L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES - Promote Heightened Spell for supported save profiles | ready-for-implementation-after-light-research | none | Independent save-profile slice. |
+| 6 | L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE - Promote Transmuted Spell damage type substitution | ready-for-implementation-after-light-research | none | Independent damage-type substitution slice. |
+| 7 | L3META-07-TWINNED-SPELL-UPCAST-TARGETING - Promote Twinned Spell higher-slot target-count projection | ready-for-implementation-after-light-research | none | Independent target-count projection slice. |
+| 8 | L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION - Consolidate Metamagic golden tracer bullet evidence | blocked | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS, L3META-02-QUICKENED-SPELL-ATTACKS, L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES, L3META-04-CAREFUL-SPELL-SAVE-PROFILES, L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES, L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE, L3META-07-TWINNED-SPELL-UPCAST-TARGETING | Consolidation only after all Metamagic slices close. |
 
 ## Global Acceptance Criteria
 
@@ -220,7 +252,7 @@ Expected outputs:
 
 ### Task 8 - L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
 Consolidate `sorcerer_metamagic` claims after Tasks 1-7.
 
