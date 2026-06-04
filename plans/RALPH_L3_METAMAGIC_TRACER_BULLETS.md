@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Quickened Spell for save-gated damage spell procedures"
     },
     {
@@ -85,7 +85,7 @@ owns branch repair.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS - Promote Quickened Spell for save-gated damage spell procedures | ready-for-implementation-after-light-research | none | Independent Quickened save-damage slice. |
+| 1 | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS - Promote Quickened Spell for save-gated damage spell procedures | done | none | Independent Quickened save-damage slice. |
 | 2 | L3META-02-QUICKENED-SPELL-ATTACKS - Promote Quickened Spell for spell attack procedures | ready-for-implementation-after-light-research | none | Independent Quickened spell-attack slice. |
 | 3 | L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES - Promote Quickened Spell for condition and buff action-spell procedures | ready-for-implementation-after-light-research | none | Independent Quickened condition/buff slice. |
 | 4 | L3META-04-CAREFUL-SPELL-SAVE-PROFILES - Promote Careful Spell for supported save profiles | ready-for-implementation-after-light-research | none | Independent save-profile slice. |
@@ -132,7 +132,7 @@ parity. Reviewer-loop convergence is required.
 
 ### Task 1 - L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Quickened Spell for supported Magic Action save-gated damage spells.
 
