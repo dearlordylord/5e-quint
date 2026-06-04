@@ -26,13 +26,13 @@
     "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
-    "total": 110,
+    "total": 112,
     "bySubject": {
-      "battle-hole-family": 69,
-      "battle-fill-kind": 41
+      "battle-hole-family": 70,
+      "battle-fill-kind": 42
     },
     "byClassification": {
-      "semantic-frontier": 85,
+      "semantic-frontier": 87,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 25,
       "unsupported-dead-branch": 0
@@ -157,6 +157,12 @@
           "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -179,7 +185,8 @@
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
         "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -3529,6 +3536,17 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "hitPointHealingDistribution",
+      "id": "BattleHitPointHealingPoolDistributionHole",
+      "reason": "Hit Point healing pool distribution holes collect caller-selected Bloodied targets and allocation amounts for supported Unit feature procedures. Non-self range facts remain caller/table spatial evidence, while the reducer-owned semantics validate eligibility, spend the feature resource and Magic Action, and apply Hit Point restoration.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
       ],
@@ -3934,6 +3952,17 @@
       "followUpTaskIds": [],
       "id": "rolledDice",
       "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "hitPointHealingDistribution",
+      "followUpTaskIds": [],
+      "id": "hitPointHealingDistribution",
+      "reason": "Hit Point healing distribution fills choose target allocations for a supported Unit feature healing pool. Target selection and allocation amounts change reducer legality and resulting Hit Point state; non-self range facts carried with the fill stay caller/table spatial evidence.",
       "subject": "battle-fill-kind"
     },
     {
@@ -5541,6 +5570,14 @@
           "profileId": "unit-feature.spell-slot-healing-modifier"
         }
       ],
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt is the focused Preserve Life literal projection witness for Magic Action spend, Channel Divinity use spend, healing-pool distribution, self inclusion, Bloodied/range rejection, pool and half-Hit-Point-maximum cap rejection, and missing-resource/action rejection.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
       "role": "mbt-fixture"
     },
     {

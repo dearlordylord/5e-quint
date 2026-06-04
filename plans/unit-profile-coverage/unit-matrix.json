@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 151,
-      "numerator": 151,
+      "denominator": 152,
+      "numerator": 152,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 151,
-      "numerator": 147,
+      "denominator": 152,
+      "numerator": 148,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 151,
-      "percent": "66.5%"
+      "numerator": 152,
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -4032,16 +4032,35 @@
     {
       "id": "unit-feature.magic-action-healing-pool",
       "profileKind": "battle-admission",
-      "qntOwners": [],
-      "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. Battle initialization retains the admitted support profile on character combatants, runtime discovery consumes existing Magic Action and resource availability, and resolution consumes caller-supplied healing allocations plus caller-supplied non-self range facts to spend the existing Channel Divinity resource and apply ordinary Hit Point restoration without duplicate resource state, geometry derivation, or authored-identity dispatch.",
       "taskRefs": [
-        "L13UG-A16"
+        "L13UG-A16",
+        "L3PUTB-04"
       ],
       "title": "Unit feature projects a Magic Action resource-spent healing pool with Bloodied target caps",
-      "verificationOwners": []
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/preserve-life-healing-pool.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.magic-action-area-save-damage-healing",
@@ -13389,6 +13408,22 @@
         "unit-feature.spell-slot-healing-modifier"
       ],
       "taskId": "L3PUTB-03"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Preserve Life MBT witness models Magic Action resource spend, Channel Divinity use spend, healing-pool distribution, self inclusion, Bloodied and range validation, pool and half-Hit-Point-maximum cap enforcement, and missing-resource/action rejection.",
+      "profileIds": [
+        "unit-feature.magic-action-healing-pool"
+      ],
+      "taskId": "L3PUTB-04"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Preserve Life discovery through the admitted support profile, Magic Action spend, existing Cleric Channel Divinity resource spend, caller-supplied Bloodied target distribution including self, caller-supplied 30-foot range facts for non-self targets, five-times-Cleric-level pool enforcement, half-Hit-Point-maximum cap enforcement, and rejection cases without authored-identity dispatch or duplicate resource state.",
+      "profileIds": [
+        "unit-feature.magic-action-healing-pool"
+      ],
+      "taskId": "L3PUTB-04"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13462,12 +13497,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 24,
+        "profileSubsetSupportedUnits": 23,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 64,
+        "selectedIdentityReplayDenominator": 65,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 64,
-        "supportedProfileUnits": 52,
+        "selectedIdentityReplayWitnessUnits": 65,
+        "supportedProfileUnits": 53,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -15748,38 +15783,21 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
-            "mechanic": "Execute Preserve Life as a Magic Action: spend one Channel Divinity use, accept chosen Bloodied creatures within 30 feet including self, distribute a five-times-Cleric-level healing pool, and cap each target at half Hit Point maximum."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
-            "mechanic": "Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap.",
-            "owner": "battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
-            "title": "Cleric Preserve Life Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Channel Divinity healing pool owner plus promoted Quint parity",
         "profileIds": [
           "unit-feature.magic-action-healing-pool"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Magic Action healing pool execution owner consumes this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface magic_action_healing_pool mechanics with Magic Action activation and a referenced Channel Divinity spend",
-          "The projected support profile carries 30-foot Bloodied creature targeting including self, a pool equal to five times class level, and a half-Hit-Point-maximum cap without duplicating Channel Divinity state"
+          "Battle initialization retains the parsed support profile on character combatants only when the selected Unit ref admits the profile",
+          "Battle runtime discovers Preserve Life as a Magic Action from the admitted support profile when the actor can spend a Magic Action and the referenced Channel Divinity resource has uses remaining",
+          "Battle runtime accepts caller-supplied healing distribution among Bloodied creatures, including self, uses caller-supplied 30-foot range facts for non-self targets, and enforces the five-times-class-level pool plus the half-Hit-Point-maximum per-target cap",
+          "Battle runtime spends the existing Channel Divinity resource, spends the Magic Action, and applies healing through existing Hit Point restoration state without duplicating Channel Divinity state or dispatching on authored feature identity",
+          "Battle runtime rejects missing resources, missing Magic Action availability, non-Bloodied targets, missing non-self range facts, duplicate targets, nonpositive healing allocations, over-pool distributions, and over-cap healing"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -15787,6 +15805,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A16"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-04"
         }
       ],
       "executableMechanics": true,
@@ -15795,16 +15818,35 @@
         {
           "id": "unit-feature.magic-action-healing-pool",
           "profileKind": "battle-admission",
-          "qntOwners": [],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. Battle initialization retains the admitted support profile on character combatants, runtime discovery consumes existing Magic Action and resource availability, and resolution consumes caller-supplied healing allocations plus caller-supplied non-self range facts to spend the existing Channel Divinity resource and apply ordinary Hit Point restoration without duplicate resource state, geometry derivation, or authored-identity dispatch.",
           "taskRefs": [
-            "L13UG-A16"
+            "L13UG-A16",
+            "L3PUTB-04"
           ],
           "title": "Unit feature projects a Magic Action resource-spent healing pool with Bloodied target caps",
-          "verificationOwners": []
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-healing-pool.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",

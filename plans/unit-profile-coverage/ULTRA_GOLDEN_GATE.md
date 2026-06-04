@@ -88,8 +88,8 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | --- | ---: | ---: | ---: |
 | level-1 | 81 | 81/81 | 0 |
 | level-1-2 | 94 | 94/94 | 0 |
-| level-1-3 | 127 | 127/127 | 0 |
+| level-1-3 | 128 | 127/128 | 1 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-3 | `cleric_preserve_life` | class_feature | `L3PUTB-04` | `packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.magic-action-healing-pool` |

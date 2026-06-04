@@ -1595,6 +1595,13 @@ export type BattleTargetSpatialFact =
       readonly rangeFeet: MovementFeet;
     }
   | {
+      readonly kind: "magicActionHealingPoolTargetWithinRange";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
       readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
       readonly reactorId: CombatantId;
       readonly fallingCreatureId: CombatantId;
@@ -3835,6 +3842,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "spellSlotHealingModifier" }
           >
         >;
+        readonly magicActionHealingPoolProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "magicActionHealingPool" }
+          >
+        >;
         readonly rogueSteadyAimProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
@@ -5089,6 +5103,25 @@ export type BattleUnitFeatureDecisionHole = {
   };
   readonly choices: readonly ["use", "decline"];
 };
+export type BattleHitPointHealingPoolAllocation = {
+  readonly targetId: CombatantId;
+  readonly hitPoints: Hp;
+};
+export type BattleHitPointHealingPoolDistributionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "hitPointHealingDistribution";
+  readonly label: string;
+  readonly requiresTableSpatialFact: true;
+  readonly healingPool: {
+    readonly sourceCombatantId: CombatantId;
+    readonly unitId: UnitRecord["id"];
+    readonly rangeFeet: MovementFeet;
+    readonly poolHitPoints: Hp;
+    readonly perTargetCap: "halfHitPointMaximum";
+  };
+  readonly choices: readonly CombatantId[];
+};
 export type BattleDeathSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5321,6 +5354,7 @@ export type BattleHole =
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleUnitFeatureDecisionHole
+  | BattleHitPointHealingPoolDistributionHole
   | BattleDeathSavingThrowHole
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
@@ -5447,6 +5481,14 @@ export type BattleFill =
       readonly kind: "unitFeatureDecision";
       readonly holeId: BattleHoleId;
       readonly value: "use" | "decline";
+    }
+  | {
+      readonly kind: "hitPointHealingDistribution";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly allocations: readonly BattleHitPointHealingPoolAllocation[];
+      };
+      readonly spatialFacts: readonly BattleTargetSpatialFact[];
     }
   | {
       readonly kind: "heldObjectFacts";

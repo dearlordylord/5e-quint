@@ -1,5 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-healing-pool unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
@@ -70,6 +70,7 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
@@ -279,6 +280,12 @@ export function battleCreatureStateFromInit(
             creatureInit.characterUnitRefs,
             classLevels,
           ),
+        magicActionHealingPoolProfiles: characterMagicActionHealingPoolProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
+          classLevels,
+        ),
         rogueSteadyAimProfiles: characterRogueSteadyAimProfiles(
           creatureInit.resources ?? [],
           creatureInit.unitFeatures ?? [],
@@ -1274,6 +1281,37 @@ export function characterSpellSlotHealingModifierProfiles(
           unitRefs,
           unit.id,
           SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterMagicActionHealingPoolProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "magicActionHealingPool" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

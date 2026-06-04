@@ -627,6 +627,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
+    kind: Schema.Literal("magicActionHealingPoolTargetWithinRange"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
     reactorId: CombatantId,
     damageSourceId: CombatantId,
@@ -891,6 +898,20 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("hitPointHealingDistribution"),
+    label: Schema.String,
+    requiresTableSpatialFact: Schema.Literal(true),
+    healingPool: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      unitId: Schema.String,
+      rangeFeet: MovementFeet,
+      poolHitPoints: HpSchema,
+      perTargetCap: Schema.Literal("halfHitPointMaximum"),
+    }),
+    choices: Schema.Array(CombatantId),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2254,6 +2275,17 @@ type BattleFillEncoded =
       readonly value: "use" | "decline";
     }
   | {
+      readonly kind: "hitPointHealingDistribution";
+      readonly holeId: string;
+      readonly value: {
+        readonly allocations: readonly {
+          readonly targetId: string;
+          readonly hitPoints: number;
+        }[];
+      };
+      readonly spatialFacts: readonly unknown[];
+    }
+  | {
       readonly kind: "heldObjectFacts";
       readonly holeId: string;
       readonly value: {
@@ -2557,6 +2589,19 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("targetSpatialFacts"),
       holeId: BattleHoleIdSchema,
+      spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("hitPointHealingDistribution"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        allocations: Schema.Array(
+          Schema.Struct({
+            targetId: CombatantId,
+            hitPoints: HpSchema,
+          }),
+        ),
+      }),
       spatialFacts: BattleTargetSpatialFactsSchema,
     }),
     Schema.Struct({

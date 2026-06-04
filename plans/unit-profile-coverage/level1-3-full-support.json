@@ -543,40 +543,6 @@
       "unitId": "cleric_life_domain_spells"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME: Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap. Owner: battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Magic Action healing pool execution owner consumes this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Cleric Preserve Life",
-          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 333,
-            "lineStart": 330,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "cleric_preserve_life"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -3306,7 +3272,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 128,
+      "count": 129,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3334,6 +3300,7 @@
         "cleric_channel_divinity",
         "cleric_disciple_of_life",
         "cleric_divine_order",
+        "cleric_preserve_life",
         "color_spray",
         "command",
         "cure_wounds",
@@ -3482,12 +3449,11 @@
       ]
     },
     {
-      "count": 13,
+      "count": 12,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
-        "cleric_preserve_life",
         "darkness",
         "druid_lands_aid",
         "druid_wild_shape",
@@ -3582,8 +3548,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 128,
-      "percent": "65%"
+      "numerator": 129,
+      "percent": "65.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -9928,13 +9894,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 12,
-      "witness-present": 155
+      "not-applicable": 11,
+      "witness-present": 156
     },
     "rowsByStatus": {
-      "not-applicable": 12,
+      "not-applicable": 11,
       "not-required": 30,
-      "witness-present": 155
+      "witness-present": 156
     }
   },
   "sourceArtifacts": {
@@ -10842,20 +10808,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 39,
-      "supported-profile": 128,
+      "profile-subset-supported": 38,
+      "supported-profile": 129,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 12,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 128
+      "supported-profile": 129
     },
-    "nonSupportedFrontier": 69,
+    "nonSupportedFrontier": 68,
     "strictDenominator": 197
   }
 }

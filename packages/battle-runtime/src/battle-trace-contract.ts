@@ -10,6 +10,7 @@ import type {
 export const BATTLE_TRACE_HOLE_KINDS = [
   "targetChoice",
   "targetSpatialFacts",
+  "hitPointHealingDistribution",
   "objectTargetChoice",
   "ongoingSpellTargetChoice",
   "objectContactTargets",

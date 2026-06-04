@@ -87,6 +87,8 @@ export const bardCuttingWordsUnitId = "bard_cutting_words";
 
 export const clericDiscipleOfLifeUnitId = "cleric_disciple_of_life";
 
+export const clericChannelDivinityUnitId = "cleric_channel_divinity";
+
 export const clericPreserveLifeUnitId = "cleric_preserve_life";
 
 export const subclassClericLifeDomainUnitId = "subclass_cleric_life_domain";

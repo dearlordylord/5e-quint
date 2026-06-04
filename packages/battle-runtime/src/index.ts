@@ -292,6 +292,8 @@ export {
   type BattleHelpAttack,
   type BattleHiddenState,
   type BattleHidePrerequisite,
+  type BattleHitPointHealingPoolAllocation,
+  type BattleHitPointHealingPoolDistributionHole,
   type BattleHole,
   type BattleHoleId,
   type BattleHoleInstanceKey,

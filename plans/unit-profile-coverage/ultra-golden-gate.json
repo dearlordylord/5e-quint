@@ -94,7 +94,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
-              "focused-mbt": 41,
+              "focused-mbt": 42,
               "runtime-test": 14
             }
           },
@@ -355,7 +355,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
-              "focused-mbt": 41,
+              "focused-mbt": 42,
               "runtime-test": 14
             }
           },
@@ -619,7 +619,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 58,
+              "focused-mbt": 59,
               "runtime-test": 21
             }
           },
@@ -833,20 +833,47 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 127,
-            "numerator": 127
+            "denominator": 128,
+            "numerator": 128
           },
           "joinedEvidenceRows": {
-            "denominator": 127,
+            "denominator": 128,
             "numerator": 127
           },
           "missingJoinRows": {
-            "denominator": 127,
-            "numerator": 0
+            "denominator": 128,
+            "numerator": 1
           }
         },
-        "rowCount": 0,
-        "rows": [],
+        "rowCount": 1,
+        "rows": [
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3PUTB-04"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [],
+              "requiredFlowIds": [],
+              "status": "not-applicable"
+            },
+            "profileIds": [
+              "unit-feature.magic-action-healing-pool"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "missing-unit-profile-join",
+              "unitProfileJoinRowCount": 0,
+              "unitProfileWitnessOwners": []
+            },
+            "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
+            "unitId": "cleric_preserve_life"
+          }
+        ],
         "scopeId": "level-1-3"
       }
     ]

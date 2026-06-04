@@ -132,16 +132,16 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 110
+- Total classified rows: 112
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 69 |
-| battle-fill-kind | 41 |
+| battle-hole-family | 70 |
+| battle-fill-kind | 42 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 85 |
+| semantic-frontier | 87 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 25 |
 | unsupported-dead-branch | 0 |
@@ -169,6 +169,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellTurnStartDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | _none_ |
 | battle-hole-family | `BattleFlamingSphereDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpellHealingRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.HIT_POINT_RESTORATION` | _none_ |
+| battle-hole-family | `BattleHitPointHealingPoolDistributionHole` | `hitPointHealingDistribution` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleSpellSkillChoiceHole` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | _none_ |
 | battle-hole-family | `BattleSpellAbilityChoiceHole` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | _none_ |
 | battle-hole-family | `BattleSpellTargetAbilityChoicesHole` | `targetAbilityChoices` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | _none_ |
@@ -203,6 +204,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleAttackDamageDispositionHole` | `attackDamageDisposition` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-fill-kind | `attackRoll` | `attackRoll` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.STAT_BLOCK.ATTACK_CONTROL`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | _none_ |
 | battle-fill-kind | `rolledDice` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | _none_ |
+| battle-fill-kind | `hitPointHealingDistribution` | `hitPointHealingDistribution` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `damageTypeChoice` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-fill-kind | `savingThrowOutcome` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`, `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | _none_ |
 | battle-fill-kind | `conditionChoice` | `conditionChoice` | semantic-frontier | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | _none_ |
@@ -273,6 +275,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.enemy-zero-hit-point-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.spell-slot-healing-modifier` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt` | mbt-fixture | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | semantic-core | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |

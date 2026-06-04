@@ -6,9 +6,10 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-healing-pool unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
+  canSpendAction,
   grantUnitActionResource,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -26,7 +27,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
-import { MovementFeet } from "@dnd/shared/types";
+import { Hp, MovementFeet } from "@dnd/shared/types";
 
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -67,7 +68,11 @@ import {
   dismissDruidWildShapeForm,
 } from "./druid-wild-shape.ts";
 
-import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
+import {
+  applyHpHealing,
+  breakBattleConcentration,
+  effectiveHitPointMaximum,
+} from "./damage-apply.ts";
 
 import { snapshotBattle, spendReaction } from "./dispatcher.ts";
 import {
@@ -102,6 +107,7 @@ import type {
   BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
   BattleFill,
+  BattleHitPointHealingPoolDistributionHole,
   BattleHoleId,
   BattleResolutionResult,
   BattleState,
@@ -228,7 +234,56 @@ export function supportedUnitFeatureActs(
         : [];
     },
   );
-  return [...resourceActs, ...rogueSteadyAimActs(state, actor)];
+  return [
+    ...resourceActs,
+    ...magicActionHealingPoolActs(state, actor),
+    ...rogueSteadyAimActs(state, actor),
+  ];
+}
+
+function magicActionHealingPoolActs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  if (!canSpendAction(state.currentTurnResources, "magic")) {
+    return [];
+  }
+  return [...actor.origin.magicActionHealingPoolProfiles.values()].flatMap(
+    (unitFeature): readonly AvailableBattleAct[] => {
+      const resource = actor.origin.resources.find(
+        (candidate) =>
+          candidate.unit.id === unitFeature.healingPool.spends.resourceUnitId,
+      );
+      const choices = magicActionHealingPoolTargetChoices(
+        state,
+        actor.combatantId,
+        unitFeature,
+      );
+      return resource !== undefined &&
+        resourceHasUsesRemaining(resource) &&
+        choices.length > 0
+        ? [
+            {
+              subject: {
+                tag: "unitFeature" as const,
+                actorId: actor.combatantId,
+                unitId: unitFeature.unit.id,
+              },
+              label: unitFeature.unit.name,
+              summary:
+                "Spend a Magic Action and one resource use to distribute Hit Point healing among Bloodied creatures.",
+              initialHoles: [
+                magicActionHealingPoolDistributionHole(
+                  state,
+                  actor.combatantId,
+                  unitFeature,
+                ),
+              ],
+            },
+          ]
+        : [];
+    },
+  );
 }
 
 function rogueSteadyAimActs(
@@ -367,6 +422,16 @@ export function resolveUnitFeature(
     if (rogueSteadyAim !== undefined) {
       return resolveRogueSteadyAimUnitFeature(input, actor, rogueSteadyAim);
     }
+
+    const magicActionHealingPool =
+      actor.origin.magicActionHealingPoolProfiles.get(subject.unitId);
+    if (magicActionHealingPool !== undefined) {
+      return resolveMagicActionHealingPoolUnitFeature(
+        input,
+        actor,
+        magicActionHealingPool,
+      );
+    }
   }
 
   if (input.fills.length > 0) {
@@ -456,6 +521,102 @@ function resolveRogueSteadyAimUnitFeature(
       ...actor,
       activeEffects,
     }),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveMagicActionHealingPoolUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): BattleResolutionResult {
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === unitFeature.healingPool.spends.resourceUnitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} has no resource uses remaining.`,
+    );
+  }
+
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "action",
+    action: "magic",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} Magic Action is no longer available.`,
+    );
+  }
+
+  const distribution = magicActionHealingPoolDistributionFill(
+    input.fills,
+    unitFeature,
+  );
+  if (distribution.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", distribution.message);
+  }
+  if (distribution.value === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      magicActionHealingPoolDistributionHole(
+        input.state,
+        actor.combatantId,
+        unitFeature,
+      ),
+    ]);
+  }
+
+  const validation = validateMagicActionHealingPoolDistribution({
+    state: input.state,
+    actorId: actor.combatantId,
+    unitFeature,
+    fill: distribution.value,
+  });
+  if (validation.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", validation.message);
+  }
+
+  const nextActor: BattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === unitFeature.healingPool.spends.resourceUnitId &&
+        resourceHasUsesRemaining(candidate)
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const combatants = new Map(input.state.combatants).set(
+    actor.combatantId,
+    nextActor,
+  );
+  for (const allocation of distribution.value.value.allocations) {
+    const target = combatants.get(allocation.targetId);
+    if (target !== undefined) {
+      combatants.set(
+        allocation.targetId,
+        applyHpHealing(target, Number(allocation.hitPoints)),
+      );
+    }
+  }
+  const nextState = {
+    ...input.state,
+    currentTurnResources: spent.right,
+    combatants,
   };
   return {
     tag: "resolved",
@@ -1004,6 +1165,251 @@ function hasBardicInspirationRangeFact(
       fact.targetId === targetId &&
       fact.unitId === unitFeature.unit.id &&
       fact.rangeFeet === unitFeature.rangeFeet,
+  );
+}
+
+type MagicActionHealingPoolDistributionFill = Extract<
+  BattleFill,
+  { readonly kind: "hitPointHealingDistribution" }
+>;
+
+function magicActionHealingPoolDistributionFill(
+  fills: readonly BattleFill[],
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+):
+  | {
+      readonly tag: "ok";
+      readonly value: MagicActionHealingPoolDistributionFill | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let distribution: MagicActionHealingPoolDistributionFill | undefined;
+  for (const fill of fills) {
+    if (
+      fill.kind === "hitPointHealingDistribution" &&
+      fill.holeId === magicActionHealingPoolDistributionHoleId(unitFeature)
+    ) {
+      if (distribution !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} healing distribution was filled twice.`,
+        };
+      }
+      distribution = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the ${unitFeature.unit.name} replay holes.`,
+    };
+  }
+  return { tag: "ok", value: distribution };
+}
+
+function validateMagicActionHealingPoolDistribution(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >;
+  readonly fill: MagicActionHealingPoolDistributionFill;
+}):
+  | { readonly tag: "ok" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const allocations = input.fill.value.allocations;
+  if (allocations.length === 0) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} requires at least one healing allocation.`,
+    };
+  }
+  const seenTargets = new Set<CombatantId>();
+  let spentHitPoints = 0;
+  const poolHitPoints = magicActionHealingPoolSize(
+    input.state,
+    input.actorId,
+    input.unitFeature,
+  );
+  for (const allocation of allocations) {
+    if (seenTargets.has(allocation.targetId)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target was allocated healing twice.`,
+      };
+    }
+    seenTargets.add(allocation.targetId);
+    const healing = Number(allocation.hitPoints);
+    if (!Number.isInteger(healing) || healing <= 0) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} allocations must restore a positive integer number of Hit Points.`,
+      };
+    }
+    const target = input.state.combatants.get(allocation.targetId);
+    if (target === undefined) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target must be a creature in this battle.`,
+      };
+    }
+    if (!combatantIsBloodied(target)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target must be Bloodied.`,
+      };
+    }
+    if (
+      allocation.targetId !== input.actorId &&
+      !hasMagicActionHealingPoolRangeFact(
+        input.fill.spatialFacts,
+        input.actorId,
+        allocation.targetId,
+        input.unitFeature,
+      )
+    ) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target must be within range.`,
+      };
+    }
+    const cap = combatantHalfHitPointMaximum(target);
+    if (Number(target.hp) + healing > cap) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} cannot restore a target above half its Hit Point Maximum.`,
+      };
+    }
+    spentHitPoints += healing;
+    if (spentHitPoints > poolHitPoints) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} allocations exceed the healing pool.`,
+      };
+    }
+  }
+  return { tag: "ok" };
+}
+
+function magicActionHealingPoolDistributionHole(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): BattleHitPointHealingPoolDistributionHole {
+  return {
+    kind: "hitPointHealingDistribution",
+    holeId: magicActionHealingPoolDistributionHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionHealingPoolDistributionHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} healing distribution`,
+    requiresTableSpatialFact: true,
+    healingPool: {
+      sourceCombatantId: actorId,
+      unitId: unitFeature.unit.id,
+      rangeFeet: unitFeature.healingPool.rangeFeet,
+      poolHitPoints: Hp(
+        magicActionHealingPoolSize(state, actorId, unitFeature),
+      ),
+      perTargetCap: unitFeature.healingPool.perTargetCap,
+    },
+    choices: magicActionHealingPoolTargetChoices(state, actorId, unitFeature),
+  };
+}
+
+function magicActionHealingPoolDistributionHoleId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): BattleHoleId {
+  return holeId(magicActionHealingPoolDistributionProtocolId(unitFeature));
+}
+
+function magicActionHealingPoolDistributionHoleInstanceKey(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionHealingPoolDistributionProtocolId(unitFeature),
+  );
+}
+
+function magicActionHealingPoolDistributionProtocolId(
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): string {
+  return `battle:unit-feature:${unitFeature.unit.id}:hit-point-healing-distribution`;
+}
+
+function magicActionHealingPoolTargetChoices(
+  state: BattleState,
+  _actorId: CombatantId,
+  _unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): readonly CombatantId[] {
+  return [...state.combatants.values()]
+    .filter(combatantIsBloodied)
+    .map((combatant) => combatant.combatantId);
+}
+
+function magicActionHealingPoolSize(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): number {
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    return 0;
+  }
+  const unitClassName =
+    "className" in unitFeature.unit ? unitFeature.unit.className : undefined;
+  if (unitClassName === undefined) {
+    return 0;
+  }
+  const classLevel =
+    actor.origin.classLevels.find((level) => level.className === unitClassName)
+      ?.level ?? 0;
+  return Number(classLevel) * unitFeature.healingPool.pool.multiplier;
+}
+
+function combatantIsBloodied(combatant: BattleCreatureState): boolean {
+  return Number(combatant.hp) <= combatantHalfHitPointMaximum(combatant);
+}
+
+function combatantHalfHitPointMaximum(combatant: BattleCreatureState): number {
+  return Math.floor(Number(effectiveHitPointMaximum(combatant)) / 2);
+}
+
+function hasMagicActionHealingPoolRangeFact(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionHealingPool" }
+  >,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "magicActionHealingPoolTargetWithinRange" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId &&
+      fact.unitId === unitFeature.unit.id &&
+      fact.rangeFeet === unitFeature.healingPool.rangeFeet,
   );
 }
 

@@ -8812,7 +8812,7 @@
         "state": "installed",
         "unitId": "cleric_preserve_life"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

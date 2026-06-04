@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Cleric Preserve Life Magic Action healing pool"
     },
     {
@@ -309,7 +309,7 @@ Out of scope:
 
 ### Task 4 - L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `cleric_preserve_life` Magic Action healing pool.
 
