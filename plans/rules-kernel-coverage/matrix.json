@@ -151,6 +151,12 @@
           "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -172,7 +178,8 @@
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4653,6 +4660,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.spell-slot-healing-modifier"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.failed-ability-check-resource-boost"
     },
     {
@@ -5510,6 +5523,22 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+        }
+      ],
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt is the focused Disciple of Life literal projection witness for slot-cast healing modifier application, non-slot healing exclusion, non-modifier slot healing, and each-creature-healed multi-target restoration.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.spell-slot-healing-modifier"
         }
       ],
       "role": "mbt-fixture"
@@ -7355,6 +7384,18 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.spell-slot-healing-modifier",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+          "role": "mbt-fixture"
         }
       ]
     },

@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 150,
-      "numerator": 150,
+      "denominator": 151,
+      "numerator": 151,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 134,
-      "numerator": 134,
+      "denominator": 135,
+      "numerator": 135,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 134,
-      "numerator": 134,
+      "denominator": 135,
+      "numerator": 135,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 150,
-      "numerator": 146,
-      "percent": "97.3%"
+      "denominator": 151,
+      "numerator": 147,
+      "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 150,
-      "percent": "66.1%"
+      "numerator": 151,
+      "percent": "66.5%"
     }
   },
   "metricSemantics": [
@@ -3999,17 +3999,35 @@
     },
     {
       "id": "unit-feature.spell-slot-healing-modifier",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. It projects typed trigger, scope, and flat-plus-slot-level facts without dispatching on the feature id; spell-healing execution consumes those facts in a future promoted reducer owner.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. Battle initialization retains the parsed support profile on the character combatant, and direct Hit Point restoration consumes the existing spell-slot invocation level and healing target facts to add 2 plus the spent Spell Slot level to each healed creature without authored-identity dispatch, duplicate Spell Slot state, or effects on non-slot/non-spell/unsupported healing procedures.",
       "taskRefs": [
-        "L13UG-A16"
+        "L13UG-A16",
+        "L3PUTB-03"
       ],
-      "title": "Unit feature projects a Spell Slot healing bonus equal to 2 plus the slot level",
-      "verificationOwners": []
+      "title": "Unit feature adds a Spell Slot healing bonus equal to 2 plus the slot level",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/disciple-of-life-healing-modifier.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.magic-action-healing-pool",
@@ -4192,13 +4210,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 134,
-        "numerator": 134,
+        "denominator": 135,
+        "numerator": 135,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 134,
-        "numerator": 134,
+        "denominator": 135,
+        "numerator": 135,
         "percent": "100%"
       }
     },
@@ -6478,6 +6496,22 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.spell-slot-healing-modifier",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
         "profileKind": "persistent-effect",
         "qntOwners": [
@@ -6509,8 +6543,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 149,
-          "numerator": 149,
+          "denominator": 150,
+          "numerator": 150,
           "percent": "100%"
         }
       },
@@ -7168,6 +7202,28 @@
             }
           ],
           "unitId": "cleric_channel_divinity"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.spell-slot-healing-modifier",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+              ]
+            }
+          ],
+          "unitId": "cleric_disciple_of_life"
         },
         {
           "joinStatus": "covered",
@@ -13317,6 +13373,22 @@
         "unit-feature.enemy-zero-hit-point-temporary-hit-points"
       ],
       "taskId": "L3PUTB-02"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Disciple of Life MBT witness models slot-cast healing modifier application, non-slot healing exclusion, non-modifier slot healing, and each-creature-healed application for multi-target restoration.",
+      "profileIds": [
+        "unit-feature.spell-slot-healing-modifier"
+      ],
+      "taskId": "L3PUTB-03"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover retained support-profile consumption by direct spell Hit Point restoration, 2 plus Spell Slot level healing, each healed creature receiving the bonus, no-slot healing exclusion through the cantrip admission boundary, and no bonus for unsupported casters without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.spell-slot-healing-modifier"
+      ],
+      "taskId": "L3PUTB-03"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13390,12 +13462,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 25,
+        "profileSubsetSupportedUnits": 24,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 63,
+        "selectedIdentityReplayDenominator": 64,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 63,
-        "supportedProfileUnits": 51,
+        "selectedIdentityReplayWitnessUnits": 64,
+        "supportedProfileUnits": 52,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -15479,38 +15551,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
-            "mechanic": "Execute the admitted healing modifier during spell Hit Point restoration: detect spell-slot casts on the cast turn, add 2 plus the spent Spell Slot level to each healed creature, and exclude non-slot casts."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
-            "mechanic": "Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity.",
-            "owner": "battle-runtime spell Hit Point restoration reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion.",
-            "title": "Cleric Disciple Of Life Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell Hit Point restoration modifier owner plus promoted Quint parity",
         "profileIds": [
           "unit-feature.spell-slot-healing-modifier"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the spell-healing modifier execution owner consumes this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface spell_slot_healing_modifier mechanics for spells cast with a Spell Slot that restore Hit Points",
-          "The projected support profile carries the turn-of-cast trigger, each-creature-healed scope, and 2 plus Spell Slot level bonus without authored-identity dispatch"
+          "Battle initialization retains the parsed support profile on character combatants without dispatching on Cleric or feature authored identity",
+          "Direct spell Hit Point restoration consumes existing Spell Slot invocation level and target healing facts to add 2 plus the spent Spell Slot level to each healed creature",
+          "Non-slot casts, non-spell healing, and unsupported healing procedures do not receive this modifier because the runtime consumes the profile only inside supported spell-slot direct Hit Point restoration"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -15518,6 +15571,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A16"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-03"
         }
       ],
       "executableMechanics": true,
@@ -15525,17 +15583,35 @@
       "profiles": [
         {
           "id": "unit-feature.spell-slot-healing-modifier",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. It projects typed trigger, scope, and flat-plus-slot-level facts without dispatching on the feature id; spell-healing execution consumes those facts in a future promoted reducer owner.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface spell_slot_healing_modifier shape for spells the caster casts with a Spell Slot that restore Hit Points on that turn. Battle initialization retains the parsed support profile on the character combatant, and direct Hit Point restoration consumes the existing spell-slot invocation level and healing target facts to add 2 plus the spent Spell Slot level to each healed creature without authored-identity dispatch, duplicate Spell Slot state, or effects on non-slot/non-spell/unsupported healing procedures.",
           "taskRefs": [
-            "L13UG-A16"
+            "L13UG-A16",
+            "L3PUTB-03"
           ],
-          "title": "Unit feature projects a Spell Slot healing bonus equal to 2 plus the slot level",
-          "verificationOwners": []
+          "title": "Unit feature adds a Spell Slot healing bonus equal to 2 plus the slot level",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-healing-modifier.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",

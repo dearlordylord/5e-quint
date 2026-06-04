@@ -8769,7 +8769,7 @@
         "state": "installed",
         "unitId": "cleric_disciple_of_life"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

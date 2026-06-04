@@ -51,6 +51,8 @@ export function spellBattle(input: {
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
+  readonly extraTargetHp?: number;
+  readonly extraTargetMaxHp?: number;
   readonly targetHp?: number;
   readonly targetMaxHp?: number;
   readonly targetAttack?: Extract<
@@ -78,6 +80,14 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly casterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
+  readonly casterUnitFeatures?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"];
   readonly casterProficiencyBonus?: ProficiencyBonus;
   readonly casterWeaponProficiencies?: readonly WeaponProficiency[];
   readonly statBlockTargets?: readonly {
@@ -115,6 +125,12 @@ export function spellBattle(input: {
         ...(input.casterWeaponProficiencies === undefined
           ? {}
           : { weaponProficiencies: input.casterWeaponProficiencies }),
+        ...(input.casterUnitRefs === undefined
+          ? {}
+          : { characterUnitRefs: input.casterUnitRefs }),
+        ...(input.casterUnitFeatures === undefined
+          ? {}
+          : { unitFeatures: input.casterUnitFeatures }),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -161,6 +177,12 @@ export function spellBattle(input: {
           displayName: `Target ${index + 2}`,
           initiative: 9 - index,
           side: oppositionSide,
+          ...(input.extraTargetHp === undefined
+            ? {}
+            : { currentHp: input.extraTargetHp }),
+          ...(input.extraTargetMaxHp === undefined
+            ? {}
+            : { maxHp: input.extraTargetMaxHp }),
         }),
       ),
       ...(input.statBlockTargets ?? []).map((target) =>

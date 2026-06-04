@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 //
 // The directHitPointRestoration Spell Procedure Profile: prepared spells that
@@ -14,6 +14,8 @@
 //     restoration spells.
 //   - SRD 5.2.1 Spells "Cure Wounds" and "Mass Cure Wounds": Magic Action
 //     restoration spells.
+//   - SRD 5.2.1 Cleric "Level 3: Disciple of Life": slot-cast spell
+//     restoration adds 2 plus the Spell Slot level to each healed creature.
 
 import {
   movementFeet,
@@ -372,6 +374,11 @@ function resolveDirectHitPointRestoration(
     input.invocation,
     input.fillSet.healingRoll,
   );
+  const healingModifierAmount = spellSlotHealingModifierAmount(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
   const healed = targetSelection.targetIds.reduce((state, targetId) => {
     const target = state.combatants.get(targetId);
     return target === undefined
@@ -380,7 +387,7 @@ function resolveDirectHitPointRestoration(
           ...state,
           combatants: new Map(state.combatants).set(
             targetId,
-            applyHpHealing(target, healingAmount),
+            applyHpHealing(target, healingAmount + healingModifierAmount),
           ),
         };
   }, input.input.state);
@@ -396,6 +403,24 @@ function resolveDirectHitPointRestoration(
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
+}
+
+function spellSlotHealingModifierAmount(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: DirectHitPointRestorationInvocation,
+): number {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return 0;
+  }
+  return [...actor.origin.spellSlotHealingModifierProfiles.values()].reduce(
+    (total, profile) =>
+      total +
+      profile.healingModifier.bonus.flat +
+      Number(invocation.resource.slotLevel),
+    0,
+  );
 }
 
 const DirectHitPointRestorationInvocationSchema =

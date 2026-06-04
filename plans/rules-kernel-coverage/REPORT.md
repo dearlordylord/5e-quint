@@ -272,6 +272,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.enemy-zero-hit-point-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.spell-slot-healing-modifier` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | semantic-core | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
@@ -466,6 +467,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.rogue-steady-aim` | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.save-damage-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.self-bonus-action-healing` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.spell-slot-healing-modifier` | `packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-critical-range-19` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-damage-dice-roll-choice` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-mastery-cleave` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

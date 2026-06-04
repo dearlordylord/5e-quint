@@ -14,14 +14,14 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 127/197 (64.5%) |
+| Strict runtime/profile support | 128/197 (65%) |
 | Strict target closure | 197/197 (100%) |
 | Selected identity readiness | 167/167 (100%) |
 | Diagnostic product readiness | 583/607 (96%) |
 | SRD authored product readiness | 79/79 (100%) |
-| Rules-kernel profile join | 96/96 (100%) |
-| Rules-kernel covered profile join | 96/96 (100%) |
-| Supported Unit rules-kernel chain | 126/126 (100%) |
+| Rules-kernel profile join | 97/97 (100%) |
+| Rules-kernel covered profile join | 97/97 (100%) |
+| Supported Unit rules-kernel chain | 127/127 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -45,9 +45,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| not-applicable | 13 |
+| not-applicable | 12 |
 | not-required | 30 |
-| witness-present | 154 |
+| witness-present | 155 |
 
 ### Selected Identity Blockers
 
@@ -101,15 +101,15 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 197 |
-| Non-supported frontier | 70 |
+| Non-supported frontier | 69 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 127 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 128 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 34 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `comprehend_languages`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `pass_without_trace`, `rope_trick`, `silence`, `silent_image`, `speak_with_animals`, `spike_growth`, `suggestion`, `thaumaturgy`, `zone_of_truth` |
-| blocked-follow-up-split | 14 | `acid_arrow`, `cleric_disciple_of_life`, `cleric_preserve_life`, `darkness`, `druid_lands_aid`, `druid_wild_shape`, `enhance_ability`, `fighter_remarkable_athlete`, `monk_open_hand_technique`, `moonbeam`, `paladin_sacred_weapon`, `ranger_hunters_prey`, `sorcerer_metamagic`, `wizard_potent_cantrip` |
+| blocked-follow-up-split | 13 | `acid_arrow`, `cleric_preserve_life`, `darkness`, `druid_lands_aid`, `druid_wild_shape`, `enhance_ability`, `fighter_remarkable_athlete`, `monk_open_hand_technique`, `moonbeam`, `paladin_sacred_weapon`, `ranger_hunters_prey`, `sorcerer_metamagic`, `wizard_potent_cantrip` |
 | closed-later-level-only | 11 | `barbarian_weapon_mastery`, `bard_expertise`, `cleric_life_domain_spells`, `fighter_weapon_mastery`, `paladin_fighting_style`, `paladin_oath_of_devotion_spells`, `ranger_favored_enemy`, `ranger_fighting_style`, `sorcerer_draconic_spells`, `warlock_fiend_spells`, `wizard_evocation_savant` |
 | closed-outside-battle-runtime-boundary | 6 | `bard_bonus_proficiencies`, `continual_flame`, `enlarge_reduce`, `levitate`, `prayer_of_healing`, `rogue_fast_hands` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
@@ -144,7 +144,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `bard_expertise` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane. |
 | `calm_emotions` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
-| `cleric_disciple_of_life` | blocked-follow-up-split | profile-subset-supported | not-applicable | installed | follow-up-split | L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME: Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity. Owner: battle-runtime spell Hit Point restoration reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion. |
 | `cleric_life_domain_spells` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants. |
 | `cleric_preserve_life` | blocked-follow-up-split | profile-subset-supported | not-applicable | installed | follow-up-split | L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME: Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap. Owner: battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch. |
 | `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |

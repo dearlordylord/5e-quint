@@ -513,40 +513,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE-RUNTIME: Consume the admitted spell-slot-healing-modifier support profile during supported spell healing resolution without dispatching on Cleric or feature authored identity. Owner: battle-runtime spell Hit Point restoration reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for slot-cast healing bonus application and non-slot exclusion.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the spell-healing modifier execution owner consumes this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Cleric Disciple of Life",
-          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 316,
-            "lineStart": 313,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "cleric_disciple_of_life"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -3340,7 +3306,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 127,
+      "count": 128,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3366,6 +3332,7 @@
         "chill_touch",
         "chromatic_orb",
         "cleric_channel_divinity",
+        "cleric_disciple_of_life",
         "cleric_divine_order",
         "color_spray",
         "command",
@@ -3515,12 +3482,11 @@
       ]
     },
     {
-      "count": 14,
+      "count": 13,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
-        "cleric_disciple_of_life",
         "cleric_preserve_life",
         "darkness",
         "druid_lands_aid",
@@ -3600,24 +3566,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 127,
-      "percent": "64.5%"
+      "numerator": 128,
+      "percent": "65%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6333,8 +6299,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 126,
-        "numerator": 126,
+        "denominator": 127,
+        "numerator": 127,
         "percent": "100%"
       }
     },
@@ -6948,6 +6914,28 @@
           }
         ],
         "unitId": "cleric_channel_divinity"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.spell-slot-healing-modifier",
+            "profileKind": "passive",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+            ]
+          }
+        ],
+        "unitId": "cleric_disciple_of_life"
       },
       {
         "joinStatus": "covered",
@@ -9940,13 +9928,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 13,
-      "witness-present": 154
+      "not-applicable": 12,
+      "witness-present": 155
     },
     "rowsByStatus": {
-      "not-applicable": 13,
+      "not-applicable": 12,
       "not-required": 30,
-      "witness-present": 154
+      "witness-present": 155
     }
   },
   "sourceArtifacts": {
@@ -10854,20 +10842,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 40,
-      "supported-profile": 127,
+      "profile-subset-supported": 39,
+      "supported-profile": 128,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 14,
+      "blocked-follow-up-split": 13,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 127
+      "supported-profile": 128
     },
-    "nonSupportedFrontier": 70,
+    "nonSupportedFrontier": 69,
     "strictDenominator": 197
   }
 }

@@ -3828,6 +3828,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "failedAbilityCheckResourceBoost" }
           >
         >;
+        readonly spellSlotHealingModifierProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "spellSlotHealingModifier" }
+          >
+        >;
         readonly rogueSteadyAimProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
