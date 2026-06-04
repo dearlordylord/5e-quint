@@ -193,7 +193,7 @@ and code-review passes after implementation. Fix every reasonable finding,
 explicitly reject only with a concrete reason, and repeat until no reasonable
 findings remain. Use at least two rounds for non-trivial changes.
 
-## Task 1 - L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME
+### Task 1 - L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME
 
 Status: `todo`
 
@@ -237,7 +237,7 @@ Out of scope:
 - table movement geometry;
 - Steady Aim interactions beyond the current turn cleanup and next attack roll.
 
-## Task 2 - L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME
+### Task 2 - L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME
 
 Status: `todo`
 
@@ -271,7 +271,7 @@ Out of scope:
 - kill attribution outside the existing damage event boundary;
 - non-battle social/enemy adjudication.
 
-## Task 3 - L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME
+### Task 3 - L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME
 
 Status: `todo`
 
@@ -299,7 +299,7 @@ Out of scope:
 - generic metamagic or item healing modifiers;
 - Character Sheet durable HP persistence beyond existing owners.
 
-## Task 4 - L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME
+### Task 4 - L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME
 
 Status: `todo`
 
@@ -331,7 +331,7 @@ Out of scope:
 - other Channel Divinity options;
 - generic healing pool abstraction unless needed by existing local patterns.
 
-## Task 5 - L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME
+### Task 5 - L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME
 
 Status: `todo`
 
@@ -361,7 +361,7 @@ Out of scope:
 - cantrip-specific behavior not already admitted by typed spell profiles;
 - broader spell save redesign.
 
-## Task 6 - L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME
+### Task 6 - L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME
 
 Status: `todo`
 
@@ -391,7 +391,7 @@ Out of scope:
 - automatic map collision/path derivation for Push;
 - generic rider framework redesign.
 
-## Task 7 - L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME
+### Task 7 - L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME
 
 Status: `todo`
 
@@ -422,7 +422,7 @@ Out of scope:
 - map-derived 5-foot adjacency;
 - broader extra-attack sequencing redesign.
 
-## Task 8 - L3PUTB-08-DRUID-LANDS-AID-RUNTIME
+### Task 8 - L3PUTB-08-DRUID-LANDS-AID-RUNTIME
 
 Status: `todo`
 
