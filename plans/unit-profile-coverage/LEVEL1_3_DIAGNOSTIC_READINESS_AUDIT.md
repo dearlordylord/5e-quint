@@ -6,14 +6,19 @@ Task: L13UG-A08-LEVEL13-DIAGNOSTIC-READINESS-AUDIT
 
 ## Decision
 
-The level 1-3 product-readiness diagnostics do not add a hidden blocker to the
-current full-support claim gate.
+The level 1-3 product-readiness diagnostics did not add a hidden blocker to the
+full-support claim gate at the time of this audit.
 
-`LEVEL1_3_FULL_SUPPORT.md` reports a passing claim because the actual gate has
+`LEVEL1_3_FULL_SUPPORT.md` reported a passing claim because the actual gate had
 zero strict open rows, zero selected-identity blockers, and zero
-SRD-authored-product-readiness blockers. The 30 non-green product-readiness rows
-remain useful planning diagnostics, but they are not an additional conjunctive
-claim gate under the current checker.
+SRD-authored-product-readiness blockers. The non-green product-readiness rows
+remained useful planning diagnostics, but they were not an additional
+conjunctive claim gate under the checker.
+
+Subsequent update: `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION` closed the
+Darkness object-origin branch as table/object-spatial adjudication, so the
+current generated ledger no longer counts Darkness as partial battle-runtime
+pressure.
 
 ## Gate Check
 
@@ -63,7 +68,7 @@ Effect`, `Using a Higher-Level Spell Slot`, `Spell Attack`, `Area of Effect`,
 | --- | ---: | --- | --- |
 | `battle-runtime-required` | 1 | No | The sole row is Acid Arrow from the Wizard level-2 spell-list pressure. It is already represented in the strict view as `blocked-follow-up-split` with concrete RAW reconciliation, Surface repair, and battle-runtime support owners. Task 7 audited that split as non-blocking under the current gate. |
 | `owner-evidence-required` | 18 | No | None of these rows appear in SRD-authored-product-readiness blockers. Fifteen are level-3 class feature rows with no Unit matrix row yet, kept visible for the no-matrix/future-owner audits. The other three are installed Units needing better checker-readable owner evidence or follow-up accounting: `bard_jack_of_all_trades`, `sorcerer_metamagic`, and `wizard_evocation_savant`. |
-| `partial-battle-runtime` | 11 | No | These 11 source rows collapse to four profile-subset-supported Units: `darkness`, `druid_wild_shape`, `enhance_ability`, and `moonbeam`. Each has selected-identity evidence and concrete follow-up split owners for the residual mechanics. Task 7 audited those follow-up splits as non-blocking under the current gate. |
+| `partial-battle-runtime` | 11 | No | At audit time, these 11 source rows collapsed to four profile-subset-supported Units: `darkness`, `druid_wild_shape`, `enhance_ability`, and `moonbeam`. Each had selected-identity evidence and concrete follow-up split owners for the residual mechanics. Task 7 audited those follow-up splits as non-blocking under the current gate. Darkness was later closed by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION`. |
 
 ## Row Inventory
 
@@ -94,10 +99,10 @@ Effect`, `Using a Higher-Level Spell Slot`, `Spell Attack`, `Area of Effect`,
 | `partial-battle-runtime` | `enhance_ability` | Druid spell list Enhance Ability | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
 | `partial-battle-runtime` | `moonbeam` | Druid spell list Moonbeam | `catalog-installed-owner-evidence-present` | Strict row is `blocked-follow-up-split`; residual true-form owners were audited in Task 7. |
 | `partial-battle-runtime` | `enhance_ability` | Ranger spell list Enhance Ability | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
-| `partial-battle-runtime` | `darkness` | Sorcerer spell list Darkness | `catalog-installed-owner-evidence-present` | Strict row is `blocked-follow-up-split`; residual object-origin branch was audited in Task 7. |
+| `partial-battle-runtime` | `darkness` | Sorcerer spell list Darkness | `catalog-installed-owner-evidence-present` | Historical audit row; later closed by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION` as table/object-spatial adjudication. |
 | `partial-battle-runtime` | `enhance_ability` | Sorcerer spell list Enhance Ability | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
-| `partial-battle-runtime` | `darkness` | Warlock spell list Darkness | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
-| `partial-battle-runtime` | `darkness` | Wizard spell list Darkness | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
+| `partial-battle-runtime` | `darkness` | Warlock spell list Darkness | `catalog-installed-owner-evidence-present` | Historical audit row; later closed by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION` as table/object-spatial adjudication. |
+| `partial-battle-runtime` | `darkness` | Wizard spell list Darkness | `catalog-installed-owner-evidence-present` | Historical audit row; later closed by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION` as table/object-spatial adjudication. |
 | `partial-battle-runtime` | `enhance_ability` | Wizard spell list Enhance Ability | `catalog-installed-owner-evidence-present` | Same Unit as above; duplicate source-list pressure, not an additional Unit blocker. |
 
 ## Reviewer Loop

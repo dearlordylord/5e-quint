@@ -232,13 +232,13 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 589,
-      "percent": "97%",
+      "numerator": 592,
+      "percent": "97.5%",
       "rowsByStatus": {
-        "accepted": 428,
+        "accepted": 431,
         "accepted-no-battle-effect": 161,
         "owner-evidence-required": 12,
-        "partial-battle-runtime": 5,
+        "partial-battle-runtime": 2,
         "battle-runtime-required": 1
       }
     },
@@ -24992,6 +24992,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -25005,7 +25011,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkvision",
@@ -28364,6 +28370,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -28377,7 +28389,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
@@ -32251,6 +32263,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -32264,7 +32282,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkvision",

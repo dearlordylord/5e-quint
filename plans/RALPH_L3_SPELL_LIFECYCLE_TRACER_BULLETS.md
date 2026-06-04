@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote or close Darkness object-origin branch"
     },
     {
@@ -86,7 +86,7 @@ owns branch repair.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | done | none | Independent spell-resource/targeting slice. |
-| 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | ready-for-implementation-after-light-research | none | Independent closure-or-promotion decision. |
+| 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | done | none | Closed as table/object-spatial adjudication; point-origin support remains unchanged. |
 | 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | ready-for-implementation-after-light-research | none | Independent spell-effect lifecycle slice. |
 | 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | ready-for-implementation-after-light-research | none | Independent stat-block lifecycle decision. |
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | ready-for-implementation-after-light-research | none | Independent ongoing-effect cleanup slice. |
@@ -156,7 +156,7 @@ Expected outputs:
 
 ### Task 2 - L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Represent and promote or precisely close Darkness's object-origin branch.
 
@@ -175,6 +175,15 @@ Expected outputs:
 - either focused QNT/runtime tracer bullet or explicit closure with no reducer
   code;
 - no map/object lifecycle state invented just for Darkness.
+
+Result:
+
+- closed the object-origin branch as table/object-spatial adjudication because
+  promoted battle runtime owns point-origin magical Darkness and light-overlap
+  consequences but does not own generic object position, movement, cover, area
+  membership, sight-line, or map-illumination state;
+- recorded the closure in `plans/unit-profile-coverage/` without reducer, QNT,
+  MBT, or runtime-test changes.
 
 ### Task 3 - L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION
 

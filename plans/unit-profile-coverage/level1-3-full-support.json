@@ -712,12 +712,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
+      "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -761,7 +761,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "darkness"
     },
@@ -3349,7 +3349,7 @@
       ]
     },
     {
-      "count": 34,
+      "count": 35,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -3361,6 +3361,7 @@
         "calm_emotions",
         "charm_person",
         "comprehend_languages",
+        "darkness",
         "darkvision",
         "detect_evil_and_good",
         "detect_magic",
@@ -3390,13 +3391,12 @@
       ]
     },
     {
-      "count": 12,
+      "count": 11,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "cleric_preserve_life",
-        "darkness",
         "druid_lands_aid",
         "druid_wild_shape",
         "fighter_remarkable_athlete",
@@ -3462,14 +3462,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 589,
-      "percent": "97%",
+      "numerator": 592,
+      "percent": "97.5%",
       "rowsByStatus": {
-        "accepted": 428,
+        "accepted": 431,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
         "owner-evidence-required": 12,
-        "partial-battle-runtime": 5
+        "partial-battle-runtime": 2
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -10776,12 +10776,12 @@
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 12,
+      "blocked-follow-up-split": 11,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
-      "closed-runtime-detached-table-adjudication": 34,
+      "closed-runtime-detached-table-adjudication": 35,
       "supported-profile": 129
     },
     "nonSupportedFrontier": 68,

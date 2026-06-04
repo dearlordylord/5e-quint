@@ -45,15 +45,15 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 589/607 (97%)
+- Accepted: 592/607 (97.5%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 428
+- accepted: 431
 - accepted-no-battle-effect: 161
 - battle-runtime-required: 1
 - owner-evidence-required: 12
-- partial-battle-runtime: 5
+- partial-battle-runtime: 2
 
 ### Level-3 Class/Subclass Battle Readiness
 

@@ -1445,7 +1445,8 @@
       "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and typed caller-supplied spell-created light overlap facts keyed by tracked source effect id. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, overlap-triggered dispel of tracked spell-light emitters whose source spell level is 2 or lower without authored spell identity dispatch, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, and map illumination remain outside this profile.",
       "taskRefs": [
         "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-        "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
+        "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+        "L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION"
       ],
       "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
       "verificationOwners": [
@@ -12899,6 +12900,14 @@
       "taskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed local SRD Darkness object targeting, Emanation movement, opaque-cover blocking, and existing object/light/area witnesses. The object-origin branch is closed as table/object-spatial adjudication because promoted battle runtime lacks a generic object-origin area lifecycle owner and must not add Darkness-specific object position, movement, cover, area membership, sight-line, or map-illumination state.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Dispel Magic catalog admission, ongoing creature/object/magical-effect target hole admission, target-within-range fact validation, automatic ending for tracked ongoing spell-light effects at or below the Dispel Magic slot level, DC 10 plus spell level spellcasting ability checks for higher-level tracked effects, higher-slot automatic ending, and generic object-attached Continual Flame cleanup without a spell-specific remover registry.",
       "profileIds": [
@@ -22634,20 +22643,14 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/object-spatial and object-presentation owner",
+              "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+            },
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, opaque-cover blocking, affected area membership, sight lines, and map illumination remain table/object-spatial adjudication outside promoted battle runtime."
           }
         ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
-            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
-            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
-            "title": "Darkness Object-Origin Branch"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary",
         "profileIds": [
           "spell.invocation-magical-darkness-point-origin"
         ],
@@ -22697,7 +22700,8 @@
           "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and typed caller-supplied spell-created light overlap facts keyed by tracked source effect id. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, overlap-triggered dispel of tracked spell-light emitters whose source spell level is 2 or lower without authored spell identity dispatch, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, and map illumination remain outside this profile.",
           "taskRefs": [
             "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-            "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
+            "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION"
           ],
           "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
           "verificationOwners": [
