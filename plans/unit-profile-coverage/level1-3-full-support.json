@@ -1259,99 +1259,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES: Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets. Owner: battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Enhance Ability",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Enhance Ability",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 187,
-            "lineStart": 187,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Enhance Ability",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Enhance Ability",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 186,
-            "lineStart": 186,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Enhance Ability",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 277,
-            "lineStart": 277,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Enhance Ability",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 209,
-            "lineStart": 209,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "enhance_ability"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
@@ -3306,7 +3213,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 128,
+      "count": 129,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3345,6 +3252,7 @@
         "druid_circle_of_the_land_spells",
         "druid_primal_order",
         "eldritch_blast",
+        "enhance_ability",
         "ensnaring_strike",
         "entangle",
         "expeditious_retreat",
@@ -3482,7 +3390,7 @@
       ]
     },
     {
-      "count": 13,
+      "count": 12,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3491,7 +3399,6 @@
         "darkness",
         "druid_lands_aid",
         "druid_wild_shape",
-        "enhance_ability",
         "fighter_remarkable_athlete",
         "monk_open_hand_technique",
         "moonbeam",
@@ -3555,14 +3462,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 583,
-      "percent": "96%",
+      "numerator": 589,
+      "percent": "97%",
       "rowsByStatus": {
-        "accepted": 422,
+        "accepted": 428,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
         "owner-evidence-required": 12,
-        "partial-battle-runtime": 11
+        "partial-battle-runtime": 5
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -3576,14 +3483,14 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 127,
-      "numerator": 127,
+      "denominator": 128,
+      "numerator": 128,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 128,
-      "percent": "65%"
+      "numerator": 129,
+      "percent": "65.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6299,8 +6206,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 127,
-        "numerator": 127,
+        "denominator": 128,
+        "numerator": 128,
         "percent": "100%"
       }
     },
@@ -7292,6 +7199,28 @@
           }
         ],
         "unitId": "eldritch_blast"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+              }
+            ],
+            "profileId": "spell.invocation-roll-modifier",
+            "profileKind": "spell-invocation",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
+            ]
+          }
+        ],
+        "unitId": "enhance_ability"
       },
       {
         "joinStatus": "covered",
@@ -10842,20 +10771,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 39,
-      "supported-profile": 128,
+      "profile-subset-supported": 38,
+      "supported-profile": 129,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 12,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 128
+      "supported-profile": 129
     },
-    "nonSupportedFrontier": 69,
+    "nonSupportedFrontier": 68,
     "strictDenominator": 197
   }
 }

@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 151,
-      "numerator": 151,
+      "denominator": 152,
+      "numerator": 152,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 150,
-      "numerator": 150,
+      "denominator": 151,
+      "numerator": 151,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 151,
-      "numerator": 147,
+      "denominator": 152,
+      "numerator": 148,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 151,
-      "percent": "66.5%"
+      "numerator": 152,
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -2266,6 +2266,7 @@
       "taskRefs": [
         "SRDINV30B",
         "L12G-MISSING-ENHANCE-ABILITY",
+        "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
         "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
       ],
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -6543,8 +6544,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 150,
-          "numerator": 150,
+          "denominator": 151,
+          "numerator": 151,
           "percent": "100%"
         }
       },
@@ -7630,6 +7631,28 @@
             }
           ],
           "unitId": "eldritch_blast"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+                }
+              ],
+              "profileId": "spell.invocation-roll-modifier",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
+              ]
+            }
+          ],
+          "unitId": "enhance_ability"
         },
         {
           "joinStatus": "covered",
@@ -11274,7 +11297,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset with one runtime target pending the per-target upcast follow-up.",
+      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset.",
       "profileIds": [
         "spell.invocation-roll-modifier"
       ],
@@ -11282,11 +11305,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection for one target.",
+      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection.",
       "profileIds": [
         "spell.invocation-roll-modifier"
       ],
       "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused battle-runtime QNT facts and MBT parity cover level-3 Enhance Ability with two targets carrying distinct Ability Check Advantage choices.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused reducer and selected-identity replay tests cover level-3 Spell Slot spend, slot-scaled target count, per-target Strength/Dexterity/Intelligence/Wisdom/Charisma choices, and rejection of Constitution, shared, missing, over-targeted, or duplicate target ability choices.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -13448,12 +13487,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 131,
-        "profileSubsetSupportedUnits": 20,
+        "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 108,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 108,
-        "supportedProfileUnits": 88,
+        "supportedProfileUnits": 89,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -21532,6 +21571,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -21594,6 +21634,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -23153,22 +23194,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
-            "mechanic": "higher-level Spell Slot casts can target one additional creature per slot level above 2 and can choose a different ability for each target"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
-            "mechanic": "Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets.",
-            "owner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
-            "title": "Enhance Ability Upcast Per-Target Ability Choices"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
         "profileIds": [
           "spell.invocation-roll-modifier"
         ],
@@ -23177,9 +23202,9 @@
         ],
         "supportedMechanics": [
           "SRD Surface definition records level-2 Magic Action Spell Slot casting, Touch range, V/S/M components, Concentration up to 1 hour, and Strength/Dexterity/Intelligence/Wisdom/Charisma Ability Check Advantage choices without Constitution",
-          "Battle runtime admits prepared Enhance Ability through the roll-modifier spell profile, spends the Magic Action and Spell Slot, starts caster-owned Concentration, accepts one touched creature target, accepts one chosen ability from the SRD 5.2.1 list, and projects Ability Check Advantage for that ability with normal Advantage/Disadvantage cancellation"
+          "Battle runtime admits prepared Enhance Ability through the roll-modifier spell profile, spends the Magic Action and selected level-2-or-higher Spell Slot, starts caster-owned Concentration, accepts one touched creature target at level 2 or one additional creature per Spell Slot level above 2, accepts a Strength/Dexterity/Intelligence/Wisdom/Charisma Ability Check Advantage choice per target without Constitution or shared/missing choices, and projects each target's chosen Ability Check Advantage independently with normal Advantage/Disadvantage cancellation"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -23191,7 +23216,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+          "taskId": "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET"
         }
       ],
       "executableMechanics": true,
@@ -23210,6 +23235,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -23497,6 +23523,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -24377,6 +24404,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
@@ -25926,6 +25954,7 @@
           "taskRefs": [
             "SRDINV30B",
             "L12G-MISSING-ENHANCE-ABILITY",
+            "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
             "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
