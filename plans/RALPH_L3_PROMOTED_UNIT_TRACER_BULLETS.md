@@ -7,49 +7,49 @@
     {
       "number": 1,
       "id": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Rogue Steady Aim through battle reducer, QNT, MBT, and Unit evidence"
     },
     {
       "number": 2,
       "id": "L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Warlock Dark One's Blessing zero-HP Temporary Hit Points"
     },
     {
       "number": 3,
       "id": "L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Cleric Disciple of Life slot-cast healing modifier"
     },
     {
       "number": 4,
       "id": "L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Cleric Preserve Life Magic Action healing pool"
     },
     {
       "number": 5,
       "id": "L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Wizard Potent Cantrip miss/save-success half damage"
     },
     {
       "number": 6,
       "id": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Monk Open Hand Technique Flurry hit riders"
     },
     {
       "number": 7,
       "id": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Ranger Hunter's Prey selected attack option"
     },
     {
       "number": 8,
       "id": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME",
-      "status": "todo",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Druid Land's Aid level-3 area damage and healing"
     }
   ]
@@ -195,7 +195,7 @@ findings remain. Use at least two rounds for non-trivial changes.
 
 ### Task 1 - L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `rogue_steady_aim` from battle-admission projection to executable
 battle-runtime behavior.
@@ -239,7 +239,7 @@ Out of scope:
 
 ### Task 2 - L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `warlock_dark_ones_blessing` zero-Hit-Point Temporary Hit Points.
 
@@ -273,7 +273,7 @@ Out of scope:
 
 ### Task 3 - L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `cleric_disciple_of_life` slot-cast healing modifier.
 
@@ -301,7 +301,7 @@ Out of scope:
 
 ### Task 4 - L3PUTB-04-CLERIC-PRESERVE-LIFE-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `cleric_preserve_life` Magic Action healing pool.
 
@@ -333,7 +333,7 @@ Out of scope:
 
 ### Task 5 - L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `wizard_potent_cantrip` half damage on missed cantrip attacks and
 successful cantrip saves.
@@ -363,7 +363,7 @@ Out of scope:
 
 ### Task 6 - L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `monk_open_hand_technique` after supported Flurry of Blows hits.
 
@@ -393,7 +393,7 @@ Out of scope:
 
 ### Task 7 - L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote `ranger_hunters_prey` selected attack option execution.
 
@@ -424,7 +424,7 @@ Out of scope:
 
 ### Task 8 - L3PUTB-08-DRUID-LANDS-AID-RUNTIME
 
-Status: `todo`
+Status: `ready-for-implementation-after-light-research`
 
 Promote the level-3 execution subset of `druid_lands_aid`.
 
