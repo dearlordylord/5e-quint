@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -466,6 +467,197 @@ describe("battle runtime: class action features", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Steady Aim spends a Bonus Action, grants next-attack Advantage, and sets Speed to 0 until turn end", () => {
+    const steadyAimUnit = unitLibrary.requireUnit("rogue_steady_aim");
+    if (steadyAimUnit.kind !== "class_feature") {
+      throw new Error("Expected Steady Aim class feature Unit.");
+    }
+    const state = startBattleRight({
+      battleId: battleId("battle-rogue-steady-aim"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 3 }],
+          unitFeatures: [{ unit: steadyAimUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(steadyAimUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        candidate.subject.unitId === "rogue_steady_aim",
+    );
+    expect(act).toMatchObject({
+      subject: {
+        tag: "unitFeature",
+        actorId: fighterId,
+        unitId: "rogue_steady_aim",
+      },
+      label: "Steady Aim",
+      initialHoles: [],
+    });
+    if (act === undefined) {
+      throw new Error("Expected Steady Aim act.");
+    }
+
+    const aimed = requireResolved(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    );
+    expect(aimed.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(
+      aimed.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === fighterId,
+      )?.movement,
+    ).toMatchObject({ speedFeet: 0, remainingFeet: 0 });
+    expect(aimed.state.combatants.get(fighterId)?.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "nextAttackRollBySelf",
+          sourceUnitId: "rogue_steady_aim",
+          mode: "advantage",
+        }),
+        expect.objectContaining({
+          kind: "selfSpeedZero",
+          sourceUnitId: "rogue_steady_aim",
+        }),
+      ]),
+    );
+
+    const targetHole = attackInitialTargetHole(aimed.state);
+    const rollHole = attackRollHoleAfterTarget(aimed.state, targetHole);
+    expect(rollHole).toMatchObject({
+      kind: "attackRoll",
+      rollMode: "advantage",
+    });
+    const attackRoll = attackRollFill(rollHole, {
+      total: 16,
+      naturalD20: 11,
+      rollMode: "advantage",
+    });
+    const needsDamage = resolveBattleSubject({
+      state: aimed.state,
+      subject: fighterAttackSubject(),
+      fills: [targetFill(targetHole, goblinId), attackRoll],
+    });
+    const damageHole = requireHole(needsDamage, "rolledDice");
+    const attacked = requireResolved(
+      resolveBattleSubject({
+        state: aimed.state,
+        subject: fighterAttackSubject(),
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRoll,
+          damageRollFill(damageHole, 4),
+        ],
+      }),
+    );
+    expect(
+      attacked.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "nextAttackRollBySelf",
+        ),
+    ).toBe(false);
+    expect(
+      attacked.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.kind === "selfSpeedZero"),
+    ).toBe(true);
+    expect(
+      attacked.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === fighterId,
+      )?.movement.speedFeet,
+    ).toBe(0);
+
+    const ended = endTurn({ state: attacked.state, actorId: fighterId });
+    expect(ended).toMatchObject({ tag: "resolved" });
+    if (ended.tag !== "resolved") {
+      throw new Error("Expected Steady Aim turn end to resolve.");
+    }
+    expect(
+      ended.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "nextAttackRollBySelf" ||
+            effect.kind === "selfSpeedZero",
+        ),
+    ).toBe(false);
+    expect(
+      ended.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === fighterId,
+      )?.movement.speedFeet,
+    ).toBe(30);
+  });
+
+  test("Steady Aim rejects prior movement or an unavailable Bonus Action", () => {
+    const steadyAimUnit = unitLibrary.requireUnit("rogue_steady_aim");
+    if (steadyAimUnit.kind !== "class_feature") {
+      throw new Error("Expected Steady Aim class feature Unit.");
+    }
+    const state = startBattleRight({
+      battleId: battleId("battle-rogue-steady-aim-reject"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 3 }],
+          unitFeatures: [{ unit: steadyAimUnit }],
+          characterUnitRefs: [supportedBattleUnitRef(steadyAimUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "rogue_steady_aim",
+    };
+    const actor = state.combatants.get(fighterId);
+    if (actor === undefined) {
+      throw new Error("Expected Steady Aim actor.");
+    }
+    const movedState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...actor,
+        movementSpentFeet: movementFeet(5),
+      }),
+    } satisfies BattleState;
+    expect(
+      discoverBattleActs(movedState).some(
+        (candidate) =>
+          candidate.subject.tag === "unitFeature" &&
+          candidate.subject.unitId === "rogue_steady_aim",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({ state: movedState, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Steady Aim is available only if the actor has not moved this turn.",
+    });
+
+    const noBonusActionState = {
+      ...state,
+      currentTurnResources: {
+        ...state.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    } satisfies BattleState;
+    expect(
+      resolveBattleSubject({ state: noBonusActionState, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Steady Aim Bonus Action is no longer available.",
+    });
   });
 
   test("Rage enters a reusable ongoing feature and applies damage and Resistance riders", () => {
@@ -1877,7 +2069,8 @@ describe("battle runtime: class action features", () => {
       }),
     ).state;
     expect(
-      afterRecklessMiss.currentTurnResources.recklessAttackWhileRagingUsedThisTurn,
+      afterRecklessMiss.currentTurnResources
+        .recklessAttackWhileRagingUsedThisTurn,
     ).toEqual([]);
 
     const rageSubject: BattleSubject = {

@@ -103,6 +103,16 @@ export type AdrenalineRushMbtProjection = {
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
 
+export type RogueSteadyAimMbtProjection = {
+  readonly bonusActionAvailable: boolean;
+  readonly actorSpeedFeet: number;
+  readonly nextAttackAdvantageActive: boolean;
+  readonly speedZeroActive: boolean;
+  readonly attackRollMode: "normal" | "advantage";
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
 type ScalarBuffMbtProjection = {
   readonly fighterSpeed: number;
   readonly goblinSpeed: number;
@@ -191,6 +201,16 @@ const adrenalineRushDriverSchema = {
   step: {},
 } as const;
 
+const rogueSteadyAimDriverSchema = {
+  init: {},
+  doSteadyAim: {},
+  doRejectAfterMoved: {},
+  doRejectSecondAim: {},
+  doAttackConsumesAdvantage: {},
+  doEndTurnCleanup: {},
+  step: {},
+} as const;
+
 const scalarBuffDriverSchema = {
   init: {},
   doFillLongstriderTarget: {},
@@ -208,6 +228,10 @@ export type ExtraAttackDriverAction = Exclude<
 >;
 export type AdrenalineRushDriverAction = Exclude<
   keyof typeof adrenalineRushDriverSchema,
+  "init" | "step"
+>;
+export type RogueSteadyAimDriverAction = Exclude<
+  keyof typeof rogueSteadyAimDriverSchema,
   "init" | "step"
 >;
 const extraAttackSelectedUnitIds = [
@@ -260,9 +284,20 @@ export type AdrenalineRushSelectedUnitIdentityReplay = {
     AdrenalineRushMbtProjection
   >[];
 };
+export type RogueSteadyAimSelectedUnitIdentityReplay = {
+  readonly driver: "rogueSteadyAim";
+  readonly taskId: "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME";
+  readonly unitId: "rogue_steady_aim";
+  readonly actions: readonly RogueSteadyAimDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    RogueSteadyAimDriverAction,
+    RogueSteadyAimMbtProjection
+  >[];
+};
 export type SelectedUnitIdentityReplay =
   | ExtraAttackSelectedUnitIdentityReplay
-  | AdrenalineRushSelectedUnitIdentityReplay;
+  | AdrenalineRushSelectedUnitIdentityReplay
+  | RogueSteadyAimSelectedUnitIdentityReplay;
 type SelectedUnitIdentityReplayUnitId = SelectedUnitIdentityReplay["unitId"];
 type SelectedReplayDriver<ActionName extends string, Projection> = {
   readonly actions: Readonly<
@@ -322,7 +357,11 @@ export async function runSelectedUnitIdentityReplay(
     );
     return;
   }
-  await runSelectedIdentityReplay(replay, createAdrenalineRushDriver());
+  if (replay.driver === "adrenalineRush") {
+    await runSelectedIdentityReplay(replay, createAdrenalineRushDriver());
+    return;
+  }
+  await runSelectedIdentityReplay(replay, createRogueSteadyAimDriver());
 }
 
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
@@ -774,6 +813,116 @@ export function createAdrenalineRushDriver(
   });
 }
 
+export function createRogueSteadyAimDriver(
+  schema: typeof rogueSteadyAimDriverSchema = rogueSteadyAimDriverSchema,
+) {
+  return defineDriver(schema, () => {
+    let state = rogueSteadyAimBattle();
+    let lastResult: RogueSteadyAimMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = rogueSteadyAimBattle();
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function resolveAttack(): void {
+      const subject = fighterAttackSubject();
+      const targetHole = requireHole(
+        discoverAttackHoles(state, subject),
+        "targetChoice",
+      );
+      const target = targetFill(targetHole, skeletonId);
+      const attackRollHole = requireHole(
+        holesAfterFills(state, subject, [target]),
+        "attackRoll",
+      );
+      const attackRoll = attackRollFill(attackRollHole, {
+        total: 16,
+        naturalD20: 11,
+        rollMode: "advantage",
+      });
+      const damageHole = requireHole(
+        holesAfterFills(state, subject, [target, attackRoll]),
+        "rolledDice",
+      );
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [target, attackRoll, damageRollFill(damageHole, 4)],
+        }),
+      );
+    }
+
+    return {
+      init: reset,
+      doSteadyAim: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(),
+            fills: [],
+          }),
+        );
+      },
+      doRejectAfterMoved: () => {
+        state = rogueSteadyAimBattleWithMovementSpent();
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(),
+            fills: [],
+          }),
+        );
+      },
+      doRejectSecondAim: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(),
+            fills: [],
+          }),
+        );
+      },
+      doAttackConsumesAdvantage: resolveAttack,
+      doEndTurnCleanup: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: endTurnSubject(),
+            fills: [],
+          }),
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectRogueSteadyAimMbtState({
+          state,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const state = quintStateRecord(raw);
 
@@ -834,6 +983,30 @@ function normalizeAdrenalineRushQuintState(
   };
 }
 
+function normalizeRogueSteadyAimQuintState(
+  raw: unknown,
+): RogueSteadyAimMbtProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    actorSpeedFeet: numberFromQuintInt(
+      state["qActorSpeedFeet"],
+      "qActorSpeedFeet",
+    ),
+    nextAttackAdvantageActive: booleanField(
+      state,
+      "qNextAttackAdvantageActive",
+    ),
+    speedZeroActive: booleanField(state, "qSpeedZeroActive"),
+    attackRollMode: booleanField(state, "qAttackRollAdvantage")
+      ? "advantage"
+      : "normal",
+    lastResult: mbtLastResult(state["qLastResult"]),
+    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+  };
+}
+
 function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
   const state = quintStateRecord(raw);
 
@@ -869,7 +1042,10 @@ function mbtInvalidReason(
   throw new Error(`Unexpected battle-runtime MBT invalid reason: ${reason}`);
 }
 
-export const battleRuntimeStateCheck = stateCheck(normalizeQuintState, compareState);
+export const battleRuntimeStateCheck = stateCheck(
+  normalizeQuintState,
+  compareState,
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -880,6 +1056,13 @@ export const extraAttackStateCheck = stateCheck(
 export const adrenalineRushStateCheck = stateCheck(
   normalizeAdrenalineRushQuintState,
   (spec: AdrenalineRushMbtProjection, impl: AdrenalineRushMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const rogueSteadyAimStateCheck = stateCheck(
+  normalizeRogueSteadyAimQuintState,
+  (spec: RogueSteadyAimMbtProjection, impl: RogueSteadyAimMbtProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -995,6 +1178,42 @@ function projectAdrenalineRushMbtState(input: {
       input.state,
       "orc_adrenaline_rush",
     ),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectRogueSteadyAimMbtState(input: {
+  readonly state: BattleState;
+  readonly lastResult: RogueSteadyAimMbtProjection["lastResult"];
+  readonly lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"];
+}): RogueSteadyAimMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  const actorState = input.state.combatants.get(fighterId);
+  if (actor == null || actorState === undefined) {
+    throw new Error("Expected Steady Aim MBT actor.");
+  }
+  const nextAttackAdvantageActive = actorState.activeEffects.some(
+    (effect) =>
+      effect.kind === "nextAttackRollBySelf" &&
+      "sourceUnitId" in effect &&
+      effect.sourceUnitId === "rogue_steady_aim" &&
+      effect.mode === "advantage",
+  );
+  const speedZeroActive = actorState.activeEffects.some(
+    (effect) =>
+      effect.kind === "selfSpeedZero" &&
+      effect.sourceUnitId === "rogue_steady_aim",
+  );
+  return {
+    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    actorSpeedFeet: Number(actor.movement.speedFeet),
+    nextAttackAdvantageActive,
+    speedZeroActive,
+    attackRollMode: nextAttackAdvantageActive ? "advantage" : "normal",
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -1120,6 +1339,17 @@ function adrenalineRushDashSubject(): Extract<
     sourceUnitId: recordSelectedUnitRuntimeBoundaryId("orc_adrenaline_rush"),
     action: "dash",
     speedKind: "walk",
+  };
+}
+
+function rogueSteadyAimSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "unitFeature" }
+> {
+  return {
+    tag: "unitFeature",
+    actorId: fighterId,
+    unitId: recordSelectedUnitRuntimeBoundaryId("rogue_steady_aim"),
   };
 }
 
@@ -1272,6 +1502,31 @@ function adrenalineRushBattle(): BattleState {
   });
 }
 
+function rogueSteadyAimBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-rogue-steady-aim"),
+    combatants: [
+      rogueSteadyAimCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function rogueSteadyAimBattleWithMovementSpent(): BattleState {
+  const state = rogueSteadyAimBattle();
+  const actor = state.combatants.get(fighterId);
+  if (actor === undefined) {
+    throw new Error("Expected Steady Aim MBT actor.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(fighterId, {
+      ...actor,
+      movementSpentFeet: movementFeet(5),
+    }),
+  };
+}
+
 function scalarBuffBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
@@ -1348,6 +1603,47 @@ function rogueCreatureInit(input: {
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
+    },
+  };
+}
+
+function rogueSteadyAimCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const steadyAim = unitLibrary.requireUnit("rogue_steady_aim");
+  if (steadyAim.kind !== "class_feature") {
+    throw new Error("Expected Steady Aim class feature Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Rogue",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("steady-aim-rogue-character"),
+      characterUnitRefs: [rogueSteadyAimUnitRef(steadyAim)],
+      classLevels: [{ className: "rogue", level: 3 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {
+        weapon: {
+          itemId: "main:weapon_dagger",
+          unitId: "weapon_dagger",
+          grip: "one_handed",
+        },
+      },
+      attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
+      unitFeatures: [{ unit: steadyAim }],
     },
   };
 }
@@ -1497,6 +1793,23 @@ function adrenalineRushUnitRef(
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },
     unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function rogueSteadyAimUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+    classLevels: [{ className: "rogue", level: 3 }],
   });
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);

@@ -303,6 +303,13 @@ export type BattleActiveEffect =
         { readonly kind: "duration" }
       >;
     })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "selfSpeedZero";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "endOfTurn" }
+      >;
+    })
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
       readonly deltaFeet: MovementDeltaFeet;
@@ -312,20 +319,20 @@ export type BattleActiveEffect =
       readonly kind: "specialSpeedGrant";
       readonly expiresAt: BattleActiveEffectExpiration;
     } & (
-      | {
-          readonly speedKind: Exclude<BattleSpecialSpeedKind, "fly">;
-          readonly speed: { readonly kind: "equalToSpeed" };
-          readonly hover: false;
-        }
-      | {
-          readonly speedKind: Extract<BattleSpecialSpeedKind, "fly">;
-          readonly speed: {
-            readonly kind: "fixed";
-            readonly speedFeet: MovementFeet;
-          };
-          readonly hover: true;
-        }
-    ))
+        | {
+            readonly speedKind: Exclude<BattleSpecialSpeedKind, "fly">;
+            readonly speed: { readonly kind: "equalToSpeed" };
+            readonly hover: false;
+          }
+        | {
+            readonly speedKind: Extract<BattleSpecialSpeedKind, "fly">;
+            readonly speed: {
+              readonly kind: "fixed";
+              readonly speedFeet: MovementFeet;
+            };
+            readonly hover: true;
+          }
+      ))
   | (BattleSpellEffectBase & {
       readonly kind: "selfTransformation";
       readonly expiresAt: Extract<

@@ -6,7 +6,7 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   grantUnitActionResource,
@@ -130,84 +130,19 @@ export function supportedUnitFeatureActs(
   }
 
   const classLevels = actor.origin.classLevels;
-  return actor.origin.resources.flatMap<AvailableBattleAct>((resource) => {
-    const unitFeature = supportedUnitFeatureProfileForResource(
-      actor,
-      resource,
-      classLevels,
-    );
-    if (
-      unitFeature?.kind === "extraActionGrant" &&
-      resourceHasUsesRemaining(resource) &&
-      !resource.usedThisTurn
-    ) {
-      return [
-        {
-          subject: {
-            tag: "unitFeature" as const,
-            actorId,
-            unitId: unitFeature.unit.id,
-          },
-          label: unitFeature.unit.name,
-          summary: "Grant one additional non-Magic action this turn.",
-          initialHoles: [],
-        },
-      ];
-    }
-
-    if (
-      unitFeature?.kind === "ongoingFeature" &&
-      unitFeature.activationTrigger === "bonusAction" &&
-      ongoingFeatureIsAvailable(state, actor, resource, unitFeature)
-    ) {
-      return [
-        {
-          subject: {
-            tag: "unitFeature" as const,
-            actorId,
-            unitId: unitFeature.unit.id,
-          },
-          label: unitFeature.unit.name,
-          summary: "Activate an ongoing feature occurrence.",
-          initialHoles: [],
-        },
-      ];
-    }
-
-    if (
-      unitFeature?.kind === "bardicInspirationGrant" &&
-      resourceHasUsesRemaining(resource) &&
-      state.currentTurnResources.currentHasBonusAction &&
-      bardicInspirationGrantTargetChoices(state, actorId).length > 0
-    ) {
-      return [
-        {
-          subject: {
-            tag: "unitFeature" as const,
-            actorId,
-            unitId: unitFeature.unit.id,
-          },
-          label: unitFeature.unit.name,
-          summary:
-            "Spend a Bonus Action and one use to grant one Bardic Inspiration die.",
-          initialHoles: [
-            bardicInspirationGrantTargetHole(state, actorId, unitFeature),
-          ],
-        },
-      ];
-    }
-
-    if (
-      unitFeature?.kind === "druidWildShapeKnownForm" &&
-      state.currentTurnResources.currentHasBonusAction
-    ) {
-      return druidWildShapeActsForResource(state, actor, resource, unitFeature);
-    }
-
-    return unitFeature?.kind === "selfBonusActionHealing" &&
-      resourceHasUsesRemaining(resource) &&
-      state.currentTurnResources.currentHasBonusAction
-      ? [
+  const resourceActs = actor.origin.resources.flatMap<AvailableBattleAct>(
+    (resource) => {
+      const unitFeature = supportedUnitFeatureProfileForResource(
+        actor,
+        resource,
+        classLevels,
+      );
+      if (
+        unitFeature?.kind === "extraActionGrant" &&
+        resourceHasUsesRemaining(resource) &&
+        !resource.usedThisTurn
+      ) {
+        return [
           {
             subject: {
               tag: "unitFeature" as const,
@@ -215,12 +150,110 @@ export function supportedUnitFeatureActs(
               unitId: unitFeature.unit.id,
             },
             label: unitFeature.unit.name,
-            summary: "Spend a Bonus Action and one use to regain Hit Points.",
-            initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
+            summary: "Grant one additional non-Magic action this turn.",
+            initialHoles: [],
           },
-        ]
-      : [];
-  });
+        ];
+      }
+
+      if (
+        unitFeature?.kind === "ongoingFeature" &&
+        unitFeature.activationTrigger === "bonusAction" &&
+        ongoingFeatureIsAvailable(state, actor, resource, unitFeature)
+      ) {
+        return [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId,
+              unitId: unitFeature.unit.id,
+            },
+            label: unitFeature.unit.name,
+            summary: "Activate an ongoing feature occurrence.",
+            initialHoles: [],
+          },
+        ];
+      }
+
+      if (
+        unitFeature?.kind === "bardicInspirationGrant" &&
+        resourceHasUsesRemaining(resource) &&
+        state.currentTurnResources.currentHasBonusAction &&
+        bardicInspirationGrantTargetChoices(state, actorId).length > 0
+      ) {
+        return [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId,
+              unitId: unitFeature.unit.id,
+            },
+            label: unitFeature.unit.name,
+            summary:
+              "Spend a Bonus Action and one use to grant one Bardic Inspiration die.",
+            initialHoles: [
+              bardicInspirationGrantTargetHole(state, actorId, unitFeature),
+            ],
+          },
+        ];
+      }
+
+      if (
+        unitFeature?.kind === "druidWildShapeKnownForm" &&
+        state.currentTurnResources.currentHasBonusAction
+      ) {
+        return druidWildShapeActsForResource(
+          state,
+          actor,
+          resource,
+          unitFeature,
+        );
+      }
+
+      return unitFeature?.kind === "selfBonusActionHealing" &&
+        resourceHasUsesRemaining(resource) &&
+        state.currentTurnResources.currentHasBonusAction
+        ? [
+            {
+              subject: {
+                tag: "unitFeature" as const,
+                actorId,
+                unitId: unitFeature.unit.id,
+              },
+              label: unitFeature.unit.name,
+              summary: "Spend a Bonus Action and one use to regain Hit Points.",
+              initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
+            },
+          ]
+        : [];
+    },
+  );
+  return [...resourceActs, ...rogueSteadyAimActs(state, actor)];
+}
+
+function rogueSteadyAimActs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  if (
+    !state.currentTurnResources.currentHasBonusAction ||
+    Number(actor.movementSpentFeet) > 0
+  ) {
+    return [];
+  }
+  return [...actor.origin.rogueSteadyAimProfiles.values()].map(
+    (unitFeature) => ({
+      subject: {
+        tag: "unitFeature" as const,
+        actorId: actor.combatantId,
+        unitId: unitFeature.unit.id,
+      },
+      label: unitFeature.unit.name,
+      summary:
+        "Spend a Bonus Action to gain Advantage on the next attack roll this turn and set Speed to 0.",
+      initialHoles: [],
+    }),
+  );
 }
 
 export function druidWildShapeActsForResource(
@@ -327,6 +360,13 @@ export function resolveUnitFeature(
         );
       }
     }
+
+    const rogueSteadyAim = actor.origin.rogueSteadyAimProfiles.get(
+      subject.unitId,
+    );
+    if (rogueSteadyAim !== undefined) {
+      return resolveRogueSteadyAimUnitFeature(input, actor, rogueSteadyAim);
+    }
   }
 
   if (input.fills.length > 0) {
@@ -342,6 +382,86 @@ export function resolveUnitFeature(
     "staleSubject",
     "Unit feature is no longer available for the current actor.",
   );
+}
+
+function resolveRogueSteadyAimUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "rogueSteadyAim" }
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Steady Aim does not accept battle fills.",
+    );
+  }
+  if (Number(actor.movementSpentFeet) > 0) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Steady Aim is available only if the actor has not moved this turn.",
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Steady Aim Bonus Action is no longer available.",
+    );
+  }
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          "sourceUnitId" in effect &&
+          effect.sourceUnitId === unitFeature.unit.id &&
+          effect.sourceCombatantId === actor.combatantId &&
+          (effect.kind === "nextAttackRollBySelf" ||
+            effect.kind === "selfSpeedZero")
+        ),
+    ),
+    {
+      kind: "nextAttackRollBySelf",
+      sourceUnitId: unitFeature.unit.id,
+      sourceCombatantId: actor.combatantId,
+      mode: unitFeature.steadyAim.attackRoll.mode,
+      expiresAt: {
+        kind: "endOfTurn",
+        combatantId: actor.combatantId,
+        round: input.state.initiative.round,
+      },
+    } as const,
+    {
+      kind: "selfSpeedZero",
+      sourceUnitId: unitFeature.unit.id,
+      sourceCombatantId: actor.combatantId,
+      expiresAt: {
+        kind: "endOfTurn",
+        combatantId: actor.combatantId,
+        round: input.state.initiative.round,
+      },
+    } as const,
+  ];
+  const nextState = {
+    ...input.state,
+    currentTurnResources: spent.right,
+    combatants: new Map(input.state.combatants).set(actor.combatantId, {
+      ...actor,
+      activeEffects,
+    }),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 export function resolveDruidWildShapeUnitFeature(

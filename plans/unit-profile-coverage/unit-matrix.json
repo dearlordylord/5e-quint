@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 148,
-      "numerator": 148,
+      "denominator": 149,
+      "numerator": 149,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 132,
-      "numerator": 132,
+      "denominator": 133,
+      "numerator": 133,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 132,
-      "numerator": 132,
+      "denominator": 133,
+      "numerator": 133,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 148,
-      "numerator": 144,
+      "denominator": 149,
+      "numerator": 145,
       "percent": "97.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 148,
-      "percent": "65.2%"
+      "numerator": 149,
+      "percent": "65.6%"
     }
   },
   "metricSemantics": [
@@ -4125,17 +4125,34 @@
     },
     {
       "id": "unit-feature.rogue-steady-aim",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts without duplicating movement history. Existing unit-feature action discovery, action economy, attack-roll active effects, movement budget, Speed, and end-turn cleanup owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts. Battle runtime consumes the profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf active-effect, Speed projection, and turn-end cleanup state without duplicating movement history, action economy state, or Speed state.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
       ],
-      "title": "Unit feature admits Steady Aim Bonus Action attack-roll and Speed facts",
-      "verificationOwners": []
+      "title": "Unit feature spends a Bonus Action to gain next-attack Advantage and Speed 0",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.potent-cantrip",
@@ -4156,13 +4173,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 132,
-        "numerator": 132,
+        "denominator": 133,
+        "numerator": 133,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 132,
-        "numerator": 132,
+        "denominator": 133,
+        "numerator": 133,
         "percent": "100%"
       }
     },
@@ -6431,6 +6448,22 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.rogue-steady-aim",
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -6441,8 +6474,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 147,
-          "numerator": 147,
+          "denominator": 148,
+          "numerator": 148,
           "percent": "100%"
         }
       },
@@ -9636,6 +9669,28 @@
             }
           ],
           "unitId": "rogue_sneak_attack"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.rogue-steady-aim",
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+              ]
+            }
+          ],
+          "unitId": "rogue_steady_aim"
         },
         {
           "joinStatus": "covered",
@@ -13173,6 +13228,22 @@
         "unit-feature.potent-cantrip"
       ],
       "taskId": "L13UG-A18"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Steady Aim MBT witness models Bonus Action availability, prior-movement rejection, Bonus Action spend, next-attack Advantage, Speed 0, attack consumption, duplicate-use rejection, and end-turn cleanup.",
+      "profileIds": [
+        "unit-feature.rogue-steady-aim"
+      ],
+      "taskId": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Steady Aim discovery through the admitted support profile, prior-movement rejection, Bonus Action spend, next attack-roll Advantage, Speed 0 projection, attack consumption of Advantage, and turn-end cleanup without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.rogue-steady-aim"
+      ],
+      "taskId": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13246,12 +13317,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 27,
+        "profileSubsetSupportedUnits": 26,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 61,
+        "selectedIdentityReplayDenominator": 62,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 61,
-        "supportedProfileUnits": 49,
+        "selectedIdentityReplayWitnessUnits": 62,
+        "supportedProfileUnits": 50,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -17342,39 +17413,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME",
-            "mechanic": "Execute Steady Aim as a Bonus Action only if the Rogue has not moved this turn, applying next-attack-roll Advantage and Speed 0 until the end of the current turn."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME",
-            "mechanic": "Consume the admitted steady-aim profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf, Speed, and turn-end cleanup state without duplicating movement or action state.",
-            "owner": "battle-runtime unit-feature action and movement reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for no-movement admission, moved-this-turn rejection, Bonus Action spend, next attack Advantage, Speed 0, and end-turn cleanup.",
-            "title": "Rogue Steady Aim Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime unit-feature action, action economy, attack-roll active-effect, movement budget, Speed, and end-turn cleanup owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.rogue-steady-aim"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until unit-feature action discovery, action economy, attack-roll active effect, movement budget, Speed, and end-turn cleanup owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Rogue grants Steady Aim as a level-3 class feature Unit",
-          "Battle Unit support admits the Surface steady_aim mechanics",
-          "The projected support profile carries Bonus Action activation, no-prior-movement prerequisite, next-attack-roll Advantage, and Speed 0 until end of current turn without authored-identity dispatch"
+          "Battle Unit support admits the Surface steady_aim mechanics without authored-identity dispatch",
+          "Battle runtime discovers Steady Aim as a Bonus Action only when the actor has not moved this turn and rejects stale direct resolution after movement",
+          "Battle runtime spends the Bonus Action, grants Advantage on the actor's next attack roll on the current turn, sets Speed to 0 until the current turn ends, consumes the next-attack Advantage on attack resolution, and clears Steady Aim effects at turn end without duplicating movement history, action economy state, attack-roll state, or Speed state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -17382,6 +17433,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -17389,17 +17445,34 @@
       "profiles": [
         {
           "id": "unit-feature.rogue-steady-aim",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts without duplicating movement history. Existing unit-feature action discovery, action economy, attack-roll active effects, movement budget, Speed, and end-turn cleanup owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface steady_aim shape and projects typed Bonus Action, no-prior-movement, next-attack-roll Advantage, and Speed-zero-until-end-of-turn facts. Battle runtime consumes the profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf active-effect, Speed projection, and turn-end cleanup state without duplicating movement history, action economy state, or Speed state.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
           ],
-          "title": "Unit feature admits Steady Aim Bonus Action attack-roll and Speed facts",
-          "verificationOwners": []
+          "title": "Unit feature spends a Bonus Action to gain next-attack Advantage and Speed 0",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/rogue_steady_aim.json",

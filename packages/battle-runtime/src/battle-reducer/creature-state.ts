@@ -71,6 +71,7 @@ import {
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleDruidWildShapeKnownFormSupportForUnit,
   parseSupportedUnitFeatureProfile,
@@ -269,6 +270,12 @@ export function battleCreatureStateFromInit(
             creatureInit.characterUnitRefs,
             classLevels,
           ),
+        rogueSteadyAimProfiles: characterRogueSteadyAimProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
+          classLevels,
+        ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -1220,6 +1227,34 @@ export function characterFailedAbilityCheckResourceBoostProfiles(
           unitRefs,
           unit.id,
           FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterRogueSteadyAimProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "rogueSteadyAim" }>
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "rogueSteadyAim" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          ROGUE_STEADY_AIM_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

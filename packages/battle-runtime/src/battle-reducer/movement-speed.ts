@@ -269,6 +269,7 @@ export function battleTerminalSpeedZero(
 ): boolean {
   return (
     isGrappled ||
+    combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||
     hasCondition(combatant.conditions, "restrained") ||
@@ -338,13 +339,12 @@ export function isBattleLiteralSpecialSpeed(speed: {
   readonly kind: BattleSpecialSpeedKind;
   readonly feet: { readonly kind: "literal"; readonly value: number };
 } {
-  return (
-    speed.feet.kind === "literal" &&
-    isBattleSpecialSpeedKind(speed.kind)
-  );
+  return speed.feet.kind === "literal" && isBattleSpecialSpeedKind(speed.kind);
 }
 
-function isBattleSpecialSpeedKind(kind: SpeedType): kind is BattleSpecialSpeedKind {
+function isBattleSpecialSpeedKind(
+  kind: SpeedType,
+): kind is BattleSpecialSpeedKind {
   return BATTLE_SPECIAL_SPEED_KINDS.some((candidate) => candidate === kind);
 }
 

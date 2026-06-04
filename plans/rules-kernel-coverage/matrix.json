@@ -139,6 +139,12 @@
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
           "stepAction": "stepSpendAllSlots"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -158,7 +164,8 @@
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
         "packages/battle-runtime/battle-runtime-turn-order.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4706,6 +4713,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.rogue-steady-aim"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.save-damage-replacement"
     },
     {
@@ -5542,6 +5555,22 @@
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt is the focused Steady Aim literal projection witness for Bonus Action spend, movement rejection, next-attack Advantage, Speed 0, and end-turn cleanup.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.rogue-steady-aim"
+        }
+      ],
       "role": "mbt-fixture"
     },
     {
@@ -7249,6 +7278,18 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.rogue-steady-aim",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+          "role": "mbt-fixture"
         }
       ]
     },

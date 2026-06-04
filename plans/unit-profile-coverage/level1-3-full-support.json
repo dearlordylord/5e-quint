@@ -2676,40 +2676,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-ROGUE-STEADY-AIM-RUNTIME: Consume the admitted steady-aim profile through existing movementSpentFeet, current Bonus Action, nextAttackRollBySelf, Speed, and turn-end cleanup state without duplicating movement or action state. Owner: battle-runtime unit-feature action and movement reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for no-movement admission, moved-this-turn rejection, Bonus Action spend, next attack Advantage, Speed 0, and end-turn cleanup.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until unit-feature action discovery, action economy, attack-roll active effect, movement budget, Speed, and end-turn cleanup owners consume this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/rogue_steady_aim.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Rogue Steady Aim",
-          "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 92,
-            "lineStart": 89,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "rogue_steady_aim"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "character-fact-and-runtime-detached-split"
@@ -3408,7 +3374,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 125,
+      "count": 126,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3507,6 +3473,7 @@
         "rogue_expertise",
         "rogue_second_story_work",
         "rogue_sneak_attack",
+        "rogue_steady_aim",
         "rogue_weapon_mastery",
         "sacred_flame",
         "sanctuary",
@@ -3581,7 +3548,7 @@
       ]
     },
     {
-      "count": 16,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3597,7 +3564,6 @@
         "moonbeam",
         "paladin_sacred_weapon",
         "ranger_hunters_prey",
-        "rogue_steady_aim",
         "sorcerer_metamagic",
         "warlock_dark_ones_blessing",
         "wizard_potent_cantrip"
@@ -3668,24 +3634,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 125,
-      "percent": "63.5%"
+      "numerator": 126,
+      "percent": "64%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6401,8 +6367,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 124,
-        "numerator": 124,
+        "denominator": 125,
+        "numerator": 125,
         "percent": "100%"
       }
     },
@@ -9125,6 +9091,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.rogue-steady-aim",
+            "profileKind": "bonus-action",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+            ]
+          }
+        ],
+        "unitId": "rogue_steady_aim"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -9964,13 +9952,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 15,
-      "witness-present": 152
+      "not-applicable": 14,
+      "witness-present": 153
     },
     "rowsByStatus": {
-      "not-applicable": 15,
+      "not-applicable": 14,
       "not-required": 30,
-      "witness-present": 152
+      "witness-present": 153
     }
   },
   "sourceArtifacts": {
@@ -10878,20 +10866,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 42,
-      "supported-profile": 125,
+      "profile-subset-supported": 41,
+      "supported-profile": 126,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 16,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 125
+      "supported-profile": 126
     },
-    "nonSupportedFrontier": 72,
+    "nonSupportedFrontier": 71,
     "strictDenominator": 197
   }
 }

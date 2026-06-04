@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
@@ -3817,6 +3818,13 @@ type BattleCreatureStateCommon = {
           Extract<
             SupportedUnitFeatureProfile,
             { readonly kind: "failedAbilityCheckResourceBoost" }
+          >
+        >;
+        readonly rogueSteadyAimProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "rogueSteadyAim" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
