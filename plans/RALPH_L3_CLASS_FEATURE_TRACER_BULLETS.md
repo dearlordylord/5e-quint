@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup"
     },
     {
@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Consolidate class-feature golden tracer bullet evidence and stale follow-ups"
     }
   ]
@@ -59,6 +59,36 @@ RAW scope
   -> selected Unit identity replay when reducer behavior is supported
   -> coverage ledger rows that join Unit, profile, runtime owner, QNT owner, and verification owner
 ```
+
+## Declared Base And Task-Base Check
+
+Declared Base SHA for every task in this lane:
+
+```text
+d05bfd52bf6a5964af9f2a5f88c37d5093256e06
+```
+
+Before starting each task, run and log:
+
+```sh
+git rev-parse HEAD
+git merge-base --is-ancestor d05bfd52bf6a5964af9f2a5f88c37d5093256e06 HEAD
+```
+
+If the ancestor check fails, stop and report the branch-base mismatch. Do not
+repair branch state by rebasing against `master`; the Ralph runner or decider
+owns branch repair.
+
+## DAG / Queue Order
+
+| Order | Task | Status | Depends On | Notes |
+|---:|---|---|---|---|
+| 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | ready-for-implementation-after-light-research | none | Independent roll-mode slice. |
+| 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | ready-for-implementation-after-light-research | none | Independent movement-trigger slice. |
+| 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | ready-for-implementation-after-light-research | none | Establishes activation/effect binding. |
+| 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | blocked | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Requires the activation/effect binding from Task 3. |
+| 5 | L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT - Close or promote Fast Hands battle-owned delegated action economy | ready-for-implementation-after-light-research | none | Independent closure-or-promotion audit. |
+| 6 | L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION - Consolidate class-feature golden tracer bullet evidence and stale follow-ups | blocked | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES, L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT, L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION, L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT, L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT | Consolidation only after all class-feature slices close. |
 
 ## Global Acceptance Criteria
 
@@ -184,7 +214,7 @@ Expected outputs:
 
 ### Task 4 - L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
 Promote Sacred Weapon effects after activation.
 
@@ -222,7 +252,7 @@ Expected outputs:
 
 ### Task 6 - L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
 Consolidate class-feature ledger state after Tasks 1-5.
 

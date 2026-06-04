@@ -185,7 +185,15 @@ ps aux | grep quint_evaluator | grep -v grep
 ```
 
 If stale `quint_evaluator` processes exist, kill them with
-`killall -9 quint_evaluator`. Run one MBT command at a time.
+`killall -9 quint_evaluator`. Parallel Ralph lanes are active, so wrap any
+focused MBT command in the shared global lock:
+
+```sh
+flock /workspace/typescript/dnd/.ralph/mbt-global.lock -c 'START=$(date +%s); <cmd> 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"'
+```
+
+Inside the lock, still perform the `vitest` and `quint_evaluator` precheck
+above. Never run broad exploratory MBT.
 
 Every implementation task must include reviewer-loop convergence: RAW
 traceability, ubiquitous-language/domain-language, architecture/connascence,
@@ -462,6 +470,8 @@ ubiquitous-language/domain-language, architecture/connascence, and code-review
 passes. Fix every reasonable finding, explicitly reject only findings with a
 concrete reason, and repeat until no reasonable findings remain.
 
-For ordinary launches, start with Task 1 and proceed in task order. If Task 1
-uncovers a blocker in shared action/active-effect infrastructure, record the
-blocker in this lane and move to Task 2 rather than silently widening Task 1.
+For ordinary launches, start with the next runnable task and proceed in task
+order. Do not rerun tasks already marked `done` unless the user explicitly asks.
+If a task uncovers a blocker in shared action/active-effect infrastructure,
+record the blocker in this lane and move to the next runnable task rather than
+silently widening the blocked task.

@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "blocked",
       "title": "Promote Hypnotic Pattern control runtime after Surface repair"
     }
   ]
@@ -61,6 +61,38 @@
 Deepen level-3 spell lifecycle gaps that are currently explicit follow-up
 splits or broader lifecycle closures. This lane is for spell/runtime lifecycle
 work, not level-3 class-feature Units already assigned to other lanes.
+
+## Declared Base And Task-Base Check
+
+Declared Base SHA for every task in this lane:
+
+```text
+d05bfd52bf6a5964af9f2a5f88c37d5093256e06
+```
+
+Before starting each task, run and log:
+
+```sh
+git rev-parse HEAD
+git merge-base --is-ancestor d05bfd52bf6a5964af9f2a5f88c37d5093256e06 HEAD
+```
+
+If the ancestor check fails, stop and report the branch-base mismatch. Do not
+repair branch state by rebasing against `master`; the Ralph runner or decider
+owns branch repair.
+
+## DAG / Queue Order
+
+| Order | Task | Status | Depends On | Notes |
+|---:|---|---|---|---|
+| 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | ready-for-implementation-after-light-research | none | Independent spell-resource/targeting slice. |
+| 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | ready-for-implementation-after-light-research | none | Independent closure-or-promotion decision. |
+| 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | ready-for-implementation-after-light-research | none | Independent spell-effect lifecycle slice. |
+| 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | ready-for-implementation-after-light-research | none | Independent stat-block lifecycle decision. |
+| 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | ready-for-implementation-after-light-research | none | Independent ongoing-effect cleanup slice. |
+| 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | ready-for-implementation-after-light-research | none | Independent boundary split. |
+| 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | ready-for-implementation-after-light-research | none | Surface repair prerequisite for Task 8. |
+| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | blocked | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Requires the typed escape Surface shape from Task 7. |
 
 ## Global Acceptance Criteria
 
@@ -242,7 +274,7 @@ Expected outputs:
 
 ### Task 8 - L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `blocked`
 
 After Task 7, promote Hypnotic Pattern runtime.
 
