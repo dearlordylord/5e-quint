@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Remarkable Athlete Initiative and Strength Athletics roll modes"
     },
     {
@@ -83,7 +83,7 @@ owns branch repair.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | ready-for-implementation-after-light-research | none | Independent roll-mode slice. |
+| 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | done | none | Independent roll-mode slice. |
 | 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | ready-for-implementation-after-light-research | none | Independent movement-trigger slice. |
 | 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | ready-for-implementation-after-light-research | none | Establishes activation/effect binding. |
 | 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | blocked | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Requires the activation/effect binding from Task 3. |
@@ -145,7 +145,7 @@ findings remain.
 
 ### Task 1 - L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote the roll-mode portion of `fighter_remarkable_athlete`.
 
