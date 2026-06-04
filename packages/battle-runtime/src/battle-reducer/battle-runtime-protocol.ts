@@ -244,6 +244,12 @@ export type AttackFillSet =
       readonly weaponMasteryToppleSavingThrow:
         | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
         | undefined;
+      readonly openHandTechniqueDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly openHandTechniqueSavingThrow:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
       readonly weaponMasteryCleaveDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;

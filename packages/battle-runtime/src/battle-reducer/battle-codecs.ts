@@ -1483,7 +1483,15 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("unitFeatureDecision"),
     label: Schema.String,
     unitFeature: BattleRuntimeObjectSchema,
-    choices: Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
+    choices: Schema.Union(
+      Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
+      Schema.Tuple(
+        Schema.Literal("addle"),
+        Schema.Literal("push"),
+        Schema.Literal("topple"),
+        Schema.Literal("decline"),
+      ),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2272,7 +2280,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: string;
-      readonly value: "use" | "decline";
+      readonly value: "use" | "addle" | "push" | "topple" | "decline";
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -2953,6 +2961,10 @@ export const BattleFillSchema: Schema.Schema<
               succeeded: Schema.Boolean,
             }),
           ),
+          openHandTechniquePush: Schema.optionalWith(
+            BattleShovePushOutcomeSchema,
+            { exact: true },
+          ),
         }),
       ),
     }),
@@ -3006,7 +3018,7 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("unitFeatureDecision"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Literal("use", "decline"),
+      value: Schema.Literal("use", "addle", "push", "topple", "decline"),
     }),
     Schema.Struct({
       kind: Schema.Literal("heldObjectFacts"),

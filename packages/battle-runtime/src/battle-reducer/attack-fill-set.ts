@@ -28,6 +28,8 @@ import {
   WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
+  OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
+  OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
@@ -65,6 +67,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryToppleSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
+  let openHandTechniqueDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let openHandTechniqueSavingThrow:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
   const hideousLaughterDamageRepeatSaves: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
@@ -95,6 +103,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       weaponMasteryCleaveDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID
+    ) {
+      if (openHandTechniqueDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Open Hand Technique decision was filled twice.",
+        };
+      }
+      openHandTechniqueDecision = fill;
       continue;
     }
 
@@ -225,6 +247,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       weaponMasteryToppleSavingThrow = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId === OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID
+    ) {
+      if (openHandTechniqueSavingThrow !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Open Hand Technique Saving Throw was filled twice.",
+        };
+      }
+      openHandTechniqueSavingThrow = fill;
       continue;
     }
 
@@ -395,6 +431,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,
     weaponMasteryToppleSavingThrow,
+    openHandTechniqueDecision,
+    openHandTechniqueSavingThrow,
     weaponMasteryCleaveDecision,
     weaponMasteryCleaveTarget,
     weaponMasteryCleaveAttackRoll,

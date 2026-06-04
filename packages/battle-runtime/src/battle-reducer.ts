@@ -4959,6 +4959,7 @@ export type BattleSpellSavingThrowOutcomeValue =
   | BattleSpellTargetSavingThrowOutcomeValue;
 export type BattleUnitFeatureSavingThrowOutcomeValue = {
   readonly outcomes: readonly BattleSavingThrowOutcome[];
+  readonly openHandTechniquePush?: BattleShovePushOutcome;
 };
 export type BattleSavingThrowOutcomeValue =
   | BattleSpellSavingThrowOutcomeValue
@@ -5108,7 +5109,9 @@ export type BattleUnitFeatureDecisionHole = {
     readonly unitId: UnitRecord["id"];
     readonly label: string;
   };
-  readonly choices: readonly ["use", "decline"];
+  readonly choices:
+    | readonly ["use", "decline"]
+    | readonly ["addle", "push", "topple", "decline"];
 };
 export type BattleHitPointHealingPoolAllocation = {
   readonly targetId: CombatantId;
@@ -5487,7 +5490,7 @@ export type BattleFill =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: BattleHoleId;
-      readonly value: "use" | "decline";
+      readonly value: "use" | "addle" | "push" | "topple" | "decline";
     }
   | {
       readonly kind: "hitPointHealingDistribution";

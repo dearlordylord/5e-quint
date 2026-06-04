@@ -601,7 +601,7 @@ export type BattleActiveEffect =
       readonly save: SpellTurnStartDamageSave;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
-  | (BattleSpellEffectBase & {
+  | ((BattleSpellEffectBase | BattleUnitFeatureEffectBase) & {
       readonly kind: "opportunityAttackDenied";
       readonly expiresAt: BattleActiveEffectExpiration;
     })

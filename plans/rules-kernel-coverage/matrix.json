@@ -163,6 +163,12 @@
           "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -186,7 +192,9 @@
         "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
         "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
         "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
+        "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5797,6 +5805,22 @@
         }
       ],
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-open-hand-technique.qnt carries focused Open Hand Technique Addle, Push, Topple, save-gating, and unsupported-disposition semantics for Flurry of Blows hit windows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt is the focused Open Hand Technique selected-identity literal projection witness for Addle, Push save success/failure, Topple save success/failure, non-Flurry rejection, over-maximum Push rejection, and non-Push disposition rejection.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is the focused QNT owner carrying Moonbeam movable Cylinder reducer semantics.",

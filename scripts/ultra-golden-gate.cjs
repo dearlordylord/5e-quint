@@ -854,7 +854,29 @@ function requireAuditProfileIds(unit) {
   return unit.claim.profileIds;
 }
 
-function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes) {
+function profileScopedQntMbtJoinRows(unit) {
+  return (unit.profiles ?? []).flatMap((profile) => {
+    if (profile.profileKind !== "battle-admission") return [];
+    const qntOwners = profile.qntOwners ?? [];
+    const parityWitnesses = (profile.verificationOwners ?? [])
+      .filter((owner) => owner.kind === "focused-mbt")
+      .map((owner) => ({
+        kind: owner.kind,
+        ownerPath: owner.ownerPath,
+      }));
+    if (qntOwners.length === 0 || parityWitnesses.length === 0) return [];
+    return [
+      {
+        obligationId: "UNIT_PROFILE.BATTLE_ADMISSION_QNT_MBT",
+        parityWitnesses,
+        profileId: profile.id,
+        runtime: "battle",
+      },
+    ];
+  });
+}
+
+function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes, unitMatrix) {
   const rowsByUnitId = new Map();
   for (const unit of levelReport.rulesKernelSupportedUnitJoin?.units ?? []) {
     const current = rowsByUnitId.get(unit.unitId) ?? [];
@@ -872,6 +894,13 @@ function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes) {
       }
     }
     if (current.length > 0) rowsByUnitId.set(unit.unitId, current);
+  }
+  for (const unit of unitMatrix.units ?? []) {
+    const current = rowsByUnitId.get(unit.unitId) ?? [];
+    const profileScopedRows = profileScopedQntMbtJoinRows(unit);
+    if (profileScopedRows.length > 0) {
+      rowsByUnitId.set(unit.unitId, [...current, ...profileScopedRows]);
+    }
   }
   return rowsByUnitId;
 }
@@ -970,7 +999,11 @@ function buildSelectedIdentityEvidenceAuditScope({
 }) {
   const unitsById = indexUnits(unitMatrix);
   const scopedSupportedUnitIds = supportedUnitIds(levelReport);
-  const qntMbtRowsByUnitId = qntMbtJoinRowsByUnitId(levelReport, kernelIndexes);
+  const qntMbtRowsByUnitId = qntMbtJoinRowsByUnitId(
+    levelReport,
+    kernelIndexes,
+    unitMatrix,
+  );
   const coveredMcpFlowIds = new Set(
     (mcpScenarioEvidence.evidence ?? [])
       .filter((row) => row.scopeIds.includes(scopeId))
@@ -1041,7 +1074,7 @@ function buildSelectedIdentityEvidenceAudit({
     criteria: {
       evidenceTag: selectedIdentityMbtEvidenceTag,
       qntMbtJoin:
-        "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile.",
+        "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile or a profile-scoped focused MBT verification owner for battle-admission profiles with QNT owners.",
       mcpScenarioJoin:
         "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
       rowPolicy:
@@ -1496,7 +1529,7 @@ function renderUltraGoldenGate(gate) {
     "",
     "## Selected Identity Evidence Join Audit",
     "",
-    "Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner is not also an exact rules-kernel parity witness and whose inferred MCP flow has no scenario evidence.",
+    "Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner has neither an exact QNT/MBT parity-witness join nor inferred MCP flow scenario evidence.",
     "",
     "| Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |",
     "| --- | ---: | ---: | ---: |",

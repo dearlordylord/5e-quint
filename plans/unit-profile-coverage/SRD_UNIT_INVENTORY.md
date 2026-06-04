@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 583/607 (96%)
+- Accepted: 584/607 (96.2%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 422
+- accepted: 423
 - accepted-no-battle-effect: 161
 - battle-runtime-required: 1
-- owner-evidence-required: 12
+- owner-evidence-required: 11
 - partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 41/51 (80.4%)
+- Accepted: 42/51 (82.4%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 27
+- accepted: 28
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 10
+- owner-evidence-required: 9
 
 ### Spell-Level-3 Battle Readiness
 
@@ -95,8 +95,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 27
-- catalog-installed-owner-evidence-required: 10
+- catalog-installed-owner-evidence-present: 28
+- catalog-installed-owner-evidence-required: 9
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -449,7 +449,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:33|
 |Fighter Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:86|
 |Monk Deflect Attacks|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:102|
-|Monk Open Hand Technique|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; battle-runtime Flurry of Blows hit-rider owner: owner evidence required|Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.|.references/srd-5.2.1/Classes/Monk.md:192|
+|Monk Open Hand Technique|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:192|
 |Monk level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:34|
 |Monk Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:108|
 |Paladin Channel Divinity|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:100|

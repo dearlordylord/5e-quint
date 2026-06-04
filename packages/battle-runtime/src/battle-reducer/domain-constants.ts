@@ -101,6 +101,18 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
 export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:hideous-laughter-repeat-save:";
 export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
+export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:open-hand-technique:decision",
+);
+export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:open-hand-technique:decision",
+);
+export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID = holeId(
+  "battle:unit-feature:open-hand-technique:save",
+);
+export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:open-hand-technique:save",
+);
 export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "blinded",
   "deafened",

@@ -94,7 +94,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
-              "focused-mbt": 42,
+              "focused-mbt": 43,
               "runtime-test": 14
             }
           },
@@ -355,7 +355,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
-              "focused-mbt": 42,
+              "focused-mbt": 43,
               "runtime-test": 14
             }
           },
@@ -619,7 +619,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 59,
+              "focused-mbt": 60,
               "runtime-test": 21
             }
           },
@@ -788,7 +788,7 @@
     "criteria": {
       "evidenceTag": "selected-identity-mbt",
       "mcpScenarioJoin": "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
-      "qntMbtJoin": "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile.",
+      "qntMbtJoin": "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile or a profile-scoped focused MBT verification owner for battle-admission profiles with QNT owners.",
       "rowPolicy": "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join."
     },
     "scopes": [
@@ -833,73 +833,20 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 129,
-            "numerator": 129
+            "denominator": 130,
+            "numerator": 130
           },
           "joinedEvidenceRows": {
-            "denominator": 129,
-            "numerator": 127
+            "denominator": 130,
+            "numerator": 130
           },
           "missingJoinRows": {
-            "denominator": 129,
-            "numerator": 2
+            "denominator": 130,
+            "numerator": 0
           }
         },
-        "rowCount": 2,
-        "rows": [
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "L3PUTB-04"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [],
-              "requiredFlowIds": [],
-              "status": "not-applicable"
-            },
-            "profileIds": [
-              "unit-feature.magic-action-healing-pool"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "missing-unit-profile-join",
-              "unitProfileJoinRowCount": 0,
-              "unitProfileWitnessOwners": []
-            },
-            "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
-            "unitId": "cleric_preserve_life"
-          },
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "L3PUTB-05"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [],
-              "requiredFlowIds": [],
-              "status": "not-applicable"
-            },
-            "profileIds": [
-              "unit-feature.potent-cantrip"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "missing-unit-profile-join",
-              "unitProfileJoinRowCount": 0,
-              "unitProfileWitnessOwners": []
-            },
-            "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
-            "unitId": "wizard_potent_cantrip"
-          }
-        ],
+        "rowCount": 0,
+        "rows": [],
         "scopeId": "level-1-3"
       }
     ]

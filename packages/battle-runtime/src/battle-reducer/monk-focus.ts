@@ -1,5 +1,5 @@
 // Monk's Focus option execution.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import * as Either from "effect/Either";

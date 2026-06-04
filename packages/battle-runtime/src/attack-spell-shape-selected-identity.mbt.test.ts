@@ -689,6 +689,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "opportunityAttackDenied" &&
+        "sourceSpellId" in effect &&
         effect.sourceSpellId === "shocking_grasp",
     )
   ) {
@@ -709,6 +710,7 @@ function activeEffectCount(
     target?.activeEffects.filter(
       (effect): effect is BattleActiveEffect & { readonly kind: typeof kind } =>
         effect.kind === kind &&
+        "sourceSpellId" in effect &&
         effect.sourceSpellId === spellIdForEffectKind(kind),
     ).length ?? 0
   );

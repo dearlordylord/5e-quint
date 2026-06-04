@@ -299,6 +299,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | profile-scoped: `unit-feature.monk-focus-battle-options` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-open-hand-technique.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt` | mbt-fixture | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | semantic-core | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-movement.qnt` | semantic-core | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE`<br>profile-scoped: `unit-feature.bonus-action-dash-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` |

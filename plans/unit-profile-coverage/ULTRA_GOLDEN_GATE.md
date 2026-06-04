@@ -82,15 +82,14 @@ Scope audit decisions are checker-owned conclusions from the MCP scenario eviden
 
 ## Selected Identity Evidence Join Audit
 
-Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner is not also an exact rules-kernel parity witness and whose inferred MCP flow has no scenario evidence.
+Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner has neither an exact QNT/MBT parity-witness join nor inferred MCP flow scenario evidence.
 
 | Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |
 | --- | ---: | ---: | ---: |
 | level-1 | 81 | 81/81 | 0 |
 | level-1-2 | 94 | 94/94 | 0 |
-| level-1-3 | 129 | 127/129 | 2 |
+| level-1-3 | 130 | 130/130 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| level-1-3 | `cleric_preserve_life` | class_feature | `L3PUTB-04` | `packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.magic-action-healing-pool` |
-| level-1-3 | `wizard_potent_cantrip` | class_feature | `L3PUTB-05` | `packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.potent-cantrip` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |

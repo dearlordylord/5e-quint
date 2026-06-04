@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 153,
-      "numerator": 149,
+      "denominator": 154,
+      "numerator": 150,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 153,
-      "percent": "67.4%"
+      "numerator": 154,
+      "percent": "67.8%"
     }
   },
   "metricSemantics": [
@@ -4140,16 +4140,36 @@
     {
       "id": "unit-feature.open-hand-technique",
       "profileKind": "battle-admission",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
+        "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Battle runtime consumes the selected support profile only after an eligible Flurry of Blows hit, opens the optional Addle/Push/Topple/decline choice, applies Addle as Opportunity Attack denial until the target's next turn starts, gates Push behind a failed Strength Saving Throw plus caller-supplied non-provoking push disposition up to the feature's 15-foot maximum, gates Topple behind a failed Dexterity Saving Throw and applies Prone through the shared condition owner, and rejects non-Flurry hits, stale hit windows, successful-save effects, and unsupported Push dispositions including over-maximum distances and Push facts supplied to non-Push choices.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
       ],
-      "title": "Unit feature admits Open Hand Technique Flurry of Blows rider choices",
-      "verificationOwners": []
+      "title": "Unit feature executes Open Hand Technique Flurry of Blows hit riders",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-open-hand-technique.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.paladin-sacred-weapon",
@@ -13459,6 +13479,22 @@
         "unit-feature.potent-cantrip"
       ],
       "taskId": "L3PUTB-05"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Open Hand Technique QNT proof and literal MBT witness model Addle Opportunity Attack denial, failed-save-only Push and Topple outcomes, Push distances up to the feature's 15-foot maximum, successful-save no-op behavior for Push and Topple, and rejection of missing selected profile, non-Flurry hit windows, and stale targets.",
+      "profileIds": [
+        "unit-feature.open-hand-technique"
+      ],
+      "taskId": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover selected Open Hand Technique support profile retention, Flurry of Blows hit-window gating, Addle Opportunity Attack denial until the target's next turn starts, Strength Saving Throw-gated non-provoking Push disposition validation up to the feature's 15-foot maximum, Dexterity Saving Throw-gated Prone application, successful-save no-op behavior, non-Flurry rejection, stale Flurry hit rejection, and unsupported Push disposition rejection including over-maximum distances and Push facts supplied to non-Push choices without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.open-hand-technique"
+      ],
+      "taskId": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13532,12 +13568,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 22,
+        "profileSubsetSupportedUnits": 21,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 66,
+        "selectedIdentityReplayDenominator": 67,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 66,
-        "supportedProfileUnits": 54,
+        "selectedIdentityReplayWitnessUnits": 67,
+        "supportedProfileUnits": 55,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16912,39 +16948,23 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-            "mechanic": "Execute Open Hand Technique after Flurry of Blows hits, including Addle Opportunity Attack denial and failed-save-gated Push/Topple outcomes."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-            "mechanic": "Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success.",
-            "owner": "battle-runtime Flurry of Blows attack-hit reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
-            "title": "Monk Open Hand Technique Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Monk Focus, attack-hit, saving-throw, forced-movement, and condition owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.open-hand-technique"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Flurry of Blows hit and saving-throw rider owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Warrior of the Open Hand grants Open Hand Technique as a level-3 subclass feature Unit",
-          "Battle Unit support admits the Surface open_hand_technique mechanics referencing Monk Focus Flurry of Blows",
-          "The projected support profile carries Addle, Push, and Topple rider facts, including the required Strength/Dexterity Saving Throw gates for Push and Topple, without authored-identity dispatch"
+          "Battle Unit support admits the Surface open_hand_technique mechanics referencing Monk Focus Flurry of Blows and projects typed Addle, Push, and Topple rider facts without authored-identity dispatch",
+          "Battle initialization retains the admitted Open Hand Technique support profile on selected character Unit refs so reducer execution is gated by selected identity plus profile shape",
+          "Battle runtime consumes the selected support profile only after an eligible Flurry of Blows hit and opens the optional Addle, Push, Topple, or decline choice",
+          "Addle applies Opportunity Attack denial until the start of the target's next turn using the shared active-effect owner",
+          "Push asks for a Strength Saving Throw and, only on failed saves, validates the caller-supplied non-provoking push disposition up to the feature's 15-foot maximum through the forced-movement boundary",
+          "Topple asks for a Dexterity Saving Throw and, only on failed saves, applies the Prone condition through the shared condition owner",
+          "Battle runtime rejects non-Flurry hits, stale Flurry hit windows, successful-save Push/Topple effects, and unsupported Push disposition states including over-maximum distances and Push facts supplied to non-Push choices"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16952,6 +16972,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -16960,16 +16985,36 @@
         {
           "id": "unit-feature.open-hand-technique",
           "profileKind": "battle-admission",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
+            "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Battle runtime consumes the selected support profile only after an eligible Flurry of Blows hit, opens the optional Addle/Push/Topple/decline choice, applies Addle as Opportunity Attack denial until the target's next turn starts, gates Push behind a failed Strength Saving Throw plus caller-supplied non-provoking push disposition up to the feature's 15-foot maximum, gates Topple behind a failed Dexterity Saving Throw and applies Prone through the shared condition owner, and rejects non-Flurry hits, stale hit windows, successful-save effects, and unsupported Push dispositions including over-maximum distances and Push facts supplied to non-Push choices.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
           ],
-          "title": "Unit feature admits Open Hand Technique Flurry of Blows rider choices",
-          "verificationOwners": []
+          "title": "Unit feature executes Open Hand Technique Flurry of Blows hit riders",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-open-hand-technique.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",

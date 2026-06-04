@@ -181,14 +181,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
-    {
-      owner: "battle-runtime Flurry of Blows hit-rider owner",
-      requirement:
-        "Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.",
-    },
-  ],
-  [
     "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
     {
       owner:

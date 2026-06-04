@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -107,6 +107,7 @@ import {
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -133,6 +134,7 @@ import type {
   BattleFill,
   BattleInterruptedProcedure,
   BattleResolutionResult,
+  BattleShovePushOutcome,
   BattleState,
   AttackFillSet,
 } from "../battle-reducer.ts";
@@ -591,9 +593,42 @@ export function resolveSelectedAttackProcedure(
       return reactionWindow;
     }
   }
+  if (
+    !hit &&
+    (fillSet.openHandTechniqueDecision !== undefined ||
+      fillSet.openHandTechniqueSavingThrow !== undefined)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Open Hand Technique is only valid after an eligible attack hit.",
+    );
+  }
+  const openHandTechniqueApplied = hit
+    ? resolveOpenHandTechniqueAfterHit({
+        state: attackRolledState,
+        subject: input.subject,
+        actorId: attackerId,
+        targetId: target.combatantId,
+        decision: fillSet.openHandTechniqueDecision,
+        savingThrow: fillSet.openHandTechniqueSavingThrow,
+      })
+    : ({ tag: "ok", state: attackRolledState, shovePushes: [] } as const);
+  if (openHandTechniqueApplied.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      openHandTechniqueApplied.message,
+    );
+  }
+  if (openHandTechniqueApplied.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      ...openHandTechniqueApplied.holes,
+    ]);
+  }
   const toppleSaveHole = hit
     ? weaponMasteryToppleSavingThrowHole(
-        attackRolledState,
+        openHandTechniqueApplied.state,
         attackerId,
         target.combatantId,
         attack,
@@ -608,16 +643,18 @@ export function resolveSelectedAttackProcedure(
       );
     }
   } else if (fillSet.weaponMasteryToppleSavingThrow === undefined) {
-    return needsHolesResult(attackRolledState, input.subject, [toppleSaveHole]);
+    return needsHolesResult(openHandTechniqueApplied.state, input.subject, [
+      toppleSaveHole,
+    ]);
   }
   const toppleApplied = fillSet.weaponMasteryToppleSavingThrow
     ? applyWeaponMasteryToppleSavingThrow(
-        attackRolledState,
+        openHandTechniqueApplied.state,
         attackerId,
         target.combatantId,
         fillSet.weaponMasteryToppleSavingThrow,
       )
-    : ({ tag: "ok", state: attackRolledState } as const);
+    : ({ tag: "ok", state: openHandTechniqueApplied.state } as const);
   if (toppleApplied.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", toppleApplied.message);
   }
@@ -886,7 +923,7 @@ export function resolveSelectedAttackProcedure(
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
     }
-    return resolveWeaponMasteryCleaveContinuation({
+    const afterPrimaryDamage = resolveWeaponMasteryCleaveContinuation({
       state: spent.state,
       subject: input.subject,
       firstTargetId: target.combatantId,
@@ -894,6 +931,10 @@ export function resolveSelectedAttackProcedure(
       fills: cleaveFillsAfterPrimaryDamage(input.fills),
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
+    return withOpenHandTechniqueShovePushes(
+      afterPrimaryDamage,
+      openHandTechniqueApplied.shovePushes,
+    );
   }
   if (hit && fillSet.damageRoll == null) {
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
@@ -1254,33 +1295,51 @@ export function resolveSelectedAttackProcedure(
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
     }
-    return resolveWeaponMasteryCleaveContinuation({
-      state: spent.state,
-      subject: input.subject,
-      firstTargetId: target.combatantId,
-      attack,
-      fills: cleaveFillsAfterPrimaryDamage(input.fills),
-      suppressedReactionTrigger: input.suppressedReactionTrigger,
-    });
+    return withOpenHandTechniqueShovePushes(
+      resolveWeaponMasteryCleaveContinuation({
+        state: spent.state,
+        subject: input.subject,
+        firstTargetId: target.combatantId,
+        attack,
+        fills: cleaveFillsAfterPrimaryDamage(input.fills),
+        suppressedReactionTrigger: input.suppressedReactionTrigger,
+      }),
+      openHandTechniqueApplied.shovePushes,
+    );
   }
 
-  return spendAttackProcedure(
-    hit
-      ? applyAttackDamage(
-          hitAppliedState,
-          attackerId,
-          target.combatantId,
-          attack,
-          fillSet,
-          critical,
-          selectedDamageRiders,
-          spellWeaponDamageRiders,
-          spellMarkedDamageRiders,
-        )
-      : attackRolledState,
-    attackerId,
-    attack,
+  return withOpenHandTechniqueShovePushes(
+    spendAttackProcedure(
+      hit
+        ? applyAttackDamage(
+            hitAppliedState,
+            attackerId,
+            target.combatantId,
+            attack,
+            fillSet,
+            critical,
+            selectedDamageRiders,
+            spellWeaponDamageRiders,
+            spellMarkedDamageRiders,
+          )
+        : attackRolledState,
+      attackerId,
+      attack,
+    ),
+    openHandTechniqueApplied.shovePushes,
   );
+}
+
+function withOpenHandTechniqueShovePushes(
+  result: BattleResolutionResult,
+  shovePushes: readonly BattleShovePushOutcome[],
+): BattleResolutionResult {
+  return result.tag === "resolved" && shovePushes.length > 0
+    ? {
+        ...result,
+        shovePushes: [...(result.shovePushes ?? []), ...shovePushes],
+      }
+    : result;
 }
 
 function attackPostMirrorImageFillsArePresent(
@@ -1295,6 +1354,8 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.attackDamageReductionRedirectSave !== undefined ||
     fillSet.attackDamageReductionRedirectDamage !== undefined ||
     fillSet.weaponMasteryToppleSavingThrow !== undefined ||
+    fillSet.openHandTechniqueDecision !== undefined ||
+    fillSet.openHandTechniqueSavingThrow !== undefined ||
     fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.weaponMasteryCleaveDecision !== undefined ||
