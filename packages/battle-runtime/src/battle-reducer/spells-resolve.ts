@@ -48,7 +48,6 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
-  type BattleSpellCastingTimeResource,
   type BattleState,
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
@@ -151,7 +150,10 @@ import {
   metamagicActionCostOverride,
   spellInvocationHasMagicActionCastingTime,
 } from "./metamagic.ts";
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spellCastingTimeResourceForSpellCast,
+  spendSpellCastResources,
+} from "./spells-resolve-resources.ts";
 
 import {
   chainedSpellFillSet as parseChainedSpellFillSet,
@@ -246,12 +248,11 @@ type SpellAttackDamageInvocation = Extract<
 type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
   readonly useSharedSpellAttackDamageResolver?: true;
+  readonly actionCostOverride?: SpellProcedureActionCostOverride;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 };
 
-type SpellProcedureActionCostOverride = Exclude<
-  ReturnType<typeof metamagicActionCostOverride>,
-  undefined
->;
+type SpellProcedureActionCostOverride = "magicAction" | "bonusAction";
 
 type SpellProcedureResolveDispatchInput = {
   readonly input:
@@ -300,6 +301,7 @@ const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
   "scalarBuff",
   "directHitPointRestoration",
   "saveGatedDamage",
+  "spellAttackDamage",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 
 function procedureIsIn(
@@ -434,11 +436,20 @@ export function resolveSpellAttackDamageAct(
         SupportedSpellInvocation,
         { readonly procedure: "spellCreatedHeldObjectAttack" }
       >,
-    ActionSpellBattleResolutionInput
-  >,
+    ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  > & {
+    readonly actionCostOverride?: SpellProcedureActionCostOverride;
+    readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  },
 ): BattleResolutionResult {
-  return resolveSpellActInternal(input.input, {
+  return resolveSpellActInternal(input.input as ActionSpellBattleResolutionInput, {
     useSharedSpellAttackDamageResolver: true,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
 }
 
@@ -647,6 +658,9 @@ function resolveSpellActInternal(
       input.state.currentTurnResources,
       input.subject.actorId,
       invocation,
+      options.actionCostOverride === undefined
+        ? undefined
+        : { actionCostOverride: options.actionCostOverride },
     )
   ) {
     return invalidResult(
@@ -810,6 +824,12 @@ function resolveSpellActInternal(
       actorId: subject.actorId,
       invocation: invocationForResolution,
       fillSet: { ...fillSet, objectTarget },
+      ...(options.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: options.actionCostOverride }),
+      ...(options.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: options.metamagicApplications }),
     });
   }
   if (fillSet.targetId == null) {
@@ -886,6 +906,12 @@ function resolveSpellActInternal(
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
+        ...(options.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: options.actionCostOverride }),
+        ...(options.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: options.metamagicApplications }),
         ...(spiritualWeaponForcePosition === undefined
           ? {}
           : { spiritualWeaponForcePosition }),
@@ -930,22 +956,25 @@ function resolveSpellActInternal(
           "Sanctuary replacement requires the original spell target fill.",
         );
       }
-      return resolveSpellAct({
-        ...input,
-        fills: [
-          ...input.fills
-            .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
-            .map((fill) =>
-              fill === originalTargetFill
-                ? {
-                    ...fill,
-                    value: replacementTarget.combatantId,
-                    spatialFacts: sanctuaryCheck.spatialFacts,
-                  }
-                : fill,
-            ),
-        ],
-      });
+      return resolveSpellActInternal(
+        {
+          ...input,
+          fills: [
+            ...input.fills
+              .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+              .map((fill) =>
+                fill === originalTargetFill
+                  ? {
+                      ...fill,
+                      value: replacementTarget.combatantId,
+                      spatialFacts: sanctuaryCheck.spatialFacts,
+                    }
+                  : fill,
+              ),
+          ],
+        },
+        options,
+      );
     }
   }
 
@@ -959,9 +988,12 @@ function resolveSpellActInternal(
           invocation: invocationForResolution,
           targetIds: [target.combatantId],
           reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-          castingResource: spellCastingTimeResourceForInvocation(
-            invocationForResolution,
-          ),
+          castingResource: spellCastingTimeResourceForSpellCast({
+            invocation: invocationForResolution,
+            ...(options.actionCostOverride === undefined
+              ? {}
+              : { actionCostOverride: options.actionCostOverride }),
+          }),
           continuation: {
             kind: "replay",
             subject: input.subject,
@@ -1075,6 +1107,12 @@ function resolveSpellActInternal(
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
+          ...(options.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: options.actionCostOverride }),
+          ...(options.metamagicApplications === undefined
+            ? {}
+            : { metamagicApplications: options.metamagicApplications }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1153,6 +1191,12 @@ function resolveSpellActInternal(
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
+          ...(options.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: options.actionCostOverride }),
+          ...(options.metamagicApplications === undefined
+            ? {}
+            : { metamagicApplications: options.metamagicApplications }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1237,6 +1281,12 @@ function resolveSpellActInternal(
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
+        ...(options.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: options.actionCostOverride }),
+        ...(options.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: options.metamagicApplications }),
         ...(spiritualWeaponForcePosition === undefined
           ? {}
           : { spiritualWeaponForcePosition }),
@@ -1562,6 +1612,12 @@ function resolveSpellActInternal(
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
+          ...(options.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: options.actionCostOverride }),
+          ...(options.metamagicApplications === undefined
+            ? {}
+            : { metamagicApplications: options.metamagicApplications }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1608,14 +1664,6 @@ function stateAfterResolvedHeldLightHurl(
   return invocation.procedure === "heldLightHurl"
     ? endHeldLightSpellEffect(state, actorId, invocation)
     : state;
-}
-
-function spellCastingTimeResourceForInvocation(
-  invocation: SupportedSpellInvocation,
-): BattleSpellCastingTimeResource {
-  return "actionCost" in invocation
-    ? { kind: invocation.actionCost }
-    : { kind: "magicAction" };
 }
 
 function stateAfterSpellAttackRollMadeForInvocation(
@@ -1774,6 +1822,8 @@ function spendSpellActResolutionResources(input: {
   readonly actorId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   readonly spiritualWeaponForcePosition?: Extract<
     BattleFill,
     { readonly kind: "spiritualWeaponForcePosition" }
@@ -1809,6 +1859,12 @@ function spendSpellActResolutionResources(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.errorState,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
     if (spent.tag !== "resolved") {
       return spent;
@@ -1948,6 +2004,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
         SupportedDamageSpellInvocation,
         { readonly procedure: "spellAttackDamage" }
       >;
+  readonly actionCostOverride?: SpellProcedureActionCostOverride;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }> & {
     readonly objectTarget: NonNullable<
       Extract<SpellFillSet, { readonly tag: "ok" }>["objectTarget"]
@@ -2036,7 +2094,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
       invocation: input.invocation,
       targetIds: [],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource: spellCastingTimeResourceForSpellCast({
+        invocation: input.invocation,
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
+      }),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -2120,6 +2183,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (input.fillSet.damageRoll == null) {
@@ -2217,6 +2286,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;
@@ -2421,6 +2496,17 @@ export function resolveBonusActionSpellAct(
       );
     }
   } else if (invocation.procedure === "saveGatedDamage") {
+    if (
+      actionCostOverride !== "bonusAction" ||
+      !spellInvocationHasMagicActionCastingTime(invocation)
+    ) {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else if (invocation.procedure === "spellAttackDamage") {
     if (
       actionCostOverride !== "bonusAction" ||
       !spellInvocationHasMagicActionCastingTime(invocation)

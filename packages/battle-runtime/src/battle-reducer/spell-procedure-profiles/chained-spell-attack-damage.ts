@@ -21,8 +21,10 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
@@ -58,9 +60,12 @@ type ChainedSpellAttackDamageInvocation = Extract<
 
 type ChainedSpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   ChainedSpellAttackDamageInvocation,
-  ActionSpellBattleResolutionInput,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput,
   ChainedSpellFillSet
->;
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 function isChainedSpellAttackDamageInvocation(
   invocation: SupportedSpellInvocation,
@@ -127,6 +132,12 @@ function resolveChainedSpellAttackDamage(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
 }
 

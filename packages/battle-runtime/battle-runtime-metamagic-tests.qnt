@@ -189,6 +189,13 @@ module battleRuntimeMetamagicTests {
         Set(quickenedSpellMetamagicFact),
         2,
       )),
+      assert(quickenedSpellCanModifySpellAttackDamage(
+        initialState,
+        RayOfFrostSpellAttack,
+        known,
+        Set(quickenedSpellMetamagicFact),
+        2,
+      )),
       assert(not(quickenedSpellCanModifySaveGatedDamage(
         initialState,
         HellishRebukeSaveGate,
@@ -199,10 +206,51 @@ module battleRuntimeMetamagicTests {
     }
   }
 
+  run test_quickened_spell_attack_preserves_attack_damage_and_spends_bonus_action = {
+    val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
+    val result = resolveQuickenedRayOfFrost(
+      noReaction,
+      15,
+      10,
+      7,
+      true,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 0),
+      assert(result.state.goblin.hp == 3),
+      assert(result.state.goblin.activeEffects.contains(RayOfFrostSpeedDelta)),
+    }
+  }
+
+  run test_quickened_spell_attack_rejects_prior_level_1_plus_spell = {
+    val priorSpell = commitActorLevelOnePlusSpellCast(initialState, Fighter)
+    val result = resolveQuickenedRayOfFrost(
+      priorSpell,
+      15,
+      10,
+      7,
+      true,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      2,
+    )
+    assert(result == { state: priorSpell, sorceryPointsRemaining: 2 })
+  }
+
   run test_quickened_unsupported_action_spell_procedure_classes_are_closed = {
     all {
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedSaveGatedDamageProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSpellAttackProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
       assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(

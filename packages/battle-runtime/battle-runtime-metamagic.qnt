@@ -12,6 +12,7 @@ module battleRuntimeMetamagic {
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -181,6 +182,23 @@ module battleRuntimeMetamagic {
     state.bonusActionAvailable and
     not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
 
+  pure def quickenedSpellCanModifySpellAttackDamage(
+    state: BattleState,
+    invocation: SpellAttackDamageInvocation,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedSpellAttackProcedure, selectedOptions) and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
   pure def saveGatedDamageHasMagicActionCastingTime(
     invocation: SaveGatedDamageInvocation,
   ): bool =
@@ -311,6 +329,54 @@ module battleRuntimeMetamagic {
           fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded, Fighter),
           goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded, Fighter),
         }, Fighter), Fighter),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        state: state,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
+
+  pure def resolveQuickenedRayOfFrost(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifySpellAttackDamage(
+      state,
+      RayOfFrostSpellAttack,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    if (
+      canModify and
+      currentActor(state) == Fighter and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val resolvedAsMagicAction = resolveRayOfFrost(
+        { ...state, actionAvailable: true },
+        attackTotal,
+        naturalD20,
+        damageRoll,
+        concentrationSaveSucceeded,
+      )
+      {
+        state: commitActorQuickenedLevelOnePlusSpellCast({
+          ...resolvedAsMagicAction,
+          actionAvailable: state.actionAvailable,
+          bonusActionAvailable: false,
+        }, Fighter),
         sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
       }
     } else {

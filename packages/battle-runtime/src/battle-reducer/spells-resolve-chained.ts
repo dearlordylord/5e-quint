@@ -29,9 +29,11 @@ import {
   type BattleState,
   type BattleSpellCastReactionFact,
   type BattleTargetSpatialFact,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
   snapshotBattle,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -86,7 +88,10 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spellCastingTimeResourceForSpellCast,
+  spendSpellCastResources,
+} from "./spells-resolve-resources.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -141,7 +146,9 @@ function matchingHoleIdFills<F extends { readonly holeId: unknown }>(
 }
 
 export function resolveChainedSpellAttackDamageAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -150,6 +157,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
   readonly fillSet?: ChainedSpellFillSet;
   readonly opensSpellCastReactionWindow?: boolean;
   readonly spendsCastResources?: boolean;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   const fillSet =
     input.fillSet ?? chainedSpellFillSet(input.input.fills, input.invocation);
@@ -265,6 +274,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
         actorId: input.actorId,
         invocation: input.invocation,
         errorState: input.input.state,
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
+        ...(input.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: input.metamagicApplications }),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -341,7 +356,10 @@ export function resolveChainedSpellAttackDamageAct(input: {
           invocation: input.invocation,
           targetIds: [target.combatantId],
           reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-          castingResource: { kind: "magicAction" },
+          castingResource: spellCastingTimeResourceForSpellCast({
+            invocation: input.invocation,
+            actionCostOverride: input.actionCostOverride,
+          }),
           continuation: {
             kind: "replay",
             subject: input.input.subject,
@@ -711,13 +729,17 @@ export function resolveChainedSpellAttackDamageAct(input: {
 
 export function resolveCompletedChainedSpell(input: {
   readonly input: {
-    readonly input: ActionSpellBattleResolutionInput;
+    readonly input:
+      | ActionSpellBattleResolutionInput
+      | BonusActionSpellBattleResolutionInput;
     readonly actorId: CombatantId;
     readonly invocation: Extract<
       SupportedSpellInvocation,
       { readonly procedure: "chainedSpellAttackDamage" }
     >;
     readonly spendsCastResources?: boolean;
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+    readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   };
   readonly state: BattleState;
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
@@ -738,6 +760,12 @@ export function resolveCompletedChainedSpell(input: {
     actorId: input.input.actorId,
     invocation: input.input.invocation,
     errorState: input.input.input.state,
+    ...(input.input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.input.actionCostOverride }),
+    ...(input.input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.input.metamagicApplications }),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;

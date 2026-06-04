@@ -20,9 +20,11 @@ import {
   type BattleObjectDamageOutcome,
   type BattleResolutionResult,
   type BattleSpellDamageReductionRollHole,
+  type BonusActionSpellBattleResolutionInput,
   type SpellDamageReductionRoll,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -88,7 +90,10 @@ import type {
   SpellAttackSequencePartFillSet,
 } from "./spells-resolve-fill-set.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spellCastingTimeResourceForSpellCast,
+  spendSpellCastResources,
+} from "./spells-resolve-resources.ts";
 
 type ResolvedSpellAttackSequencePart = {
   readonly tag: "resolved";
@@ -99,13 +104,17 @@ type ResolvedSpellAttackSequencePart = {
 };
 
 export function resolveSpellAttackSequenceAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -153,7 +162,10 @@ export function resolveSpellAttackSequenceAct(input: {
       invocation: input.invocation,
       targetIds: [...new Set(targetIds)],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource: spellCastingTimeResourceForSpellCast({
+        invocation: input.invocation,
+        actionCostOverride: input.actionCostOverride,
+      }),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -215,6 +227,12 @@ export function resolveSpellAttackSequenceAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (spent.tag !== "resolved") {
     return spent;
@@ -243,7 +261,7 @@ export function resolveSpellAttackSequenceAct(input: {
 
 function resolveSpellAttackSequencePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -252,6 +270,8 @@ function resolveSpellAttackSequencePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.partFill.target;
   if (target === undefined) {
@@ -270,7 +290,7 @@ function resolveSpellAttackSequencePart(input: {
 
 function resolveSpellAttackSequenceCreaturePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -279,6 +299,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   readonly target: Extract<
     NonNullable<SpellAttackSequencePartFillSet["target"]>,
     { readonly kind: "combatant" }
@@ -340,6 +362,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (sanctuaryCheck.tag === "newTarget") {
@@ -827,7 +855,7 @@ function isResolvedSpellAttackSequencePart(
 
 function resolveSpellAttackSequenceObjectPart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,

@@ -6,9 +6,11 @@ import {
   spendActivationResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { resourceCount } from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
+import type { BattleActiveEffect } from "./battle-reducer.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -44,6 +46,7 @@ import {
   characterSeed,
   battleId,
   combatantId,
+  attackRollFill,
   damageRollFillWithGroups,
   fighterId,
   findHole,
@@ -298,6 +301,356 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).toContain(wizardId);
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(1);
+  });
+
+  test("discovers Quickened spell attacks as Bonus Action casts and preserves hit damage", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+
+    expect(act.subject).toEqual(quickenedRayOfFrostSubject());
+
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, attackRoll],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          damageRollFillWithGroups(damageHole, [[4, 3]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(3);
+  });
+
+  test("blocks later level 1+ spells after Quickened cantrip spell attacks", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, attackRoll],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          damageRollFillWithGroups(damageHole, [[4, 3]]),
+        ],
+      }),
+    );
+
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(
+      discoverBattleActs(resolved.state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "burning_hands",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: burningHandsActionSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "This turn has already expended a Spell Slot.",
+    });
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+  });
+
+  test("spends Sorcery Points for Quickened spell attacks on a miss without opening damage", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRollFill(attackRollHole, {
+            total: 1,
+            naturalD20: 1,
+          }),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
+  });
+
+  test("resolves Quickened spell attacks after the Magic action is already spent", () => {
+    const state = magicActionSpent(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+      }),
+    );
+    const act = quickenedRayOfFrostAct(state);
+
+    expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
+    expect(act.subject).toEqual(quickenedRayOfFrostSubject());
+
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, attackRoll],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          damageRollFillWithGroups(damageHole, [[4, 3]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(3);
+  });
+
+  test("preserves Quickened spell attack resources through Sanctuary retarget", () => {
+    const state = withSanctuaryWard(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+      }),
+      skeletonId,
+    );
+    const act = quickenedRayOfFrostAct(state);
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const originalTarget = targetFill(targetHole, skeletonId);
+    const needsSanctuary = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [originalTarget],
+    });
+    const sanctuaryHole = findHole(
+      needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
+      "sanctuaryInterdictionOutcome",
+    );
+    const sanctuaryRetarget = sanctuaryRetargetFill(
+      sanctuaryHole,
+      fighterId,
+      "ray_of_frost",
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [originalTarget, sanctuaryRetarget],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [originalTarget, sanctuaryRetarget, attackRoll],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          originalTarget,
+          sanctuaryRetarget,
+          attackRoll,
+          damageRollFillWithGroups(damageHole, [[4, 3]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(5);
+  });
+
+  test("preserves Quickened spell attack resources when Mirror Image duplicate is hit", () => {
+    const state = withMirrorImageDuplicates(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+      }),
+      skeletonId,
+    );
+    const act = quickenedRayOfFrostAct(state);
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingMirrorImage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, attackRoll],
+    });
+    const mirrorImageHole = findHole(
+      awaitingMirrorImage.tag === "needsHoles"
+        ? awaitingMirrorImage.holes
+        : [],
+      "rolledDice",
+    );
+    if (!("mirrorImageDuplicateRoll" in mirrorImageHole)) {
+      throw new Error("Expected Mirror Image duplicate roll hole.");
+    }
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          damageRollFillWithGroups(mirrorImageHole, [[6, 6, 6]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
+    expect(mirrorImageDuplicatesRemaining(resolved.state, skeletonId)).toBe(2);
   });
 
   test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
@@ -567,7 +920,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
-  test("blocks Quickened level 1+ spells after this turn has already cast a level 1+ spell", () => {
+  test("blocks Quickened spells after this turn has already cast a level 1+ spell", () => {
     const state = metamagicBattle();
     const afterPriorFreeSpell: BattleState = {
       ...state,
@@ -587,8 +940,36 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Quickened Spell cannot modify a level 1+ spell after this turn has already cast a level 1+ spell.",
+        "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
     });
+
+    const spellAttackState = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const spellAttackAfterPriorFreeSpell: BattleState = {
+      ...spellAttackState,
+      currentTurnResources: {
+        ...spellAttackState.currentTurnResources,
+        levelOnePlusSpellCastsThisTurn: [wizardId],
+      },
+    };
+    expect(hasQuickenedRayOfFrostAct(spellAttackAfterPriorFreeSpell)).toBe(
+      false,
+    );
+    expect(
+      resolveBattleSubject({
+        state: spellAttackAfterPriorFreeSpell,
+        subject: quickenedRayOfFrostSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
+    });
+    expect(sorceryPointsRemaining(spellAttackAfterPriorFreeSpell)).toBe(
+      resourceCount(4),
+    );
   });
 
   test("rejects Quickened non-action spells before Sorcery Point spending", () => {
@@ -673,6 +1054,27 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       resolveBattleSubject({
         state,
         subject: quickenedBurningHandsSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Bonus Action spell is no longer available for the current actor.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Quickened spell attacks after the Bonus Action is spent", () => {
+    const state = bonusActionSpent(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+      }),
+    );
+
+    expect(hasQuickenedRayOfFrostAct(state)).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: quickenedRayOfFrostSubject(),
         fills: [],
       }),
     ).toMatchObject({
@@ -1073,6 +1475,90 @@ function bonusActionSpent(state: BattleState): BattleState {
   };
 }
 
+function withSanctuaryWard(
+  state: BattleState,
+  wardedId: ReturnType<typeof combatantId>,
+): BattleState {
+  return withActiveEffect(state, wardedId, {
+    kind: "sanctuaryWard",
+    sourceSpellId: spellRecord("sanctuary").id,
+    sourceCombatantId: wizardId,
+    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+  });
+}
+
+function withMirrorImageDuplicates(
+  state: BattleState,
+  targetId: ReturnType<typeof combatantId>,
+): BattleState {
+  return withActiveEffect(state, targetId, {
+    kind: "mirrorImageDuplicates",
+    sourceSpellId: spellRecord("mirror_image").id,
+    sourceCombatantId: targetId,
+    remainingDuplicates: 3,
+    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+  });
+}
+
+function withActiveEffect(
+  state: BattleState,
+  targetId: ReturnType<typeof combatantId>,
+  effect: BattleActiveEffect,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected active-effect target combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [...target.activeEffects, effect],
+    }),
+  };
+}
+
+function sanctuaryRetargetFill(
+  hole: BattleHole,
+  targetId: ReturnType<typeof combatantId>,
+  spellId: "ray_of_frost",
+): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
+  if (hole.kind !== "sanctuaryInterdictionOutcome") {
+    throw new Error("Expected Sanctuary interdiction outcome hole.");
+  }
+  return {
+    kind: "sanctuaryInterdictionOutcome",
+    holeId: hole.holeId,
+    value: {
+      saveSucceeded: false,
+      outcome: {
+        kind: "newTarget",
+        targetId,
+        spatialFacts: [
+          { kind: "spellTarget", casterId: wizardId, targetId, spellId },
+        ],
+      },
+    },
+  };
+}
+
+function mirrorImageDuplicatesRemaining(
+  state: BattleState,
+  targetId: ReturnType<typeof combatantId>,
+): number | null {
+  const target = state.combatants.get(targetId);
+  const effect = target?.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "mirrorImageDuplicates" }
+    > => candidate.kind === "mirrorImageDuplicates",
+  );
+  return effect?.remainingDuplicates ?? null;
+}
+
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
@@ -1464,12 +1950,26 @@ function quickenedBurningHandsSubject(): QuickenedBonusActionSpellAct["subject"]
   };
 }
 
+function quickenedRayOfFrostSubject(): QuickenedBonusActionSpellAct["subject"] {
+  return {
+    tag: "bonusActionSpell",
+    actorId: wizardId,
+    invocation: cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    mode: { tag: "cast" },
+    metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+  };
+}
+
 function hasQuickenedCureWoundsAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(isQuickenedCureWoundsAct);
 }
 
 function hasQuickenedBurningHandsAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(isQuickenedBurningHandsAct);
+}
+
+function hasQuickenedRayOfFrostAct(state: BattleState): boolean {
+  return discoverBattleActs(state).some(isQuickenedRayOfFrostAct);
 }
 
 type QuickenedBonusActionSpellAct = AvailableBattleAct & {
@@ -1534,6 +2034,28 @@ function quickenedBurningHandsAct(
   const act = discoverBattleActs(state).find(isQuickenedBurningHandsAct);
   if (act === undefined) {
     throw new Error("Expected Quickened Burning Hands act.");
+  }
+  return act;
+}
+
+function isQuickenedRayOfFrostAct(
+  candidate: AvailableBattleAct,
+): candidate is QuickenedBonusActionSpellAct {
+  return (
+    candidate.subject.tag === "bonusActionSpell" &&
+    candidate.subject.invocation.spellId === "ray_of_frost" &&
+    candidate.subject.metamagic?.some(
+      (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function quickenedRayOfFrostAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(isQuickenedRayOfFrostAct);
+  if (act === undefined) {
+    throw new Error("Expected Quickened Ray of Frost act.");
   }
   return act;
 }

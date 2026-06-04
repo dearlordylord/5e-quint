@@ -1,30 +1,30 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE sorcerer_metamagic doResolveQuickenedSaveGatedDamage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic
+// UNIT-IDENTITY-MBT-REPLAY: L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic doResolveQuickenedSpellAttack
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell:
 //   Quickened Spell costs 2 Sorcery Points and changes an action casting time
 //   to a Bonus Action for that casting.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
-//   Burning Hands is an action-cast Dexterity Saving Throw damage spell.
+// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
+//   Ray of Frost is an action-cast ranged Spell Attack cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
-//   Saving Throw, Sorcery Points as a Pool, and Spend.
+//   Attack Roll, Damage Roll, Sorcery Points as a Pool, and Spend.
 import * as path from "node:path";
 
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   projectBattleState,
-  resolveQuickenedBurningHands,
+  resolveQuickenedRayOfFrost,
   sorcererMetamagicBattle,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
 defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic selected identity MBT",
-  taskId: "L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE",
+  describeLabel: "Sorcerer Metamagic spell attack selected identity MBT",
+  taskId: "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS",
   specFile: path.resolve(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+    "../battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     magicActionAvailable: "bool",
@@ -45,18 +45,18 @@ defineSelectedIdentityWitness({
       unitId: "sorcerer_metamagic",
       procedures: [
         {
-          actionName: "doResolveQuickenedSaveGatedDamage",
+          actionName: "doResolveQuickenedSpellAttack",
           projectionAfter: {
             magicActionAvailable: true,
             bonusActionAvailable: false,
             sorceryPointsRemaining: 2,
-            targetHp: 1,
-            lastResult: "quickenedSaveGatedDamage",
+            targetHp: 3,
+            lastResult: "quickenedSpellAttack",
           },
           discover: () =>
             projectBattleState(
-              resolveQuickenedBurningHands(sorcererMetamagicBattle()),
-              "quickenedSaveGatedDamage",
+              resolveQuickenedRayOfFrost(sorcererMetamagicBattle()),
+              "quickenedSpellAttack",
             ),
         },
       ],
