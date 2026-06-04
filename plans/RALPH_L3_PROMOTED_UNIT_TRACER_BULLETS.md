@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Monk Open Hand Technique Flurry hit riders"
     },
     {
@@ -371,7 +371,7 @@ Out of scope:
 
 ### Task 6 - L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `monk_open_hand_technique` after supported Flurry of Blows hits.
 
