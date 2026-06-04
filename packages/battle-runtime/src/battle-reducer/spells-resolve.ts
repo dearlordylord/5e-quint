@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
@@ -359,6 +360,30 @@ function isSupportedDamageSpellInvocation(
     invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "saveGatedDamage" ||
     invocation.procedure === "attackBurstSaveDamage"
+  );
+}
+
+function potentCantripAppliesToMissedSpellAttack(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+  readonly target: BattleCreatureState;
+}): boolean {
+  if (
+    input.actor?.origin.kind !== "character" ||
+    input.invocation.procedure !== "spellAttackDamage" ||
+    input.invocation.resource.tag !== "none" ||
+    input.invocation.access.tag !== "classCantrip" ||
+    !isSupportedDamageSpellInvocation(input.invocation)
+  ) {
+    return false;
+  }
+  return [...input.actor.origin.potentCantripProfiles.values()].some(
+    (profile) =>
+      profile.potentCantrip.trigger.kind === "castCantripAtCreature" &&
+      profile.potentCantrip.trigger.cantripKind === "damaging" &&
+      profile.potentCantrip.outcomes.includes("missWithAttackRoll") &&
+      profile.potentCantrip.damage === "halfCantripDamageIfAny" &&
+      profile.potentCantrip.additionalEffect === "none",
   );
 }
 
@@ -1037,6 +1062,13 @@ function resolveSpellActInternal(
       );
     }
     const hit = ordinaryHit || missToHitReplacement !== null;
+    const potentCantripMiss =
+      !hit &&
+      potentCantripAppliesToMissedSpellAttack({
+        actor: castingState.combatants.get(subject.actorId),
+        invocation: invocationForResolution,
+        target,
+      });
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
     const attackRollState = stateAfterSpellAttackRollMadeForInvocation(
       castingState,
@@ -1197,7 +1229,7 @@ function resolveSpellActInternal(
         return reactionWindow;
       }
     }
-    if (hit && fillSet.damageRoll == null) {
+    if ((hit || potentCantripMiss) && fillSet.damageRoll == null) {
       if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
         return invalidResult(
           input.state,
@@ -1211,7 +1243,7 @@ function resolveSpellActInternal(
         [
           spellDamageHole(
             invocationForResolution,
-            critical,
+            hit && critical,
             spellMarkedDamageRiders,
           ),
         ],
@@ -1219,6 +1251,7 @@ function resolveSpellActInternal(
     }
     if (
       !hit &&
+      !potentCantripMiss &&
       (fillSet.damageRoll != null ||
         fillSet.damageDispositions.length > 0 ||
         fillSet.sourceDamageRollPenaltyRolls.length > 0)
@@ -1229,7 +1262,7 @@ function resolveSpellActInternal(
         "Spell damage can only be filled after a hit.",
       );
     }
-    if (!hit) {
+    if (!hit && !potentCantripMiss) {
       return spendSpellActResolutionResources({
         state: attackRolledStateAfterHurl,
         actorId: subject.actorId,
@@ -1342,10 +1375,31 @@ function resolveSpellActInternal(
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null &&
     attackRollIsCriticalHit(fillSet.attackRoll);
+  const spellAttackHit =
+    (invocationForResolution.procedure === "spellAttackDamage" ||
+      invocationForResolution.procedure === "heldLightHurl" ||
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
+    fillSet.attackRoll != null &&
+    (attackRollHits(
+      fillSet.attackRoll,
+      currentArmorClass(activeEffectArmorClass(target)),
+    ) ||
+      spellAttackMissToHitReplacement !== null);
+  const spellDamageResult =
+    !spellAttackHit &&
+    potentCantripAppliesToMissedSpellAttack({
+      actor: castingState.combatants.get(subject.actorId),
+      invocation: invocationForResolution,
+      target,
+    })
+      ? "half"
+      : "full";
   const damageValidation = validateSpellDamageFill(
     fillSet.damageRoll,
     damageInvocation,
-    critical,
+    spellAttackHit && critical,
     spellMarkedDamageRiders,
   );
   if (damageValidation !== null) {
@@ -1359,9 +1413,9 @@ function resolveSpellActInternal(
     target,
     damageInvocation,
     fillSet.damageRoll,
-    "full",
+    spellDamageResult,
     spellMarkedDamageRiders,
-    critical,
+    spellAttackHit && critical,
   );
   const damageSource = spellDamageBaseState.combatants.get(subject.actorId);
   const expectedSourcePenaltyHole =
@@ -1508,7 +1562,7 @@ function resolveSpellActInternal(
     target.combatantId,
     damageInvocation,
     fillSet.damageRoll,
-    critical,
+    spellAttackHit && critical,
     {
       concentrationSavingThrow: concentrationFill,
       wardingBondDamageShareConcentrationSavingThrows:
@@ -1524,18 +1578,22 @@ function resolveSpellActInternal(
       hideousLaughterDamageRepeatSaves:
         fillSet.hideousLaughterDamageRepeatSaves,
       damageSourceId: subject.actorId,
+      saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,
     },
   );
-  const effected = applySpellActiveEffects(
-    damaged,
-    subject.actorId,
-    target.combatantId,
-    invocationForResolution,
-  );
+  const effected = spellAttackHit
+    ? applySpellActiveEffects(
+        damaged,
+        subject.actorId,
+        target.combatantId,
+        invocationForResolution,
+      )
+    : damaged;
   const lit =
     invocationForResolution.procedure === "heldLightHurl" ||
-    invocationForResolution.procedure === "spellAttackDamage"
+    (invocationForResolution.procedure === "spellAttackDamage" &&
+      spellAttackHit)
       ? applySpellLightEmitterEffects(
           effected,
           subject.actorId,

@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Wizard Potent Cantrip miss/save-success half damage"
     },
     {
@@ -341,7 +341,7 @@ Out of scope:
 
 ### Task 5 - L3PUTB-05-WIZARD-POTENT-CANTRIP-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `wizard_potent_cantrip` half damage on missed cantrip attacks and
 successful cantrip saves.

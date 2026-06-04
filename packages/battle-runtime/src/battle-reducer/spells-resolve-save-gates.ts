@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -30,6 +31,7 @@ import {
   type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
   type BattleGustOfWindLinePushDisposition,
+  type BattleCreatureState,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSavingThrowOutcomeValue,
@@ -1262,13 +1264,15 @@ export function resolveSaveGateDamageSpellAct(input: {
   const saveDamageResultByTargetId = new Map(
     savingThrowOutcomes.outcomes.map((outcome) => [
       outcome.targetId,
-      saveGateDamageResultForOutcome(
-        stateAfterCastConcentrationBreak,
-        outcome.targetId,
-        input.invocation,
-        outcome.succeeded,
-        metamagicSelections.carefulSpellProtectedTargetIds,
-      ),
+      potentCantripSaveDamageResultForOutcome({
+        state: stateAfterCastConcentrationBreak,
+        actorId: input.actorId,
+        targetId: outcome.targetId,
+        invocation: input.invocation,
+        savingThrowSucceeded: outcome.succeeded,
+        carefulSpellProtectedTargetIds:
+          metamagicSelections.carefulSpellProtectedTargetIds,
+      }),
     ]),
   );
   const saveDamageResultForTarget = (targetId: CombatantId): SaveDamageResult =>
@@ -1887,6 +1891,68 @@ function withObjectIgnitions(
     ...result,
     objectIgnitions: [...(result.objectIgnitions ?? []), ...objectIgnitions],
   };
+}
+
+function potentCantripSaveDamageResultForOutcome(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+  readonly savingThrowSucceeded: boolean;
+  readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+}): SaveDamageResult {
+  const baseResult = saveGateDamageResultForOutcome(
+    input.state,
+    input.targetId,
+    input.invocation,
+    input.savingThrowSucceeded,
+    input.carefulSpellProtectedTargetIds,
+  );
+  if (
+    !input.savingThrowSucceeded ||
+    baseResult !== "none" ||
+    input.carefulSpellProtectedTargetIds.includes(input.targetId)
+  ) {
+    return baseResult;
+  }
+  const actor = input.state.combatants.get(input.actorId);
+  const target = input.state.combatants.get(input.targetId);
+  return potentCantripAppliesToSuccessfulSave({
+    actor,
+    target,
+    invocation: input.invocation,
+  })
+    ? "half"
+    : baseResult;
+}
+
+function potentCantripAppliesToSuccessfulSave(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly target: BattleCreatureState | undefined;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): boolean {
+  if (
+    input.actor?.origin.kind !== "character" ||
+    input.target === undefined ||
+    input.invocation.resource.tag !== "none" ||
+    input.invocation.access.tag !== "classCantrip"
+  ) {
+    return false;
+  }
+  return [...input.actor.origin.potentCantripProfiles.values()].some(
+    (profile) =>
+      profile.potentCantrip.trigger.kind === "castCantripAtCreature" &&
+      profile.potentCantrip.trigger.cantripKind === "damaging" &&
+      profile.potentCantrip.outcomes.includes("targetSucceedsSavingThrow") &&
+      profile.potentCantrip.damage === "halfCantripDamageIfAny" &&
+      profile.potentCantrip.additionalEffect === "none",
+  );
 }
 
 type SpellConcentrationDurationEffect = Extract<

@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 152,
-      "numerator": 152,
+      "denominator": 153,
+      "numerator": 153,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 152,
-      "numerator": 148,
+      "denominator": 153,
+      "numerator": 149,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 152,
-      "percent": "67%"
+      "numerator": 153,
+      "percent": "67.4%"
     }
   },
   "metricSemantics": [
@@ -4213,16 +4213,35 @@
     {
       "id": "unit-feature.potent-cantrip",
       "profileKind": "battle-admission",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Battle initialization retains the admitted support profile on character combatants, and spell attack/save resolution consumes the profile for supported class-cantrip damage invocations against creature targets, applying half damage on the qualifying miss or successful-save branch while suppressing non-damage active effects and light-emitter post-damage riders on that branch and leaving object-target misses without Potent Cantrip damage.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3PUTB-05"
       ],
-      "title": "Unit feature admits Potent Cantrip miss/save-success half-damage facts",
-      "verificationOwners": []
+      "title": "Unit feature projects Potent Cantrip miss/save-success half-damage facts into cantrip spell resolution",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/potent-cantrip-runtime.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
@@ -13424,6 +13443,22 @@
         "unit-feature.magic-action-healing-pool"
       ],
       "taskId": "L3PUTB-04"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Potent Cantrip MBT witness models attack-miss half cantrip damage, successful-save half cantrip damage, no additional active-effect or light-emitter effect on the miss/save-success branch, and object-target misses staying outside the Potent Cantrip half-damage branch.",
+      "profileIds": [
+        "unit-feature.potent-cantrip"
+      ],
+      "taskId": "L3PUTB-05"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Potent Cantrip selected Unit identity reaching battle initialization, admitted profile consumption by cantrip spell attack and saving-throw resolution, half damage on supported damaging class-cantrip attack misses and successful target saves against creatures, no non-damage active-effect or light-emitter effect on those branches, object-target miss rejection from the Potent Cantrip half-damage branch, and no authored cantrip identity dispatch.",
+      "profileIds": [
+        "unit-feature.potent-cantrip"
+      ],
+      "taskId": "L3PUTB-05"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13497,12 +13532,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 23,
+        "profileSubsetSupportedUnits": 22,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 65,
+        "selectedIdentityReplayDenominator": 66,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 65,
-        "supportedProfileUnits": 53,
+        "selectedIdentityReplayWitnessUnits": 66,
+        "supportedProfileUnits": 54,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -18986,39 +19021,21 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
-            "mechanic": "Execute Potent Cantrip in spell resolution, applying half cantrip damage on attack misses or successful target saves while applying no additional effect."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
-            "mechanic": "Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success.",
-            "owner": "battle-runtime spell attack/save cantrip-damage reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
-            "title": "Wizard Potent Cantrip Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell attack, spell save, cantrip damage, and additional-effect owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.potent-cantrip"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until spell attack, spell save, cantrip-damage, and additional-effect owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Evoker grants Potent Cantrip as a level-3 subclass feature Unit",
-          "Battle Unit support admits the Surface potent_cantrip mechanics",
-          "The projected support profile carries damaging-cantrip creature-target half-damage facts for attack misses and successful target saves, plus the no-additional-effect restriction, without authored-identity dispatch"
+          "Battle Unit support admits the Surface potent_cantrip mechanics and projects damaging-cantrip creature-target half-damage facts for attack misses and successful target saves, plus the no-additional-effect restriction, without authored-identity dispatch",
+          "Battle initialization retains the admitted Potent Cantrip support profile on character combatants only when the selected Unit ref admits the profile",
+          "Battle runtime consumes the admitted support profile for supported damaging class-cantrip spell attack invocations against creature targets, asks for cantrip damage on an attack miss, applies half of the rolled cantrip damage, spends the Magic action, and suppresses hit-only non-damage effects and light-emitter post-damage riders on the miss branch",
+          "Battle runtime consumes the admitted support profile for supported damaging class-cantrip saving-throw invocations against creature targets, asks for cantrip damage on a successful target save when the base save result has no damage, applies half of the rolled cantrip damage, spends the Magic action, and suppresses failed-save non-damage effects on the successful-save branch",
+          "Battle runtime leaves object-target attack misses outside the Potent Cantrip half-damage branch and continues to reject damage fills on object misses"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -19026,6 +19043,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-05"
         }
       ],
       "executableMechanics": true,
@@ -19034,16 +19056,35 @@
         {
           "id": "unit-feature.potent-cantrip",
           "profileKind": "battle-admission",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Battle initialization retains the admitted support profile on character combatants, and spell attack/save resolution consumes the profile for supported class-cantrip damage invocations against creature targets, applying half damage on the qualifying miss or successful-save branch while suppressing non-damage active effects and light-emitter post-damage riders on that branch and leaving object-target misses without Potent Cantrip damage.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3PUTB-05"
           ],
-          "title": "Unit feature admits Potent Cantrip miss/save-success half-damage facts",
-          "verificationOwners": []
+          "title": "Unit feature projects Potent Cantrip miss/save-success half-damage facts into cantrip spell resolution",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/potent-cantrip-runtime.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",

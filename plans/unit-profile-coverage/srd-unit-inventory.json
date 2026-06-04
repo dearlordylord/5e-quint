@@ -29943,7 +29943,7 @@
         "state": "installed",
         "unitId": "wizard_potent_cantrip"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

@@ -3856,6 +3856,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "rogueSteadyAim" }
           >
         >;
+        readonly potentCantripProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "potentCantrip" }
+          >
+        >;
         readonly enemyZeroHitPointTemporaryHitPointsProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<

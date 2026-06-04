@@ -3179,40 +3179,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME: Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success. Owner: battle-runtime spell attack/save cantrip-damage reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until spell attack, spell save, cantrip-damage, and additional-effect owners consume this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Wizard Potent Cantrip",
-          "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 420,
-            "lineStart": 417,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "wizard_potent_cantrip"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "social-knowledge-effect"
@@ -3272,7 +3238,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 129,
+      "count": 130,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3403,6 +3369,7 @@
         "warlock_magical_cunning",
         "web",
         "wizard_arcane_recovery",
+        "wizard_potent_cantrip",
         "wizard_ritual_adept",
         "wizard_scholar"
       ]
@@ -3449,7 +3416,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 11,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3463,8 +3430,7 @@
         "moonbeam",
         "paladin_sacred_weapon",
         "ranger_hunters_prey",
-        "sorcerer_metamagic",
-        "wizard_potent_cantrip"
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -3548,8 +3514,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 129,
-      "percent": "65.5%"
+      "numerator": 130,
+      "percent": "66%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -9894,13 +9860,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 11,
-      "witness-present": 156
+      "not-applicable": 10,
+      "witness-present": 157
     },
     "rowsByStatus": {
-      "not-applicable": 11,
+      "not-applicable": 10,
       "not-required": 30,
-      "witness-present": 156
+      "witness-present": 157
     }
   },
   "sourceArtifacts": {
@@ -10808,20 +10774,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 38,
-      "supported-profile": 129,
+      "profile-subset-supported": 37,
+      "supported-profile": 130,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 12,
+      "blocked-follow-up-split": 11,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 129
+      "supported-profile": 130
     },
-    "nonSupportedFrontier": 68,
+    "nonSupportedFrontier": 67,
     "strictDenominator": 197
   }
 }

@@ -833,19 +833,19 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 128,
-            "numerator": 128
+            "denominator": 129,
+            "numerator": 129
           },
           "joinedEvidenceRows": {
-            "denominator": 128,
+            "denominator": 129,
             "numerator": 127
           },
           "missingJoinRows": {
-            "denominator": 128,
-            "numerator": 1
+            "denominator": 129,
+            "numerator": 2
           }
         },
-        "rowCount": 1,
+        "rowCount": 2,
         "rows": [
           {
             "collectionId": "srd-5.2.1",
@@ -872,6 +872,32 @@
             },
             "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
             "unitId": "cleric_preserve_life"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3PUTB-05"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [],
+              "requiredFlowIds": [],
+              "status": "not-applicable"
+            },
+            "profileIds": [
+              "unit-feature.potent-cantrip"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "missing-unit-profile-join",
+              "unitProfileJoinRowCount": 0,
+              "unitProfileWitnessOwners": []
+            },
+            "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
+            "unitId": "wizard_potent_cantrip"
           }
         ],
         "scopeId": "level-1-3"
