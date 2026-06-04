@@ -477,6 +477,7 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
             resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
             procedure: "saveGatedDamage" as const,
             spell,
+            castingTime: { kind: "reaction" as const },
             ability: phase.ability,
             dc: phase.dc,
             targeting: { kind: "singleCombatant" as const },

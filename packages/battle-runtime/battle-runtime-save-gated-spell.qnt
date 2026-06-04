@@ -21,6 +21,10 @@ module battleRuntimeSaveGatedSpell {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
+  type SaveGatedDamageCastingTime =
+    | SaveGatedDamageActionCastingTime
+    | SaveGatedDamageReactionCastingTime
+
   pure def battleRuntimeSaveGatedDamageProfileForInvocation(
     invocation: SaveGatedDamageInvocation
   ): BattleRuntimeSaveGatedDamageProfile =
@@ -35,6 +39,14 @@ module battleRuntimeSaveGatedSpell {
       | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
       | HellishRebukeSaveGate => BattleRuntimeHellishRebukeSaveDamage
       | MindSpikeSaveGate => BattleRuntimeMindSpikeSaveDamage
+    }
+
+  pure def saveGatedDamageCastingTime(
+    invocation: SaveGatedDamageInvocation,
+  ): SaveGatedDamageCastingTime =
+    match invocation {
+      | HellishRebukeSaveGate => SaveGatedDamageReactionCastingTime
+      | _ => SaveGatedDamageActionCastingTime
     }
 
   pure def battleRuntimeSaveGatedConditionProfileForInvocation(

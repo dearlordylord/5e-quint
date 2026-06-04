@@ -251,6 +251,9 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
 export function spellInvocationHasMagicActionCastingTime(
   invocation: SupportedSpellInvocation,
 ): boolean {
+  if (invocation.procedure === "saveGatedDamage") {
+    return invocation.castingTime.kind === "action";
+  }
   return (
     !("actionCost" in invocation) || invocation.actionCost === "magicAction"
   );

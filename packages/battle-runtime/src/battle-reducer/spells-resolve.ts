@@ -149,6 +149,7 @@ import {
 import {
   admitSpellMetamagicApplications,
   metamagicActionCostOverride,
+  spellInvocationHasMagicActionCastingTime,
 } from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
@@ -298,6 +299,7 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
 const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
   "scalarBuff",
   "directHitPointRestoration",
+  "saveGatedDamage",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 
 function procedureIsIn(
@@ -2418,6 +2420,17 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "saveGatedDamage") {
+    if (
+      actionCostOverride !== "bonusAction" ||
+      !spellInvocationHasMagicActionCastingTime(invocation)
+    ) {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else {
     return invalidResult(
       input.state,
@@ -2454,7 +2467,10 @@ export function resolveBonusActionSpellAct(
     return invalidResult(
       input.state,
       "staleSubject",
-      "This turn has already expended a Spell Slot.",
+      actionCostOverride === "bonusAction" &&
+        !input.state.currentTurnResources.currentHasBonusAction
+        ? "Bonus Action spell is no longer available for the current actor."
+        : "This turn has already expended a Spell Slot.",
     );
   }
   if (

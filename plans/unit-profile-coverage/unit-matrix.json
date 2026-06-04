@@ -18071,6 +18071,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE"
         }
       ],
       "executableMechanics": true,

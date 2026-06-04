@@ -89,6 +89,30 @@ module battleRuntimeMetamagicTests {
     }
   }
 
+  run test_quickened_save_gated_damage_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedBurningHands(
+      initialState,
+      true,
+      false,
+      9,
+      true,
+      true,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.fighter.hp == 8),
+      assert(result.state.goblin.hp == 1),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
   run test_quickened_metamagic_known_affordable_and_stacking_admission = {
     val known = Set(
       quickenedSpellMetamagicFact,
@@ -158,11 +182,29 @@ module battleRuntimeMetamagicTests {
         Set(quickenedSpellMetamagicFact),
         2,
       ))),
+      assert(quickenedSpellCanModifySaveGatedDamage(
+        initialState,
+        BurningHandsSaveGate,
+        known,
+        Set(quickenedSpellMetamagicFact),
+        2,
+      )),
+      assert(not(quickenedSpellCanModifySaveGatedDamage(
+        initialState,
+        HellishRebukeSaveGate,
+        known,
+        Set(quickenedSpellMetamagicFact),
+        2,
+      ))),
     }
   }
 
   run test_quickened_unsupported_action_spell_procedure_classes_are_closed = {
     all {
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedDamageProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
       assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedDamageProcedure,
         Set(quickenedSpellMetamagicFact),

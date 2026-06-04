@@ -12,6 +12,7 @@ import {
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   isTargetListSpellInvocation,
@@ -20,6 +21,7 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BonusActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleHoleId,
   type BattleHole,
@@ -139,6 +141,18 @@ type SaveMetamagicSelectionState =
       readonly tag: "invalid";
       readonly message: string;
     };
+
+type SaveGatedDamageResolutionInput =
+  | ActionSpellBattleResolutionInput
+  | BonusActionSpellBattleResolutionInput;
+
+function spellReactionContinuationSubject(
+  input: SaveGatedDamageResolutionInput,
+): BattleSubject {
+  return "reactionContinuationSubject" in input
+    ? (input.reactionContinuationSubject ?? input.subject)
+    : input.subject;
+}
 
 function metamagicApplicationsIncludeCareful(
   applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
@@ -997,13 +1011,16 @@ export function resolveSaveGateDamageSpellRelease(input: {
 }
 
 export function resolveSaveGateDamageSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
@@ -1066,6 +1083,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: false,
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
         ...(input.metamagicApplications === undefined
           ? {}
           : { metamagicApplications: input.metamagicApplications }),
@@ -1172,7 +1192,11 @@ export function resolveSaveGateDamageSpellAct(input: {
       invocation: input.invocation,
       targetIds: saveGatedDamageSpellCastTargetIds(input.fillSet),
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource:
+        input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -1291,8 +1315,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -1331,6 +1354,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: startFailedSaveConcentration,
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
         ...(input.metamagicApplications === undefined
           ? {}
           : { metamagicApplications: input.metamagicApplications }),
@@ -1829,6 +1855,9 @@ export function resolveSaveGateDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
       startConcentration: startFailedSaveConcentration,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
       ...(input.metamagicApplications === undefined
         ? {}
         : { metamagicApplications: input.metamagicApplications }),
@@ -1954,7 +1983,9 @@ function withFailedSaveConcentrationDuration(
 
 function resolveFailedSaveForcedReactionMovement(input: {
   readonly state: BattleState;
-  readonly subject: ActionSpellBattleResolutionInput["subject"];
+  readonly subject:
+    | ActionSpellBattleResolutionInput["subject"]
+    | BonusActionSpellBattleResolutionInput["subject"];
   readonly failedTargets: readonly CombatantId[];
   readonly invocation: Extract<
     SupportedSpellInvocation,

@@ -1151,6 +1151,7 @@ export function supportedSaveGateDamageProfile(
   const saveGatedInvocation = {
     procedure: "saveGatedDamage" as const,
     spell,
+    castingTime: { kind: "action" as const },
     ability: phase.ability,
     dc: phase.dc,
     targeting,

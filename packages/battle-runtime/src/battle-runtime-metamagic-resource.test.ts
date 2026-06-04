@@ -3,6 +3,7 @@
 
 import {
   canSpendAction,
+  spendActivationResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { resourceCount } from "@dnd/shared/types";
@@ -28,7 +29,6 @@ import {
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
-  QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
@@ -258,6 +258,48 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(resolved.state.combatants.get(wizardId)?.tempHp).toBe(11);
   });
 
+  test("discovers Quickened save-gated damage spells as Bonus Action casts and preserves save damage", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const act = quickenedBurningHandsAct(state);
+
+    expect(act.subject).toEqual(quickenedBurningHandsSubject());
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [burningHandsSaveFill(act.initialHoles)],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          burningHandsSaveFill(act.initialHoles),
+          damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(1);
+  });
+
   test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
     const state = metamagicBattle({
       preparedSpells: ["cure_wounds", "false_life"],
@@ -322,6 +364,42 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         state: unknown,
         subject: {
           ...quickenedCureWoundsSubject(),
+          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Metamagic selection must be one of the actor's known Metamagic options.",
+    });
+  });
+
+  test("requires known Metamagic and enough Sorcery Points for Quickened save-gated damage", () => {
+    const unaffordable = saveMetamagicBattle({
+      sorceryPoints: 1,
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    expect(hasQuickenedBurningHandsAct(unaffordable)).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: unaffordable,
+        subject: quickenedBurningHandsSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Metamagic requires enough unexpended Sorcery Points.",
+    });
+
+    const unknown = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    expect(
+      resolveBattleSubject({
+        state: unknown,
+        subject: {
+          ...quickenedBurningHandsSubject(),
           metamagic: [{ effectKind: "saving_throw_disadvantage" }],
         },
         fills: [],
@@ -513,8 +591,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
   });
 
-  test("rejects unsupported Quickened procedure classes before Sorcery Point spending", () => {
-    const state = saveMetamagicBattle({
+  test("rejects Quickened non-action spells before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      preparedSpells: ["healing_word"],
       knownOptions: [quickenedMetamagicOption()],
     });
 
@@ -525,7 +604,47 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           tag: "bonusActionSpell",
           actorId: wizardId,
           invocation: spellSlotInvocationRef(
-            "burning_hands",
+            "healing_word",
+            1,
+            "directHitPointRestoration",
+          ),
+          mode: { tag: "cast" },
+          metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Quickened Spell can modify only spells with a casting time of an action.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Quickened reaction save-gated damage before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      preparedSpells: ["hellish_rebuke"],
+      knownOptions: [quickenedMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusActionSpell" &&
+          candidate.subject.invocation.spellId === "hellish_rebuke" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "hellish_rebuke",
             1,
             "saveGatedDamage",
           ),
@@ -536,7 +655,29 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
+      message:
+        "Quickened Spell can modify only spells with a casting time of an action.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Quickened save-gated damage after the Bonus Action is spent", () => {
+    const state = bonusActionSpent(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+      }),
+    );
+
+    expect(hasQuickenedBurningHandsAct(state)).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: quickenedBurningHandsSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Bonus Action spell is no longer available for the current actor.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -921,10 +1062,26 @@ function magicActionSpent(state: BattleState): BattleState {
   };
 }
 
+function bonusActionSpent(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: expectRight(
+      spendActivationResource(state.currentTurnResources, {
+        kind: "bonusAction",
+      }),
+    ),
+  };
+}
+
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
-  readonly preparedSpells?: readonly ("cure_wounds" | "false_life")[];
+  readonly preparedSpells?: readonly (
+    | "cure_wounds"
+    | "false_life"
+    | "healing_word"
+    | "hellish_rebuke"
+  )[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-quickened"),
@@ -973,6 +1130,7 @@ function metamagicBattle(input?: {
 }
 
 function saveMetamagicBattle(input: {
+  readonly sorceryPoints?: number;
   readonly knownOptions: readonly MetamagicOptionFixture[];
 }): BattleState {
   return startBattleRight({
@@ -990,7 +1148,7 @@ function saveMetamagicBattle(input: {
         resources: [
           {
             unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
-            pointsRemaining: resourceCount(4),
+            pointsRemaining: resourceCount(input.sorceryPoints ?? 4),
           },
         ],
         metamagic: {
@@ -1296,8 +1454,22 @@ function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {
   };
 }
 
+function quickenedBurningHandsSubject(): QuickenedBonusActionSpellAct["subject"] {
+  return {
+    tag: "bonusActionSpell",
+    actorId: wizardId,
+    invocation: spellSlotInvocationRef("burning_hands", 1, "saveGatedDamage"),
+    mode: { tag: "cast" },
+    metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+  };
+}
+
 function hasQuickenedCureWoundsAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(isQuickenedCureWoundsAct);
+}
+
+function hasQuickenedBurningHandsAct(state: BattleState): boolean {
+  return discoverBattleActs(state).some(isQuickenedBurningHandsAct);
 }
 
 type QuickenedBonusActionSpellAct = AvailableBattleAct & {
@@ -1340,6 +1512,28 @@ function quickenedFalseLifeAct(state: BattleState): QuickenedBonusActionSpellAct
   );
   if (act === undefined) {
     throw new Error("Expected Quickened False Life act.");
+  }
+  return act;
+}
+
+function isQuickenedBurningHandsAct(
+  candidate: AvailableBattleAct,
+): candidate is QuickenedBonusActionSpellAct {
+  return (
+    candidate.subject.tag === "bonusActionSpell" &&
+    candidate.subject.invocation.spellId === "burning_hands" &&
+    candidate.subject.metamagic?.some(
+      (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function quickenedBurningHandsAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(isQuickenedBurningHandsAct);
+  if (act === undefined) {
+    throw new Error("Expected Quickened Burning Hands act.");
   }
   return act;
 }
@@ -1450,6 +1644,23 @@ function spellTargetListFill(
       targetId,
       spellId,
     })),
+  };
+}
+
+function burningHandsSaveFill(
+  holes: readonly BattleHole[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const savingThrow = findHole(holes, "savingThrowOutcome");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: savingThrow.holeId,
+    value: {
+      area: {
+        originAnchorId: wizardId,
+        affectedTargetIds: [skeletonId],
+      },
+      outcomes: [{ targetId: skeletonId, succeeded: false }],
+    },
   };
 }
 

@@ -12,14 +12,16 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
   //   a longer casting time.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action and Bonus Action.
   //
-  // This core models the profile support subset owned by this task. Direct Hit Point
-  // restoration and scalar buff action-casting procedures admit the rewrite;
-  // damage, control, ongoing-effect, and other action procedures stay closed
-  // for the deferred all-action-spell expansion.
+  // This core models the profile support subset owned by these tracer bullets.
+  // Direct Hit Point restoration, scalar buffs, and save-gated damage
+  // action-casting procedures admit the rewrite; spell attacks, control,
+  // ongoing-effect, and other action procedures stay closed for their
+  // dedicated follow-up tasks.
 
   type BattleRuntimeQuickenedActionSpellProcedure =
     | QuickenedDirectRestorationProcedure
     | QuickenedScalarBuffProcedure
+    | QuickenedSaveGatedDamageProcedure
     | QuickenedDamageProcedure
     | QuickenedControlProcedure
     | QuickenedOngoingEffectProcedure
@@ -31,6 +33,7 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
     match procedure {
       | QuickenedDirectRestorationProcedure => true
       | QuickenedScalarBuffProcedure => true
+      | QuickenedSaveGatedDamageProcedure => true
       | QuickenedDamageProcedure => false
       | QuickenedControlProcedure => false
       | QuickenedOngoingEffectProcedure => false
