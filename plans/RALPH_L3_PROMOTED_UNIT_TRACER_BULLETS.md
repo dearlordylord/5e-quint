@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Rogue Steady Aim through battle reducer, QNT, MBT, and Unit evidence"
     },
     {
@@ -195,7 +195,7 @@ findings remain. Use at least two rounds for non-trivial changes.
 
 ### Task 1 - L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `rogue_steady_aim` from battle-admission projection to executable
 battle-runtime behavior.
