@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -107,6 +107,7 @@ import {
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -591,9 +592,22 @@ export function resolveSelectedAttackProcedure(
       return reactionWindow;
     }
   }
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
+      state: attackRolledState,
+      subject: input.subject,
+      attackerId,
+      scoredCriticalHit: critical,
+      fills: fillSet,
+    },
+  );
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
   const toppleSaveHole = hit
     ? weaponMasteryToppleSavingThrowHole(
-        attackRolledState,
+        postRemarkableAthleteMovementState,
         attackerId,
         target.combatantId,
         attack,
@@ -608,16 +622,18 @@ export function resolveSelectedAttackProcedure(
       );
     }
   } else if (fillSet.weaponMasteryToppleSavingThrow === undefined) {
-    return needsHolesResult(attackRolledState, input.subject, [toppleSaveHole]);
+    return needsHolesResult(postRemarkableAthleteMovementState, input.subject, [
+      toppleSaveHole,
+    ]);
   }
   const toppleApplied = fillSet.weaponMasteryToppleSavingThrow
     ? applyWeaponMasteryToppleSavingThrow(
-        attackRolledState,
+        postRemarkableAthleteMovementState,
         attackerId,
         target.combatantId,
         fillSet.weaponMasteryToppleSavingThrow,
       )
-    : ({ tag: "ok", state: attackRolledState } as const);
+    : ({ tag: "ok", state: postRemarkableAthleteMovementState } as const);
   if (toppleApplied.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", toppleApplied.message);
   }
@@ -1301,7 +1317,13 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.weaponMasteryCleaveTarget !== undefined ||
     fillSet.weaponMasteryCleaveAttackRoll !== undefined ||
     fillSet.weaponMasteryCleaveDamageRoll !== undefined ||
-    fillSet.weaponMasteryCleaveDamageDispositionFilled
+    fillSet.weaponMasteryCleaveDamageDispositionFilled ||
+    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
+      undefined ||
+    fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !==
+      undefined ||
+    fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
+    fillSet.remarkableAthleteCriticalHitMovement !== undefined
   );
 }
 
@@ -1557,7 +1579,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   const cleaveHit = ordinaryCleaveHit || cleaveMissToHitReplacement !== null;
-  const cleaveAttackRolledState = recordAttackRollMissToHitReplacementUsed(
+  let cleaveAttackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
         revealHidden(input.state, input.subject.actorId),
@@ -1612,6 +1634,25 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       return { tag: "result", result: attackHitReactionWindow };
     }
   }
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
+      state: cleaveAttackRolledState,
+      subject: input.subject,
+      attackerId: input.subject.actorId,
+      scoredCriticalHit: cleaveCritical,
+      fills: {
+        remarkableAthleteCriticalHitMovementDecision:
+          input.fillSet
+            .weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision,
+        remarkableAthleteCriticalHitMovement:
+          input.fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovement,
+      },
+    },
+  );
+  if (remarkableAthleteMovement.tag === "result") {
+    return { tag: "result", result: remarkableAthleteMovement.result };
+  }
+  cleaveAttackRolledState = remarkableAthleteMovement.state;
   if (!cleaveHit) {
     return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
       ? {

@@ -74,6 +74,7 @@ import {
   revealHidden,
 } from "./hole-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 
 import {
   attackHitTriggerKind,
@@ -306,7 +307,7 @@ function resolveBonusActionAttack(
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
-  const attackRolledState = consumeHelpAttackForAttackRoll(
+  let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, input.subject.actorId),
       input.subject.actorId,
@@ -389,6 +390,19 @@ function resolveBonusActionAttack(
       return reactionWindow;
     }
   }
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
+      state: attackRolledState,
+      subject: input.subject,
+      attackerId: input.subject.actorId,
+      scoredCriticalHit: critical,
+      fills: fillSet,
+    },
+  );
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  attackRolledState = remarkableAthleteMovement.state;
   if (hit && fillSet.damageRoll == null) {
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
       return invalidResult(

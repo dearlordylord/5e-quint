@@ -21,6 +21,7 @@
 {"profileId":"unit-feature.passive-saving-throw-roll-mode","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-speed-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-speed-kind-grants","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.remarkable-athlete","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.reaction-roll-or-damage-reduction","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"unit-feature.rogue-steady-aim","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.save-damage-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

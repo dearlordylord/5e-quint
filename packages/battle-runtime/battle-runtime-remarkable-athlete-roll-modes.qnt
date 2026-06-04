@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.remarkable-athlete
 module battleRuntimeRemarkableAthleteRollModes {

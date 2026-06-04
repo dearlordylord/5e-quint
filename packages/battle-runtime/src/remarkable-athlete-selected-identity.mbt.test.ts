@@ -1,19 +1,27 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete
 // UNIT-IDENTITY-MBT-REPLAY: L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete doProjectRemarkableAthleteRollModes
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete
+// UNIT-IDENTITY-MBT-REPLAY: L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete doProjectRemarkableAthleteRollModes doProjectRemarkableAthleteCriticalMovement
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.remarkable-athlete
 import * as path from "node:path";
 
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import type { BattleHole } from "./index.ts";
 import {
   battleId,
   battleUnitRefWithSupportProfiles,
   combatantId,
   Either,
   fighterRemarkableAthleteUnitId,
+  attackRollFill,
+  attackTargetFill,
+  movementFill,
   oppositionSide,
   partySide,
+  requireHole,
   requiredInitiativeRollModeForCombatant,
+  resolveBattleSubject,
   startBattle,
   type BattleState,
   unitLibrary,
@@ -29,7 +37,11 @@ type RemarkableAthleteProjection = {
   readonly plainStrengthRollMode: RollMode;
   readonly dexterityAthleticsRollMode: RollMode;
   readonly unselectedStrengthAthleticsRollMode: RollMode;
-  readonly lastResult: "init" | "projected";
+  readonly criticalMovementOffered: boolean;
+  readonly criticalMovementBudgetFeet: number;
+  readonly criticalMovementProvokesOpportunityAttacks: boolean;
+  readonly criticalMovementAccepted: boolean;
+  readonly lastResult: "init" | "projected" | "criticalMovement";
 };
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-mbt-actor");
@@ -38,7 +50,7 @@ const targetId = combatantId("remarkable-athlete-mbt-target");
 
 defineSelectedIdentityWitness({
   describeLabel: "Remarkable Athlete selected identity MBT",
-  taskId: "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES",
+  taskId: "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
   specFile: path.resolve(
     import.meta.dirname,
     "../battle-runtime-remarkable-athlete-selected-identity.mbt.qnt",
@@ -50,6 +62,10 @@ defineSelectedIdentityWitness({
     plainStrengthRollMode: "str",
     dexterityAthleticsRollMode: "str",
     unselectedStrengthAthleticsRollMode: "str",
+    criticalMovementOffered: "bool",
+    criticalMovementBudgetFeet: "int",
+    criticalMovementProvokesOpportunityAttacks: "bool",
+    criticalMovementAccepted: "bool",
     lastResult: "str",
   },
   initialProjection: {
@@ -59,6 +75,10 @@ defineSelectedIdentityWitness({
     plainStrengthRollMode: "normal",
     dexterityAthleticsRollMode: "normal",
     unselectedStrengthAthleticsRollMode: "normal",
+    criticalMovementOffered: false,
+    criticalMovementBudgetFeet: 0,
+    criticalMovementProvokesOpportunityAttacks: false,
+    criticalMovementAccepted: false,
     lastResult: "init",
   },
   units: [
@@ -74,6 +94,10 @@ defineSelectedIdentityWitness({
             plainStrengthRollMode: "normal",
             dexterityAthleticsRollMode: "normal",
             unselectedStrengthAthleticsRollMode: "normal",
+            criticalMovementOffered: false,
+            criticalMovementBudgetFeet: 0,
+            criticalMovementProvokesOpportunityAttacks: false,
+            criticalMovementAccepted: false,
             lastResult: "projected",
           },
           discover: () =>
@@ -81,6 +105,24 @@ defineSelectedIdentityWitness({
               remarkableAthleteBattle(),
               "projected",
             ),
+        },
+        {
+          actionName: "doProjectRemarkableAthleteCriticalMovement",
+          projectionAfter: {
+            initiativeRollMode: "normal",
+            strengthAthleticsRollMode: "normal",
+            strengthAcrobaticsRollMode: "normal",
+            plainStrengthRollMode: "normal",
+            dexterityAthleticsRollMode: "normal",
+            unselectedStrengthAthleticsRollMode: "normal",
+            criticalMovementOffered: true,
+            criticalMovementBudgetFeet: 15,
+            criticalMovementProvokesOpportunityAttacks: false,
+            criticalMovementAccepted: true,
+            lastResult: "criticalMovement",
+          },
+          discover: () =>
+            projectRemarkableAthleteCriticalMovement(remarkableAthleteBattle()),
         },
       ],
     },
@@ -159,6 +201,113 @@ function projectRemarkableAthleteRollModes(
       requiredAbilityCheckRollMode(state, unselectedActorId, "str", {
         skill: "athletics",
       }) ?? "normal",
+    criticalMovementOffered: false,
+    criticalMovementBudgetFeet: 0,
+    criticalMovementProvokesOpportunityAttacks: false,
+    criticalMovementAccepted: false,
     lastResult,
+  };
+}
+
+function projectRemarkableAthleteCriticalMovement(
+  state: BattleState,
+): RemarkableAthleteProjection {
+  const subject = {
+    tag: "action",
+    actorId: remarkableAthleteActorId,
+    action: "attack",
+    attackName: "Unarmed Strike",
+  } as const;
+  const target = requireHole(
+    requireNeedsHoles(resolveBattleSubject({ state, subject, fills: [] })),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    target,
+    remarkableAthleteActorId,
+    targetId,
+  );
+  const attackRoll = requireHole(
+    requireNeedsHoles(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+    ),
+    "attackRoll",
+  );
+  const criticalAttackFill = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 20,
+  });
+  const decision = requireHole(
+    requireNeedsHoles(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, criticalAttackFill],
+      }),
+    ),
+    "unitFeatureDecision",
+  );
+  const movement = requireHole(
+    requireNeedsHoles(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill,
+          criticalAttackFill,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+    ),
+    "movement",
+  );
+  const accepted = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      targetFill,
+      criticalAttackFill,
+      unitFeatureDecisionFill(decision, "use"),
+      movementFill(movement, {
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+      }),
+    ],
+  });
+  if (accepted.tag === "invalid") {
+    throw new Error(accepted.message);
+  }
+  return {
+    initiativeRollMode: "normal",
+    strengthAthleticsRollMode: "normal",
+    strengthAcrobaticsRollMode: "normal",
+    plainStrengthRollMode: "normal",
+    dexterityAthleticsRollMode: "normal",
+    unselectedStrengthAthleticsRollMode: "normal",
+    criticalMovementOffered: true,
+    criticalMovementBudgetFeet: Number(movement.movementBudgetFeet),
+    criticalMovementProvokesOpportunityAttacks: false,
+    criticalMovementAccepted: true,
+    lastResult: "criticalMovement",
+  };
+}
+
+function requireNeedsHoles(
+  result: ReturnType<typeof resolveBattleSubject>,
+): readonly BattleHole[] {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles, got ${result.tag}.`);
+  }
+  return result.holes;
+}
+
+function unitFeatureDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "unitFeatureDecision" }>,
+  value: "use" | "decline",
+) {
+  return {
+    kind: "unitFeatureDecision" as const,
+    holeId: hole.holeId,
+    value,
   };
 }

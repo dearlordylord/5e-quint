@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
@@ -78,7 +79,11 @@ import {
   spiritualWeaponForcePositionInvalidReason,
 } from "./spells-targeting.ts";
 import { levitateInitialRiseHole } from "./levitate-creature.ts";
-import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
+import {
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
+  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+} from "./domain-constants.ts";
 
 export type SpellAttackSequencePartTargetFill =
   | {
@@ -98,6 +103,12 @@ export type SpellAttackSequencePartTargetFill =
 export type SpellAttackSequencePartFillSet = {
   readonly target: SpellAttackSequencePartTargetFill | undefined;
   readonly attackRoll: BattleAttackRollResult | undefined;
+  readonly remarkableAthleteCriticalHitMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  readonly remarkableAthleteCriticalHitMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
+    | undefined;
   readonly mirrorImageDuplicateRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
@@ -189,6 +200,12 @@ export type SpellFillSet =
         | undefined;
       readonly attackSequencePartFills: readonly SpellAttackSequencePartFillSet[];
       readonly attackRoll: BattleAttackRollResult | undefined;
+      readonly remarkableAthleteCriticalHitMovementDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly remarkableAthleteCriticalHitMovement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
       readonly savingThrowOutcomes:
         | BattleSpellSavingThrowOutcomeValue
         | undefined;
@@ -336,10 +353,18 @@ export function spellFillSet(
       ? Array.from({ length: invocation.targeting.attackCount }, () => ({
           target: undefined,
           attackRoll: undefined,
+          remarkableAthleteCriticalHitMovementDecision: undefined,
+          remarkableAthleteCriticalHitMovement: undefined,
           mirrorImageDuplicateRoll: undefined,
           damageRoll: undefined,
         }))
       : [];
+  let remarkableAthleteCriticalHitMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let remarkableAthleteCriticalHitMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
+    | undefined;
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
   let abilityChoice: Ability | undefined;
@@ -404,6 +429,98 @@ export function spellFillSet(
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "sanctuaryInterdictionOutcome") {
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID
+    ) {
+      if (invocation.procedure === "spellAttackSequence") {
+        const partIndex =
+          latestAttackSequencePartIndexForRemarkableAthleteDecision(
+            attackSequencePartFills,
+          );
+        if (partIndex === null) {
+          return {
+            tag: "invalid",
+            message:
+              "Remarkable Athlete movement decision must follow a spell attack sequence attack roll.",
+          };
+        }
+        const attackSequencePartFill = attackSequencePartFills[partIndex];
+        if (attackSequencePartFill === undefined) {
+          return {
+            tag: "invalid",
+            message:
+              "Remarkable Athlete movement decision is outside this spell act.",
+          };
+        }
+        attackSequencePartFills[partIndex] = {
+          ...attackSequencePartFill,
+          remarkableAthleteCriticalHitMovementDecision: fill,
+        };
+        continue;
+      }
+      if (!spellInvocationCanUseRemarkableAthleteCriticalMovement(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Remarkable Athlete movement decision does not match this spell act.",
+        };
+      }
+      if (remarkableAthleteCriticalHitMovementDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Remarkable Athlete movement decision was filled twice.",
+        };
+      }
+      remarkableAthleteCriticalHitMovementDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "movement" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID
+    ) {
+      if (invocation.procedure === "spellAttackSequence") {
+        const partIndex =
+          latestAttackSequencePartIndexForRemarkableAthleteMovement(
+            attackSequencePartFills,
+          );
+        if (partIndex === null) {
+          return {
+            tag: "invalid",
+            message:
+              "Remarkable Athlete movement must follow a spell attack sequence use decision.",
+          };
+        }
+        const attackSequencePartFill = attackSequencePartFills[partIndex];
+        if (attackSequencePartFill === undefined) {
+          return {
+            tag: "invalid",
+            message: "Remarkable Athlete movement is outside this spell act.",
+          };
+        }
+        attackSequencePartFills[partIndex] = {
+          ...attackSequencePartFill,
+          remarkableAthleteCriticalHitMovement: fill,
+        };
+        continue;
+      }
+      if (!spellInvocationCanUseRemarkableAthleteCriticalMovement(invocation)) {
+        return {
+          tag: "invalid",
+          message: "Remarkable Athlete movement does not match this spell act.",
+        };
+      }
+      if (remarkableAthleteCriticalHitMovement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Remarkable Athlete movement was filled twice.",
+        };
+      }
+      remarkableAthleteCriticalHitMovement = fill;
       continue;
     }
 
@@ -1551,6 +1668,8 @@ export function spellFillSet(
     targetList,
     attackSequencePartFills,
     attackRoll,
+    remarkableAthleteCriticalHitMovementDecision,
+    remarkableAthleteCriticalHitMovement,
     savingThrowOutcomes,
     skillChoice,
     abilityChoice,
@@ -1599,10 +1718,16 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       (attackSequencePartFill) =>
         attackSequencePartFill.target === undefined &&
         attackSequencePartFill.attackRoll === undefined &&
+        attackSequencePartFill
+          .remarkableAthleteCriticalHitMovementDecision === undefined &&
+        attackSequencePartFill.remarkableAthleteCriticalHitMovement ===
+          undefined &&
         attackSequencePartFill.mirrorImageDuplicateRoll === undefined &&
         attackSequencePartFill.damageRoll === undefined,
     ) &&
     fillSet.attackRoll === undefined &&
+    fillSet.remarkableAthleteCriticalHitMovementDecision === undefined &&
+    fillSet.remarkableAthleteCriticalHitMovement === undefined &&
     (options.allowSavingThrowOutcomes === true ||
       fillSet.savingThrowOutcomes === undefined) &&
     fillSet.skillChoice === undefined &&
@@ -1651,6 +1776,51 @@ function spellAttackSequencePartIndexForMirrorImageRoll(
     }
   }
   return null;
+}
+
+function latestAttackSequencePartIndexForRemarkableAthleteDecision(
+  partFills: readonly SpellAttackSequencePartFillSet[],
+): number | null {
+  for (let index = partFills.length - 1; index >= 0; index -= 1) {
+    const partFill = partFills[index];
+    if (
+      partFill !== undefined &&
+      partFill.attackRoll !== undefined &&
+      partFill.remarkableAthleteCriticalHitMovementDecision === undefined
+    ) {
+      return index;
+    }
+  }
+  return null;
+}
+
+function latestAttackSequencePartIndexForRemarkableAthleteMovement(
+  partFills: readonly SpellAttackSequencePartFillSet[],
+): number | null {
+  for (let index = partFills.length - 1; index >= 0; index -= 1) {
+    const partFill = partFills[index];
+    if (
+      partFill !== undefined &&
+      partFill.remarkableAthleteCriticalHitMovementDecision !== undefined &&
+      partFill.remarkableAthleteCriticalHitMovement === undefined
+    ) {
+      return index;
+    }
+  }
+  return null;
+}
+
+function spellInvocationCanUseRemarkableAthleteCriticalMovement(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure === "spellAttackDamage" ||
+    invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "spellCreatedHeldObjectAttack" ||
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "attackBurstSaveDamage"
+  );
 }
 
 export function parseSpellCastReactionFactsFill(

@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Remarkable Athlete post-critical half-Speed movement"
     },
     {
@@ -84,7 +84,7 @@ owns branch repair.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | done | none | Independent roll-mode slice. |
-| 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | ready-for-implementation-after-light-research | none | Independent movement-trigger slice. |
+| 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | done | none | Independent movement-trigger slice. |
 | 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | ready-for-implementation-after-light-research | none | Establishes activation/effect binding. |
 | 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | blocked | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Requires the activation/effect binding from Task 3. |
 | 5 | L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT - Close or promote Fast Hands battle-owned delegated action economy | ready-for-implementation-after-light-research | none | Independent closure-or-promotion audit. |
@@ -173,7 +173,7 @@ Out of scope:
 
 ### Task 2 - L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote the post-Critical Hit movement clause of Remarkable Athlete.
 

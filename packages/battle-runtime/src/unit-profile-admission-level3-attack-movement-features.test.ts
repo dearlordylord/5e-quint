@@ -5,9 +5,13 @@ import {
   classRogueUnitId,
   fighterRemarkableAthleteUnitId,
   fighterSecondWindUnitId,
+  flyUnitId,
   monkOpenHandTechniqueUnitId,
   paladinSacredWeaponUnitId,
+  produceFlameUnitId,
   rangerHuntersPreyUnitId,
+  spellCasterId,
+  spellTargetId,
   subclassFighterChampionUnitId,
   subclassMonkWarriorOfTheOpenHandUnitId,
   subclassPaladinOathOfDevotionUnitId,
@@ -26,6 +30,8 @@ import {
   battleRogueSteadyAimSupportForUnit,
   battleUnitRefWithSupportProfiles,
   battleId,
+  attackRollFill,
+  attackTargetFill,
   classLevel,
   combatantId,
   Either,
@@ -39,15 +45,132 @@ import {
   POTENT_CANTRIP_SUPPORT_PROFILE,
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   requiredInitiativeRollModeForCombatant,
+  movementFill,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   rogueSteadyAimUnitId,
+  requireResultHole,
+  resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
+import type { BattleActiveEffect } from "./battle-reducer.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  bonusSpellAct,
+  spellAct,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
+
+function remarkableAthleteRuntimeBattle(input: { readonly selected: boolean }) {
+  const { unit, unitRef } = remarkableAthleteSelectedUnit();
+  const state = startBattle({
+    battleId: battleId(
+      input.selected
+        ? "remarkable-athlete-critical-movement"
+        : "remarkable-athlete-critical-movement-unselected",
+    ),
+    combatants: [
+      characterCreature({
+        combatantId: remarkableAthleteActorId,
+        displayName: "Remarkable Athlete Critical Actor",
+        initiative: 18,
+        side: partySide,
+        characterUnitRefs: input.selected ? [unitRef] : [],
+        classLevels: [{ className: "fighter", level: 3 }],
+        unitFeatures: [{ unit }],
+      }),
+      characterCreature({
+        combatantId: remarkableAthleteTargetId,
+        displayName: "Remarkable Athlete Critical Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(state)).toBe(true);
+  if (Either.isLeft(state)) {
+    throw new Error(state.left.message);
+  }
+  return state.right;
+}
+
+function remarkableAthleteRuntimeBattleWithFlySpeed() {
+  const state = remarkableAthleteRuntimeBattle({ selected: true });
+  const actor = state.combatants.get(remarkableAthleteActorId);
+  if (actor === undefined) {
+    throw new Error("Expected Remarkable Athlete actor in fixture.");
+  }
+  const flySpeedGrant = {
+    kind: "specialSpeedGrant",
+    sourceSpellId: flyUnitId,
+    sourceCombatantId: remarkableAthleteActorId,
+    speedKind: "fly",
+    speed: { kind: "fixed", speedFeet: movementFeet(40) },
+    hover: true,
+    expiresAt: { kind: "untilDispelled" },
+  } as const satisfies BattleActiveEffect;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
+      ...actor,
+      activeEffects: [...actor.activeEffects, flySpeedGrant],
+    }),
+  };
+}
+
+function remarkableAthleteSelectedUnit() {
+  const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(Either.isRight(unitRef)).toBe(true);
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return { unit, unitRef: unitRef.right };
+}
+
+function remarkableAthleteAttackPrefix(
+  state: ReturnType<typeof remarkableAthleteRuntimeBattle>,
+) {
+  const subject = {
+    tag: "action",
+    actorId: remarkableAthleteActorId,
+    action: "attack",
+    attackName: "Unarmed Strike",
+  } as const;
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    target,
+    remarkableAthleteActorId,
+    remarkableAthleteTargetId,
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [targetFill] }),
+    "attackRoll",
+  );
+  return { subject, target: targetFill, attackRoll };
+}
+
+function unitFeatureDecisionFill(
+  hole: ReturnType<typeof requireResultHole<"unitFeatureDecision">>,
+  value: "use" | "decline",
+) {
+  return {
+    kind: "unitFeatureDecision" as const,
+    holeId: hole.holeId,
+    value,
+  };
+}
 
 const remarkableAthleteSupport = {
   kind: REMARKABLE_ATHLETE_SUPPORT_PROFILE,
@@ -364,7 +487,11 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       ),
     ).toBe("advantage");
     expect(
-      requiredAbilityCheckRollMode(state.right, remarkableAthleteActorId, "str"),
+      requiredAbilityCheckRollMode(
+        state.right,
+        remarkableAthleteActorId,
+        "str",
+      ),
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
@@ -424,6 +551,372 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         { skill: "athletics" },
       ),
     ).toBeUndefined();
+  });
+
+  test("Remarkable Athlete offers immediate half-Speed movement after a selected-profile Critical Hit", () => {
+    const state = remarkableAthleteRuntimeBattle({ selected: true });
+    const prefix = remarkableAthleteAttackPrefix(state);
+    const critical = attackRollFill(prefix.attackRoll, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [prefix.target, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(decision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+      choices: ["use", "decline"],
+      unitFeature: {
+        unitId: fighterRemarkableAthleteUnitId,
+        label: "Remarkable Athlete",
+      },
+    });
+
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "movement",
+    );
+    expect(movement).toMatchObject({
+      label: "Remarkable Athlete movement",
+      actorId: remarkableAthleteActorId,
+      movementBudgetFeet: movementFeet(15),
+      speedKinds: [{ kind: "walk", movementBudgetFeet: movementFeet(15) }],
+    });
+
+    const moved = resolveBattleSubject({
+      state,
+      subject: prefix.subject,
+      fills: [
+        prefix.target,
+        critical,
+        unitFeatureDecisionFill(decision, "use"),
+        movementFill(movement, {
+          movementCostFeet: 10,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(moved.tag).not.toBe("invalid");
+    if (moved.tag === "resolved") {
+      expect(moved.snapshot.pendingReaction).toBeNull();
+      expect(
+        moved.state.combatants.get(remarkableAthleteActorId)?.movementSpentFeet,
+      ).toEqual(movementFeet(0));
+    }
+  });
+
+  test("Remarkable Athlete Critical Hit movement projects represented Speed kinds", () => {
+    const state = remarkableAthleteRuntimeBattleWithFlySpeed();
+    const prefix = remarkableAthleteAttackPrefix(state);
+    const critical = attackRollFill(prefix.attackRoll, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [prefix.target, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "movement",
+    );
+    expect(movement).toMatchObject({
+      label: "Remarkable Athlete movement",
+      actorId: remarkableAthleteActorId,
+      movementBudgetFeet: movementFeet(20),
+      speedKinds: [
+        { kind: "walk", movementBudgetFeet: movementFeet(15) },
+        { kind: "fly", movementBudgetFeet: movementFeet(20) },
+      ],
+    });
+
+    const moved = resolveBattleSubject({
+      state,
+      subject: prefix.subject,
+      fills: [
+        prefix.target,
+        critical,
+        unitFeatureDecisionFill(decision, "use"),
+        movementFill(movement, {
+          speedKind: "fly",
+          movementCostFeet: 20,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(moved.tag).not.toBe("invalid");
+    if (moved.tag === "resolved") {
+      expect(
+        moved.state.combatants.get(remarkableAthleteActorId)?.movementSpentFeet,
+      ).toEqual(movementFeet(0));
+    }
+  });
+
+  test("Remarkable Athlete offers immediate movement after a selected-profile spell attack Critical Hit", () => {
+    const { unit, unitRef } = remarkableAthleteSelectedUnit();
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "fighter", level: classLevel(3) }],
+      casterUnitRefs: [unitRef],
+      casterUnitFeatures: [{ unit }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    expect(lit).toMatchObject({ tag: "resolved" });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({
+      state: lit.state,
+      spellId: produceFlameUnitId,
+    });
+    const target = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetFill = spellTargetFill(
+      target,
+      produceFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const critical = attackRollFill(attack, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(decision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+      unitFeature: {
+        unitId: fighterRemarkableAthleteUnitId,
+        label: "Remarkable Athlete",
+      },
+    });
+
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill, critical, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "movement",
+    );
+    expect(movement).toMatchObject({
+      actorId: spellCasterId,
+      movementBudgetFeet: movementFeet(15),
+    });
+    expect(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [
+          targetFill,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    });
+  });
+
+  test("Remarkable Athlete critical movement can be declined without leaving a movement hole", () => {
+    const state = remarkableAthleteRuntimeBattle({ selected: true });
+    const prefix = remarkableAthleteAttackPrefix(state);
+    const critical = attackRollFill(prefix.attackRoll, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [prefix.target, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    const declined = resolveBattleSubject({
+      state,
+      subject: prefix.subject,
+      fills: [
+        prefix.target,
+        critical,
+        unitFeatureDecisionFill(decision, "decline"),
+      ],
+    });
+    expect(declined.tag).not.toBe("invalid");
+    if (declined.tag === "needsHoles") {
+      expect(declined.holes).not.toContainEqual(
+        expect.objectContaining({ kind: "movement" }),
+      );
+    }
+  });
+
+  test("Remarkable Athlete critical movement rejects excess distance and Opportunity Attack threats", () => {
+    const state = remarkableAthleteRuntimeBattle({ selected: true });
+    const prefix = remarkableAthleteAttackPrefix(state);
+    const critical = attackRollFill(prefix.attackRoll, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [prefix.target, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "movement",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 16,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Movement cost exceeds the combatant's remaining Movement.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [
+              {
+                reactorId: remarkableAthleteTargetId,
+                attackName: "Unarmed Strike",
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Remarkable Athlete movement does not provoke Opportunity Attacks.",
+    });
+  });
+
+  test("Remarkable Athlete does not offer critical movement for non-critical hits or missing selected profile", () => {
+    const selectedState = remarkableAthleteRuntimeBattle({ selected: true });
+    const selectedPrefix = remarkableAthleteAttackPrefix(selectedState);
+    const nonCritical = resolveBattleSubject({
+      state: selectedState,
+      subject: selectedPrefix.subject,
+      fills: [
+        selectedPrefix.target,
+        attackRollFill(selectedPrefix.attackRoll, {
+          total: 15,
+          naturalD20: 10,
+        }),
+      ],
+    });
+    expect(nonCritical).not.toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+    });
+
+    const unselectedState = remarkableAthleteRuntimeBattle({ selected: false });
+    const unselectedPrefix = remarkableAthleteAttackPrefix(unselectedState);
+    const unselectedCritical = resolveBattleSubject({
+      state: unselectedState,
+      subject: unselectedPrefix.subject,
+      fills: [
+        unselectedPrefix.target,
+        attackRollFill(unselectedPrefix.attackRoll, {
+          total: 20,
+          naturalD20: 20,
+        }),
+      ],
+    });
+    expect(unselectedCritical).not.toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+    });
   });
 
   test("feature profile readers reject malformed mechanics and ignore unrelated Units", () => {

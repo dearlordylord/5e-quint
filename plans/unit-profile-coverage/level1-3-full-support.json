@@ -1466,39 +1466,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT: Consume the admitted remarkable-athlete profile immediately after Critical Hits without duplicating movement or Opportunity Attack state. Owner: battle-runtime attack-critical movement reducers plus Quint parity. Required output: Focused runtime tests and promoted QNT/runtime parity for Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Fighter Remarkable Athlete",
-          "id": "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 145,
-            "lineStart": 140,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "fighter_remarkable_athlete"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -3305,7 +3272,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 128,
+      "count": 129,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3353,6 +3320,7 @@
         "fighter_action_surge",
         "fighter_fighting_style",
         "fighter_improved_critical",
+        "fighter_remarkable_athlete",
         "fighter_second_wind",
         "fighter_tactical_mind",
         "fire_bolt",
@@ -3481,7 +3449,7 @@
       ]
     },
     {
-      "count": 13,
+      "count": 12,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3491,7 +3459,6 @@
         "druid_lands_aid",
         "druid_wild_shape",
         "enhance_ability",
-        "fighter_remarkable_athlete",
         "monk_open_hand_technique",
         "moonbeam",
         "paladin_sacred_weapon",
@@ -3565,24 +3532,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 127,
-      "numerator": 127,
+      "denominator": 128,
+      "numerator": 128,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 128,
-      "percent": "65%"
+      "numerator": 129,
+      "percent": "65.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6298,8 +6265,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 127,
-        "numerator": 127,
+        "denominator": 128,
+        "numerator": 128,
         "percent": "100%"
       }
     },
@@ -7513,6 +7480,29 @@
           }
         ],
         "unitId": "fighter_improved_critical"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.remarkable-athlete",
+            "profileKind": "passive",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
+              "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+            ]
+          }
+        ],
+        "unitId": "fighter_remarkable_athlete"
       },
       {
         "joinStatus": "covered",
@@ -10841,20 +10831,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 39,
-      "supported-profile": 128,
+      "profile-subset-supported": 38,
+      "supported-profile": 129,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 12,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 128
+      "supported-profile": 129
     },
-    "nonSupportedFrontier": 69,
+    "nonSupportedFrontier": 68,
     "strictDenominator": 197
   }
 }

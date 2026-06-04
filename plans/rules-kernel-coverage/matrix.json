@@ -179,7 +179,9 @@
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
         "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
+        "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4730,6 +4732,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.remarkable-athlete"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
@@ -5820,6 +5828,38 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt is focused proof evidence for the Remarkable Athlete Critical Hit movement feature profile; it is not a reusable generator semantic core while its run blocks remain profile-local.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.remarkable-athlete"
+        }
+      ],
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt is focused proof evidence for the Remarkable Athlete Initiative and Strength (Athletics) roll-mode feature profile; it is not a reusable generator semantic core while its run blocks remain profile-local.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.remarkable-athlete"
+        }
+      ],
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -7348,6 +7388,25 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.remarkable-athlete",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
+          "role": "proof-only"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
+          "role": "proof-only"
         }
       ]
     },

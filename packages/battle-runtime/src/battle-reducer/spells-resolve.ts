@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
@@ -92,6 +93,7 @@ import {
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { spellProcedureProfileFor } from "./spell-procedure-profiles/registry.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -414,7 +416,9 @@ function spellAttackPostMirrorImageFillsArePresent(
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
+    fillSet.remarkableAthleteCriticalHitMovement !== undefined
   );
 }
 
@@ -974,6 +978,7 @@ function resolveSpellActInternal(
   }
 
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
+  let spellResolutionStateAfterCriticalMovement: BattleState | null = null;
   if (
     invocationForResolution.procedure === "spellAttackDamage" ||
     invocationForResolution.procedure === "heldLightHurl" ||
@@ -1197,6 +1202,18 @@ function resolveSpellActInternal(
         return reactionWindow;
       }
     }
+    const remarkableAthleteMovement =
+      resolveRemarkableAthleteCriticalHitMovement({
+        state: attackRolledStateBeforeHitContinuations,
+        subject: input.subject,
+        attackerId: subject.actorId,
+        scoredCriticalHit: critical,
+        fills: fillSet,
+      });
+    if (remarkableAthleteMovement.tag === "result") {
+      return remarkableAthleteMovement.result;
+    }
+    spellResolutionStateAfterCriticalMovement = remarkableAthleteMovement.state;
     if (hit && fillSet.damageRoll == null) {
       if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
         return invalidResult(
@@ -1206,7 +1223,7 @@ function resolveSpellActInternal(
         );
       }
       return needsHolesResult(
-        attackRolledStateBeforeHitContinuations,
+        spellResolutionStateAfterCriticalMovement,
         input.subject,
         [
           spellDamageHole(
@@ -1294,29 +1311,30 @@ function resolveSpellActInternal(
       invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null
-      ? recordAttackRollMissToHitReplacementUsed(
-          consumeHelpAttackForAttackRoll(
-            recordAttackRollOngoingFeatures(
-              stateAfterSpellAttackRollMadeForInvocation(
-                castingState,
+      ? (spellResolutionStateAfterCriticalMovement ??
+          recordAttackRollMissToHitReplacementUsed(
+            consumeHelpAttackForAttackRoll(
+              recordAttackRollOngoingFeatures(
+                stateAfterSpellAttackRollMadeForInvocation(
+                  castingState,
+                  subject.actorId,
+                  invocationForResolution,
+                ),
                 subject.actorId,
-                invocationForResolution,
+                target.combatantId,
+                null,
               ),
               subject.actorId,
               target.combatantId,
-              null,
             ),
             subject.actorId,
-            target.combatantId,
-          ),
-          subject.actorId,
-          spellAttackMissToHitReplacement,
-          {
-            subject: input.subject,
-            targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
-          },
-        )
+            spellAttackMissToHitReplacement,
+            {
+              subject: input.subject,
+              targetId: target.combatantId,
+              attackRoll: fillSet.attackRoll,
+            },
+          ))
       : castingState;
   const spellDamageBaseStateResult =
     stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
@@ -2096,6 +2114,18 @@ function resolveSpellAttackDamageObjectTarget(input: {
     },
     input.actorId,
   );
+  const remarkableAthleteMovement =
+    resolveRemarkableAthleteCriticalHitMovement({
+      state: attackRolledState,
+      subject: input.input.subject,
+      attackerId: input.actorId,
+      scoredCriticalHit: hit && critical,
+      fills: input.fillSet,
+    });
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
   if (
     !hit &&
     (input.fillSet.damageRoll != null ||
@@ -2111,7 +2141,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
   if (!hit) {
     return spendSpellCastResources({
       state: stateAfterResolvedHeldLightHurl(
-        attackRolledState,
+        postRemarkableAthleteMovementState,
         input.actorId,
         input.invocation,
       ),
@@ -2128,9 +2158,11 @@ function resolveSpellAttackDamageObjectTarget(input: {
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      spellDamageHole(input.invocation, critical),
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [spellDamageHole(input.invocation, critical)],
+    );
   }
   const damageValidation = validateSpellDamageFill(
     input.fillSet.damageRoll,
@@ -2156,7 +2188,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
     input.fillSet.damageRoll,
     critical,
   );
-  const objectDamageSource = attackRolledState.combatants.get(input.actorId);
+  const objectDamageSource =
+    postRemarkableAthleteMovementState.combatants.get(input.actorId);
   const expectedSourcePenaltyHole =
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       objectDamageSource,
@@ -2195,13 +2228,15 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      ...sourcePenalty.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...sourcePenalty.holes],
+    );
   }
 
   const lit = applySpellLightEmitterEffects(
-    attackRolledState,
+    postRemarkableAthleteMovementState,
     input.actorId,
     { kind: "object", objectId: input.fillSet.objectTarget.objectId },
     input.invocation,

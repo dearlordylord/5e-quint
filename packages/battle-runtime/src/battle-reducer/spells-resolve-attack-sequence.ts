@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -43,6 +44,7 @@ import {
 import { activeEffectArmorClass } from "./creature-state.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   activeMarkedDamageRiders,
@@ -551,6 +553,18 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       return reactionWindow;
     }
   }
+  const remarkableAthleteMovement =
+    resolveRemarkableAthleteCriticalHitMovement({
+      state: attackRolledState,
+      subject: input.input.subject,
+      attackerId: input.actorId,
+      scoredCriticalHit: critical,
+      fills: input.partFill,
+    });
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
   if (!hit && input.partFill.damageRoll !== undefined) {
     const partName = spellAttackSequencePartName();
     return invalidResult(
@@ -562,21 +576,25 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   if (!hit) {
     return {
       tag: "resolved",
-      state: attackRolledState,
+      state: postRemarkableAthleteMovementState,
       objectDamages: [],
       afterDamageEvents: [],
       usedExtraFillHoleIds: [],
     };
   }
   if (input.partFill.damageRoll === undefined) {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      spellAttackSequencePartDamageHole(
-        input.invocation,
-        input.partIndex,
-        critical,
-        spellMarkedDamageRiders,
-      ),
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [
+        spellAttackSequencePartDamageHole(
+          input.invocation,
+          input.partIndex,
+          critical,
+          spellMarkedDamageRiders,
+        ),
+      ],
+    );
   }
   const damageValidation = validateSpellAttackSequencePartDamageFill(
     input.partFill.damageRoll,
@@ -603,12 +621,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       reduction,
     );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
-    attackRolledState.combatants.get(input.actorId),
+    postRemarkableAthleteMovementState.combatants.get(input.actorId),
     spellDamageByType,
     input.partFill.damageRoll.holeId,
     sourceDamageRollPenaltyRollForDamageRoll(
       input.fillSet.sourceDamageRollPenaltyRolls,
-      attackRolledState.combatants.get(input.actorId),
+      postRemarkableAthleteMovementState.combatants.get(input.actorId),
       spellDamageByType,
       input.partFill.damageRoll.holeId,
     ),
@@ -621,9 +639,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
   }
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      ...sourcePenalty.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...sourcePenalty.holes],
+    );
   }
   const spellReductionCandidate = applyAvailableSpellDamageReduction(
     target,
@@ -651,9 +671,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
   }
   if (spellReduction.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      ...spellReduction.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...spellReduction.holes],
+    );
   }
   const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
     spellReduction.target,
@@ -679,9 +701,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
           concentrationSave,
         );
   if (concentrationSave !== null && concentrationFill === undefined) {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      concentrationSave,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [concentrationSave],
+    );
   }
   const damageEventKey = String(
     spellAttackSequencePartDamageDispositionHoleKey(
@@ -725,9 +749,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       damageDispositionHole,
     ) === undefined
   ) {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      damageDispositionHole,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [damageDispositionHole],
+    );
   }
   const relevantHideousLaughterDamageRepeatSaves =
     hideousLaughterDamageRepeatSaveFillsForTarget(
@@ -742,9 +768,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     damageEventKey,
   });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      ...hideousLaughterSaveCheck.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...hideousLaughterSaveCheck.holes],
+    );
   }
   if (hideousLaughterSaveCheck.tag === "invalid") {
     return invalidResult(
@@ -755,12 +783,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   }
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     input.fillSet.sourceDamageRollPenaltyRolls,
-    attackRolledState.combatants.get(input.actorId),
+    postRemarkableAthleteMovementState.combatants.get(input.actorId),
     spellDamageByType,
     input.partFill.damageRoll.holeId,
   );
   const damaged = applySpellDamage(
-    attackRolledState,
+    postRemarkableAthleteMovementState,
     target.combatantId,
     input.invocation,
     input.partFill.damageRoll,
@@ -946,6 +974,18 @@ function resolveSpellAttackSequenceObjectPart(input: {
     },
     input.actorId,
   );
+  const remarkableAthleteMovement =
+    resolveRemarkableAthleteCriticalHitMovement({
+      state: attackRolledState,
+      subject: input.input.subject,
+      attackerId: input.actorId,
+      scoredCriticalHit: hit && critical,
+      fills: input.partFill,
+    });
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
   if (!hit && input.partFill.damageRoll !== undefined) {
     return invalidResult(
       input.input.state,
@@ -956,20 +996,24 @@ function resolveSpellAttackSequenceObjectPart(input: {
   if (!hit) {
     return {
       tag: "resolved",
-      state: attackRolledState,
+      state: postRemarkableAthleteMovementState,
       objectDamages: [],
       afterDamageEvents: [],
       usedExtraFillHoleIds: [],
     };
   }
   if (input.partFill.damageRoll === undefined) {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      spellAttackSequencePartDamageHole(
-        input.invocation,
-        input.partIndex,
-        critical,
-      ),
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [
+        spellAttackSequencePartDamageHole(
+          input.invocation,
+          input.partIndex,
+          critical,
+        ),
+      ],
+    );
   }
   const damageValidation = validateSpellAttackSequencePartDamageFill(
     input.partFill.damageRoll,
@@ -987,12 +1031,12 @@ function resolveSpellAttackSequenceObjectPart(input: {
   );
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     input.fillSet.sourceDamageRollPenaltyRolls,
-    attackRolledState.combatants.get(input.actorId),
+    postRemarkableAthleteMovementState.combatants.get(input.actorId),
     objectDamageByType,
     input.partFill.damageRoll.holeId,
   );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
-    attackRolledState.combatants.get(input.actorId),
+    postRemarkableAthleteMovementState.combatants.get(input.actorId),
     objectDamageByType,
     input.partFill.damageRoll.holeId,
     sourceDamageRollPenaltyRoll,
@@ -1005,13 +1049,15 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
-      ...sourcePenalty.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...sourcePenalty.holes],
+    );
   }
   return {
     tag: "resolved",
-    state: attackRolledState,
+    state: postRemarkableAthleteMovementState,
     objectDamages: [
       spellObjectDamageOutcomeFromDamageByType({
         objectId: input.target.objectId,
