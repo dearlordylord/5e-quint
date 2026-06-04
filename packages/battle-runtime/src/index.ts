@@ -15,12 +15,14 @@ export {
   battleLineDirectionId,
   battleObjectId,
   battleReplayStackDepth,
+  battleSpellEffectOccurrenceId,
   battleTablePositionId,
   characterId,
   combatantId,
   initiativeScore,
   spellId,
   type BattleAreaId,
+  type BattleSpellEffectOccurrenceId,
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";
@@ -504,6 +506,7 @@ export {
   battleShapeShiftedRuntimeState,
   combatantIsShapeShifted,
   combatantShapeShiftingSuppressed,
+  spellShapeShiftedRuntimeState,
   shapeShiftedRuntimeState,
   revertShapeShiftedCombatantToTrueForm,
   revertShapeShiftedRuntimeState,
@@ -515,4 +518,5 @@ export {
   type BattleShapeShiftRuntimeOwner,
   type BattleShapeShiftedRuntimeState,
   type BattleShapeShiftTrueFormFacts,
+  type SpellShapeShiftedFormActiveEffect,
 } from "./battle-reducer/shape-shifting.ts";

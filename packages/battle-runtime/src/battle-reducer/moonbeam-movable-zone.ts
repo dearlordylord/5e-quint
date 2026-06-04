@@ -14,6 +14,11 @@ import {
   spellSlotExpenditureResultState,
 } from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { Match } from "effect";
+import {
+  projectShapeShiftRuntimeReversion,
+  trueFormRuntimeState,
+  type BattleShapeShiftedRuntimeState,
+} from "./shape-shifting.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -24,14 +29,6 @@ const MOONBEAM_SAVE_TRIGGERS = [
   "endsTurnInArea",
 ] as const;
 export type MoonbeamSaveTrigger = (typeof MOONBEAM_SAVE_TRIGGERS)[number];
-
-const MOONBEAM_SHAPE_SHIFT_STATES = [
-  "trueForm",
-  "shapeShifted",
-  "shapeShiftSuppressedTrueForm",
-] as const;
-export type MoonbeamShapeShiftState =
-  (typeof MOONBEAM_SHAPE_SHIFT_STATES)[number];
 
 export const MOONBEAM_DURATION_TICKS = 10;
 export const MOONBEAM_REPOSITION_MAX_MOVE_FEET = 60;
@@ -65,14 +62,29 @@ export type MoonbeamMovableZoneSlotLedger = {
   readonly slotsRemaining: number;
 };
 
+export type MoonbeamTargetShapeShiftState =
+  | {
+      readonly tag: "unsuppressed";
+      readonly shapeShift: BattleShapeShiftedRuntimeState;
+    }
+  | { readonly tag: "suppressedTrueForm" };
+
 export type MoonbeamMovableZoneState = {
   readonly actionAvailable: boolean;
   readonly zone: MoonbeamMovableZone;
   readonly slotLedger: MoonbeamMovableZoneSlotLedger;
   readonly slotSpellCastThisTurn: boolean;
   readonly targetVitals: MoonbeamMovableZoneCreatureVitals;
-  readonly targetShapeShift: MoonbeamShapeShiftState;
+  readonly targetShapeShift: MoonbeamTargetShapeShiftState;
 };
+
+const MOONBEAM_TARGET_TRUE_FORM = {
+  tag: "unsuppressed",
+  shapeShift: trueFormRuntimeState(),
+} as const satisfies MoonbeamTargetShapeShiftState;
+const MOONBEAM_TARGET_SUPPRESSED_TRUE_FORM = {
+  tag: "suppressedTrueForm",
+} as const satisfies MoonbeamTargetShapeShiftState;
 
 export type MoonbeamMovableZoneFills = {
   readonly savingThrowSucceeded: boolean;
@@ -263,9 +275,14 @@ export function beginMoonbeamLaterTurn(
 export function resolveMoonbeamCylinderExit(
   state: MoonbeamMovableZoneState,
 ): MoonbeamMovableZoneState {
-  return state.targetShapeShift === "shapeShiftSuppressedTrueForm"
-    ? { ...state, targetShapeShift: "trueForm" }
-    : state;
+  return Match.value(state.targetShapeShift).pipe(
+    byTag("unsuppressed", () => state),
+    byTag("suppressedTrueForm", () => ({
+      ...state,
+      targetShapeShift: MOONBEAM_TARGET_TRUE_FORM,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function resolveMoonbeamSpellCleanup(
@@ -282,16 +299,20 @@ function applyMoonbeamShapeShiftRider(
     return state;
   }
   return Match.value(state.targetShapeShift).pipe(
-    Match.when("trueForm", () => state),
-    Match.when("shapeShifted", () => {
-      const targetShapeShift: MoonbeamShapeShiftState =
-        "shapeShiftSuppressedTrueForm";
-      return {
-        ...state,
-        targetShapeShift,
-      };
+    byTag("suppressedTrueForm", () => state),
+    byTag("unsuppressed", (targetShapeShift) => {
+      const projection = projectShapeShiftRuntimeReversion(
+        targetShapeShift.shapeShift,
+      );
+      return Match.value(projection).pipe(
+        byTag("alreadyTrueForm", () => state),
+        byTag("revertedToTrueForm", () => ({
+          ...state,
+          targetShapeShift: MOONBEAM_TARGET_SUPPRESSED_TRUE_FORM,
+        })),
+        Match.exhaustive,
+      );
     }),
-    Match.when("shapeShiftSuppressedTrueForm", () => state),
     Match.exhaustive,
   );
 }

@@ -26,6 +26,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
+import {
+  activeEffectsWithShapeShiftOwnerReplaced,
+  activeEffectsWithoutShapeShiftOwner,
+} from "../active-effect/lifecycle.ts";
 import type { StatBlockMutableResourceState } from "../battle-action-options.ts";
 import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type {
@@ -276,10 +280,8 @@ export function assumeDruidWildShapeForm(input: {
     tempHp: Hp(
       Math.max(Number(input.actor.tempHp), Number(input.profile.classLevel)),
     ),
-    activeEffects: [
-      ...input.actor.activeEffects.filter(
-        (effect) => effect.kind !== "druidWildShapeForm",
-      ),
+    activeEffects: activeEffectsWithShapeShiftOwnerReplaced(
+      input.actor.activeEffects,
       {
         kind: "druidWildShapeForm",
         sourceUnitId: input.unitId,
@@ -289,7 +291,7 @@ export function assumeDruidWildShapeForm(input: {
         resources: input.formResources,
         expiresAt: { kind: "duration", durationTicks: durationTicks.right },
       },
-    ],
+    ),
   };
   return {
     ...input.state,
@@ -331,9 +333,7 @@ export function revertDruidWildShapeForm(input: {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.actorId, {
       ...actor,
-      activeEffects: actor.activeEffects.filter(
-        (effect) => effect.kind !== "druidWildShapeForm",
-      ),
+      activeEffects: activeEffectsWithoutShapeShiftOwner(actor.activeEffects),
     }),
   };
 }

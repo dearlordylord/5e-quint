@@ -15,8 +15,42 @@ import {
   resolveMoonbeamSpellCleanup,
   type MoonbeamMovableZoneState,
   type MoonbeamSaveTrigger,
-  type MoonbeamShapeShiftState,
+  type MoonbeamTargetShapeShiftState,
 } from "./battle-reducer/moonbeam-movable-zone.ts";
+import {
+  battleSpellEffectOccurrenceId,
+  combatantId,
+  spellShapeShiftedRuntimeState,
+  trueFormRuntimeState,
+  type SpellShapeShiftedFormActiveEffect,
+} from "./index.ts";
+
+const syntheticShapeCasterId = combatantId("synthetic-shape-caster");
+const syntheticShapeTargetId = combatantId("synthetic-shape-target");
+const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
+  kind: "spellShapeShiftedForm",
+  sourceCombatantId: syntheticShapeCasterId,
+  sourceSpellId: "synthetic_shape_spell",
+  sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-effect"),
+  replacementForm: {
+    kind: "runtimeCreatureForm",
+    creatureSize: "large",
+  },
+  expiresAt: { kind: "concentration", combatantId: syntheticShapeCasterId },
+};
+
+function syntheticSpellEffectTargetShapeShift(): Extract<
+  MoonbeamTargetShapeShiftState,
+  { readonly tag: "unsuppressed" }
+> {
+  return {
+    tag: "unsuppressed",
+    shapeShift: spellShapeShiftedRuntimeState({
+      targetCombatantId: syntheticShapeTargetId,
+      effect: syntheticSpellShapeShiftEffect,
+    }),
+  };
+}
 
 function initialState(slotLedgerLevel: number): MoonbeamMovableZoneState {
   return {
@@ -32,7 +66,10 @@ function initialState(slotLedgerLevel: number): MoonbeamMovableZoneState {
       dead: false,
       unconscious: false,
     },
-    targetShapeShift: "trueForm",
+    targetShapeShift: {
+      tag: "unsuppressed",
+      shapeShift: trueFormRuntimeState(),
+    },
   };
 }
 
@@ -106,8 +143,11 @@ function createMoonbeamMovableZoneDriver() {
         state = resolveMoonbeamSpellCleanup(state);
       },
       doShapeShift: () => {
-        if (state.targetShapeShift !== "shapeShiftSuppressedTrueForm") {
-          state = { ...state, targetShapeShift: "shapeShifted" };
+        if (state.targetShapeShift.tag !== "suppressedTrueForm") {
+          state = {
+            ...state,
+            targetShapeShift: syntheticSpellEffectTargetShapeShift(),
+          };
         }
       },
       step: () => {},
@@ -171,10 +211,9 @@ describe("Moonbeam movable zone MBT parity", () => {
   });
 
   it("reverts admitted shape-shift on failed save and clears suppression on exit", () => {
-    const targetShapeShift: MoonbeamShapeShiftState = "shapeShifted";
     const cast = {
       ...resolveMoonbeamCast(initialState(2), 2),
-      targetShapeShift,
+      targetShapeShift: syntheticSpellEffectTargetShapeShift(),
     };
     const failed = resolveMoonbeamSave(cast, "entersArea", {
       savingThrowSucceeded: false,
@@ -182,10 +221,11 @@ describe("Moonbeam movable zone MBT parity", () => {
       moveFeet: 0,
     });
 
-    expect(failed.targetShapeShift).toBe("shapeShiftSuppressedTrueForm");
-    expect(resolveMoonbeamCylinderExit(failed).targetShapeShift).toBe(
-      "trueForm",
-    );
+    expect(failed.targetShapeShift.tag).toBe("suppressedTrueForm");
+    expect(resolveMoonbeamCylinderExit(failed).targetShapeShift).toEqual({
+      tag: "unsuppressed",
+      shapeShift: trueFormRuntimeState(),
+    });
   });
 
   it("repositions an active later-turn Moonbeam and consumes the Magic Action", () => {
@@ -269,7 +309,7 @@ function normalizeMoonbeamMovableZoneQuintState(
         "qTargetUnconscious",
       ),
     },
-    targetShapeShift: moonbeamShapeShiftStateFromQuint(
+    targetShapeShift: targetShapeShiftStateFromQuint(
       state["qTargetShapeShift"],
     ),
   };
@@ -326,14 +366,30 @@ function moonbeamSaveTriggerFromQuint(raw: unknown): MoonbeamSaveTrigger {
   throw new Error(`Unknown Quint Moonbeam save trigger: ${tag}`);
 }
 
-function moonbeamShapeShiftStateFromQuint(
+function targetShapeShiftStateFromQuint(
   raw: unknown,
-): MoonbeamShapeShiftState {
+): MoonbeamTargetShapeShiftState {
   const tag = quintVariantTag(raw);
-  if (tag === "MoonbeamTrueForm") return "trueForm";
-  if (tag === "MoonbeamShapeShifted") return "shapeShifted";
-  if (tag === "MoonbeamShapeShiftSuppressedTrueForm") {
-    return "shapeShiftSuppressedTrueForm";
+  if (tag === "MoonbeamTargetSuppressedTrueForm") {
+    return { tag: "suppressedTrueForm" };
+  }
+  if (tag === "MoonbeamTargetUnsuppressed") {
+    const value = quintVariantValue(raw);
+    if (
+      value === null ||
+      typeof value !== "object" ||
+      !("shapeShift" in value)
+    ) {
+      throw new Error("Expected Quint Moonbeam unsuppressed shape-shift value.");
+    }
+    const shapeShiftTag = quintVariantTag(value.shapeShift);
+    if (shapeShiftTag === "TrueForm") {
+      return { tag: "unsuppressed", shapeShift: trueFormRuntimeState() };
+    }
+    if (shapeShiftTag === "SpellEffectShapeShifted") {
+      return syntheticSpellEffectTargetShapeShift();
+    }
+    throw new Error(`Unknown Quint shared shape-shift state: ${shapeShiftTag}`);
   }
   throw new Error(`Unknown Quint Moonbeam shape-shift state: ${tag}`);
 }
@@ -345,6 +401,13 @@ function quintVariantTag(raw: unknown): string {
     if (typeof tag === "string") return tag;
   }
   throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
+}
+
+function quintVariantValue(raw: unknown): unknown {
+  if (raw !== null && typeof raw === "object" && "value" in raw) {
+    return raw.value;
+  }
+  throw new Error(`Expected Quint variant value, got ${String(raw)}.`);
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {

@@ -2,6 +2,7 @@
 
 module battleRuntimeMoonbeamMovableZoneMbt {
   import battleRuntimeMoonbeamMovableZone.* from "./battle-runtime-moonbeam-movable-zone"
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 
   var qActionAvailable: bool
@@ -18,7 +19,7 @@ module battleRuntimeMoonbeamMovableZoneMbt {
   var qTargetTemporaryHitPoints: int
   var qTargetDead: bool
   var qTargetUnconscious: bool
-  var qTargetShapeShift: MoonbeamShapeShiftState
+  var qTargetShapeShift: MoonbeamTargetShapeShiftState
 
   pure def moonbeamMovableZoneState(
     actionAvailable: bool,
@@ -35,7 +36,7 @@ module battleRuntimeMoonbeamMovableZoneMbt {
     targetTemporaryHitPoints: int,
     targetDead: bool,
     targetUnconscious: bool,
-    targetShapeShift: MoonbeamShapeShiftState,
+    targetShapeShift: MoonbeamTargetShapeShiftState,
   ): MoonbeamMovableZoneState = {
     actionAvailable: actionAvailable,
     zone:
@@ -133,7 +134,7 @@ module battleRuntimeMoonbeamMovableZoneMbt {
       qTargetTemporaryHitPoints' = 0,
       qTargetDead' = false,
       qTargetUnconscious' = false,
-      qTargetShapeShift' = MoonbeamTrueForm,
+      qTargetShapeShift' = MoonbeamTargetUnsuppressed({ shapeShift: TrueForm }),
     }
   }
 
@@ -190,10 +191,21 @@ module battleRuntimeMoonbeamMovableZoneMbt {
   }
 
   action doShapeShift = all {
-    if (qTargetShapeShift == MoonbeamShapeShiftSuppressedTrueForm)
+    if (qTargetShapeShift == MoonbeamTargetSuppressedTrueForm)
       recordNextState(currentMoonbeamMovableZoneState)
     else
-      recordNextState({ ...currentMoonbeamMovableZoneState, targetShapeShift: MoonbeamShapeShifted }),
+      recordNextState({
+        ...currentMoonbeamMovableZoneState,
+        targetShapeShift: MoonbeamTargetUnsuppressed({
+          shapeShift: SpellEffectShapeShifted({
+            source: {
+              sourceCombatantId: "synthetic_shape_caster",
+              sourceSpellId: "synthetic_shape_spell",
+            },
+            replacementForm: syntheticLargeFastFormFacts,
+          }),
+        }),
+      }),
   }
 
   action step = any {

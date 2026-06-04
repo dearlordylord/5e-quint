@@ -71,6 +71,47 @@ export function activeEffectConditions(
     : [activeEffectCondition(effect)];
 }
 
+export type ShapeShiftOwnerActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "druidWildShapeForm" | "spellShapeShiftedForm" }
+>;
+
+export function isShapeShiftOwnerActiveEffect(
+  effect: BattleActiveEffect,
+): effect is ShapeShiftOwnerActiveEffect {
+  return (
+    effect.kind === "druidWildShapeForm" ||
+    effect.kind === "spellShapeShiftedForm"
+  );
+}
+
+export function activeEffectsWithoutShapeShiftOwner(
+  activeEffects: readonly BattleActiveEffect[],
+): readonly BattleActiveEffect[] {
+  return activeEffects.filter(
+    (effect) => !isShapeShiftOwnerActiveEffect(effect),
+  );
+}
+
+export function activeEffectsWithShapeShiftOwnerReplaced(
+  activeEffects: readonly BattleActiveEffect[],
+  owner: ShapeShiftOwnerActiveEffect,
+): readonly BattleActiveEffect[] {
+  return [...activeEffectsWithoutShapeShiftOwner(activeEffects), owner];
+}
+
+export function activeShapeShiftOwnerEffect(
+  activeEffects: readonly BattleActiveEffect[],
+): ShapeShiftOwnerActiveEffect | null {
+  for (let index = activeEffects.length - 1; index >= 0; index -= 1) {
+    const effect = activeEffects[index];
+    if (effect !== undefined && isShapeShiftOwnerActiveEffect(effect)) {
+      return effect;
+    }
+  }
+  return null;
+}
+
 export function conditionsAfterApplyingSpellConditionEffects(
   conditions: ConditionState,
   activeEffects: readonly BattleActiveEffect[],
@@ -150,17 +191,22 @@ export function battleCreatureWithSpellActiveEffects(
   combatant: BattleCreatureState,
   activeEffects: readonly BattleActiveEffect[],
 ): BattleCreatureState {
+  const shapeShiftOwner = activeShapeShiftOwnerEffect(activeEffects);
+  const exclusiveActiveEffects =
+    shapeShiftOwner === null
+      ? activeEffects
+      : activeEffectsWithShapeShiftOwnerReplaced(activeEffects, shapeShiftOwner);
   const nextCombatant =
     combatant.positiveHpUnconscious === null
       ? {
           ...combatant,
-          activeEffects,
+          activeEffects: exclusiveActiveEffects,
           conditions: conditionsAfterApplyingSpellConditionEffects(
             combatant.conditions,
-            activeEffects,
+            exclusiveActiveEffects,
           ),
         }
-      : { ...combatant, activeEffects };
+      : { ...combatant, activeEffects: exclusiveActiveEffects };
   return battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
     nextCombatant,
   );

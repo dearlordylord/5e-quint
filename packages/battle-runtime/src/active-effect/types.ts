@@ -25,6 +25,7 @@ import type {
   DamageType,
   DcSource,
   DiceExpr,
+  Size,
   Skill,
   SpellRecord,
   UnitRecord,
@@ -106,6 +107,16 @@ export type BattleConcentrationBrokenEarlyEnd = Extract<
 export type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
+};
+export type BattleShapeShiftReplacementFormFacts = {
+  readonly kind: "runtimeCreatureForm";
+  readonly creatureSize: Size;
+};
+export type SpellShapeShiftedFormActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellShapeShiftedForm";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly replacementForm: BattleShapeShiftReplacementFormFacts;
+  readonly expiresAt: BattleActiveEffectExpiration;
 };
 export type SpellCreatureSizeChangeDirection = "increase" | "decrease";
 export type SpellCreatureSizeChangeActiveEffect = BattleSpellEffectBase & {
@@ -340,6 +351,7 @@ export type BattleActiveEffect =
         { readonly kind: "concentration" }
       > & { readonly durationTicks: ElapsedTimeTicks };
     } & SelfTransformationModeEffectPayload)
+  | SpellShapeShiftedFormActiveEffect
   | SpellLevitatedCreatureActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassBonus";

@@ -26,11 +26,12 @@
 // Intentionally out of scope:
 //   - table-owned placement, route, line of sight, and area membership
 //   - Cylinder point identity and dim-light presentation projection
-//   - spell/stat-block shape-shift sources until their restoration owners are admitted
+//   - stat-block shape-shift sources until their restoration owners are admitted
 //   - initiative order, broad turn sequencing, and reaction windows
 
 module battleRuntimeMoonbeamMovableZone {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
@@ -49,11 +50,6 @@ module battleRuntimeMoonbeamMovableZone {
     | MoonbeamEntersArea
     | MoonbeamEndsTurnInArea
 
-  type MoonbeamShapeShiftState =
-    | MoonbeamTrueForm
-    | MoonbeamShapeShifted
-    | MoonbeamShapeShiftSuppressedTrueForm
-
   type MoonbeamMovableZone =
     | MoonbeamZoneAbsent
     | MoonbeamZoneActive({
@@ -63,13 +59,17 @@ module battleRuntimeMoonbeamMovableZone {
         savedThisTurn: bool,
       })
 
+  type MoonbeamTargetShapeShiftState =
+    | MoonbeamTargetUnsuppressed({ shapeShift: ShapeShiftedRuntimeState })
+    | MoonbeamTargetSuppressedTrueForm
+
   type MoonbeamMovableZoneState = {
     actionAvailable: bool,
     zone: MoonbeamMovableZone,
     slotLedger: SpellSlotLedger,
     slotSpellCastThisTurn: bool,
     targetVitals: CreatureVitals,
-    targetShapeShift: MoonbeamShapeShiftState,
+    targetShapeShift: MoonbeamTargetShapeShiftState,
   }
 
   type MoonbeamMovableZoneFills = {
@@ -166,13 +166,16 @@ module battleRuntimeMoonbeamMovableZone {
       state
     else
       match state.targetShapeShift {
-        | MoonbeamTrueForm => state
-        | MoonbeamShapeShifted =>
-          {
-            ...state,
-            targetShapeShift: MoonbeamShapeShiftSuppressedTrueForm,
-          }
-        | MoonbeamShapeShiftSuppressedTrueForm => state
+        | MoonbeamTargetSuppressedTrueForm => state
+        | MoonbeamTargetUnsuppressed(target) =>
+            match revertShapeShiftedRuntimeState(target.shapeShift) {
+              | ShapeShiftAlreadyTrueForm => state
+              | ShapeShiftRevertedToTrueForm =>
+                  {
+                    ...state,
+                    targetShapeShift: MoonbeamTargetSuppressedTrueForm,
+                  }
+            }
       }
 
   pure def resolveMoonbeamSave(
@@ -231,10 +234,10 @@ module battleRuntimeMoonbeamMovableZone {
     }
 
   pure def resolveMoonbeamCylinderExit(state: MoonbeamMovableZoneState): MoonbeamMovableZoneState =
-    if (state.targetShapeShift == MoonbeamShapeShiftSuppressedTrueForm)
-      { ...state, targetShapeShift: MoonbeamTrueForm }
-    else
-      state
+    match state.targetShapeShift {
+      | MoonbeamTargetUnsuppressed(_) => state
+      | MoonbeamTargetSuppressedTrueForm => { ...state, targetShapeShift: MoonbeamTargetUnsuppressed({ shapeShift: TrueForm }) }
+    }
 
   pure def resolveMoonbeamSpellCleanup(state: MoonbeamMovableZoneState): MoonbeamMovableZoneState =
     { ...resolveMoonbeamCylinderExit(state), zone: MoonbeamZoneAbsent }

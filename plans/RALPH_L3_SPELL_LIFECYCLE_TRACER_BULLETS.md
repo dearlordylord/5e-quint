@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote spell-effect shape-shift true-form reversion owner"
     },
     {
@@ -87,7 +87,7 @@ owns branch repair.
 |---:|---|---|---|---|
 | 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | done | none | Independent spell-resource/targeting slice. |
 | 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | done | none | Closed as table/object-spatial adjudication; point-origin support remains unchanged. |
-| 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | ready-for-implementation-after-light-research | none | Independent spell-effect lifecycle slice. |
+| 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | done | none | Spell-effect shape-shift owners are promoted through the shared reversion owner used by Moonbeam. |
 | 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | ready-for-implementation-after-light-research | none | Independent stat-block lifecycle decision. |
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | ready-for-implementation-after-light-research | none | Independent ongoing-effect cleanup slice. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | ready-for-implementation-after-light-research | none | Independent boundary split. |
@@ -187,7 +187,7 @@ Result:
 
 ### Task 3 - L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote spell-effect shape-shift projection and true-form reversion through the
 shared shape-shifting owner used by Moonbeam.
@@ -205,6 +205,14 @@ Expected outputs:
 - focused spell-transformation runtime tests;
 - QNT/parity for failed-save reversion and successful-save non-reversion;
 - coverage updates for Moonbeam follow-up closure.
+
+Result:
+
+- promoted spell-effect shape-shift active effects as shared shape-shift owners;
+- made Moonbeam consume shared shape-shift reversion for failed-save reversion
+  and preserve spell-effect shape-shift state on successful saves without spell
+  authored-identity dispatch;
+- updated focused runtime tests, QNT/parity, and Moonbeam coverage artifacts.
 
 ### Task 4 - L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION
 
