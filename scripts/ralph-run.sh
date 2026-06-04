@@ -2394,7 +2394,7 @@ run_task_attempt() {
   local matrix_after_file="$attempt_root/matrix-after.json"
   local matrix_delta_file="$attempt_root/matrix-delta.md"
   local implementation_worktree="$worktree_root/task-$task_no-attempt-$attempt_no/implementation"
-  local implementation_branch="ralph/$run_id/task-$task_no/attempt-$attempt_no/implementation"
+  local implementation_branch="ralph-task/$run_id/task-$task_no/attempt-$attempt_no/implementation"
   local task_base_ref="$output_branch"
   local task_base_sha
   task_base_sha="$(git rev-parse HEAD)"
