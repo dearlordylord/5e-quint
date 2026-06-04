@@ -7,7 +7,13 @@ proof 62/62, selected-identity MBT 17/85). Per-task history lives in git.
 
 ## Active Ralph Queues
 
-The next runnable QNT deepening lane is:
+The next runnable promoted Unit lane is:
+
+- `plans/RALPH_L3_PROMOTED_UNIT_TRACER_BULLETS.md` — level-3 promoted Unit
+  tracer bullets that convert already-admitted follow-up splits into battle
+  reducer, QNT/MBT, Unit evidence, and production-path coverage.
+
+The next optional QNT deepening lane is:
 
 - `plans/RALPH_LANE_B_QNT_DEEPENING.md` — focused QNT witness deepening plus the
   next manual Rust dry-run vertical after generator readiness closure.

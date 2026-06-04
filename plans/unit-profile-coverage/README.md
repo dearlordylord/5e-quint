@@ -177,6 +177,16 @@ Classic non-SRD id.
 The coverage lane intentionally spans several ownership layers, but the work
 does not always move through them in one direction.
 
+A **promoted Unit tracer bullet** is the smallest end-to-end slice that proves
+one authored Unit, or one supported part of a `profile-subset-supported` Unit,
+is truly executable at its promoted runtime boundary. It is a per-Unit or
+per-supported-subset vertical; it is not the same thing as the scope-level
+ultra-golden aggregate gate. For battle-promoted behavior, the tracer bullet
+includes QNT/parity because battle reducer semantics must be represented in
+QNT. For table-only, exploration-only, character-creation-only, or
+character-sheet-only dispositions, the tracer bullet stops at that explicit
+owner boundary and does not require battle QNT.
+
 For already-authored TypeScript content, the usual evidence flow is:
 
 ```text
@@ -199,6 +209,27 @@ matrix gap or authored-source pressure
   -> deterministic admission/projection evidence
   -> selected Unit identity replay/wiring when identity risk justifies it
 ```
+
+For promoted battle behavior, the promoted Unit tracer bullet is stricter than
+the generic Unit evidence flow:
+
+```text
+RAW scope
+  -> battle-supported profile decision
+  -> QNT obligation / focused MBT expectation
+  -> TypeScript battle reducer implementation
+  -> deterministic admission/projection evidence
+  -> selected Unit identity replay/wiring
+  -> MCP or equivalent production-path scenario when the scope requires it
+```
+
+If behavior is implemented in the battle reducer, it must be represented by a
+QNT obligation and a parity witness. In short: **in reducer means in QNT**. Do
+not add battle-runtime reducer semantics and classify a Unit as battle-supported
+with only catalog, character-sheet, or table-level evidence. Conversely,
+table-only, exploration-only, character-creation-only, or character-sheet-only
+Units do not need QNT merely because they are authored Units; they need an
+explicit non-battle or non-reducer disposition and the relevant owner evidence.
 
 Authored Unit sources currently include SRD-backed records in this repo and
 public mechanics-only Classic fixtures. Non-SRD mechanics pressure must enter

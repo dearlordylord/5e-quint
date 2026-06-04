@@ -127,6 +127,14 @@ Active generator and Rust queues:
 
 - Do not modify ADR-0001 or other architecture decisions without explicit user approval.
 - Do not introduce production reducer wiring inside a slice task — slice composites stand alone; production integration is separate work.
+- For promoted battle behavior, in reducer means in QNT. A task that adds or
+  changes production battle-runtime reducer semantics must add or update the
+  corresponding QNT obligation and parity witness in the same task or explicitly
+  keep the Unit/profile out of battle-supported status. Table-only,
+  exploration-only, character-creation-only, and character-sheet-only Units do
+  not need QNT solely because they are authored Units. This is the
+  battle-runtime branch of the promoted Unit tracer bullet defined in
+  `plans/unit-profile-coverage/README.md`.
 - Do not add a new obligation whose QNT owner is still `fixture-bound`; resolve
   the blocker in the same focused task or carve a fresh follow-up before
   claiming generator readiness.
