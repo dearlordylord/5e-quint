@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote or close stat-block shapechanger true-form reversion owner"
     },
     {
@@ -88,7 +88,7 @@ owns branch repair.
 | 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | done | none | Independent spell-resource/targeting slice. |
 | 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | done | none | Closed as table/object-spatial adjudication; point-origin support remains unchanged. |
 | 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | done | none | Spell-effect shape-shift owners are promoted through the shared reversion owner used by Moonbeam. |
-| 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | ready-for-implementation-after-light-research | none | Independent stat-block lifecycle decision. |
+| 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | done | none | Closed as outside promoted battle runtime because SRD Shape-Shift specials lack a structured active-form owner. |
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | ready-for-implementation-after-light-research | none | Independent ongoing-effect cleanup slice. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | ready-for-implementation-after-light-research | none | Independent boundary split. |
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | ready-for-implementation-after-light-research | none | Surface repair prerequisite for Task 8. |
@@ -216,7 +216,7 @@ Result:
 
 ### Task 4 - L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote or close stat-block shapechanger active-form state as a true
 shape-shift owner.
@@ -232,6 +232,21 @@ Expected outputs:
 
 - focused stat-block runtime tests or precise closure;
 - Moonbeam claim remains honest.
+
+Result:
+
+- inspected local SRD Moonbeam, Shape-Shifting, Truesight, and Stat Block
+  shapechanger facts;
+- closed stat-block Shape-Shift true-form reversion as outside promoted battle
+  runtime because imp/quasit Shape-Shift is stored as prose-only Stat Block
+  `actions.specials`, while battle Stat Block execution currently admits attack
+  actions and rejects specials;
+- recorded that a promotion would need one generic structured Stat Block
+  special-action active-form owner for form choices, Speed replacement,
+  equipment non-transformation, and return-to-true-form state, rather than
+  Moonbeam-local metadata or stat-block authored-identity dispatch;
+- updated Moonbeam coverage artifacts and added the closure note at
+  `plans/unit-profile-coverage/L3SPELL-04_STATBLOCK_SHAPECHANGER_TRUE_FORM_REVERSION.md`.
 
 ### Task 5 - L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS
 

@@ -232,13 +232,13 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 592,
-      "percent": "97.5%",
+      "numerator": 593,
+      "percent": "97.7%",
       "rowsByStatus": {
-        "accepted": 431,
+        "accepted": 432,
         "accepted-no-battle-effect": 161,
         "owner-evidence-required": 12,
-        "partial-battle-runtime": 2,
+        "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
     },
@@ -14259,6 +14259,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future structured Stat Block special-action active-form owner",
+        "reason": "Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14272,7 +14278,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_pass_without_trace",

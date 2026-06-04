@@ -2194,12 +2194,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION: Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state. Owner: shared shape-shifting runtime plus stat-block battle controls. Required output: Focused stat-block runtime tests, promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+      "reason": "Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2219,7 +2219,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "moonbeam"
     },
@@ -3392,24 +3392,6 @@
     },
     {
       "count": 11,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "cleric_preserve_life",
-        "druid_lands_aid",
-        "druid_wild_shape",
-        "fighter_remarkable_athlete",
-        "monk_open_hand_technique",
-        "moonbeam",
-        "paladin_sacred_weapon",
-        "ranger_hunters_prey",
-        "sorcerer_metamagic",
-        "wizard_potent_cantrip"
-      ]
-    },
-    {
-      "count": 11,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
@@ -3427,7 +3409,24 @@
       ]
     },
     {
-      "count": 6,
+      "count": 10,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "cleric_preserve_life",
+        "druid_lands_aid",
+        "druid_wild_shape",
+        "fighter_remarkable_athlete",
+        "monk_open_hand_technique",
+        "paladin_sacred_weapon",
+        "ranger_hunters_prey",
+        "sorcerer_metamagic",
+        "wizard_potent_cantrip"
+      ]
+    },
+    {
+      "count": 7,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3435,6 +3434,7 @@
         "continual_flame",
         "enlarge_reduce",
         "levitate",
+        "moonbeam",
         "prayer_of_healing",
         "rogue_fast_hands"
       ]
@@ -3462,14 +3462,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 592,
-      "percent": "97.5%",
+      "numerator": 593,
+      "percent": "97.7%",
       "rowsByStatus": {
-        "accepted": 431,
+        "accepted": 432,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
         "owner-evidence-required": 12,
-        "partial-battle-runtime": 2
+        "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -10776,11 +10776,11 @@
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 11,
+      "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
-      "closed-outside-battle-runtime-boundary": 6,
+      "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
       "supported-profile": 129
     },
