@@ -1623,8 +1623,11 @@ type SpellDamageContext = {
   readonly sourceDamageRollPenaltyRoll?:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
-  readonly sourcePenaltyDamageByType?: ReadonlyMap<DamageType, number> | undefined;
+  readonly sourcePenaltyDamageByType?:
+    | ReadonlyMap<DamageType, number>
+    | undefined;
   readonly damageSourceId?: CombatantId | undefined;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
 };
 
 export function applySpellDamage(
@@ -1633,7 +1636,7 @@ export function applySpellDamage(
   invocation: SupportedDamageSpellInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   critical: boolean,
-  context: SpellDamageContext = {},
+  context: SpellDamageContext,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -1652,6 +1655,7 @@ export function applySpellDamage(
     sourceDamageRollPenaltyRoll,
     sourcePenaltyDamageByType,
     damageSourceId,
+    spatialFacts,
   } = context;
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
@@ -1699,6 +1703,7 @@ export function applySpellDamage(
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition,
     damageSourceId,
+    spatialFacts,
     concentrationSavingThrow,
     ...(wardingBondDamageShareConcentrationSavingThrows === undefined
       ? {}
@@ -1728,13 +1733,14 @@ type PreparedSlotSpellDamageContext = {
   readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
 };
 
 export function applyPreparedSlotSpellDamage(
   state: BattleState,
   targetId: CombatantId,
   damageAmount: number,
-  context: PreparedSlotSpellDamageContext = {},
+  context: PreparedSlotSpellDamageContext,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -1747,6 +1753,7 @@ export function applyPreparedSlotSpellDamage(
     hideousLaughterDamageRepeatSaveEventKey,
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
+    spatialFacts,
   } = context;
   return applyBattleHitPointDamage({
     state,
@@ -1755,6 +1762,7 @@ export function applyPreparedSlotSpellDamage(
     deathFailuresAtZeroHp: 1,
     damageDisposition,
     damageSourceId,
+    spatialFacts,
     concentrationSavingThrow,
     ...(wardingBondDamageShareConcentrationSavingThrows === undefined
       ? {}
@@ -1948,7 +1956,10 @@ export function spellObjectDamageOutcomeFromDamageByType(input: {
   const entries = damageAmountByTypeMapEntries(input.damageByType);
   const [firstEntry] = entries;
   const damageType = input.damageType ?? firstEntry?.damageType ?? "force";
-  const rolledDamage = entries.reduce((total, entry) => total + entry.amount, 0);
+  const rolledDamage = entries.reduce(
+    (total, entry) => total + entry.amount,
+    0,
+  );
   return Match.value(input.disposition).pipe(
     Match.when({ kind: "tableResolved" }, () => ({
       kind: "tableResolved" as const,

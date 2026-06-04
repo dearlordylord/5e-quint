@@ -753,13 +753,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       hideousLaughterSaveCheck.message,
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      input.fillSet.sourceDamageRollPenaltyRolls,
-      attackRolledState.combatants.get(input.actorId),
-      spellDamageByType,
-      input.partFill.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    input.fillSet.sourceDamageRollPenaltyRolls,
+    attackRolledState.combatants.get(input.actorId),
+    spellDamageByType,
+    input.partFill.damageRoll.holeId,
+  );
   const damaged = applySpellDamage(
     attackRolledState,
     target.combatantId,
@@ -783,6 +782,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         relevantHideousLaughterDamageRepeatSaves,
       hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
+      spatialFacts: input.target.spatialFacts,
     },
   );
   const usedExtraFillHoleIds = [
@@ -985,13 +985,12 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.partFill.damageRoll,
     critical,
   );
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      input.fillSet.sourceDamageRollPenaltyRolls,
-      attackRolledState.combatants.get(input.actorId),
-      objectDamageByType,
-      input.partFill.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    input.fillSet.sourceDamageRollPenaltyRolls,
+    attackRolledState.combatants.get(input.actorId),
+    objectDamageByType,
+    input.partFill.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     attackRolledState.combatants.get(input.actorId),
     objectDamageByType,

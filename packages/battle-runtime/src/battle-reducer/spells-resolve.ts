@@ -691,11 +691,7 @@ function resolveSpellActInternal(
   if (!actionSpellUsesSharedSpellAttackDamageBody(invocation, options)) {
     const profile = spellProcedureProfileFor(invocation.procedure);
     return resolveRegisteredSpellProcedureProfile(profile, {
-      input: actionSpellProfileResolutionInput(
-        input,
-        castingState,
-        invocation,
-      ),
+      input: actionSpellProfileResolutionInput(input, castingState, invocation),
       actorId: subject.actorId,
       invocation,
       fillSet,
@@ -1528,6 +1524,7 @@ function resolveSpellActInternal(
       hideousLaughterDamageRepeatSaves:
         fillSet.hideousLaughterDamageRepeatSaves,
       damageSourceId: subject.actorId,
+      spatialFacts: fillSet.targetSpatialFacts,
     },
   );
   const effected = applySpellActiveEffects(

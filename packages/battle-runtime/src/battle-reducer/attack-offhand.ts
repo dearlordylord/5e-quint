@@ -666,6 +666,7 @@ function resolveBonusActionAttack(
       primaryConcentrationSavingThrow,
       fillSet.hideousLaughterDamageRepeatSaves,
       fillSet.concentrationSavingThrows,
+      fillSet.targetSpatialFacts,
     );
     const spent = spendOffHandBonusAction(damaged);
     if (spent.tag === "invalid") {

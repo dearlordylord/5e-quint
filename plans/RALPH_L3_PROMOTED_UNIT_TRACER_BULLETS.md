@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Warlock Dark One's Blessing zero-HP Temporary Hit Points"
     },
     {
@@ -239,7 +239,7 @@ Out of scope:
 
 ### Task 2 - L3PUTB-02-WARLOCK-DARK-ONES-BLESSING-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `warlock_dark_ones_blessing` zero-Hit-Point Temporary Hit Points.
 

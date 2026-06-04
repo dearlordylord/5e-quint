@@ -1587,6 +1587,14 @@ export type BattleTargetSpatialFact =
       readonly rangeFeet: MovementFeet;
     }
   | {
+      readonly kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange";
+      readonly beneficiaryId: CombatantId;
+      readonly damageSourceId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
       readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
       readonly reactorId: CombatantId;
       readonly fallingCreatureId: CombatantId;
@@ -3825,6 +3833,13 @@ type BattleCreatureStateCommon = {
           Extract<
             SupportedUnitFeatureProfile,
             { readonly kind: "rogueSteadyAim" }
+          >
+        >;
+        readonly enemyZeroHitPointTemporaryHitPointsProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;

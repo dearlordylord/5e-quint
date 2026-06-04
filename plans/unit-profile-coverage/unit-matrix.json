@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 133,
-      "numerator": 133,
+      "denominator": 134,
+      "numerator": 134,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 133,
-      "numerator": 133,
+      "denominator": 134,
+      "numerator": 134,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 148,
-      "numerator": 148,
+      "denominator": 149,
+      "numerator": 149,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 149,
-      "numerator": 145,
+      "denominator": 150,
+      "numerator": 146,
       "percent": "97.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 149,
-      "percent": "65.6%"
+      "numerator": 150,
+      "percent": "66.1%"
     }
   },
   "metricSemantics": [
@@ -4041,17 +4041,36 @@
     },
     {
       "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. It projects self and 10-foot other-killer trigger facts without dispatching on feature id; enemy qualification, range witness, and Temporary Hit Point application remain future promoted reducer work.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes existing damage-source and side-based beneficiary-target enemy relationship facts plus caller-supplied 10-foot beneficiary range facts, and applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
       "taskRefs": [
-        "L13UG-A16"
+        "L13UG-A16",
+        "L3PUTB-02"
       ],
-      "title": "Unit feature projects Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
-      "verificationOwners": []
+      "title": "Unit feature grants Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-dark-ones-blessing.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.bonus-action-delegated-standard-actions",
@@ -4173,13 +4192,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 133,
-        "numerator": 133,
+        "denominator": 134,
+        "numerator": 134,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 133,
-        "numerator": 133,
+        "denominator": 134,
+        "numerator": 134,
         "percent": "100%"
       }
     },
@@ -6459,6 +6478,22 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.rogue-steady-aim",
         "profileKind": "bonus-action",
         "qntOwners": [
@@ -6474,8 +6509,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 148,
-          "numerator": 148,
+          "denominator": 149,
+          "numerator": 149,
           "percent": "100%"
         }
       },
@@ -10409,6 +10444,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+              ]
+            }
+          ],
+          "unitId": "warlock_dark_ones_blessing"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                   "runtime": "character-creation",
                   "status": "covered",
@@ -13244,6 +13301,22 @@
         "unit-feature.rogue-steady-aim"
       ],
       "taskId": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Dark One's Blessing MBT witness models self kill, nearby-other kill, same-side source/target nearby kill, out-of-range rejection, non-enemy rejection, minimum Temporary Hit Points, and ordinary Temporary Hit Point replacement.",
+      "profileIds": [
+        "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+      ],
+      "taskId": "L3PUTB-02"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover the admitted enemy-zero-Hit-Point Temporary Hit Points profile through the damage boundary, including self and nearby-other enemy reduction to 0 Hit Points, caller-supplied 10-foot range facts, beneficiary-target enemy validation that does not require the damage source to be an enemy of the target, non-enemy and out-of-range rejection, Charisma modifier plus Warlock level amount with minimum 1, and ordinary non-stacking Temporary Hit Point replacement without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+      ],
+      "taskId": "L3PUTB-02"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13317,12 +13390,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 26,
+        "profileSubsetSupportedUnits": 25,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 62,
+        "selectedIdentityReplayDenominator": 63,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 62,
-        "supportedProfileUnits": 50,
+        "selectedIdentityReplayWitnessUnits": 63,
+        "supportedProfileUnits": 51,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -18297,38 +18370,21 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-            "mechanic": "Execute Dark One's Blessing when an enemy is reduced to 0 Hit Points by the Warlock or by another creature within 10 feet, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME",
-            "mechanic": "Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch.",
-            "owner": "battle-runtime zero-Hit-Point trigger reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application.",
-            "title": "Warlock Dark Ones Blessing Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime zero-Hit-Point trigger and Temporary Hit Points owner plus promoted Quint parity",
         "profileIds": [
           "unit-feature.enemy-zero-hit-point-temporary-hit-points"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the enemy-zero-Hit-Point Temporary Hit Points execution owner consumes this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface enemy_zero_hit_point_temporary_hit_points mechanics",
-          "The projected support profile carries self or another creature within 10 feet reducing an enemy to 0 Hit Points, plus Charisma modifier plus Warlock level Temporary Hit Points with minimum 1, without authored-identity dispatch"
+          "Battle runtime consumes the retained support profile when the Warlock reduces an enemy to 0 Hit Points",
+          "Battle runtime consumes caller-supplied 10-foot beneficiary range facts when another creature reduces an enemy to 0 Hit Points near the Warlock",
+          "The defeated creature must be an enemy of the Warlock beneficiary; the damage source does not need to be an enemy of the defeated creature",
+          "Non-enemy and out-of-range zero-Hit-Point events do not grant this benefit",
+          "Temporary Hit Points equal Charisma modifier plus Warlock level with minimum 1 and use ordinary non-stacking replacement behavior"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -18336,6 +18392,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A16"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-02"
         }
       ],
       "executableMechanics": true,
@@ -18343,17 +18404,36 @@
       "profiles": [
         {
           "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. It projects self and 10-foot other-killer trigger facts without dispatching on feature id; enemy qualification, range witness, and Temporary Hit Point application remain future promoted reducer work.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface enemy_zero_hit_point_temporary_hit_points trigger and Charisma-modifier-plus-class-level amount with minimum 1. Battle runtime retains the admitted support profile on character combatants, consumes existing damage-source and side-based beneficiary-target enemy relationship facts plus caller-supplied 10-foot beneficiary range facts, and applies ordinary non-stacking Temporary Hit Point replacement when a qualifying enemy is reduced to 0 Hit Points without requiring the damage source to be an enemy of the defeated creature or dispatching on authored feature identity.",
           "taskRefs": [
-            "L13UG-A16"
+            "L13UG-A16",
+            "L3PUTB-02"
           ],
-          "title": "Unit feature projects Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
-          "verificationOwners": []
+          "title": "Unit feature grants Temporary Hit Points when an enemy is reduced to 0 Hit Points nearby",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-dark-ones-blessing.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",

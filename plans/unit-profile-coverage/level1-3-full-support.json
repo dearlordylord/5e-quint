@@ -3183,40 +3183,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME: Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch. Owner: battle-runtime zero-Hit-Point trigger reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the enemy-zero-Hit-Point Temporary Hit Points execution owner consumes this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Warlock Dark One's Blessing",
-          "id": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 463,
-            "lineStart": 460,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "warlock_dark_ones_blessing"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -3374,7 +3340,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 126,
+      "count": 127,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3498,6 +3464,7 @@
         "true_strike",
         "vicious_mockery",
         "warding_bond",
+        "warlock_dark_ones_blessing",
         "warlock_eldritch_invocations",
         "warlock_magical_cunning",
         "web",
@@ -3548,7 +3515,7 @@
       ]
     },
     {
-      "count": 15,
+      "count": 14,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3565,7 +3532,6 @@
         "paladin_sacred_weapon",
         "ranger_hunters_prey",
         "sorcerer_metamagic",
-        "warlock_dark_ones_blessing",
         "wizard_potent_cantrip"
       ]
     },
@@ -3623,35 +3589,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 582,
-      "percent": "95.9%",
+      "numerator": 583,
+      "percent": "96%",
       "rowsByStatus": {
-        "accepted": 421,
+        "accepted": 422,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 13,
+        "owner-evidence-required": 12,
         "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 125,
-      "numerator": 125,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 126,
-      "percent": "64%"
+      "numerator": 127,
+      "percent": "64.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6367,8 +6333,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 125,
-        "numerator": 125,
+        "denominator": 126,
+        "numerator": 126,
         "percent": "100%"
       }
     },
@@ -9794,6 +9760,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+            "profileKind": "persistent-effect",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+            ]
+          }
+        ],
+        "unitId": "warlock_dark_ones_blessing"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -9952,13 +9940,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 14,
-      "witness-present": 153
+      "not-applicable": 13,
+      "witness-present": 154
     },
     "rowsByStatus": {
-      "not-applicable": 14,
+      "not-applicable": 13,
       "not-required": 30,
-      "witness-present": 153
+      "witness-present": 154
     }
   },
   "sourceArtifacts": {
@@ -10866,20 +10854,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 41,
-      "supported-profile": 126,
+      "profile-subset-supported": 40,
+      "supported-profile": 127,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 15,
+      "blocked-follow-up-split": 14,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 6,
       "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 126
+      "supported-profile": 127
     },
-    "nonSupportedFrontier": 71,
+    "nonSupportedFrontier": 70,
     "strictDenominator": 197
   }
 }

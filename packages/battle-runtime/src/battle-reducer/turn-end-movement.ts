@@ -753,6 +753,7 @@ function applySpellTurnStartDamage(
       damageDisposition,
       hideousLaughterDamageRepeatSaves,
       damageSourceId: effect.sourceCombatantId,
+      spatialFacts: [],
     },
   );
 }
@@ -2902,6 +2903,7 @@ function applyFlamingSphereDamage(input: {
     {
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
+      spatialFacts: [],
     },
   );
 }
@@ -3645,6 +3647,7 @@ function applyMoonbeamDamage(input: {
     {
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
+      spatialFacts: [],
     },
   );
 }
@@ -4630,23 +4633,20 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
     value: combatants,
     flySpeedGrantEndFallCleanupFrames: [],
   };
-  return uniqueSources.reduce(
-    (current, source) => {
-      const expired =
-        expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
-          current.value,
-          source,
-        );
-      return {
-        value: expired.value,
-        flySpeedGrantEndFallCleanupFrames: [
-          ...current.flySpeedGrantEndFallCleanupFrames,
-          ...expired.flySpeedGrantEndFallCleanupFrames,
-        ],
-      };
-    },
-    initial,
-  );
+  return uniqueSources.reduce((current, source) => {
+    const expired =
+      expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
+        current.value,
+        source,
+      );
+    return {
+      value: expired.value,
+      flySpeedGrantEndFallCleanupFrames: [
+        ...current.flySpeedGrantEndFallCleanupFrames,
+        ...expired.flySpeedGrantEndFallCleanupFrames,
+      ],
+    };
+  }, initial);
 }
 
 function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
@@ -6414,6 +6414,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         ),
         wardingBondDamageShareConcentrationSavingThrows: [],
         hideousLaughterDamageRepeatSaves: [],
+        spatialFacts: [],
       },
     );
   }

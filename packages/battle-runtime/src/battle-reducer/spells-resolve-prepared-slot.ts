@@ -600,6 +600,7 @@ export function resolvePreparedSlotSpellAct(input: {
           ),
           hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
+          spatialFacts: input.fillSet.targetSpatialFacts,
         },
       );
     },

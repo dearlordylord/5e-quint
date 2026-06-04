@@ -452,6 +452,7 @@ export function resolveOpportunityAttackCommand(
       primaryConcentrationSavingThrow,
       fillSet.hideousLaughterDamageRepeatSaves,
       fillSet.concentrationSavingThrows,
+      fillSet.targetSpatialFacts,
     );
     const reactionWindow = maybeOpenReactionWindow(
       nextState,
@@ -731,6 +732,7 @@ export function resolveOpportunityAttackCommand(
     primaryConcentrationSavingThrow,
     fillSet.hideousLaughterDamageRepeatSaves,
     fillSet.concentrationSavingThrows,
+    fillSet.targetSpatialFacts,
   );
   const reactionWindow = maybeOpenReactionWindow(
     nextState,

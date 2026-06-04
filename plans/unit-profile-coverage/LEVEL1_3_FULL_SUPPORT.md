@@ -14,18 +14,18 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 126/197 (64%) |
+| Strict runtime/profile support | 127/197 (64.5%) |
 | Strict target closure | 197/197 (100%) |
 | Selected identity readiness | 167/167 (100%) |
-| Diagnostic product readiness | 582/607 (95.9%) |
+| Diagnostic product readiness | 583/607 (96%) |
 | SRD authored product readiness | 79/79 (100%) |
-| Rules-kernel profile join | 95/95 (100%) |
-| Rules-kernel covered profile join | 95/95 (100%) |
-| Supported Unit rules-kernel chain | 125/125 (100%) |
+| Rules-kernel profile join | 96/96 (100%) |
+| Rules-kernel covered profile join | 96/96 (100%) |
+| Supported Unit rules-kernel chain | 126/126 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 582/607 (95.9%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 583/607 (96%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,10 +33,10 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 421 |
+| accepted | 422 |
 | accepted-no-battle-effect | 161 |
 | battle-runtime-required | 1 |
-| owner-evidence-required | 13 |
+| owner-evidence-required | 12 |
 | partial-battle-runtime | 11 |
 
 ### Selected Identity Replay Accounting
@@ -45,9 +45,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| not-applicable | 14 |
+| not-applicable | 13 |
 | not-required | 30 |
-| witness-present | 153 |
+| witness-present | 154 |
 
 ### Selected Identity Blockers
 
@@ -101,15 +101,15 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 197 |
-| Non-supported frontier | 71 |
+| Non-supported frontier | 70 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 126 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 127 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 34 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `comprehend_languages`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `pass_without_trace`, `rope_trick`, `silence`, `silent_image`, `speak_with_animals`, `spike_growth`, `suggestion`, `thaumaturgy`, `zone_of_truth` |
-| blocked-follow-up-split | 15 | `acid_arrow`, `cleric_disciple_of_life`, `cleric_preserve_life`, `darkness`, `druid_lands_aid`, `druid_wild_shape`, `enhance_ability`, `fighter_remarkable_athlete`, `monk_open_hand_technique`, `moonbeam`, `paladin_sacred_weapon`, `ranger_hunters_prey`, `sorcerer_metamagic`, `warlock_dark_ones_blessing`, `wizard_potent_cantrip` |
+| blocked-follow-up-split | 14 | `acid_arrow`, `cleric_disciple_of_life`, `cleric_preserve_life`, `darkness`, `druid_lands_aid`, `druid_wild_shape`, `enhance_ability`, `fighter_remarkable_athlete`, `monk_open_hand_technique`, `moonbeam`, `paladin_sacred_weapon`, `ranger_hunters_prey`, `sorcerer_metamagic`, `wizard_potent_cantrip` |
 | closed-later-level-only | 11 | `barbarian_weapon_mastery`, `bard_expertise`, `cleric_life_domain_spells`, `fighter_weapon_mastery`, `paladin_fighting_style`, `paladin_oath_of_devotion_spells`, `ranger_favored_enemy`, `ranger_fighting_style`, `sorcerer_draconic_spells`, `warlock_fiend_spells`, `wizard_evocation_savant` |
 | closed-outside-battle-runtime-boundary | 6 | `bard_bonus_proficiencies`, `continual_flame`, `enlarge_reduce`, `levitate`, `prayer_of_healing`, `rogue_fast_hands` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
@@ -199,7 +199,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `spike_growth` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state. |
 | `suggestion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity. |
 | `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
-| `warlock_dark_ones_blessing` | blocked-follow-up-split | profile-subset-supported | not-applicable | installed | follow-up-split | L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING-RUNTIME: Consume the admitted enemy-zero-hit-point-temporary-hit-points profile during damage resolution, using caller-visible enemy and range facts without authored-identity dispatch. Owner: battle-runtime zero-Hit-Point trigger reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for self kill, nearby other kill, enemy/range rejection, and Temporary Hit Points application. |
 | `warlock_fiend_spells` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants. |
 | `wizard_evocation_savant` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow. |
 | `wizard_potent_cantrip` | blocked-follow-up-split | profile-subset-supported | not-applicable | installed | follow-up-split | L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME: Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success. Owner: battle-runtime spell attack/save cantrip-damage reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect. |

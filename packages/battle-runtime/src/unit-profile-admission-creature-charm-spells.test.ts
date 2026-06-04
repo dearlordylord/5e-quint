@@ -288,6 +288,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
       damageSourceId: allyId,
+      spatialFacts: [],
     });
 
     expect(damaged.combatants.get(beastId)).toMatchObject({
@@ -314,6 +315,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
 
     const damaged = applyPreparedSlotSpellDamage(charmed, beastId, 4, {
       damageSourceId: enemyId,
+      spatialFacts: [],
     });
 
     expect(damaged.combatants.get(beastId)).toMatchObject({

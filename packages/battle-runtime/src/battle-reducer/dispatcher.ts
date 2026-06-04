@@ -2814,6 +2814,7 @@ function resolveHellishRebukeReactionSpellCommand(
       sourceDamageRollPenaltyRoll,
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.reactorId,
+      spatialFacts: fillSet.targetSpatialFacts,
     },
   );
   const slotted = expendSpellSlot(
@@ -3514,6 +3515,7 @@ export function resumeInterruptedProcedure(
       attackDamageContinuationTargetConcentrationFill(state, continuation),
       [],
       continuationConcentrationSavingThrows,
+      attackDamageContinuationTargetSpatialFacts(continuation),
     );
     return openAfterDamageSequenceReactionWindow({
       state: damagedState,

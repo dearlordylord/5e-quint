@@ -232,24 +232,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 582,
-      "percent": "95.9%",
+      "numerator": 583,
+      "percent": "96%",
       "rowsByStatus": {
-        "accepted": 421,
+        "accepted": 422,
         "accepted-no-battle-effect": 161,
-        "owner-evidence-required": 13,
+        "owner-evidence-required": 12,
         "partial-battle-runtime": 11,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 40,
-      "percent": "78.4%",
+      "numerator": 41,
+      "percent": "80.4%",
       "rowsByStatus": {
-        "accepted": 26,
+        "accepted": 27,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 11
+        "owner-evidence-required": 10
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -276,10 +276,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 26,
+      "catalog-installed-owner-evidence-present": 27,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 11
+      "catalog-installed-owner-evidence-required": 10
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -288,9 +288,9 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 457,
+      "catalog-installed-owner-evidence-present": 458,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 12,
+      "catalog-installed-owner-evidence-required": 11,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -27415,8 +27415,8 @@
         "state": "installed",
         "unitId": "warlock_dark_ones_blessing"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -27424,13 +27424,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime defeat-triggered Temporary Hit Point owner",
-          "evidence": "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A16 at packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:level-3:class-table-summary:warlock_level_3_feature_table_row",

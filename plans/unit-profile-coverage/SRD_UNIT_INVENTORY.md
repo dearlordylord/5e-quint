@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 582/607 (95.9%)
+- Accepted: 583/607 (96%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 421
+- accepted: 422
 - accepted-no-battle-effect: 161
 - battle-runtime-required: 1
-- owner-evidence-required: 13
+- owner-evidence-required: 12
 - partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 40/51 (78.4%)
+- Accepted: 41/51 (80.4%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 26
+- accepted: 27
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 11
+- owner-evidence-required: 10
 
 ### Spell-Level-3 Battle Readiness
 
@@ -95,8 +95,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 26
-- catalog-installed-owner-evidence-required: 11
+- catalog-installed-owner-evidence-present: 27
+- catalog-installed-owner-evidence-required: 10
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -470,7 +470,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:37|
 |Sorcerer Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:119|
 |Sorcerer Draconic Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future subclass Spell Access progression owner|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:419|
-|Warlock Dark One's Blessing|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; battle-runtime defeat-triggered Temporary Hit Point owner: owner evidence required|Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.|.references/srd-5.2.1/Classes/Warlock.md:460|
+|Warlock Dark One's Blessing|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:460|
 |Warlock level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:37|
 |Warlock Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:96|
 |Warlock Fiend Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future subclass Spell Access progression owner|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:464|

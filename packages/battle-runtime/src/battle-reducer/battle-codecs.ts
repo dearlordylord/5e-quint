@@ -634,6 +634,16 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
+    kind: Schema.Literal(
+      "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
+    ),
+    beneficiaryId: CombatantId,
+    damageSourceId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("featherFallTriggerSelfOrVisibleCreatureWithinRange"),
     reactorId: CombatantId,
     fallingCreatureId: CombatantId,

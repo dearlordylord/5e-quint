@@ -1,5 +1,6 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
@@ -63,6 +64,7 @@ import {
   type BattleStatBlockRechargeRollHole,
   type BattleStatBlockRechargeRollResult,
   type BattleState,
+  type BattleTargetSpatialFact,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
@@ -116,6 +118,7 @@ import {
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
+import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import {
   sameStatBlockPartKey,
   statBlockLimitedUseForPart,
@@ -400,6 +403,7 @@ export function applyBattleHitPointDamage(input: {
     { readonly kind: "savingThrowOutcome" }
   >[];
   readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
+  readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly suppressWardingBondDamageShare?: true;
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
@@ -458,8 +462,19 @@ export function applyBattleHitPointDamage(input: {
           input.hideousLaughterDamageRepeatSaveEventKey,
         )
       : afterSleep;
+  const afterEnemyZeroHitPointTemporaryHitPoints =
+    input.damageAmount > 0
+      ? applyEnemyZeroHitPointTemporaryHitPointsAwards({
+          state: afterHideousLaughter,
+          damageSourceId: input.damageSourceId,
+          targetId,
+          priorTarget: input.target,
+          damagedTarget: damaged,
+          spatialFacts: input.spatialFacts ?? [],
+        })
+      : afterHideousLaughter;
   const afterFamiliar = applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
-    state: afterHideousLaughter,
+    state: afterEnemyZeroHitPointTemporaryHitPoints,
     targetId,
     priorHp: input.target.hp,
     nextHp: damaged.hp,
@@ -481,6 +496,34 @@ export function applyBattleHitPointDamage(input: {
   return battleStateAfterWardingBondCasterZeroHitPoints(
     afterWardingBondDamageShare,
   );
+}
+
+function applyEnemyZeroHitPointTemporaryHitPointsAwards(input: {
+  readonly state: BattleState;
+  readonly damageSourceId: CombatantId | undefined;
+  readonly targetId: CombatantId;
+  readonly priorTarget: BattleCreatureState;
+  readonly damagedTarget: BattleCreatureState;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+}): BattleState {
+  const awards = enemyZeroHitPointTemporaryHitPointsAwards(input);
+  if (awards.length === 0) {
+    return input.state;
+  }
+  let combatants = input.state.combatants;
+  for (const award of awards) {
+    const beneficiary = combatants.get(award.beneficiaryId);
+    if (beneficiary === undefined) {
+      continue;
+    }
+    combatants = new Map(combatants).set(
+      award.beneficiaryId,
+      applyTemporaryHitPoints(beneficiary, award.temporaryHitPoints),
+    );
+  }
+  return combatants === input.state.combatants
+    ? input.state
+    : { ...input.state, combatants };
 }
 
 export function damageLifecycleConcentrationSavingThrowHoles(input: {
@@ -810,6 +853,7 @@ export function applyAttackDamage(
     wardingBondDamageShareConcentrationSavingThrows:
       fillSet.concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
+    spatialFacts: fillSet.targetSpatialFacts,
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(afterDamage, attackDamageRiders),
@@ -878,6 +922,7 @@ export function applyAttackDamageAmount(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   wardingBondDamageShareConcentrationSavingThrows: readonly ConcentrationSavingThrowFill[] = [],
+  spatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target == null) {
@@ -893,6 +938,7 @@ export function applyAttackDamageAmount(
     concentrationSavingThrow,
     wardingBondDamageShareConcentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
+    spatialFacts,
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(

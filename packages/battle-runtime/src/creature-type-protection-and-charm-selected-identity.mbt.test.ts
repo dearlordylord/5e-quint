@@ -259,9 +259,7 @@ const selectedUnitIdentityReplays = [
       },
       {
         name: "scoped-creature-type-attacker-rolls-with-disadvantage",
-        actions: [
-          "doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage",
-        ],
+        actions: ["doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage"],
         expected: expectedProjection({
           knownWillingProtectionTargetAdmitted: true,
           plainProtectionTargetRejected: true,
@@ -275,9 +273,7 @@ const selectedUnitIdentityReplays = [
       },
       {
         name: "scoped-creature-type-charm-and-possession-are-prevented",
-        actions: [
-          "doPreventProtectionFromEvilAndGoodScopedCharmAndPossession",
-        ],
+        actions: ["doPreventProtectionFromEvilAndGoodScopedCharmAndPossession"],
         expected: expectedProjection({
           knownWillingProtectionTargetAdmitted: true,
           plainProtectionTargetRejected: true,
@@ -337,7 +333,7 @@ const creatureTypeProtectionAndCharmDiscoveries = {
         resolveAnimalFriendshipFailedSave(state),
         beastTargetId,
         1,
-        { damageSourceId: casterId },
+        { damageSourceId: casterId, spatialFacts: [] },
       ),
       animalFriendshipTargetAdmission(state),
       emptyProtectionFromEvilAndGoodEvidence(),
@@ -345,7 +341,10 @@ const creatureTypeProtectionAndCharmDiscoveries = {
     );
   },
   doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () =>
-    protectionProjection(resolveProtectionFromEvilAndGood(), "protectionResolved"),
+    protectionProjection(
+      resolveProtectionFromEvilAndGood(),
+      "protectionResolved",
+    ),
   doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () =>
     protectionProjection(
       projectProtectionFromEvilAndGoodAttackRollModes(),
@@ -644,9 +643,7 @@ function resolveProtectionFromEvilAndGood(): {
         targetHole.choices.includes(protectedTargetId),
       plainProtectionTargetRejected: plainTarget.tag === "invalid",
       protectionEffectPresent:
-        protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
-          protectedState,
-        ),
+        protectionFromEvilAndGoodEffectPresentOnProtectedTarget(protectedState),
     },
   };
 }
@@ -760,10 +757,7 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
   const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
     resolved.state,
   );
-  const protectedTarget = requireCombatantState(
-    targetTurn,
-    protectedTargetId,
-  );
+  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
   const activeEffectState: BattleState = {
     ...targetTurn,
     combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
@@ -835,7 +829,8 @@ function protectionFromEvilAndGoodHumanoidAttackerTurn(
 function protectionFromEvilAndGoodProtectedTargetTurn(
   protectedState: BattleState,
 ): BattleState {
-  const undeadTurn = protectionFromEvilAndGoodUndeadAttackerTurn(protectedState);
+  const undeadTurn =
+    protectionFromEvilAndGoodUndeadAttackerTurn(protectedState);
   const humanoidTurn =
     protectionFromEvilAndGoodHumanoidAttackerTurn(undeadTurn);
   const feyTurn = requireResolvedState(
@@ -1224,16 +1219,18 @@ function protectionFromEvilAndGoodEffectPresentOnProtectedTarget(
   state: BattleState,
 ): boolean {
   return (
-    state.combatants.get(protectedTargetId)?.activeEffects.some(
-      (effect) =>
-        effect.kind === "creatureTypeProtection" &&
-        effect.sourceSpellId === protectionFromEvilAndGoodUnitId &&
-        effect.sourceCombatantId === casterId &&
-        effect.attackRollMode === "disadvantage" &&
-        effect.preventedConditions.includes("charmed") &&
-        effect.preventedConditions.includes("frightened") &&
-        effect.preventsPossession,
-    ) ?? false
+    state.combatants
+      .get(protectedTargetId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "creatureTypeProtection" &&
+          effect.sourceSpellId === protectionFromEvilAndGoodUnitId &&
+          effect.sourceCombatantId === casterId &&
+          effect.attackRollMode === "disadvantage" &&
+          effect.preventedConditions.includes("charmed") &&
+          effect.preventedConditions.includes("frightened") &&
+          effect.preventsPossession,
+      ) ?? false
   );
 }
 
@@ -1244,13 +1241,15 @@ function spellConditionPresentOnProtectedTarget(
   condition: Condition,
 ): boolean {
   return (
-    state.combatants.get(protectedTargetId)?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.sourceSpellId === sourceSpellId &&
-        effect.sourceCombatantId === sourceCombatantId &&
-        effect.condition === condition,
-    ) ?? false
+    state.combatants
+      .get(protectedTargetId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.sourceSpellId === sourceSpellId &&
+          effect.sourceCombatantId === sourceCombatantId &&
+          effect.condition === condition,
+      ) ?? false
   );
 }
 
@@ -1322,15 +1321,19 @@ function snapshotHasCondition(
   return conditions.includes(condition);
 }
 
-function animalFriendshipEffectPresentOnBeastTarget(state: BattleState): boolean {
+function animalFriendshipEffectPresentOnBeastTarget(
+  state: BattleState,
+): boolean {
   return (
-    state.combatants.get(beastTargetId)?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.sourceSpellId === animalFriendshipUnitId &&
-        effect.sourceCombatantId === casterId &&
-        effect.condition === "charmed",
-    ) ?? false
+    state.combatants
+      .get(beastTargetId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.sourceSpellId === animalFriendshipUnitId &&
+          effect.sourceCombatantId === casterId &&
+          effect.condition === "charmed",
+      ) ?? false
   );
 }
 

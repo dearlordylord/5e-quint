@@ -1807,6 +1807,7 @@ export function resolveSaveGateDamageSpellAct(input: {
           targetId,
         ),
         damageSourceId: input.actorId,
+        spatialFacts: input.fillSet.targetSpatialFacts,
       },
     );
   }, stateAfterCastConcentrationBreak);

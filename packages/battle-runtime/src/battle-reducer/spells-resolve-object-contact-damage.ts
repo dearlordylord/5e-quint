@@ -982,6 +982,7 @@ function resolveObjectContactDamage(input: {
       ),
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.actorId,
+      spatialFacts: [],
     });
   }, input.state);
   const penalized = applyObjectContactPenalties({

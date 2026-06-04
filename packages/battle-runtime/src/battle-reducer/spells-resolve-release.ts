@@ -1018,6 +1018,7 @@ export function resolveSpellRelease(
       sourceDamageRollPenaltyRoll,
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.actorId,
+      spatialFacts: fillSet.targetSpatialFacts,
     },
   );
   const effected = applySpellActiveEffects(

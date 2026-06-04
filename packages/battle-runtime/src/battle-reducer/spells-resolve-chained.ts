@@ -639,20 +639,22 @@ export function resolveChainedSpellAttackDamageAct(input: {
     replayState = applyChainedSpellDamage(
       replayState,
       target.combatantId,
-      input.invocation,
-      selectedDamageType,
-      step.damageRoll,
       damageAmount,
       critical,
-      concentrationFill,
-      damageDispositionForTarget(
-        dispositionHole === null ? [] : [dispositionHole],
-        fillSet.damageDispositions,
-        target.combatantId,
-      ),
-      concentrationLifecycleFills,
-      hideousLaughterLifecycleFills,
-      damageEventKey,
+      {
+        concentrationSavingThrow: concentrationFill,
+        damageDisposition: damageDispositionForTarget(
+          dispositionHole === null ? [] : [dispositionHole],
+          fillSet.damageDispositions,
+          target.combatantId,
+        ),
+        wardingBondDamageShareConcentrationSavingThrows:
+          concentrationLifecycleFills,
+        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+        hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
+        damageSourceId: input.actorId,
+        spatialFacts: step.target.spatialFacts ?? [],
+      },
     );
     afterDamageEvents.push({
       damageSourceId: input.actorId,
@@ -1132,47 +1134,48 @@ function chainedSpellDamageByType(
   );
 }
 
+type ChainedSpellDamageContext = {
+  concentrationSavingThrow:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly damageDisposition: BattleAttackDamageDisposition;
+  readonly wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[];
+  readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly hideousLaughterDamageRepeatSaveEventKey?: string;
+  readonly damageSourceId: CombatantId;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+};
+
 export function applyChainedSpellDamage(
   state: BattleState,
   targetId: CombatantId,
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
-  >,
-  damageType: DamageType,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   damageAmount: number,
   critical: boolean,
-  concentrationSavingThrow:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined,
-  damageDisposition: BattleAttackDamageDisposition,
-  wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >[] = [],
-  hideousLaughterDamageRepeatSaves: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  hideousLaughterDamageRepeatSaveEventKey?: string,
+  context: ChainedSpellDamageContext,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
     return state;
   }
-  void invocation;
-  void damageType;
-  void damageRoll;
   return applyBattleHitPointDamage({
     state,
     target,
     damageAmount,
     deathFailuresAtZeroHp: critical ? 2 : 1,
-    damageDisposition,
-    concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey,
+    damageDisposition: context.damageDisposition,
+    damageSourceId: context.damageSourceId,
+    spatialFacts: context.spatialFacts,
+    concentrationSavingThrow: context.concentrationSavingThrow,
+    wardingBondDamageShareConcentrationSavingThrows:
+      context.wardingBondDamageShareConcentrationSavingThrows,
+    hideousLaughterDamageRepeatSaves: context.hideousLaughterDamageRepeatSaves,
+    hideousLaughterDamageRepeatSaveEventKey:
+      context.hideousLaughterDamageRepeatSaveEventKey,
   });
 }

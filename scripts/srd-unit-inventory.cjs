@@ -256,14 +256,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
-    {
-      owner: "battle-runtime defeat-triggered Temporary Hit Point owner",
-      requirement:
-        "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
-    },
-  ],
-  [
     "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
     {
       owner: "character-creation-runtime and character-sheet spellbook owner",

@@ -145,6 +145,12 @@
           "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -165,7 +171,8 @@
         "packages/battle-runtime/battle-runtime-turn-order.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-        "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4640,6 +4647,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.failed-ability-check-resource-boost"
     },
     {
@@ -5484,6 +5497,22 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt is the focused Dark One's Blessing literal projection witness for self kill, nearby-other kill, enemy/range rejection, minimum Temporary Hit Points, and Temporary Hit Point replacement.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+        }
+      ],
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -7127,6 +7156,18 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+          "role": "mbt-fixture"
         }
       ]
     },

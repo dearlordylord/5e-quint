@@ -585,20 +585,22 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
-            sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
-              input.fillSet.sourceDamageRollPenaltyRolls,
-              attackResolvedState.combatants.get(input.actorId),
-              spellDamageByTypeForTarget(
-                target,
-                input.invocation,
-                input.fillSet.attackBurstDamageRoll,
-                "full",
-                spellMarkedDamageRiders,
-                critical,
+            sourceDamageRollPenaltyRoll:
+              sourceDamageRollPenaltyRollForDamageRoll(
+                input.fillSet.sourceDamageRollPenaltyRolls,
+                attackResolvedState.combatants.get(input.actorId),
+                spellDamageByTypeForTarget(
+                  target,
+                  input.invocation,
+                  input.fillSet.attackBurstDamageRoll,
+                  "full",
+                  spellMarkedDamageRiders,
+                  critical,
+                ),
+                input.fillSet.attackBurstDamageRoll.holeId,
               ),
-              input.fillSet.attackBurstDamageRoll.holeId,
-            ),
             damageSourceId: input.actorId,
+            spatialFacts: input.fillSet.targetSpatialFacts,
           },
         )
       : attackResolvedState;
@@ -968,20 +970,22 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
-            sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
-              input.fillSet.sourceDamageRollPenaltyRolls,
-              attackResolvedState.combatants.get(input.actorId),
-              spellDamageByTypeForTarget(
-                target,
-                input.invocation,
-                input.fillSet.attackBurstDamageRoll,
-                "full",
-                spellMarkedDamageRiders,
-                critical,
+            sourceDamageRollPenaltyRoll:
+              sourceDamageRollPenaltyRollForDamageRoll(
+                input.fillSet.sourceDamageRollPenaltyRolls,
+                attackResolvedState.combatants.get(input.actorId),
+                spellDamageByTypeForTarget(
+                  target,
+                  input.invocation,
+                  input.fillSet.attackBurstDamageRoll,
+                  "full",
+                  spellMarkedDamageRiders,
+                  critical,
+                ),
+                input.fillSet.attackBurstDamageRoll.holeId,
               ),
-              input.fillSet.attackBurstDamageRoll.holeId,
-            ),
             damageSourceId: input.actorId,
+            spatialFacts: input.fillSet.targetSpatialFacts,
           },
         )
       : attackResolvedState;
@@ -1034,6 +1038,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
             damageSourceId: input.actorId,
+            spatialFacts: input.fillSet.targetSpatialFacts,
           });
         }, damagedByAttackWithConcentration);
 

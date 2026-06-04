@@ -1,5 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
@@ -68,6 +68,7 @@ import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+  ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -276,6 +277,13 @@ export function battleCreatureStateFromInit(
           creatureInit.characterUnitRefs,
           classLevels,
         ),
+        enemyZeroHitPointTemporaryHitPointsProfiles:
+          characterEnemyZeroHitPointTemporaryHitPointsProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -1255,6 +1263,37 @@ export function characterRogueSteadyAimProfiles(
           unitRefs,
           unit.id,
           ROGUE_STEADY_AIM_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterEnemyZeroHitPointTemporaryHitPointsProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "enemyZeroHitPointTemporaryHitPoints" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];
