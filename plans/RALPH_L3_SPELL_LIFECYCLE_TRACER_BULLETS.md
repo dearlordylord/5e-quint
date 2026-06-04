@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Enhance Ability upcast per-target ability choices"
     },
     {
@@ -85,7 +85,7 @@ owns branch repair.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | ready-for-implementation-after-light-research | none | Independent spell-resource/targeting slice. |
+| 1 | L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET - Promote Enhance Ability upcast per-target ability choices | done | none | Independent spell-resource/targeting slice. |
 | 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | ready-for-implementation-after-light-research | none | Independent closure-or-promotion decision. |
 | 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | ready-for-implementation-after-light-research | none | Independent spell-effect lifecycle slice. |
 | 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | ready-for-implementation-after-light-research | none | Independent stat-block lifecycle decision. |
@@ -132,7 +132,7 @@ Surface schema/catalog tests and must leave runtime follow-ups honest.
 
 ### Task 1 - L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote the remaining Enhance Ability level-3+ upcast behavior.
 
