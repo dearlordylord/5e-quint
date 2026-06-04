@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.healing-resource-action character-sheet.class-feature-use-count-resource character-sheet.class-feature-point-pool-resource character-sheet.font-of-magic-slot-to-sorcery-points character-sheet.font-of-magic-sorcery-points-to-spell-slot character-sheet.class-feature-long-rest-use-state character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 module featureResourcePool {
   type ResourcePoolFacts = {

@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.spellbook-ritual-invocation
 
 module characterSheetSpellbookRitualSelectedIdentityMbt {
   import spellbookRitualAccess.* from "../shared-algebras/proofs/rule-core/spellbook-ritual-access"

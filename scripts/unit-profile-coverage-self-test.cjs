@@ -909,6 +909,93 @@ function runSelfTest(root) {
         `Self-test failed: expected matching deterministic replay action marker to pass, got ${JSON.stringify(issues)}`,
       );
     }
+    const reachableOwnerPath = path.join(
+      tempDir,
+      "packages/battle-runtime/src/reachable-selected-identity.mbt.test.ts",
+    );
+    const unreachableOwnerPath = path.join(
+      tempDir,
+      "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
+    );
+    const selectedReplayText = [
+      "const selectedUnitIdentityReplays = [",
+      "  {",
+      '    taskId: "QMBT10",',
+      '    unitId: "fixture_unit",',
+      '    actions: ["doReachableAction"],',
+      "    sequences: [],",
+      "  },",
+      "] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;",
+      "",
+    ].join("\n");
+    const reachableSelectedReplayText = [
+      'import { startBattle, resolveBattleSubject } from "./index.ts";',
+      "void startBattle;",
+      "void resolveBattleSubject;",
+      selectedReplayText,
+    ].join("\n");
+    fs.mkdirSync(path.dirname(reachableOwnerPath), { recursive: true });
+    fs.writeFileSync(reachableOwnerPath, reachableSelectedReplayText);
+    fs.writeFileSync(unreachableOwnerPath, selectedReplayText);
+    const reachableRows = extractSelectedUnitIdentityReplays(
+      tempDir,
+      reachableSelectedReplayText,
+      reachableOwnerPath,
+    );
+    const unreachableRows = extractSelectedUnitIdentityReplays(
+      tempDir,
+      selectedReplayText,
+      unreachableOwnerPath,
+    );
+    if (reachableRows[0]?.reducerReachability?.reachable !== true) {
+      fail(
+        `Self-test failed: expected selected identity owner to reach production runtime entrypoints, got ${JSON.stringify(reachableRows)}`,
+      );
+    }
+    if (unreachableRows[0]?.reducerReachability?.reachable !== false) {
+      fail(
+        `Self-test failed: expected selected identity owner without runtime imports to fail reachability, got ${JSON.stringify(unreachableRows)}`,
+      );
+    }
+    const unreachableReplayIssues = validateOwnerClaims(
+      [],
+      [],
+      [],
+      {
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: unreachableRows.map((replay) => ({
+          ownerPath:
+            "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
+          ...replay,
+        })),
+        selectedUnitIdentityReplayConsumers: [
+          {
+            ownerPath:
+              "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
+          },
+        ],
+      },
+      [
+        {
+          unitId: "fixture_unit",
+          evidence: {
+            ownerPath:
+              "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
+            tag: selectedIdentityMbtEvidenceTag,
+            taskId: "QMBT10",
+          },
+        },
+      ],
+    );
+    const reachabilityIssue = unreachableReplayIssues.find((issue) =>
+      issue.includes("does not reach production runtime entrypoints"),
+    );
+    if (reachabilityIssue === undefined) {
+      fail(
+        `Self-test failed: expected missing production runtime reachability issue, got ${JSON.stringify(unreachableReplayIssues)}`,
+      );
+    }
     const taskClaimDriftIssues = validateOwnerClaims(
       [
         {

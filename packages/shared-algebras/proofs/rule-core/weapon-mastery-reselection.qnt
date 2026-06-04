@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.WEAPON_MASTERY.RESELECTION
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.weapon-mastery-reselection
 
 module weaponMasteryReselection {
   type WeaponMasteryReselectionFacts = {

@@ -15,7 +15,7 @@
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm unit-profile-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

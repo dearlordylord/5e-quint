@@ -31,9 +31,12 @@ const BattleResolutionResultSchema = Schema.Union(
       Schema.Array(BattleDroppedObjectOutcomeSchema),
       { exact: true },
     ),
-    shovePushes: Schema.optionalWith(Schema.Array(BattleShovePushOutcomeSchema), {
-      exact: true,
-    }),
+    shovePushes: Schema.optionalWith(
+      Schema.Array(BattleShovePushOutcomeSchema),
+      {
+        exact: true,
+      },
+    ),
   }),
   Schema.Struct({
     tag: Schema.Literal("needsHoles"),

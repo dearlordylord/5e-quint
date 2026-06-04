@@ -30,10 +30,7 @@ import {
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
-import {
-  createMcpCompositionRoot,
-  handleToolCall,
-} from "./server.ts";
+import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 
 const fighterId = combatantId("fighter");
@@ -111,7 +108,9 @@ describe("manual MCP battle surface coverage", () => {
     expect(
       root.sessionStore.battleState?.combatants
         .get(goblinId)
-        ?.activeEffects.some((effect) => effect.kind === "bardicInspirationDie"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "bardicInspirationDie",
+        ),
     ).toBe(true);
   });
 
@@ -158,12 +157,19 @@ describe("manual MCP battle surface coverage", () => {
     });
     const afterTarget = call(root, "fill_battle_hole", {
       subject: burst.subject,
-      fill: spellTargetFill(target.holeId, "fighter", "goblin", "sorcerous_burst"),
+      fill: spellTargetFill(
+        target.holeId,
+        "fighter",
+        "goblin",
+        "sorcerous_burst",
+      ),
     });
 
     expect(afterTarget.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll", rollMode: "advantage" })],
+      holes: [
+        expect.objectContaining({ kind: "attackRoll", rollMode: "advantage" }),
+      ],
     });
   });
 
@@ -196,7 +202,12 @@ describe("manual MCP battle surface coverage", () => {
     const act = requireAct(root, "Martial Arts Bonus Unarmed Strike");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: act.subject,
-      fill: attackTargetFill("battle:attack:target", "fighter", "goblin", "Unarmed Strike"),
+      fill: attackTargetFill(
+        "battle:attack:target",
+        "fighter",
+        "goblin",
+        "Unarmed Strike",
+      ),
     });
     const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
     const afterRoll = call(root, "fill_battle_hole", {
@@ -228,7 +239,10 @@ describe("manual MCP battle surface coverage", () => {
         combatantId: fighterId,
         initiative: 20,
         characterUnitRefs: [
-          { unitId: "mastery_sap", supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE] },
+          {
+            unitId: "mastery_sap",
+            supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
+          },
         ],
         weaponMasteries: [{ weaponUnitId: "weapon_longsword" }],
       }),
@@ -239,11 +253,21 @@ describe("manual MCP battle surface coverage", () => {
     const goblinAttack = requireAct(sapRoot, "Attack", "Scimitar");
     const afterGoblinTarget = call(sapRoot, "fill_battle_hole", {
       subject: goblinAttack.subject,
-      fill: attackTargetFill("battle:attack:target", "goblin", "fighter", "Scimitar"),
+      fill: attackTargetFill(
+        "battle:attack:target",
+        "goblin",
+        "fighter",
+        "Scimitar",
+      ),
     });
     expect(afterGoblinTarget.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll", rollMode: "disadvantage" })],
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          rollMode: "disadvantage",
+        }),
+      ],
     });
 
     const toppleRoot = createMcpCompositionRoot();
@@ -312,10 +336,21 @@ describe("manual MCP battle surface coverage", () => {
       }),
     ]);
 
-    const afterDamage = resolveAttack(root, "Greataxe", "goblin", 18, 12, [[6]], {
-      cleaveSecondTargetId: "ally",
-    });
-    const cleaveDecision = requireHole(afterDamage.result.holes, "unitFeatureDecision");
+    const afterDamage = resolveAttack(
+      root,
+      "Greataxe",
+      "goblin",
+      18,
+      12,
+      [[6]],
+      {
+        cleaveSecondTargetId: "ally",
+      },
+    );
+    const cleaveDecision = requireHole(
+      afterDamage.result.holes,
+      "unitFeatureDecision",
+    );
     const afterCleaveDecision = call(root, "fill_battle_hole", {
       subject: afterDamage.result.subject,
       fill: {
@@ -328,7 +363,10 @@ describe("manual MCP battle surface coverage", () => {
       throw new Error(JSON.stringify(afterCleaveDecision.result));
     }
     expect(afterCleaveDecision.result).toMatchObject({ tag: "needsHoles" });
-    const secondTarget = requireHole(afterCleaveDecision.result.holes, "targetChoice");
+    const secondTarget = requireHole(
+      afterCleaveDecision.result.holes,
+      "targetChoice",
+    );
     const afterSecondTarget = call(root, "fill_battle_hole", {
       subject: afterDamage.result.subject,
       fill: attackTargetFill(
@@ -342,7 +380,12 @@ describe("manual MCP battle surface coverage", () => {
     });
     expect(afterSecondTarget.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll", label: "Cleave attack roll" })],
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          label: "Cleave attack roll",
+        }),
+      ],
     });
   });
 
@@ -437,12 +480,16 @@ describe("manual MCP battle surface coverage", () => {
       holes: [expect.objectContaining({ kind: "reactionDecision" })],
       snapshot: { pendingReaction: { trigger: "attackHit" } },
     });
-    const reactionHole = requireHole(afterAttackRoll.result.holes, "reactionDecision");
-    const shieldChoice = afterAttackRoll.result.snapshot.pendingReaction.choices.find(
-      (choice: Json) =>
-        choice.kind === "castTriggeredReactionSpell" &&
-        choice.invocation.spellId === "shield",
+    const reactionHole = requireHole(
+      afterAttackRoll.result.holes,
+      "reactionDecision",
     );
+    const shieldChoice =
+      afterAttackRoll.result.snapshot.pendingReaction.choices.find(
+        (choice: Json) =>
+          choice.kind === "castTriggeredReactionSpell" &&
+          choice.invocation.spellId === "shield",
+      );
     if (shieldChoice === undefined) {
       throw new Error("Expected Shield reaction choice.");
     }
@@ -536,7 +583,10 @@ describe("manual MCP battle surface coverage", () => {
       subject: goblinAttack.subject,
       fill: attackRollFill(attackRoll.holeId, 18, 12, attackRoll.rollMode),
     });
-    const attackDamage = requireHole(afterAttackRoll.result.holes, "rolledDice");
+    const attackDamage = requireHole(
+      afterAttackRoll.result.holes,
+      "rolledDice",
+    );
     const afterDamage = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
       fill: rolledDiceFill(attackDamage.holeId, [[1]]),
@@ -547,18 +597,22 @@ describe("manual MCP battle surface coverage", () => {
       holes: [expect.objectContaining({ kind: "reactionDecision" })],
       snapshot: { pendingReaction: { trigger: "afterDamage" } },
     });
-    const hellishChoice = afterDamage.result.snapshot.pendingReaction.choices.find(
-      (choice: Json) =>
-        choice.kind === "castTriggeredReactionSpell" &&
-        choice.invocation.spellId === "hellish_rebuke" &&
-        choice.invocation.slotLevel === 2,
-    );
+    const hellishChoice =
+      afterDamage.result.snapshot.pendingReaction.choices.find(
+        (choice: Json) =>
+          choice.kind === "castTriggeredReactionSpell" &&
+          choice.invocation.spellId === "hellish_rebuke" &&
+          choice.invocation.slotLevel === 2,
+      );
     if (hellishChoice === undefined) {
       throw new Error("Expected Hellish Rebuke reaction choice.");
     }
     const save = requireHole(hellishChoice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(hellishChoice.initialHoles, "rolledDice");
-    const reactionHole = requireHole(afterDamage.result.holes, "reactionDecision");
+    const reactionHole = requireHole(
+      afterDamage.result.holes,
+      "reactionDecision",
+    );
     const afterHellishRebuke = call(root, "fill_battle_hole", {
       subject: afterDamage.result.subject ?? goblinAttack.subject,
       fill: {
@@ -646,15 +700,19 @@ describe("manual MCP battle surface coverage", () => {
       holes: [expect.objectContaining({ kind: "reactionDecision" })],
       snapshot: { pendingReaction: { trigger: "creatureFalls" } },
     });
-    const featherFallChoice = falling.result.snapshot.pendingReaction.choices.find(
-      (choice: Json) =>
-        choice.kind === "castTriggeredReactionSpell" &&
-        choice.invocation.spellId === "feather_fall",
-    );
+    const featherFallChoice =
+      falling.result.snapshot.pendingReaction.choices.find(
+        (choice: Json) =>
+          choice.kind === "castTriggeredReactionSpell" &&
+          choice.invocation.spellId === "feather_fall",
+      );
     if (featherFallChoice === undefined) {
       throw new Error("Expected Feather Fall reaction choice.");
     }
-    const targetList = requireHole(featherFallChoice.initialHoles, "spellTargetList");
+    const targetList = requireHole(
+      featherFallChoice.initialHoles,
+      "spellTargetList",
+    );
     const reactionHole = requireHole(falling.result.holes, "reactionDecision");
     const resolved = call(root, "fill_battle_hole", {
       subject: falling.result.subject,
@@ -703,7 +761,9 @@ describe("manual MCP battle surface coverage", () => {
     expect(
       root.sessionStore.battleState?.combatants
         .get(allyId)
-        ?.activeEffects.some((effect) => effect.kind === "featherFallMitigation"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "featherFallMitigation",
+        ),
     ).toBe(true);
   });
 
@@ -725,7 +785,8 @@ describe("manual MCP battle surface coverage", () => {
         }),
       }),
     ]);
-    const chainWarlock = chainRoot.sessionStore.battleState?.combatants.get(fighterId);
+    const chainWarlock =
+      chainRoot.sessionStore.battleState?.combatants.get(fighterId);
     expect(chainWarlock?.origin.kind).toBe("character");
     if (chainWarlock?.origin.kind !== "character") return;
     expect(chainWarlock.origin.spellcasting?.invocationSpellAccesses).toEqual([
@@ -735,8 +796,8 @@ describe("manual MCP battle surface coverage", () => {
       }),
     ]);
     expect(
-      call(chainRoot, "discover_battle_acts", {}).snapshot.acts.some((act: Json) =>
-        String(act.summary).includes("Find Familiar"),
+      call(chainRoot, "discover_battle_acts", {}).snapshot.acts.some(
+        (act: Json) => String(act.summary).includes("Find Familiar"),
       ),
     ).toBe(false);
 
@@ -904,7 +965,9 @@ describe("manual MCP battle surface coverage", () => {
     ]);
 
     for (const spellId of [...cantrips, ...preparedSpells]) {
-      expect(requireSpellAct(root, spellId).subject.invocation.spellId).toBe(spellId);
+      expect(requireSpellAct(root, spellId).subject.invocation.spellId).toBe(
+        spellId,
+      );
     }
   });
 });
@@ -919,8 +982,14 @@ function call(root: Root, toolName: string, args: Json): Json {
   );
 }
 
-function startBattleRight(_root: Root, combatants: readonly BattleCreatureInit[]): BattleState {
-  const result = startBattle({ battleId: battleId(`battle:${crypto.randomUUID()}`), combatants });
+function startBattleRight(
+  _root: Root,
+  combatants: readonly BattleCreatureInit[],
+): BattleState {
+  const result = startBattle({
+    battleId: battleId(`battle:${crypto.randomUUID()}`),
+    combatants,
+  });
   if (Either.isLeft(result)) throw new Error(result.left.message);
   return result.right;
 }
@@ -934,7 +1003,9 @@ function statBlock(
     readonly creatureType?: "beast";
   },
 ): BattleCreatureInit {
-  const statBlock = root.statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const statBlock = root.statBlockCatalog.requireStatBlock(
+    "stat_block_goblin_warrior",
+  );
   const battleStatBlock =
     input.creatureType === undefined
       ? statBlock
@@ -977,7 +1048,10 @@ function character(
     readonly invocationFeatures?: any;
   },
 ): BattleCreatureInit {
-  const attack = input.attack === undefined ? weaponAttack(root, "weapon_longsword", "str", 3) : input.attack;
+  const attack =
+    input.attack === undefined
+      ? weaponAttack(root, "weapon_longsword", "str", 3)
+      : input.attack;
   const selectedLoadout =
     input.selectedLoadout ??
     (attack === null
@@ -991,8 +1065,14 @@ function character(
         });
   const ac = {
     ...(input.armorClass ?? defaultArmorClassState()),
-    rightHandUse: selectedLoadout.weapon === undefined ? ("free" as const) : ("mainWeapon" as const),
-    leftHandUse: selectedLoadout.shield === undefined ? ("free" as const) : ("shield" as const),
+    rightHandUse:
+      selectedLoadout.weapon === undefined
+        ? ("free" as const)
+        : ("mainWeapon" as const),
+    leftHandUse:
+      selectedLoadout.shield === undefined
+        ? ("free" as const)
+        : ("shield" as const),
   };
   return {
     combatantId: input.combatantId,
@@ -1005,7 +1085,10 @@ function character(
       characterUnitRefs: input.characterUnitRefs ?? [],
       invocationFeatures: input.invocationFeatures ?? [],
       classLevels: input.classLevels ?? [
-        { className: input.spellcasting?.sourceClassName ?? "fighter", level: 1 },
+        {
+          className: input.spellcasting?.sourceClassName ?? "fighter",
+          level: 1,
+        },
       ],
       d20Statistics: {
         abilityScores: {
@@ -1047,7 +1130,9 @@ function character(
         damageAbilityModifier: abilityModifier(3),
       },
       ...(input.resources === undefined ? {} : { resources: input.resources }),
-      ...(input.spellcasting === undefined ? {} : { spellcasting: input.spellcasting }),
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
     },
   };
 }
@@ -1059,7 +1144,8 @@ function weaponAttack(
   mod: number,
 ): CharacterWeaponAttackActionOption {
   const weapon = root.unitLibrary.requireUnit(weaponId);
-  if (weapon.kind !== "weapon") throw new Error(`Expected weapon Unit: ${weaponId}`);
+  if (weapon.kind !== "weapon")
+    throw new Error(`Expected weapon Unit: ${weaponId}`);
   return {
     kind: "weapon",
     weapon: weapon as WeaponRecord,
@@ -1077,7 +1163,10 @@ function spellcasting(
     readonly abilityModifier: number;
     readonly cantrips?: readonly string[];
     readonly preparedSpells?: readonly string[];
-    readonly featurePreparedSpells?: readonly { readonly sourceUnitId: string; readonly spellId: string }[];
+    readonly featurePreparedSpells?: readonly {
+      readonly sourceUnitId: string;
+      readonly spellId: string;
+    }[];
     readonly spellbookRitualSpellAccesses?: readonly {
       readonly tag: "spellbookRitual";
       readonly spellId: string;
@@ -1090,8 +1179,14 @@ function spellcasting(
       readonly ritualSpells: readonly [string, string];
       readonly spellcastingFocus: "book_of_shadows";
     }[];
-    readonly invocationSpellAccesses?: readonly { readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar"; readonly spellId: string }[];
-    readonly slots?: readonly { readonly spellLevel: number; readonly count: number }[];
+    readonly invocationSpellAccesses?: readonly {
+      readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
+      readonly spellId: string;
+    }[];
+    readonly slots?: readonly {
+      readonly spellLevel: number;
+      readonly count: number;
+    }[];
   },
 ) {
   return {
@@ -1099,28 +1194,40 @@ function spellcasting(
     spellcastingAbilityModifier: input.abilityModifier,
     proficiencyBonus: 2,
     canCastSpells: true,
-    cantrips: (input.cantrips ?? []).map((id) => root.unitLibrary.requireUnit(id)),
-    preparedSpells: (input.preparedSpells ?? []).map((id) => root.unitLibrary.requireUnit(id)),
+    cantrips: (input.cantrips ?? []).map((id) =>
+      root.unitLibrary.requireUnit(id),
+    ),
+    preparedSpells: (input.preparedSpells ?? []).map((id) =>
+      root.unitLibrary.requireUnit(id),
+    ),
     featurePreparedSpells: (input.featurePreparedSpells ?? []).map((entry) => ({
       sourceUnitId: entry.sourceUnitId,
       spell: root.unitLibrary.requireUnit(entry.spellId),
     })),
-    spellbookRitualSpellAccesses: (input.spellbookRitualSpellAccesses ?? []).map((entry) => ({
+    spellbookRitualSpellAccesses: (
+      input.spellbookRitualSpellAccesses ?? []
+    ).map((entry) => ({
       tag: entry.tag,
       spell: root.unitLibrary.requireUnit(entry.spellId),
       featureUnitId: entry.featureUnitId,
     })),
-    bookOfShadowsSpellAccesses: (input.bookOfShadowsSpellAccesses ?? []).map((entry) => ({
-      tag: entry.tag,
-      bookPresence: entry.bookPresence,
-      cantrips: entry.cantrips.map((id) => root.unitLibrary.requireUnit(id)),
-      ritualSpells: entry.ritualSpells.map((id) => root.unitLibrary.requireUnit(id)),
-      spellcastingFocus: entry.spellcastingFocus,
-    })),
-    invocationSpellAccesses: (input.invocationSpellAccesses ?? []).map((entry) => ({
-      tag: entry.tag,
-      spell: root.unitLibrary.requireUnit(entry.spellId),
-    })),
+    bookOfShadowsSpellAccesses: (input.bookOfShadowsSpellAccesses ?? []).map(
+      (entry) => ({
+        tag: entry.tag,
+        bookPresence: entry.bookPresence,
+        cantrips: entry.cantrips.map((id) => root.unitLibrary.requireUnit(id)),
+        ritualSpells: entry.ritualSpells.map((id) =>
+          root.unitLibrary.requireUnit(id),
+        ),
+        spellcastingFocus: entry.spellcastingFocus,
+      }),
+    ),
+    invocationSpellAccesses: (input.invocationSpellAccesses ?? []).map(
+      (entry) => ({
+        tag: entry.tag,
+        spell: root.unitLibrary.requireUnit(entry.spellId),
+      }),
+    ),
     spellSlots: input.slots ?? [],
   };
 }
@@ -1130,7 +1237,8 @@ function requireAct(root: Root, label: string, attackName?: string): Json {
   const act = discovered.snapshot.acts.find(
     (candidate: Json) =>
       candidate.label === label &&
-      (attackName === undefined || candidate.subject?.attackName === attackName),
+      (attackName === undefined ||
+        candidate.subject?.attackName === attackName),
   );
   if (act === undefined) throw new Error(`Expected MCP battle act: ${label}`);
   return act;
@@ -1212,11 +1320,18 @@ function attackRollFill(
   return {
     kind: "attackRoll",
     holeId,
-    value: { total, naturalD20, ...(rollMode === undefined ? {} : { rollMode }) },
+    value: {
+      total,
+      naturalD20,
+      ...(rollMode === undefined ? {} : { rollMode }),
+    },
   };
 }
 
-function rolledDiceFill(holeId: string, groups: readonly (readonly number[])[]) {
+function rolledDiceFill(
+  holeId: string,
+  groups: readonly (readonly number[])[],
+) {
   return {
     kind: "rolledDice",
     holeId,
@@ -1246,7 +1361,12 @@ function resolveAttackThroughRoll(
   const attackRoll = requireHole(afterTarget.result.holes, "attackRoll");
   return call(root, "fill_battle_hole", {
     subject: act.subject,
-    fill: attackRollFill(attackRoll.holeId, total, naturalD20, attackRoll.rollMode),
+    fill: attackRollFill(
+      attackRoll.holeId,
+      total,
+      naturalD20,
+      attackRoll.rollMode,
+    ),
   });
 }
 
@@ -1259,10 +1379,19 @@ function resolveAttack(
   damageGroups: readonly (readonly number[])[],
   options: { readonly cleaveSecondTargetId?: string } = {},
 ): Json {
-  const afterRoll = resolveAttackThroughRoll(root, attackName, targetId, total, naturalD20, options);
+  const afterRoll = resolveAttackThroughRoll(
+    root,
+    attackName,
+    targetId,
+    total,
+    naturalD20,
+    options,
+  );
   const damage = requireHole(afterRoll.result.holes, "rolledDice");
   return call(root, "fill_battle_hole", {
-    subject: afterRoll.result.subject ?? requireAct(root, "Attack", attackName).subject,
+    subject:
+      afterRoll.result.subject ??
+      requireAct(root, "Attack", attackName).subject,
     fill: rolledDiceFill(damage.holeId, damageGroups),
   });
 }

@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.healing-resource-action
 
 module layOnHandsResource {
   import featureResourceHitPointHealing.* from "./feature-resource-hit-point-healing"

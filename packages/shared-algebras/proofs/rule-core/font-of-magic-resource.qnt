@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.font-of-magic-slot-to-sorcery-points character-sheet.font-of-magic-sorcery-points-to-spell-slot
 
 module fontOfMagicResource {
   import featureResourcePool.* from "./feature-resource-pool"

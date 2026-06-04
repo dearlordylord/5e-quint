@@ -96,7 +96,7 @@ coverage without merging the two denominators.
 ## Running It
 
 ```sh
-pnpm quality                    # workspace lint, circular checks, and typecheck
+pnpm quality                    # coverage gates, lint, circular checks, and typecheck
 pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```

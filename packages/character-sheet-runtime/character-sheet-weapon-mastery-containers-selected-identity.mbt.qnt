@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner SHEET.WEAPON_MASTERY.RESELECTION
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.weapon-mastery-reselection
 
 module characterSheetWeaponMasteryContainersSelectedIdentityMbt {
   import weaponMasteryReselection.* from "../shared-algebras/proofs/rule-core/weapon-mastery-reselection"

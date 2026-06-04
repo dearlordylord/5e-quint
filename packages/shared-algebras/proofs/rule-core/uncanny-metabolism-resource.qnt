@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.class-feature-long-rest-use-state character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 module uncannyMetabolismResource {
   import featureResourceHitPointHealing.* from "./feature-resource-hit-point-healing"

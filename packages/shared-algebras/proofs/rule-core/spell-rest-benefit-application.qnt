@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.spell-rest-benefit-application
 
 module spellRestBenefitApplication {
   type SpellRestBenefitProfile = {

@@ -68,8 +68,8 @@
     },
     "profileClassificationCoverage": {
       "denominator": 274,
-      "numerator": 272,
-      "percent": "99.3%"
+      "numerator": 274,
+      "percent": "100%"
     },
     "qntProfileModelingCoverage": {
       "denominator": 96,
@@ -30075,6 +30075,10 @@
         "collectionId": "srd-5.2.1",
         "status": "installed"
       },
+      "claim": {
+        "reason": "Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row.",
+        "tag": "unsupported-profile"
+      },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": false,
@@ -30088,6 +30092,10 @@
       "catalogAdmission": {
         "collectionId": "srd-5.2.1",
         "status": "installed"
+      },
+      "claim": {
+        "reason": "Equipment AC data is authored and consumed by Character Sheet Armor Class projection, but the armor record is not represented as an executable Unit profile row.",
+        "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],

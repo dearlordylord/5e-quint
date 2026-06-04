@@ -52,6 +52,10 @@ const ALLOWLIST_PATH_RULES = [
       /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
   {
+    reason: "battle-runtime-mbt-fixture-boundary",
+    pattern: /^packages\/battle-runtime\/src\/battle-runtime-mbt-fixtures\.ts$/,
+  },
+  {
     reason: "battle-runtime-unit-feature-support-profile-boundary",
     pattern: /^packages\/battle-runtime\/src\/unit-feature-support\.ts$/,
   },

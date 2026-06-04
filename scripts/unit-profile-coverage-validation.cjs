@@ -839,6 +839,11 @@ function validateOwnerClaims(
     (claimKind) => completedRuntimeParityKinds.has(claimKind),
   );
   for (const replay of scannedUnitEvidence.selectedUnitIdentityReplays) {
+    if (replay.reducerReachability?.reachable !== true) {
+      issues.push(
+        `${replay.ownerPath} selected Unit identity replay data for ${replay.unitId} does not reach production runtime entrypoints (${replay.reducerReachability?.description ?? "no reducer reachability evidence"}).`,
+      );
+    }
     if (!selectedReplayConsumerOwnerPaths.has(replay.ownerPath)) {
       issues.push(
         `${replay.ownerPath} has selected Unit identity replay data but no deterministic replay test consumer.`,
