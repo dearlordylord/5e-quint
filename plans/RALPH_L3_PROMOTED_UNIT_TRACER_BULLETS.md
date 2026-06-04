@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Cleric Disciple of Life slot-cast healing modifier"
     },
     {
@@ -273,7 +273,7 @@ Out of scope:
 
 ### Task 3 - L3PUTB-03-CLERIC-DISCIPLE-OF-LIFE-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `cleric_disciple_of_life` slot-cast healing modifier.
 
