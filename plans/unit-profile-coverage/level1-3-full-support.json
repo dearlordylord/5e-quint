@@ -1471,11 +1471,10 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME: Consume the admitted remarkable-athlete profile during Initiative, Strength (Athletics) checks, and immediately after critical hits without duplicating movement or Opportunity Attack state. Owner: battle-runtime initiative/ability-check/attack-critical movement reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for roll-mode projection, Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
+      "reason": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT: Consume the admitted remarkable-athlete profile immediately after Critical Hits without duplicating movement or Opportunity Attack state. Owner: battle-runtime attack-critical movement reducers plus Quint parity. Required output: Focused runtime tests and promoted QNT/runtime parity for Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
       "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the existing initiative, ability-check, attack-critical, movement, and Opportunity Attack owners consume this profile.",
-        "status": "not-applicable"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
       "sourceRows": [
@@ -9928,13 +9927,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 12,
-      "witness-present": 155
+      "not-applicable": 11,
+      "witness-present": 156
     },
     "rowsByStatus": {
-      "not-applicable": 12,
+      "not-applicable": 11,
       "not-required": 30,
-      "witness-present": 155
+      "witness-present": 156
     }
   },
   "sourceArtifacts": {

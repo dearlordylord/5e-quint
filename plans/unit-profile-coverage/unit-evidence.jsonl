@@ -385,6 +385,7 @@
 {"unitId":"paladin_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"rogue_fast_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts"}}
 {"unitId":"fighter_remarkable_athlete","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"fighter_remarkable_athlete","evidence":{"tag":"selected-identity-mbt","taskId":"L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES","ownerPath":"packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts"}}
 {"unitId":"monk_open_hand_technique","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
 {"unitId":"paladin_sacred_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
 {"unitId":"ranger_hunters_prey","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}

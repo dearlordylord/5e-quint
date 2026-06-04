@@ -250,6 +250,7 @@ export {
   resolveFeatherFallLanding,
   resolveFlySpeedGrantEndFallCleanup,
   resolveFailedAbilityCheckResourceBoost,
+  requiredInitiativeRollModeForCombatant,
   resolveSuccessfulAbilityCheckReactionReduction,
   resolveBattleReaction,
   resolveBattleSubject,

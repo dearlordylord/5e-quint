@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 100,
+      "numerator": 100,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 100,
+      "numerator": 100,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 135,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 135,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 150,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 100,
+      "numerator": 100,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 100,
+      "numerator": 100,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -4106,17 +4106,36 @@
     },
     {
       "id": "unit-feature.remarkable-athlete",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initiative, ability-check, attack-critical, movement, and Opportunity Attack execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initialization retains the parsed support profile on character combatants. The Initiative owner derives Initiative roll Advantage from the retained profile without changing caller-supplied Initiative scores, and the Ability Check owner derives Advantage only for Strength (Athletics) checks without duplicating Ability Check state. Attack-critical movement and Opportunity Attack execution remain a separate future owner.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
       ],
-      "title": "Unit feature admits Remarkable Athlete roll and critical-hit movement facts",
-      "verificationOwners": []
+      "title": "Unit feature projects Remarkable Athlete Initiative and Strength Athletics roll modes and admits critical-hit movement facts",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.open-hand-technique",
@@ -4210,14 +4229,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 135,
+        "denominator": 136,
         "numerator": 135,
-        "percent": "100%"
+        "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 135,
+        "denominator": 136,
         "numerator": 135,
-        "percent": "100%"
+        "percent": "99.3%"
       }
     },
     "profileKinds": [
@@ -6516,6 +6535,15 @@
         "profileKind": "persistent-effect",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.remarkable-athlete",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
         ]
       },
       {
@@ -13344,6 +13372,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Focused Remarkable Athlete QNT witness covers Initiative Advantage, Strength (Athletics) Ability Check Advantage, and adjacent non-Strength-Athletics/non-selected normal roll modes.",
+      "profileIds": [
+        "unit-feature.remarkable-athlete"
+      ],
+      "taskId": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Remarkable Athlete support profile on selected character combatants, projecting Initiative Advantage without changing caller-supplied Initiative scores, projecting Strength (Athletics) Ability Check Advantage through the existing Ability Check roll-mode owner, and rejecting unselected or adjacent check modes.",
+      "profileIds": [
+        "unit-feature.remarkable-athlete"
+      ],
+      "taskId": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Focused Steady Aim MBT witness models Bonus Action availability, prior-movement rejection, Bonus Action spend, next-attack Advantage, Speed 0, attack consumption, duplicate-use rejection, and end-turn cleanup.",
       "profileIds": [
         "unit-feature.rogue-steady-aim"
@@ -13464,9 +13508,9 @@
         "profileFactDenominator": 103,
         "profileSubsetSupportedUnits": 24,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 64,
+        "selectedIdentityReplayDenominator": 65,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 64,
+        "selectedIdentityReplayWitnessUnits": 65,
         "supportedProfileUnits": 52,
         "unsupportedOrOtherUnits": 2
       }
@@ -14571,20 +14615,20 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
-            "mechanic": "Execute Remarkable Athlete Initiative Advantage, Strength (Athletics) Advantage, and post-Critical Hit half-Speed movement through the existing runtime owners."
+            "followUpTaskId": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
+            "mechanic": "Execute Remarkable Athlete immediate post-Critical Hit movement up to half Speed without provoking Opportunity Attacks through the existing attack-critical, movement, and Opportunity Attack owners."
           }
         ],
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME",
-            "mechanic": "Consume the admitted remarkable-athlete profile during Initiative, Strength (Athletics) checks, and immediately after critical hits without duplicating movement or Opportunity Attack state.",
-            "owner": "battle-runtime initiative/ability-check/attack-critical movement reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for roll-mode projection, Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
-            "title": "Fighter Remarkable Athlete Runtime"
+            "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
+            "mechanic": "Consume the admitted remarkable-athlete profile immediately after Critical Hits without duplicating movement or Opportunity Attack state.",
+            "owner": "battle-runtime attack-critical movement reducers plus Quint parity",
+            "requiredOutput": "Focused runtime tests and promoted QNT/runtime parity for Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
+            "title": "Promote Remarkable Athlete post-critical half-Speed movement"
           }
         ],
-        "futureProfileOwner": "battle-runtime initiative, ability-check, attack-critical, movement, and Opportunity Attack owners plus promoted Quint parity",
+        "futureProfileOwner": "battle-runtime attack-critical, movement, and Opportunity Attack owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.remarkable-athlete"
         ],
@@ -14592,14 +14636,17 @@
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
         "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the existing initiative, ability-check, attack-critical, movement, and Opportunity Attack owners consume this profile.",
+          "owner": "battle-runtime selected-identity evidence row",
+          "reason": "Selected-identity MBT evidence is recorded in unit-evidence.jsonl for Task L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES; this claim remains a profile-subset row because the critical-hit movement subset is still deferred.",
           "tag": "not-applicable"
         },
         "supportedMechanics": [
           "Champion grants Remarkable Athlete as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface remarkable_athlete mechanics",
-          "The projected support profile carries Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement without Opportunity Attacks, without authored-identity dispatch"
+          "Battle initialization retains the parsed support profile on selected character combatants",
+          "The Initiative owner derives Advantage for Initiative rolls from the retained profile without mutating caller-supplied Initiative scores",
+          "The Ability Check owner derives Advantage for Strength (Athletics) checks and not adjacent Strength or Athletics-shaped checks",
+          "The projected support profile still carries immediate post-Critical Hit half-Speed movement without Opportunity Attacks for the future movement task"
         ],
         "tag": "profile-subset-supported"
       },
@@ -14609,6 +14656,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
         }
       ],
       "executableMechanics": true,
@@ -14616,17 +14668,36 @@
       "profiles": [
         {
           "id": "unit-feature.remarkable-athlete",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initiative, ability-check, attack-critical, movement, and Opportunity Attack execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface remarkable_athlete shape and projects typed Initiative Advantage, Strength (Athletics) Advantage, and immediate post-Critical Hit half-Speed movement facts without dispatching on feature id. Battle initialization retains the parsed support profile on character combatants. The Initiative owner derives Initiative roll Advantage from the retained profile without changing caller-supplied Initiative scores, and the Ability Check owner derives Advantage only for Strength (Athletics) checks without duplicating Ability Check state. Attack-critical movement and Opportunity Attack execution remain a separate future owner.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
           ],
-          "title": "Unit feature admits Remarkable Athlete roll and critical-hit movement facts",
-          "verificationOwners": []
+          "title": "Unit feature projects Remarkable Athlete Initiative and Strength Athletics roll modes and admits critical-hit movement facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",

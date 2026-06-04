@@ -25,18 +25,29 @@ import {
   battleRemarkableAthleteSupportForUnit,
   battleRogueSteadyAimSupportForUnit,
   battleUnitRefWithSupportProfiles,
+  battleId,
   classLevel,
+  combatantId,
   Either,
   HUNTERS_PREY_SUPPORT_PROFILE,
   movementFeet,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
+  oppositionSide,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
+  partySide,
   POTENT_CANTRIP_SUPPORT_PROFILE,
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
+  requiredInitiativeRollModeForCombatant,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   rogueSteadyAimUnitId,
+  startBattle,
 } from "./unit-profile-admission-test-support.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+
+const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
+const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
 
 const remarkableAthleteSupport = {
   kind: REMARKABLE_ATHLETE_SUPPORT_PROFILE,
@@ -302,6 +313,118 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       );
     },
   );
+
+  test("Remarkable Athlete projects Initiative and Strength Athletics Advantage from the selected support profile", () => {
+    const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
+    });
+    expect(Either.isRight(unitRef)).toBe(true);
+    if (Either.isLeft(unitRef)) {
+      throw new Error(unitRef.left.message);
+    }
+    const state = startBattle({
+      battleId: battleId("remarkable-athlete-roll-modes"),
+      combatants: [
+        characterCreature({
+          combatantId: remarkableAthleteActorId,
+          displayName: "Remarkable Athlete Actor",
+          initiative: 18,
+          side: partySide,
+          characterUnitRefs: [unitRef.right],
+          classLevels: [{ className: "fighter", level: 3 }],
+          unitFeatures: [{ unit }],
+        }),
+        characterCreature({
+          combatantId: remarkableAthleteTargetId,
+          displayName: "Remarkable Athlete Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    expect(Either.isRight(state)).toBe(true);
+    if (Either.isLeft(state)) {
+      throw new Error(state.left.message);
+    }
+
+    expect(
+      requiredInitiativeRollModeForCombatant(
+        state.right,
+        remarkableAthleteActorId,
+      ),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(
+        state.right,
+        remarkableAthleteActorId,
+        "str",
+        { skill: "athletics" },
+      ),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(state.right, remarkableAthleteActorId, "str"),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(
+        state.right,
+        remarkableAthleteActorId,
+        "str",
+        { skill: "acrobatics" },
+      ),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(
+        state.right,
+        remarkableAthleteActorId,
+        "dex",
+        { skill: "athletics" },
+      ),
+    ).toBeUndefined();
+    expect(
+      requiredInitiativeRollModeForCombatant(
+        state.right,
+        remarkableAthleteTargetId,
+      ),
+    ).toBeUndefined();
+  });
+
+  test("Remarkable Athlete profile is not executable without the selected support-profile Unit ref", () => {
+    const unit = unitLibrary.requireUnit(fighterRemarkableAthleteUnitId);
+    const state = startBattle({
+      battleId: battleId("remarkable-athlete-unselected"),
+      combatants: [
+        characterCreature({
+          combatantId: remarkableAthleteActorId,
+          displayName: "Unselected Remarkable Athlete Actor",
+          initiative: 18,
+          side: partySide,
+          classLevels: [{ className: "fighter", level: 3 }],
+          unitFeatures: [{ unit }],
+        }),
+      ],
+    });
+    expect(Either.isRight(state)).toBe(true);
+    if (Either.isLeft(state)) {
+      throw new Error(state.left.message);
+    }
+
+    expect(
+      requiredInitiativeRollModeForCombatant(
+        state.right,
+        remarkableAthleteActorId,
+      ),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(
+        state.right,
+        remarkableAthleteActorId,
+        "str",
+        { skill: "athletics" },
+      ),
+    ).toBeUndefined();
+  });
 
   test("feature profile readers reject malformed mechanics and ignore unrelated Units", () => {
     const remarkableAthlete = unitLibrary.requireUnit(

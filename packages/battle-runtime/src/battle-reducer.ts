@@ -201,6 +201,7 @@ export {
   applyInitiativeSwap,
   finishInitialInitiativeSetup,
   removeBattleCombatants,
+  requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
   type InitialInitiativeSetup,
@@ -3847,6 +3848,13 @@ type BattleCreatureStateCommon = {
           Extract<
             SupportedUnitFeatureProfile,
             { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
+          >
+        >;
+        readonly remarkableAthleteProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "remarkableAthlete" }
           >
         >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
