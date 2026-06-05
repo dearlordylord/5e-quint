@@ -45,6 +45,7 @@ import { gustOfWindLineProfile } from "./gust-of-wind-line.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
+import { hypnoticPatternProfile } from "./hypnotic-pattern.ts";
 import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
@@ -141,6 +142,7 @@ function registeredSpellProcedureProfiles() {
     abilityD20TestRollModeSaveGateProfile,
     sleepTargetAdmissionProfile,
     hideousLaughterProfile,
+    hypnoticPatternProfile,
     greaseGroundHazardProfile,
     gustOfWindLineProfile,
     flamingSphereProfile,

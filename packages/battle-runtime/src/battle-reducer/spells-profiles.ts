@@ -50,6 +50,7 @@ import { commandProfile } from "./spell-procedure-profiles/command.ts";
 import { heldLightProfile } from "./spell-procedure-profiles/held-light.ts";
 import { heldLightHurlProfile } from "./spell-procedure-profiles/held-light-hurl.ts";
 import { hideousLaughterProfile } from "./spell-procedure-profiles/hideous-laughter.ts";
+import { hypnoticPatternProfile } from "./spell-procedure-profiles/hypnotic-pattern.ts";
 import { makeStableProfile } from "./spell-procedure-profiles/make-stable.ts";
 import { magicWeaponEnhancementProfile } from "./spell-procedure-profiles/magic-weapon-enhancement.ts";
 import { markedDamageRiderProfile } from "./spell-procedure-profiles/marked-damage-rider.ts";
@@ -206,6 +207,9 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       hideousLaughterProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      hypnoticPatternProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       greaseGroundHazardProfile.admit(spell, admissionContext),

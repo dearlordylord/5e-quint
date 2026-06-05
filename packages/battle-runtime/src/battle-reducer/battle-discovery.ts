@@ -83,6 +83,7 @@ import {
   grappleTargetHole,
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
+  hypnoticPatternShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
   shoveTargetHole,
@@ -96,6 +97,7 @@ import {
 } from "./movement-speed.ts";
 
 import {
+  hypnoticPatternShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
   protectionRelevantEffectsForTarget,
   sleepShakeAwakeTargetChoices,
@@ -103,6 +105,7 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
   activeSelfTransformationModeEffect,
   selfTransformationModeLabel,
@@ -303,7 +306,9 @@ export function discoverBattleActs(
   acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   acts.push(...levitateAltitudeControlActs(state, actorId));
-  acts.push(...dragonsBreathExhaleActs(state, actorId));
+  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
+    acts.push(...dragonsBreathExhaleActs(state, actorId));
+  }
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -406,6 +411,23 @@ export function discoverBattleActs(
       label: "Shake Awake",
       summary: "Use an action to shake an adjacent creature out of Sleep.",
       initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    hasTurnActionResource(state.currentTurnResources) &&
+    hypnoticPatternShakeAwakeTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: {
+        tag: "action",
+        actorId,
+        action: "shakeAwakeFromHypnoticPattern",
+      },
+      label: "Shake Awake",
+      summary:
+        "Use an action to shake an adjacent creature out of Hypnotic Pattern.",
+      initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (
@@ -623,7 +645,8 @@ function levitateAltitudeControlActs(
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||
-    !canSpendAction(state.currentTurnResources, "magic")
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }
@@ -681,7 +704,8 @@ function selfTransformationModeReplacementActs(
   if (
     activeEffect === undefined ||
     !combatantCanTakeActions(actor) ||
-    !canSpendAction(state.currentTurnResources, "magic")
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }
@@ -1271,7 +1295,8 @@ function moonbeamRepositionActs(
 ): readonly AvailableBattleAct[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
-    !combatantCanTakeActions(state.combatants.get(actorId))
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }

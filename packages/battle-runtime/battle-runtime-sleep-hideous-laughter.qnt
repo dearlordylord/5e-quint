@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-hypnotic-pattern-control spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSleepHideousLaughter {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
@@ -289,6 +289,141 @@ module battleRuntimeSleepHideousLaughter {
       | HideousLaughterEffect(_) => true
       | _ => false
     })
+
+  pure def hypnoticPatternDurationTicks: int = 10
+
+  pure def activeEffectsWithoutHypnoticPattern(effects: Set[ActiveEffect], source: Actor, targetActor: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HypnoticPatternEffect(data) => not(data.source == source and data.target == targetActor)
+      | _ => true
+    })
+
+  pure def hypnoticPatternEffect(source: Actor, targetActor: Actor, target: Combatant): ActiveEffect =
+    HypnoticPatternEffect({
+      source: source,
+      target: targetActor,
+      hadCharmed: target.activeEffects.exists(effect => match effect {
+        | AnimalFriendshipCharmed(_) => true
+        | CharmPersonCharmed(_) => true
+        | ProtectionRelevantCharmed(_) => true
+        | HypnoticPatternEffect(_) => true
+        | _ => false
+      }),
+      hadIncapacitated: target.incapacitated,
+      durationTicks: hypnoticPatternDurationTicks,
+    })
+
+  pure def combatantHasHypnoticPattern(target: Combatant): bool =
+    target.activeEffects.exists(effect => match effect {
+      | HypnoticPatternEffect(_) => true
+      | _ => false
+    })
+
+  pure def combatantHasHypnoticPatternFrom(target: Combatant, source: Actor, targetActor: Actor): bool =
+    target.activeEffects.exists(effect => match effect {
+      | HypnoticPatternEffect(data) => data.source == source and data.target == targetActor
+      | _ => false
+    })
+
+  pure def combatantHasHypnoticPatternCharmedProjection(target: Combatant): bool =
+    combatantHasHypnoticPattern(target)
+
+  pure def combatantHasCharmedImmunity(target: Combatant): bool =
+    target.activeEffects.contains(CalmEmotionsCharmedImmunity)
+
+  pure def hypnoticPatternEffectiveSpeed(target: Combatant): int =
+    if (combatantHasHypnoticPattern(target)) 0 else target.speed
+
+  pure def combatantWithoutHypnoticPattern(target: Combatant, source: Actor, targetActor: Actor): Combatant = {
+    val expiring = target.activeEffects.filter(effect => match effect {
+      | HypnoticPatternEffect(data) => data.source == source and data.target == targetActor
+      | _ => false
+    })
+    val hadHypnoticPattern = expiring.size() > 0
+    val hadIncapacitated = expiring.exists(effect => match effect {
+      | HypnoticPatternEffect(data) => data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      incapacitated: if (hadHypnoticPattern) hadIncapacitated else target.incapacitated,
+      activeEffects: activeEffectsWithoutHypnoticPattern(target.activeEffects, source, targetActor),
+    }
+  }
+
+  pure def hypnoticPatternTarget(
+    target: Combatant,
+    targetActor: Actor,
+    savingThrowSucceeded: bool,
+    source: Actor,
+  ): Combatant =
+    hypnoticPatternTargetWithCharmedPrevention(target, targetActor, savingThrowSucceeded, false, source)
+
+  pure def hypnoticPatternTargetWithCharmedPrevention(
+    target: Combatant,
+    targetActor: Actor,
+    savingThrowSucceeded: bool,
+    charmedPrevented: bool,
+    source: Actor,
+  ): Combatant =
+    if (savingThrowSucceeded or charmedPrevented or combatantHasCharmedImmunity(target))
+      target
+    else {
+      val withoutPrior = combatantWithoutHypnoticPattern(target, source, targetActor)
+      val controlled = {
+        ...withoutPrior,
+        incapacitated: true,
+        activeEffects: withoutPrior.activeEffects.union(Set(hypnoticPatternEffect(source, targetActor, withoutPrior))),
+      }
+      breakConcentrationFromSleepAppliedIncapacitated(controlled, targetActor)
+    }
+
+  pure def resolveHypnoticPattern(
+    state: BattleState,
+    goblinSavingThrowSucceeded: bool,
+    slotLevel: int,
+  ): BattleState =
+    resolveHypnoticPatternWithCharmedPrevention(state, goblinSavingThrowSucceeded, false, slotLevel)
+
+  pure def resolveHypnoticPatternWithCharmedPrevention(
+    state: BattleState,
+    goblinSavingThrowSucceeded: bool,
+    goblinCharmedPrevented: bool,
+    slotLevel: int,
+  ): BattleState =
+    if (slotLevel < 3 or not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val goblin = hypnoticPatternTargetWithCharmedPrevention(withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, goblinCharmedPrevented, Fighter)
+      val appliedControl = combatantHasHypnoticPatternFrom(goblin, Fighter, Goblin)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: appliedControl },
+        goblin: goblin,
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def combatantAfterHypnoticPatternDamage(target: Combatant, source: Actor, targetActor: Actor, damage: int): Combatant =
+    if (damage > 0)
+      combatantWithoutHypnoticPattern(target, source, targetActor)
+    else
+      target
+
+  pure def shakeAwakeFromHypnoticPattern(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
+    if (not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) == targetActor or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+      state
+    else {
+      match targetActor {
+        | Fighter => state
+        | Goblin =>
+          if (combatantHasHypnoticPattern(state.goblin))
+            { ...state, goblin: combatantWithoutHypnoticPattern(state.goblin, Fighter, Goblin), actionAvailable: false }
+          else
+            state
+      }
+    }
 
   pure def endTurnWithSleepRepeatSave(state: BattleState, savingThrowSucceeded: bool): BattleState =
     match currentActor(state) {

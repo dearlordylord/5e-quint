@@ -51,7 +51,7 @@
 {"profileId":"spell.invocation-feather-fall-mitigation","obligationIds":["BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.invocation-jump-movement-replacement","obligationIds":["BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
 {"profileId":"spell.invocation-forced-reaction-movement","obligationIds":["BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
-{"profileId":"spell.invocation-self-teleport","obligationIds":["BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"]}
+{"profileId":"spell.invocation-self-teleport","obligationIds":["BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE","BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"]}
 {"profileId":"spell.invocation-blur-attack-roll-defense","obligationIds":["BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"]}
 {"profileId":"spell.invocation-moonbeam-movable-zone","obligationIds":["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES","SHARED.HIT_POINTS.POSITIVE_DAMAGE","BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"]}
 {"profileId":"spell.invocation-direct-condition","obligationIds":["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"]}
@@ -68,6 +68,7 @@
 {"profileId":"spell.invocation-save-gated-condition-immunity","obligationIds":["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE","BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"]}
 {"profileId":"spell.scalar-buff","obligationIds":["BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"]}
 {"profileId":"spell.invocation-hideous-laughter-repeat-save-lifecycle","obligationIds":["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"]}
+{"profileId":"spell.invocation-hypnotic-pattern-control","obligationIds":["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"]}
 {"profileId":"spell.invocation-self-ability-check-advantage","obligationIds":["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"]}
 {"profileId":"spell.invocation-condition-removal-protection","obligationIds":["BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"]}
 {"profileId":"spell.invocation-direct-condition-removal","obligationIds":["BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"]}
@@ -132,6 +133,8 @@
 {"profileId":"unit-feature.metamagic-cast-governor-quickened","obligationIds":["BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
 {"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
+{"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}
+{"profileId":"spell.invocation-antimagic-field-magical-effect-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"]}
 {"profileId":"spell.invocation-spike-growth-movement-hazard","obligationIds":["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"]}
 {"profileId":"spell.invocation-see-invisible-observer-sight","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"]}
 {"profileId":"spell.invocation-spiritual-weapon-attack-proxy","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}

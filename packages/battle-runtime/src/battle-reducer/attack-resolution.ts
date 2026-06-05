@@ -112,6 +112,7 @@ import {
   grappleOutcomeHole,
   grappleTargetHole,
   hideAbilityCheckHole,
+  hypnoticPatternShakeAwakeTargetHole,
   needsHolesResult,
   searchAbilityCheckHole,
   searchTargetHole,
@@ -131,6 +132,8 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 
 import {
+  hypnoticPatternShakeAwakeTargetChoices,
+  removeHypnoticPatternControlEffectsFromTarget,
   removeSpellConditionEffect,
   removeSleepEffectsFromTarget,
   spellRestraintEffectFor,
@@ -205,6 +208,7 @@ import {
   SEARCH_TARGET_HOLE_ID,
   SHOVE_OUTCOME_HOLE_ID,
   SHOVE_TARGET_HOLE_ID,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   actorHasClassFeatureExtraAttackActionResource,
   actorHasStatBlockMultiattackActionResource,
@@ -755,6 +759,71 @@ export function resolveShakeAwakeFromSleep(
     );
   }
   const nextState = removeSleepEffectsFromTarget(
+    { ...input.state, currentTurnResources: spent.right },
+    targetId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveShakeAwakeFromHypnoticPattern(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "action";
+        readonly action: "shakeAwakeFromHypnoticPattern";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const [targetFill] = input.fills;
+  if (targetFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      hypnoticPatternShakeAwakeTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+  if (
+    input.fills.length > 1 ||
+    targetFill.kind !== "targetChoice" ||
+    targetFill.holeId !== HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Hypnotic Pattern shake-awake requires one target fill.",
+    );
+  }
+  const targetId = targetFill.value;
+  if (
+    !hypnoticPatternShakeAwakeTargetChoices(
+      input.state,
+      input.subject.actorId,
+    ).includes(targetId) ||
+    !hasHypnoticPatternShakeAwakeSpatialFact(
+      targetFill.spatialFacts ?? [],
+      input.subject.actorId,
+      targetId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Hypnotic Pattern shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+    );
+  }
+  const spent = spendTurnAction(input.state.currentTurnResources);
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Hypnotic Pattern shake-awake is no longer available.",
+    );
+  }
+  const nextState = removeHypnoticPatternControlEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.right },
     targetId,
   );
@@ -1646,6 +1715,19 @@ function hasSleepShakeAwakeSpatialFact(
   return facts.some(
     (fact) =>
       fact.kind === "sleepShakeAwakeActorWithin5Feet" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId,
+  );
+}
+
+function hasHypnoticPatternShakeAwakeSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "hypnoticPatternShakeAwakeActorWithin5Feet" &&
       fact.actorId === actorId &&
       fact.targetId === targetId,
   );

@@ -7,6 +7,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
   //   at or below the Dispel Magic slot level end; higher-level ongoing spells
   //   require a spellcasting ability check against DC 10 plus that spell level;
   //   higher-level slots automatically end same-or-lower-level ongoing spells.
+  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+  //   Dispel Magic has no effect on the aura.
   // - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks:
   //   ability checks compare the total to a Difficulty Class.
   // - UBIQUITOUS_LANGUAGE.md: Ability Check, Difficulty Class, Magic Action,
@@ -16,6 +18,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
   var qSlot4Available: bool
   var qLowLevelEffectActive: bool
   var qHighLevelEffectActive: bool
+  var qAntimagicAuraActive: bool
   var qHigherLevelCheckHoleCount: int
   var qHigherLevelCheckDc: int
   var qHighLevelCasterConcentrating: bool
@@ -32,6 +35,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     slot4Available: bool,
     lowLevelEffectActive: bool,
     highLevelEffectActive: bool,
+    antimagicAuraActive: bool,
     higherLevelCheckHoleCount: int,
     higherLevelCheckDc: int,
     highLevelCasterConcentrating: bool,
@@ -42,6 +46,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     qSlot4Available' = slot4Available,
     qLowLevelEffectActive' = lowLevelEffectActive,
     qHighLevelEffectActive' = highLevelEffectActive,
+    qAntimagicAuraActive' = antimagicAuraActive,
     qHigherLevelCheckHoleCount' = higherLevelCheckHoleCount,
     qHigherLevelCheckDc' = higherLevelCheckDc,
     qHighLevelCasterConcentrating' = highLevelCasterConcentrating,
@@ -49,6 +54,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
   }
 
   action init = recordDispelState(
+    true,
     true,
     true,
     true,
@@ -67,6 +73,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     qHighLevelEffectActive,
     baseSlotLevel < higherLevelSourceSpellLevel,
     recordDispelState(
+      true,
       true,
       true,
       true,
@@ -92,6 +99,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       true,
       false,
       true,
+      true,
       0,
       0,
       true,
@@ -112,6 +120,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       true,
       false,
       false,
+      true,
       0,
       0,
       false,
@@ -131,10 +140,31 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       false,
       false,
       false,
+      true,
       0,
       0,
       false,
       "upcastAutoEnded",
+    ),
+  }
+
+  action doTargetAntimagicAura = all {
+    qActionAvailable,
+    qSlot3Available,
+    qLowLevelEffectActive,
+    qHighLevelEffectActive,
+    qAntimagicAuraActive,
+    recordDispelState(
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      0,
+      0,
+      true,
+      "antimagicAuraUnaffected",
     ),
   }
 
@@ -146,6 +176,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       qSlot4Available,
       qLowLevelEffectActive,
       qHighLevelEffectActive,
+      qAntimagicAuraActive,
       qHigherLevelCheckHoleCount,
       qHigherLevelCheckDc,
       qHighLevelCasterConcentrating,
@@ -158,6 +189,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     doFailHigherLevelCheck,
     doSucceedHigherLevelCheck,
     doUpcastAutoEnd,
+    doTargetAntimagicAura,
     doStutter,
   }
 }

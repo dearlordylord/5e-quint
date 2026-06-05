@@ -8056,6 +8056,12 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
                 "runtime": "battle",
                 "status": "covered",
@@ -8065,6 +8071,7 @@
             "profileId": "spell.invocation-self-teleport",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
               "packages/battle-runtime/battle-runtime-self-teleport.qnt"
             ]
           }

@@ -1,4 +1,6 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-teleport
 
 module battleRuntimeSelfTeleportLifecycleMbt {
   // RAW trace:
@@ -11,6 +13,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
   // - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions and
   //   #Opportunity Attacks: a creature can take one Bonus Action on its turn,
   //   and teleportation avoids Opportunity Attacks.
+  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+  //   no one can teleport into or out of the aura or use planar travel there.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
   //   Opportunity Attack, Teleportation, and Holding / Wielding.
   var qBonusActionAvailable: bool
@@ -25,6 +29,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
   var qNoOpportunityAttackProjected: bool
   var qEquipmentTransportProjected: bool
   var qDestinationDistanceFeet: int
+  var qDestinationInsideAntimagicAuraWitness: bool
+  var qAntimagicTransitBlocked: bool
   var qLastResult: str
 
   action recordSelfTeleportState(
@@ -40,6 +46,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     noOpportunityAttackProjected: bool,
     equipmentTransportProjected: bool,
     destinationDistanceFeet: int,
+    destinationInsideAntimagicAuraWitness: bool,
+    antimagicTransitBlocked: bool,
     lastResult: str,
   ): bool = all {
     qBonusActionAvailable' = bonusActionAvailable,
@@ -54,6 +62,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     qNoOpportunityAttackProjected' = noOpportunityAttackProjected,
     qEquipmentTransportProjected' = equipmentTransportProjected,
     qDestinationDistanceFeet' = destinationDistanceFeet,
+    qDestinationInsideAntimagicAuraWitness' = destinationInsideAntimagicAuraWitness,
+    qAntimagicTransitBlocked' = antimagicTransitBlocked,
     qLastResult' = lastResult,
   }
 
@@ -70,6 +80,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     false,
     false,
     0,
+    false,
+    false,
     "init",
   )
 
@@ -90,6 +102,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       false,
       false,
       0,
+      false,
+      false,
       "destinationWitnessRequired",
     ),
   }
@@ -112,7 +126,33 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       true,
       true,
       30,
+      false,
+      false,
       "selfTeleported",
+    ),
+  }
+
+  action doRejectAntimagicDestinationTransit = all {
+    qBonusActionAvailable,
+    qSpellAvailable,
+    qDestinationWitnessAvailable,
+    qSpellSlotExpended == 0,
+    recordSelfTeleportState(
+      true,
+      true,
+      true,
+      false,
+      false,
+      0,
+      30,
+      0,
+      false,
+      false,
+      false,
+      0,
+      true,
+      true,
+      "antimagicTransitBlocked",
     ),
   }
 
@@ -129,12 +169,15 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     qNoOpportunityAttackProjected,
     qEquipmentTransportProjected,
     qDestinationDistanceFeet,
+    qDestinationInsideAntimagicAuraWitness,
+    qAntimagicTransitBlocked,
     qLastResult,
   )
 
   action step = any {
     doRequestDestinationWitness,
     doCastSelfTeleport,
+    doRejectAntimagicDestinationTransit,
     doStutter,
   }
 }

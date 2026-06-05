@@ -298,6 +298,7 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "saveGatedConditionImmunity",
   "saveGatedAttackRollAdvantage",
   "hideousLaughter",
+  "hypnoticPattern",
   "greaseGroundHazard",
   "gustOfWindLine",
   "command",

@@ -114,6 +114,7 @@ import {
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
+  removeHypnoticPatternControlEffectsFromTarget,
   removeHideousLaughterEffectFromTarget,
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
@@ -453,15 +454,19 @@ export function applyBattleHitPointDamage(input: {
     input.damageAmount > 0
       ? removeSleepEffectsFromTarget(afterTargetActionEarlyEnd, targetId)
       : afterTargetActionEarlyEnd;
+  const afterHypnoticPattern =
+    input.damageAmount > 0
+      ? removeHypnoticPatternControlEffectsFromTarget(afterSleep, targetId)
+      : afterSleep;
   const afterHideousLaughter =
     input.damageAmount > 0
       ? applyHideousLaughterDamageRepeatSaves(
-          afterSleep,
+          afterHypnoticPattern,
           targetId,
           input.hideousLaughterDamageRepeatSaves ?? [],
           input.hideousLaughterDamageRepeatSaveEventKey,
         )
-      : afterSleep;
+      : afterHypnoticPattern;
   const afterEnemyZeroHitPointTemporaryHitPoints =
     input.damageAmount > 0
       ? applyEnemyZeroHitPointTemporaryHitPointsAwards({

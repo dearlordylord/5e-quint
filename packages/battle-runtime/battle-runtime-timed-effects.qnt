@@ -333,6 +333,13 @@ module battleRuntimeTimedEffects {
             hadIncapacitated: data.hadIncapacitated,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | HypnoticPatternEffect(data) => HypnoticPatternEffect({
+            source: data.source,
+            target: data.target,
+            hadCharmed: data.hadCharmed,
+            hadIncapacitated: data.hadIncapacitated,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -437,6 +444,7 @@ module battleRuntimeTimedEffects {
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | HypnoticPatternEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SpikeGrowthMovementHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -457,9 +465,22 @@ module battleRuntimeTimedEffects {
       | _ => false
     })
 
+  pure def activeEffectsContainHypnoticPatternFrom(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | HypnoticPatternEffect(data) => data.source == source
+      | _ => false
+    })
+
   pure def hideousLaughterEffectsExpiringAfterRoundTick(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | HideousLaughterEffect(data) =>
+          not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
+      | _ => false
+    })
+
+  pure def hypnoticPatternEffectsExpiringAfterRoundTick(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HypnoticPatternEffect(data) =>
           not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
       | _ => false
     })
@@ -468,6 +489,14 @@ module battleRuntimeTimedEffects {
     effects.filter(effect => match effect {
       | HoldPersonParalyzed(data) =>
           not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
+      | _ => false
+    })
+
+  pure def activeEffectsProjectIncapacitated(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | HideousLaughterEffect(_) => true
+      | HypnoticPatternEffect(_) => true
+      | HoldPersonParalyzed(_) => true
       | _ => false
     })
 
@@ -506,6 +535,24 @@ module battleRuntimeTimedEffects {
     }
   }
 
+  pure def combatantAfterHypnoticPatternDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
+    val expiring = hypnoticPatternEffectsExpiringAfterRoundTick(target.activeEffects)
+    val hasExpiring = expiring.size() > 0
+    val remainingHypnoticPattern = tickedEffects.exists(effect => match effect {
+      | HypnoticPatternEffect(_) => true
+      | _ => false
+    })
+    val expiringHadIncapacitated = expiring.exists(effect => match effect {
+      | HypnoticPatternEffect(data) => data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      incapacitated: if (hasExpiring and not(remainingHypnoticPattern)) expiringHadIncapacitated else target.incapacitated,
+      activeEffects: tickedEffects,
+    }
+  }
+
   pure def combatantAfterHoldPersonDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
     val expiring = holdPersonEffectsExpiringAfterRoundTick(target.activeEffects)
     val hasExpiring = expiring.size() > 0
@@ -527,11 +574,26 @@ module battleRuntimeTimedEffects {
   pure def combatantAfterConditionDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
     val afterAid = combatantAfterAidDurationTick(target, tickedEffects)
     val afterHideousLaughter = combatantAfterHideousLaughterDurationTick(afterAid, tickedEffects)
+    val afterHypnoticPattern = combatantAfterHypnoticPatternDurationTick(afterAid, tickedEffects)
     val afterHoldPerson = combatantAfterHoldPersonDurationTick(afterAid, tickedEffects)
+    val remainingHideousLaughter = tickedEffects.exists(effect => match effect {
+      | HideousLaughterEffect(_) => true
+      | _ => false
+    })
+    val hypnoticPatternExpired = hypnoticPatternEffectsExpiringAfterRoundTick(target.activeEffects).size() > 0
     val holdPersonExpired = holdPersonEffectsExpiringAfterRoundTick(target.activeEffects).size() > 0
+    val nonHoldPersonIncapacitated =
+      if (remainingHideousLaughter)
+        true
+      else if (hypnoticPatternExpired)
+        afterHypnoticPattern.incapacitated
+      else
+        afterHideousLaughter.incapacitated
     {
-      ...afterHideousLaughter,
-      incapacitated: if (holdPersonExpired) afterHoldPerson.incapacitated else afterHideousLaughter.incapacitated,
+      ...afterHypnoticPattern,
+      prone: afterHideousLaughter.prone,
+      incapacitated: activeEffectsProjectIncapacitated(tickedEffects)
+        or (if (holdPersonExpired) afterHoldPerson.incapacitated else nonHoldPersonIncapacitated),
       activeEffects: tickedEffects,
     }
   }
@@ -545,6 +607,8 @@ module battleRuntimeTimedEffects {
         or activeEffectsContainTimedLevitatedCreatureFrom(state.goblin.activeEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Fighter)
+        or activeEffectsContainHypnoticPatternFrom(state.fighter.activeEffects, Fighter)
+        or activeEffectsContainHypnoticPatternFrom(state.goblin.activeEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Fighter)
     val fighterTimedConcentrationAfter =
@@ -553,6 +617,8 @@ module battleRuntimeTimedEffects {
         or activeEffectsContainTimedLevitatedCreatureFrom(goblinEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Fighter)
+        or activeEffectsContainHypnoticPatternFrom(fighterEffects, Fighter)
+        or activeEffectsContainHypnoticPatternFrom(goblinEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(fighterEffects, Fighter)
         or activeEffectsContainHoldPersonFrom(goblinEffects, Fighter)
     val goblinTimedConcentrationBefore =
@@ -561,6 +627,8 @@ module battleRuntimeTimedEffects {
         or activeEffectsContainTimedLevitatedCreatureFrom(state.goblin.activeEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Goblin)
+        or activeEffectsContainHypnoticPatternFrom(state.fighter.activeEffects, Goblin)
+        or activeEffectsContainHypnoticPatternFrom(state.goblin.activeEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Goblin)
     val goblinTimedConcentrationAfter =
@@ -569,6 +637,8 @@ module battleRuntimeTimedEffects {
         or activeEffectsContainTimedLevitatedCreatureFrom(goblinEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Goblin)
+        or activeEffectsContainHypnoticPatternFrom(fighterEffects, Goblin)
+        or activeEffectsContainHypnoticPatternFrom(goblinEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(fighterEffects, Goblin)
         or activeEffectsContainHoldPersonFrom(goblinEffects, Goblin)
     {

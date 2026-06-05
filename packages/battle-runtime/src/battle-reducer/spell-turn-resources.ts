@@ -58,9 +58,7 @@ export function spellActTurnResourceAvailable(
   ) {
     return false;
   }
-  const actionCost =
-    options?.actionCostOverride ??
-    ("actionCost" in invocation ? invocation.actionCost : "magicAction");
+  const actionCost = spellInvocationActionCost(invocation, options);
   if (actionCost === "bonusAction") {
     return resources.currentHasBonusAction;
   }
@@ -68,6 +66,27 @@ export function spellActTurnResourceAvailable(
     return canSpendAction(resources, "magic");
   }
   return canSpendAction(resources, "magic");
+}
+
+export function spellInvocationSpendsMagicAction(
+  invocation: SupportedSpellInvocation,
+  options?: {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+  },
+): boolean {
+  return spellInvocationActionCost(invocation, options) === "magicAction";
+}
+
+function spellInvocationActionCost(
+  invocation: SupportedSpellInvocation,
+  options?: {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+  },
+): "magicAction" | "bonusAction" {
+  return (
+    options?.actionCostOverride ??
+    ("actionCost" in invocation ? invocation.actionCost : "magicAction")
+  );
 }
 
 export function spellInvocationIsLevelOnePlus(

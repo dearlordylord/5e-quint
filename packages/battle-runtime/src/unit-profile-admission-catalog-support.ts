@@ -200,6 +200,10 @@ export const hideousLaughterUnitId = "hideous_laughter";
 
 export const hideousLaughterDurationTicks = elapsedTimeTicks(10);
 
+export const hypnoticPatternUnitId = "hypnotic_pattern";
+
+export const hypnoticPatternDurationTicks = elapsedTimeTicks(10);
+
 export const holdPersonUnitId = "hold_person";
 
 export const holdPersonDurationTicks = elapsedTimeTicks(10);

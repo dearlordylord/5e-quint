@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 99,
-    "covered": 93,
+    "total": 102,
+    "covered": 96,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 71,
+      "battle": 74,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 93,
+      "covered": 96,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -329,6 +329,7 @@
       "profiles": [
         "spell.invocation-condition-save",
         "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+        "spell.invocation-hypnotic-pattern-control",
         "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
@@ -872,6 +873,73 @@
       "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
     },
     {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-antimagic-field-action-interdiction"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Rules-Glossary.md#Emanation",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
+      "title": "Battle Antimagic Field aura membership blocks spellcasting and Magic actions for creatures inside the aura"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-antimagic-field-magical-effect-interdiction"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Rules-Glossary.md#Magical Effect",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
+    },
+    {
       "id": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
@@ -1318,6 +1386,36 @@
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step"
       ],
       "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-self-teleport"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step",
+        ".references/srd-5.2.1/Rules-Glossary.md#Teleportation"
+      ],
+      "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
     },
     {
       "id": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
@@ -4967,7 +5065,8 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"
       ],
       "profileId": "spell.invocation-self-teleport"
     },
@@ -5070,6 +5169,12 @@
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
       "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-hypnotic-pattern-control"
     },
     {
       "obligationIds": [
@@ -5459,6 +5564,18 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
+      ],
+      "profileId": "spell.invocation-antimagic-field-action-interdiction"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
+      ],
+      "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
       ],
       "profileId": "spell.invocation-spike-growth-movement-hazard"
@@ -5504,6 +5621,22 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt is current QNT proof evidence for Bardic Inspiration grant and failed-D20-Test feature profiles; it is not a generator semantic core while its run blocks remain colocated.",
@@ -6007,6 +6140,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt is the focused literal projection witness for represented self-teleport lifecycle parity and Antimagic Field transit blocking from caller-supplied aura origin/destination membership witnesses.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-self-transformation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -10193,6 +10334,8 @@
     "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
+    "spell.invocation-antimagic-field-action-interdiction",
+    "spell.invocation-antimagic-field-magical-effect-interdiction",
     "spell.invocation-antimagic-field-ongoing-spell-suppression",
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",
@@ -10221,6 +10364,7 @@
     "spell.invocation-gust-of-wind-line",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+    "spell.invocation-hypnotic-pattern-control",
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-levitated-creature",

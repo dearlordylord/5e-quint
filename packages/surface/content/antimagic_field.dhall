@@ -14,8 +14,9 @@
 --    function, but the time it spends suppressed counts against its
 --    duration."
 --
--- PARTIAL: temporary portal closure and "Dispel Magic has no effect"
--- are not represented as executable surface facts yet.
+-- PARTIAL: temporary portal closure is not represented as an executable
+-- surface fact yet; Dispel Magic's no-effect aura exception is represented
+-- by the battle-runtime targeting owner rather than a surface operation.
 
 let Effect : Type =
       { kind : Text

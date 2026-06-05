@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 422,
-      "numerator": 226,
-      "percent": "53.6%"
+      "numerator": 227,
+      "percent": "53.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 507,
-      "numerator": 273,
-      "percent": "53.8%"
+      "numerator": 274,
+      "percent": "54%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 274
+      "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 274,
-      "numerator": 274,
+      "denominator": 275,
+      "numerator": 275,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 105,
-      "numerator": 105,
-      "percent": "100%"
+      "denominator": 108,
+      "numerator": 106,
+      "percent": "98.1%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 141,
-      "numerator": 137,
+      "denominator": 144,
+      "numerator": 140,
       "percent": "97.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 141,
-      "numerator": 137,
+      "denominator": 144,
+      "numerator": 140,
       "percent": "97.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 159,
-      "numerator": 155,
+      "denominator": 160,
+      "numerator": 156,
       "percent": "97.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 227,
-      "numerator": 159,
-      "percent": "70%"
+      "denominator": 228,
+      "numerator": 160,
+      "percent": "70.2%"
     }
   },
   "metricSemantics": [
@@ -2520,6 +2520,31 @@
       ]
     },
     {
+      "id": "spell.invocation-hypnotic-pattern-control",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored Hypnotic Pattern spell facts, caller-supplied Cube affected-creature and sight witnesses, Saving Throw outcomes, damage events, and table-supplied adjacent shake-awake facts; automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation remain caller/table facts.",
+      "taskRefs": [
+        "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+      ],
+      "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-sanctuary-targeting-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3058,14 +3083,18 @@
       "id": "spell.invocation-self-teleport",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-self-teleport.qnt"
+        "packages/battle-runtime/battle-runtime-self-teleport.qnt",
+        "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer.ts"
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+      "sourceBoundary": "The runtime consumes the authored Misty Step spell, a caller-supplied unoccupied visible destination within 30 feet, and caller-supplied Antimagic Field origin/destination aura-membership witnesses for each active aura. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment, and rejects teleportation across an active Antimagic Field aura boundary before spending resources. Automatic visibility, occupancy, blocked-destination fallback, map-position derivation, destination aura-membership derivation, and plane state remain table/spatial facts outside this runtime boundary.",
       "taskRefs": [
-        "L12G-SPELL-MISTY-STEP"
+        "L12G-SPELL-MISTY-STEP",
+        "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING"
       ],
       "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
       "verificationOwners": [
@@ -3076,6 +3105,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts"
         }
       ]
     },
@@ -3528,11 +3561,12 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Other creature-attached active spell effects, area effects, object effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
       "taskRefs": [
         "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
         "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-        "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS"
+        "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS",
+        "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY"
       ],
       "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
       "verificationOwners": [
@@ -3762,7 +3796,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, magical area clipping, teleport/planar transit blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
+      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, table-spatial magical area clipping, planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
       "taskRefs": [
         "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
         "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
@@ -3781,6 +3815,66 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-antimagic-field-action-interdiction",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity created by the existing ongoing-spell suppression profile plus caller-supplied aura-membership witnesses keyed by area and source combatant. It owns explicit Emanation origin-inclusion membership, Action spell discovery suppression, Bonus Action spell discovery suppression, triggered Reaction spell discovery suppression, stale spell subject rejection, and supported non-spell Magic Action feature discovery and stale-subject rejection for creatures inside an active aura. Table geometry, automatic aura membership derivation, magical-effect targeting or delivery blocking, magic-item property suppression, table-spatial area clipping, represented teleport destination transit blocking, planar travel blocking, portal closure, Dispel Magic immunity, and broader ongoing Spell Effect suppression remain outside this owner.",
+      "taskRefs": [
+        "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
+      ],
+      "title": "Spell invocation blocks spellcasting and Magic actions inside Antimagic Field aura membership witnesses",
+      "verificationOwners": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity and caller-supplied aura-membership witnesses created by the existing Antimagic Field suppression/action-interdiction owners. It owns a generic magical-effect source classification for spells, future magic items, and other magical effects, and uses that shared boundary to reject selected spell targets, table-supplied spell area affected creatures, object-contact spell affected creatures, and supported non-spell Magic Action feature targets that are inside an active aura. It does not derive table geometry, duplicate spell-specific target state, dispatch on authored spell, feature, or item identity, suppress magic-item properties, clip represented area geometry, close portals, model planar travel, model Dispel Magic immunity, or broaden ongoing Spell Effect suppression.",
+      "taskRefs": [
+        "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+      ],
+      "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
+      "verificationOwners": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
         }
       ]
     },
@@ -4530,13 +4624,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 141,
-        "numerator": 137,
+        "denominator": 144,
+        "numerator": 140,
         "percent": "97.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 141,
-        "numerator": 137,
+        "denominator": 144,
+        "numerator": 140,
         "percent": "97.2%"
       }
     },
@@ -5983,6 +6077,22 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-hypnotic-pattern-control",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
             "runtime": "battle",
             "status": "covered",
@@ -6336,6 +6446,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
+          },
+          {
             "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
             "runtime": "battle",
             "status": "covered",
@@ -6345,6 +6461,7 @@
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
           "packages/battle-runtime/battle-runtime-self-teleport.qnt"
         ]
       },
@@ -6696,6 +6813,38 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field aura membership blocks spellcasting and Magic actions for creatures inside the aura"
+          }
+        ],
+        "profileId": "spell.invocation-antimagic-field-action-interdiction",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
+          }
+        ],
+        "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
             "runtime": "battle",
             "status": "covered",
@@ -6933,8 +7082,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 153,
-          "numerator": 153,
+          "denominator": 154,
+          "numerator": 154,
           "percent": "100%"
         }
       },
@@ -8863,6 +9012,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+                }
+              ],
+              "profileId": "spell.invocation-hypnotic-pattern-control",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              ]
+            }
+          ],
+          "unitId": "hypnotic_pattern"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
                   "runtime": "battle",
                   "status": "covered",
@@ -9343,6 +9514,12 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
+                },
+                {
                   "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
                   "runtime": "battle",
                   "status": "covered",
@@ -9352,6 +9529,7 @@
               "profileId": "spell.invocation-self-teleport",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
                 "packages/battle-runtime/battle-runtime-self-teleport.qnt"
               ]
             }
@@ -12623,6 +12801,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Promoted save-spell Quint ownership covers Hypnotic Pattern's save-gated control lifecycle boundary, including Concentration-owned condition lifecycle parity in the shared save spell lane.",
+      "profileIds": [
+        "spell.invocation-hypnotic-pattern-control"
+      ],
+      "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Hypnotic Pattern discovery, level-3 Spell Slot gate, point-origin Cube Saving Throw outcomes, failed-save Charmed and Incapacitated application, Speed 0 projection, caster Concentration ownership, damage cleanup preserving independent conditions, and another-creature Action shake-awake cleanup with table-supplied adjacency facts.",
+      "profileIds": [
+        "spell.invocation-hypnotic-pattern-control"
+      ],
+      "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Sanctuary's Bonus Action ward application, one-minute ward duration, attack-roll and damaging-spell targeting triggers, area-effect exclusion, successful-save pass-through, failed-save loss, failed-save new-target outcome, and early-end lifecycle.",
       "profileIds": [
         "spell.invocation-sanctuary-targeting-interdiction"
@@ -13414,6 +13608,28 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover caller-supplied Antimagic Field aura membership with explicit Emanation origin inclusion, Action spell discovery suppression, Bonus Action spell discovery suppression, non-origin membership suppression without table geometry, stale spell subject rejection, supported non-spell Magic Action feature discovery and stale-subject rejection, and triggered Reaction spell stale-subject rejection.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-action-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Promoted focused MBT parity witnesses Antimagic Field aura action interdiction for inside-aura discovery blocking, origin-excluded allowance, stale Action spell rejection, stale Magic Action rejection, and triggered Reaction spell rejection while keeping aura membership caller-supplied.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-action-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task research found no additional represented ongoing Spell Effect occurrence family beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences with both stable occurrence identity and source spell level. Spiritual Weapon Antimagic suppression was already claimed by L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION, so this task records no new runtime parity claim; future broader suppression should promote when another occurrence family gains those source facts and executable suppressed-state behavior.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
       "profileIds": [
         "character-sheet.spell-rest-benefit-application"
@@ -14014,7 +14230,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests extend Dispel Magic to tracked Spiritual Weapon active-effect occurrences, using the existing magical-effect target choice, stable sourceEffectId identity, sourceSpellLevel slot gate, higher-level spellcasting ability check gate, and concentration cleanup. Object/contact and spell-light handling remain generic; broader untracked creature-attached effects, area effects, and spell-specific dispel exceptions remain deferred.",
+      "note": "Focused battle-runtime tests extend Dispel Magic to tracked Spiritual Weapon active-effect occurrences, using the existing magical-effect target choice, stable sourceEffectId identity, sourceSpellLevel slot gate, higher-level spellcasting ability check gate, and concentration cleanup. Object/contact and spell-light handling remain generic; broader untracked creature-attached effects, area effects, and additional spell-specific dispel exceptions beyond the represented Antimagic Field aura no-effect exception remain deferred.",
       "profileIds": [
         "spell.invocation-ongoing-spell-ending"
       ],
@@ -14027,6 +14243,14 @@
         "spell.invocation-ongoing-spell-ending"
       ],
       "taskId": "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover Dispel Magic magical-effect targeting of an active Antimagic Field aura by stable area identity and source combatant identity, routing through a typed no-effect exception that leaves the aura and its Concentration active without authored-identity dispatch.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -14043,6 +14267,28 @@
         "spell.invocation-moonbeam-movable-zone"
       ],
       "taskId": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover a shared magical-effect interdiction boundary for spell target selection, spell area effect delivery, and supported non-spell Magic Action feature targeting, consuming existing Antimagic Field aura membership witnesses without authored-identity dispatch or duplicate spell-specific target state.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-magical-effect-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Misty Step self-teleport runtime tests cover represented Antimagic Field teleport blocking from caller-supplied origin/destination aura-membership witnesses, including rejection before Bonus Action or Spell Slot spend when the destination witness crosses into an active aura, outbound transit-witness classification, and rejection when an active aura lacks a transit witness. Focused MBT covers represented Misty Step transit blocking. Automatic location, destination, and aura membership derivation remain table-owned.",
+      "profileIds": [
+        "spell.invocation-self-teleport"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Planar travel is explicitly closed for this task because battle runtime currently has no represented planar-travel procedure, plane-location state, or table-owned plane transition witness shape. The Antimagic Field planar-travel clause remains future work for a dedicated planar-travel owner rather than adding inert plane metadata to Misty Step or generic teleport state.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING"
     },
     {
       "claimKind": "accepted-runtime-closure",
@@ -14167,17 +14413,17 @@
         "unsupportedOrOtherUnits": 3
       },
       {
-        "executableUnitDenominator": 126,
-        "installedUnitDenominator": 126,
+        "executableUnitDenominator": 127,
+        "installedUnitDenominator": 127,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 131,
+        "profileFactDenominator": 135,
         "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 108,
+        "selectedIdentityReplayDenominator": 109,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 108,
-        "supportedProfileUnits": 89,
+        "selectedIdentityReplayWitnessUnits": 109,
+        "supportedProfileUnits": 90,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -22241,24 +22487,6 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "Antimagic Field aura-membership witness plus cross-action interdiction owner",
-              "reason": "SRD Emanation origin inclusion is creator-selected, and the promoted Antimagic Field fill stores an area identity plus affected ongoing Spell Effect refs, not explicit creature-in-aura or origin-included membership. The battle runtime cannot honestly suppress every spell cast or Magic action without a typed aura-membership witness and a shared action-discovery/resolution interdiction owner."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION",
-            "mechanic": "spellcasting prevention and Magic Action prevention for creatures inside the aura, including the caster-origin Emanation case"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "magical-effect targeting and effect-delivery interdiction owner",
-              "reason": "Promoted spell procedures consume spell-specific target, range, and area witnesses. There is no generic magical-effect delivery boundary that classifies spell, magic-item, and other magical effects and checks whether selected targets or affected things are inside an Antimagic Field aura."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-            "mechanic": "magical targeting prevention and the rule that magical effects can't otherwise affect anything inside the aura"
-          },
-          {
-            "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "magic item record, equipment, attunement, and property-projection owner",
               "reason": "The SRD magic-item corpus is not represented as battle Unit records or runtime equipment/property effects at this boundary, so Antimagic Field must not add a parallel magic-item suppression registry before the magic-item owner exists."
@@ -22269,20 +22497,18 @@
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "area geometry overlap and clipping owner",
-              "reason": "Existing promoted area spells consume caller-supplied area identities, movement/path witnesses, and affected-creature facts. The runtime does not store generic map geometry, overlap, Total Cover line tests, or partial area clipping facts that could make Antimagic Field area exclusion executable without duplicating table state."
+              "owner": "shared area geometry overlap and clipping owner",
+              "reason": "Task 12 inspected the existing area identity, membership, movement/path, Total Cover, opaque-cover, and overlap facts. Supported area shapes consume caller-supplied area ids, affected target membership, aura membership, movement/path witnesses, and spell-light overlap facts, but the runtime does not store generic map geometry, shape placement, Total Cover line tests, or partial clipped geometry. The table supplies post-Antimagic area and membership facts for Cone, Cube, Cylinder, Emanation, Line, and Sphere shapes until a shared geometry owner exists."
             },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING",
             "mechanic": "areas of effect created by spells or other magic can't extend into the aura"
           },
           {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "teleport/planar transit procedure plus aura-membership witness owner",
-              "reason": "Teleport and planar travel blocking depends on origin and destination membership in the Antimagic Field aura, plus planar-travel procedure classification. The current runtime has self-teleport procedure support, but no generic aura-membership facts for teleport origins/destinations and no planar-travel state."
+              "kind": "outside-battle-runtime",
+              "owner": "planar-travel procedure, plane-location state, and table-owned plane transition witness owner",
+              "reason": "Battle runtime has no represented planar-travel procedure, plane-location state, or table-owned plane transition witness shape. Antimagic Field should consume that owner when it exists rather than adding inert plane metadata to self-teleport or generic teleport state."
             },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING",
-            "mechanic": "teleportation and planar travel blocking into or out of the aura"
+            "mechanic": "planar travel there"
           },
           {
             "battleReadinessClosure": {
@@ -22296,52 +22522,20 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "spell-specific Dispel Magic exception owner over stable magical-effect identities",
-              "reason": "The promoted Dispel Magic owner ends only tracked ongoing Spell Effect occurrence families that expose stable dispel targets. Antimagic Field aura identity is not exposed as a Dispel Magic targetable occurrence, so explicit immunity needs the spell-specific dispel-exception owner rather than relying on absence from the current target set."
+              "owner": "future broader ongoing Spell Effect occurrence model",
+              "reason": "The current battle runtime has no additional represented ongoing Spell Effect family beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences with both stable occurrence identity and source spell level. Future suppression must be promoted when another occurrence family gains those source facts and executable suppressed-state behavior."
             },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY",
-            "mechanic": "Dispel Magic has no effect on the Antimagic Field aura"
-          },
-          {
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
+            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
             "mechanic": "ongoing Spell Effect suppression beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences"
           }
         ],
         "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION",
-            "mechanic": "Represent typed Antimagic Field aura membership, including the Emanation origin-inclusion choice, then block spellcasting and Magic actions for creatures inside the aura across action discovery and stale subject resolution without dispatching on spell identity.",
-            "owner": "battle-runtime cross-action spellcasting/Magic Action interdiction plus caller-supplied aura-membership witnesses",
-            "requiredOutput": "Focused runtime tests and promoted Quint/runtime parity for action-spell, Bonus Action spell, reaction spell, and non-spell Magic Action interdiction once the shared aura-membership witness exists.",
-            "title": "Antimagic Field Aura Action Interdiction"
-          },
-          {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-            "mechanic": "Block spells, magic items, and other magical effects from targeting or otherwise affecting things inside Antimagic Field, using typed magical-effect source classification and target/affected-thing aura-membership facts.",
-            "owner": "generic magical-effect target/effect-delivery owner with aura-membership witnesses",
-            "requiredOutput": "One shared interdiction boundary consumed by spell and later magic-item procedures, with tests proving target and effect delivery rejection without duplicating spell-specific target state.",
-            "title": "Antimagic Field Magical Targeting And Effect Interdiction"
-          },
           {
             "id": "L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION",
             "mechanic": "Suppress magical properties of represented magic items inside the aura or on things inside it while preserving the item/equipment occurrence and restoring properties when the aura no longer applies.",
             "owner": "magic item record, equipment/attunement state, property projection, and Antimagic aura-membership owner",
             "requiredOutput": "Promotion after magic-item runtime records exist; no Antimagic-local magic-item registry or copied item-property state.",
             "title": "Antimagic Field Magic Item Suppression"
-          },
-          {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING",
-            "mechanic": "Prevent areas of effect created by spells or other magic from extending into Antimagic Field by consuming shared area geometry, overlap, and Total Cover facts rather than spell-local clipping code.",
-            "owner": "generic area geometry overlap/clipping owner",
-            "requiredOutput": "Promoted area-clipping owner or explicit table closure for each supported area shape; existing area spells must keep caller-supplied membership facts single-sourced.",
-            "title": "Antimagic Field Magical Area Clipping"
-          },
-          {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING",
-            "mechanic": "Reject teleportation into or out of the aura and planar travel there for represented transit procedures.",
-            "owner": "teleport/planar transit procedures plus origin/destination aura-membership witnesses",
-            "requiredOutput": "Focused runtime tests and Quint parity over at least one represented teleport procedure, leaving automatic location and plane derivation table-owned.",
-            "title": "Antimagic Field Teleportation And Planar Travel Blocking"
           },
           {
             "id": "L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE",
@@ -22351,23 +22545,19 @@
             "title": "Antimagic Field Portal Closure"
           },
           {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY",
-            "mechanic": "Represent that Dispel Magic has no effect on an Antimagic Field aura once aura occurrences are otherwise targetable or visible to magical-effect targeting.",
-            "owner": "spell-specific Dispel Magic exception owner",
-            "requiredOutput": "A typed dispel-exception path with tests proving Dispel Magic leaves the aura active without using authored-identity dispatch in the reducer.",
-            "title": "Antimagic Field Dispel Magic Immunity"
-          },
-          {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
-            "mechanic": "Extend suppression to additional tracked ongoing Spell Effect occurrence families beyond spell-light, spellObjectContactDamage, and Spiritual Weapon while keeping suppressed durations ticking and occurrences undeleted.",
-            "owner": "broader ongoing Spell Effect occurrence model",
-            "requiredOutput": "Supported-profile claim update, focused runtime tests, and promoted Quint/runtime parity for each newly represented occurrence family with artifact/deity exceptions preserved.",
-            "title": "Antimagic Field Broader Ongoing Spell Suppression"
+            "id": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
+            "mechanic": "Promote Antimagic Field suppression for the next represented ongoing Spell Effect occurrence family that has stable occurrence identity, source spell level, and executable suppressed-state behavior, while preserving non-deletion, ticking duration, and Artifact/deity exceptions.",
+            "owner": "broader ongoing Spell Effect occurrence model plus Antimagic Field suppression owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Antimagic Field claim update, focused runtime tests, and promoted Quint/runtime parity for that occurrence family; no broad claim over unrepresented creature, object, or area effect families.",
+            "title": "Antimagic Field Additional Tracked Ongoing Spell Suppression"
           }
         ],
-        "futureProfileOwner": "split Antimagic Field aura-membership, magical-effect interdiction, magic-item, area-clipping, transit, portal, dispel-exception, and broader ongoing Spell Effect owners",
+        "futureProfileOwner": "split Antimagic Field magic-item, portal, future broader ongoing Spell Effect, and future planar-travel owners",
         "profileIds": [
-          "spell.invocation-antimagic-field-ongoing-spell-suppression"
+          "spell.invocation-antimagic-field-ongoing-spell-suppression",
+          "spell.invocation-antimagic-field-action-interdiction",
+          "spell.invocation-antimagic-field-magical-effect-interdiction",
+          "spell.invocation-ongoing-spell-ending"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -22383,7 +22573,18 @@
           "suppressed tracked spell-light, spellObjectContactDamage, and Spiritual Weapon durations continue ticking while suppressed",
           "suppressed tracked Spiritual Weapon repeat attacks are not discoverable and stale repeat subjects are rejected without deleting or moving the occurrence",
           "artifact/deity spell-effect sources are excluded from suppression",
-          "Concentration and duration cleanup remove the active suppression field"
+          "Concentration and duration cleanup remove the active suppression field",
+          "caller-supplied Antimagic Field aura membership witnesses identify creatures inside an active aura by area identity and source combatant without deriving table geometry",
+          "the Emanation origin-inclusion choice is represented explicitly so the caster is blocked only when the caller-selected origin-inclusive aura says so",
+          "spellcasting is blocked for creatures inside an active Antimagic Field aura across Action spell discovery, Bonus Action spell discovery, triggered Reaction spell discovery, and stale spell subject resolution",
+          "supported non-spell Magic Action feature subjects are blocked for creatures inside an active Antimagic Field aura across discovery and stale subject resolution",
+          "generic magical-effect source classification distinguishes spells, future magic items, and other magical effects at the shared Antimagic Field targeting/effect-delivery boundary without authored-identity dispatch",
+          "selected spell targets inside an active Antimagic Field aura are rejected by consuming the caller-supplied aura membership witness rather than storing duplicate spell-specific target state",
+          "table-supplied spell area affected creatures inside an active Antimagic Field aura are rejected at effect delivery by consuming the same aura membership witness",
+          "object-contact spell affected creatures inside an active Antimagic Field aura are rejected at effect delivery by consuming the same aura membership witness",
+          "supported non-spell Magic Action feature targets and affected creatures inside an active Antimagic Field aura are rejected through the shared magical-effect interdiction boundary",
+          "represented self-teleport destinations that cross into an active Antimagic Field aura are rejected before Bonus Action or Spell Slot spend by consuming caller-supplied origin/destination aura-membership witnesses",
+          "Dispel Magic can target an active Antimagic Field aura by stable area identity and source combatant identity, and the typed no-effect exception leaves the aura and its Concentration active"
         ],
         "tag": "profile-subset-supported"
       },
@@ -22414,7 +22615,7 @@
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, magical area clipping, teleport/planar transit blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
+          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, table-spatial magical area clipping, planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
           "taskRefs": [
             "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
             "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
@@ -22433,6 +22634,104 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-antimagic-field-action-interdiction",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity created by the existing ongoing-spell suppression profile plus caller-supplied aura-membership witnesses keyed by area and source combatant. It owns explicit Emanation origin-inclusion membership, Action spell discovery suppression, Bonus Action spell discovery suppression, triggered Reaction spell discovery suppression, stale spell subject rejection, and supported non-spell Magic Action feature discovery and stale-subject rejection for creatures inside an active aura. Table geometry, automatic aura membership derivation, magical-effect targeting or delivery blocking, magic-item property suppression, table-spatial area clipping, represented teleport destination transit blocking, planar travel blocking, portal closure, Dispel Magic immunity, and broader ongoing Spell Effect suppression remain outside this owner.",
+          "taskRefs": [
+            "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
+          ],
+          "title": "Spell invocation blocks spellcasting and Magic actions inside Antimagic Field aura membership witnesses",
+          "verificationOwners": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity and caller-supplied aura-membership witnesses created by the existing Antimagic Field suppression/action-interdiction owners. It owns a generic magical-effect source classification for spells, future magic items, and other magical effects, and uses that shared boundary to reject selected spell targets, table-supplied spell area affected creatures, object-contact spell affected creatures, and supported non-spell Magic Action feature targets that are inside an active aura. It does not derive table geometry, duplicate spell-specific target state, dispatch on authored spell, feature, or item identity, suppress magic-item properties, clip represented area geometry, close portals, model planar travel, model Dispel Magic immunity, or broaden ongoing Spell Effect suppression.",
+          "taskRefs": [
+            "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+          ],
+          "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
+          "verificationOwners": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-ongoing-spell-ending",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
+            "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
+            "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS",
+            "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY"
+          ],
+          "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-object-contact-damage-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dispel-magic-ongoing-spell-ending.mbt.test.ts"
             }
           ]
         }
@@ -23844,7 +24143,7 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences, including other creature-attached active effects, area effects, other object effects, and spell-specific dispel exceptions or immunities such as force barriers"
+            "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences, including other creature-attached active effects, area effects, other object effects, and additional spell-specific dispel exceptions or immunities such as force barriers"
           },
           {
             "battleReadinessClosure": {
@@ -23858,13 +24157,13 @@
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences by representing broader ongoing Spell Effect occurrences for additional creature-attached active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
+            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, tracked Spiritual Weapon active-effect occurrences, and the Antimagic Field aura no-effect exception by representing broader ongoing Spell Effect occurrences for additional creature-attached active effects, area effects, object effects, and additional spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
             "owner": "battle-runtime Spell Effect occurrence model plus promoted Quint/runtime parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending broader generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
+            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending broader generic ongoing Spell Effect occurrences while preserving explicit closures for additional spell-specific exceptions and table-owned target identity/range derivation.",
             "title": "Broader Ongoing Spell Effect Dispel Runtime"
           }
         ],
-        "futureProfileOwner": "broader ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
+        "futureProfileOwner": "broader ongoing Spell Effect occurrence model plus additional spell-specific dispel exception owners",
         "profileIds": [
           "spell.invocation-ongoing-spell-ending"
         ],
@@ -23883,7 +24182,8 @@
           "magical-effect targeting ends a tracked Spiritual Weapon active-effect occurrence by stable sourceEffectId identity when its source spell level is at or below the Dispel Magic slot level",
           "higher-level tracked Spiritual Weapon active-effect occurrences require the same spellcasting ability check gate or a higher-level slot",
           "ending the final tracked Concentration active-effect occurrence clears the source caster's Concentration through the shared spell-effect cleanup owner",
-          "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry"
+          "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry",
+          "magical-effect targeting leaves an active Antimagic Field aura active through a typed no-effect exception matched by stable area identity and source combatant identity"
         ],
         "tag": "profile-subset-supported"
       },
@@ -23914,11 +24214,12 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Other creature-attached active spell effects, area effects, object effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
           "taskRefs": [
             "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
             "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-            "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS"
+            "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS",
+            "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY"
           ],
           "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
           "verificationOwners": [
@@ -26977,14 +27278,18 @@
           "id": "spell.invocation-self-teleport",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-self-teleport.qnt"
+            "packages/battle-runtime/battle-runtime-self-teleport.qnt",
+            "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts"
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+          "sourceBoundary": "The runtime consumes the authored Misty Step spell, a caller-supplied unoccupied visible destination within 30 feet, and caller-supplied Antimagic Field origin/destination aura-membership witnesses for each active aura. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment, and rejects teleportation across an active Antimagic Field aura boundary before spending resources. Automatic visibility, occupancy, blocked-destination fallback, map-position derivation, destination aura-membership derivation, and plane state remain table/spatial facts outside this runtime boundary.",
           "taskRefs": [
-            "L12G-SPELL-MISTY-STEP"
+            "L12G-SPELL-MISTY-STEP",
+            "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING"
           ],
           "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
           "verificationOwners": [
@@ -26995,6 +27300,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts"
             }
           ]
         }
@@ -31166,6 +31475,81 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "table/spatial and sight witness provider",
+          "reason": "Automatic Cube geometry, Total Cover blocking, point-of-origin inclusion, area membership, and sight derivation remain caller-supplied table facts outside promoted battle runtime."
+        },
+        "profileIds": [
+          "spell.invocation-hypnotic-pattern-control"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-3-or-higher Spell Slot casting from the authored SRD Hypnotic Pattern Unit",
+          "caller-supplied point-origin 30-foot Cube affected-creature and sight witnesses",
+          "Wisdom Saving Throw against the caster Spell Save DC",
+          "failed-save source-owned target control effect projecting Charmed, Incapacitated, and Speed 0 without duplicating independent condition sources",
+          "caster Concentration ownership up to 1 minute only when at least one target is controlled",
+          "affected-target damage cleanup removes only the spell-owned Hypnotic Pattern control effect and clears Concentration when no controlled targets remain",
+          "another creature can spend an Action with a table-supplied adjacent witness to shake an affected target awake",
+          "Concentration and duration cleanup remove the active control effect"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-hypnotic-pattern-control",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored Hypnotic Pattern spell facts, caller-supplied Cube affected-creature and sight witnesses, Saving Throw outcomes, damage events, and table-supplied adjacent shake-awake facts; automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation remain caller/table facts.",
+          "taskRefs": [
+            "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+          ],
+          "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
+      "unitId": "hypnotic_pattern"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/material/spatial witness provider",
           "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
         },
@@ -33243,39 +33627,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/holy_aura.json",
       "unitId": "holy_aura"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-            "mechanic": "Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch.",
-            "owner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
-            "title": "Hypnotic Pattern Control Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
-        "reason": "The installed SRD 5.2.1 Hypnotic Pattern Surface Spell Definition encodes Action level-3 Spell Slot casting, 120-foot range, caster-owned Concentration up to 1 minute, a point-origin 30-foot Cube with a sight-gated affected-creature predicate, Wisdom Saving Throw, failed-save Charmed condition, Incapacitated projection while Charmed, Speed 0 while Charmed, target-specific ending when the affected target takes damage, and another-creature action-spend shake-awake escape. No promoted battle-runtime profile exists yet because exact support still needs Unit catalog/runtime admission, caller-supplied Cube affected-creature and sight witnesses, a source-owned runtime target effect that keeps Charmed, Incapacitated, and Speed 0 linked without duplicating independent condition or Speed sources, damage cleanup, shake-awake cleanup, duration cleanup, and promoted Quint/runtime parity without authored-identity dispatch.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
-      "unitId": "hypnotic_pattern"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

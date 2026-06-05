@@ -2,6 +2,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
 import {
   holeId,
@@ -52,6 +54,10 @@ import {
 } from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
+import {
+  SPELL_MAGICAL_EFFECT_SOURCE,
+  magicalEffectTargetsInterdictionMessage,
+} from "./antimagic-field-magical-effect-interdiction.ts";
 
 type SingleCreatureOrObjectSpellAttackDamageInvocation =
   Extract<
@@ -354,7 +360,14 @@ export function spellObjectContactTargetsHole(input: {
       rangeFeet: input.invocation.rangeFeet,
       requiresObjectWithinRange: input.requiresObjectWithinRange,
     },
-    choices: [...input.state.combatants.keys()],
+    choices: [...input.state.combatants.keys()].filter(
+      (targetId) =>
+        magicalEffectTargetsInterdictionMessage({
+          state: input.state,
+          source: SPELL_MAGICAL_EFFECT_SOURCE,
+          targetIds: [targetId],
+        }) === null,
+    ),
     requiresTableSpatialFact: true,
   };
 }
@@ -849,6 +862,15 @@ export function spellTargetHasNonSpatialPrerequisites(
 ): boolean {
   const target = state.combatants.get(targetId);
   if (
+    magicalEffectTargetsInterdictionMessage({
+      state,
+      source: SPELL_MAGICAL_EFFECT_SOURCE,
+      targetIds: [targetId],
+    }) !== null
+  ) {
+    return false;
+  }
+  if (
     spellInvocationRequiresKnownWillingTarget(invocation) &&
     invocation.procedure !== "wardingBond" &&
     invocation.procedure !== "creatureTypeProtection" &&
@@ -975,6 +997,14 @@ export function validateSpellTargetList(
     !targetIds.includes(actorId)
   ) {
     return `${invocation.spell.name} must include the caster among its targets.`;
+  }
+  const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
+    state,
+    source: SPELL_MAGICAL_EFFECT_SOURCE,
+    targetIds,
+  });
+  if (antimagicInterdiction !== null) {
+    return antimagicInterdiction;
   }
   const seen = new Set<CombatantId>();
   for (const targetId of targetIds) {

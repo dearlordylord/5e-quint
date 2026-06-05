@@ -117,6 +117,11 @@ export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
 export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:sleep-shake-awake:target",
 );
+export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:hypnotic-pattern-shake-awake:target",
+);
+export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
+  holeInstanceKey("battle:hypnotic-pattern-shake-awake:target");
 export const DEATH_SAVING_THROW_HOLE_ID = holeId(
   "battle:end-turn:death-saving-throw",
 );

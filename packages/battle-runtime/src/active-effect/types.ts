@@ -39,11 +39,12 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 // dissolves as those domains are extracted. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
 import type {
   BattleCommandOption,
+  BattleAntimagicFieldAuraMembership,
+  BattleAntimagicFieldOngoingSpellEffectRef,
   BattleD20RollModifierDelta,
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
-  BattleOngoingSpellEffectRef,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
@@ -481,6 +482,15 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "hypnoticPatternControl";
+      readonly conditionHadNonSpellCharmedSource: boolean;
+      readonly conditionHadNonSpellIncapacitatedSource: boolean;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";
       readonly areaId: BattleAreaId;
       readonly save: {
@@ -600,8 +610,9 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "antimagicFieldOngoingSpellSuppression";
       readonly areaId: BattleAreaId;
+      readonly auraMembership: BattleAntimagicFieldAuraMembership;
       readonly radiusFeet: MovementFeet;
-      readonly suppressedOngoingSpellEffects: readonly BattleOngoingSpellEffectRef[];
+      readonly suppressedOngoingSpellEffects: readonly BattleAntimagicFieldOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 //
 // The Antimagic Field ongoing-spell suppression Spell Procedure Profile:
@@ -255,6 +256,17 @@ function resolveAntimagicFieldOngoingSpellSuppression(
       "Antimagic Field area id must be a non-empty antimagic Emanation area.",
     );
   }
+  if (
+    input.fillSet.areaChoice.auraMembership.nonOriginCombatantIds.includes(
+      input.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Antimagic Field non-origin aura membership cannot include the source combatant.",
+    );
+  }
   const invalidAffectedEffects = antimagicFieldAreaChoiceInvalidReason(
     input.input.state,
     input.fillSet.areaChoice,
@@ -280,6 +292,7 @@ function resolveAntimagicFieldOngoingSpellSuppression(
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,
+    auraMembership: input.fillSet.areaChoice.auraMembership,
     affectedOngoingSpellEffects:
       input.fillSet.areaChoice.affectedOngoingSpellEffects,
     invocation: input.invocation,
@@ -336,6 +349,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
+  readonly auraMembership: BattleAntimagicFieldAreaChoice["auraMembership"];
   readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
   readonly invocation: AntimagicFieldOngoingSpellSuppressionInvocation;
 }): BattleState {
@@ -361,6 +375,7 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
       sourceSpellId: input.invocation.spell.id,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
+      auraMembership: input.auraMembership,
       radiusFeet: input.invocation.targeting.radiusFeet,
       suppressedOngoingSpellEffects,
       expiresAt: {

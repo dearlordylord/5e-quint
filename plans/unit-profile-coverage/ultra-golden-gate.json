@@ -601,8 +601,8 @@
               "numerator": 56
             },
             "qntCoveredObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             }
           },
           "generatorBlockingRows": [],
@@ -614,12 +614,12 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 60,
+              "focused-mbt": 61,
               "runtime-test": 21
             }
           },
@@ -721,6 +721,7 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
         "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",

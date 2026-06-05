@@ -1,9 +1,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-teleport
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 //
 // The selfTeleport Spell Procedure Profile: a prepared Bonus Action spell that
 // requires a caller-supplied table destination witness and emits a teleport
-// outcome rather than spending Movement.
+// outcome rather than spending Movement. Antimagic Field transit blocking is
+// handled from caller-supplied aura origin/destination membership witnesses on
+// that same destination fact.
 //
 // RAW anchors:
 //   - SRD 5.2.1 Spells "Misty Step": Bonus Action, Self, Instantaneous;
@@ -41,6 +44,7 @@ import {
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
 } from "../spells-targeting.ts";
+import { antimagicFieldTransitInvalidReason } from "../antimagic-field-transit-blocking.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -203,6 +207,18 @@ function resolveSelfTeleport(
   );
   if (validation !== null) {
     return invalidResult(input.input.state, "invalidFill", validation);
+  }
+  const antimagicTransitInvalidReason = antimagicFieldTransitInvalidReason({
+    state: input.input.state,
+    actorId: input.actorId,
+    witnesses: destination.antimagicFieldTransit,
+  });
+  if (antimagicTransitInvalidReason !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      antimagicTransitInvalidReason,
+    );
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(

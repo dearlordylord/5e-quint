@@ -49,19 +49,19 @@
     {
       "number": 8,
       "id": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Hypnotic Pattern control runtime after Surface repair"
     },
     {
       "number": 9,
       "id": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field aura action interdiction"
     },
     {
       "number": 10,
       "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-      "status": "blocked",
+      "status": "done",
       "title": "Antimagic Field magical targeting and effect interdiction"
     },
     {
@@ -73,13 +73,13 @@
     {
       "number": 12,
       "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field magical area clipping"
     },
     {
       "number": 13,
       "id": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING",
-      "status": "blocked",
+      "status": "done",
       "title": "Antimagic Field teleportation and planar travel blocking"
     },
     {
@@ -91,14 +91,20 @@
     {
       "number": 15,
       "id": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY",
-      "status": "blocked",
+      "status": "done",
       "title": "Antimagic Field Dispel Magic immunity"
     },
     {
       "number": 16,
       "id": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field broader ongoing spell suppression"
+    },
+    {
+      "number": 17,
+      "id": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
+      "status": "blocked",
+      "title": "Antimagic Field additional tracked ongoing spell suppression"
     }
   ]
 }
@@ -140,15 +146,16 @@ owns branch repair.
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | done | none | Spiritual Weapon tracked active-effect occurrences are now covered by the existing Dispel Magic ongoing-effect gate. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | done | none | Split into owner-specific executable follow-up rows. |
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
-| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | ready-for-implementation-after-light-research | none | Surface repair is complete; runtime promotion can start. |
-| 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
-| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
+| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | done | none | Hypnotic Pattern control runtime is promoted. |
+| 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
+| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Shared magical-effect targeting and delivery interdiction is promoted for represented combatant target/effect-delivery paths. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
-| 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
-| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
+| 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed as table-spatial derivation for currently supported area shapes without duplicating map state. |
+| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Represented self-teleport transit blocking is promoted from caller-supplied origin/destination aura-membership witnesses; planar travel is closed until a future planar-travel owner exists. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
-| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | blocked | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
-| 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
+| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | done | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Dispel Magic no-effect aura exception is promoted through stable area and source combatant identity. |
+| 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed after research found no additional represented ongoing Spell Effect family with stable occurrence identity and source spell level beyond the families already claimed. |
+| 17 | L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION - Antimagic Field additional tracked ongoing spell suppression | blocked | future broader ongoing Spell Effect occurrence owner | Promote the next represented ongoing Spell Effect family after it has stable occurrence identity, source spell level, and executable suppressed-state behavior. |
 
 ## Global Acceptance Criteria
 
@@ -404,7 +411,7 @@ Result:
 
 ### Task 8 - L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 After Task 7, promote Hypnotic Pattern runtime.
 
@@ -425,7 +432,7 @@ Expected outputs:
 
 ### Task 9 - L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Represent typed Antimagic Field aura membership and use it to block
 spellcasting and Magic actions for creatures inside the aura.
@@ -447,7 +454,7 @@ Expected outputs:
 
 ### Task 10 - L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION
 
-Status: `blocked`
+Status: `done`
 
 Block spells, magic items, and other magical effects from targeting or otherwise
 affecting things inside Antimagic Field.
@@ -464,6 +471,17 @@ Expected outputs:
 - one shared interdiction boundary with tests for target rejection and effect
   delivery rejection;
 - no production dispatch on authored spell, feature, or item identity.
+
+Result:
+
+- promoted a shared magical-effect target/effect-delivery interdiction boundary
+  that consumes Task 9's Antimagic Field aura-membership witness;
+- covered selected spell targets, table-supplied spell area affected creatures,
+  object-contact spell affected creatures, repeated object-contact delivery, and
+  supported non-spell Magic Action feature targets;
+- left magic-item property suppression, area clipping, transit blocking, portal
+  closure, Dispel Magic immunity, and broader ongoing Spell Effect suppression
+  in their existing follow-up task rows.
 
 ### Task 11 - L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION
 
@@ -486,7 +504,7 @@ Expected outputs:
 
 ### Task 12 - L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Prevent areas of effect created by spells or other magic from extending into
 Antimagic Field.
@@ -500,15 +518,18 @@ Required behavior:
 - otherwise close specific supported area shapes as table-spatial derivation
   without changing reducer behavior.
 
-Expected outputs:
+Completed output:
 
-- promoted area-clipping owner or explicit table closure for each supported area
-  shape;
-- existing caller-supplied area membership facts remain single-sourced.
+- explicit table-spatial closure for Cone, Cube, Cylinder, Emanation, Line, and
+  Sphere area shapes;
+- existing caller-supplied area identity, affected membership, aura membership,
+  movement/path, and overlap facts remain single-sourced;
+- durable closure evidence is recorded in
+  `plans/unit-profile-coverage/L3_FOLLOWUP_ANTIMAGIC_MAGICAL_AREA_CLIPPING.md`.
 
 ### Task 13 - L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING
 
-Status: `blocked`
+Status: `done`
 
 Reject teleportation into or out of the aura and planar travel there for
 represented transit procedures.
@@ -524,6 +545,18 @@ Expected outputs:
 
 - focused runtime tests and Quint parity over a represented transit procedure;
 - explicit closure for planar travel if no planar-travel procedure state exists.
+
+Completed output:
+
+- promoted represented self-teleport transit blocking for caller-supplied
+  Antimagic Field origin/destination aura-membership witnesses;
+- focused runtime tests cover inbound represented Misty Step rejection before
+  resource spend, outbound transit-witness classification, and missing
+  active-aura witness rejection; focused MBT parity covers represented Misty
+  Step transit blocking;
+- planar travel remains closed because the battle runtime has no represented
+  planar-travel procedure, plane-location state, or table-owned plane transition
+  witness owner.
 
 ### Task 14 - L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE
 
@@ -545,7 +578,7 @@ Expected outputs:
 
 ### Task 15 - L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY
 
-Status: `blocked`
+Status: `done`
 
 Represent that Dispel Magic has no effect on an Antimagic Field aura once aura
 occurrences are otherwise targetable or visible to magical-effect targeting.
@@ -562,9 +595,17 @@ Expected outputs:
 - focused tests proving Dispel Magic leaves Antimagic Field active;
 - QNT/runtime parity for the exception once the target boundary exists.
 
+Completed output:
+
+- Dispel Magic magical-effect targeting now exposes active Antimagic Field aura
+  occurrences by stable area identity and source combatant identity;
+- a typed no-effect exception spends Dispel Magic resources while leaving the
+  aura and its Concentration active without authored-identity dispatch;
+- focused runtime tests and MBT parity cover the promoted exception.
+
 ### Task 16 - L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Extend Antimagic Field suppression to additional represented ongoing Spell
 Effect occurrence families.
@@ -580,4 +621,44 @@ Expected outputs:
 
 - supported-profile claim update, focused runtime tests, and promoted
   Quint/runtime parity for each newly represented occurrence family;
+- no broad claim over unrepresented creature, object, or area effect families.
+
+Result:
+
+- confirmed the local SRD Antimagic Field suppression text and the project
+  Spell Effect ownership language;
+- found no additional represented ongoing Spell Effect family beyond tracked
+  spell-light emitters, tracked spellObjectContactDamage active-effect
+  occurrences, and tracked Spiritual Weapon active-effect occurrences with both
+  stable occurrence identity and source spell level;
+- recorded an accepted runtime closure instead of adding behavior or making a
+  broad claim over unrepresented creature, object, or area effect families;
+- split the still-desired future suppression work to
+  L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION.
+
+### Task 17 - L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION
+
+Status: `blocked`
+
+Promote Antimagic Field suppression for the next represented ongoing Spell
+Effect family once that family has the facts required by the generic suppression
+owner.
+
+Blocked on:
+
+- a broader ongoing Spell Effect occurrence owner that represents an additional
+  family with stable occurrence identity, source spell level, and executable
+  suppressed-state behavior.
+
+Required behavior:
+
+- consume the existing Antimagic Field affected ongoing Spell Effect boundary;
+- suppress the occurrence without deletion while it is inside the aura;
+- keep suppressed duration ticking and preserve Artifact/deity exceptions.
+
+Expected outputs:
+
+- supported-profile or profile-subset-supported Antimagic Field claim update;
+- focused runtime tests and promoted Quint/runtime parity for the new occurrence
+  family;
 - no broad claim over unrepresented creature, object, or area effect families.

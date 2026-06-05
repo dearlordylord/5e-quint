@@ -16,6 +16,10 @@ const HIDEOUS_LAUGHTER_CONDITIONS = [
   "prone",
   "incapacitated",
 ] as const satisfies ReadonlyArray<Condition>;
+const HYPNOTIC_PATTERN_CONDITIONS = [
+  "charmed",
+  "incapacitated",
+] as const satisfies ReadonlyArray<Condition>;
 
 export type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
@@ -27,11 +31,15 @@ export type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
-  | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+  | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
+  | Extract<BattleActiveEffect, { readonly kind: "hypnoticPatternControl" }>;
 
 export type SingleConditionApplyingActiveEffect = Exclude<
   ConditionApplyingActiveEffect,
-  Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
+  Extract<
+    BattleActiveEffect,
+    { readonly kind: "hideousLaughter" | "hypnoticPatternControl" }
+  >
 >;
 
 export function isConditionApplyingActiveEffect(
@@ -44,7 +52,8 @@ export function isConditionApplyingActiveEffect(
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
     effect.kind === "sleepUnconscious" ||
-    effect.kind === "hideousLaughter"
+    effect.kind === "hideousLaughter" ||
+    effect.kind === "hypnoticPatternControl"
   );
 }
 
@@ -66,9 +75,13 @@ export function activeEffectCondition(
 export function activeEffectConditions(
   effect: ConditionApplyingActiveEffect,
 ): readonly Condition[] {
-  return effect.kind === "hideousLaughter"
-    ? HIDEOUS_LAUGHTER_CONDITIONS
-    : [activeEffectCondition(effect)];
+  if (effect.kind === "hideousLaughter") {
+    return HIDEOUS_LAUGHTER_CONDITIONS;
+  }
+  if (effect.kind === "hypnoticPatternControl") {
+    return HYPNOTIC_PATTERN_CONDITIONS;
+  }
+  return [activeEffectCondition(effect)];
 }
 
 export type ShapeShiftOwnerActiveEffect = Extract<

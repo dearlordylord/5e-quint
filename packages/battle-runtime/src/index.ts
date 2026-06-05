@@ -330,6 +330,8 @@ export {
   type BattleObjectIgnitionOutcome,
   type BattleObjectOutline,
   type BattleObjectTargetChoiceHole,
+  type BattleAntimagicFieldAuraMembership,
+  type BattleAntimagicFieldTransitWitness,
   type BattlePossessionAttemptDisposition,
   type BattleReactionDecision,
   type BattleReactionDecisionHole,

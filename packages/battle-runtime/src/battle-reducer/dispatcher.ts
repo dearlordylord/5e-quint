@@ -7,7 +7,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -123,6 +125,11 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
+import {
+  antimagicFieldInterdictionMessage,
+  battleSubjectInterdictedByAntimagicField,
+  combatantInsideActiveAntimagicFieldAura,
+} from "./antimagic-field-action-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -309,6 +316,7 @@ import {
   resolveReleaseReadiedSpellCommand,
   resolveSearch,
   resolveShove,
+  resolveShakeAwakeFromHypnoticPattern,
   resolveShakeAwakeFromSleep,
   resolveStandFromProneCommand,
   resolveStatBlockBonusActionOption,
@@ -531,6 +539,13 @@ export function resolveBattleSubjectInternal(
       "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
+  if (battleSubjectInterdictedByAntimagicField(input.state, input.subject)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      antimagicFieldInterdictionMessage(input.state, input.subject),
+    );
+  }
 
   if (
     subjectRequiresActionEligibility(input.subject) &&
@@ -741,6 +756,12 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
       return resolveShakeAwakeFromSleep({ ...input, subject });
+    }
+    if (
+      subject.tag === "action" &&
+      subject.action === "shakeAwakeFromHypnoticPattern"
+    ) {
+      return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -1553,7 +1574,8 @@ function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
         subject.action === "shove" ||
         subject.action === "escapeGrapple" ||
         subject.action === "escapeSpellRestraint" ||
-        subject.action === "shakeAwakeFromSleep"))
+        subject.action === "shakeAwakeFromSleep" ||
+        subject.action === "shakeAwakeFromHypnoticPattern"))
   );
 }
 
@@ -1625,7 +1647,10 @@ export function standardActionKindForSubject(
   if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
     return null;
   }
-  if (subject.action === "shakeAwakeFromSleep") {
+  if (
+    subject.action === "shakeAwakeFromSleep" ||
+    subject.action === "shakeAwakeFromHypnoticPattern"
+  ) {
     return null;
   }
   return Match.value(subject.action).pipe(
@@ -4418,7 +4443,8 @@ export function attackHitBonusActionSpellReactionChoices(
     target === undefined ||
     !combatantCanTakeActions(actor) ||
     !state.currentTurnResources.currentHasBonusAction ||
-    activeOngoingFeaturesPreventSpellcasting(actor)
+    activeOngoingFeaturesPreventSpellcasting(actor) ||
+    combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
   ) {
     return [];
   }

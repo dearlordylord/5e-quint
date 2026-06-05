@@ -6,6 +6,8 @@
 //   at or below the Dispel Magic slot level end; higher-level ongoing spells
 //   require a spellcasting ability check against DC 10 plus that spell level;
 //   higher-level slots automatically end same-or-lower-level ongoing spells.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+//   Dispel Magic has no effect on the aura.
 // - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks:
 //   ability checks compare the total to a Difficulty Class.
 // - UBIQUITOUS_LANGUAGE.md: Ability Check, Difficulty Class, Magic Action,
@@ -25,6 +27,7 @@ import type {
 } from "./battle-reducer.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
+  antimagicFieldUnitId,
   continualFlameUnitId,
   dispelMagicUnitId,
   heatMetalUnitId,
@@ -36,6 +39,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleAreaId,
   battleObjectId,
   resolveBattleSubject,
   type BattleActiveEffect,
@@ -54,6 +58,7 @@ const LAST_RESULTS = [
   "failedHigherLevelCheck",
   "succeededHigherLevelCheck",
   "upcastAutoEnded",
+  "antimagicAuraUnaffected",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
 const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
@@ -64,6 +69,7 @@ type DispelMagicOngoingSpellEndingProjection = {
   readonly slot4Available: boolean;
   readonly lowLevelEffectActive: boolean;
   readonly highLevelEffectActive: boolean;
+  readonly antimagicAuraActive: boolean;
   readonly higherLevelCheckHoleCount: number;
   readonly higherLevelCheckDc: number;
   readonly highLevelCasterConcentrating: boolean;
@@ -86,6 +92,7 @@ const lowLevelEffectId = battleSpellEffectOccurrenceId(
 const highLevelEffectId = battleSpellEffectOccurrenceId(
   "focused-dispel-magic-high-level-contact",
 );
+const antimagicFieldAreaId = battleAreaId("focused-dispel-antimagic-aura");
 const BASE_DISPEL_SLOT_LEVEL = 3;
 const UPCAST_DISPEL_SLOT_LEVEL = 4;
 const HIGHER_LEVEL_SOURCE_SPELL_LEVEL = 4;
@@ -99,6 +106,7 @@ const driverSchema = {
   doFailHigherLevelCheck: {},
   doSucceedHigherLevelCheck: {},
   doUpcastAutoEnd: {},
+  doTargetAntimagicAura: {},
   doStutter: {},
   step: {},
 } as const;
@@ -130,6 +138,9 @@ function createDispelMagicOngoingSpellEndingDriver() {
       doUpcastAutoEnd: () => {
         state = upcastAutoEnd(state);
       },
+      doTargetAntimagicAura: () => {
+        state = targetAntimagicAura(state);
+      },
       doStutter: () => {},
       step: () => {},
       getState: () => dispelProjection(state),
@@ -152,6 +163,7 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
       slot4Available: true,
       lowLevelEffectActive: true,
       highLevelEffectActive: true,
+      antimagicAuraActive: true,
       higherLevelCheckHoleCount: 1,
       higherLevelCheckDc: HIGHER_LEVEL_CHECK_DC,
       highLevelCasterConcentrating: true,
@@ -172,6 +184,7 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
       slot4Available: true,
       lowLevelEffectActive: false,
       highLevelEffectActive: true,
+      antimagicAuraActive: true,
       higherLevelCheckHoleCount: 0,
       higherLevelCheckDc: 0,
       highLevelCasterConcentrating: true,
@@ -193,6 +206,7 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
       slot4Available: true,
       lowLevelEffectActive: false,
       highLevelEffectActive: false,
+      antimagicAuraActive: true,
       higherLevelCheckHoleCount: 0,
       higherLevelCheckDc: 0,
       highLevelCasterConcentrating: false,
@@ -204,10 +218,28 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
       slot4Available: false,
       lowLevelEffectActive: false,
       highLevelEffectActive: false,
+      antimagicAuraActive: true,
       higherLevelCheckHoleCount: 0,
       higherLevelCheckDc: 0,
       highLevelCasterConcentrating: false,
       lastResult: "upcastAutoEnded",
+    });
+  });
+
+  it("leaves an Antimagic Field aura active when selected as a magical effect", () => {
+    const targeted = targetAntimagicAura(initialRuntimeState());
+
+    expect(dispelProjection(targeted)).toMatchObject({
+      actionAvailable: false,
+      slot3Available: false,
+      slot4Available: true,
+      lowLevelEffectActive: true,
+      highLevelEffectActive: true,
+      antimagicAuraActive: true,
+      higherLevelCheckHoleCount: 0,
+      higherLevelCheckDc: 0,
+      highLevelCasterConcentrating: true,
+      lastResult: "antimagicAuraUnaffected",
     });
   });
 
@@ -237,20 +269,30 @@ function initialRuntimeState(): DispelMagicRuntimeState {
     ],
   });
   const caster = requireCombatant(base, spellCasterId);
+  const target = requireCombatant(base, spellTargetId);
   return {
     battle: {
       ...base,
-      combatants: new Map(base.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: {
-          sourceSpellId: heatMetalUnitId,
-          effectKind: "spellEffect",
-        },
-        activeEffects: [
-          ...caster.activeEffects,
-          highLevelObjectContactEffect(),
-        ],
-      }),
+      combatants: new Map(base.combatants)
+        .set(spellCasterId, {
+          ...caster,
+          concentration: {
+            sourceSpellId: heatMetalUnitId,
+            effectKind: "spellEffect",
+          },
+          activeEffects: [
+            ...caster.activeEffects,
+            highLevelObjectContactEffect(),
+          ],
+        })
+        .set(spellTargetId, {
+          ...target,
+          concentration: {
+            sourceSpellId: antimagicFieldUnitId,
+            effectKind: "spellEffect",
+          },
+          activeEffects: [...target.activeEffects, antimagicFieldAuraEffect()],
+        }),
       lightEmitters: [lowLevelObjectLightEmitter()],
     },
     higherLevelCheckHoles: [],
@@ -280,8 +322,10 @@ function requestHigherLevelCheck(
   const checkHoles = result.holes.filter(
     (
       hole,
-    ): hole is Extract<BattleHole, { readonly kind: "spellcastingAbilityCheck" }> =>
-      hole.kind === "spellcastingAbilityCheck",
+    ): hole is Extract<
+      BattleHole,
+      { readonly kind: "spellcastingAbilityCheck" }
+    > => hole.kind === "spellcastingAbilityCheck",
   );
   expect(checkHoles).toHaveLength(1);
   expect(checkHoles[0]).toMatchObject({
@@ -343,7 +387,9 @@ function resolveHigherLevelCheck(
   };
 }
 
-function upcastAutoEnd(state: DispelMagicRuntimeState): DispelMagicRuntimeState {
+function upcastAutoEnd(
+  state: DispelMagicRuntimeState,
+): DispelMagicRuntimeState {
   const act = spellAct({
     state: state.battle,
     spellId: dispelMagicUnitId,
@@ -368,6 +414,45 @@ function upcastAutoEnd(state: DispelMagicRuntimeState): DispelMagicRuntimeState 
   };
 }
 
+function targetAntimagicAura(
+  state: DispelMagicRuntimeState,
+): DispelMagicRuntimeState {
+  const act = spellAct({
+    state: state.battle,
+    spellId: dispelMagicUnitId,
+    slotLevel: BASE_DISPEL_SLOT_LEVEL,
+  });
+  const target = {
+    kind: "magicalEffect" as const,
+    effect: {
+      kind: "antimagicFieldAura" as const,
+      areaId: antimagicFieldAreaId,
+      sourceCombatantId: spellTargetId,
+    },
+  };
+  expect(
+    requireOngoingSpellTargetChoiceHole(act.initialHoles).choices,
+  ).toContainEqual(target);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill(
+          requireOngoingSpellTargetChoiceHole(act.initialHoles),
+          target,
+        ),
+      ],
+    }),
+    "Expected Dispel Magic Antimagic Field aura target to resolve.",
+  );
+  return {
+    battle: resolved.state,
+    higherLevelCheckHoles: [],
+    lastResult: "antimagicAuraUnaffected",
+  };
+}
+
 function dispelProjection(
   state: DispelMagicRuntimeState,
 ): DispelMagicOngoingSpellEndingProjection {
@@ -387,6 +472,14 @@ function dispelProjection(
         effect.kind === "spellObjectContactDamage" &&
         effect.effectId === highLevelEffectId,
     ),
+    antimagicAuraActive: requireCombatant(
+      state.battle,
+      spellTargetId,
+    ).activeEffects.some(
+      (effect) =>
+        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+        effect.areaId === antimagicFieldAreaId,
+    ),
     higherLevelCheckHoleCount: state.higherLevelCheckHoles.length,
     higherLevelCheckDc: state.higherLevelCheckHoles[0]?.dc ?? 0,
     highLevelCasterConcentrating:
@@ -396,6 +489,30 @@ function dispelProjection(
   };
   expect(projection.higherLevelCheckHoleCount).toBeLessThanOrEqual(1);
   return projection;
+}
+
+function antimagicFieldAuraEffect(): Extract<
+  BattleActiveEffect,
+  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+> {
+  return {
+    kind: "antimagicFieldOngoingSpellSuppression",
+    sourceSpellId: antimagicFieldUnitId,
+    sourceCombatantId: spellTargetId,
+    areaId: antimagicFieldAreaId,
+    auraMembership: {
+      kind: "antimagicFieldAuraMembership",
+      originIncluded: true,
+      nonOriginCombatantIds: [],
+    },
+    radiusFeet: movementFeet(10),
+    suppressedOngoingSpellEffects: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellTargetId,
+      durationTicks: elapsedTimeTicks(600),
+    },
+  };
 }
 
 function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {
@@ -445,11 +562,11 @@ function highLevelObjectContactEffect(): Extract<
 
 function ongoingSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "ongoingSpellTargetChoice" }>,
-): Extract<BattleFill, { readonly kind: "ongoingSpellTargetChoice" }> {
-  const target: BattleOngoingSpellTarget = {
+  target: BattleOngoingSpellTarget = {
     kind: "object",
     objectId: dispelledObjectId,
-  };
+  },
+): Extract<BattleFill, { readonly kind: "ongoingSpellTargetChoice" }> {
   return {
     kind: "ongoingSpellTargetChoice",
     holeId: hole.holeId,
@@ -561,6 +678,7 @@ function normalizeDispelMagicQuintState(
     slot4Available: booleanField(state, "qSlot4Available"),
     lowLevelEffectActive: booleanField(state, "qLowLevelEffectActive"),
     highLevelEffectActive: booleanField(state, "qHighLevelEffectActive"),
+    antimagicAuraActive: booleanField(state, "qAntimagicAuraActive"),
     higherLevelCheckHoleCount: numberFromQuintInt(
       state["qHigherLevelCheckHoleCount"],
       "qHigherLevelCheckHoleCount",

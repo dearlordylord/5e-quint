@@ -8,6 +8,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
+  antimagicFieldUnitId,
   continualFlameUnitId,
   dispelMagicUnitId,
   heatMetalUnitId,
@@ -26,6 +27,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleAreaId,
   battleObjectId,
   canSpendAction,
   movementFeet,
@@ -780,6 +782,107 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(false);
   });
 
+  test("magical-effect targeting leaves an Antimagic Field aura active", () => {
+    const areaId = battleAreaId("dispel-antimagic-field-aura-target");
+    const aura = antimagicFieldAuraEffect(areaId);
+    const state = stateWithCombatantActiveEffects({
+      target: {
+        concentration: {
+          sourceSpellId: antimagicFieldUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [aura],
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const target = {
+      kind: "magicalEffect" as const,
+      effect: {
+        kind: "antimagicFieldAura" as const,
+        areaId,
+        sourceCombatantId: spellTargetId,
+      },
+    };
+
+    expect(
+      requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
+    ).toContainEqual(target);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic aura target to resolve.");
+    }
+    const antimagicCaster = resolved.state.combatants.get(spellTargetId);
+    expect(antimagicCaster?.concentration).toEqual({
+      sourceSpellId: antimagicFieldUnitId,
+      effectKind: "spellEffect",
+    });
+    expect(antimagicCaster?.activeEffects).toContainEqual(aura);
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+  });
+
+  test("magical-effect targeting rejects stale Antimagic Field aura identity", () => {
+    const activeAreaId = battleAreaId("dispel-active-antimagic-aura-target");
+    const staleAreaId = battleAreaId("dispel-stale-antimagic-aura-target");
+    const state = stateWithCombatantActiveEffects({
+      target: {
+        concentration: {
+          sourceSpellId: antimagicFieldUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [antimagicFieldAuraEffect(activeAreaId)],
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const staleTarget = {
+      kind: "magicalEffect" as const,
+      effect: {
+        kind: "antimagicFieldAura" as const,
+        areaId: staleAreaId,
+        sourceCombatantId: spellTargetId,
+      },
+    };
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          ongoingSpellTargetFill({
+            hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+            target: staleTarget,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Dispel Magic Antimagic Field aura target must reference an active aura.",
+    });
+  });
+
   test("higher-level tracked Spiritual Weapon occurrences use the Dispel Magic ability-check gate", () => {
     const effect = spiritualWeaponEffect({
       sourceSpellLevel: 4,
@@ -1054,6 +1157,32 @@ function spiritualWeaponEffect(input: {
       kind: "concentration",
       combatantId: spellCasterId,
       durationTicks: elapsedTimeTicks(10),
+    },
+  };
+}
+
+function antimagicFieldAuraEffect(
+  areaId: ReturnType<typeof battleAreaId>,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+> {
+  return {
+    kind: "antimagicFieldOngoingSpellSuppression",
+    sourceSpellId: antimagicFieldUnitId,
+    sourceCombatantId: spellTargetId,
+    areaId,
+    auraMembership: {
+      kind: "antimagicFieldAuraMembership",
+      originIncluded: true,
+      nonOriginCombatantIds: [],
+    },
+    radiusFeet: movementFeet(10),
+    suppressedOngoingSpellEffects: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellTargetId,
+      durationTicks: elapsedTimeTicks(600),
     },
   };
 }

@@ -1,9 +1,10 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person sleep
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
+// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import * as path from "node:path";
@@ -23,7 +24,9 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
 
 import {
   battleCombatantSide,
@@ -50,6 +53,7 @@ import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 type ConditionSavingThrowSelectedIdentityProjection = {
+  readonly targetCharmed: boolean;
   readonly targetBlinded: boolean;
   readonly targetDeafened: boolean;
   readonly targetRestrained: boolean;
@@ -59,8 +63,10 @@ type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetProne: boolean;
   readonly casterConcentrating: boolean;
   readonly actionAvailable: boolean;
+  readonly targetWalkSpeedFeet: number;
   readonly firstLevelSlotsExpended: number;
   readonly secondLevelSlotsExpended: number;
+  readonly thirdLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
 const conditionSavingThrowSpellUnitIds = [
@@ -69,6 +75,7 @@ const conditionSavingThrowSpellUnitIds = [
   "entangle",
   "hold_person",
   "hideous_laughter",
+  "hypnotic_pattern",
   "sleep",
 ] as const;
 type ConditionSavingThrowSpellUnitId =
@@ -101,6 +108,7 @@ if (unitCatalogResult.tag !== "ok") {
   );
 }
 const unitLibrary = unitCatalogResult.catalog;
+const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
 
 defineSelectedIdentityWitness({
   describeLabel: "Condition Saving Throw selected identity MBT",
@@ -110,6 +118,7 @@ defineSelectedIdentityWitness({
     "../battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
+    targetCharmed: "bool",
     targetBlinded: "bool",
     targetDeafened: "bool",
     targetRestrained: "bool",
@@ -119,8 +128,10 @@ defineSelectedIdentityWitness({
     targetProne: "bool",
     casterConcentrating: "bool",
     actionAvailable: "bool",
+    targetWalkSpeedFeet: "int",
     firstLevelSlotsExpended: "int",
     secondLevelSlotsExpended: "int",
+    thirdLevelSlotsExpended: "int",
     lastResult: "str",
   },
   initialProjection: expectedProjection(),
@@ -186,6 +197,7 @@ defineSelectedIdentityWitness({
             targetRestrained: true,
             casterConcentrating: true,
             actionAvailable: false,
+            targetWalkSpeedFeet: 0,
             firstLevelSlotsExpended: 1,
             lastResult: "resolved",
           }),
@@ -226,10 +238,12 @@ defineSelectedIdentityWitness({
             targetIncapacitated: true,
             casterConcentrating: true,
             actionAvailable: false,
+            targetWalkSpeedFeet: 0,
             secondLevelSlotsExpended: 1,
             lastResult: "resolved",
           }),
-          discover: () => resolvedProjection(resolveHoldPersonFailedSavingThrow()),
+          discover: () =>
+            resolvedProjection(resolveHoldPersonFailedSavingThrow()),
         },
         {
           actionName: "doResolveHoldPersonRepeatSavingThrowSuccess",
@@ -244,6 +258,25 @@ defineSelectedIdentityWitness({
       ],
     },
     {
+      unitId: "hypnotic_pattern",
+      procedures: [
+        {
+          actionName: "doResolveHypnoticPatternFailedSavingThrow",
+          projectionAfter: expectedProjection({
+            targetCharmed: true,
+            targetIncapacitated: true,
+            casterConcentrating: true,
+            actionAvailable: false,
+            targetWalkSpeedFeet: 0,
+            thirdLevelSlotsExpended: 1,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            resolvedProjection(resolveHypnoticPatternFailedSavingThrow()),
+        },
+      ],
+    },
+    {
       unitId: "sleep",
       procedures: [
         {
@@ -254,6 +287,7 @@ defineSelectedIdentityWitness({
             targetProne: true,
             casterConcentrating: true,
             actionAvailable: true,
+            targetWalkSpeedFeet: 0,
             firstLevelSlotsExpended: 1,
             lastResult: "resolved",
           }),
@@ -281,9 +315,13 @@ function resolvedProjection(
 
 function resolveAreaSavingThrowSpell(
   state: BattleState,
-  spellId: Extract<ConditionSavingThrowSpellUnitId, "color_spray" | "entangle">,
+  spellId: Extract<
+    ConditionSavingThrowSpellUnitId,
+    "color_spray" | "entangle" | "hypnotic_pattern"
+  >,
+  slotLevel = 1,
 ): BattleResolutionResult {
-  const act = spellAct({ state, spellId, slotLevel: 1 });
+  const act = spellAct({ state, spellId, slotLevel });
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   return resolveBattleSubject({
     state,
@@ -292,6 +330,14 @@ function resolveAreaSavingThrowSpell(
       savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
     ],
   });
+}
+
+function resolveHypnoticPatternFailedSavingThrow(): BattleResolutionResult {
+  return resolveAreaSavingThrowSpell(
+    conditionSpellBattle(srdSpellRecord("hypnotic_pattern"), "wizard"),
+    "hypnotic_pattern",
+    3,
+  );
 }
 
 function resolveBlindnessDeafnessFailedSavingThrow(
@@ -476,6 +522,7 @@ function expectedProjection(
   overrides: Partial<ConditionSavingThrowSelectedIdentityProjection> = {},
 ): ConditionSavingThrowSelectedIdentityProjection {
   return {
+    targetCharmed: false,
     targetBlinded: false,
     targetDeafened: false,
     targetRestrained: false,
@@ -485,17 +532,30 @@ function expectedProjection(
     targetProne: false,
     casterConcentrating: false,
     actionAvailable: true,
+    targetWalkSpeedFeet: 30,
     firstLevelSlotsExpended: 0,
     secondLevelSlotsExpended: 0,
+    thirdLevelSlotsExpended: 0,
     lastResult: "init",
     ...overrides,
   };
 }
 
 function srdSpellRecord(unitId: ConditionSavingThrowSpellUnitId): SpellRecord {
+  if (unitId === "hypnotic_pattern") {
+    return hypnoticPatternSpell;
+  }
   const unit = unitLibrary.requireUnit(unitId);
   if (unit.kind !== "spell") {
     throw new Error(`Expected SRD catalog unit ${unitId} to be a Spell.`);
+  }
+  return unit;
+}
+
+function decodeHypnoticPatternSpellRecord(): SpellRecord {
+  const unit = decodeUnitRecordSync(hypnoticPatternInput);
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Hypnotic Pattern fixture to decode as a Spell.");
   }
   return unit;
 }
@@ -526,7 +586,9 @@ function conditionSpellBattle(
           spellSlots:
             spell.id === "hold_person" || spell.id === "blindness_deafness"
               ? [{ spellLevel: 2, count: 1 }]
-              : [{ spellLevel: 1, count: 1 }],
+              : spell.id === "hypnotic_pattern"
+                ? [{ spellLevel: 3, count: 1 }]
+                : [{ spellLevel: 1, count: 1 }],
         },
       }),
       conditionSpellCreature({
@@ -636,18 +698,33 @@ function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value:
-      "spell" in hole &&
-      hole.spell.procedure !== "rollModifier" &&
-      hole.spell.targeting.kind !== "singleCombatant" &&
-      hole.spell.targeting.kind !== "targetList"
+      "spell" in hole && hole.spell.procedure === "hypnoticPattern"
         ? {
             area: {
+              kind: "hypnoticPatternArea",
               originAnchorId: casterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+              cubeSideFeet: 30,
+              affectedCreatureWitnesses: outcomes.map((outcome) => ({
+                targetId: outcome.targetId,
+                inCube: true,
+                canSeePattern: true,
+              })),
             },
             outcomes,
           }
-        : { outcomes },
+        : "spell" in hole &&
+            hole.spell.procedure !== "rollModifier" &&
+            hole.spell.targeting.kind !== "singleCombatant" &&
+            hole.spell.targeting.kind !== "targetList"
+          ? {
+              area: {
+                originAnchorId: casterId,
+                affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+              },
+              outcomes,
+            }
+          : { outcomes },
   };
 }
 
@@ -707,6 +784,7 @@ function projectConditionSavingThrowSelectedIdentityState(
     );
   }
   return {
+    targetCharmed: snapshotHasCondition(target.conditions, "charmed"),
     targetBlinded: snapshotHasCondition(target.conditions, "blinded"),
     targetDeafened: snapshotHasCondition(target.conditions, "deafened"),
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
@@ -721,8 +799,10 @@ function projectConditionSavingThrowSelectedIdentityState(
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
+    targetWalkSpeedFeet: Number(target.movement.speedFeet),
     firstLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 1),
     secondLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 2),
+    thirdLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 3),
     lastResult,
   };
 }

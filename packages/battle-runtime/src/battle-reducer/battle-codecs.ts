@@ -335,6 +335,20 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("hypnoticPatternArea"),
+    cubeSideFeet: Schema.Literal(30),
+    affectedCreatureWitnesses: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        inCube: Schema.Literal(true),
+        canSeePattern: Schema.Literal(true),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: BattleAreaId,
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -707,6 +721,11 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
   }),
   Schema.Struct({
+    kind: Schema.Literal("hypnoticPatternShakeAwakeActorWithin5Feet"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("sneakAttackAllyWithin5FeetOfTarget"),
     attackerId: CombatantId,
     targetId: CombatantId,
@@ -838,6 +857,11 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union(
       "spiritualWeapon",
     ),
     sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("antimagicFieldAura"),
+    areaId: BattleAreaId,
+    sourceCombatantId: CombatantId,
   }),
 );
 const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
@@ -1706,6 +1730,17 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
   | {
+      readonly kind: "hypnoticPatternArea";
+      readonly cubeSideFeet: 30;
+      readonly affectedCreatureWitnesses: readonly {
+        readonly targetId: string;
+        readonly inCube: true;
+        readonly canSeePattern: true;
+      }[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
       readonly sleepNonSleeperFacts?: never;
@@ -1914,6 +1949,11 @@ type BattleFillEncoded =
                     | "spellObjectContactDamage"
                     | "spiritualWeapon";
                   readonly sourceEffectId: string;
+                }
+              | {
+                  readonly kind: "antimagicFieldAura";
+                  readonly areaId: string;
+                  readonly sourceCombatantId: string;
                 };
           };
       readonly spatialFacts: readonly {
@@ -1942,6 +1982,11 @@ type BattleFillEncoded =
                       | "spellObjectContactDamage"
                       | "spiritualWeapon";
                     readonly sourceEffectId: string;
+                  }
+                | {
+                    readonly kind: "antimagicFieldAura";
+                    readonly areaId: string;
+                    readonly sourceCombatantId: string;
                   };
             };
         readonly rangeFeet: number;
@@ -2034,6 +2079,11 @@ type BattleFillEncoded =
         | {
             readonly kind: "antimagicFieldSelfEmanation";
             readonly areaId: string;
+            readonly auraMembership: {
+              readonly kind: "antimagicFieldAuraMembership";
+              readonly originIncluded: boolean;
+              readonly nonOriginCombatantIds: readonly string[];
+            };
             readonly affectedOngoingSpellEffects: readonly {
               readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
               readonly effect:
@@ -2103,6 +2153,13 @@ type BattleFillEncoded =
         readonly spellId: string;
         readonly destinationId: string;
         readonly distanceFeet: number;
+        readonly antimagicFieldTransit: readonly {
+          readonly kind: "antimagicFieldTransit";
+          readonly areaId: string;
+          readonly sourceCombatantId: string;
+          readonly originInsideAura: boolean;
+          readonly destinationInsideAura: boolean;
+        }[];
       };
     }
   | {
@@ -2874,6 +2931,11 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("antimagicFieldSelfEmanation"),
           areaId: BattleAreaId,
+          auraMembership: Schema.Struct({
+            kind: Schema.Literal("antimagicFieldAuraMembership"),
+            originIncluded: Schema.Boolean,
+            nonOriginCombatantIds: Schema.Array(CombatantId),
+          }),
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),
@@ -2937,6 +2999,15 @@ export const BattleFillSchema: Schema.Schema<
         spellId: SpellId,
         destinationId: BattleTablePositionId,
         distanceFeet: MovementFeet,
+        antimagicFieldTransit: Schema.Array(
+          Schema.Struct({
+            kind: Schema.Literal("antimagicFieldTransit"),
+            areaId: BattleAreaId,
+            sourceCombatantId: CombatantId,
+            originInsideAura: Schema.Boolean,
+            destinationInsideAura: Schema.Boolean,
+          }),
+        ),
       }),
     }),
     Schema.Struct({

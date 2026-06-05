@@ -14,6 +14,8 @@
 //     higher-level ongoing spells require a spellcasting Ability Check against
 //     DC 10 plus the spell level; higher-level slots automatically end spells
 //     whose level is equal to or below the slot level.
+//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
+//     Dispel Magic has no effect on the aura.
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Ability Check, Spell Slot, Spell
 //     Invocation, Spell Effect, and Battle Runtime Boundaries.
 
@@ -47,6 +49,7 @@ import { invalidResult } from "../result-helpers.ts";
 import {
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefEquals,
+  ongoingSpellEffectRefForAntimagicFieldAura,
   ongoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
@@ -261,6 +264,22 @@ type BattleTrackedOngoingSpellOccurrence =
       readonly kind: "activeEffect";
       readonly effect: TrackedDispellableOngoingSpellActiveEffect;
     };
+type AntimagicFieldAuraOngoingSpellEffectRef = Extract<
+  BattleOngoingSpellEffectRef,
+  { readonly kind: "antimagicFieldAura" }
+>;
+type OngoingSpellEndDispelException =
+  | {
+      readonly kind: "antimagicFieldAuraNoEffect";
+      readonly effect: AntimagicFieldAuraOngoingSpellEffectRef;
+    }
+  | {
+      readonly kind: "notException";
+    }
+  | {
+      readonly kind: "invalid";
+      readonly message: string;
+    };
 
 function ongoingSpellTargetChoiceHole(
   state: BattleState,
@@ -379,6 +398,26 @@ function resolveOngoingSpellEndSpellAct(input: {
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
+  }
+
+  const dispelException = ongoingSpellEndDispelException(
+    input.input.state,
+    selectedTarget,
+  );
+  if (dispelException.kind === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      dispelException.message,
+    );
+  }
+  if (dispelException.kind === "antimagicFieldAuraNoEffect") {
+    return resolveOngoingSpellEndDispelException({
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      exception: dispelException,
+    });
   }
 
   const targetOccurrences = matchingTrackedOngoingSpellOccurrences(
@@ -517,6 +556,66 @@ function resolveOngoingSpellEndSpellAct(input: {
       };
 }
 
+function ongoingSpellEndDispelException(
+  state: BattleState,
+  target: BattleOngoingSpellTarget,
+): OngoingSpellEndDispelException {
+  if (target.kind !== "magicalEffect") {
+    return { kind: "notException" };
+  }
+  if (target.effect.kind !== "antimagicFieldAura") {
+    return { kind: "notException" };
+  }
+  return activeAntimagicFieldAuraMatchesTarget(state, target.effect)
+    ? {
+        kind: "antimagicFieldAuraNoEffect",
+        effect: target.effect,
+      }
+    : {
+        kind: "invalid",
+        message:
+          "Dispel Magic Antimagic Field aura target must reference an active aura.",
+      };
+}
+
+function activeAntimagicFieldAuraMatchesTarget(
+  state: BattleState,
+  target: AntimagicFieldAuraOngoingSpellEffectRef,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+        effect.areaId === target.areaId &&
+        effect.sourceCombatantId === target.sourceCombatantId,
+    ),
+  );
+}
+
+function resolveOngoingSpellEndDispelException(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: OngoingSpellEndInvocation;
+  readonly exception: Extract<
+    OngoingSpellEndDispelException,
+    { readonly kind: "antimagicFieldAuraNoEffect" }
+  >;
+}): BattleResolutionResult {
+  const resourced = spendSpellCastResources({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
 function ongoingSpellEndAbilityCheckHole(
   casterId: CombatantId,
   invocation: OngoingSpellEndInvocation,
@@ -573,6 +672,16 @@ function ongoingSpellTargetChoices(
   }
   for (const combatant of state.combatants.values()) {
     for (const effect of combatant.activeEffects) {
+      if (effect.kind === "antimagicFieldOngoingSpellSuppression") {
+        pushUniqueOngoingSpellTarget(choices, {
+          kind: "magicalEffect",
+          effect: ongoingSpellEffectRefForAntimagicFieldAura({
+            areaId: effect.areaId,
+            sourceCombatantId: effect.sourceCombatantId,
+          }),
+        });
+        continue;
+      }
       if (!isTrackedDispellableOngoingSpellActiveEffect(effect)) {
         continue;
       }
