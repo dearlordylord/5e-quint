@@ -2064,6 +2064,11 @@ type BattleFillEncoded =
         | {
             readonly kind: "antimagicFieldSelfEmanation";
             readonly areaId: string;
+            readonly auraMembership: {
+              readonly kind: "antimagicFieldAuraMembership";
+              readonly originIncluded: boolean;
+              readonly nonOriginCombatantIds: readonly string[];
+            };
             readonly affectedOngoingSpellEffects: readonly {
               readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
               readonly effect:
@@ -2904,6 +2909,11 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("antimagicFieldSelfEmanation"),
           areaId: BattleAreaId,
+          auraMembership: Schema.Struct({
+            kind: Schema.Literal("antimagicFieldAuraMembership"),
+            originIncluded: Schema.Boolean,
+            nonOriginCombatantIds: Schema.Array(CombatantId),
+          }),
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),

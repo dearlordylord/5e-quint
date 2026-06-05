@@ -14,6 +14,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -1909,6 +1910,11 @@ export type BattleAntimagicFieldAffectedOngoingSpellEffect = {
   readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
   readonly sourceKind: BattleAntimagicFieldOngoingSpellEffectSourceKind;
 };
+export type BattleAntimagicFieldAuraMembership = {
+  readonly kind: "antimagicFieldAuraMembership";
+  readonly originIncluded: boolean;
+  readonly nonOriginCombatantIds: readonly CombatantId[];
+};
 export type BattleAntimagicFieldAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "antimagicFieldSelfEmanation" }
@@ -1946,6 +1952,7 @@ export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "antimagicFieldSelfEmanation";
       readonly areaId: BattleAreaId;
+      readonly auraMembership: BattleAntimagicFieldAuraMembership;
       readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
     }
   | {

@@ -419,6 +419,11 @@ function antimagicFieldAreaFill(input: {
     value: {
       kind: "antimagicFieldSelfEmanation",
       areaId: antimagicFieldAreaId,
+      auraMembership: {
+        kind: "antimagicFieldAuraMembership",
+        originIncluded: true,
+        nonOriginCombatantIds: [],
+      },
       affectedOngoingSpellEffects: input.affectedOngoingSpellEffects,
     },
   };

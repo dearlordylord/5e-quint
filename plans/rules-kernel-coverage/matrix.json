@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 99,
-    "covered": 93,
+    "total": 100,
+    "covered": 94,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 71,
+      "battle": 72,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 93,
+      "covered": 94,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -871,6 +871,40 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-antimagic-field-action-interdiction"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Rules-Glossary.md#Emanation",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
+      "title": "Battle Antimagic Field aura membership blocks spellcasting and Magic actions for creatures inside the aura"
     },
     {
       "id": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
@@ -5466,6 +5500,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
+      ],
+      "profileId": "spell.invocation-antimagic-field-action-interdiction"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
       ],
       "profileId": "spell.invocation-spike-growth-movement-hazard"
@@ -5511,6 +5551,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt is current QNT proof evidence for Bardic Inspiration grant and failed-D20-Test feature profiles; it is not a generator semantic core while its run blocks remain colocated.",
@@ -10200,6 +10248,7 @@
     "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
+    "spell.invocation-antimagic-field-action-interdiction",
     "spell.invocation-antimagic-field-ongoing-spell-suppression",
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",

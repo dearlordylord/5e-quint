@@ -2,7 +2,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -45,6 +47,10 @@ import {
   spellProcedureProfileFor,
 } from "./spell-procedure-profiles/registry.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
+import {
+  combatantInsideActiveAntimagicFieldAura,
+  spellInvocationActInterdictedByAntimagicField,
+} from "./antimagic-field-action-interdiction.ts";
 import {
   counterspellCapableReactors,
   spellCastCanTriggerCounterspell,
@@ -97,6 +103,8 @@ export function discoverSupportedSpellInvocations(
     return [];
   }
   const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
+  const spellcastingPreventedByAntimagicField =
+    combatantInsideActiveAntimagicFieldAura(state, actorId);
   const invocations = supportedSpellActs(actor, state);
   const counterspellReactors = counterspellCapableReactors(state);
   const acts = invocations.flatMap(
@@ -107,7 +115,16 @@ export function discoverSupportedSpellInvocations(
       if (invocation.spell.mechanics.family === "triggered_reaction") {
         return [];
       }
-      if (spellcastingPrevented && spellInvocationIsSpellcasting(invocation)) {
+      if (
+        spellcastingPrevented &&
+        spellInvocationIsSpellcasting(invocation)
+      ) {
+        return [];
+      }
+      if (
+        spellcastingPreventedByAntimagicField &&
+        spellInvocationActInterdictedByAntimagicField(invocation)
+      ) {
         return [];
       }
       if (!spellHasAvailableSpend(actor, invocation)) {

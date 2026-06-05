@@ -133,6 +133,7 @@
 {"profileId":"unit-feature.metamagic-cast-governor-quickened","obligationIds":["BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
 {"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
+{"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}
 {"profileId":"spell.invocation-spike-growth-movement-hazard","obligationIds":["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"]}
 {"profileId":"spell.invocation-see-invisible-observer-sight","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"]}
 {"profileId":"spell.invocation-spiritual-weapon-attack-proxy","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}

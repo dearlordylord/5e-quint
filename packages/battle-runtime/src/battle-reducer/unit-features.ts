@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // Unit feature discovery and resolution extracted from ../battle-reducer.ts.
 // Owns unit-feature act discovery, feature command resolution, ongoing feature
 // activation, failed/successful ability-check feature reactions, and self-heal
@@ -109,6 +111,7 @@ import {
 } from "./ongoing-feature-helpers.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -267,7 +270,10 @@ function magicActionHealingPoolActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
 ): readonly AvailableBattleAct[] {
-  if (!canSpendAction(state.currentTurnResources, "magic")) {
+  if (
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
+  ) {
     return [];
   }
   return [...actor.origin.magicActionHealingPoolProfiles.values()].flatMap(
@@ -314,7 +320,8 @@ function magicActionAreaSaveDamageHealingActs(
 ): readonly AvailableBattleAct[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
-    spellSaveDcForCaster(state, actor.combatantId) === null
+    spellSaveDcForCaster(state, actor.combatantId) === null ||
+    combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
   ) {
     return [];
   }

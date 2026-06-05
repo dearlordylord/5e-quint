@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 99
-- Covered obligations: 93
+- Total obligations: 100
+- Covered obligations: 94
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 93 |
+| covered | 94 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 71 |
+| battle | 72 |
 | character-creation | 13 |
 | character-sheet | 11 |
 | character-battle | 3 |
@@ -53,6 +53,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | battle | covered | `unit-feature.metamagic-cast-governor-quickened` |
 | `SHEET.SPELL_REST_BENEFIT.APPLICATION` | character-sheet | covered | `character-sheet.spell-rest-benefit-application` |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | battle | covered | `spell.invocation-antimagic-field-ongoing-spell-suppression` |
+| `BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION` | battle | covered | `spell.invocation-antimagic-field-action-interdiction` |
 | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` | battle | covered | `spell.invocation-spike-growth-movement-hazard` |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-sleep-target-admission` |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-grease-ground-hazard` |
@@ -268,6 +269,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` |
 | `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
+| `packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION` |
 | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | profile-scoped: `unit-feature.bardic-inspiration-failed-d20-test` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bardic-inspiration-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |

@@ -437,8 +437,23 @@ export function removeBattleCombatants(input: {
         id,
         {
           ...combatant,
-          activeEffects: combatant.activeEffects.filter(
-            (effect) => !removeIds.has(effect.sourceCombatantId),
+          activeEffects: combatant.activeEffects.flatMap((effect) =>
+            removeIds.has(effect.sourceCombatantId)
+              ? []
+              : [
+                  effect.kind === "antimagicFieldOngoingSpellSuppression"
+                    ? {
+                        ...effect,
+                        auraMembership: {
+                          ...effect.auraMembership,
+                          nonOriginCombatantIds:
+                            effect.auraMembership.nonOriginCombatantIds.filter(
+                              (id) => !removeIds.has(id),
+                            ),
+                        },
+                      }
+                    : effect,
+                ],
           ),
         },
       ]),

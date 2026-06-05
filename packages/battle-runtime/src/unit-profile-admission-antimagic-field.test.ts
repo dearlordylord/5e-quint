@@ -39,6 +39,7 @@ import {
   spellSlotInvocationRef,
   type BattleActiveEffect,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
+  type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -126,6 +127,11 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       sourceSpellId: antimagicFieldUnitId,
       sourceCombatantId: spellCasterId,
       areaId: antimagicFieldAreaId,
+      auraMembership: {
+        kind: "antimagicFieldAuraMembership",
+        originIncluded: true,
+        nonOriginCombatantIds: [],
+      },
       radiusFeet: movementFeet(10),
       suppressedOngoingSpellEffects: [
         {
@@ -141,10 +147,50 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     });
 
     const restored = breakBattleConcentration(resolved.state, spellCasterId);
+    expect(
+      restored.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "antimagicFieldOngoingSpellSuppression",
+        ),
+    ).toBe(false);
     expect(snapshotBattle(restored).lightEmitters).toEqual([
       ordinaryLight,
       artifactLight,
     ]);
+  });
+
+  test("rejects an aura membership that lists the source as non-origin", () => {
+    const state = antimagicFieldBattle();
+    const act = spellAct({
+      state,
+      spellId: antimagicFieldUnitId,
+      slotLevel: 8,
+    });
+    const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        antimagicFieldAreaFill({
+          hole: areaHole,
+          affectedOngoingSpellEffects: [],
+          auraMembership: {
+            kind: "antimagicFieldAuraMembership",
+            originIncluded: false,
+            nonOriginCombatantIds: [spellCasterId],
+          },
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Antimagic Field non-origin aura membership cannot include the source combatant.",
+    });
   });
 
   test("suppressed duration-based spell light still expires while suppressed", () => {
@@ -480,6 +526,7 @@ function castAntimagicField(
 function antimagicFieldAreaFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>;
   readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
+  readonly auraMembership?: BattleAntimagicFieldAuraMembership;
 }): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
@@ -487,6 +534,11 @@ function antimagicFieldAreaFill(input: {
     value: {
       kind: "antimagicFieldSelfEmanation",
       areaId: antimagicFieldAreaId,
+      auraMembership: input.auraMembership ?? {
+        kind: "antimagicFieldAuraMembership",
+        originIncluded: true,
+        nonOriginCombatantIds: [],
+      },
       affectedOngoingSpellEffects: input.affectedOngoingSpellEffects,
     },
   };
@@ -553,6 +605,11 @@ function antimagicFieldSuppressing(
           sourceSpellId: antimagicFieldUnitId,
           sourceCombatantId: spellTargetId,
           areaId: antimagicFieldAreaId,
+          auraMembership: {
+            kind: "antimagicFieldAuraMembership",
+            originIncluded: true,
+            nonOriginCombatantIds: [],
+          },
           radiusFeet: movementFeet(10),
           suppressedOngoingSpellEffects: affectedOngoingSpellEffects
             .filter((effect) => effect.sourceKind === "ordinarySpell")

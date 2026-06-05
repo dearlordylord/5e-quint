@@ -105,6 +105,7 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
   activeSelfTransformationModeEffect,
   selfTransformationModeLabel,
@@ -305,7 +306,9 @@ export function discoverBattleActs(
   acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   acts.push(...levitateAltitudeControlActs(state, actorId));
-  acts.push(...dragonsBreathExhaleActs(state, actorId));
+  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
+    acts.push(...dragonsBreathExhaleActs(state, actorId));
+  }
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -642,7 +645,8 @@ function levitateAltitudeControlActs(
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||
-    !canSpendAction(state.currentTurnResources, "magic")
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }
@@ -700,7 +704,8 @@ function selfTransformationModeReplacementActs(
   if (
     activeEffect === undefined ||
     !combatantCanTakeActions(actor) ||
-    !canSpendAction(state.currentTurnResources, "magic")
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }
@@ -1290,7 +1295,8 @@ function moonbeamRepositionActs(
 ): readonly AvailableBattleAct[] {
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
-    !combatantCanTakeActions(state.combatants.get(actorId))
+    !combatantCanTakeActions(state.combatants.get(actorId)) ||
+    combatantInsideActiveAntimagicFieldAura(state, actorId)
   ) {
     return [];
   }

@@ -39,6 +39,7 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 // dissolves as those domains are extracted. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
 import type {
   BattleCommandOption,
+  BattleAntimagicFieldAuraMembership,
   BattleD20RollModifierDelta,
   BattleD20RollModifierKind,
   BattleDancingLight,
@@ -609,6 +610,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "antimagicFieldOngoingSpellSuppression";
       readonly areaId: BattleAreaId;
+      readonly auraMembership: BattleAntimagicFieldAuraMembership;
       readonly radiusFeet: MovementFeet;
       readonly suppressedOngoingSpellEffects: readonly BattleOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
