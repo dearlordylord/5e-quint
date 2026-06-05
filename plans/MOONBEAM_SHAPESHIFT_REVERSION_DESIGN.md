@@ -2,6 +2,14 @@
 
 Task: QRFR-C11-MOONBEAM-SHAPESHIFT-DESIGN
 
+Status: historical design note. The current closure is
+`plans/unit-profile-coverage/L3MSPELL_10_MOONBEAM_SHAPESHIFT_CLOSURE.md`.
+That closure supersedes this note where this file describes a Druid-only
+runtime owner: the current battle runtime admits both class-feature
+`druidWildShapeForm` and spell-effect `spellShapeShiftedForm` shape-shift
+owners through the shared restoration-owner slot. Stat-block Shape-Shift
+special actions remain outside the admitted runtime owner.
+
 ## RAW and Language Anchors
 
 - `.references/srd-5.2.1/Spells/Descriptions-M-P.md`, Moonbeam: a failed Constitution Saving Throw deals Radiant damage, and if the creature is shape-shifted it reverts to true form and cannot shape-shift until it leaves the Cylinder. A successful save takes half damage only. The same save trigger applies when the Cylinder appears, moves into a creature's space, a creature enters it, or a creature ends its turn there, once per creature per turn.

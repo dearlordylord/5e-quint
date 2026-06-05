@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Moonbeam shapeshift trigger closure"
     },
     {
@@ -119,7 +119,7 @@ repair branch state by rebasing against `master`.
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | done | none | Fireball object ignition is reachable through the production `saveGatedDamage` reducer path; automatic area membership, line of effect, object discovery, flammable/unworn discovery, and grid geometry remain table/spatial derivations. |
 | 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | done | none | Spike Growth camouflaged terrain recognition remains a runtime-detached Search/perception witness; do not add Spike Growth-local recognized terrain state. |
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | done | none | Fly cleanup already uses the promoted scalar-buff/end-fall witness boundary; automatic elevation, landing, and can-stop-fall derivation remain table/spatial facts. |
-| 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | ready-for-research | none | Resolve shapechanger/shapeshift trigger ownership against current unit/profile facts. |
+| 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | done | none | Moonbeam shape-shift support is resolved through the shared class-feature and spell-effect shape-shift owners; stat-block Shape-Shift specials remain outside this profile until a generic Stat Block special-action active-form owner exists. |
 | 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Confirm promoted spell profiles replay selected identity through production reducer paths. |
 | 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | blocked | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
 
@@ -256,6 +256,16 @@ consolidated in
 Resolve Moonbeam shapechanger/shapeshift trigger support without dispatching on
 authored identity.
 
+Outcome: Moonbeam shape-shift support is resolved for the current battle
+runtime. Failed saves revert admitted class-feature and spell-effect
+shape-shifted targets through the shared restoration owner and apply Moonbeam
+suppression until Cylinder exit or spell cleanup; successful saves do not
+revert. Stat-block Shape-Shift specials are not admitted because the current SRD
+Stat Block catalog stores those facts as prose-only specials and battle runtime
+has no generic Stat Block special-action active-form owner. Evidence is
+consolidated in
+`plans/unit-profile-coverage/L3MSPELL_10_MOONBEAM_SHAPESHIFT_CLOSURE.md`.
+
 ### Task 11 - L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT
 
 Audit promoted spell profiles to make sure selected identity flows through the
@@ -269,7 +279,8 @@ lane, and record remaining spell pressure. Include the Task 3 Continual Flame
 component-boundary note, the Task 4 Continual Flame light-projection evidence
 note, the Task 5 Enlarge/Reduce object-lifecycle note, the Task 6 Levitate
 loose-object boundary note, the Task 7 Fireball area-object closure note, the
-Task 8 Spike Growth Search/perception closure note, and regenerated ledgers.
+Task 8 Spike Growth Search/perception closure note, the Task 10 Moonbeam
+shape-shift closure note, and regenerated ledgers.
 
 ## Task Rules
 
