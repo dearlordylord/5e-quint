@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Deduplicate Fast Hands delegated owner rows"
     },
     {
