@@ -3,6 +3,7 @@ import { resourceCount } from "@dnd/shared/types";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
 import {
@@ -43,6 +44,7 @@ export type SorcererMetamagicProjection = {
     | "init"
     | "carefulSaveGatedDamage"
     | "carefulSaveGatedNoEffect"
+    | "heightenedSaveGatedDamage"
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack";
 };
@@ -119,9 +121,7 @@ export function resolveCarefulBurningHands(state: BattleState): BattleState {
     fills: [protectedTargets],
   });
   if (awaitingSave.tag !== "needsHoles") {
-    throw new Error(
-      "Expected Careful Burning Hands to request a save hole.",
-    );
+    throw new Error("Expected Careful Burning Hands to request a save hole.");
   }
   const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
   return requireResolved(
@@ -184,6 +184,61 @@ export function resolveCarefulCommand(state: BattleState): BattleState {
   ).state;
 }
 
+export function resolveHeightenedBurningHands(state: BattleState): BattleState {
+  const act = heightenedBurningHandsAct(state);
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Burning Hands to request a save hole.",
+    );
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrowFill: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  > = {
+    kind: "savingThrowOutcome",
+    holeId: savingThrow.holeId,
+    value: {
+      area: {
+        originAnchorId: wizardId,
+        affectedTargetIds: [skeletonId],
+      },
+      outcomes: [{ targetId: skeletonId, succeeded: false }],
+    },
+  };
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget, savingThrowFill],
+  });
+  if (awaitingDamage.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Burning Hands to request a damage hole.",
+    );
+  }
+  const damage = findHole(awaitingDamage.holes, "rolledDice");
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        savingThrowFill,
+        damageRollFillWithGroups(damage, [[4, 3, 2]]),
+      ],
+    }),
+  ).state;
+}
+
 export function projectBattleState(
   state: BattleState,
   lastResult: SorcererMetamagicProjection["lastResult"],
@@ -205,6 +260,10 @@ export function sorcererMetamagicBattle(): BattleState {
 
 export function carefulSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([carefulMetamagicOption()]);
+}
+
+export function heightenedSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([heightenedMetamagicOption()]);
 }
 
 function sorcererMetamagicBattleWithOptions(
@@ -265,6 +324,14 @@ function carefulMetamagicOption(): CharacterBattleMetamagicOptionFact {
     effectKind: CAREFUL_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
+  };
+}
+
+function heightenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(2),
   };
 }
 
@@ -342,6 +409,22 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Careful Command act.");
+  }
+  return act;
+}
+
+function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Burning Hands act.");
   }
   return act;
 }

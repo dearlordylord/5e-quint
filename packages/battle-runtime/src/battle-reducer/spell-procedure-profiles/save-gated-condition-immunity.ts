@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 //
 // The saveGatedConditionImmunity Spell Procedure Profile: action-time Spell
 // Slot casting where Humanoid area targets make a Saving Throw before failed

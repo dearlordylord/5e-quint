@@ -374,6 +374,7 @@
 {"unitId":"fireball","evidence":{"tag":"selected-identity-mbt","taskId":"B23-FIREBALL-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts"}}
 {"unitId":"lightning_bolt","evidence":{"tag":"selected-identity-mbt","taskId":"B24-LIGHTNING-BOLT-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"}}
+{"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"}}
 {"unitId":"barbarian_primal_knowledge","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_primal_knowledge","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"rogue_second_story_work","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}

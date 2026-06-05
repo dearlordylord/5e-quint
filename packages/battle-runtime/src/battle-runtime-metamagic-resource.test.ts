@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
@@ -36,6 +36,7 @@ import {
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
@@ -97,7 +98,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
                 sorceryPointCost: resourceCount(1),
               },
               {
-                effectKind: "saving_throw_disadvantage",
+                effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
                 stackingMode: "one_per_spell",
                 sorceryPointCost: resourceCount(2),
               },
@@ -128,7 +129,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
           sorceryPointCost: resourceCount(1),
         },
         {
-          effectKind: "saving_throw_disadvantage",
+          effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
           stackingMode: "one_per_spell",
           sorceryPointCost: resourceCount(2),
         },
@@ -851,7 +852,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         state: unknown,
         subject: {
           ...quickenedCureWoundsSubject(),
-          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
         },
         fills: [],
       }),
@@ -887,7 +888,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         state: unknown,
         subject: {
           ...quickenedBurningHandsSubject(),
-          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
         },
         fills: [],
       }),
@@ -933,7 +934,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           ...quickenedCureWoundsSubject(),
           metamagic: [
             { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
-            { effectKind: "saving_throw_disadvantage" },
+            { effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND },
           ],
         },
         fills: [],
@@ -1251,6 +1252,11 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       targetId: skeletonId,
       rollMode: "disadvantage",
     });
+    expect(
+      saveHole.targetRollModes.some(
+        (projection) => projection.targetId === fighterId,
+      ),
+    ).toBe(false);
 
     const awaitingDamage = resolveBattleSubject({
       state,
@@ -1341,6 +1347,50 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         (projection) => projection.targetId === skeletonId,
       ),
     ).toBeUndefined();
+  });
+
+  test("Heightened Spell rejects a disadvantaged target outside the affected spell targets", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const act = heightenedBurningHandsAct(state);
+    const heightenedHole = findHole(act.initialHoles, "targetChoice");
+    const heightenedTarget = targetFill(heightenedHole, fighterId);
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [heightenedTarget],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          heightenedTarget,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [skeletonId],
+              },
+              outcomes: [{ targetId: skeletonId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Heightened Spell disadvantaged target must be one affected target from the selected spell.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
   test("Careful Spell turns a protected successful half-damage save into no damage", () => {
@@ -1692,7 +1742,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
           candidate.subject.tag === "actionSpell" &&
           candidate.subject.invocation.spellId === "gust_of_wind" &&
           candidate.subject.metamagic?.some(
-            (selection) => selection.effectKind === "saving_throw_disadvantage",
+            (selection) =>
+              selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
           ) === true,
       ),
     ).toBe(false);
@@ -1701,7 +1752,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         state,
         subject: {
           ...act.subject,
-          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
         },
         fills: [],
       }),
@@ -1723,7 +1774,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         state,
         subject: {
           ...readyAct.subject,
-          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
         },
         fills: [],
       }),
@@ -1746,7 +1797,8 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
           candidate.subject.tag === "actionSpell" &&
           candidate.subject.invocation.spellId === "sleep" &&
           candidate.subject.metamagic?.some(
-            (selection) => selection.effectKind === "saving_throw_disadvantage",
+            (selection) =>
+              selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
           ) === true,
       ),
     ).toBe(false);
@@ -1755,7 +1807,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         state,
         subject: {
           ...sleepAct.subject,
-          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
         },
         fills: [],
       }),
@@ -2211,7 +2263,7 @@ function seekingMetamagicOption(): MetamagicOptionFixture {
 
 function heightenedMetamagicOption(): MetamagicOptionFixture {
   return {
-    effectKind: "saving_throw_disadvantage",
+    effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(2),
   };
@@ -2474,7 +2526,8 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.invocation.spellId === "burning_hands" &&
       candidate.subject.metamagic?.some(
-        (selection) => selection.effectKind === "saving_throw_disadvantage",
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
