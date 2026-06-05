@@ -232,13 +232,13 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 584,
-      "percent": "96.2%",
+      "numerator": 594,
+      "percent": "97.9%",
       "rowsByStatus": {
-        "accepted": 423,
+        "accepted": 433,
         "accepted-no-battle-effect": 161,
         "owner-evidence-required": 11,
-        "partial-battle-runtime": 11,
+        "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
     },
@@ -6780,7 +6780,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6790,12 +6790,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
@@ -7756,7 +7756,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -8812,7 +8812,7 @@
         "state": "installed",
         "unitId": "cleric_preserve_life"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -10151,7 +10151,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -10161,12 +10161,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
@@ -13742,7 +13742,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13752,12 +13752,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
@@ -14259,6 +14259,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future structured Stat Block special-action active-form owner",
+        "reason": "Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14272,7 +14278,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_pass_without_trace",
@@ -16594,7 +16600,7 @@
         "state": "installed",
         "unitId": "monk_open_hand_technique"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -20565,7 +20571,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -20575,12 +20581,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
@@ -24992,6 +24998,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -25005,7 +25017,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkvision",
@@ -25180,7 +25192,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -25190,12 +25202,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
@@ -26406,7 +26418,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -28364,6 +28376,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -28377,7 +28395,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
@@ -29026,7 +29044,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -29943,7 +29961,7 @@
         "state": "installed",
         "unitId": "wizard_potent_cantrip"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
@@ -32251,6 +32269,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/object-spatial and object-presentation owner",
+        "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -32264,7 +32288,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkvision",
@@ -32439,7 +32463,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -32449,12 +32473,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",
@@ -33951,7 +33975,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

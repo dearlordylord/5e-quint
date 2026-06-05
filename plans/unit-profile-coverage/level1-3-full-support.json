@@ -543,6 +543,39 @@
       "unitId": "cleric_life_domain_spells"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME: Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap. Owner: battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Cleric Preserve Life",
+          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 333,
+            "lineStart": 330,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "cleric_preserve_life"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -678,12 +711,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
+      "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -727,7 +760,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "darkness"
     },
@@ -1225,99 +1258,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES: Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets. Owner: battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Enhance Ability",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Enhance Ability",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 187,
-            "lineStart": 187,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Enhance Ability",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Enhance Ability",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 186,
-            "lineStart": 186,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Enhance Ability",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 277,
-            "lineStart": 277,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Enhance Ability",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 209,
-            "lineStart": 209,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "enhance_ability"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
@@ -1427,40 +1367,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "enthrall"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE-RUNTIME: Consume the admitted remarkable-athlete profile during Initiative, Strength (Athletics) checks, and immediately after critical hits without duplicating movement or Opportunity Attack state. Owner: battle-runtime initiative/ability-check/attack-critical movement reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for roll-mode projection, Critical Hit trigger gating, half-Speed movement, and no-Opportunity-Attack movement.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the existing initiative, ability-check, attack-critical, movement, and Opportunity Attack owners consume this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Fighter Remarkable Athlete",
-          "id": "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 145,
-            "lineStart": 140,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "fighter_remarkable_athlete"
     },
     {
       "catalogStatus": "installed",
@@ -2223,8 +2129,41 @@
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME: Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success. Owner: battle-runtime Flurry of Blows attack-hit reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Monk Open Hand Technique",
+          "id": "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 201,
+            "lineStart": 192,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "monk_open_hand_technique"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION: Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them. Owner: shared shape-shifting runtime plus spell active-effect lifecycle owners. Required output: Focused spell-transformation runtime tests, promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.; L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION: Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state. Owner: shared shape-shifting runtime plus stat-block battle controls. Required output: Focused stat-block runtime tests, promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+      "reason": "Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2244,7 +2183,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "moonbeam"
     },
@@ -2323,11 +2262,10 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the admitted sacred-weapon profile through existing action economy, Paladin Channel Divinity resource, held weapon item state, attack bonus, damage type choice, light emission, and dismissal lifecycle owners. Owner: battle-runtime resource/action/item/attack/light reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for activation, resource spend, attack bonus minimum, Radiant choice, light projection, recast/dismiss/not-carried ending, and resource/weapon rejection.",
+      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics. Owner: battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
       "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until action discovery, resource spend, item, attack, damage-type, light, and dismissal owners consume this profile.",
-        "status": "not-applicable"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
       "sourceRows": [
@@ -3145,6 +3083,39 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME: Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success. Owner: battle-runtime spell attack/save cantrip-damage reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Wizard Potent Cantrip",
+          "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 420,
+            "lineStart": 417,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "wizard_potent_cantrip"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "social-knowledge-effect"
@@ -3204,7 +3175,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 131,
+      "count": 130,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3232,7 +3203,6 @@
         "cleric_channel_divinity",
         "cleric_disciple_of_life",
         "cleric_divine_order",
-        "cleric_preserve_life",
         "color_spray",
         "command",
         "cure_wounds",
@@ -3244,6 +3214,7 @@
         "druid_circle_of_the_land_spells",
         "druid_primal_order",
         "eldritch_blast",
+        "enhance_ability",
         "ensnaring_strike",
         "entangle",
         "expeditious_retreat",
@@ -3253,6 +3224,7 @@
         "fighter_action_surge",
         "fighter_fighting_style",
         "fighter_improved_critical",
+        "fighter_remarkable_athlete",
         "fighter_second_wind",
         "fighter_tactical_mind",
         "fire_bolt",
@@ -3284,7 +3256,6 @@
         "misty_step",
         "monk_deflect_attacks",
         "monk_martial_arts",
-        "monk_open_hand_technique",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
@@ -3336,13 +3307,12 @@
         "warlock_magical_cunning",
         "web",
         "wizard_arcane_recovery",
-        "wizard_potent_cantrip",
         "wizard_ritual_adept",
         "wizard_scholar"
       ]
     },
     {
-      "count": 34,
+      "count": 35,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -3354,6 +3324,7 @@
         "calm_emotions",
         "charm_person",
         "comprehend_languages",
+        "darkness",
         "darkvision",
         "detect_evil_and_good",
         "detect_magic",
@@ -3401,24 +3372,23 @@
       ]
     },
     {
-      "count": 10,
+      "count": 9,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
-        "darkness",
+        "cleric_preserve_life",
         "druid_lands_aid",
         "druid_wild_shape",
-        "enhance_ability",
-        "fighter_remarkable_athlete",
-        "moonbeam",
+        "monk_open_hand_technique",
         "paladin_sacred_weapon",
         "ranger_hunters_prey",
-        "sorcerer_metamagic"
+        "sorcerer_metamagic",
+        "wizard_potent_cantrip"
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3426,6 +3396,7 @@
         "continual_flame",
         "enlarge_reduce",
         "levitate",
+        "moonbeam",
         "prayer_of_healing",
         "rogue_fast_hands"
       ]
@@ -3453,35 +3424,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 584,
-      "percent": "96.2%",
+      "numerator": 594,
+      "percent": "97.9%",
       "rowsByStatus": {
-        "accepted": 423,
+        "accepted": 433,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
         "owner-evidence-required": 11,
-        "partial-battle-runtime": 11
+        "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 98,
+      "numerator": 98,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 127,
-      "numerator": 127,
+      "denominator": 129,
+      "numerator": 129,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 131,
-      "percent": "66.5%"
+      "numerator": 130,
+      "percent": "66%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6197,8 +6168,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 127,
-        "numerator": 127,
+        "denominator": 129,
+        "numerator": 129,
         "percent": "100%"
       }
     },
@@ -7198,6 +7169,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+              }
+            ],
+            "profileId": "spell.invocation-roll-modifier",
+            "profileKind": "spell-invocation",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
+            ]
+          }
+        ],
+        "unitId": "enhance_ability"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
                 "status": "covered",
@@ -7412,6 +7405,29 @@
           }
         ],
         "unitId": "fighter_improved_critical"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.remarkable-athlete",
+            "profileKind": "passive",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
+              "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+            ]
+          }
+        ],
+        "unitId": "fighter_remarkable_athlete"
       },
       {
         "joinStatus": "covered",
@@ -9826,13 +9842,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 9,
-      "witness-present": 158
+      "not-applicable": 7,
+      "witness-present": 160
     },
     "rowsByStatus": {
-      "not-applicable": 9,
+      "not-applicable": 7,
       "not-required": 30,
-      "witness-present": 158
+      "witness-present": 160
     }
   },
   "sourceArtifacts": {
@@ -10740,20 +10756,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 36,
-      "supported-profile": 131,
+      "profile-subset-supported": 37,
+      "supported-profile": 130,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 10,
+      "blocked-follow-up-split": 9,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
-      "closed-outside-battle-runtime-boundary": 6,
-      "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 131
+      "closed-outside-battle-runtime-boundary": 7,
+      "closed-runtime-detached-table-adjudication": 35,
+      "supported-profile": 130
     },
-    "nonSupportedFrontier": 66,
+    "nonSupportedFrontier": 67,
     "strictDenominator": 197
   }
 }
