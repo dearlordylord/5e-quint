@@ -111,7 +111,7 @@ const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
 const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
   "cleric_channel_divinity" as const satisfies UnitRecord["id"];
-const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
+export const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
   "paladin_channel_divinity" as const satisfies UnitRecord["id"];
 const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID =
   "druid_wild_shape" as const satisfies UnitRecord["id"];

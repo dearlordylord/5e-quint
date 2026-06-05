@@ -2357,11 +2357,10 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the admitted sacred-weapon profile through existing action economy, Paladin Channel Divinity resource, held weapon item state, attack bonus, damage type choice, light emission, and dismissal lifecycle owners. Owner: battle-runtime resource/action/item/attack/light reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for activation, resource spend, attack bonus minimum, Radiant choice, light projection, recast/dismiss/not-carried ending, and resource/weapon rejection.",
+      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics. Owner: battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
       "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until action discovery, resource spend, item, attack, damage-type, light, and dismissal owners consume this profile.",
-        "status": "not-applicable"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
       "sourceRows": [
@@ -9917,13 +9916,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 11,
-      "witness-present": 156
+      "not-applicable": 10,
+      "witness-present": 157
     },
     "rowsByStatus": {
-      "not-applicable": 11,
+      "not-applicable": 10,
       "not-required": 30,
-      "witness-present": 156
+      "witness-present": 157
     }
   },
   "sourceArtifacts": {

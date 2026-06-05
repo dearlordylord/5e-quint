@@ -313,6 +313,7 @@ import {
   resolveStatBlockBonusActionOption,
   resolveDruidWildShapeUnitFeature,
   resolveUnitFeature,
+  resolveUnitFeatureHeldWeaponActivation,
   subjectAllowedDuringStatBlockMultiattackDispatch,
 } from "../battle-reducer.ts";
 export function resolveBattleSubject(
@@ -623,6 +624,17 @@ export function resolveBattleSubjectInternal(
     );
   }
   if (
+    input.subject.tag === "unitFeatureHeldWeaponActivation" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !canSpendAction(input.state.currentTurnResources, "attack"))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Attack action feature is no longer available for the current actor.",
+    );
+  }
+  if (
     input.subject.tag === "druidWildShape" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
       !input.state.currentTurnResources.currentHasBonusAction)
@@ -851,6 +863,9 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "unitFeature") {
       return resolveUnitFeature({ ...input, subject });
+    }
+    if (subject.tag === "unitFeatureHeldWeaponActivation") {
+      return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
     if (subject.tag === "druidWildShape") {
       return resolveDruidWildShapeUnitFeature({ ...input, subject });
@@ -1233,6 +1248,7 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     subject.tag === "monkFocusOption" ||
     subject.tag === "monkFocusFlurryOfBlowsStrike" ||
     subject.tag === "unitFeature" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
     subject.tag === "druidWildShape"
   ) {
     return true;
@@ -1520,6 +1536,7 @@ function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
   return (
     subject.tag === "monkFocusOption" ||
     subject.tag === "monkFocusFlurryOfBlowsStrike" ||
+    subject.tag === "unitFeatureHeldWeaponActivation" ||
     subject.tag === "pactOfTheChainFamiliarAttack" ||
     (subject.tag === "action" &&
       (subject.action === "attack" ||

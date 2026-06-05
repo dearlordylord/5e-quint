@@ -33,6 +33,7 @@ import {
   battleMonkFocusBattleOptionsSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
+  PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID,
   requireCharacterClassLevel,
 } from "./unit-feature-support.ts";
 import {
@@ -41,7 +42,7 @@ import {
 } from "./find-familiar-forms.ts";
 import * as Either from "effect/Either";
 
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.paladin-sacred-weapon
 
 export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
 
@@ -727,8 +728,8 @@ function characterBattleResourceForUnitOrNull(
     unit.mechanics.family === "resource_container"
   ) {
     const support = battleMonkFocusBattleOptionsSupportForUnit(unit);
-    return support !== null &&
-      support !== "unsupported" &&
+    return ((support !== null && support !== "unsupported") ||
+      unit.id === PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID) &&
       activationResourceIsSupportedByBattleForUnit(
         unit,
         unit.mechanics.resource,

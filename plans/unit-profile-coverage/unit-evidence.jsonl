@@ -389,6 +389,7 @@
 {"unitId":"fighter_remarkable_athlete","evidence":{"tag":"selected-identity-mbt","taskId":"L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT","ownerPath":"packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts"}}
 {"unitId":"monk_open_hand_technique","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
 {"unitId":"paladin_sacred_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
+{"unitId":"paladin_sacred_weapon","evidence":{"tag":"selected-identity-mbt","taskId":"L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION","ownerPath":"packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"}}
 {"unitId":"ranger_hunters_prey","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
 {"unitId":"rogue_steady_aim","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A18","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts"}}
 {"unitId":"rogue_steady_aim","evidence":{"tag":"selected-identity-mbt","taskId":"L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME","ownerPath":"packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts"}}

@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding"
     },
     {
       "number": 4,
       "id": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup"
     },
     {
@@ -85,8 +85,8 @@ owns branch repair.
 |---:|---|---|---|---|
 | 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | done | none | Independent roll-mode slice. |
 | 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | done | none | Independent movement-trigger slice. |
-| 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | ready-for-implementation-after-light-research | none | Establishes activation/effect binding. |
-| 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | blocked | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Requires the activation/effect binding from Task 3. |
+| 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | done | none | Established activation/effect binding. |
+| 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | ready-for-implementation-after-light-research | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Consumes the activation/effect binding from Task 3. |
 | 5 | L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT - Close or promote Fast Hands battle-owned delegated action economy | ready-for-implementation-after-light-research | none | Independent closure-or-promotion audit. |
 | 6 | L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION - Consolidate class-feature golden tracer bullet evidence and stale follow-ups | blocked | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES, L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT, L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION, L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT, L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT | Consolidation only after all class-feature slices close. |
 
@@ -193,7 +193,7 @@ Expected outputs:
 
 ### Task 3 - L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Sacred Weapon activation up to the active-effect boundary.
 
@@ -214,7 +214,7 @@ Expected outputs:
 
 ### Task 4 - L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Promote Sacred Weapon effects after activation.
 

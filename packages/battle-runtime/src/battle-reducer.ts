@@ -245,6 +245,7 @@ export {
   resolveSelfBonusActionHealingUnitFeature,
   resolveSuccessfulAbilityCheckReactionReduction,
   resolveUnitFeature,
+  resolveUnitFeatureHeldWeaponActivation,
   selfBonusActionHealingAmount,
   selfBonusActionHealingRollFill,
   selfBonusActionHealingRollHole,
@@ -3857,6 +3858,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "remarkableAthlete" }
           >
         >;
+        readonly paladinSacredWeaponProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "paladinSacredWeapon" }
+          >
+        >;
         readonly spellcasting?: CharacterBattleSpellcastingState;
       }
     | {
@@ -5771,6 +5779,10 @@ export type BonusActionDashSpellBattleResolutionInput =
 export type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
 >;
+export type UnitFeatureHeldWeaponActivationBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "unitFeatureHeldWeaponActivation" }>
+  >;
 export type MonkFocusOptionBattleResolutionInput =
   BattleResolutionInputForSubject<MonkFocusOptionSubject>;
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =

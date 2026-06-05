@@ -385,6 +385,7 @@ export function subjectName(
   | "monkFocusOption"
   | "monkFocusFlurryOfBlowsStrike"
   | "unitFeature"
+  | "unitFeatureHeldWeaponActivation"
   | "druidWildShape"
   | "endTurn"
   | "move"
@@ -447,6 +448,9 @@ export function subjectName(
   }
   if (subject.tag === "unitFeature") {
     return "unitFeature";
+  }
+  if (subject.tag === "unitFeatureHeldWeaponActivation") {
+    return "unitFeatureHeldWeaponActivation";
   }
   if (subject.tag === "druidWildShape") {
     return "druidWildShape";

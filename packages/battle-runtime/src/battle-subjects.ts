@@ -557,6 +557,12 @@ export const BattleSubjectSchema = Schema.Union(
     unitId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
+    tag: Schema.Literal("unitFeatureHeldWeaponActivation"),
+    actorId: CombatantId,
+    unitId: BattleSubjectTextSchema,
+    weaponItemId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
     actorId: CombatantId,
     unitId: BattleSubjectTextSchema,
@@ -973,6 +979,14 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.action,
       "formStatBlockId" in subject ? subject.formStatBlockId : null,
       "equipmentDisposition" in subject ? subject.equipmentDisposition : null,
+    ]);
+  }
+  if (subject.tag === "unitFeatureHeldWeaponActivation") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.unitId,
+      subject.weaponItemId,
     ]);
   }
   return Match.value(subject).pipe(

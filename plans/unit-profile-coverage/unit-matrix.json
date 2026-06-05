@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 136,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 136,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 151,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -4167,17 +4167,36 @@
     },
     {
       "id": "unit-feature.paladin-sacred-weapon",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Battle initialization retains the selected Sacred Weapon support profile on character combatants. Battle resource projection admits only the Paladin Channel Divinity use-count resource required by this Sacred Weapon spend path, not every Channel Divinity-shaped resource container. Battle action discovery and resolution consume existing action economy state, existing Paladin Channel Divinity resource state, and existing selected loadout/weapon attack facts to offer Sacred Weapon only for an available Attack action, an available use, and a held Melee weapon; activation spends the Attack action and one use, records a single active binding to the selected weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces the previous binding on recast. Attack-roll bonus, normal-or-Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 owners.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
       ],
-      "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
-      "verificationOwners": []
+      "title": "Unit feature activates Sacred Weapon by spending Paladin Channel Divinity and binding a held Melee weapon",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.hunters-prey",
@@ -4243,14 +4262,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 136,
+        "denominator": 137,
         "numerator": 136,
-        "percent": "100%"
+        "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 136,
+        "denominator": 137,
         "numerator": 136,
-        "percent": "100%"
+        "percent": "99.3%"
       }
     },
     "profileKinds": [
@@ -6566,6 +6585,15 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
           "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.paladin-sacred-weapon",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
         ]
       },
       {
@@ -13449,6 +13477,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Focused Sacred Weapon QNT witness covers Attack action activation availability, Paladin Channel Divinity spend, held Melee weapon binding, missing-resource and Ranged-weapon rejection, and recast replacement of the active binding. Attack bonus, Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 scope.",
+      "profileIds": [
+        "unit-feature.paladin-sacred-weapon"
+      ],
+      "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Sacred Weapon support profile on selected character combatants, admitting only the Paladin Channel Divinity resource for this battle spend path, discovering activation only with an available Attack action, Channel Divinity use, and held Melee weapon, spending the Attack action and one use, binding the selected weapon item, rejecting stale missing-resource or Ranged-weapon subjects, and replacing the prior binding on recast without duplicating item state. Attack bonus, Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 scope.",
+      "profileIds": [
+        "unit-feature.paladin-sacred-weapon"
+      ],
+      "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Focused Steady Aim MBT witness models Bonus Action availability, prior-movement rejection, Bonus Action spend, next-attack Advantage, Speed 0, attack consumption, duplicate-use rejection, and end-turn cleanup.",
       "profileIds": [
         "unit-feature.rogue-steady-aim"
@@ -13569,9 +13613,9 @@
         "profileFactDenominator": 103,
         "profileSubsetSupportedUnits": 23,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 65,
+        "selectedIdentityReplayDenominator": 66,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 65,
+        "selectedIdentityReplayWitnessUnits": 66,
         "supportedProfileUnits": 53,
         "unsupportedOrOtherUnits": 2
       }
@@ -19886,34 +19930,31 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
-            "mechanic": "Execute Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds to a held Melee weapon, applies the active attack/damage/light effects, and ends on recast, dismissal, or not carrying the weapon."
+            "mechanic": "Apply Sacred Weapon's active attack-roll bonus, normal-or-Radiant damage choice, light emission, and dismissal/not-carried ending semantics from the retained active weapon binding."
           }
         ],
         "followUpTasks": [
           {
             "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
-            "mechanic": "Consume the admitted sacred-weapon profile through existing action economy, Paladin Channel Divinity resource, held weapon item state, attack bonus, damage type choice, light emission, and dismissal lifecycle owners.",
-            "owner": "battle-runtime resource/action/item/attack/light reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for activation, resource spend, attack bonus minimum, Radiant choice, light projection, recast/dismiss/not-carried ending, and resource/weapon rejection.",
+            "mechanic": "Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics.",
+            "owner": "battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
             "title": "Paladin Sacred Weapon Runtime"
           }
         ],
-        "futureProfileOwner": "battle-runtime Unit action discovery, resource, item, attack, damage-type, light, and active-effect owners plus promoted Quint parity",
+        "futureProfileOwner": "battle-runtime attack, damage-type, light, and active-effect lifecycle owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.paladin-sacred-weapon"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until action discovery, resource spend, item, attack, damage-type, light, and dismissal owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Oath of Devotion grants Sacred Weapon as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface sacred_weapon mechanics with Attack action activation and referenced Paladin Channel Divinity spend",
-          "The projected support profile carries Attack action activation, Paladin Channel Divinity spend, held Melee weapon target, Charisma attack-roll bonus with minimum 1, normal-or-Radiant hit damage choice, light radii, and dismissal triggers without authored-identity dispatch"
+          "The projected support profile carries Attack action activation, Paladin Channel Divinity spend, held Melee weapon target, Charisma attack-roll bonus with minimum 1, normal-or-Radiant hit damage choice, light radii, and dismissal triggers without authored-identity dispatch",
+          "Battle runtime discovers Sacred Weapon only for selected support-profile character combatants that can spend the Attack action, have a Paladin Channel Divinity use remaining, and hold a selected Melee weapon",
+          "Sacred Weapon activation spends the Attack action and one Paladin Channel Divinity use, binds the active effect to the selected held weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces a prior Sacred Weapon binding on recast"
         ],
         "tag": "profile-subset-supported"
       },
@@ -19923,6 +19964,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
         }
       ],
       "executableMechanics": true,
@@ -19930,17 +19976,36 @@
       "profiles": [
         {
           "id": "unit-feature.paladin-sacred-weapon",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Battle initialization retains the selected Sacred Weapon support profile on character combatants. Battle resource projection admits only the Paladin Channel Divinity use-count resource required by this Sacred Weapon spend path, not every Channel Divinity-shaped resource container. Battle action discovery and resolution consume existing action economy state, existing Paladin Channel Divinity resource state, and existing selected loadout/weapon attack facts to offer Sacred Weapon only for an available Attack action, an available use, and a held Melee weapon; activation spends the Attack action and one use, records a single active binding to the selected weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces the previous binding on recast. Attack-roll bonus, normal-or-Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 owners.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
           ],
-          "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
-          "verificationOwners": []
+          "title": "Unit feature activates Sacred Weapon by spending Paladin Channel Divinity and binding a held Melee weapon",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
