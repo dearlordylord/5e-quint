@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -290,6 +291,18 @@ export function saveMetamagicSelectionState(input: {
         input.invocation,
       ),
     );
+  }
+  if (
+    includesCareful &&
+    targeting.kind !== "singleCombatant" &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds !== undefined &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds.length === 0
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    };
   }
   const heightenedSpellTargetId =
     includesHeightened && targeting.kind === "singleCombatant"
@@ -3142,10 +3155,7 @@ function validateSavingThrowOutcomeSelections(input: {
       input.state,
       input.actorId,
     );
-    if (
-      input.carefulSpellProtectedTargetIds.length > maxProtectedTargets ||
-      input.carefulSpellProtectedTargetIds.length === 0
-    ) {
+    if (input.carefulSpellProtectedTargetIds.length > maxProtectedTargets) {
       return "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.";
     }
     if (

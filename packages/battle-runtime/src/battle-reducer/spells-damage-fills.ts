@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING

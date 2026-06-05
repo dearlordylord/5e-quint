@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
@@ -29,6 +29,7 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
@@ -1497,6 +1498,188 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
   });
 
+  test("Careful Spell rejects protected-target over-selection", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulBurningHandsAct(state);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+    const protectedTargetsFill = {
+      kind: "spellTargetList" as const,
+      holeId: protectedTargetsHole.holeId,
+      value: {
+        targetIds: [
+          fighterId,
+          skeletonId,
+          combatantId("combatant:careful-extra-target-a"),
+          combatantId("combatant:careful-extra-target-b"),
+        ],
+      },
+      spatialFacts: [],
+    };
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [protectedTargetsFill],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          protectedTargetsFill,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [fighterId, skeletonId],
+              },
+              outcomes: [
+                { targetId: fighterId, succeeded: true },
+                { targetId: skeletonId, succeeded: true },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    });
+  });
+
+  test("Careful Spell rejects explicitly empty protected-target selections before spending resources", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulBurningHandsAct(state);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "spellTargetList",
+          holeId: protectedTargetsHole.holeId,
+          value: { targetIds: [] },
+          spatialFacts: [],
+        },
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Careful Spell requires enough unexpended Sorcery Points", () => {
+    const state = saveMetamagicBattle({
+      sorceryPoints: 0,
+      knownOptions: [carefulMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "burning_hands" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...burningHandsActionSubject(),
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Metamagic requires enough unexpended Sorcery Points.",
+    });
+  });
+
+  test("Careful Spell rejects non-save spell procedures", () => {
+    const state = metamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "cure_wounds" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...cureWoundsActionSubject(),
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Selected Metamagic option effect is not supported for this spell procedure.",
+    });
+  });
+
+  test("Careful Spell is explicitly closed for unsupported save-affecting spell lifecycles", () => {
+    const state = sleepMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const sleepAct = sleepActionAct(state);
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "sleep" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...sleepAct.subject,
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.",
+    });
+  });
+
   test("Heightened Spell is explicitly closed for repeat-save spell lifecycles", () => {
     const state = gustOfWindMetamagicBattle({
       knownOptions: [heightenedMetamagicOption()],
@@ -2036,7 +2219,7 @@ function heightenedMetamagicOption(): MetamagicOptionFixture {
 
 function carefulMetamagicOption(): MetamagicOptionFixture {
   return {
-    effectKind: "saving_throw_protection",
+    effectKind: CAREFUL_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
   };
@@ -2306,7 +2489,7 @@ function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.invocation.spellId === "burning_hands" &&
       candidate.subject.metamagic?.some(
-        (selection) => selection.effectKind === "saving_throw_protection",
+        (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
@@ -2321,7 +2504,7 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.invocation.spellId === "command" &&
       candidate.subject.metamagic?.some(
-        (selection) => selection.effectKind === "saving_throw_protection",
+        (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {

@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 136,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 136,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 152,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3588,6 +3588,41 @@
       ]
     },
     {
+      "id": "unit-feature.metamagic-careful-save-protection",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Careful Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and typed protected-target fills for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, over-count, duplicate, caster, and non-affected protected-target selections before spending resources. Protected non-caster targets must be affected spell targets and must succeed on their Saving Throw; save-for-half damage procedures turn that protected successful save into no damage while save-gated no-effect procedures preserve the base successful-save no-effect result. The profile does not claim Heightened Spell, repeat-save lifecycle targeting, or unsupported cast-property, damage-shape, and reroll Metamagic options.",
+      "taskRefs": [
+        "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+      ],
+      "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -4337,14 +4372,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 136,
+        "denominator": 137,
         "numerator": 136,
-        "percent": "100%"
+        "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 136,
+        "denominator": 137,
         "numerator": 136,
-        "percent": "100%"
+        "percent": "99.3%"
       }
     },
     "profileKinds": [
@@ -6426,6 +6461,15 @@
         ],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.metamagic-careful-save-protection",
+        "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
         ]
@@ -13099,6 +13143,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Careful Spell admission for supported save-gated damage and save-gated no-effect procedures, known-option and Sorcery Point gates, protected-target count bounds from Charisma modifier minimum one, rejection of non-save procedures, and the protected successful save-for-half damage suppression rule.",
+      "profileIds": [
+        "unit-feature.metamagic-careful-save-protection"
+      ],
+      "taskId": "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Careful Spell discovery and resolution for Burning Hands save-for-half damage and Command save-gated no-effect representatives, protected-target selection consumption, automatic successful Saving Throw outcomes, no successful-save half damage for protected targets, preservation of base successful-save no-effect behavior, Sorcery Point spending through the shared Font of Magic point pool, and rejection of unsupported or invalid save-affecting Metamagic selections.",
+      "profileIds": [
+        "unit-feature.metamagic-careful-save-protection"
+      ],
+      "taskId": "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Package-local promoted Quint facts cover Antimagic Field's Magic Action and level-8-or-higher Spell Slot spend, caller-supplied self-origin 10-foot Emanation identity, active suppression effect, suppression of ordinary tracked spell-light emitters by source effect id, artifact/deity source exclusion, duration ticking while suppressed, and cleanup on Concentration or duration end.",
       "profileIds": [
         "spell.invocation-antimagic-field-ongoing-spell-suppression"
@@ -13841,7 +13901,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 103,
+        "profileFactDenominator": 104,
         "profileSubsetSupportedUnits": 23,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 69,
@@ -18448,7 +18508,7 @@
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Careful and Heightened Spell saving throw modifiers: protect a Charisma-modifier-limited selected creature set with automatic save success and no half-damage-on-success, and give one target Disadvantage on saves against the spell."
+            "mechanic": "Heightened Spell saving throw modifier: choose one affected target and give it Disadvantage on saves against the spell while preserving ordinary save outcomes and resource spending."
           },
           {
             "battleReadinessClosure": {
@@ -18481,10 +18541,10 @@
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell.",
+            "mechanic": "Promote Heightened Spell against supported save-gated spell procedures by choosing one affected target and giving it Disadvantage on saves against the spell.",
             "owner": "battle-runtime saving throw spell resolution hooks",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.",
-            "title": "Sorcerer Metamagic Save Options"
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Heightened without option identity dispatch.",
+            "title": "Sorcerer Metamagic Heightened Save Option"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
@@ -18499,7 +18559,8 @@
           "character-creation.class-feature-source-fact-projection",
           "character-creation.class-feature-advancement-replacement",
           "character-sheet.metamagic-battle-resource-bridge",
-          "unit-feature.metamagic-cast-governor-quickened"
+          "unit-feature.metamagic-cast-governor-quickened",
+          "unit-feature.metamagic-careful-save-protection"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -18507,7 +18568,8 @@
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
           "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
-          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts"
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
+          "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures."
         ],
         "tag": "profile-subset-supported"
       },
@@ -18537,6 +18599,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES"
         }
       ],
       "executableMechanics": true,
@@ -18663,6 +18730,41 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-careful-save-protection",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Careful Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and typed protected-target fills for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, over-count, duplicate, caster, and non-affected protected-target selections before spending resources. Protected non-caster targets must be affected spell targets and must succeed on their Saving Throw; save-for-half damage procedures turn that protected successful save into no damage while save-gated no-effect procedures preserve the base successful-save no-effect result. The profile does not claim Heightened Spell, repeat-save lifecycle targeting, or unsupported cast-property, damage-shape, and reroll Metamagic options.",
+          "taskRefs": [
+            "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+          ],
+          "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
             }
           ]
         }

@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-careful-save-protection
+
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
   import unitFeatureMetamagicSpellModificationAdmissionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core"
