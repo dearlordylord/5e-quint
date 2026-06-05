@@ -22,7 +22,7 @@ The promoted Antimagic Field runtime owners cover ongoing-spell suppression, aur
 | Planar travel blocking | Closed until a planar-travel procedure, plane-location state, and table-owned plane transition witness owner exists; do not add plane metadata to self-teleport or generic teleport state. | future planar-travel owner |
 | Portal closure | Deferred until portal occurrences have stable identity, placement, open/closed state, destination, and cleanup semantics. | `L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE` |
 | Dispel Magic immunity on the aura | Promoted by Task 15 with a typed Dispel Magic no-effect exception for active Antimagic Field aura targets matched by stable area identity and source combatant identity. | completed |
-| Broader ongoing spell suppression | Extend the current suppression owner one represented ongoing Spell Effect family at a time, preserving non-deletion, ticking duration, and Artifact/deity exceptions. | `L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION` |
+| Broader ongoing spell suppression | No additional represented ongoing Spell Effect family has both stable occurrence identity and source spell level beyond the already claimed spell-light, spellObjectContactDamage, and Spiritual Weapon families. The next promotion waits for another tracked occurrence owner with executable suppressed-state behavior. | `L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION` |
 
 ## Implementation Decision
 

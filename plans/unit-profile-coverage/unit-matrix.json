@@ -13492,6 +13492,12 @@
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task research found no additional represented ongoing Spell Effect occurrence family beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences with both stable occurrence identity and source spell level. Spiritual Weapon Antimagic suppression was already claimed by L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION, so this task records no new runtime parity claim; future broader suppression should promote when another occurrence family gains those source facts and executable suppressed-state behavior.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
       "profileIds": [
@@ -22299,7 +22305,12 @@
             "mechanic": "portals close temporarily while in the aura"
           },
           {
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future broader ongoing Spell Effect occurrence model",
+              "reason": "The current battle runtime has no additional represented ongoing Spell Effect family beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences with both stable occurrence identity and source spell level. Future suppression must be promoted when another occurrence family gains those source facts and executable suppressed-state behavior."
+            },
+            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
             "mechanic": "ongoing Spell Effect suppression beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences"
           }
         ],
@@ -22319,14 +22330,14 @@
             "title": "Antimagic Field Portal Closure"
           },
           {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
-            "mechanic": "Extend suppression to additional tracked ongoing Spell Effect occurrence families beyond spell-light, spellObjectContactDamage, and Spiritual Weapon while keeping suppressed durations ticking and occurrences undeleted.",
-            "owner": "broader ongoing Spell Effect occurrence model",
-            "requiredOutput": "Supported-profile claim update, focused runtime tests, and promoted Quint/runtime parity for each newly represented occurrence family with artifact/deity exceptions preserved.",
-            "title": "Antimagic Field Broader Ongoing Spell Suppression"
+            "id": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
+            "mechanic": "Promote Antimagic Field suppression for the next represented ongoing Spell Effect occurrence family that has stable occurrence identity, source spell level, and executable suppressed-state behavior, while preserving non-deletion, ticking duration, and Artifact/deity exceptions.",
+            "owner": "broader ongoing Spell Effect occurrence model plus Antimagic Field suppression owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Antimagic Field claim update, focused runtime tests, and promoted Quint/runtime parity for that occurrence family; no broad claim over unrepresented creature, object, or area effect families.",
+            "title": "Antimagic Field Additional Tracked Ongoing Spell Suppression"
           }
         ],
-        "futureProfileOwner": "split Antimagic Field magic-item, portal, broader ongoing Spell Effect, and future planar-travel owners",
+        "futureProfileOwner": "split Antimagic Field magic-item, portal, future broader ongoing Spell Effect, and future planar-travel owners",
         "profileIds": [
           "spell.invocation-antimagic-field-ongoing-spell-suppression",
           "spell.invocation-antimagic-field-action-interdiction",

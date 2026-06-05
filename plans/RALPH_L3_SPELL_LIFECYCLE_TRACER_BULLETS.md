@@ -97,8 +97,14 @@
     {
       "number": 16,
       "id": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field broader ongoing spell suppression"
+    },
+    {
+      "number": 17,
+      "id": "L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION",
+      "status": "blocked",
+      "title": "Antimagic Field additional tracked ongoing spell suppression"
     }
   ]
 }
@@ -148,7 +154,8 @@ owns branch repair.
 | 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Represented self-teleport transit blocking is promoted from caller-supplied origin/destination aura-membership witnesses; planar travel is closed until a future planar-travel owner exists. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
 | 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | done | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Dispel Magic no-effect aura exception is promoted through stable area and source combatant identity. |
-| 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
+| 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed after research found no additional represented ongoing Spell Effect family with stable occurrence identity and source spell level beyond the families already claimed. |
+| 17 | L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION - Antimagic Field additional tracked ongoing spell suppression | blocked | future broader ongoing Spell Effect occurrence owner | Promote the next represented ongoing Spell Effect family after it has stable occurrence identity, source spell level, and executable suppressed-state behavior. |
 
 ## Global Acceptance Criteria
 
@@ -598,7 +605,7 @@ Completed output:
 
 ### Task 16 - L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Extend Antimagic Field suppression to additional represented ongoing Spell
 Effect occurrence families.
@@ -614,4 +621,44 @@ Expected outputs:
 
 - supported-profile claim update, focused runtime tests, and promoted
   Quint/runtime parity for each newly represented occurrence family;
+- no broad claim over unrepresented creature, object, or area effect families.
+
+Result:
+
+- confirmed the local SRD Antimagic Field suppression text and the project
+  Spell Effect ownership language;
+- found no additional represented ongoing Spell Effect family beyond tracked
+  spell-light emitters, tracked spellObjectContactDamage active-effect
+  occurrences, and tracked Spiritual Weapon active-effect occurrences with both
+  stable occurrence identity and source spell level;
+- recorded an accepted runtime closure instead of adding behavior or making a
+  broad claim over unrepresented creature, object, or area effect families;
+- split the still-desired future suppression work to
+  L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION.
+
+### Task 17 - L3-FOLLOWUP-ANTIMAGIC-ADDITIONAL-TRACKED-ONGOING-SPELL-SUPPRESSION
+
+Status: `blocked`
+
+Promote Antimagic Field suppression for the next represented ongoing Spell
+Effect family once that family has the facts required by the generic suppression
+owner.
+
+Blocked on:
+
+- a broader ongoing Spell Effect occurrence owner that represents an additional
+  family with stable occurrence identity, source spell level, and executable
+  suppressed-state behavior.
+
+Required behavior:
+
+- consume the existing Antimagic Field affected ongoing Spell Effect boundary;
+- suppress the occurrence without deletion while it is inside the aura;
+- keep suppressed duration ticking and preserve Artifact/deity exceptions.
+
+Expected outputs:
+
+- supported-profile or profile-subset-supported Antimagic Field claim update;
+- focused runtime tests and promoted Quint/runtime parity for the new occurrence
+  family;
 - no broad claim over unrepresented creature, object, or area effect families.
