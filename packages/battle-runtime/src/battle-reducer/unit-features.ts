@@ -6,13 +6,15 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-healing-pool unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
   grantUnitActionResource,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
+
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
@@ -121,6 +123,7 @@ import type {
   SuccessfulAbilityCheckReactionReductionResolutionInput,
   SuccessfulAbilityCheckReactionReductionResolutionResult,
   UnitFeatureBattleResolutionInput,
+  UnitFeatureHeldWeaponActivationBattleResolutionInput,
   UnitFeatureRolledDiceFill,
 } from "../battle-reducer.ts";
 export function supportedUnitFeatureActs(
@@ -237,6 +240,7 @@ export function supportedUnitFeatureActs(
   return [
     ...resourceActs,
     ...magicActionHealingPoolActs(state, actor),
+    ...paladinSacredWeaponActs(state, actor),
     ...rogueSteadyAimActs(state, actor),
   ];
 }
@@ -284,6 +288,74 @@ function magicActionHealingPoolActs(
         : [];
     },
   );
+}
+
+type SacredWeaponHeldMeleeWeapon = {
+  readonly itemId: string;
+  readonly attackName: string;
+};
+
+function paladinSacredWeaponActs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  if (!canSpendAction(state.currentTurnResources, "attack")) {
+    return [];
+  }
+  return [...actor.origin.paladinSacredWeaponProfiles.values()].flatMap(
+    (unitFeature) => {
+      const resource = actor.origin.resources.find(
+        (candidate) =>
+          candidate.unit.id === unitFeature.sacredWeapon.spends.resourceUnitId,
+      );
+      if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+        return [];
+      }
+      return sacredWeaponHeldMeleeWeapons(actor).map((weapon) => ({
+        subject: {
+          tag: "unitFeatureHeldWeaponActivation" as const,
+          actorId: actor.combatantId,
+          unitId: unitFeature.unit.id,
+          weaponItemId: weapon.itemId,
+        },
+        label: `${unitFeature.unit.name}: ${weapon.attackName}`,
+        summary:
+          "Spend the Attack action and one Channel Divinity use to imbue this held Melee weapon.",
+        initialHoles: [],
+      }));
+    },
+  );
+}
+
+function sacredWeaponHeldMeleeWeapons(
+  actor: CharacterBattleCreatureState,
+): readonly SacredWeaponHeldMeleeWeapon[] {
+  const weapons: SacredWeaponHeldMeleeWeapon[] = [];
+  const main = actor.origin.selectedLoadout.weapon;
+  if (
+    main !== undefined &&
+    actor.origin.attack?.kind === "weapon" &&
+    actor.origin.attack.weapon.id === main.unitId &&
+    actor.origin.attack.weapon.usage === "melee"
+  ) {
+    weapons.push({
+      itemId: main.itemId,
+      attackName: attackActionOptionName(actor.origin.attack),
+    });
+  }
+  const offHand = actor.origin.selectedLoadout.offHandWeapon;
+  if (
+    offHand !== undefined &&
+    actor.origin.offHandAttack?.kind === "weapon" &&
+    actor.origin.offHandAttack.weapon.id === offHand.unitId &&
+    actor.origin.offHandAttack.weapon.usage === "melee"
+  ) {
+    weapons.push({
+      itemId: offHand.itemId,
+      attackName: attackActionOptionName(actor.origin.offHandAttack),
+    });
+  }
+  return weapons;
 }
 
 function rogueSteadyAimActs(
@@ -447,6 +519,128 @@ export function resolveUnitFeature(
     "staleSubject",
     "Unit feature is no longer available for the current actor.",
   );
+}
+
+export function resolveUnitFeatureHeldWeaponActivation(
+  input: UnitFeatureHeldWeaponActivationBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Held-weapon Unit feature activation does not accept battle fills.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Held-weapon Unit feature is no longer available for the current actor.",
+    );
+  }
+  const unitFeature = actor.origin.paladinSacredWeaponProfiles.get(
+    input.subject.unitId,
+  );
+  if (unitFeature === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Held-weapon Unit feature is no longer selected for the current actor.",
+    );
+  }
+  if (
+    !sacredWeaponHeldMeleeWeapons(actor).some(
+      (weapon) => weapon.itemId === input.subject.weaponItemId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon requires a selected held Melee weapon.",
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === unitFeature.sacredWeapon.spends.resourceUnitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon has no Channel Divinity uses remaining.",
+    );
+  }
+  const spentAction = spendActivationResource(
+    input.state.currentTurnResources,
+    {
+      kind: "action",
+      action: unitFeature.sacredWeapon.activationCost.action,
+    },
+  );
+  if (Either.isLeft(spentAction)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon Attack action is no longer available.",
+    );
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
+    unit: unitFeature.sacredWeapon.duration.unit,
+    amount: unitFeature.sacredWeapon.duration.amount,
+  });
+  if (Either.isLeft(durationTicks)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon duration is not supported by battle runtime.",
+    );
+  }
+  const nextActor: CharacterBattleCreatureState = {
+    ...actor,
+    activeEffects: [
+      ...actor.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "paladinSacredWeapon" &&
+            effect.sourceUnitId === unitFeature.unit.id &&
+            effect.sourceCombatantId === actor.combatantId
+          ),
+      ),
+      {
+        kind: "paladinSacredWeapon",
+        sourceUnitId: unitFeature.unit.id,
+        sourceCombatantId: actor.combatantId,
+        weaponItemId: input.subject.weaponItemId,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: durationTicks.right,
+        },
+      },
+    ],
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === resource.unit.id &&
+        resourceHasUsesRemaining(candidate)
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const nextState = {
+    ...input.state,
+    currentTurnResources: spentAction.right,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      nextActor,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveRogueSteadyAimUnitFeature(

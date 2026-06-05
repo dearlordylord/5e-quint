@@ -15628,7 +15628,7 @@
         "state": "installed",
         "unitId": "fighter_remarkable_athlete"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

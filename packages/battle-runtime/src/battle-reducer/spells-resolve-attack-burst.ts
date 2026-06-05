@@ -1,6 +1,7 @@
 // Attack-burst save-damage spell resolution, currently Ice Knife.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
@@ -56,6 +57,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
@@ -391,10 +393,25 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }
   }
 
+  const remarkableAthleteMovement =
+    resolveRemarkableAthleteCriticalHitMovement({
+      state: attackResolvedState,
+      subject: input.input.subject,
+      attackerId: input.actorId,
+      scoredCriticalHit: hitTarget && critical,
+      fills: input.fillSet,
+    });
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
+
   if (hitTarget && input.fillSet.attackBurstDamageRoll === undefined) {
-    return needsHolesResult(attackResolvedState, input.input.subject, [
-      spellDamageHole(input.invocation, critical, spellMarkedDamageRiders),
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [spellDamageHole(input.invocation, critical, spellMarkedDamageRiders)],
+    );
   }
   if (!hitTarget && input.fillSet.attackBurstDamageRoll !== undefined) {
     return invalidResult(
@@ -435,7 +452,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     input.fillSet.attackBurstDamageRoll === undefined
       ? null
       : sourceDamageRollPenaltyRollHoleForDamageRoll(
-          attackResolvedState.combatants.get(input.actorId),
+          postRemarkableAthleteMovementState.combatants.get(input.actorId),
           attackDamageByType,
           input.fillSet.attackBurstDamageRoll.holeId,
         );
@@ -443,12 +460,12 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     attackDamageByType !== undefined &&
     input.fillSet.attackBurstDamageRoll !== undefined
       ? applyAvailableSourceDamageRollPenalty(
-          attackResolvedState.combatants.get(input.actorId),
+          postRemarkableAthleteMovementState.combatants.get(input.actorId),
           attackDamageByType,
           input.fillSet.attackBurstDamageRoll.holeId,
           sourceDamageRollPenaltyRollForDamageRoll(
             input.fillSet.sourceDamageRollPenaltyRolls,
-            attackResolvedState.combatants.get(input.actorId),
+            postRemarkableAthleteMovementState.combatants.get(input.actorId),
             attackDamageByType,
             input.fillSet.attackBurstDamageRoll.holeId,
           ),
@@ -462,9 +479,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   if (attackSourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(attackResolvedState, input.input.subject, [
-      ...attackSourcePenalty.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...attackSourcePenalty.holes],
+    );
   }
   const attackDamageAmount =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
@@ -515,21 +534,21 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   if (missingAttackDamageDispositionHoles.length > 0) {
     return needsHolesResult(
-      attackResolvedState,
+      postRemarkableAthleteMovementState,
       input.input.subject,
       missingAttackDamageDispositionHoles,
     );
   }
   const attackHideousLaughterSaveHoles =
     damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-      state: attackRolledState,
+      state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
       damageEventKey: attackDamageEventKey,
     });
   const attackHideousLaughterSaveCheck =
     damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: attackRolledState,
+      state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
       fills: fillsMatchingHoleIds(
@@ -539,9 +558,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       damageEventKey: attackDamageEventKey,
     });
   if (attackHideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(attackResolvedState, input.input.subject, [
-      ...attackHideousLaughterSaveCheck.holes,
-    ]);
+    return needsHolesResult(
+      postRemarkableAthleteMovementState,
+      input.input.subject,
+      [...attackHideousLaughterSaveCheck.holes],
+    );
   }
   if (attackHideousLaughterSaveCheck.tag === "invalid") {
     return invalidResult(
@@ -552,7 +573,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   const attackConcentrationLifecycleHoles =
     damageLifecycleConcentrationSavingThrowHoles({
-      state: attackRolledState,
+      state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
     });
@@ -568,7 +589,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   const damagedByAttack =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
-          attackResolvedState,
+          postRemarkableAthleteMovementState,
           target.combatantId,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
@@ -588,7 +609,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
-                attackResolvedState.combatants.get(input.actorId),
+                postRemarkableAthleteMovementState.combatants.get(
+                  input.actorId,
+                ),
                 spellDamageByTypeForTarget(
                   target,
                   input.invocation,
@@ -603,7 +626,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             spatialFacts: input.fillSet.targetSpatialFacts,
           },
         )
-      : attackResolvedState;
+      : postRemarkableAthleteMovementState;
 
   const savingThrowHole = spellSavingThrowOutcomeHole(
     damagedByAttack,
@@ -941,7 +964,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   const damagedByAttackWithConcentration =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
-          attackResolvedState,
+          postRemarkableAthleteMovementState,
           target.combatantId,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
@@ -973,7 +996,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
-                attackResolvedState.combatants.get(input.actorId),
+                postRemarkableAthleteMovementState.combatants.get(
+                  input.actorId,
+                ),
                 spellDamageByTypeForTarget(
                   target,
                   input.invocation,
@@ -988,7 +1013,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             spatialFacts: input.fillSet.targetSpatialFacts,
           },
         )
-      : attackResolvedState;
+      : postRemarkableAthleteMovementState;
   const damagedByBurst =
     input.fillSet.damageRoll === undefined
       ? damagedByAttackWithConcentration

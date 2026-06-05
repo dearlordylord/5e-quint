@@ -214,6 +214,15 @@ export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:weapon-mastery-cleave:damage-disposition");
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID =
+  holeId("battle:remarkable-athlete:critical-hit-movement:decision");
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_INSTANCE =
+  holeInstanceKey("battle:remarkable-athlete:critical-hit-movement:decision");
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID = holeId(
+  "battle:remarkable-athlete:critical-hit-movement",
+);
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_INSTANCE =
+  holeInstanceKey("battle:remarkable-athlete:critical-hit-movement");
 export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
   "celestial",

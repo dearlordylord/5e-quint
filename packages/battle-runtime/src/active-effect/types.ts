@@ -304,6 +304,14 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleUnitFeatureEffectBase & {
+      readonly kind: "paladinSacredWeapon";
+      readonly weaponItemId: string;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleUnitFeatureEffectBase & {
       readonly kind: "selfSpeedZero";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,

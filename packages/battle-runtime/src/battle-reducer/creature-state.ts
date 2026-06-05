@@ -1,5 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-healing-pool unit-feature.potent-cantrip unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.potent-cantrip unit-feature.remarkable-athlete unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
@@ -71,9 +71,11 @@ import {
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+  PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   POTENT_CANTRIP_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
@@ -306,6 +308,18 @@ export function battleCreatureStateFromInit(
             creatureInit.characterUnitRefs,
             classLevels,
           ),
+        remarkableAthleteProfiles: characterRemarkableAthleteProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
+          classLevels,
+        ),
+        paladinSacredWeaponProfiles: characterPaladinSacredWeaponProfiles(
+          creatureInit.resources ?? [],
+          creatureInit.unitFeatures ?? [],
+          creatureInit.characterUnitRefs,
+          classLevels,
+        ),
         ...(creatureInit.spellcasting === undefined
           ? {}
           : {
@@ -1406,6 +1420,62 @@ export function characterEnemyZeroHitPointTemporaryHitPointsProfiles(
           unitRefs,
           unit.id,
           ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterRemarkableAthleteProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "remarkableAthlete" }>
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "remarkableAthlete" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          REMARKABLE_ATHLETE_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterPaladinSacredWeaponProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<SupportedUnitFeatureProfile, { readonly kind: "paladinSacredWeapon" }>
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "paladinSacredWeapon" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

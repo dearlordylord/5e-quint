@@ -612,7 +612,7 @@ function validateUnitEvidence(
       continue;
     }
 
-    const rowKey = `${row.unitId}\u0000${row.evidence?.tag}\u0000${row.evidence?.ownerPath}`;
+    const rowKey = `${row.unitId}\u0000${row.evidence?.tag}\u0000${row.evidence?.taskId}\u0000${row.evidence?.ownerPath}`;
     if (seen.has(rowKey)) {
       issues.push(
         `Duplicate Unit evidence for ${row.unitId} at ${row.evidence?.ownerPath}.`,

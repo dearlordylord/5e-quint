@@ -3,6 +3,7 @@
 // turn resources, supported action-resource projections, and small fill-set
 // result types used by resolver modules.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
@@ -262,6 +263,18 @@ export type AttackFillSet =
       readonly weaponMasteryCleaveDamageRoll: BattleRolledDiceFill | undefined;
       readonly weaponMasteryCleaveDamageDisposition: BattleAttackDamageDisposition;
       readonly weaponMasteryCleaveDamageDispositionFilled: boolean;
+      readonly remarkableAthleteCriticalHitMovementDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly remarkableAthleteCriticalHitMovement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
+      readonly weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly weaponMasteryCleaveRemarkableAthleteCriticalHitMovement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type GrappleFillSet =

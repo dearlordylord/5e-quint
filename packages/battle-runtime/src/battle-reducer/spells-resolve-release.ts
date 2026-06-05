@@ -1,6 +1,7 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 
 import {
   spendAction,
@@ -60,6 +61,7 @@ import {
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
@@ -675,6 +677,7 @@ export function resolveSpellRelease(
     );
   }
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
+  let releaseResolutionStateAfterCriticalMovement: BattleState | null = null;
   if (invocation.procedure === "spellAttackDamage") {
     const requiredRollMode = requiredSpellAttackRollMode(
       input.state,
@@ -758,6 +761,19 @@ export function resolveSpellRelease(
           target.combatantId,
         )
       : [];
+    const remarkableAthleteMovement =
+      resolveRemarkableAthleteCriticalHitMovement({
+        state: releaseAttackRolledState,
+        subject: input.subject,
+        attackerId: input.subject.actorId,
+        scoredCriticalHit: critical,
+        fills: fillSet,
+      });
+    if (remarkableAthleteMovement.tag === "result") {
+      return remarkableAthleteMovement.result;
+    }
+    releaseResolutionStateAfterCriticalMovement =
+      remarkableAthleteMovement.state;
     if (hit && fillSet.damageRoll == null) {
       if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
         return invalidResult(
@@ -766,9 +782,11 @@ export function resolveSpellRelease(
           "Source damage roll penalty does not match an active source-side damage penalty.",
         );
       }
-      return needsHolesResult(releaseAttackRolledState, input.subject, [
-        spellDamageHole(invocation, critical, spellMarkedDamageRiders),
-      ]);
+      return needsHolesResult(
+        releaseResolutionStateAfterCriticalMovement,
+        input.subject,
+        [spellDamageHole(invocation, critical, spellMarkedDamageRiders)],
+      );
     }
     if (
       !hit &&
@@ -785,8 +803,8 @@ export function resolveSpellRelease(
     if (!hit) {
       return {
         tag: "resolved",
-        state: releaseAttackRolledState,
-        snapshot: snapshotBattle(releaseAttackRolledState),
+        state: releaseResolutionStateAfterCriticalMovement,
+        snapshot: snapshotBattle(releaseResolutionStateAfterCriticalMovement),
       };
     }
   } else if (fillSet.attackRoll != null) {
@@ -809,6 +827,8 @@ export function resolveSpellRelease(
       spellDamageHole(invocation),
     ]);
   }
+  const releaseDamageBaseState =
+    releaseResolutionStateAfterCriticalMovement ?? input.state;
   const critical =
     invocation.procedure === "spellAttackDamage" &&
     fillSet.attackRoll != null &&
@@ -830,7 +850,9 @@ export function resolveSpellRelease(
     spellMarkedDamageRiders,
     critical,
   );
-  const damageSource = input.state.combatants.get(input.subject.actorId);
+  const damageSource = releaseDamageBaseState.combatants.get(
+    input.subject.actorId,
+  );
   const expectedSourcePenaltyHole =
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       damageSource,
@@ -869,7 +891,7 @@ export function resolveSpellRelease(
     );
   }
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(releaseDamageBaseState, input.subject, [
       ...sourcePenalty.holes,
     ]);
   }
@@ -883,7 +905,7 @@ export function resolveSpellRelease(
   );
   const concentrationLifecycleHoles =
     damageLifecycleConcentrationSavingThrowHoles({
-      state: input.state,
+      state: releaseDamageBaseState,
       target,
       damageAmount: spellDamageAmount,
     });
@@ -900,13 +922,13 @@ export function resolveSpellRelease(
         );
   const concentrationSaveCheck =
     damageLifecycleConcentrationSavingThrowFillCheck({
-      state: input.state,
+      state: releaseDamageBaseState,
       target,
       damageAmount: spellDamageAmount,
       fills: fillSet.concentrationSavingThrows,
     });
   if (concentrationSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(releaseDamageBaseState, input.subject, [
       ...concentrationSaveCheck.holes,
     ]);
   }
@@ -940,19 +962,19 @@ export function resolveSpellRelease(
       damageDispositionHole,
     ) === undefined
   ) {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(releaseDamageBaseState, input.subject, [
       damageDispositionHole,
     ]);
   }
   const hideousLaughterSaveCheck =
     damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: input.state,
+      state: releaseDamageBaseState,
       target,
       damageAmount: spellDamageAmount,
       fills: fillSet.hideousLaughterDamageRepeatSaves,
     });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(input.state, input.subject, [
+    return needsHolesResult(releaseDamageBaseState, input.subject, [
       ...hideousLaughterSaveCheck.holes,
     ]);
   }
@@ -969,35 +991,36 @@ export function resolveSpellRelease(
   );
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
-      ? recordAttackRollMissToHitReplacementUsed(
-          consumeHelpAttackForAttackRoll(
-            recordAttackRollOngoingFeatures(
-              input.state,
+      ? (releaseResolutionStateAfterCriticalMovement ??
+          recordAttackRollMissToHitReplacementUsed(
+            consumeHelpAttackForAttackRoll(
+              recordAttackRollOngoingFeatures(
+                input.state,
+                input.subject.actorId,
+                target.combatantId,
+                null,
+              ),
               input.subject.actorId,
               target.combatantId,
-              null,
             ),
             input.subject.actorId,
-            target.combatantId,
-          ),
-          input.subject.actorId,
-          selectedAttackRollMissToHitReplacement({
-            state: input.state,
-            subject: input.subject,
-            attackerId: input.subject.actorId,
-            targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
-            ordinaryHit: attackRollHits(
-              fillSet.attackRoll,
-              currentArmorClass(activeEffectArmorClass(target)),
-            ),
-          }),
-          {
-            subject: input.subject,
-            targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
-          },
-        )
+            selectedAttackRollMissToHitReplacement({
+              state: input.state,
+              subject: input.subject,
+              attackerId: input.subject.actorId,
+              targetId: target.combatantId,
+              attackRoll: fillSet.attackRoll,
+              ordinaryHit: attackRollHits(
+                fillSet.attackRoll,
+                currentArmorClass(activeEffectArmorClass(target)),
+              ),
+            }),
+            {
+              subject: input.subject,
+              targetId: target.combatantId,
+              attackRoll: fillSet.attackRoll,
+            },
+          ))
       : input.state;
   const damaged = applySpellDamage(
     releaseResolutionState,

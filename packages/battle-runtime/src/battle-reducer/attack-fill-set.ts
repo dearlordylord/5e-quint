@@ -23,6 +23,8 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
@@ -87,8 +89,78 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
   let weaponMasteryCleaveDamageRoll: BattleRolledDiceFill | undefined;
+  let remarkableAthleteCriticalHitMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let remarkableAthleteCriticalHitMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
+    | undefined;
+  let weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let weaponMasteryCleaveRemarkableAthleteCriticalHitMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
+    | undefined;
   for (const fill of fills) {
     if (fill.kind === "sanctuaryInterdictionOutcome") {
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID
+    ) {
+      if (weaponMasteryCleaveAttackRoll !== undefined) {
+        if (
+          weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
+          undefined
+        ) {
+          return {
+            tag: "invalid",
+            message:
+              "Weapon Mastery Cleave Remarkable Athlete movement decision was filled twice.",
+          };
+        }
+        weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision = fill;
+        continue;
+      }
+      if (remarkableAthleteCriticalHitMovementDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Remarkable Athlete movement decision was filled twice.",
+        };
+      }
+      remarkableAthleteCriticalHitMovementDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "movement" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID
+    ) {
+      if (
+        weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
+        undefined
+      ) {
+        if (
+          weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !== undefined
+        ) {
+          return {
+            tag: "invalid",
+            message:
+              "Weapon Mastery Cleave Remarkable Athlete movement was filled twice.",
+          };
+        }
+        weaponMasteryCleaveRemarkableAthleteCriticalHitMovement = fill;
+        continue;
+      }
+      if (remarkableAthleteCriticalHitMovement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Remarkable Athlete movement was filled twice.",
+        };
+      }
+      remarkableAthleteCriticalHitMovement = fill;
       continue;
     }
 
@@ -439,6 +511,10 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     weaponMasteryCleaveDamageRoll,
     weaponMasteryCleaveDamageDisposition,
     weaponMasteryCleaveDamageDispositionFilled,
+    remarkableAthleteCriticalHitMovementDecision,
+    remarkableAthleteCriticalHitMovement,
+    weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision,
+    weaponMasteryCleaveRemarkableAthleteCriticalHitMovement,
   };
 }
 

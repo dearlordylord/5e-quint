@@ -63,6 +63,7 @@ import {
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   attackActionOptionName,
@@ -165,7 +166,7 @@ export function resolveOpportunityAttackCommand(
       "Opportunity Attack roll mode does not match the current attack-roll rule.",
     );
   }
-  const attackRolledState = consumeHelpAttackForAttackRoll(
+  let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
       subject.reactorId,
@@ -254,6 +255,19 @@ export function resolveOpportunityAttackCommand(
       return reactionWindow;
     }
   }
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
+      state: attackRolledState,
+      subject: input.subject,
+      attackerId: subject.reactorId,
+      scoredCriticalHit: critical,
+      fills: fillSet,
+    },
+  );
+  if (remarkableAthleteMovement.tag === "result") {
+    return remarkableAthleteMovement.result;
+  }
+  attackRolledState = remarkableAthleteMovement.state;
   if (
     !hit &&
     (fillSet.damageRoll != null ||

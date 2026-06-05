@@ -41,7 +41,7 @@ import {
 import * as Either from "effect/Either";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.magic-action-healing-pool
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.paladin-sacred-weapon
 
 export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
 

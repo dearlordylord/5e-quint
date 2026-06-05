@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
@@ -233,6 +234,13 @@ export function requiredAbilityCheckRollMode(
         ability,
         context.skill,
         context.targetId,
+      )) ||
+    (context?.skill !== undefined &&
+      activeRemarkableAthleteAbilityCheckAdvantageMatches(
+        state,
+        actorId,
+        ability,
+        context.skill,
       ));
   if (hasAdvantage === hasDisadvantage) {
     return undefined;
@@ -345,6 +353,24 @@ function activeMarkedDamageRiderFindingAdvantageMatches(
           (candidate) => candidate === skill,
         ),
     ) ?? false
+  );
+}
+
+function activeRemarkableAthleteAbilityCheckAdvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  skill: Skill,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return false;
+  }
+  return [...actor.origin.remarkableAthleteProfiles.values()].some(
+    (profile) =>
+      profile.remarkableAthlete.abilityCheck.kind === "rollAdvantage" &&
+      profile.remarkableAthlete.abilityCheck.ability === ability &&
+      profile.remarkableAthlete.abilityCheck.skill === skill,
   );
 }
 

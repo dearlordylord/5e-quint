@@ -63,10 +63,15 @@ import {
   isSourceDamageRollPenaltyRollFill,
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
+import {
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
+  REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
+} from "./domain-constants.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
@@ -99,6 +104,12 @@ export type ChainedSpellStepFills = {
     | undefined;
   readonly attackRoll:
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
+    | undefined;
+  readonly remarkableAthleteCriticalHitMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  readonly remarkableAthleteCriticalHitMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
     | undefined;
   readonly damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
@@ -435,6 +446,18 @@ export function resolveChainedSpellAttackDamageAct(input: {
     const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(step.attackRoll.value);
     if (!hit) {
+      const remarkableAthleteMovement =
+        resolveRemarkableAthleteCriticalHitMovement({
+          state: replayState,
+          subject: input.input.subject,
+          attackerId: input.actorId,
+          scoredCriticalHit: false,
+          fills: step,
+        });
+      if (remarkableAthleteMovement.tag === "result") {
+        return remarkableAthleteMovement.result;
+      }
+      replayState = remarkableAthleteMovement.state;
       if (!chainedSpellLaterStepsAreEmpty(fillSet.steps, stepIndex)) {
         return invalidResult(
           input.input.state,
@@ -486,6 +509,19 @@ export function resolveChainedSpellAttackDamageAct(input: {
     if (attackHitReactionWindow !== null) {
       return attackHitReactionWindow;
     }
+
+    const remarkableAthleteMovement =
+      resolveRemarkableAthleteCriticalHitMovement({
+        state: replayState,
+        subject: input.input.subject,
+        attackerId: input.actorId,
+        scoredCriticalHit: critical,
+        fills: step,
+      });
+    if (remarkableAthleteMovement.tag === "result") {
+      return remarkableAthleteMovement.result;
+    }
+    replayState = remarkableAthleteMovement.state;
 
     if (step.damageRoll === undefined) {
       return needsHolesResult(replayState, input.input.subject, [
@@ -757,6 +793,8 @@ export function emptyChainedSpellStepFills(): ChainedSpellStepFills {
   return {
     target: undefined,
     attackRoll: undefined,
+    remarkableAthleteCriticalHitMovementDecision: undefined,
+    remarkableAthleteCriticalHitMovement: undefined,
     damageRoll: undefined,
   };
 }
@@ -842,6 +880,60 @@ export function chainedSpellFillSet(
         };
       }
       damageType = fill;
+      continue;
+    }
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID
+    ) {
+      const stepIndex =
+        latestChainedSpellStepIndexForRemarkableAthleteDecision(steps);
+      if (stepIndex === null) {
+        return {
+          tag: "invalid",
+          message:
+            "Remarkable Athlete movement decision must follow a chained spell attack roll.",
+        };
+      }
+      const step = steps[stepIndex];
+      if (step === undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Remarkable Athlete movement decision is outside this chained spell act.",
+        };
+      }
+      steps[stepIndex] = {
+        ...step,
+        remarkableAthleteCriticalHitMovementDecision: fill,
+      };
+      continue;
+    }
+    if (
+      fill.kind === "movement" &&
+      fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID
+    ) {
+      const stepIndex =
+        latestChainedSpellStepIndexForRemarkableAthleteMovement(steps);
+      if (stepIndex === null) {
+        return {
+          tag: "invalid",
+          message:
+            "Remarkable Athlete movement must follow a chained spell use decision.",
+        };
+      }
+      const step = steps[stepIndex];
+      if (step === undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Remarkable Athlete movement is outside this chained spell act.",
+        };
+      }
+      steps[stepIndex] = {
+        ...step,
+        remarkableAthleteCriticalHitMovement: fill,
+      };
       continue;
     }
     if (
@@ -1011,8 +1103,42 @@ export function chainedSpellLaterStepsAreEmpty(
       (step) =>
         step.target === undefined &&
         step.attackRoll === undefined &&
+        step.remarkableAthleteCriticalHitMovementDecision === undefined &&
+        step.remarkableAthleteCriticalHitMovement === undefined &&
         step.damageRoll === undefined,
     );
+}
+
+function latestChainedSpellStepIndexForRemarkableAthleteDecision(
+  steps: readonly ChainedSpellStepFills[],
+): number | null {
+  for (let index = steps.length - 1; index >= 0; index -= 1) {
+    const step = steps[index];
+    if (
+      step !== undefined &&
+      step.attackRoll !== undefined &&
+      step.remarkableAthleteCriticalHitMovementDecision === undefined
+    ) {
+      return index;
+    }
+  }
+  return null;
+}
+
+function latestChainedSpellStepIndexForRemarkableAthleteMovement(
+  steps: readonly ChainedSpellStepFills[],
+): number | null {
+  for (let index = steps.length - 1; index >= 0; index -= 1) {
+    const step = steps[index];
+    if (
+      step !== undefined &&
+      step.remarkableAthleteCriticalHitMovementDecision !== undefined &&
+      step.remarkableAthleteCriticalHitMovement === undefined
+    ) {
+      return index;
+    }
+  }
+  return null;
 }
 
 export function validateChainedSpellFollowUpFills(input: {
