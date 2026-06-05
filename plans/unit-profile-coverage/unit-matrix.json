@@ -4129,9 +4129,10 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape and preserves its Bonus Action cost as delegated permission metadata. This profile does not claim an independent battle reducer or QNT shell: current battle runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation BattleSubject that Fast Hands can wrap without inventing item or object state. The concrete delegated owners must spend the Bonus Action when they consume this profile.",
       "taskRefs": [
-        "L13UG-A17"
+        "L13UG-A17",
+        "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
       ],
       "title": "Unit feature admits delegated Bonus Action standard-action permissions",
       "verificationOwners": []
@@ -13557,6 +13558,14 @@
       "taskId": "L13UG-A17"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed SRD 5.2.1 Rogue Fast Hands, UBIQUITOUS_LANGUAGE action terms, the Surface bonus_action_delegated_standard_actions shape, and current battle subjects. Fast Hands has no battle-owned reducer or QNT shell independent of the concrete delegated procedures: lock/trap/pocket checks are table/tool-check owned, generic Utilize object effects are not a current battle subject, and magic-item Magic action activation requires item-owned procedure state. The admission profile remains deterministic metadata only; concrete delegated owners must spend the Bonus Action when they consume it.",
+      "profileIds": [
+        "unit-feature.bonus-action-delegated-standard-actions"
+      ],
+      "taskId": "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
+    },
+    {
       "claimKind": "admission-projection",
       "note": "Focused battle-runtime admission tests cover Surface mechanics shape admission, malformed-shape rejection, class/subclass grant reachability, and support-profile projection without authored-identity dispatch. Reducer execution and QNT parity remain explicit follow-up work: the current battle runtime has existing owners for action economy, resources, movement, attack roll modes, attack damage riders, item/light state, and spell cantrip damage that must consume these typed profiles directly rather than a detached Task 18 state machine.",
       "profileIds": [
@@ -17920,25 +17929,25 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "table/tool-check owner",
-              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile."
+              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper."
             },
-            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, and success/failure consequences."
+            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, success/failure consequences, and the Fast Hands Bonus Action spend for that concrete procedure."
           },
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "Utilize action owner",
-              "reason": "Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary."
+              "reason": "Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure."
             },
-            "mechanic": "Execute the object interaction effects of the Utilize action."
+            "mechanic": "Execute the object interaction effects of the Utilize action, including the Fast Hands Bonus Action spend when a generic object-use owner exists."
           },
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "magic-item activation owner",
-              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
+              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner."
             },
-            "mechanic": "Activate magic items that require a Magic action."
+            "mechanic": "Activate magic items that require a Magic action, including the Fast Hands Bonus Action spend for the selected magic-item procedure."
           }
         ],
         "profileIds": [
@@ -17949,13 +17958,13 @@
         ],
         "selectedIdentityEvidenceDisposition": {
           "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+          "reason": "Tasks L13UG-A17 and L3CF-05 admit Surface shape and support-profile projection only. L3CF-05 found no independent battle-owned Bonus Action shell to promote because the current runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation subject for this profile to wrap.",
           "tag": "not-applicable"
         },
         "supportedMechanics": [
           "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
-          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
-          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action"
+          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics and preserves the declared Bonus Action cost as delegated permission metadata",
+          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action permission, and a Magic action permission restricted to magic items that require a Magic action"
         ],
         "tag": "profile-subset-supported"
       },
@@ -17977,9 +17986,10 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape and preserves its Bonus Action cost as delegated permission metadata. This profile does not claim an independent battle reducer or QNT shell: current battle runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation BattleSubject that Fast Hands can wrap without inventing item or object state. The concrete delegated owners must spend the Bonus Action when they consume this profile.",
           "taskRefs": [
-            "L13UG-A17"
+            "L13UG-A17",
+            "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
           ],
           "title": "Unit feature admits delegated Bonus Action standard-action permissions",
           "verificationOwners": []
