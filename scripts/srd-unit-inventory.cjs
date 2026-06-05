@@ -1362,6 +1362,16 @@ function installedSpellUnitOwnerClassification(
   ) {
     return undefined;
   }
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  if (characterSheetEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
   const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
     row.candidateUnitId,
   );

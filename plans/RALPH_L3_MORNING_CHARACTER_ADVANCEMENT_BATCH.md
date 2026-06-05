@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Prayer of Healing cast witness closure"
     },
     {
@@ -115,7 +115,7 @@ repair branch state by rebasing against `master`.
 | 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | done | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
 | 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | done | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
 | 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | done | none | Later-slot support is closed to the future character-advancement Wizard spell slot level access owner; level-3 acquisition-time Evocation Savant spellbook evidence is present. |
-| 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | ready-for-research | none | Classify cast witness and rest interaction against current runtime owners. |
+| 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | done | none | Cast witness and rest interaction close to the existing character-sheet spell-rest benefit owner, with casting progress, range maintenance, and interruption remaining caller/table facts. |
 | 7 | L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE | ready-for-research | none | Decide whether sorcery-point slot creation is reachable in battle reducer flows. |
 | 8 | L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP | ready-for-implementation-after-light-research | none | Remove duplicated delegated owner rows or make the single owner executable. |
 | 9 | L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | ready-for-research | none | Resolve jump-distance support without adding absent movement state. |

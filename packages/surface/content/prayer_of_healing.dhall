@@ -22,9 +22,11 @@
 --   • heal_hp with linear_per_level DiceAmount (2d8, +1d8 per slot
 --     above 2; no spellcasting ability modifier in SRD 5.2.1).
 --   • grant_rest_benefit(short_rest) and spell_recipient_rest_lockout
---     as executable source facts. Character Sheet rest application,
---     Spell Slot spend timing, and lockout state remain runtime-owner
---     follow-up work.
+--     as executable source facts consumed by the Character Sheet
+--     spell-rest benefit owner. Automatic 10-minute casting progress,
+--     range maintenance tracking, and encounter-time casting
+--     interruption detection remain caller/table facts rather than
+--     duplicated Character Sheet or battle-runtime state.
 
 let DiceExpr : Type = { dice : Natural, dieSize : Natural }
 

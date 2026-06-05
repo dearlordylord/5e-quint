@@ -10442,8 +10442,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3MCHAR-06 Character Sheet spell-granted Short Rest benefit runtime; Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
           "status": "owner evidence present"
         }
       ],
@@ -18529,8 +18529,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3MCHAR-06 Character Sheet spell-granted Short Rest benefit runtime; Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
           "status": "owner evidence present"
         }
       ],
