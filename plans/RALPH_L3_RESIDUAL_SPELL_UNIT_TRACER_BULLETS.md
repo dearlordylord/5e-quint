@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Wild Shape object anatomy and equipment disposition"
     },
     {
@@ -75,6 +75,18 @@
       "id": "L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION",
       "status": "ready-for-implementation",
       "title": "Implement shared creature perception communication projection"
+    },
+    {
+      "number": 13,
+      "id": "L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER",
+      "status": "ready-for-implementation",
+      "title": "Implement Wild Shape equipment disposition owner"
+    },
+    {
+      "number": 14,
+      "id": "L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS",
+      "status": "blocked",
+      "title": "Promote Wild Shape worn-equipment and object-handling consumers"
     }
   ]
 }
@@ -120,9 +132,11 @@ owns branch repair.
 | 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | done | none | Closed by replacing the broad retained-statistics blocker with narrower Wild Shape follow-up owners and an ASSUMPTIONS-backed active-form persistence closure. |
 | 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | ready-for-implementation | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation can now run over the closed independent residual slices while keeping the split Wild Shape follow-ups visible as future owner tasks. |
 | 9 | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION - Project Wild Shape sense language and speech facts | done | none | Closed by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`: shared creature projection should derive senses, retained languages, and speech blocking from existing active-form, Character Build, Stat Block, and condition facts. |
-| 10 | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT - Promote Wild Shape object anatomy and equipment disposition | ready-for-research | none | Research the equipment/loadout, form-anatomy, and GM-witness boundary before promoting object handling or non-merged equipment dispositions. |
+| 10 | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT - Promote Wild Shape object anatomy and equipment disposition | done | none | Closed by `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`: Wild Shape equipment disposition should be a battle-runtime owner derived from existing selected loadout and typed caller/GM witnesses, with no Wild Shape-local inventory or authored-form identity table. |
 | 11 | L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY - Resolve Wild Shape active form persistence boundary | blocked | future session active-effect persistence owner or owner-approved `ASSUMPTIONS.md` revision | Existing Character Sheet handoff rejection remains correct under A27 until the repo owns cross-session active-form persistence. |
 | 12 | L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION - Implement shared creature perception communication projection | ready-for-implementation | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | Implement the shared battle-runtime projection described in `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`; do not wire it into visibility, Mirror Image, app, or MCP consumers until those owners are promoted. |
+| 13 | L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER - Implement Wild Shape equipment disposition owner | ready-for-implementation | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT | Implement the first battle-runtime owner described in `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`: loadout object identity repair, disposition hole/fill validation, active-effect disposition storage, all-merged parity, and fallen-equipment boundary outcomes. |
+| 14 | L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS - Promote Wild Shape worn-equipment and object-handling consumers | blocked | L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER | Only run after the disposition owner exists; then promote effective-loadout projection for worn equipment and object/Utilize consumers for the form-limb witness. |
 
 ## Global Acceptance Criteria
 
@@ -441,7 +455,22 @@ Expected outputs:
 
 ### Task 10 - L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT
 
-Status: `ready-for-research`
+Status: `done`
+
+Closure:
+
+- Research completed in `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`.
+- The Wild Shape equipment-disposition owner should derive candidates from
+  `origin.selectedLoadout`, not from a copied Wild Shape inventory or durable
+  `equipment.owned`.
+- `CharacterBattleLoadoutRef` already preserves weapon item identity, but armor
+  and shield refs are currently bare Unit ids. The implementation must repair
+  that boundary before per-object armor or shield disposition and fallen-object
+  outcomes can be correct.
+- Form-limb object handling and equipment practicality are typed caller/GM
+  witness facts, not authored Beast identity behavior. Fallen Wild Shape
+  equipment needs a Wild Shape-specific outcome or a generic source union; the
+  current spell-sourced `BattleDroppedObjectOutcome` is not the right boundary.
 
 Research and design the Wild Shape Objects rule owner for form-limb object
 handling and equipment disposition.
@@ -518,3 +547,77 @@ Expected outputs:
   language threading;
 - coverage evidence only for the promoted projection claim, with no battle MBT
   unless a reducer behavior consumer is added.
+
+### Task 13 - L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER
+
+Status: `ready-for-implementation`
+
+Implement the first Wild Shape equipment-disposition owner described in
+`plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors in
+  `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md` before coding;
+- repair `CharacterBattleLoadoutRef["armor" | "shield"]` to carry the existing
+  Character Build item id plus the equipment Unit id, matching weapon refs,
+  without synthesizing inventory identity;
+- derive Wild Shape equipment candidates from `origin.selectedLoadout` only:
+  armor, shield, main weapon, and off-hand weapon when present;
+- expose and fill a typed Wild Shape equipment-disposition battle hole when
+  candidates are non-empty, validating unknown, duplicated, and missing item
+  choices as typed fill failures;
+- represent form-limb object handling and GM wear practicality as typed
+  caller/GM witnesses, with `notPracticalToWear` forced to a fall-or-merge
+  fallback before storing the active disposition;
+- store only completed active-form equipment dispositions on the active Wild
+  Shape effect; do not add equipment fields to `BattleState`, character build,
+  character sheet, or Wild Shape local state;
+- preserve all-merged Wild Shape lifecycle behavior and make merged and fallen
+  equipment have no AC, shield, weapon, magic-item, or hand-use effect while
+  active;
+- return a Wild Shape-specific fallen-equipment boundary outcome, or introduce a
+  generic dropped-equipment source union that includes `druidWildShape`; do not
+  reuse the current spell-sourced `BattleDroppedObjectOutcome`.
+
+Expected outputs:
+
+- focused character-battle projection tests for armor/shield item identity;
+- focused Wild Shape equipment candidate, fill-validation, all-merged, and
+  all-falls runtime tests;
+- App/MCP battle-fill plumbing only where needed to pass typed witness values
+  through existing battle APIs, with no local practicality inference;
+- QNT/rule-core witness and focused MBT only if the active-effect shape or
+  subject protocol changes are observed by existing parity bridges;
+- coverage artifacts updated only for behavior that is production-reachable and
+  tested.
+
+### Task 14 - L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS
+
+Status: `blocked`
+
+Promote worn-equipment combat consequences and form-limb object-handling
+consumers after `L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER` exists.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors in
+  `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md` before coding;
+- derive an effective combat loadout from the active Wild Shape equipment
+  disposition, where worn equipment can function normally only after typed GM
+  practicality was supplied and merged/fallen equipment has no effect;
+- wire form-limb object handling into object/Utilize workflows through the
+  stored limb witness, not through authored Beast ids, names, recommended-form
+  ids, size tables, or provenance sections;
+- update App and MCP consumers only to surface the shared battle workflow and
+  typed witness choices; they must not infer practicality locally;
+- update QNT/runtime parity because AC, attack, hand-use, and action/object
+  availability can change.
+
+Expected outputs:
+
+- focused runtime tests for worn armor, shield, weapon, and object-handling
+  consequences in active Wild Shape;
+- QNT/rule-core parity evidence and focused MBT where the promoted behavior
+  touches existing battle-runtime bridges;
+- coverage artifacts updated only for production-reachable behavior.
