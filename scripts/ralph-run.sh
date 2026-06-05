@@ -533,10 +533,9 @@ text = text.replace(/<!-- ralph-task-index\n([\s\S]*?)\n-->/, (full, jsonBlock) 
 })
 
 const heading = new RegExp(`(### Task ${taskNo}[^\\n]*\\n\\nStatus: \\\`)([^\\\`]+)(\\\`)`)
-if (!heading.test(text)) {
-  throw new Error(`task heading/status missing for task ${taskNo}`)
+if (heading.test(text)) {
+  text = text.replace(heading, `$1${newStatus}$3`)
 }
-text = text.replace(heading, `$1${newStatus}$3`)
 
 const lines = text.split("\n")
 for (let i = 0; i < lines.length; i += 1) {
@@ -722,10 +721,9 @@ for (const task of unblocked) {
   const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: `)([^`]+)(`)", "m")
   const headingReplacement = `$1${task.status}$3`
 
-  if (!headingPattern.test(updatedText)) {
-    throw new Error(`missing task heading for #${task.number}`)
+  if (headingPattern.test(updatedText)) {
+    updatedText = updatedText.replace(headingPattern, headingReplacement)
   }
-  updatedText = updatedText.replace(headingPattern, headingReplacement)
 }
 
 updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`)
