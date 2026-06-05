@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step:
 //   Misty Step is a level 2 Bonus Action spell with range Self that teleports
@@ -10,18 +10,25 @@
 // - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions and
 //   #Opportunity Attacks: a creature can take one Bonus Action on its turn,
 //   and teleportation avoids Opportunity Attacks.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+//   no one can teleport into or out of the aura or use planar travel there.
 // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
 //   Opportunity Attack, Teleportation, and Holding / Wielding.
 import * as path from "node:path";
 
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import type {
+  BattleActiveEffect,
+  BattleAntimagicFieldAuraMembership,
+  BattleAntimagicFieldTransitWitness,
   BattleHole,
   BattleResolutionResult,
   BattleState,
+  CombatantId,
 } from "./index.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
 import {
@@ -35,18 +42,23 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleAreaId,
   battleTablePositionId,
   movementFeet,
 } from "./unit-profile-admission-test-support.ts";
+import { antimagicFieldTransitInvalidReason } from "./battle-reducer/antimagic-field-transit-blocking.ts";
 import {
+  antimagicFieldUnitId,
   mistyStepUnitId,
   spellCasterId,
+  spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 
 const LAST_RESULTS = [
   "init",
   "destinationWitnessRequired",
   "selfTeleported",
+  "antimagicTransitBlocked",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
 const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
@@ -64,6 +76,8 @@ type SelfTeleportProjection = {
   readonly noOpportunityAttackProjected: boolean;
   readonly equipmentTransportProjected: boolean;
   readonly destinationDistanceFeet: number;
+  readonly destinationInsideAntimagicAuraWitness: boolean;
+  readonly antimagicTransitBlocked: boolean;
   readonly lastResult: LastResult;
 };
 
@@ -74,6 +88,9 @@ type SelfTeleportOutcome = NonNullable<
 type SelfTeleportRuntimeState = {
   readonly battle: BattleState;
   readonly lastTeleport: SelfTeleportOutcome | undefined;
+  readonly lastAntimagicTransitWitness:
+    | BattleAntimagicFieldTransitWitness
+    | undefined;
   readonly lastResult: LastResult;
 };
 
@@ -81,11 +98,15 @@ const MISTY_STEP_DESTINATION_ID = battleTablePositionId(
   "focused-misty-step-destination",
 );
 const MISTY_STEP_DESTINATION_DISTANCE_FEET = movementFeet(30);
+const ANTIMAGIC_FIELD_AREA_ID = battleAreaId(
+  "focused-misty-step-antimagic-field-area",
+);
 
 const driverSchema = {
   init: {},
   doRequestDestinationWitness: {},
   doCastSelfTeleport: {},
+  doRejectAntimagicDestinationTransit: {},
   doStutter: {},
   step: {},
 } as const;
@@ -102,6 +123,9 @@ function createSelfTeleportLifecycleDriver() {
       },
       doCastSelfTeleport: () => {
         state = castSelfTeleport(state);
+      },
+      doRejectAntimagicDestinationTransit: () => {
+        state = castSelfTeleportIntoAntimagicAura(state);
       },
       doStutter: () => {},
       step: () => {},
@@ -132,6 +156,8 @@ describe("Self-teleport lifecycle MBT parity", () => {
       noOpportunityAttackProjected: false,
       equipmentTransportProjected: false,
       destinationDistanceFeet: 0,
+      destinationInsideAntimagicAuraWitness: false,
+      antimagicTransitBlocked: false,
       lastResult: "destinationWitnessRequired",
     });
   });
@@ -149,6 +175,8 @@ describe("Self-teleport lifecycle MBT parity", () => {
       movementRemainingFeet: 30,
       spellSlotExpended: 1,
       spellSlotCommittedThisTurn: true,
+      destinationInsideAntimagicAuraWitness: false,
+      antimagicTransitBlocked: false,
       lastResult: "selfTeleported",
     });
   });
@@ -163,6 +191,8 @@ describe("Self-teleport lifecycle MBT parity", () => {
       noOpportunityAttackProjected: true,
       equipmentTransportProjected: true,
       destinationDistanceFeet: 30,
+      destinationInsideAntimagicAuraWitness: false,
+      antimagicTransitBlocked: false,
       lastResult: "selfTeleported",
     });
     expect(cast.lastTeleport).toMatchObject({
@@ -176,6 +206,86 @@ describe("Self-teleport lifecycle MBT parity", () => {
       spendsMovement: false,
       provokesOpportunityAttacks: false,
       transportsWornAndCarriedEquipment: true,
+    });
+  });
+
+  it("rejects Misty Step into an active Antimagic Field aura from a caller-supplied destination witness", () => {
+    const blocked = castSelfTeleportIntoAntimagicAura(initialRuntimeState());
+
+    expect(selfTeleportProjection(blocked)).toMatchObject({
+      bonusActionAvailable: true,
+      spellAvailable: true,
+      destinationWitnessAvailable: true,
+      destinationWitnessConsumed: false,
+      teleportEmitted: false,
+      movementSpentFeet: 0,
+      movementRemainingFeet: 30,
+      spellSlotExpended: 0,
+      spellSlotCommittedThisTurn: false,
+      noOpportunityAttackProjected: false,
+      equipmentTransportProjected: false,
+      destinationDistanceFeet: 0,
+      destinationInsideAntimagicAuraWitness: true,
+      antimagicTransitBlocked: true,
+      lastResult: "antimagicTransitBlocked",
+    });
+  });
+
+  it("rejects outbound Antimagic Field transit from a caller-supplied destination witness", () => {
+    const battle = activeAntimagicAuraState(
+      initialRuntimeState().battle,
+      auraMembership({
+        sourceCombatantId: spellTargetId,
+        originIncluded: true,
+        nonOriginCombatantIds: [spellCasterId],
+      }),
+    );
+
+    expect(
+      antimagicFieldTransitInvalidReason({
+        state: battle,
+        actorId: spellCasterId,
+        witnesses: [
+          {
+            kind: "antimagicFieldTransit",
+            areaId: ANTIMAGIC_FIELD_AREA_ID,
+            sourceCombatantId: spellTargetId,
+            originInsideAura: true,
+            destinationInsideAura: false,
+          },
+        ],
+      }),
+    ).toBe("Teleportation into or out of an Antimagic Field aura is blocked.");
+  });
+
+  it("requires an Antimagic Field transit witness for every active aura", () => {
+    const battle = activeAntimagicAuraState(
+      initialRuntimeState().battle,
+      auraMembership({
+        sourceCombatantId: spellTargetId,
+        originIncluded: true,
+        nonOriginCombatantIds: [],
+      }),
+    );
+    const act = requireSelfTeleportAct(battle);
+    const destinationHole = requireTeleportDestinationHole(act.initialHoles);
+
+    expect(
+      resolveBattleSubject({
+        state: battle,
+        subject: act.subject,
+        fills: [
+          teleportDestinationFill({
+            hole: destinationHole,
+            destinationId: "missing-antimagic-transit-witness",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
     });
   });
 
@@ -203,6 +313,7 @@ function initialRuntimeState(): SelfTeleportRuntimeState {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     }),
     lastTeleport: undefined,
+    lastAntimagicTransitWitness: undefined,
     lastResult: "init",
   };
 }
@@ -219,7 +330,11 @@ function requestDestinationWitness(
       fills: [],
     }),
   ).toMatchObject({ tag: "needsHoles", holes: [destinationHole] });
-  return { ...state, lastResult: "destinationWitnessRequired" };
+  return {
+    ...state,
+    lastAntimagicTransitWitness: undefined,
+    lastResult: "destinationWitnessRequired",
+  };
 }
 
 function castSelfTeleport(
@@ -245,7 +360,55 @@ function castSelfTeleport(
   return {
     battle: resolved.state,
     lastTeleport: teleport,
+    lastAntimagicTransitWitness: undefined,
     lastResult: "selfTeleported",
+  };
+}
+
+function castSelfTeleportIntoAntimagicAura(
+  state: SelfTeleportRuntimeState,
+): SelfTeleportRuntimeState {
+  const battle = activeAntimagicAuraState(
+    state.battle,
+    auraMembership({
+      sourceCombatantId: spellTargetId,
+      originIncluded: true,
+      nonOriginCombatantIds: [],
+    }),
+  );
+  const act = requireSelfTeleportAct(battle);
+  const destinationHole = requireTeleportDestinationHole(act.initialHoles);
+  const transitWitness: BattleAntimagicFieldTransitWitness = {
+    kind: "antimagicFieldTransit",
+    areaId: ANTIMAGIC_FIELD_AREA_ID,
+    sourceCombatantId: spellTargetId,
+    originInsideAura: false,
+    destinationInsideAura: true,
+  };
+
+  expect(
+    resolveBattleSubject({
+      state: battle,
+      subject: act.subject,
+      fills: [
+        teleportDestinationFill({
+          hole: destinationHole,
+          destinationId: "misty-step-antimagic-field-destination",
+          antimagicFieldTransit: [transitWitness],
+        }),
+      ],
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message: "Teleportation into or out of an Antimagic Field aura is blocked.",
+  });
+
+  return {
+    battle: state.battle,
+    lastTeleport: undefined,
+    lastAntimagicTransitWitness: transitWitness,
+    lastResult: "antimagicTransitBlocked",
   };
 }
 
@@ -284,6 +447,9 @@ function selfTeleportProjection(
     destinationDistanceFeet: Number(
       state.lastTeleport?.destination.distanceFeet ?? 0,
     ),
+    destinationInsideAntimagicAuraWitness:
+      state.lastAntimagicTransitWitness?.destinationInsideAura === true,
+    antimagicTransitBlocked: state.lastResult === "antimagicTransitBlocked",
     lastResult: state.lastResult,
   };
 }
@@ -348,6 +514,64 @@ function casterSpellSlotExpended(state: BattleState): number {
   return Number(mistyStepSlot?.expended ?? 0);
 }
 
+function activeAntimagicAuraState(
+  state: BattleState,
+  aura: TestAntimagicFieldAuraMembership,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  const source = combatants.get(aura.sourceCombatantId);
+  if (source === undefined) {
+    throw new Error("Antimagic Field test source must be in the battle.");
+  }
+  combatants.set(aura.sourceCombatantId, {
+    ...source,
+    activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
+  });
+  return {
+    ...state,
+    combatants,
+  };
+}
+
+function antimagicFieldAuraEffect(
+  aura: TestAntimagicFieldAuraMembership,
+): BattleActiveEffect {
+  return {
+    kind: "antimagicFieldOngoingSpellSuppression",
+    sourceSpellId: antimagicFieldUnitId,
+    sourceCombatantId: aura.sourceCombatantId,
+    areaId: ANTIMAGIC_FIELD_AREA_ID,
+    auraMembership: aura.membership,
+    radiusFeet: movementFeet(10),
+    suppressedOngoingSpellEffects: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: aura.sourceCombatantId,
+      durationTicks: elapsedTimeTicks(600),
+    },
+  };
+}
+
+type TestAntimagicFieldAuraMembership = {
+  readonly sourceCombatantId: CombatantId;
+  readonly membership: BattleAntimagicFieldAuraMembership;
+};
+
+function auraMembership(input: {
+  readonly sourceCombatantId: CombatantId;
+  readonly originIncluded: boolean;
+  readonly nonOriginCombatantIds: readonly CombatantId[];
+}): TestAntimagicFieldAuraMembership {
+  return {
+    sourceCombatantId: input.sourceCombatantId,
+    membership: {
+      kind: "antimagicFieldAuraMembership",
+      originIncluded: input.originIncluded,
+      nonOriginCombatantIds: input.nonOriginCombatantIds,
+    },
+  };
+}
+
 function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
   const state = quintStateRecord(raw);
   return {
@@ -378,6 +602,14 @@ function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
       "qEquipmentTransportProjected",
     ),
     destinationDistanceFeet: numberField(state, "qDestinationDistanceFeet"),
+    destinationInsideAntimagicAuraWitness: booleanField(
+      state,
+      "qDestinationInsideAntimagicAuraWitness",
+    ),
+    antimagicTransitBlocked: booleanField(
+      state,
+      "qAntimagicTransitBlocked",
+    ),
     lastResult: lastResult(state["qLastResult"]),
   };
 }

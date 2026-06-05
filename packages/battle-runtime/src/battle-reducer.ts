@@ -1395,6 +1395,7 @@ export type BattleTeleportDestination = {
 export type BattleTeleportDestinationFact = BattleTeleportDestination & {
   readonly actorId: CombatantId;
   readonly spellId: SpellId;
+  readonly antimagicFieldTransit: readonly BattleAntimagicFieldTransitWitness[];
 };
 export type BattleSpiritualWeaponForcePosition = {
   readonly positionId: BattleTablePositionId;
@@ -1914,6 +1915,13 @@ export type BattleAntimagicFieldAuraMembership = {
   readonly kind: "antimagicFieldAuraMembership";
   readonly originIncluded: boolean;
   readonly nonOriginCombatantIds: readonly CombatantId[];
+};
+export type BattleAntimagicFieldTransitWitness = {
+  readonly kind: "antimagicFieldTransit";
+  readonly areaId: BattleAreaId;
+  readonly sourceCombatantId: CombatantId;
+  readonly originInsideAura: boolean;
+  readonly destinationInsideAura: boolean;
 };
 export type BattleAntimagicFieldAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,

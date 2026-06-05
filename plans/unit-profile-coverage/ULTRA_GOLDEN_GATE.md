@@ -32,7 +32,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | --- | --- | ---: | ---: |
 | level-1 | pass | 4/4 | 44 |
 | level-1-2 | pass | 4/4 | 47 |
-| level-1-3 | pass | 4/4 | 66 |
+| level-1-3 | pass | 4/4 | 67 |
 
 ## Layer Results
 

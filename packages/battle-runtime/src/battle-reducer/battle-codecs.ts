@@ -2138,6 +2138,13 @@ type BattleFillEncoded =
         readonly spellId: string;
         readonly destinationId: string;
         readonly distanceFeet: number;
+        readonly antimagicFieldTransit: readonly {
+          readonly kind: "antimagicFieldTransit";
+          readonly areaId: string;
+          readonly sourceCombatantId: string;
+          readonly originInsideAura: boolean;
+          readonly destinationInsideAura: boolean;
+        }[];
       };
     }
   | {
@@ -2977,6 +2984,15 @@ export const BattleFillSchema: Schema.Schema<
         spellId: SpellId,
         destinationId: BattleTablePositionId,
         distanceFeet: MovementFeet,
+        antimagicFieldTransit: Schema.Array(
+          Schema.Struct({
+            kind: Schema.Literal("antimagicFieldTransit"),
+            areaId: BattleAreaId,
+            sourceCombatantId: CombatantId,
+            originInsideAura: Schema.Boolean,
+            destinationInsideAura: Schema.Boolean,
+          }),
+        ),
       }),
     }),
     Schema.Struct({

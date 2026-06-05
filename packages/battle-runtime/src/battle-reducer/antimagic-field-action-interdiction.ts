@@ -33,7 +33,7 @@ type SpellActSubject = Extract<
     readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
   }
 >;
-type ActiveAntimagicFieldAuraMembership = {
+export type ActiveAntimagicFieldAuraMembership = {
   readonly areaId: BattleAreaId;
   readonly sourceCombatantId: CombatantId;
   readonly membership: BattleAntimagicFieldAuraMembership;
@@ -86,7 +86,7 @@ export function spellInvocationActInterdictedByAntimagicField(
   );
 }
 
-function activeAntimagicFieldAuraMemberships(
+export function activeAntimagicFieldAuraMemberships(
   state: BattleState,
 ): readonly ActiveAntimagicFieldAuraMembership[] {
   return [...state.combatants.values()].flatMap((combatant) =>
@@ -104,7 +104,7 @@ function activeAntimagicFieldAuraMemberships(
   );
 }
 
-function antimagicFieldAuraMembershipIncludesCombatant(
+export function antimagicFieldAuraMembershipIncludesCombatant(
   membership: ActiveAntimagicFieldAuraMembership,
   combatantId: CombatantId,
 ): boolean {

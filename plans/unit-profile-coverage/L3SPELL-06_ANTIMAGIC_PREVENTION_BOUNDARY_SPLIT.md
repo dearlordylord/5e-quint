@@ -6,9 +6,9 @@
 - `.references/srd-5.2.1/Rules-Glossary.md#Emanation` says an Emanation extends from a creature or object, moves with that origin, and the origin is included only if the creator decides otherwise.
 - `UBIQUITOUS_LANGUAGE.md` distinguishes Magic Action from spellcasting: action-time spellcasting is one Magic Action use, but features and magic items can also require Magic actions.
 
-## Current Promoted Owner
+## Current Promoted Owners
 
-`spell.invocation-antimagic-field-ongoing-spell-suppression` remains the only promoted Antimagic Field runtime owner. It owns level-8-or-higher Spell Slot casting, caller-supplied self-origin 10-foot Emanation identity, Concentration, artifact/deity exception handling, and suppression without deletion for represented tracked ongoing Spell Effect families: spell-light emitters, `spellObjectContactDamage`, and `spiritualWeapon`.
+The promoted Antimagic Field runtime owners cover ongoing-spell suppression, aura action interdiction, magical-effect targeting/effect-delivery interdiction, and represented self-teleport destination transit blocking. They consume caller-supplied aura identity and membership witnesses rather than deriving table geometry or map positions.
 
 ## Split Rows
 
@@ -18,14 +18,15 @@
 | Magical targeting and magical-effect delivery prevention | Needs a generic magical-effect targeting/effect-delivery owner that consumes aura-membership facts for selected targets and affected things. | `L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION` |
 | Magic item property suppression | Deferred until magic item records, equipment/attunement state, and property projection exist; Antimagic Field must not create a parallel item registry. | `L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION` |
 | Magical area clipping | Needs a shared area geometry overlap/clipping owner; current area spells consume caller-supplied area and membership witnesses rather than storing map geometry. | `L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING` |
-| Teleportation and planar travel blocking | Needs represented transit procedures plus origin/destination aura-membership witnesses; current self-teleport support does not derive aura membership or planar travel state. | `L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING` |
+| Represented self-teleport destination transit blocking | Promoted by `L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING` for self-teleport destinations that consume caller-supplied origin/destination aura-membership witnesses. Automatic aura-membership derivation remains table-owned. | completed |
+| Planar travel blocking | Closed until a planar-travel procedure, plane-location state, and table-owned plane transition witness owner exists; do not add plane metadata to self-teleport or generic teleport state. | future planar-travel owner |
 | Portal closure | Deferred until portal occurrences have stable identity, placement, open/closed state, destination, and cleanup semantics. | `L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE` |
 | Dispel Magic immunity on the aura | Needs a typed Dispel Magic exception once Antimagic aura occurrences are otherwise targetable or visible to magical-effect targeting. | `L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY` |
 | Broader ongoing spell suppression | Extend the current suppression owner one represented ongoing Spell Effect family at a time, preserving non-deletion, ticking duration, and Artifact/deity exceptions. | `L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION` |
 
 ## Implementation Decision
 
-No new reducer behavior was promoted in this task. The remaining prevention clauses need state that the current promoted boundary does not own: explicit aura membership, generic magical-effect delivery, magic-item runtime state, generic area clipping, transit/plane facts, portal lifecycle, or spell-specific Dispel Magic exception handling. Adding Antimagic-only fields would duplicate table/spatial or future owner state and make invalid combinations representable.
+Task 13 promoted represented self-teleport destination transit blocking for caller-supplied origin/destination Antimagic Field aura-membership witnesses. Planar travel remains closed because the battle runtime has no represented planar-travel procedure, plane-location state, or table-owned plane transition witness shape; adding Antimagic-only plane fields would duplicate a future owner and make invalid combinations representable.
 
 ## Reviewer Loop Notes
 

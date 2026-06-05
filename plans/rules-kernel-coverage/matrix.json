@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 101,
-    "covered": 95,
+    "total": 102,
+    "covered": 96,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 73,
+      "battle": 74,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 95,
+      "covered": 96,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -1386,6 +1386,36 @@
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step"
       ],
       "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-self-teleport"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step",
+        ".references/srd-5.2.1/Rules-Glossary.md#Teleportation"
+      ],
+      "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
     },
     {
       "id": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
@@ -5035,7 +5065,8 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"
       ],
       "profileId": "spell.invocation-self-teleport"
     },
@@ -6109,6 +6140,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt is the focused literal projection witness for represented self-teleport lifecycle parity and Antimagic Field transit blocking from caller-supplied aura origin/destination membership witnesses.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-self-transformation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",

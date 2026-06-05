@@ -51,7 +51,7 @@
 {"profileId":"spell.invocation-feather-fall-mitigation","obligationIds":["BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.invocation-jump-movement-replacement","obligationIds":["BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
 {"profileId":"spell.invocation-forced-reaction-movement","obligationIds":["BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
-{"profileId":"spell.invocation-self-teleport","obligationIds":["BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"]}
+{"profileId":"spell.invocation-self-teleport","obligationIds":["BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE","BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING"]}
 {"profileId":"spell.invocation-blur-attack-roll-defense","obligationIds":["BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"]}
 {"profileId":"spell.invocation-moonbeam-movable-zone","obligationIds":["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES","SHARED.HIT_POINTS.POSITIVE_DAMAGE","BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"]}
 {"profileId":"spell.invocation-direct-condition","obligationIds":["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"]}

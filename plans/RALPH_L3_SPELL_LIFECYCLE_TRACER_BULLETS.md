@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Antimagic Field teleportation and planar travel blocking"
     },
     {
@@ -145,7 +145,7 @@ owns branch repair.
 | 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Shared magical-effect targeting and delivery interdiction is promoted for represented combatant target/effect-delivery paths. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed as table-spatial derivation for currently supported area shapes without duplicating map state. |
-| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
+| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Represented self-teleport transit blocking is promoted from caller-supplied origin/destination aura-membership witnesses; planar travel is closed until a future planar-travel owner exists. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
 | 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
 | 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
@@ -522,7 +522,7 @@ Completed output:
 
 ### Task 13 - L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING
 
-Status: `ready-for-research`
+Status: `done`
 
 Reject teleportation into or out of the aura and planar travel there for
 represented transit procedures.
@@ -538,6 +538,18 @@ Expected outputs:
 
 - focused runtime tests and Quint parity over a represented transit procedure;
 - explicit closure for planar travel if no planar-travel procedure state exists.
+
+Completed output:
+
+- promoted represented self-teleport transit blocking for caller-supplied
+  Antimagic Field origin/destination aura-membership witnesses;
+- focused runtime tests cover inbound represented Misty Step rejection before
+  resource spend, outbound transit-witness classification, and missing
+  active-aura witness rejection; focused MBT parity covers represented Misty
+  Step transit blocking;
+- planar travel remains closed because the battle runtime has no represented
+  planar-travel procedure, plane-location state, or table-owned plane transition
+  witness owner.
 
 ### Task 14 - L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE
 

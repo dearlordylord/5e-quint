@@ -11,6 +11,7 @@ import {
   spellId,
   type AvailableBattleAct,
   type BattleAreaId,
+  type BattleAntimagicFieldTransitWitness,
   type BattleFill,
   type BattleHole,
   type BattleLineDirectionId,
@@ -383,6 +384,7 @@ export function teleportDestinationFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "teleportDestination" }>;
   readonly destinationId?: string;
   readonly distanceFeet?: number;
+  readonly antimagicFieldTransit?: readonly BattleAntimagicFieldTransitWitness[];
 }): Extract<BattleFill, { readonly kind: "teleportDestination" }> {
   return {
     kind: "teleportDestination",
@@ -395,6 +397,7 @@ export function teleportDestinationFill(input: {
         input.destinationId ?? "misty-step-destination",
       ),
       distanceFeet: movementFeet(input.distanceFeet ?? 30),
+      antimagicFieldTransit: input.antimagicFieldTransit ?? [],
     },
   };
 }
