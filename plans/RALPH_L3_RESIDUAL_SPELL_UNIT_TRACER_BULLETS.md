@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3RES-02-DRUID-LANDS-AID-SCALING",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Druid Land's Aid level scaling"
     },
     {
@@ -88,7 +88,7 @@ owns branch repair.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | done | none | Evidence-only cleanup for class-feature runtime work already merged. |
-| 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | ready-for-implementation-after-light-research | none | Independent runtime/spec scaling slice after level-3 Land's Aid runtime exists. |
+| 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | done | none | Land's Aid level 10 and 14 damage/healing scaling is promoted through Surface, runtime projection, focused tests, selected-identity MBT, and coverage ledgers. |
 | 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | done | none | Closed by the merged evidence reconciliation: Sacred Weapon residual runtime evidence is already covered. |
 | 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | ready-for-implementation-after-light-research | none | RAW/ASSUMPTIONS boundary task; must not invent damage semantics. |
 | 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION | Run only after Task 4 records an executable RAW decision. |
@@ -179,7 +179,18 @@ Expected outputs:
 
 ### Task 2 - L3RES-02-DRUID-LANDS-AID-SCALING
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- Land's Aid damage/healing scaling is modeled as class-axis threshold dice in
+  the Surface content and projected to fixed 2d6, 3d6, or 4d6 executable
+  profiles from existing Druid class-level facts.
+- Focused battle-runtime tests and the selected-identity MBT witness cover
+  Druid levels 3, 10, and 14, including rejection of fills whose dice counts do
+  not match the derived class-level threshold.
+- Unit/profile coverage ledgers no longer carry the level 10 and 14 scaling as
+  deferred Land's Aid behavior.
 
 Promote Land's Aid Druid level 10 and 14 damage/healing dice scaling now that
 the level-3 runtime owner exists.

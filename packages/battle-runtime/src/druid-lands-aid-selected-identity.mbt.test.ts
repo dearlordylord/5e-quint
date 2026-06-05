@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
+// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
 import * as path from "node:path";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -66,7 +66,6 @@ type LandsAidProjection = {
 const druidWildShapeUnitId = "druid_wild_shape";
 const landsAidUnit = unitLibrary.requireUnit(druidLandsAidUnitId);
 const wildShapeUnit = unitLibrary.requireUnit(druidWildShapeUnitId);
-const landsAidUnitRef = requireLandsAidUnitRef();
 const secondTargetId = combatantId("lands-aid-selected-second-target");
 const healingTargetId = combatantId("lands-aid-selected-healing-target");
 
@@ -112,6 +111,60 @@ defineSelectedIdentityWitness({
                   healingTargetId,
                   damageRolls: [4, 4],
                   healingRolls: [3, 4],
+                }),
+              ),
+              "resolved",
+            ),
+        },
+        {
+          actionName: "doResolveAreaSaveDamageHealingLevel10",
+          projectionAfter: expectedProjection({
+            targetHp: 8,
+            secondTargetHp: 14,
+            healingTargetHp: 17,
+            wildShapeUsesRemaining: 1,
+            actionResourcesRemaining: 0,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            projectBattleState(
+              recordResolvedState(
+                resolveLandsAid(landsAidBattle({ druidLevel: 10 }), {
+                  outcomes: [
+                    { targetId: spellTargetId, succeeded: false },
+                    { targetId: secondTargetId, succeeded: true },
+                  ],
+                  areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+                  healingTargetId,
+                  damageRolls: [4, 4, 4],
+                  healingRolls: [3, 4, 5],
+                }),
+              ),
+              "resolved",
+            ),
+        },
+        {
+          actionName: "doResolveAreaSaveDamageHealingLevel14",
+          projectionAfter: expectedProjection({
+            targetHp: 4,
+            secondTargetHp: 12,
+            healingTargetHp: 20,
+            wildShapeUsesRemaining: 1,
+            actionResourcesRemaining: 0,
+            lastResult: "resolved",
+          }),
+          discover: () =>
+            projectBattleState(
+              recordResolvedState(
+                resolveLandsAid(landsAidBattle({ druidLevel: 14 }), {
+                  outcomes: [
+                    { targetId: spellTargetId, succeeded: false },
+                    { targetId: secondTargetId, succeeded: true },
+                  ],
+                  areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+                  healingTargetId,
+                  damageRolls: [4, 4, 4, 4],
+                  healingRolls: [3, 4, 5, 6],
                 }),
               ),
               "resolved",
@@ -267,8 +320,12 @@ function projectBattleState(
 }
 
 function landsAidBattle(
-  input: { readonly wildShapeUsesRemaining?: number } = {},
+  input: {
+    readonly wildShapeUsesRemaining?: number;
+    readonly druidLevel?: number;
+  } = {},
 ): BattleState {
+  const druidLevel = input.druidLevel ?? 3;
   const result = startBattle({
     battleId: battleId("druid-lands-aid-selected-identity"),
     combatants: [
@@ -277,8 +334,8 @@ function landsAidBattle(
         displayName: "Land Druid",
         initiative: 20,
         side: partySide,
-        classLevels: [{ className: "druid", level: classLevel(3) }],
-        characterUnitRefs: [landsAidUnitRef],
+        classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
+        characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
         unitFeatures: [{ unit: landsAidUnit }],
         resources: [
           {
@@ -291,12 +348,7 @@ function landsAidBattle(
           sourceClassName: "druid",
         },
         attack: null,
-        druidWildShapeKnownForms: [
-          statBlockCatalog.requireStatBlock("stat_block_rat"),
-          statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-          statBlockCatalog.requireStatBlock("stat_block_lizard"),
-          statBlockCatalog.requireStatBlock("stat_block_cat"),
-        ],
+        druidWildShapeKnownForms: druidWildShapeKnownForms(druidLevel),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -450,6 +502,21 @@ function rolledDiceFill(
   };
 }
 
+function druidWildShapeKnownForms(druidLevel: number) {
+  const forms = [
+    statBlockCatalog.requireStatBlock("stat_block_rat"),
+    statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    statBlockCatalog.requireStatBlock("stat_block_lizard"),
+    statBlockCatalog.requireStatBlock("stat_block_cat"),
+    statBlockCatalog.requireStatBlock("stat_block_bat"),
+    statBlockCatalog.requireStatBlock("stat_block_frog"),
+    statBlockCatalog.requireStatBlock("stat_block_hawk"),
+    statBlockCatalog.requireStatBlock("stat_block_owl"),
+  ];
+  const knownFormCount = druidLevel >= 8 ? 8 : druidLevel >= 4 ? 6 : 4;
+  return forms.slice(0, knownFormCount);
+}
+
 function recordResolvedState(result: BattleResolutionResult): BattleState {
   if (result.tag !== "resolved") {
     throw new Error(`Expected Land's Aid to resolve: ${result.tag}`);
@@ -485,11 +552,11 @@ function wildShapeUsesRemaining(state: BattleState): number {
   return Number(resource.usesRemaining);
 }
 
-function requireLandsAidUnitRef() {
+function requireLandsAidUnitRef(druidLevel = 3) {
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: druidLandsAidUnitId },
     unit: landsAidUnit,
-    classLevels: [{ className: "druid", level: classLevel(3) }],
+    classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
   });
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);

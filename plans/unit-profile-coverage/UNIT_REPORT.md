@@ -1712,6 +1712,8 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME | completed-runtime-parity | `unit-feature.hunters-prey` |
 | L3PUTB-08-DRUID-LANDS-AID-RUNTIME | qnt-proof | `unit-feature.magic-action-area-save-damage-healing` |
 | L3PUTB-08-DRUID-LANDS-AID-RUNTIME | completed-runtime-parity | `unit-feature.magic-action-area-save-damage-healing` |
+| L3RES-02-DRUID-LANDS-AID-SCALING | admission-projection | `unit-feature.magic-action-area-save-damage-healing` |
+| L3RES-02-DRUID-LANDS-AID-SCALING | completed-runtime-parity | `unit-feature.magic-action-area-save-damage-healing` |
 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES | qnt-proof | `unit-feature.remarkable-athlete` |
 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES | completed-runtime-parity | `unit-feature.remarkable-athlete` |
 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT | qnt-proof | `unit-feature.remarkable-athlete` |

@@ -11,6 +11,8 @@ module battleRuntimeDruidLandsAidMbt {
   //   Action that spends Wild Shape, uses a caller-selected 10-foot-radius
   //   Sphere within 60 feet, forces Constitution saves, deals 2d6 Necrotic
   //   damage with half on success, and heals one creature in the area for 2d6.
+  //   The damage and healing increase to 3d6 at Druid level 10 and 4d6 at
+  //   Druid level 14.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Saving Throw, Area of Effect,
   //   Sphere, Damage Type, Hit Points, and Creature.
   var qTargetHp: int
@@ -41,6 +43,16 @@ module battleRuntimeDruidLandsAidMbt {
   action doResolveAreaSaveDamageHealing = all {
     qLastResult == "init",
     recordProjection(12, 16, 12, 1, 0, "resolved"),
+  }
+
+  action doResolveAreaSaveDamageHealingLevel10 = all {
+    qLastResult == "init",
+    recordProjection(8, 14, 17, 1, 0, "resolved"),
+  }
+
+  action doResolveAreaSaveDamageHealingLevel14 = all {
+    qLastResult == "init",
+    recordProjection(4, 12, 20, 1, 0, "resolved"),
   }
 
   action doRejectMissingResource = all {
@@ -75,6 +87,8 @@ module battleRuntimeDruidLandsAidMbt {
 
   action step = any {
     doResolveAreaSaveDamageHealing,
+    doResolveAreaSaveDamageHealingLevel10,
+    doResolveAreaSaveDamageHealingLevel14,
     doRejectMissingResource,
     doRejectMissingAreaMembership,
     doRejectDuplicateSaveFill,

@@ -44,7 +44,6 @@ import {
 const druidWildShapeUnitId = "druid_wild_shape";
 const landsAidUnit = unitLibrary.requireUnit(druidLandsAidUnitId);
 const wildShapeUnit = unitLibrary.requireUnit(druidWildShapeUnitId);
-const landsAidUnitRef = requireLandsAidUnitRef();
 const secondTargetId = combatantId("lands-aid-second-target");
 const healingTargetId = combatantId("lands-aid-healing-target");
 
@@ -99,6 +98,78 @@ describe("Druid Land's Aid area save damage and healing", () => {
     expect(wildShapeUsesRemaining(resolved)).toBe(1);
     expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
   });
+
+  test.each([
+    {
+      druidLevel: 3,
+      damageRolls: [4, 4],
+      healingRolls: [3, 4],
+      expectedTargetHp: 12,
+      expectedSecondTargetHp: 16,
+      expectedHealingTargetHp: 12,
+    },
+    {
+      druidLevel: 10,
+      damageRolls: [4, 4, 4],
+      healingRolls: [3, 4, 5],
+      expectedTargetHp: 8,
+      expectedSecondTargetHp: 14,
+      expectedHealingTargetHp: 17,
+    },
+    {
+      druidLevel: 14,
+      damageRolls: [4, 4, 4, 4],
+      healingRolls: [3, 4, 5, 6],
+      expectedTargetHp: 4,
+      expectedSecondTargetHp: 12,
+      expectedHealingTargetHp: 20,
+    },
+  ])(
+    "derives $druidLevel Land's Aid dice from the Druid class level",
+    ({
+      druidLevel,
+      damageRolls,
+      healingRolls,
+      expectedTargetHp,
+      expectedSecondTargetHp,
+      expectedHealingTargetHp,
+    }) => {
+      const state = landsAidBattle({ druidLevel, healingTargetHp: 5 });
+      const act = landsAidAct(state);
+
+      expect(act.initialHoles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "rolledDice",
+            label: `Land's Aid damage (${damageRolls.length}d6)`,
+          }),
+          expect.objectContaining({
+            kind: "rolledDice",
+            label: `Land's Aid healing (${healingRolls.length}d6)`,
+          }),
+        ]),
+      );
+
+      const resolved = recordResolvedState(
+        resolveLandsAid(state, {
+          outcomes: [
+            { targetId: spellTargetId, succeeded: false },
+            { targetId: secondTargetId, succeeded: true },
+          ],
+          areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+          healingTargetId,
+          damageRolls,
+          healingRolls,
+        }),
+      );
+
+      expect(currentHp(resolved, spellTargetId)).toBe(expectedTargetHp);
+      expect(currentHp(resolved, secondTargetId)).toBe(expectedSecondTargetHp);
+      expect(currentHp(resolved, healingTargetId)).toBe(expectedHealingTargetHp);
+      expect(wildShapeUsesRemaining(resolved)).toBe(1);
+      expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
+    },
+  );
 
   test("returns holes when fills are missing", () => {
     const state = landsAidBattle();
@@ -228,6 +299,35 @@ describe("Druid Land's Aid area save damage and healing", () => {
       message: expect.stringContaining("outside d6"),
     });
   });
+
+  test("rejects level-10 fills that do not match the derived 3d6 dice", () => {
+    const state = landsAidBattle({ druidLevel: 10 });
+    const badDamageRoll = resolveLandsAid(state, {
+      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      areaTargetIds: [spellTargetId, healingTargetId],
+      healingTargetId,
+      damageRolls: [4, 4],
+      healingRolls: [3, 4, 5],
+    });
+    const badHealingRoll = resolveLandsAid(state, {
+      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      areaTargetIds: [spellTargetId, healingTargetId],
+      healingTargetId,
+      damageRolls: [4, 4, 4],
+      healingRolls: [3, 4],
+    });
+
+    expect(badDamageRoll).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: expect.stringContaining("dice count"),
+    });
+    expect(badHealingRoll).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: expect.stringContaining("dice count"),
+    });
+  });
 });
 
 function landsAidBattle(
@@ -236,8 +336,10 @@ function landsAidBattle(
     readonly secondTargetHp?: number;
     readonly healingTargetHp?: number;
     readonly wildShapeUsesRemaining?: number;
+    readonly druidLevel?: number;
   } = {},
 ): BattleState {
+  const druidLevel = input.druidLevel ?? 3;
   const result = startBattle({
     battleId: battleId("druid-lands-aid"),
     combatants: [
@@ -246,8 +348,8 @@ function landsAidBattle(
         displayName: "Land Druid",
         initiative: 20,
         side: partySide,
-        classLevels: [{ className: "druid", level: classLevel(3) }],
-        characterUnitRefs: [landsAidUnitRef],
+        classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
+        characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
         unitFeatures: [{ unit: landsAidUnit }],
         resources: [
           {
@@ -260,12 +362,7 @@ function landsAidBattle(
           sourceClassName: "druid",
         },
         attack: null,
-        druidWildShapeKnownForms: [
-          statBlockCatalog.requireStatBlock("stat_block_rat"),
-          statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-          statBlockCatalog.requireStatBlock("stat_block_lizard"),
-          statBlockCatalog.requireStatBlock("stat_block_cat"),
-        ],
+        druidWildShapeKnownForms: druidWildShapeKnownForms(druidLevel),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -433,6 +530,21 @@ function rolledDiceFill(
   };
 }
 
+function druidWildShapeKnownForms(druidLevel: number) {
+  const forms = [
+    statBlockCatalog.requireStatBlock("stat_block_rat"),
+    statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    statBlockCatalog.requireStatBlock("stat_block_lizard"),
+    statBlockCatalog.requireStatBlock("stat_block_cat"),
+    statBlockCatalog.requireStatBlock("stat_block_bat"),
+    statBlockCatalog.requireStatBlock("stat_block_frog"),
+    statBlockCatalog.requireStatBlock("stat_block_hawk"),
+    statBlockCatalog.requireStatBlock("stat_block_owl"),
+  ];
+  const knownFormCount = druidLevel >= 8 ? 8 : druidLevel >= 4 ? 6 : 4;
+  return forms.slice(0, knownFormCount);
+}
+
 function recordResolvedState(result: BattleResolutionResult): BattleState {
   if (result.tag !== "resolved") {
     throw new Error(`Expected Land's Aid to resolve: ${result.tag}`);
@@ -462,17 +574,18 @@ function wildShapeUsesRemaining(state: BattleState): number {
   return Number(resource.usesRemaining);
 }
 
-function requireLandsAidUnitRef() {
+function requireLandsAidUnitRef(druidLevel = 3) {
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: druidLandsAidUnitId },
     unit: landsAidUnit,
-    classLevels: [{ className: "druid", level: classLevel(3) }],
+    classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
   });
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);
   }
   const support = battleMagicActionAreaSaveDamageHealingSupportForUnit(
     landsAidUnit,
+    [{ className: "druid", level: classLevel(druidLevel) }],
   );
   if (support === null || support === "unsupported") {
     throw new Error("Expected Land's Aid damage/healing support.");
