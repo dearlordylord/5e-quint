@@ -3,11 +3,13 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-damage-resistance unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
+import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import {
   barbarianFrenzyUnitId,
   barbarianRageUnitId,
@@ -20,6 +22,7 @@ import {
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
   speciesDragonbornBreathWeaponUnitId,
+  speciesDragonbornDamageResistanceUnitId,
   unitLibrary,
   unitMechanicsVariant,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -29,19 +32,28 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleAttackActionAreaSaveDamageReplacementSupportForUnit,
+  battleId,
   battleMartialArtsAttackProjectionSupportForUnit,
+  battlePassiveDamageResistanceSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
+  combatantId,
   Either,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   movementFeet,
+  oppositionSide,
+  PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+  passiveDamageResistanceProfileForUnit,
+  partySide,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
 describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
@@ -101,6 +113,16 @@ describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
           ],
         },
         onSuccess: "halfDamage",
+      },
+    },
+  } as const;
+  const expectedDamageResistanceSupport = {
+    kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+    resistance: {
+      damageType: {
+        kind: "draconicAncestry",
+        holeId: "species_dragonborn_draconic_ancestry_damage_type",
+        value: "fire",
       },
     },
   } as const;
@@ -309,6 +331,123 @@ describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
         ),
       ).toBeNull();
     }
+  });
+
+  test("species_dragonborn_damage_resistance is admitted from the shared Draconic Ancestry fact", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+        sourceFacts: draconicAncestrySourceFacts,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: speciesDragonbornDamageResistanceUnitId,
+        supportProfiles: [expectedDamageResistanceSupport],
+      }),
+    );
+    expect(
+      battlePassiveDamageResistanceSupportForUnit({
+        unit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedDamageResistanceSupport);
+    expect(
+      passiveDamageResistanceProfileForUnit({
+        unit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedDamageResistanceSupport.resistance);
+  });
+
+  test("Damage Resistance admission requires selected Draconic Ancestry damage type", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+
+    expect(
+      battlePassiveDamageResistanceSupportForUnit({
+        unit,
+        draconicAncestryDamageType: undefined,
+      }),
+    ).toBe("unsupported");
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Unsupported battle passive damage Resistance Unit hook: ${unit.id}.`,
+      }),
+    );
+  });
+
+  test("Damage Resistance admission follows mechanics shape rather than Unit identity", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+    if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Dragonborn Damage Resistance passive trait.");
+    }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_draconic_resistance_fixture",
+      mechanics: unit.mechanics,
+    });
+
+    expect(
+      battlePassiveDamageResistanceSupportForUnit({
+        unit: syntheticUnit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedDamageResistanceSupport);
+  });
+
+  test("Damage Resistance halves only matching target-side damage", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
+      sourceFacts: draconicAncestrySourceFacts,
+    });
+    expect(Either.isRight(unitRef)).toBe(true);
+    if (Either.isLeft(unitRef)) {
+      throw new Error(unitRef.left.message);
+    }
+    const targetId = combatantId("dragonborn-damage-resistance-target");
+    const result = startBattle({
+      battleId: battleId("dragonborn-damage-resistance"),
+      combatants: [
+        characterCreature({
+          combatantId: targetId,
+          displayName: "Dragonborn Target",
+          initiative: 10,
+          side: partySide,
+          characterUnitRefs: [unitRef.right],
+        }),
+        characterCreature({
+          combatantId: combatantId("dragonborn-damage-resistance-attacker"),
+          displayName: "Attacker",
+          initiative: 5,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      throw new Error(result.left.message);
+    }
+    const target = result.right.combatants.get(targetId);
+    if (target === undefined) {
+      throw new Error("Expected Dragonborn target combatant.");
+    }
+
+    expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(4);
+    expect(damageAmountAfterTargetAdjustments(target, 9, "cold")).toBe(9);
   });
 });
 

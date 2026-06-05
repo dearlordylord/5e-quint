@@ -2260,7 +2260,8 @@
         }
       ],
       "profiles": [
-        "spell.invocation-damage-reduction"
+        "spell.invocation-damage-reduction",
+        "unit-feature.passive-damage-resistance"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
@@ -4860,6 +4861,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.passive-saving-throw-roll-mode"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "profileId": "unit-feature.passive-damage-resistance"
     },
     {
       "obligationIds": [
@@ -10433,6 +10440,7 @@
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",
     "unit-feature.passive-armor-class-bonus",
+    "unit-feature.passive-damage-resistance",
     "unit-feature.passive-ranged-attack-roll-bonus",
     "unit-feature.passive-saving-throw-roll-mode",
     "unit-feature.passive-speed-bonus",

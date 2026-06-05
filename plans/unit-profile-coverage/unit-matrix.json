@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 161,
-      "numerator": 161,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 108,
+      "denominator": 109,
       "numerator": 106,
-      "percent": "98.1%"
+      "percent": "97.2%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 144,
-      "numerator": 140,
+      "denominator": 145,
+      "numerator": 141,
       "percent": "97.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 144,
-      "numerator": 140,
+      "denominator": 145,
+      "numerator": 141,
       "percent": "97.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 161,
+      "denominator": 162,
       "numerator": 157,
-      "percent": "97.5%"
+      "percent": "96.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 161,
-      "percent": "70.6%"
+      "numerator": 162,
+      "percent": "71.1%"
     }
   },
   "metricSemantics": [
@@ -754,6 +754,34 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-damage-resistance",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+      ],
+      "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives the selected damage type from that source fact and the passive grant_resistance Surface shape, then damage adjustment consumes the admitted character Unit support profile directly from characterUnitRefs without storing a separate resistance-only damage type field.",
+      "taskRefs": [
+        "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+      ],
+      "title": "Unit feature passively grants target-side Resistance keyed to a typed damage source fact",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -4657,13 +4685,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 144,
-        "numerator": 140,
+        "denominator": 145,
+        "numerator": 141,
         "percent": "97.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 144,
-        "numerator": 140,
+        "denominator": 145,
+        "numerator": 141,
         "percent": "97.2%"
       }
     },
@@ -4977,6 +5005,23 @@
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+          }
+        ],
+        "profileId": "unit-feature.passive-damage-resistance",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
         ]
       },
       {
@@ -7115,8 +7160,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 154,
-          "numerator": 154,
+          "denominator": 155,
+          "numerator": 155,
           "percent": "100%"
         }
       },
@@ -10973,6 +11018,29 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+                }
+              ],
+              "profileId": "unit-feature.passive-damage-resistance",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_dragonborn_damage_resistance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11354,8 +11422,26 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 0,
-    "rows": []
+    "rowCount": 1,
+    "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.passive-damage-resistance"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "species_dragonborn_damage_resistance"
+      }
+    ]
   },
   "taskClaims": [
     {
@@ -14408,6 +14494,14 @@
         "unit-feature.attack-action-area-save-damage-replacement"
       ],
       "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle tests cover Dragonborn Damage Resistance admission from the shared selected Draconic Ancestry source fact, rejection when that source fact is absent, identity-independent passive grant_resistance shape admission, character handoff projection, and matching target-side damage halving through the existing Resistance adjustment math without storing a separate resistance-only damage type.",
+      "profileIds": [
+        "unit-feature.passive-damage-resistance"
+      ],
+      "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -22107,19 +22201,60 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
-          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
-        },
-        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.passive-damage-resistance"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "The Dragonborn species Surface record owns the exact SRD Draconic Ancestry damage-type source table; Damage Resistance references that same source fact rather than carrying a trait-local or resistance-only damage choice.",
+          "Character creation requires one Draconic Ancestry selection for Dragonborn and projects the selected ancestry onto CharacterBuild species choice facts.",
+          "Battle Unit admission derives the selected Draconic Ancestry damage type from CharacterBuild selected ancestry and the selected species Surface source table together with the passive grant_resistance Surface mechanics, without dispatching on Dragonborn or ancestry identity.",
+          "Battle damage adjustment consumes the admitted passive damage Resistance support profile from characterUnitRefs and halves only matching target-side damage through the existing Resistance math without storing a duplicate resistance damage-type field."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-damage-resistance",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/character-battle-runtime/src/battle-support-profiles.ts"
+          ],
+          "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives the selected damage type from that source fact and the passive grant_resistance Surface shape, then damage adjustment consumes the admitted character Unit support profile directly from characterUnitRefs without storing a separate resistance-only damage type field.",
+          "taskRefs": [
+            "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+          ],
+          "title": "Unit feature passively grants target-side Resistance keyed to a typed damage source fact",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
       "unitId": "species_dragonborn_damage_resistance"
     },

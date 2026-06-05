@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-damage-resistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
@@ -22,6 +23,7 @@ import type {
 } from "@dnd/battle-runtime";
 import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
@@ -525,6 +527,11 @@ describe("Character Sheet battle handoff", () => {
           message:
             "Unsupported battle Attack-action area save-damage replacement Unit hook: species_dragonborn_breath_weapon.",
         },
+        {
+          tag: "battleSupportProfileIssue",
+          message:
+            "Unsupported battle passive damage Resistance Unit hook: species_dragonborn_damage_resistance.",
+        },
       ]),
     );
   });
@@ -556,6 +563,25 @@ describe("Character Sheet battle handoff", () => {
                 }),
               }),
             }),
+          ]),
+        }),
+      ]),
+    );
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_damage_resistance",
+          supportProfiles: expect.arrayContaining([
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "draconicAncestry",
+                  holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                  value: "fire",
+                },
+              },
+            },
           ]),
         }),
       ]),
@@ -605,6 +631,25 @@ describe("Character Sheet battle handoff", () => {
                 }),
               }),
             }),
+          ]),
+        }),
+      ]),
+    );
+    expect(init.creatureInit.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_damage_resistance",
+          supportProfiles: expect.arrayContaining([
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "draconicAncestry",
+                  holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                  value: "fire",
+                },
+              },
+            },
           ]),
         }),
       ]),

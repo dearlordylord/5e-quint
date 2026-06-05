@@ -76,6 +76,9 @@ export const orcRelentlessEnduranceUnitId = "orc_relentless_endurance";
 export const speciesDragonbornBreathWeaponUnitId =
   "species_dragonborn_breath_weapon";
 
+export const speciesDragonbornDamageResistanceUnitId =
+  "species_dragonborn_damage_resistance";
+
 export const rogueCunningActionUnitId = "rogue_cunning_action";
 
 export const rogueEvasionUnitId = "rogue_evasion";
