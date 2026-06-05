@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Map Heightened Spell profile to rules-kernel obligations"
     },
     {
