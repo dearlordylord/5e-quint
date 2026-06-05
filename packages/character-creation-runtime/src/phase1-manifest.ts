@@ -232,6 +232,7 @@ export const PALADIN_FIGHTING_STYLE_CHOICE_KEY =
   "paladin_fighting_style" satisfies UnitChoiceKey;
 export const RANGER_FIGHTING_STYLE_CHOICE_KEY =
   "ranger_fighting_style" satisfies UnitChoiceKey;
+export const HUNTERS_PREY_CHOICE_KEY = "hunters_prey" satisfies UnitChoiceKey;
 export const BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "bard_multiclass_skill_proficiency" satisfies UnitChoiceKey;
 export const BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY =

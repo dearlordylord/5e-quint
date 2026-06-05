@@ -704,6 +704,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
     allyId: CombatantId,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("hordeBreakerSecondTargetEligible"),
+    attackerId: CombatantId,
+    unitId: Schema.String,
+    originalTargetId: CombatantId,
+    secondTargetId: CombatantId,
+  }),
 ) as unknown as Schema.Schema<BattleTargetSpatialFact, unknown, never>;
 const BattleTargetSpatialFactsSchema = Schema.Array(
   BattleTargetSpatialFactSchema,
@@ -3437,6 +3444,12 @@ const BattleTurnSnapshotSchema = Schema.Struct({
     }),
   ),
   weaponMasteryCleaveAttackersUsedThisTurn: Schema.Array(CombatantId),
+  huntersPreyHordeBreakerUsedThisTurn: Schema.Array(
+    Schema.Struct({
+      attackerId: CombatantId,
+      unitId: Schema.String,
+    }),
+  ),
   lightWeaponAttackMade: Schema.optionalWith(
     Schema.Struct({ weaponItemId: Schema.String }),
     { exact: true },

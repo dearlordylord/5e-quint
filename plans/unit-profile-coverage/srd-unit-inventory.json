@@ -19705,7 +19705,7 @@
         "state": "installed",
         "unitId": "ranger_hunters_prey"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

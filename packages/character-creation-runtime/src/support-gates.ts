@@ -45,6 +45,7 @@ import {
   PRIMAL_ORDER_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
+  HUNTERS_PREY_CHOICE_KEY,
   RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   SRD_PALADIN_CLASS_UNIT_ID,
@@ -341,6 +342,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [RANGER_FIGHTING_STYLE_CHOICE_KEY]: [
       creationChoiceOptionId("fighting_style_feat"),
       creationChoiceOptionId("druidic_warrior"),
+    ],
+    [HUNTERS_PREY_CHOICE_KEY]: [
+      creationChoiceOptionId("colossus_slayer"),
+      creationChoiceOptionId("horde_breaker"),
     ],
     [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]: SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
     [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
@@ -679,9 +684,14 @@ export function unitRefsForSupportedClassChoice(
   if (
     source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
     source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY &&
-    source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+    source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY &&
+    source.choiceKey !== HUNTERS_PREY_CHOICE_KEY
   ) {
     return [];
+  }
+
+  if (source.choiceKey === HUNTERS_PREY_CHOICE_KEY) {
+    return [source.unitId];
   }
 
   return options.flatMap((option) =>

@@ -1151,7 +1151,7 @@ export function battleUnitSupportProfilesForUnit(input: {
 }
 
 export function battleUnitRefWithSupportProfiles(input: {
-  readonly unitRef: Pick<BattleUnitRef, "unitId">;
+  readonly unitRef: Pick<BattleUnitRef, "unitId" | "selectedOption">;
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevelInit[];
 }): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
@@ -1167,9 +1167,23 @@ export function battleUnitRefWithSupportProfiles(input: {
       : { classLevels: parseBattleUnitSupportClassLevels(input.classLevels) }),
   });
   if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
+  if (
+    input.unitRef.selectedOption?.kind === "huntersPrey" &&
+    !supportProfiles.right.some(
+      (profile) =>
+        typeof profile === "object" && profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+    )
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Battle Unit ref ${input.unitRef.unitId} selected Hunter's Prey option requires Hunter's Prey support.`,
+    );
+  }
   return Either.right({
     unitId: input.unitRef.unitId,
     supportProfiles: supportProfiles.right,
+    ...(input.unitRef.selectedOption === undefined
+      ? {}
+      : { selectedOption: input.unitRef.selectedOption }),
   });
 }
 

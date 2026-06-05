@@ -30,6 +30,11 @@ import {
   WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
@@ -55,6 +60,11 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     kind: "ordinaryDamage",
   };
   let weaponMasteryCleaveDamageDispositionFilled = false;
+  let huntersPreyHordeBreakerDamageDisposition: BattleAttackDamageDisposition =
+    {
+      kind: "ordinaryDamage",
+    };
+  let huntersPreyHordeBreakerDamageDispositionFilled = false;
   let damageRoll: BattleRolledDiceFill | undefined;
   let mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
   let spellDamageReductionRoll: BattleRolledDiceFill | undefined;
@@ -101,6 +111,16 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryCleaveRemarkableAthleteCriticalHitMovement:
     | Extract<BattleFill, { readonly kind: "movement" }>
     | undefined;
+  let huntersPreyHordeBreakerDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let huntersPreyHordeBreakerTarget:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  let huntersPreyHordeBreakerAttackRoll:
+    | Extract<BattleFill, { readonly kind: "attackRoll" }>
+    | undefined;
+  let huntersPreyHordeBreakerDamageRoll: BattleRolledDiceFill | undefined;
   for (const fill of fills) {
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
@@ -166,6 +186,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "unitFeatureDecision" &&
+      fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID
+    ) {
+      if (huntersPreyHordeBreakerDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Hunter's Prey Horde Breaker decision was filled twice.",
+        };
+      }
+      huntersPreyHordeBreakerDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID
     ) {
       if (weaponMasteryCleaveDecision !== undefined) {
@@ -175,6 +209,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       weaponMasteryCleaveDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId === HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID
+    ) {
+      if (huntersPreyHordeBreakerTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Hunter's Prey Horde Breaker target was filled twice.",
+        };
+      }
+      huntersPreyHordeBreakerTarget = fill;
       continue;
     }
 
@@ -189,6 +237,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       openHandTechniqueDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "attackRoll" &&
+      fill.holeId === HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID
+    ) {
+      if (huntersPreyHordeBreakerAttackRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Hunter's Prey Horde Breaker attack roll was filled twice.",
+        };
+      }
+      huntersPreyHordeBreakerAttackRoll = fill;
       continue;
     }
 
@@ -420,6 +482,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID
+    ) {
+      if (huntersPreyHordeBreakerDamageRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Hunter's Prey Horde Breaker damage was filled twice.",
+        };
+      }
+      huntersPreyHordeBreakerDamageRoll = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice") {
       if (damageRoll !== undefined) {
         return { tag: "invalid", message: "Attack damage was filled twice." };
@@ -430,7 +506,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (fill.kind === "concentrationSavingThrow") {
       const concentrationSavingThrowHoleIds =
-        weaponMasteryCleaveDecision === undefined
+        weaponMasteryCleaveDecision === undefined &&
+        huntersPreyHordeBreakerDecision === undefined
           ? concentrationSavingThrowHoleIdsBeforeCleave
           : concentrationSavingThrowHoleIdsAfterCleave;
       const concentrationSavingThrowHoleId = String(fill.holeId);
@@ -470,8 +547,23 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         continue;
       }
       if (
+        fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID
+      ) {
+        if (huntersPreyHordeBreakerDamageDispositionFilled) {
+          return {
+            tag: "invalid",
+            message:
+              "Hunter's Prey Horde Breaker damage disposition was filled twice.",
+          };
+        }
+        huntersPreyHordeBreakerDamageDispositionFilled = true;
+        huntersPreyHordeBreakerDamageDisposition = fill.value;
+        continue;
+      }
+      if (
         fill.holeId !== ATTACK_DAMAGE_DISPOSITION_HOLE_ID &&
-        fill.holeId !== WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID
+        fill.holeId !== WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID &&
+        fill.holeId !== HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID
       ) {
         return {
           tag: "invalid",
@@ -515,6 +607,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     remarkableAthleteCriticalHitMovement,
     weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision,
     weaponMasteryCleaveRemarkableAthleteCriticalHitMovement,
+    huntersPreyHordeBreakerDecision,
+    huntersPreyHordeBreakerTarget,
+    huntersPreyHordeBreakerAttackRoll,
+    huntersPreyHordeBreakerDamageRoll,
+    huntersPreyHordeBreakerDamageDisposition,
+    huntersPreyHordeBreakerDamageDispositionFilled,
   };
 }
 

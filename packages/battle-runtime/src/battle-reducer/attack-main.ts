@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -32,6 +32,12 @@ import {
   weaponMasteryCleaveExtraAttack,
   weaponMasteryCleaveTargetHole,
   weaponMasteryCleaveTargetIsLegal,
+  huntersPreyHordeBreakerAttackRollHole,
+  huntersPreyHordeBreakerDamageHole,
+  huntersPreyHordeBreakerDecisionHole,
+  huntersPreyHordeBreakerTargetHole,
+  huntersPreyHordeBreakerTargetIsLegal,
+  recordHuntersPreyHordeBreakerUsed,
   applyWeaponMasteryToppleSavingThrow,
   applyWeaponMasterySapOnHit,
   consumeHelpAttackForAttackRoll,
@@ -44,7 +50,6 @@ import {
 import { activeEffectArmorClass } from "./creature-state.ts";
 
 import {
-  applyAttackDamage,
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
@@ -99,6 +104,9 @@ import {
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+  HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
@@ -109,6 +117,7 @@ import {
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
+import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -235,6 +244,16 @@ export function resolveSelectedAttackProcedure(
       input.state,
       "invalidFill",
       "Attack target is outside the selected attack's supported target constraint.",
+    );
+  }
+  if (
+    attack.kind === "weapon" &&
+    huntersPreyMissingSelectedOption(input.state, attackerId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Hunter's Prey requires a retained selected option before resolving weapon attacks.",
     );
   }
   if (
@@ -927,7 +946,7 @@ export function resolveSelectedAttackProcedure(
       {
         trigger: "afterDamage",
         ...primaryAfterDamageEvent,
-        continuation: weaponMasteryCleaveAfterPrimaryDamageContinuation({
+        continuation: attackFollowUpAfterPrimaryDamageContinuation({
           state: spent.state,
           subject: input.subject,
           firstTargetId: target.combatantId,
@@ -941,12 +960,12 @@ export function resolveSelectedAttackProcedure(
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
     }
-    const afterPrimaryDamage = resolveWeaponMasteryCleaveContinuation({
+    const afterPrimaryDamage = resolveAttackFollowUpContinuations({
       state: spent.state,
       subject: input.subject,
       firstTargetId: target.combatantId,
       attack,
-      fills: cleaveFillsAfterPrimaryDamage(input.fills),
+      fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
     return withOpenHandTechniqueShovePushes(
@@ -1299,7 +1318,7 @@ export function resolveSelectedAttackProcedure(
       {
         trigger: "afterDamage",
         ...primaryAfterDamageEvent,
-        continuation: weaponMasteryCleaveAfterPrimaryDamageContinuation({
+        continuation: attackFollowUpAfterPrimaryDamageContinuation({
           state: spent.state,
           subject: input.subject,
           firstTargetId: target.combatantId,
@@ -1314,36 +1333,31 @@ export function resolveSelectedAttackProcedure(
       return primaryAfterDamageReactionWindow;
     }
     return withOpenHandTechniqueShovePushes(
-      resolveWeaponMasteryCleaveContinuation({
+      resolveAttackFollowUpContinuations({
         state: spent.state,
         subject: input.subject,
         firstTargetId: target.combatantId,
         attack,
-        fills: cleaveFillsAfterPrimaryDamage(input.fills),
+        fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
         suppressedReactionTrigger: input.suppressedReactionTrigger,
       }),
       openHandTechniqueApplied.shovePushes,
     );
   }
 
+  const spent = spendAttackProcedure(attackRolledState, attackerId, attack);
+  if (spent.tag === "invalid") {
+    return spent;
+  }
   return withOpenHandTechniqueShovePushes(
-    spendAttackProcedure(
-      hit
-        ? applyAttackDamage(
-            hitAppliedState,
-            attackerId,
-            target.combatantId,
-            attack,
-            fillSet,
-            critical,
-            selectedDamageRiders,
-            spellWeaponDamageRiders,
-            spellMarkedDamageRiders,
-          )
-        : attackRolledState,
-      attackerId,
+    resolveAttackFollowUpContinuations({
+      state: spent.state,
+      subject: input.subject,
+      firstTargetId: target.combatantId,
       attack,
-    ),
+      fills: input.fills,
+      suppressedReactionTrigger: input.suppressedReactionTrigger,
+    }),
     openHandTechniqueApplied.shovePushes,
   );
 }
@@ -1386,8 +1400,46 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !==
       undefined ||
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
-    fillSet.remarkableAthleteCriticalHitMovement !== undefined
+    fillSet.remarkableAthleteCriticalHitMovement !== undefined ||
+    fillSet.huntersPreyHordeBreakerDecision !== undefined ||
+    fillSet.huntersPreyHordeBreakerTarget !== undefined ||
+    fillSet.huntersPreyHordeBreakerAttackRoll !== undefined ||
+    fillSet.huntersPreyHordeBreakerDamageRoll !== undefined ||
+    fillSet.huntersPreyHordeBreakerDamageDispositionFilled
   );
+}
+
+function resolveAttackFollowUpContinuations(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+}): BattleResolutionResult {
+  const cleaveResult = resolveWeaponMasteryCleaveContinuation(input);
+  if (cleaveResult.tag !== "resolved") {
+    return cleaveResult;
+  }
+  return resolveHuntersPreyHordeBreakerContinuation({
+    ...input,
+    state: cleaveResult.state,
+  });
+}
+
+function attackFollowUpAfterPrimaryDamageContinuation(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}): BattleInterruptedProcedure {
+  const cleaveContinuation =
+    weaponMasteryCleaveAfterPrimaryDamageContinuation(input);
+  return cleaveContinuation.kind === "resolved"
+    ? huntersPreyHordeBreakerAfterPrimaryDamageContinuation(input)
+    : cleaveContinuation;
 }
 
 export function resolveWeaponMasteryCleaveContinuation(input: {
@@ -1441,7 +1493,7 @@ function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
         subject: input.subject,
         firstTargetId: input.firstTargetId,
         attack: input.attack,
-        fills: cleaveFillsAfterPrimaryDamage(input.fills),
+        fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
       };
 }
 
@@ -1946,7 +1998,7 @@ function cleaveFillsThroughAttackRoll(
   );
 }
 
-function cleaveFillsAfterPrimaryDamage(
+function attackFollowUpFillsAfterPrimaryDamage(
   fills: readonly BattleFill[],
 ): readonly BattleFill[] {
   const primaryConcentrationSavingThrows =
@@ -1969,7 +2021,8 @@ function primaryAttackConcentrationSavingThrows(
   const cleaveStartIndex = fills.findIndex(
     (fill) =>
       fill.kind === "unitFeatureDecision" &&
-      fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+      (fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID ||
+        fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID),
   );
   const primaryFills =
     cleaveStartIndex === -1 ? fills : fills.slice(0, cleaveStartIndex);
@@ -1991,5 +2044,533 @@ function cleaveAttackFillIsAbsent(
     fillSet.weaponMasteryCleaveAttackRoll === undefined &&
     fillSet.weaponMasteryCleaveDamageRoll === undefined &&
     !fillSet.weaponMasteryCleaveDamageDispositionFilled
+  );
+}
+
+export function resolveHuntersPreyHordeBreakerContinuation(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+}): BattleResolutionResult {
+  const fillSet = attackFillSet(input.fills);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  const resolved = resolveHuntersPreyHordeBreakerAfterPrimaryDamage({
+    state: input.state,
+    subject: input.subject,
+    firstTargetId: input.firstTargetId,
+    attack: input.attack,
+    fills: input.fills,
+    fillSet,
+    suppressedReactionTrigger: input.suppressedReactionTrigger,
+  });
+  return resolved.tag === "ok"
+    ? {
+        tag: "resolved",
+        state: resolved.state,
+        snapshot: snapshotBattle(resolved.state),
+      }
+    : resolved.result;
+}
+
+function huntersPreyHordeBreakerAfterPrimaryDamageContinuation(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}): BattleInterruptedProcedure {
+  const decisionHole = huntersPreyHordeBreakerDecisionHole(
+    input.state,
+    input.subject.actorId,
+    input.firstTargetId,
+    input.attack,
+  );
+  if (decisionHole === null && hordeBreakerFillIsAbsent(input.fillSet)) {
+    return { kind: "resolved", subject: input.subject };
+  }
+  return {
+    kind: "huntersPreyHordeBreaker",
+    subject: input.subject,
+    firstTargetId: input.firstTargetId,
+    attack: input.attack,
+    fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
+  };
+}
+
+function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+}):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult } {
+  const decisionHole = huntersPreyHordeBreakerDecisionHole(
+    input.state,
+    input.subject.actorId,
+    input.firstTargetId,
+    input.attack,
+  );
+  if (decisionHole === null) {
+    return hordeBreakerFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Hunter's Prey Horde Breaker is only valid for an eligible selected weapon attack.",
+          ),
+        };
+  }
+  const unitId = decisionHole.unitFeature.unitId;
+  if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [decisionHole]),
+    };
+  }
+  if (
+    input.fillSet.huntersPreyHordeBreakerDecision.holeId !==
+    decisionHole.holeId
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker decision uses the wrong hole.",
+      ),
+    };
+  }
+  if (input.fillSet.huntersPreyHordeBreakerDecision.value === "decline") {
+    return hordeBreakerAttackFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Hunter's Prey Horde Breaker attack fills require using Horde Breaker.",
+          ),
+        };
+  }
+  if (input.attack.kind !== "weapon") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker requires a weapon attack.",
+      ),
+    };
+  }
+  if (input.fillSet.huntersPreyHordeBreakerTarget === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        huntersPreyHordeBreakerTargetHole(
+          input.state,
+          input.subject.actorId,
+          input.firstTargetId,
+        ),
+      ]),
+    };
+  }
+  const secondTargetId = input.fillSet.huntersPreyHordeBreakerTarget.value;
+  const targetFacts =
+    input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [];
+  if (
+    !huntersPreyHordeBreakerTargetIsLegal({
+      state: input.state,
+      attackerId: input.subject.actorId,
+      unitId,
+      firstTargetId: input.firstTargetId,
+      secondTargetId,
+      attack: input.attack,
+      targetSpatialFacts: targetFacts,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
+      ),
+    };
+  }
+  if (input.fillSet.huntersPreyHordeBreakerAttackRoll === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        huntersPreyHordeBreakerAttackRollHole(
+          input.state,
+          input.subject.actorId,
+          secondTargetId,
+          input.attack,
+          targetFacts,
+        ),
+      ]),
+    };
+  }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    secondTargetId,
+    input.attack,
+    targetFacts,
+  );
+  if (
+    !attackRollResultIsValid(
+      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    )
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker attack roll must be a valid attack roll.",
+      ),
+    };
+  }
+  if (
+    !attackRollModeMatches(
+      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+      requiredRollMode,
+    )
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker attack roll mode does not match current Advantage and Disadvantage sources.",
+      ),
+    };
+  }
+  const secondTarget = input.state.combatants.get(secondTargetId);
+  if (secondTarget === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker second target is no longer in this battle.",
+      ),
+    };
+  }
+  const criticalThreshold = criticalThresholdForAttack(
+    input.state.combatants.get(input.subject.actorId),
+    input.attack,
+  );
+  const hit = attackRollHitsWithCriticalThreshold(
+    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    currentArmorClass(activeEffectArmorClass(secondTarget)),
+    criticalThreshold,
+  );
+  const rolledState = consumeHelpAttackForAttackRoll(
+    recordAttackRollOngoingFeatures(
+      revealHidden(input.state, input.subject.actorId),
+      input.subject.actorId,
+      secondTargetId,
+      null,
+    ),
+    input.subject.actorId,
+    secondTargetId,
+  );
+  const critical = attackRollIsCriticalHit(
+    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    criticalThreshold,
+  );
+  const hordeBreakerSpellWeaponDamageRiders = hit
+    ? activeSpellWeaponDamageRiders(
+        rolledState.combatants.get(input.subject.actorId),
+        input.attack,
+      )
+    : [];
+  const hordeBreakerSpellMarkedDamageRiders = hit
+    ? activeMarkedDamageRiders(
+        rolledState.combatants.get(input.subject.actorId),
+        secondTargetId,
+      )
+    : [];
+  const hordeBreakerEligibleDamageRiders = hit
+    ? eligibleAttackDamageRiders(
+        rolledState,
+        input.subject.actorId,
+        secondTargetId,
+        input.attack,
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        targetFacts,
+      )
+    : [];
+  const hordeBreakerOngoingDamageModifier = ongoingFeatureDamageModifier(
+    rolledState.combatants.get(input.subject.actorId),
+    input.attack,
+  );
+  if (hit && input.suppressedReactionTrigger !== "attackHit") {
+    const attackHitReactionWindow = maybeOpenReactionWindow(
+      rolledState,
+      {
+        trigger: "attackHit",
+        attackerId: input.subject.actorId,
+        targetId: secondTargetId,
+        attackRoll: input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        attackKind: attackKindForDeflectRedirect(input.attack),
+        attackHitTriggerKind: attackHitTriggerKind(input.attack),
+        damageTypes: attackPotentialDamageTypes(
+          input.attack,
+          critical,
+          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          hordeBreakerEligibleDamageRiders,
+          hordeBreakerSpellWeaponDamageRiders,
+          hordeBreakerSpellMarkedDamageRiders,
+        ),
+        continuation: {
+          kind: "huntersPreyHordeBreaker",
+          subject: input.subject,
+          firstTargetId: input.firstTargetId,
+          attack: input.attack,
+          fills: hordeBreakerFillsThroughAttackRoll(input.fills, input.fillSet),
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (attackHitReactionWindow !== null) {
+      return { tag: "result", result: attackHitReactionWindow };
+    }
+  }
+  if (!hit) {
+    return input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined
+      ? {
+          tag: "ok",
+          state: recordHuntersPreyHordeBreakerUsed(
+            rolledState,
+            input.subject.actorId,
+            unitId,
+          ),
+        }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Hunter's Prey Horde Breaker damage can only be filled after a hit.",
+          ),
+        };
+  }
+  if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(rolledState, input.subject, [
+        huntersPreyHordeBreakerDamageHole(
+          input.attack,
+          critical,
+          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          hordeBreakerEligibleDamageRiders,
+          hordeBreakerSpellWeaponDamageRiders,
+          hordeBreakerSpellMarkedDamageRiders,
+          hordeBreakerOngoingDamageModifier,
+        ),
+      ]),
+    };
+  }
+  const hordeBreakerSelectedDamageRiders = selectedAttackDamageRiders(
+    hordeBreakerEligibleDamageRiders,
+    input.fillSet.huntersPreyHordeBreakerDamageRoll
+      .selectedAttackDamageRiderUnitIds,
+  );
+  if (hordeBreakerSelectedDamageRiders === null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Selected attack damage rider is not eligible for this attack.",
+      ),
+    };
+  }
+  const damageValidation = validateRolledDiceForWeaponAttack(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
+    input.attack,
+    critical,
+    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    hordeBreakerSelectedDamageRiders,
+    hordeBreakerSpellWeaponDamageRiders,
+    hordeBreakerSpellMarkedDamageRiders,
+  );
+  if (damageValidation !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", damageValidation),
+    };
+  }
+  const damageByType = attackDamageByTypeEntries(
+    rolledState.combatants.get(input.subject.actorId),
+    input.attack,
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    critical,
+    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    hordeBreakerSelectedDamageRiders,
+    hordeBreakerSpellWeaponDamageRiders,
+    hordeBreakerSpellMarkedDamageRiders,
+  );
+  const damageEvent = {
+    kind: "rolledDamage" as const,
+    damageRollByType: damageAmountByTypeMapEntries(
+      damageAmountByTypeEntriesToMap(damageByType),
+    ),
+  } satisfies BattleAttackDamageEvent;
+  const damageAmount = attackDamageEventAmountForTarget(
+    secondTarget,
+    damageEvent,
+  );
+  const damageDispositionHole = huntersPreyHordeBreakerDamageDispositionHole({
+    attack: input.attack,
+    attackerId: input.subject.actorId,
+    target: secondTarget,
+    damageAmount,
+  });
+  const damageDispositionValidation = damageDispositionFillValidation({
+    hole: damageDispositionHole,
+    filled: input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
+    value: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+  });
+  if (damageDispositionValidation !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      ),
+    };
+  }
+  if (
+    damageDispositionHole !== null &&
+    !input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(rolledState, input.subject, [
+        damageDispositionHole,
+      ]),
+    };
+  }
+  const usedState = recordHuntersPreyHordeBreakerUsed(
+    rolledState,
+    input.subject.actorId,
+    unitId,
+  );
+  const prefixFills = [
+    input.fillSet.huntersPreyHordeBreakerTarget,
+    input.fillSet.huntersPreyHordeBreakerAttackRoll,
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+  ] as const satisfies readonly BattleAttackDamagePrefixFill[];
+  const continuation = {
+    kind: "attackDamage" as const,
+    subject: input.subject,
+    attackerId: input.subject.actorId,
+    targetId: secondTargetId,
+    damageEvent,
+    fills: prefixFills,
+    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+    deathFailuresAtZeroHp: critical ? (2 as const) : (1 as const),
+    damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+    attackDamageRiders: hordeBreakerSelectedDamageRiders,
+  };
+  const attackDamageReactionWindow = maybeOpenReactionWindow(
+    usedState,
+    {
+      trigger: "attackDamage",
+      continuation,
+    },
+    input.suppressedReactionTrigger,
+  );
+  if (attackDamageReactionWindow !== null) {
+    return { tag: "result", result: attackDamageReactionWindow };
+  }
+  return {
+    tag: "result",
+    result: resumeInterruptedProcedure(
+      usedState,
+      continuation,
+      input.suppressedReactionTrigger ?? "attackDamage",
+    ),
+  };
+}
+
+function huntersPreyHordeBreakerDamageDispositionHole(
+  input: Parameters<typeof attackDamageDispositionHole>[0],
+): ReturnType<typeof attackDamageDispositionHole> {
+  const hole = attackDamageDispositionHole(input);
+  return hole === null
+    ? null
+    : {
+        ...hole,
+        holeId: HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
+        holeInstanceKey:
+          HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+      };
+}
+
+function hordeBreakerFillsThroughAttackRoll(
+  fills: readonly BattleFill[],
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): readonly BattleFill[] {
+  return fills.filter(
+    (fill) =>
+      fill !== fillSet.huntersPreyHordeBreakerDamageRoll &&
+      fill.kind !== "attackDamageDisposition",
+  );
+}
+
+function hordeBreakerFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.huntersPreyHordeBreakerDecision === undefined &&
+    hordeBreakerAttackFillIsAbsent(fillSet)
+  );
+}
+
+function hordeBreakerAttackFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.huntersPreyHordeBreakerTarget === undefined &&
+    fillSet.huntersPreyHordeBreakerAttackRoll === undefined &&
+    fillSet.huntersPreyHordeBreakerDamageRoll === undefined &&
+    !fillSet.huntersPreyHordeBreakerDamageDispositionFilled
+  );
+}
+
+function huntersPreyMissingSelectedOption(
+  state: BattleState,
+  attackerId: CombatantId,
+): boolean {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker?.origin.kind !== "character") {
+    return false;
+  }
+  return attacker.origin.characterUnitRefs.some(
+    (unitRef) =>
+      unitRef.selectedOption === undefined &&
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+      ),
   );
 }

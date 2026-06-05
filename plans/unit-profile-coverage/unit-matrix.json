@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 153,
-      "numerator": 149,
+      "denominator": 154,
+      "numerator": 150,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 153,
-      "percent": "67.4%"
+      "numerator": 154,
+      "percent": "67.8%"
     }
   },
   "metricSemantics": [
@@ -4253,16 +4253,48 @@
     {
       "id": "unit-feature.hunters-prey",
       "profileKind": "battle-admission",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-hunters-prey.qnt",
+        "packages/battle-runtime/battle-runtime-hunters-prey.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-init.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-battle-runtime/src/battle-support-profiles.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization retains the selected Hunter's Prey option on the existing selected Unit ref and the character-battle handoff preserves that typed option in BattleUnitRef. Battle runtime rejects missing retained options, offers selected Colossus Slayer as an optional once-per-turn same-type weapon damage rider only on weapon hits against targets below Hit Point maximum, and executes selected Horde Breaker as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet, within-weapon-range, and not-attacked-this-turn predicate facts while exposing non-enemy target choices and reusing existing weapon-attack damage rider owners such as attack damage riders and marked-target damage.",
       "taskRefs": [
-        "L13UG-A18"
+        "L13UG-A18",
+        "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
       ],
-      "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
-      "verificationOwners": []
+      "title": "Unit feature executes Hunter's Prey Colossus Slayer and Horde Breaker selected options",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-hunters-prey-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-prey.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/hunters-prey-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.rogue-steady-aim",
@@ -13626,6 +13658,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Focused Hunter's Prey QNT proof and selected-identity MBT witness model retained choice, optional Colossus Slayer missing-Hit-Point weapon-hit gating and once-per-turn damage, skipped Colossus use, Horde Breaker same-weapon extra attack gating after a primary hit or miss with different nearby target predicates, missing selected-option rejection, same-target rejection, invalid target-predicate rejection, and repeated-use exclusion.",
+      "profileIds": [
+        "unit-feature.hunters-prey"
+      ],
+      "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation, character-battle, battle-runtime reducer tests and selected-identity MBT cover production retained Hunter's Prey selected-option projection into BattleUnitRef, optional Colossus Slayer same-type weapon damage on a wounded hit with skip-then-use and once-per-turn usage recording, missing selected-option rejection, and Horde Breaker same-weapon extra attack after a primary hit or miss against a caller-eligible different creature target, including non-enemy target choice availability, same-target, missing-predicate, repeated-use rejection, and reuse of existing weapon-attack damage rider owners including attack damage riders and marked-target damage without authored-identity dispatch or duplicate target/weapon state.",
+      "profileIds": [
+        "unit-feature.hunters-prey"
+      ],
+      "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Focused Remarkable Athlete QNT witness covers Initiative Advantage, Strength (Athletics) Ability Check Advantage, and adjacent non-Strength-Athletics/non-selected normal roll modes.",
       "profileIds": [
         "unit-feature.remarkable-athlete"
@@ -13838,12 +13886,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 23,
+        "profileSubsetSupportedUnits": 22,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 69,
+        "selectedIdentityReplayDenominator": 70,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 69,
-        "supportedProfileUnits": 53,
+        "selectedIdentityReplayWitnessUnits": 70,
+        "supportedProfileUnits": 54,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -20542,39 +20590,21 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
-            "mechanic": "Execute the retained Hunter's Prey choice in attack resolution, including Colossus Slayer once-per-turn missing-HP damage and Horde Breaker once-per-turn same-weapon extra attack against a different nearby creature."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
-            "mechanic": "Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state.",
-            "owner": "battle-runtime selected-option attack reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
-            "title": "Ranger Hunters Prey Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime selected class-feature option, attack damage-rider, target-spatial-fact, and extra-attack owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.hunters-prey"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the selected-option and attack owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Hunter grants Hunter's Prey as a level-3 subclass feature Unit",
-          "Battle Unit support admits the Surface hunters_prey choose-one mechanics",
-          "The projected support profile carries Colossus Slayer and Horde Breaker option facts, including the target missing-Hit-Point and different-creature-within-5-feet predicates, without authored-identity dispatch"
+          "Battle Unit support admits the Surface hunters_prey choose-one mechanics and projects typed Colossus Slayer and Horde Breaker option facts without authored-identity dispatch",
+          "Character finalization records the selected Hunter's Prey option on the existing selected Unit ref, and the character-battle handoff preserves that typed option in BattleUnitRef instead of storing a parallel weapon or target model",
+          "Battle runtime rejects weapon attacks for Hunter's Prey support refs that lack a retained selected option",
+          "Selected Colossus Slayer is offered as an optional once-per-turn same-type weapon damage rider only when a weapon hit target is below its Hit Point maximum, so an eligible hit can be skipped and the use saved for a later hit on the same turn",
+          "Selected Horde Breaker executes as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet-of-original-target, within-weapon-range, and not-attacked-this-turn predicate facts, including non-enemy target choice availability and reuse of existing weapon-attack damage rider owners such as attack damage riders and marked-target damage"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20582,6 +20612,21 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/hunters-prey-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -20590,16 +20635,48 @@
         {
           "id": "unit-feature.hunters-prey",
           "profileKind": "battle-admission",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-hunters-prey.qnt",
+            "packages/battle-runtime/battle-runtime-hunters-prey.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-init.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-battle-runtime/src/battle-support-profiles.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization retains the selected Hunter's Prey option on the existing selected Unit ref and the character-battle handoff preserves that typed option in BattleUnitRef. Battle runtime rejects missing retained options, offers selected Colossus Slayer as an optional once-per-turn same-type weapon damage rider only on weapon hits against targets below Hit Point maximum, and executes selected Horde Breaker as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet, within-weapon-range, and not-attacked-this-turn predicate facts while exposing non-enemy target choices and reusing existing weapon-attack damage rider owners such as attack damage riders and marked-target damage.",
           "taskRefs": [
-            "L13UG-A18"
+            "L13UG-A18",
+            "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
           ],
-          "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
-          "verificationOwners": []
+          "title": "Unit feature executes Hunter's Prey Colossus Slayer and Horde Breaker selected options",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hunters-prey-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-prey.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/hunters-prey-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",

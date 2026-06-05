@@ -123,6 +123,7 @@ export const UNIT_CHOICE_KEYS = [
   "primal_order",
   "paladin_fighting_style",
   "ranger_fighting_style",
+  "hunters_prey",
   "bard_multiclass_skill_proficiency",
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",
@@ -755,6 +756,12 @@ export function characterEquipmentItemSourceFromId(
 
 export type UnitRef = {
   readonly unitId: UnitRecord["id"];
+  readonly selectedOption?: UnitRefSelectedOption;
+};
+
+export type UnitRefSelectedOption = {
+  readonly kind: "huntersPrey";
+  readonly optionId: "colossusSlayer" | "hordeBreaker";
 };
 
 export type AbilityScoreGenerationSelection = {
@@ -1046,6 +1053,7 @@ export type CharacterBuildFeature =
   | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedClassChoice";
       readonly unitId: UnitRecord["id"];
+      readonly selectedOption?: UnitRefSelectedOption;
     })
   | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedEldritchInvocation";

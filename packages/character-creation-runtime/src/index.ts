@@ -152,6 +152,7 @@ export {
   type UnitChoiceSourceUnitIdIssue,
   type UnitCatalog,
   type UnitRef,
+  type UnitRefSelectedOption,
 } from "./types.ts";
 export {
   languageFromSurfaceLanguageId,
@@ -328,6 +329,7 @@ export {
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
+  HUNTERS_PREY_CHOICE_KEY,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,

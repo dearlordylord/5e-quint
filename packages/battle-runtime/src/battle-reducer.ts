@@ -464,6 +464,7 @@ export {
 } from "./battle-reducer/attack-fill-set.ts";
 export {
   resolveAttack,
+  resolveHuntersPreyHordeBreakerContinuation,
   resolveWeaponMasteryCleaveContinuation,
 } from "./battle-reducer/attack-main.ts";
 export {
@@ -856,6 +857,13 @@ export type BattleInterruptedProcedure =
     }
   | {
       readonly kind: "weaponMasteryCleave";
+      readonly subject: BattleAttackHostSubject;
+      readonly firstTargetId: CombatantId;
+      readonly attack: SupportedAttackActionOption;
+      readonly fills: readonly BattleFill[];
+    }
+  | {
+      readonly kind: "huntersPreyHordeBreaker";
       readonly subject: BattleAttackHostSubject;
       readonly firstTargetId: CombatantId;
       readonly attack: SupportedAttackActionOption;
@@ -1662,6 +1670,13 @@ export type BattleTargetSpatialFact =
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly allyId: CombatantId;
+    }
+  | {
+      readonly kind: "hordeBreakerSecondTargetEligible";
+      readonly attackerId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly originalTargetId: CombatantId;
+      readonly secondTargetId: CombatantId;
     };
 export type BattleSpellCastReactionFact = Extract<
   BattleTargetSpatialFact,
@@ -3587,6 +3602,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
+  readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
@@ -5987,6 +6003,7 @@ export type BattleTurnSnapshot = {
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
+  readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };

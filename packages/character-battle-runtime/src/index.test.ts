@@ -5,10 +5,12 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 import type {
   BattleFill,
   BattleCreatureState,
@@ -480,6 +482,29 @@ describe("Character Sheet battle handoff", () => {
           profile.kind === "druidWildShapeKnownForm",
       ),
     ).toBe(false);
+  });
+
+  test("projects retained Hunter's Prey selected option into battle Unit refs", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        hunterRangerHordeBreakerBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "ranger", level: 3 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "ranger_hunters_prey",
+          selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+          supportProfiles: expect.arrayContaining([
+            expect.objectContaining({ kind: "huntersPrey" }),
+          ]),
+        }),
+      ]),
+    );
   });
 
   test("blocks active Wild Shape handoff and persists spent use after dismissal", () => {
@@ -3334,6 +3359,38 @@ function favoredEnemyRangerBuild(): CharacterBuild {
         },
       },
     },
+  };
+}
+
+function hunterRangerHordeBreakerBuild(): CharacterBuild {
+  return {
+    ...favoredEnemyRangerBuild(),
+    progression: {
+      startingClass: classUnitId("class_ranger"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_ranger"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+        {
+          classUnitId: classUnitId("class_ranger"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "class_ranger",
+        unitId: "subclass_ranger_hunter",
+      },
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "ranger_hunters_prey",
+        unitId: "ranger_hunters_prey",
+        selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+      },
+    ],
   };
 }
 

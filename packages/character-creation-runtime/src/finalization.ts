@@ -5,7 +5,7 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -97,6 +97,7 @@ import {
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+  HUNTERS_PREY_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
 import {
@@ -172,6 +173,7 @@ import {
   type UnitChoiceSource,
   type UnitChoiceKey,
   type UnitRef,
+  type UnitRefSelectedOption,
 } from "./types.ts";
 
 type UnitChoiceCreationHole = ChoiceCreationHole & {
@@ -2049,29 +2051,58 @@ export function characterBuildUnitRefs(
     unitLibrary === undefined
       ? []
       : characterBuildSelectedSubclassFeatureUnitIds(build, unitLibrary);
-  return unitRefs(
-    ...progressionClassUnitIds(build.progression),
-    build.background,
-    build.species,
-    ...derivedFeatureUnitIds,
-    ...selectedSubclassFeatureUnitIds,
-    ...build.features.flatMap((feature) =>
-      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
+  return uniqueUnitRefs([
+    ...unitRefs(
+      ...progressionClassUnitIds(build.progression),
+      build.background,
+      build.species,
+      ...derivedFeatureUnitIds,
+      ...selectedSubclassFeatureUnitIds,
     ),
-    ...build.equipment.owned.map((item) => item.unitId),
-    ...(build.spellcasting?.sources.flatMap((source) => [
-      source.sourceUnitId,
-      ...source.cantrips,
-      ...source.spellbook,
-      ...source.preparedSpells,
-      ...(source.bookOfShadows === undefined
-        ? []
-        : [
-            ...source.bookOfShadows.cantrips,
-            ...source.bookOfShadows.ritualSpells,
-          ]),
-    ]) ?? []),
-  );
+    ...build.features.flatMap((feature) =>
+      feature.kind === "selectedClassChoice"
+        ? [unitRefForSelectedClassChoice(feature)]
+        : [],
+    ),
+    ...unitRefs(
+      ...build.equipment.owned.map((item) => item.unitId),
+      ...(build.spellcasting?.sources.flatMap((source) => [
+        source.sourceUnitId,
+        ...source.cantrips,
+        ...source.spellbook,
+        ...source.preparedSpells,
+        ...(source.bookOfShadows === undefined
+          ? []
+          : [
+              ...source.bookOfShadows.cantrips,
+              ...source.bookOfShadows.ritualSpells,
+            ]),
+      ]) ?? []),
+    ),
+  ]);
+}
+
+function unitRefForSelectedClassChoice(
+  feature: Extract<CharacterBuildFeature, { readonly kind: "selectedClassChoice" }>,
+): UnitRef {
+  return {
+    unitId: feature.unitId,
+    ...(feature.selectedOption === undefined
+      ? {}
+      : { selectedOption: feature.selectedOption }),
+  };
+}
+
+function huntersPreySelectedOption(
+  optionId: CreationChoiceOptionId | undefined,
+): UnitRefSelectedOption | undefined {
+  if (optionId === "colossus_slayer") {
+    return { kind: "huntersPrey", optionId: "colossusSlayer" };
+  }
+  if (optionId === "horde_breaker") {
+    return { kind: "huntersPrey", optionId: "hordeBreaker" };
+  }
+  return undefined;
 }
 
 function characterBuildDerivedFeatureUnitIds(
@@ -2171,6 +2202,10 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       });
     }
 
+    const selectedOption =
+      selection.source.choiceKey === HUNTERS_PREY_CHOICE_KEY
+        ? huntersPreySelectedOption(selection.options[0]?.optionId)
+        : undefined;
     return unitRefsForSupportedClassChoice(
       selection.source,
       selection.options,
@@ -2178,6 +2213,7 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       kind: "selectedClassChoice" as const,
       unitId,
       selectedFromUnitId: selection.source.unitId,
+      ...(selectedOption === undefined ? {} : { selectedOption }),
     }));
   });
 }
@@ -3288,6 +3324,20 @@ export function unitRefs(
   ...unitIds: readonly UnitRecord["id"][]
 ): readonly UnitRef[] {
   return uniqueValues(unitIds).map((unitId) => ({ unitId }));
+}
+
+function uniqueUnitRefs(refs: readonly UnitRef[]): readonly UnitRef[] {
+  const byUnitId = new Map<UnitRecord["id"], UnitRef>();
+  for (const ref of refs) {
+    const existing = byUnitId.get(ref.unitId);
+    byUnitId.set(
+      ref.unitId,
+      existing?.selectedOption !== undefined && ref.selectedOption === undefined
+        ? existing
+        : ref,
+    );
+  }
+  return [...byUnitId.values()];
 }
 
 export function uniqueValues<T>(values: readonly T[]): readonly T[] {

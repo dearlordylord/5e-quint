@@ -2446,40 +2446,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME: Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state. Owner: battle-runtime selected-option attack reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the selected-option and attack owners consume this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Ranger Hunter's Prey",
-          "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 250,
-            "lineStart": 243,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "ranger_hunters_prey"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
@@ -3175,7 +3141,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 130,
+      "count": 131,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3268,6 +3234,7 @@
         "protection_from_evil_and_good",
         "protection_from_poison",
         "ranger_deft_explorer",
+        "ranger_hunters_prey",
         "ranger_weapon_mastery",
         "ray_of_enfeeblement",
         "ray_of_frost",
@@ -3372,7 +3339,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3382,7 +3349,6 @@
         "druid_wild_shape",
         "monk_open_hand_technique",
         "paladin_sacred_weapon",
-        "ranger_hunters_prey",
         "sorcerer_metamagic",
         "wizard_potent_cantrip"
       ]
@@ -3451,8 +3417,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 130,
-      "percent": "66%"
+      "numerator": 131,
+      "percent": "66.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -9842,13 +9808,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 7,
-      "witness-present": 160
+      "not-applicable": 6,
+      "witness-present": 161
     },
     "rowsByStatus": {
-      "not-applicable": 7,
+      "not-applicable": 6,
       "not-required": 30,
-      "witness-present": 160
+      "witness-present": 161
     }
   },
   "sourceArtifacts": {
@@ -10756,20 +10722,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 37,
-      "supported-profile": 130,
+      "profile-subset-supported": 36,
+      "supported-profile": 131,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 9,
+      "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 130
+      "supported-profile": 131
     },
-    "nonSupportedFrontier": 67,
+    "nonSupportedFrontier": 66,
     "strictDenominator": 197
   }
 }

@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Ranger Hunter's Prey selected attack option"
     },
     {
@@ -401,7 +401,7 @@ Out of scope:
 
 ### Task 7 - L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote `ranger_hunters_prey` selected attack option execution.
 

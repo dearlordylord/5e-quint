@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
@@ -51,6 +51,7 @@ import {
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  HUNTERS_PREY_CHOICE_KEY,
   INITIAL_CHARACTER_DRAFT_PATHS,
   abilityScoreIncreaseChoiceOptions,
   progressionOptionId,
@@ -1377,6 +1378,24 @@ export function classFeatureGrantChoiceHoles(
 
   if (mechanics.family === "metamagic_options") {
     return sorcererMetamagicChoiceHoles(featureUnitId, mechanics, input);
+  }
+
+  if (mechanics.family === "hunters_prey") {
+    const choiceKey = unitChoiceKey(HUNTERS_PREY_CHOICE_KEY);
+    if (Either.isLeft(choiceKey)) {
+      return [];
+    }
+    const hole = requireChoiceCreationHole(
+      choiceHole({
+        source: unitSource(featureUnitId, choiceKey.right),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: mechanics.options.map((option) => ({
+          optionId: creationChoiceOptionId(option.id),
+          label: option.id,
+        })),
+      }),
+    );
+    return hole === undefined ? [] : [hole];
   }
 
   if (mechanics.family === "wizard_spellbook_learning") {

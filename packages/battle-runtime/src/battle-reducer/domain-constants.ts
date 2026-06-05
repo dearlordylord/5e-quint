@@ -223,6 +223,33 @@ export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID = holeId(
 );
 export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_INSTANCE =
   holeInstanceKey("battle:remarkable-athlete:critical-hit-movement");
+export const HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:decision",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE =
+  holeInstanceKey("battle:hunters-prey:horde-breaker:decision");
+export const HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:target",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE = holeInstanceKey(
+  "battle:hunters-prey:horde-breaker:target",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:attack-roll",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_INSTANCE =
+  holeInstanceKey("battle:hunters-prey:horde-breaker:attack-roll");
+export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:damage",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:hunters-prey:horde-breaker:damage",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID = holeId(
+  "battle:hunters-prey:horde-breaker:damage-disposition",
+);
+export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE =
+  holeInstanceKey("battle:hunters-prey:horde-breaker:damage-disposition");
 export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
   "celestial",

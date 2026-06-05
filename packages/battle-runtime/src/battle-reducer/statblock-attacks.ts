@@ -2,6 +2,7 @@
 // battle-reducer.ts. Cluster W (statblock_attacks). Mechanical extraction —
 // no behavior change. Mutual import cycle with statblock.ts (V) is tolerated
 // because all imported bindings are function values used only at call time.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 
 import { Match } from "effect";
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
@@ -16,6 +17,7 @@ import type {
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  HUNTERS_PREY_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   type SupportedUnitFeatureProfile,
@@ -497,7 +499,7 @@ export function eligibleAttackDamageRiders(
   if (!isCharacterBattleCreatureState(attacker)) {
     return [];
   }
-  return [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
+  const profileRiders = [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
     (profile): readonly AttackDamageRider[] => {
       if (
         state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
@@ -533,6 +535,73 @@ export function eligibleAttackDamageRiders(
       return rider === null ? [] : [rider];
     },
   );
+  return [
+    ...profileRiders,
+    ...huntersPreyColossusSlayerRiders({
+      state,
+      attacker,
+      attackerId,
+      targetId,
+      attack,
+    }),
+  ];
+}
+
+function huntersPreyColossusSlayerRiders(input: {
+  readonly state: BattleState;
+  readonly attacker: CharacterBattleCreatureState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+}): readonly AttackDamageRider[] {
+  if (input.attack.kind !== "weapon") {
+    return [];
+  }
+  const attack = input.attack;
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined || target.hp >= target.maxHp) {
+    return [];
+  }
+  return input.attacker.origin.characterUnitRefs.flatMap((unitRef) => {
+    if (
+      unitRef.selectedOption?.kind !== "huntersPrey" ||
+      unitRef.selectedOption.optionId !== "colossusSlayer" ||
+      input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === input.attackerId &&
+          usage.unitId === unitRef.unitId,
+      )
+    ) {
+      return [];
+    }
+    const supportProfile = unitRef.supportProfiles.find(
+      (profile) =>
+        typeof profile === "object" &&
+        profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+    );
+    if (supportProfile === undefined || typeof supportProfile === "string") {
+      return [];
+    }
+    const colossusSlayer = supportProfile.huntersPrey.options.find(
+      (option) => option.id === "colossusSlayer",
+    );
+    if (colossusSlayer?.damage.kind !== "addAttackDamageDice") {
+      return [];
+    }
+    return [
+      {
+        attackerId: input.attackerId,
+        unitId: unitRef.unitId,
+        label: "Colossus Slayer",
+        optional: true,
+        damage: {
+          dice: colossusSlayer.damage.dice.dice,
+          dieSize: colossusSlayer.damage.dice.dieSize,
+          damageType: selectedWeaponDamage(attack.weapon).damageType,
+        },
+      },
+    ];
+  });
 }
 
 function selectedAttackDamageTypeForProfile(input: {

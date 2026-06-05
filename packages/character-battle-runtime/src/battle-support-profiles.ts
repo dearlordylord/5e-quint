@@ -17,6 +17,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 
 type CharacterBattleWeaponMasterySelection = NonNullable<
   CharacterBattleCreatureInit["weaponMasteries"]

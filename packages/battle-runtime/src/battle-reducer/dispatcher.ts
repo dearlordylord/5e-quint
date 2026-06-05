@@ -264,6 +264,7 @@ import {
   readiedMovementInitialHoles,
   readiedSpellInitialHoles,
   resolveAttack,
+  resolveHuntersPreyHordeBreakerContinuation,
   resolveWeaponMasteryCleaveContinuation,
   resolveBonusActionStandardAction,
   resolveDash,
@@ -3451,6 +3452,19 @@ export function resumeInterruptedProcedure(
           : suppressedReactionTrigger,
     });
   }
+  if (continuation.kind === "huntersPreyHordeBreaker") {
+    return resolveHuntersPreyHordeBreakerContinuation({
+      state,
+      subject: continuation.subject,
+      firstTargetId: continuation.firstTargetId,
+      attack: continuation.attack,
+      fills: continuation.fills,
+      suppressedReactionTrigger:
+        suppressedReactionTrigger === "afterDamage"
+          ? undefined
+          : suppressedReactionTrigger,
+    });
+  }
   if (continuation.kind === "movement") {
     return resolveMoveAfterMovement({
       state,
@@ -4093,6 +4107,8 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.weaponDamageDiceRollChoicesUsedThisTurn,
     weaponMasteryCleaveAttackersUsedThisTurn:
       resources.weaponMasteryCleaveAttackersUsedThisTurn,
+    huntersPreyHordeBreakerUsedThisTurn:
+      resources.huntersPreyHordeBreakerUsedThisTurn,
     ...(resources.lightWeaponAttackMade === undefined
       ? {}
       : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),

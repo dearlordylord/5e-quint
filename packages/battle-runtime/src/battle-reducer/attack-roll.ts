@@ -3,7 +3,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 
@@ -38,6 +38,7 @@ import type {
   SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import {
+  HUNTERS_PREY_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -46,6 +47,7 @@ import {
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
+  type AttackDamageRider,
   type AttackRollFeatureActivation,
   type BattleActiveEffect,
   type BattleAttackRollHole,
@@ -60,6 +62,8 @@ import {
   type BattleObjectOutline,
   type BattleState,
   type BattleTargetSpatialFact,
+  type SpellAttackDamageComponent,
+  type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
@@ -114,6 +118,14 @@ import {
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
+  HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_INSTANCE,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_INSTANCE,
+  HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
+  HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import {
@@ -1053,6 +1065,200 @@ export function weaponMasteryCleaveExtraAttack(
           ),
         }),
   };
+}
+
+export type HuntersPreyHordeBreakerSelection = {
+  readonly unitId: UnitRecord["id"];
+};
+
+export function huntersPreyHordeBreakerDecisionHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleUnitFeatureDecisionHole | null {
+  const selection = huntersPreyHordeBreakerSelection(
+    state,
+    attackerId,
+    targetId,
+    attack,
+  );
+  return selection === null
+    ? null
+    : {
+        kind: "unitFeatureDecision",
+        holeId: HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
+        holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
+        label: "Use Horde Breaker",
+        unitFeature: {
+          unitId: selection.unitId,
+          label: "Horde Breaker",
+        },
+        choices: ["use", "decline"],
+      };
+}
+
+export function huntersPreyHordeBreakerTargetHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  firstTargetId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
+    holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
+    label: "Horde Breaker second target",
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter(
+      (combatantId) =>
+        combatantId !== attackerId && combatantId !== firstTargetId,
+    ),
+  };
+}
+
+export function huntersPreyHordeBreakerAttackRollHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): BattleAttackRollHole {
+  return {
+    ...attackRollHole(
+      state.combatants.get(attackerId),
+      attack,
+      requiredAttackRollMode(
+        state,
+        attackerId,
+        targetId,
+        attack,
+        targetSpatialFacts,
+      ),
+    ),
+    holeId: HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
+    holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_INSTANCE,
+    label: "Horde Breaker attack roll",
+  };
+}
+
+export function huntersPreyHordeBreakerDamageHole(
+  attack: CharacterWeaponAttackActionOption,
+  critical: boolean,
+  attackRoll: BattleAttackRollResult,
+  attackDamageRiders: readonly AttackDamageRider[] = [],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+  ongoingDamageModifier = 0,
+): BattleDamageRollHole {
+  const expression = weaponAttackDamageExpression(
+    attack,
+    critical,
+    attackRoll,
+    attackDamageRiders,
+    spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
+    ongoingDamageModifier,
+  );
+  return {
+    kind: "rolledDice",
+    holeId: HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+    holeInstanceKey: HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_INSTANCE,
+    label: `Horde Breaker damage (${expression})`,
+    attack,
+    critical,
+    ...(attackDamageRiders.length === 0 ? {} : { attackDamageRiders }),
+    ...(spellWeaponDamageRiders.length === 0
+      ? {}
+      : { spellWeaponDamageRiders }),
+    ...(spellMarkedDamageRiders.length === 0
+      ? {}
+      : { spellMarkedDamageRiders }),
+  };
+}
+
+export function huntersPreyHordeBreakerTargetIsLegal(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly firstTargetId: CombatantId;
+  readonly secondTargetId: CombatantId;
+  readonly attack: CharacterWeaponAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): boolean {
+  return (
+    input.secondTargetId !== input.firstTargetId &&
+    attackTargetIsLegal(
+      input.state,
+      input.attackerId,
+      input.secondTargetId,
+      input.attack,
+      input.targetSpatialFacts,
+    ) &&
+    input.targetSpatialFacts.some(
+      (fact) =>
+        fact.kind === "hordeBreakerSecondTargetEligible" &&
+        fact.attackerId === input.attackerId &&
+        fact.unitId === input.unitId &&
+        fact.originalTargetId === input.firstTargetId &&
+        fact.secondTargetId === input.secondTargetId,
+    )
+  );
+}
+
+export function recordHuntersPreyHordeBreakerUsed(
+  state: BattleState,
+  attackerId: CombatantId,
+  unitId: UnitRecord["id"],
+): BattleState {
+  return state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
+    (usage) => usage.attackerId === attackerId && usage.unitId === unitId,
+  )
+    ? state
+    : {
+        ...state,
+        currentTurnResources: {
+          ...state.currentTurnResources,
+          huntersPreyHordeBreakerUsedThisTurn: [
+            ...state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+            { attackerId, unitId },
+          ],
+        },
+      };
+}
+
+function huntersPreyHordeBreakerSelection(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): HuntersPreyHordeBreakerSelection | null {
+  if (
+    attack.kind !== "weapon" ||
+    currentActorId(state) !== attackerId ||
+    !state.combatants.has(targetId)
+  ) {
+    return null;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) {
+    return null;
+  }
+  const unitRef = attacker.origin.characterUnitRefs.find(
+    (candidate) =>
+      candidate.selectedOption?.kind === "huntersPrey" &&
+      candidate.selectedOption.optionId === "hordeBreaker" &&
+      !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === attackerId &&
+          usage.unitId === candidate.unitId,
+      ) &&
+      candidate.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+      ),
+  );
+  return unitRef === undefined ? null : { unitId: unitRef.unitId };
 }
 
 function cleaveAbilityChoices(

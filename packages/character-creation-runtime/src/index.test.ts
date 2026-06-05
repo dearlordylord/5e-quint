@@ -131,6 +131,7 @@ import {
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
+  HUNTERS_PREY_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
@@ -161,6 +162,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge sorcerer_draconic_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
@@ -176,6 +178,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -4143,6 +4146,38 @@ describe("character creation finalization", () => {
         (source) => source.sourceUnitId === "class_wizard",
       )?.preparedSpells,
     ).toEqual([...preparedSpellIds]);
+  });
+
+  test("finalizes Ranger Hunter's Prey with a retained selected option Unit ref", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-ranger-hunter-horde-breaker",
+      progression: testProgression("class_ranger", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_ranger", CLASS_SUBCLASS_CHOICE_KEY)]: [
+          creationChoiceOptionId("subclass_ranger_hunter"),
+        ],
+        [testUnitChoiceSourceKey(
+          "ranger_hunters_prey",
+          HUNTERS_PREY_CHOICE_KEY,
+        )]: [creationChoiceOptionId("horde_breaker")],
+      },
+    });
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+    expect(
+      selectedChoiceOptionIds(
+        draft,
+        "ranger_hunters_prey",
+        HUNTERS_PREY_CHOICE_KEY,
+      ),
+    ).toEqual(["horde_breaker"]);
+    expect(characterBuildUnitRefs(result.build, unitLibrary)).toContainEqual({
+      unitId: "ranger_hunters_prey",
+      selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+    });
   });
 
   test("finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records", () => {

@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type {
   Condition,
@@ -44,6 +45,18 @@ import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts
 export type BattleUnitRef = {
   readonly unitId: UnitRecord["id"];
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  readonly selectedOption?: BattleUnitRefSelectedOption;
+};
+
+export const HUNTERS_PREY_SELECTED_OPTION_IDS = [
+  "colossusSlayer",
+  "hordeBreaker",
+] as const;
+export type HuntersPreySelectedOptionId =
+  (typeof HUNTERS_PREY_SELECTED_OPTION_IDS)[number];
+export type BattleUnitRefSelectedOption = {
+  readonly kind: "huntersPrey";
+  readonly optionId: HuntersPreySelectedOptionId;
 };
 
 export type CharacterBattleInvocationFeature = {

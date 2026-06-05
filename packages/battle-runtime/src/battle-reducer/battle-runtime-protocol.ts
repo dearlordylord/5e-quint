@@ -50,6 +50,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   recklessAttackWhileRagingUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
   weaponMasteryCleaveAttackersUsedThisTurn: [],
+  huntersPreyHordeBreakerUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -275,6 +276,20 @@ export type AttackFillSet =
       readonly weaponMasteryCleaveRemarkableAthleteCriticalHitMovement:
         | Extract<BattleFill, { readonly kind: "movement" }>
         | undefined;
+      readonly huntersPreyHordeBreakerDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly huntersPreyHordeBreakerTarget:
+        | Extract<BattleFill, { readonly kind: "targetChoice" }>
+        | undefined;
+      readonly huntersPreyHordeBreakerAttackRoll:
+        | Extract<BattleFill, { readonly kind: "attackRoll" }>
+        | undefined;
+      readonly huntersPreyHordeBreakerDamageRoll:
+        | BattleRolledDiceFill
+        | undefined;
+      readonly huntersPreyHordeBreakerDamageDisposition: BattleAttackDamageDisposition;
+      readonly huntersPreyHordeBreakerDamageDispositionFilled: boolean;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type GrappleFillSet =
