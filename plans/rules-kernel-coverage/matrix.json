@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 103,
-    "covered": 97,
+    "total": 104,
+    "covered": 98,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 75,
+      "battle": 76,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 97,
+      "covered": 98,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -853,6 +853,51 @@
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
       ],
       "title": "Battle Careful Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and protected-target limits, forces protected Saving Throw success, and suppresses successful-save half damage"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-heightened-save-disadvantage"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition-immunity.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Heightened Spell",
+        ".references/srd-5.2.1/Rules-Glossary.md#Disadvantage",
+        ".references/srd-5.2.1/Rules-Glossary.md#Saving Throw",
+        "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw"
+      ],
+      "title": "Battle Heightened Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and one affected target choice, and projects target-specific Saving Throw Disadvantage with Advantage/Disadvantage cancellation"
     },
     {
       "id": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
@@ -5599,6 +5644,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE"
+      ],
+      "profileId": "unit-feature.metamagic-heightened-save-disadvantage"
+    },
+    {
+      "obligationIds": [
         "SHEET.SPELL_REST_BENEFIT.APPLICATION"
       ],
       "profileId": "character-sheet.spell-rest-benefit-application"
@@ -5950,6 +6001,7 @@
       "evidence": "packages/battle-runtime/battle-runtime-metamagic.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
@@ -5959,6 +6011,7 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt is the covered obligation QNT owner carrying typed Metamagic option effect-kind, stacking-mode, and Sorcery Point cost projection semantics without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
@@ -5968,6 +6021,7 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt is the covered obligation QNT owner carrying non-empty known-option, Sorcery Point affordability, and one-option-per-spell admission semantics without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
@@ -8581,6 +8635,44 @@
         "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",

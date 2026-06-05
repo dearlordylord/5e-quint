@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 144,
-      "numerator": 141,
-      "percent": "97.9%"
+      "numerator": 142,
+      "percent": "98.6%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 144,
-      "numerator": 141,
-      "percent": "97.9%"
+      "numerator": 142,
+      "percent": "98.6%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 154,
@@ -4625,13 +4625,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 144,
-        "numerator": 141,
-        "percent": "97.9%"
+        "numerator": 142,
+        "percent": "98.6%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 144,
-        "numerator": 141,
-        "percent": "97.9%"
+        "numerator": 142,
+        "percent": "98.6%"
       }
     },
     "profileKinds": [
@@ -6757,8 +6757,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Heightened Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and one affected target choice, and projects target-specific Saving Throw Disadvantage with Advantage/Disadvantage cancellation"
+          }
+        ],
         "profileId": "unit-feature.metamagic-heightened-save-disadvantage",
         "profileKind": "resource",
         "qntOwners": [
