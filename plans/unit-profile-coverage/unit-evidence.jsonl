@@ -383,6 +383,7 @@
 {"unitId":"cleric_preserve_life","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
 {"unitId":"cleric_preserve_life","evidence":{"tag":"selected-identity-mbt","taskId":"L3PUTB-04","ownerPath":"packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_lands_aid","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
+{"unitId":"druid_lands_aid","evidence":{"tag":"selected-identity-mbt","taskId":"L3PUTB-08-DRUID-LANDS-AID-RUNTIME","ownerPath":"packages/battle-runtime/src/druid-lands-aid-selected-identity.mbt.test.ts"}}
 {"unitId":"warlock_dark_ones_blessing","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}
 {"unitId":"warlock_dark_ones_blessing","evidence":{"tag":"selected-identity-mbt","taskId":"L3PUTB-02","ownerPath":"packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A17","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}

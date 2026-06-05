@@ -1158,40 +1158,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME: Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target. Owner: battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.; L3-FOLLOWUP-DRUID-LANDS-AID-SCALING: Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted. Owner: Surface mechanics plus battle-runtime Land's Aid execution owner. Required output: Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
-      "selectedIdentity": {
-        "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
-        "status": "not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Druid Land's Aid",
-          "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 411,
-            "lineStart": 406,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "druid_lands_aid"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "companion-control-boundary"
       ],
       "collectionId": "srd-5.2.1",
@@ -3141,7 +3107,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 131,
+      "count": 132,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3178,6 +3144,7 @@
         "divine_smite",
         "dragons_breath",
         "druid_circle_of_the_land_spells",
+        "druid_lands_aid",
         "druid_primal_order",
         "eldritch_blast",
         "enhance_ability",
@@ -3339,13 +3306,12 @@
       ]
     },
     {
-      "count": 8,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "cleric_preserve_life",
-        "druid_lands_aid",
         "druid_wild_shape",
         "monk_open_hand_technique",
         "paladin_sacred_weapon",
@@ -3417,8 +3383,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 131,
-      "percent": "66.5%"
+      "numerator": 132,
+      "percent": "67%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -9808,13 +9774,13 @@
       "percent": "100%"
     },
     "readyRowsByStatus": {
-      "not-applicable": 6,
-      "witness-present": 161
+      "not-applicable": 5,
+      "witness-present": 162
     },
     "rowsByStatus": {
-      "not-applicable": 6,
+      "not-applicable": 5,
       "not-required": 30,
-      "witness-present": 161
+      "witness-present": 162
     }
   },
   "sourceArtifacts": {
@@ -10722,20 +10688,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 36,
-      "supported-profile": 131,
+      "profile-subset-supported": 35,
+      "supported-profile": 132,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 8,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 131
+      "supported-profile": 132
     },
-    "nonSupportedFrontier": 66,
+    "nonSupportedFrontier": 65,
     "strictDenominator": 197
   }
 }

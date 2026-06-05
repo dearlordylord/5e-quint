@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 154,
-      "numerator": 150,
+      "denominator": 155,
+      "numerator": 151,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 154,
-      "percent": "67.8%"
+      "numerator": 155,
+      "percent": "68.3%"
     }
   },
   "metricSemantics": [
@@ -4078,16 +4078,34 @@
     {
       "id": "unit-feature.magic-action-area-save-damage-healing",
       "profileKind": "battle-admission",
-      "qntOwners": [],
-      "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle initialization retains the parsed support profile on selected character combatants, and battle runtime consumes existing Magic Action, Wild Shape resource, spell save DC, caller-supplied Sphere membership, save outcomes, and 2d6 damage/healing fills to apply level-3 Necrotic damage with half damage on success plus one chosen in-area healing target without authored-identity dispatch, duplicate Wild Shape state, or duplicate geometry; later Druid-level dice scaling remains future promoted reducer work.",
       "taskRefs": [
-        "L13UG-A16"
+        "L13UG-A16",
+        "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
       ],
       "title": "Unit feature projects a Magic Action area Constitution save damage plus one-target healing profile",
-      "verificationOwners": []
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/druid-lands-aid-area-save-damage-healing.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/druid-lands-aid-selected-identity.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
@@ -13674,6 +13692,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Focused Land's Aid literal MBT witness models Magic Action and Wild Shape resource spend, caller-supplied Sphere membership, Constitution save outcomes, failed-save 2d6 Necrotic damage, successful-save half damage, one-target 2d6 healing, and missing-resource, missing-area, duplicate-save-fill, invalid-healing-target, and malformed-roll rejection.",
+      "profileIds": [
+        "unit-feature.magic-action-area-save-damage-healing"
+      ],
+      "taskId": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Druid Land's Aid discovery through the admitted support profile, Magic Action spend, existing Wild Shape resource spend, caller-supplied 10-foot Sphere membership facts, Constitution saves against the actor's spell save DC, level-3 2d6 Necrotic damage with half damage on success, one chosen in-area creature healed for 2d6 Hit Points, and missing-resource, invalid-area, invalid-save-fill, invalid-healing-target, and malformed-roll rejection without authored-identity dispatch or duplicate geometry state.",
+      "profileIds": [
+        "unit-feature.magic-action-area-save-damage-healing"
+      ],
+      "taskId": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Focused Remarkable Athlete QNT witness covers Initiative Advantage, Strength (Athletics) Ability Check Advantage, and adjacent non-Strength-Athletics/non-selected normal roll modes.",
       "profileIds": [
         "unit-feature.remarkable-athlete"
@@ -13886,12 +13920,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 22,
+        "profileSubsetSupportedUnits": 21,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 70,
+        "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 70,
-        "supportedProfileUnits": 54,
+        "selectedIdentityReplayWitnessUnits": 71,
+        "supportedProfileUnits": 55,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16380,47 +16414,24 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
-            "mechanic": "Execute Land's Aid as a Magic Action: spend one Wild Shape use, consume caller-supplied Sphere area membership, resolve Constitution saves, apply 2d6 Necrotic damage with half damage on success, and heal one chosen creature in the area for 2d6 Hit Points."
-          },
-          {
             "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
             "mechanic": "Add Druid level 10 and 14 dice scaling for Land's Aid damage and healing after the level-3 runtime owner exists."
           }
         ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
-            "mechanic": "Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target.",
-            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.",
-            "title": "Druid Lands Aid Runtime"
-          },
-          {
-            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
-            "mechanic": "Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted.",
-            "owner": "Surface mechanics plus battle-runtime Land's Aid execution owner",
-            "requiredOutput": "Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
-            "title": "Druid Lands Aid Scaling"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Wild Shape spend area save damage/healing owner plus later Druid-level scaling owner",
         "profileIds": [
           "unit-feature.magic-action-area-save-damage-healing"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface magic_action_area_save_damage_healing mechanics with Magic Action activation and a referenced Wild Shape spend",
-          "The projected level-3 support profile carries the 60-foot point origin, 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area without duplicating Wild Shape state or geometry"
+          "The projected level-3 support profile carries the 60-foot point origin, 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area without duplicating Wild Shape state or geometry",
+          "Battle initialization retains the admitted support profile on selected Druid character combatants without dispatching on authored identity",
+          "Battle runtime discovers Land's Aid only when a Magic Action, spell save DC, and existing Wild Shape resource use are available",
+          "Battle runtime consumes caller-supplied Sphere membership facts, Saving Throw outcomes, and 2d6 damage/healing fills to spend one Wild Shape use, apply level-3 Necrotic damage with half damage on success, and heal one chosen in-area creature for 2d6 Hit Points without deriving duplicate geometry"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16428,6 +16439,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A16"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/druid-lands-aid-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -16436,16 +16452,34 @@
         {
           "id": "unit-feature.magic-action-area-save-damage-healing",
           "profileKind": "battle-admission",
-          "qntOwners": [],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle initialization retains the parsed support profile on selected character combatants, and battle runtime consumes existing Magic Action, Wild Shape resource, spell save DC, caller-supplied Sphere membership, save outcomes, and 2d6 damage/healing fills to apply level-3 Necrotic damage with half damage on success plus one chosen in-area healing target without authored-identity dispatch, duplicate Wild Shape state, or duplicate geometry; later Druid-level dice scaling remains future promoted reducer work.",
           "taskRefs": [
-            "L13UG-A16"
+            "L13UG-A16",
+            "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
           ],
           "title": "Unit feature projects a Magic Action area Constitution save damage plus one-target healing profile",
-          "verificationOwners": []
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/druid-lands-aid-area-save-damage-healing.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/druid-lands-aid-selected-identity.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",

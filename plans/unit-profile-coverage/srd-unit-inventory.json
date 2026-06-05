@@ -12108,7 +12108,7 @@
         "state": "installed",
         "unitId": "druid_lands_aid"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {

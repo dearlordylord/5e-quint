@@ -634,6 +634,14 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
+    kind: Schema.Literal("magicActionAreaSaveDamageHealingTargetsInSphere"),
+    actorId: CombatantId,
+    unitId: Schema.String,
+    originWithinRangeFeet: MovementFeet,
+    radiusFeet: MovementFeet,
+    targetIds: Schema.Array(CombatantId),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
     reactorId: CombatantId,
     damageSourceId: CombatantId,
@@ -2974,6 +2982,9 @@ export const BattleFillSchema: Schema.Schema<
           ),
         }),
       ),
+      spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
+        exact: true,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("skillChoice"),

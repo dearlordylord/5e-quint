@@ -1618,6 +1618,14 @@ export type BattleTargetSpatialFact =
       readonly rangeFeet: MovementFeet;
     }
   | {
+      readonly kind: "magicActionAreaSaveDamageHealingTargetsInSphere";
+      readonly actorId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly originWithinRangeFeet: MovementFeet;
+      readonly radiusFeet: MovementFeet;
+      readonly targetIds: readonly CombatantId[];
+    }
+  | {
       readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
       readonly reactorId: CombatantId;
       readonly fallingCreatureId: CombatantId;
@@ -3877,6 +3885,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "magicActionHealingPool" }
           >
         >;
+        readonly magicActionAreaSaveDamageHealingProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "magicActionAreaSaveDamageHealing" }
+          >
+        >;
         readonly rogueSteadyAimProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
@@ -5136,6 +5151,10 @@ export type BattleUnitFeatureRollHole = Extract<
         SupportedUnitFeatureProfile,
         { readonly kind: "selfBonusActionHealing" }
       >
+    | Extract<
+        SupportedUnitFeatureProfile,
+        { readonly kind: "magicActionAreaSaveDamageHealing" }
+      >
     | {
         readonly unitId: UnitRecord["id"];
         readonly label: string;
@@ -5481,6 +5500,7 @@ export type BattleFill =
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
       readonly value: BattleSavingThrowOutcomeValue;
+      readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
   | {
       readonly kind: "conditionChoice";

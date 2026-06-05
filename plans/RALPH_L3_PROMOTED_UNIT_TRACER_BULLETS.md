@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Druid Land's Aid level-3 area damage and healing"
     }
   ]
@@ -432,7 +432,7 @@ Out of scope:
 
 ### Task 8 - L3PUTB-08-DRUID-LANDS-AID-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote the level-3 execution subset of `druid_lands_aid`.
 

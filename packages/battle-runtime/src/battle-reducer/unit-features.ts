@@ -6,7 +6,7 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
@@ -20,7 +20,10 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
-import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
+  rolledDiceTotal,
+  validateRolledDiceForDiceExpr,
+} from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 
@@ -31,7 +34,7 @@ import {
 
 import { Hp, MovementFeet } from "@dnd/shared/types";
 
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { DiceExpr, UnitRecord } from "@dnd/surface/surface/types";
 
 import * as Either from "effect/Either";
 
@@ -53,6 +56,7 @@ import {
 
 import {
   combatantCanSee,
+  normalizeBattleGrapples,
   combatantWearingArmorCategory,
 } from "./creature-state-leaves.ts";
 
@@ -71,10 +75,16 @@ import {
 } from "./druid-wild-shape.ts";
 
 import {
+  applyBattleHitPointDamage,
   applyHpHealing,
   breakBattleConcentration,
   effectiveHitPointMaximum,
 } from "./damage-apply.ts";
+import { damageAmountByTypeAfterTargetAdjustments } from "./damage-helpers.ts";
+import {
+  savingThrowFlatBonusProjections,
+  savingThrowRollModeProjections,
+} from "./spells-damage-fills.ts";
 
 import { snapshotBattle, spendReaction } from "./dispatcher.ts";
 import {
@@ -85,7 +95,10 @@ import {
 
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
-import { attackRollHitsWithCriticalThreshold } from "./attack-resolution.ts";
+import {
+  attackRollHitsWithCriticalThreshold,
+  spellSaveDcForCaster,
+} from "./attack-resolution.ts";
 
 import { needsHolesResult } from "./hole-helpers.ts";
 
@@ -112,10 +125,12 @@ import type {
   BattleHitPointHealingPoolDistributionHole,
   BattleHoleId,
   BattleResolutionResult,
+  BattleSavingThrowOutcome,
   BattleState,
   BattleTargetChoiceHole,
   BattleTargetSpatialFact,
   BattleUnitFeatureRollHole,
+  BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
   DruidWildShapeBattleResolutionInput,
   FailedAbilityCheckResourceBoostResolutionInput,
@@ -240,6 +255,7 @@ export function supportedUnitFeatureActs(
   return [
     ...resourceActs,
     ...magicActionHealingPoolActs(state, actor),
+    ...magicActionAreaSaveDamageHealingActs(state, actor),
     ...paladinSacredWeaponActs(state, actor),
     ...rogueSteadyAimActs(state, actor),
   ];
@@ -288,6 +304,45 @@ function magicActionHealingPoolActs(
         : [];
     },
   );
+}
+
+function magicActionAreaSaveDamageHealingActs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  if (
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    spellSaveDcForCaster(state, actor.combatantId) === null
+  ) {
+    return [];
+  }
+  return [
+    ...actor.origin.magicActionAreaSaveDamageHealingProfiles.values(),
+  ].flatMap((unitFeature): readonly AvailableBattleAct[] => {
+    const resource = actor.origin.resources.find(
+      (candidate) =>
+        candidate.unit.id === unitFeature.damageHealing.spends.resourceUnitId,
+    );
+    return resource !== undefined && resourceHasUsesRemaining(resource)
+      ? [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId: actor.combatantId,
+              unitId: unitFeature.unit.id,
+            },
+            label: unitFeature.unit.name,
+            summary:
+              "Spend a Magic Action and one resource use to resolve area Saving Throws, Necrotic damage, and Hit Point healing.",
+            initialHoles: magicActionAreaSaveDamageHealingHoles(
+              state,
+              actor.combatantId,
+              unitFeature,
+            ),
+          },
+        ]
+      : [];
+  });
 }
 
 type SacredWeaponHeldMeleeWeapon = {
@@ -502,6 +557,18 @@ export function resolveUnitFeature(
         input,
         actor,
         magicActionHealingPool,
+      );
+    }
+
+    const magicActionAreaSaveDamageHealing =
+      actor.origin.magicActionAreaSaveDamageHealingProfiles.get(
+        subject.unitId,
+      );
+    if (magicActionAreaSaveDamageHealing !== undefined) {
+      return resolveMagicActionAreaSaveDamageHealingUnitFeature(
+        input,
+        actor,
+        magicActionAreaSaveDamageHealing,
       );
     }
   }
@@ -816,6 +883,157 @@ function resolveMagicActionHealingPoolUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveMagicActionAreaSaveDamageHealingUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionAreaSaveDamageHealing" }
+  >,
+): BattleResolutionResult {
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === unitFeature.damageHealing.spends.resourceUnitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} has no resource uses remaining.`,
+    );
+  }
+  if (spellSaveDcForCaster(input.state, actor.combatantId) === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} requires a spell save DC.`,
+    );
+  }
+
+  const fills = magicActionAreaSaveDamageHealingFills(
+    input.fills,
+    unitFeature,
+  );
+  if (fills.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fills.message);
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "action",
+    action: "magic",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} Magic Action is no longer available.`,
+    );
+  }
+  if (
+    fills.value.savingThrows === undefined ||
+    fills.value.healingTarget === undefined ||
+    fills.value.damageRoll === undefined ||
+    fills.value.healingRoll === undefined
+  ) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      magicActionAreaSaveDamageHealingMissingHoles({
+        state: input.state,
+        actorId: actor.combatantId,
+        unitFeature,
+        fills: fills.value,
+      }),
+    );
+  }
+
+  const validation = validateMagicActionAreaSaveDamageHealing({
+    state: input.state,
+    actorId: actor.combatantId,
+    unitFeature,
+    savingThrows: fills.value.savingThrows,
+    healingTarget: fills.value.healingTarget,
+  });
+  if (validation.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", validation.message);
+  }
+
+  const actorAfterResourceSpend: CharacterBattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id ===
+          unitFeature.damageHealing.spends.resourceUnitId &&
+        resourceHasUsesRemaining(candidate)
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const stateAfterSpend = {
+    ...input.state,
+    currentTurnResources: spent.right,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      actorAfterResourceSpend,
+    ),
+  };
+  const damageRollTotal = rolledDiceTotal(fills.value.damageRoll.value);
+  const savingThrows = fills.value.savingThrows;
+  const stateAfterDamage =
+    validation.damageTargetIds.reduce<BattleState>((state, targetId) => {
+      const target = state.combatants.get(targetId);
+      if (target === undefined) {
+        return state;
+      }
+      const outcome = validation.outcomesByTargetId.get(targetId);
+      const damageBeforeTargetAdjustments =
+        outcome?.succeeded === true
+          ? Math.floor(damageRollTotal / 2)
+          : damageRollTotal;
+      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+        target,
+        new Map([
+          [
+            unitFeature.damageHealing.damage.damageType,
+            damageBeforeTargetAdjustments,
+          ],
+        ]),
+      );
+      return normalizeBattleGrapples(
+        applyBattleHitPointDamage({
+          state,
+          target,
+          damageAmount,
+          deathFailuresAtZeroHp: 1,
+          damageSourceId: actor.combatantId,
+          spatialFacts: savingThrows.spatialFacts ?? [],
+        }),
+      );
+    }, stateAfterSpend);
+  const healingTarget = stateAfterDamage.combatants.get(
+    validation.healingTargetId,
+  );
+  const stateAfterHealing =
+    healingTarget === undefined
+      ? stateAfterDamage
+      : {
+          ...stateAfterDamage,
+          combatants: new Map(stateAfterDamage.combatants).set(
+            validation.healingTargetId,
+            applyHpHealing(
+              healingTarget,
+              rolledDiceTotal(fills.value.healingRoll.value),
+            ),
+          ),
+        };
+  return {
+    tag: "resolved",
+    state: stateAfterHealing,
+    snapshot: snapshotBattle(stateAfterHealing),
   };
 }
 
@@ -1604,6 +1822,435 @@ function hasMagicActionHealingPoolRangeFact(
       fact.targetId === targetId &&
       fact.unitId === unitFeature.unit.id &&
       fact.rangeFeet === unitFeature.healingPool.rangeFeet,
+  );
+}
+
+type MagicActionAreaSaveDamageHealingProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "magicActionAreaSaveDamageHealing" }
+>;
+type MagicActionAreaSaveDamageHealingSavingThrowFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type MagicActionAreaSaveDamageHealingTargetFill = Extract<
+  BattleFill,
+  { readonly kind: "targetChoice" }
+>;
+type MagicActionAreaSaveDamageHealingRollFill = Extract<
+  BattleFill,
+  { readonly kind: "rolledDice" }
+>;
+type MagicActionAreaSaveDamageHealingFillSet = {
+  readonly savingThrows:
+    | MagicActionAreaSaveDamageHealingSavingThrowFill
+    | undefined;
+  readonly healingTarget:
+    | MagicActionAreaSaveDamageHealingTargetFill
+    | undefined;
+  readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+};
+
+function magicActionAreaSaveDamageHealingFills(
+  fills: readonly BattleFill[],
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+):
+  | {
+      readonly tag: "ok";
+      readonly value: MagicActionAreaSaveDamageHealingFillSet;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let savingThrows:
+    | MagicActionAreaSaveDamageHealingSavingThrowFill
+    | undefined;
+  let healingTarget: MagicActionAreaSaveDamageHealingTargetFill | undefined;
+  let damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  let healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  for (const fill of fills) {
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId ===
+        magicActionAreaSaveDamageHealingSavingThrowHoleId(unitFeature)
+    ) {
+      if (savingThrows !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} Saving Throw outcomes were filled twice.`,
+        };
+      }
+      savingThrows = fill;
+      continue;
+    }
+    if (
+      fill.kind === "targetChoice" &&
+      fill.holeId ===
+        magicActionAreaSaveDamageHealingHealingTargetHoleId(unitFeature)
+    ) {
+      if (healingTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} healing target was filled twice.`,
+        };
+      }
+      healingTarget = fill;
+      continue;
+    }
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === magicActionAreaSaveDamageHealingDamageRollHoleId(unitFeature)
+    ) {
+      if (damageRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} damage roll was filled twice.`,
+        };
+      }
+      const validation = validateRolledDiceForDiceExpr(
+        fill.value,
+        unitFeature.damageHealing.damage.amount.expr,
+      );
+      if (validation !== null) {
+        return { tag: "invalid", message: validation.reason };
+      }
+      damageRoll = fill;
+      continue;
+    }
+    if (
+      fill.kind === "rolledDice" &&
+      fill.holeId === magicActionAreaSaveDamageHealingHealingRollHoleId(unitFeature)
+    ) {
+      if (healingRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} healing roll was filled twice.`,
+        };
+      }
+      const validation = validateRolledDiceForDiceExpr(
+        fill.value,
+        unitFeature.damageHealing.healing.amount.expr,
+      );
+      if (validation !== null) {
+        return { tag: "invalid", message: validation.reason };
+      }
+      healingRoll = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the ${unitFeature.unit.name} replay holes.`,
+    };
+  }
+  return {
+    tag: "ok",
+    value: { savingThrows, healingTarget, damageRoll, healingRoll },
+  };
+}
+
+function validateMagicActionAreaSaveDamageHealing(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly unitFeature: MagicActionAreaSaveDamageHealingProfile;
+  readonly savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill;
+  readonly healingTarget: MagicActionAreaSaveDamageHealingTargetFill;
+}):
+  | {
+      readonly tag: "ok";
+      readonly damageTargetIds: readonly CombatantId[];
+      readonly healingTargetId: CombatantId;
+      readonly outcomesByTargetId: ReadonlyMap<
+        CombatantId,
+        BattleSavingThrowOutcome
+      >;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const healingTarget = input.healingTarget.value;
+  const outcomes = input.savingThrows.value.outcomes;
+  const outcomesByTargetId = new Map<CombatantId, BattleSavingThrowOutcome>();
+  for (const outcome of outcomes) {
+    if (outcomesByTargetId.has(outcome.targetId)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target Saving Throw was filled twice.`,
+      };
+    }
+    if (input.state.combatants.get(outcome.targetId) === undefined) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} Saving Throw target must be a creature in this battle.`,
+      };
+    }
+    outcomesByTargetId.set(outcome.targetId, outcome);
+  }
+  if (input.state.combatants.get(healingTarget) === undefined) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} healing target must be a creature in this battle.`,
+    };
+  }
+  const areaFact = magicActionAreaSaveDamageHealingAreaFact(
+    input.savingThrows.spatialFacts ?? [],
+    input.actorId,
+    input.unitFeature,
+  );
+  if (areaFact === undefined) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} requires caller-supplied Sphere area membership.`,
+    };
+  }
+  const areaTargetIds = new Set(areaFact.targetIds);
+  for (const targetId of [...outcomesByTargetId.keys(), healingTarget]) {
+    if (!areaTargetIds.has(targetId)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target must be in the supplied Sphere area.`,
+      };
+    }
+  }
+  return {
+    tag: "ok",
+    damageTargetIds: [...outcomesByTargetId.keys()],
+    healingTargetId: healingTarget,
+    outcomesByTargetId,
+  };
+}
+
+function magicActionAreaSaveDamageHealingMissingHoles(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly unitFeature: MagicActionAreaSaveDamageHealingProfile;
+  readonly fills: MagicActionAreaSaveDamageHealingFillSet;
+}): readonly (
+  | BattleUnitFeatureSavingThrowOutcomeHole
+  | BattleTargetChoiceHole
+  | BattleUnitFeatureRollHole
+)[] {
+  return [
+    ...(input.fills.savingThrows === undefined
+      ? [
+          magicActionAreaSaveDamageHealingSavingThrowHole(
+            input.state,
+            input.actorId,
+            input.unitFeature,
+          ),
+        ]
+      : []),
+    ...(input.fills.damageRoll === undefined
+      ? [magicActionAreaSaveDamageHealingDamageRollHole(input.unitFeature)]
+      : []),
+    ...(input.fills.healingTarget === undefined
+      ? [
+          magicActionAreaSaveDamageHealingHealingTargetHole(
+            input.state,
+            input.unitFeature,
+          ),
+        ]
+      : []),
+    ...(input.fills.healingRoll === undefined
+      ? [magicActionAreaSaveDamageHealingHealingRollHole(input.unitFeature)]
+      : []),
+  ];
+}
+
+function magicActionAreaSaveDamageHealingHoles(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): readonly [
+  BattleUnitFeatureSavingThrowOutcomeHole,
+  BattleUnitFeatureRollHole,
+  BattleTargetChoiceHole,
+  BattleUnitFeatureRollHole,
+] {
+  return [
+    magicActionAreaSaveDamageHealingSavingThrowHole(
+      state,
+      actorId,
+      unitFeature,
+    ),
+    magicActionAreaSaveDamageHealingDamageRollHole(unitFeature),
+    magicActionAreaSaveDamageHealingHealingTargetHole(state, unitFeature),
+    magicActionAreaSaveDamageHealingHealingRollHole(unitFeature),
+  ];
+}
+
+function magicActionAreaSaveDamageHealingSavingThrowHole(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleUnitFeatureSavingThrowOutcomeHole {
+  const dc = spellSaveDcForCaster(state, actorId);
+  if (dc === null) {
+    throw new Error("Land's Aid save hole requires a spell save DC.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: magicActionAreaSaveDamageHealingSavingThrowHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionAreaSaveDamageHealingSavingThrowHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} Constitution Saving Throws`,
+    unitFeature: {
+      unitId: unitFeature.unit.id,
+      label: unitFeature.unit.name,
+    },
+    ability: unitFeature.damageHealing.save.ability,
+    dc: { kind: "fixed", dc },
+    targetIds: [...state.combatants.keys()],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      unitFeature.damageHealing.save.ability,
+    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+  };
+}
+
+function magicActionAreaSaveDamageHealingHealingTargetHole(
+  state: BattleState,
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: magicActionAreaSaveDamageHealingHealingTargetHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionAreaSaveDamageHealingHealingTargetHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} healing target`,
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()],
+  };
+}
+
+function magicActionAreaSaveDamageHealingDamageRollHole(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleUnitFeatureRollHole {
+  return {
+    kind: "rolledDice",
+    holeId: magicActionAreaSaveDamageHealingDamageRollHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionAreaSaveDamageHealingDamageRollHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} damage (${diceExprLabel(unitFeature.damageHealing.damage.amount.expr)})`,
+    unitFeature,
+  };
+}
+
+function magicActionAreaSaveDamageHealingHealingRollHole(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleUnitFeatureRollHole {
+  return {
+    kind: "rolledDice",
+    holeId: magicActionAreaSaveDamageHealingHealingRollHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionAreaSaveDamageHealingHealingRollHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} healing (${diceExprLabel(unitFeature.damageHealing.healing.amount.expr)})`,
+    unitFeature,
+  };
+}
+
+function magicActionAreaSaveDamageHealingAreaFact(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+):
+  | Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "magicActionAreaSaveDamageHealingTargetsInSphere" }
+    >
+  | undefined {
+  return facts.find(
+    (fact): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "magicActionAreaSaveDamageHealingTargetsInSphere" }
+    > =>
+      fact.kind === "magicActionAreaSaveDamageHealingTargetsInSphere" &&
+      fact.actorId === actorId &&
+      fact.unitId === unitFeature.unit.id &&
+      fact.originWithinRangeFeet ===
+        unitFeature.damageHealing.area.origin.rangeFeet &&
+      fact.radiusFeet === unitFeature.damageHealing.area.shape.radiusFeet,
+  );
+}
+
+function magicActionAreaSaveDamageHealingProtocolId(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+  hole: "saving-throws" | "damage-roll" | "healing-target" | "healing-roll",
+): string {
+  return `battle:unit-feature:${unitFeature.unit.id}:${hole}`;
+}
+
+function diceExprLabel(expr: DiceExpr): string {
+  const flat =
+    expr.flat === undefined || expr.flat === 0
+      ? ""
+      : expr.flat > 0
+        ? `+${expr.flat}`
+        : `${expr.flat}`;
+  const spellcastingMod = expr.spellcastingMod === true ? "+spellcasting" : "";
+  const abilityModifier =
+    expr.abilityModifier === undefined ? "" : `+${expr.abilityModifier}`;
+  return `${expr.dice}d${expr.dieSize}${flat}${spellcastingMod}${abilityModifier}`;
+}
+
+function magicActionAreaSaveDamageHealingSavingThrowHoleId(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleHoleId {
+  return holeId(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "saving-throws"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingSavingThrowHoleInstanceKey(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "saving-throws"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingDamageRollHoleId(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleHoleId {
+  return holeId(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "damage-roll"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingDamageRollHoleInstanceKey(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "damage-roll"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingHealingTargetHoleId(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleHoleId {
+  return holeId(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "healing-target"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingHealingTargetHoleInstanceKey(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "healing-target"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingHealingRollHoleId(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): BattleHoleId {
+  return holeId(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "healing-roll"),
+  );
+}
+
+function magicActionAreaSaveDamageHealingHealingRollHoleInstanceKey(
+  unitFeature: MagicActionAreaSaveDamageHealingProfile,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionAreaSaveDamageHealingProtocolId(unitFeature, "healing-roll"),
   );
 }
 
