@@ -14088,6 +14088,12 @@
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task reachability review confirmed Font of Magic sorcery-point-to-Spell-Slot conversion is not promoted as a battle-runtime Unit Bonus Action. RAW makes Creating Spell Slots a Bonus Action resource conversion, but the supported runtime boundary keeps ordinary-vs-created Spell Slot source state on Character Sheet, projects only aggregate Spell Slot capacity into Character Battle, rejects source-ambiguous battle handoff, and avoids adding a duplicate battle-local Spell Slot source ledger. Existing Character Sheet conversion tests, Character Battle init/handoff tests, and character-sheet feature-resource QNT replay remain the evidence boundary.",
+      "profileIds": [],
+      "taskId": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE"
+    },
+    {
       "claimKind": "runtime-test",
       "note": "Focused runtime tests cover Ray of Enfeeblement D20 lifecycle admission, success-side next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat saves, and Concentration cleanup.",
       "profileIds": [
@@ -19320,6 +19326,11 @@
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE"
         }
       ],
       "executableMechanics": true,
