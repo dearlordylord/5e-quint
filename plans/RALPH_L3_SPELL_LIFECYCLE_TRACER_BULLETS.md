@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Antimagic Field magical targeting and effect interdiction"
     },
     {
@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Antimagic Field teleportation and planar travel blocking"
     },
     {
@@ -142,10 +142,10 @@ owns branch repair.
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
 | 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | done | none | Hypnotic Pattern control runtime is promoted. |
 | 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
-| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
+| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
-| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
+| 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
 | 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | blocked | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
 | 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
@@ -447,7 +447,7 @@ Expected outputs:
 
 ### Task 10 - L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Block spells, magic items, and other magical effects from targeting or otherwise
 affecting things inside Antimagic Field.
@@ -508,7 +508,7 @@ Expected outputs:
 
 ### Task 13 - L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Reject teleportation into or out of the aura and planar travel there for
 represented transit procedures.
