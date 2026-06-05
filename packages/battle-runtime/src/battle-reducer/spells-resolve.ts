@@ -10,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,

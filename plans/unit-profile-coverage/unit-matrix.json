@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 144,
-      "numerator": 143,
-      "percent": "99.3%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 144,
-      "numerator": 143,
-      "percent": "99.3%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 154,
@@ -4625,13 +4625,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 144,
-        "numerator": 143,
-        "percent": "99.3%"
+        "numerator": 144,
+        "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 144,
-        "numerator": 143,
-        "percent": "99.3%"
+        "numerator": 144,
+        "percent": "100%"
       }
     },
     "profileKinds": [
@@ -6789,8 +6789,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Twinned Spell Metamagic admits known selected target-count spell modifications, enforces Sorcery Point affordability, preserves actual Spell Slot level, increases effective spell level by 1, and projects one additional creature target"
+          }
+        ],
         "profileId": "unit-feature.metamagic-effective-level-extra-target",
         "profileKind": "resource",
         "qntOwners": [

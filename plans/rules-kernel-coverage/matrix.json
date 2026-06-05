@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 105,
-    "covered": 99,
+    "total": 106,
+    "covered": 100,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 77,
+      "battle": 78,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 99,
+      "covered": 100,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -939,6 +939,46 @@
         "UBIQUITOUS_LANGUAGE.md#Damage"
       ],
       "title": "Battle Transmuted Spell Metamagic admits known selected spell damage substitutions, enforces Sorcery Point affordability, requires a listed replacement Damage Type distinct from the source, and projects the replacement without mutating source damage facts"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-effective-level-extra-target"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Twinned Spell",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
+        "UBIQUITOUS_LANGUAGE.md#Using a Higher-Level Spell Slot",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
+      ],
+      "title": "Battle Twinned Spell Metamagic admits known selected target-count spell modifications, enforces Sorcery Point affordability, preserves actual Spell Slot level, increases effective spell level by 1, and projects one additional creature target"
     },
     {
       "id": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
@@ -5697,6 +5737,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
+      ],
+      "profileId": "unit-feature.metamagic-effective-level-extra-target"
+    },
+    {
+      "obligationIds": [
         "SHEET.SPELL_REST_BENEFIT.APPLICATION"
       ],
       "profileId": "character-sheet.spell-rest-benefit-application"
@@ -6050,7 +6096,8 @@
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION"
+        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
       "role": "semantic-core"
@@ -6061,7 +6108,8 @@
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION"
+        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
       "role": "semantic-core"
@@ -6072,7 +6120,8 @@
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION"
+        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
       "role": "semantic-core"
@@ -8761,6 +8810,44 @@
         "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
