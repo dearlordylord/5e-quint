@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Dispel Magic ongoing effect boundary"
     },
     {
@@ -111,7 +111,7 @@ repair branch state by rebasing against `master`.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER | ready-for-research | none | Classify remaining Antimagic Field gaps as executable battle support or owner-decision blockers. |
-| 2 | L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | ready-for-research | none | Decide whether broader ongoing spell occurrence support is runtime-owned or table-owned. |
+| 2 | L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | done | none | Broader Dispel Magic occurrence support is not represented in the real reducer path; keep it assigned to the broader ongoing Spell Effect occurrence owner. |
 | 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | ready-for-research | none | Resolve material component and inventory ownership before any runtime promotion. |
 | 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | blocked | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Implement only if Task 3 proves a battle-reducer light projection is real. |
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | ready-for-research | none | Split creature support from object/table lifecycle support. |
@@ -135,6 +135,13 @@ remaining labels with explicit runtime-owned slices or owner-decision blockers.
 Decide whether broader ongoing spell effect occurrences are represented in the
 real battle reducer path. If not, document the missing owner instead of adding a
 table-only profile.
+
+Outcome: the current Dispel Magic reducer path only enumerates tracked
+spell-light emitters, tracked `spellObjectContactDamage` active-effect
+occurrences, tracked Spiritual Weapon active-effect occurrences, and the
+Antimagic Field no-effect exception. Broader creature-attached, area, object,
+and spell-specific exception families remain assigned to the existing broader
+ongoing Spell Effect occurrence follow-up owner, not a table-only profile.
 
 ### Task 3 - L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY
 

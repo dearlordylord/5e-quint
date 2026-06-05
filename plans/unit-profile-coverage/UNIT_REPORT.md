@@ -1659,6 +1659,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | completed-runtime-parity | `spell.invocation-antimagic-field-action-interdiction` |
 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | completed-runtime-parity | `spell.invocation-antimagic-field-action-interdiction` |
 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION | accepted-runtime-closure | _none_ |
+| L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST | completed-runtime-parity | `character-sheet.spell-rest-benefit-application` |
 | L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST | qnt-proof | `character-sheet.spell-rest-benefit-application` |
 | L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT | qnt-proof | `spell.invocation-see-invisible-observer-sight` |
