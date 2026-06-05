@@ -936,5 +936,10 @@ export function shieldLoadout(): Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
 >["selectedLoadout"] {
-  return { shield: "equipment_shield" };
+  return {
+    shield: {
+      itemId: "shield:equipment_shield",
+      unitId: "equipment_shield",
+    },
+  };
 }

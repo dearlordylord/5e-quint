@@ -47,6 +47,7 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
+import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 
@@ -119,6 +120,11 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
+import {
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeAllMergedEquipmentDisposition,
+  wildShapeLoadoutObjectRefs,
+} from "./wild-shape-equipment.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
@@ -131,6 +137,7 @@ import type {
   BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
   BattleFill,
+  BattleWildShapeEquipmentDispositionHole,
   BattleHitPointHealingPoolDistributionHole,
   BattleHoleId,
   BattleResolutionResult,
@@ -150,6 +157,10 @@ import type {
   UnitFeatureHeldWeaponActivationBattleResolutionInput,
   UnitFeatureRolledDiceFill,
 } from "../battle-reducer.ts";
+
+const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
+  "druid-wild-shape-equipment-disposition";
+
 export function supportedUnitFeatureActs(
   state: BattleState,
   actorId: CombatantId,
@@ -499,12 +510,11 @@ export function druidWildShapeActsForResource(
             unitId: unitFeature.unit.id,
             action: "assumeForm" as const,
             formStatBlockId: form.id,
-            equipmentDisposition: "merged" as const,
           },
           label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
           summary:
-            "Spend a Bonus Action and one use to assume this known Beast form with equipment merged.",
-          initialHoles: [],
+            "Spend a Bonus Action and one use to assume this known Beast form.",
+          initialHoles: wildShapeInitialEquipmentDispositionHoles(actor, form),
         }))
       : [];
   const dismissAct =
@@ -524,6 +534,48 @@ export function druidWildShapeActsForResource(
           },
         ];
   return [...assumeActs, ...dismissAct];
+}
+
+function wildShapeInitialEquipmentDispositionHoles(
+  actor: CharacterBattleCreatureState,
+  form: BattleDruidWildShapeKnownForm,
+): readonly BattleWildShapeEquipmentDispositionHole[] {
+  const candidates = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
+  return candidates.length === 0
+    ? []
+    : [
+        wildShapeEquipmentDispositionHole({
+          actorId: actor.combatantId,
+          formStatBlockId: form.id,
+          candidates,
+        }),
+      ];
+}
+
+function wildShapeEquipmentDispositionHole(input: {
+  readonly actorId: CombatantId;
+  readonly formStatBlockId: BattleWildShapeEquipmentDispositionHole["formStatBlockId"];
+  readonly candidates: BattleWildShapeEquipmentDispositionHole["candidates"];
+}): BattleWildShapeEquipmentDispositionHole {
+  const protocolId = wildShapeEquipmentDispositionProtocolId(input);
+  return {
+    holeInstanceKey: holeInstanceKey(protocolId),
+    holeId: holeId(protocolId),
+    kind: "wildShapeEquipmentDisposition",
+    label: "Druid Wild Shape equipment disposition",
+    actorId: input.actorId,
+    formStatBlockId: input.formStatBlockId,
+    candidates: input.candidates,
+  };
+}
+
+function wildShapeEquipmentDispositionProtocolId(input: {
+  readonly actorId: CombatantId;
+  readonly formStatBlockId: BattleWildShapeEquipmentDispositionHole["formStatBlockId"];
+}): string {
+  return `${WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL}:${encodeURIComponent(
+    input.actorId,
+  )}:${encodeURIComponent(input.formStatBlockId)}`;
 }
 
 export function supportedUnitFeatureProfileForResource(
@@ -1139,13 +1191,6 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
 export function resolveDruidWildShapeUnitFeature(
   input: DruidWildShapeBattleResolutionInput,
 ): BattleResolutionResult {
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Druid Wild Shape acts do not accept battle fills.",
-    );
-  }
   const actor = input.state.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
@@ -1176,23 +1221,29 @@ export function resolveDruidWildShapeUnitFeature(
     );
   }
 
-  const spent = spendActivationResource(input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape Bonus Action is no longer available.",
-    );
-  }
-
   if (input.subject.action === "dismiss") {
+    if (input.fills.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Druid Wild Shape dismiss does not accept battle fills.",
+      );
+    }
     if (activeDruidWildShapeEffect(actor) === null) {
       return invalidResult(
         input.state,
         "staleSubject",
         "Druid Wild Shape has no active Beast form to dismiss.",
+      );
+    }
+    const spent = spendActivationResource(input.state.currentTurnResources, {
+      kind: "bonusAction",
+    });
+    if (Either.isLeft(spent)) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Druid Wild Shape Bonus Action is no longer available.",
       );
     }
     const nextState = dismissDruidWildShapeForm({
@@ -1234,6 +1285,88 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape form is not one of the character's known Beast forms.",
     );
   }
+  const equipmentCandidates = wildShapeLoadoutObjectRefs(
+    actor.origin.selectedLoadout,
+  );
+  const expectedEquipmentDispositionHole = wildShapeEquipmentDispositionHole({
+    actorId: actor.combatantId,
+    formStatBlockId: form.id,
+    candidates: equipmentCandidates,
+  });
+  const equipmentDisposition = (() => {
+    if (equipmentCandidates.length === 0) {
+      return input.fills.length === 0
+        ? {
+            tag: "valid" as const,
+            dispositions:
+              wildShapeAllMergedEquipmentDisposition(equipmentCandidates),
+          }
+        : {
+            tag: "invalid" as const,
+            message:
+              "Druid Wild Shape equipment disposition is not required without selected loadout equipment.",
+          };
+    }
+    if (input.fills.length === 0) {
+      return {
+        tag: "needsHoles" as const,
+        hole: expectedEquipmentDispositionHole,
+      };
+    }
+    if (input.fills.length !== 1) {
+      return {
+        tag: "invalid" as const,
+        message: "Druid Wild Shape equipment disposition must be filled once.",
+      };
+    }
+    const fill = input.fills[0];
+    if (
+      fill?.kind !== "wildShapeEquipmentDisposition" ||
+      fill.holeId !== expectedEquipmentDispositionHole.holeId
+    ) {
+      return {
+        tag: "invalid" as const,
+        message:
+          "Druid Wild Shape equipment disposition fill must match the equipment disposition hole.",
+      };
+    }
+    const validation = validateWildShapeEquipmentDispositionFill({
+      candidates: equipmentCandidates,
+      value: fill.value,
+    });
+    return validation.tag === "valid"
+      ? {
+          tag: "valid" as const,
+          dispositions: validation.dispositions,
+        }
+      : validation;
+  })();
+  if (equipmentDisposition.tag === "needsHoles") {
+    return {
+      tag: "needsHoles",
+      state: input.state,
+      subject: input.subject,
+      holes: [equipmentDisposition.hole],
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  if (equipmentDisposition.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      equipmentDisposition.message,
+    );
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape Bonus Action is no longer available.",
+    );
+  }
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     origin: {
@@ -1259,7 +1392,7 @@ export function resolveDruidWildShapeUnitFeature(
     actor: nextActor,
     unitId: subject.unitId,
     form,
-    equipmentDisposition: subject.equipmentDisposition,
+    equipmentDisposition: equipmentDisposition.dispositions,
     formResources: statBlockResourceState(form.statBlock),
     profile: unitFeature,
   });

@@ -32,6 +32,8 @@ import type {
   BattleSpellAreaChoice,
   BattleTargetSpatialFact,
   SupportedSpellInvocation,
+  WildShapeEquipmentDispositionChoice,
+  WildShapeLoadoutObjectRef,
 } from "../battle-reducer.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -232,6 +234,57 @@ const BattleHoleBaseSchema = {
   holeId: BattleHoleIdSchema,
   label: Schema.optionalWith(Schema.String, { exact: true }),
 } as const;
+
+const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> =
+  // Effect Schema infers branded ids as their encoded string representation;
+  // this local schema brands objectId before runtime use and leaves unitId as
+  // the UnitRecord id string used by loadout references.
+  Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("armor"),
+      objectId: BattleObjectId,
+      unitId: Schema.String,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("shield"),
+      objectId: BattleObjectId,
+      unitId: Schema.String,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("mainWeapon"),
+      objectId: BattleObjectId,
+      unitId: Schema.String,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("offHandWeapon"),
+      objectId: BattleObjectId,
+      unitId: Schema.String,
+    }),
+  ) as unknown as Schema.Schema<WildShapeLoadoutObjectRef>;
+
+const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmentDispositionChoice> =
+  // The union schema below exactly mirrors the discriminated choice type; the
+  // cast is only needed because Effect Schema cannot infer the nested branded
+  // WildShapeLoadoutObjectRefSchema through this union precisely.
+  Schema.Union(
+    Schema.Struct({
+      item: WildShapeLoadoutObjectRefSchema,
+      disposition: Schema.Literal("falls", "merges"),
+    }),
+    Schema.Struct({
+      item: WildShapeLoadoutObjectRefSchema,
+      disposition: Schema.Literal("worn"),
+      practicality: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("practicalToWear"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("notPracticalToWear"),
+          fallback: Schema.Literal("falls", "merges"),
+        }),
+      ),
+    }),
+  ) as unknown as Schema.Schema<WildShapeEquipmentDispositionChoice>;
 
 const BattleDancingLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
@@ -937,6 +990,13 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("wildShapeEquipmentDisposition"),
+    actorId: CombatantId,
+    formStatBlockId: Schema.String,
+    candidates: Schema.Array(WildShapeLoadoutObjectRefSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1925,6 +1985,13 @@ type BattleFillEncoded =
       )[];
     }
   | {
+      readonly kind: "wildShapeEquipmentDisposition";
+      readonly holeId: string;
+      readonly value: {
+        readonly choices: readonly WildShapeEquipmentDispositionChoice[];
+      };
+    }
+  | {
       readonly kind: "ongoingSpellTargetChoice";
       readonly holeId: string;
       readonly value:
@@ -2751,6 +2818,13 @@ export const BattleFillSchema: Schema.Schema<
           }),
         ),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("wildShapeEquipmentDisposition"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        choices: Schema.Array(WildShapeEquipmentDispositionChoiceSchema),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("ongoingSpellTargetChoice"),

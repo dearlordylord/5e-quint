@@ -685,7 +685,10 @@ describe("battle runtime: attack rolls and damage", () => {
         name: "armor",
         armorClass: heavyArmorClassState(),
         selectedLoadout: {
-          armor: "equipment_chain_mail",
+          armor: {
+            itemId: "armor:equipment_chain_mail",
+            unitId: "equipment_chain_mail",
+          },
           weapon: {
             itemId: "main:weapon_dagger",
             unitId: "weapon_dagger",
@@ -696,7 +699,12 @@ describe("battle runtime: attack rolls and damage", () => {
       },
       {
         name: "shield",
-        selectedLoadout: { shield: "equipment_shield" },
+        selectedLoadout: {
+          shield: {
+            itemId: "shield:equipment_shield",
+            unitId: "equipment_shield",
+          },
+        },
         armorClass: {
           ...defaultArmorClassState(),
           leftHandUse: "shield" as const,

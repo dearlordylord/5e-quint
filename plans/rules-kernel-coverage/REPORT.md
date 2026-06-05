@@ -135,16 +135,16 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 112
+- Total classified rows: 114
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 70 |
-| battle-fill-kind | 42 |
+| battle-hole-family | 71 |
+| battle-fill-kind | 43 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 87 |
+| semantic-frontier | 89 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 25 |
 | unsupported-dead-branch | 0 |
@@ -263,6 +263,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpikeGrowthMovementDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpiritualWeaponForcePositionHole` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `spiritualWeaponForcePosition` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleWildShapeEquipmentDispositionHole` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP` |
+| battle-fill-kind | `wildShapeEquipmentDisposition` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP` |
 
 ## QNT Owner Roles
 

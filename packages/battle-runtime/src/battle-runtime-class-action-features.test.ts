@@ -1228,7 +1228,10 @@ describe("battle runtime: class action features", () => {
           resources: [rageResource()],
           armorClass: heavyArmorClassState(),
           selectedLoadout: {
-            armor: "armor_chain_mail",
+            armor: {
+              itemId: "armor:armor_chain_mail",
+              unitId: "armor_chain_mail",
+            },
             weapon: {
               itemId: "main:weapon_longsword",
               unitId: "weapon_longsword",

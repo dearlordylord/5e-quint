@@ -901,7 +901,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         characterSeed({
           initiative: 20,
           selectedLoadout: {
-            shield: "equipment_shield",
+            shield: {
+              itemId: "shield:equipment_shield",
+              unitId: "equipment_shield",
+            },
             weapon: {
               itemId: "main:weapon_longsword",
               unitId: "weapon_longsword",

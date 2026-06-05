@@ -13,31 +13,31 @@
     {
       "number": 2,
       "id": "L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Implement Wild Shape equipment disposition owner"
     },
     {
       "number": 3,
       "id": "L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Wild Shape worn-equipment effective-loadout projection"
     },
     {
       "number": 4,
       "id": "L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Wild Shape fallen-equipment object boundary"
     },
     {
       "number": 5,
       "id": "L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY",
-      "status": "blocked",
-      "title": "Promote merged-equipment no-effect parity"
+      "status": "ready-for-research",
+      "title": "Audit merged-equipment no-effect parity after disposition owner"
     },
     {
       "number": 6,
       "id": "L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Close form-limb object-consumer boundary"
     },
     {
@@ -108,20 +108,20 @@ repair branch state by rebasing against `master`.
 
 ## DAG / Queue Order
 
-| Order | Task | Status | Depends On | Notes |
-|---:|---|---|---|---|
-| 1 | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION | ready-for-implementation-after-light-research | none | Implement the projection described by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`. |
-| 2 | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER | ready-for-implementation-after-light-research | none | Implement the first owner from `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`. |
-| 3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT | blocked | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER | Project effective loadout only after disposition storage exists. |
-| 4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY | blocked | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER | Keep fallen equipment at an explicit object/table boundary. |
-| 5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY | blocked | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER | Promote no-effect semantics for merged equipment without duplicating inventory. |
-| 6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE | blocked | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER | Close or promote object/Utilize consumers that need form-limb witnesses. |
-| 7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER | ready-for-research | none | Replace stale dependency text with an explicit owner-decision blocker. |
-| 8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER | ready-for-research | none | Keep Acid Arrow blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry. |
-| 9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION | blocked | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER | Regenerate reports after blockers/owners are real rows. |
-| 10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Ensure no selected-identity replay is orphaned after the split. |
-| 11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT | ready-for-research | none | Audit whether Wild Companion still has only explicit companion-control closure. |
-| 12 | L3MWILD-12-MORNING-WILD-SHAPE-CONSOLIDATION | blocked | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION | Final lane report and cleanup. |
+| Order | Task                                           | Status                                        | Depends On                                                                                                                                                                                                                     | Notes                                                                                                                                 |
+| ----: | ---------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+|     1 | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Implement the projection described by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`.                                           |
+|     2 | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER         | done                                          | none                                                                                                                                                                                                                           | Implemented merge-only disposition owner, selected-loadout object refs, active-effect storage, and all-merged no-effect preservation. |
+|     3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT    | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Project effective loadout for practical worn equipment now that disposition storage exists.                                           |
+|     4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY    | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Keep fallen equipment at an explicit object/table boundary before accepting `falls` disposition.                                      |
+|     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | ready-for-research                            | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Audit remaining merged-equipment parity/coverage after Task 2's merge-only active storage and no-effect behavior.                     |
+|     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Close or promote object/Utilize consumers that need form-limb witnesses.                                                              |
+|     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | ready-for-research                            | none                                                                                                                                                                                                                           | Replace stale dependency text with an explicit owner-decision blocker.                                                                |
+|     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | ready-for-research                            | none                                                                                                                                                                                                                           | Keep Acid Arrow blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                                |
+|     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | blocked                                       | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerate reports after blockers/owners are real rows.                                                                               |
+|    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Ensure no selected-identity replay is orphaned after the split.                                                                       |
+|    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | ready-for-research                            | none                                                                                                                                                                                                                           | Audit whether Wild Companion still has only explicit companion-control closure.                                                       |
+|    12 | L3MWILD-12-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION | Final lane report and cleanup.                                                                                                        |
 
 ## Task Details
 
@@ -153,6 +153,14 @@ Outputs:
 - Typed disposition hole/fill owner, active-effect storage, all-merged parity,
   focused tests, and coverage evidence.
 
+Landed scope:
+
+- Production resolution accepts merge-only completed dispositions and stores
+  selected-loadout object refs on the active Wild Shape effect.
+- `falls` and practical `worn` choices remain rejected until Tasks 4 and 3 own
+  their executable consequences.
+- Form-limb object handling remains Task 6.
+
 ### Task 3 - L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT
 
 Promote effective-loadout projection for worn equipment after the disposition
@@ -164,8 +172,10 @@ Promote fallen-equipment outcomes only at the explicit object/table boundary.
 
 ### Task 5 - L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY
 
-Promote no-effect semantics for merged equipment without duplicating inventory
-state.
+Audit merged-equipment no-effect parity and generated coverage after Task 2's
+merge-only owner. Close this task by confirming whether any QNT, MBT, coverage,
+or report residue still treats merged equipment as an unsupported follow-up; fix
+only those remaining parity/ledger gaps and avoid duplicating inventory state.
 
 ### Task 6 - L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE
 

@@ -65,8 +65,14 @@ export type CharacterBattleInvocationFeature = {
 };
 
 export type CharacterBattleLoadoutRef = {
-  readonly armor?: UnitRecord["id"];
-  readonly shield?: UnitRecord["id"];
+  readonly armor?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
+  };
+  readonly shield?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
+  };
   readonly weapon?: {
     readonly itemId: string;
     readonly unitId: UnitRecord["id"];

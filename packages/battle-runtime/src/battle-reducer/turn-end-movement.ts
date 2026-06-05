@@ -1165,7 +1165,9 @@ export function canonicalHeldObjectIdsForActor(
     ...(loadout.offHandWeapon === undefined
       ? []
       : [battleObjectId(loadout.offHandWeapon.itemId)]),
-    ...(loadout.shield === undefined ? [] : [battleObjectId(loadout.shield)]),
+    ...(loadout.shield === undefined
+      ? []
+      : [battleObjectId(loadout.shield.itemId)]),
   ];
 }
 

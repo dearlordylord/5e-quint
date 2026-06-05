@@ -2237,6 +2237,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model Hit Point healing distribution holes.",
     );
   }
+  if (hole.kind === "wildShapeEquipmentDisposition") {
+    throw new Error(
+      "Battle runtime MBT does not model Wild Shape equipment disposition holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

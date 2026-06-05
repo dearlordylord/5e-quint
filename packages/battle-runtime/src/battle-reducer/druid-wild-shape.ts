@@ -45,6 +45,9 @@ import {
   activeCreatureSizeChangeEffect,
   type SpellCreatureSizeChangeEffect,
 } from "./creature-size-change-effects.ts";
+import type {
+  ActiveWildShapeEquipmentDisposition,
+} from "./wild-shape-equipment.ts";
 
 const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
   "str",
@@ -265,7 +268,7 @@ export function assumeDruidWildShapeForm(input: {
   readonly actor: CharacterBattleCreatureState;
   readonly unitId: UnitRecord["id"];
   readonly form: BattleDruidWildShapeKnownForm;
-  readonly equipmentDisposition: "merged";
+  readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
   readonly formResources: StatBlockMutableResourceState;
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
 }): BattleState {

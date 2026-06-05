@@ -184,6 +184,10 @@ import type {
 } from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import type {
+  WildShapeEquipmentDispositionFillValue,
+  WildShapeLoadoutObjectRef,
+} from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   type BattleD20RollModifierDieSize,
@@ -200,6 +204,20 @@ import {
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
   type BattleAntimagicFieldOngoingSpellEffectSourceKind,
 } from "./battle-reducer/domain-constants.ts";
+export type {
+  ActiveWildShapeEquipmentDisposition,
+  WildShapeEquipmentDisposition,
+  WildShapeEquipmentDispositionChoice,
+  WildShapeEquipmentDispositionFillValue,
+  WildShapeLoadoutObjectRef,
+  WildShapeWearPracticalityWitness,
+} from "./battle-reducer/wild-shape-equipment.ts";
+export {
+  WILD_SHAPE_EQUIPMENT_DISPOSITIONS,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeAllMergedEquipmentDisposition,
+  wildShapeLoadoutObjectRefs,
+} from "./battle-reducer/wild-shape-equipment.ts";
 export {
   addBattleCombatant,
   applyInitiativeSwap,
@@ -5438,6 +5456,15 @@ export type BattleOngoingSpellTargetChoiceHole = {
   readonly rangeFeet: MovementFeet;
   readonly choices: readonly BattleOngoingSpellTarget[];
 };
+export type BattleWildShapeEquipmentDispositionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "wildShapeEquipmentDisposition";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+  readonly candidates: readonly WildShapeLoadoutObjectRef[];
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleSpellCastReactionFactsHole
@@ -5508,7 +5535,8 @@ export type BattleHole =
   | BattleShoveOutcomeHole
   | BattleSanctuaryInterdictionOutcomeHole
   | BattleAttackDamageDispositionHole
-  | BattleOngoingSpellTargetChoiceHole;
+  | BattleOngoingSpellTargetChoiceHole
+  | BattleWildShapeEquipmentDispositionHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
@@ -5612,6 +5640,11 @@ export type BattleFill =
       readonly kind: "selfTransformationModeChoice";
       readonly holeId: BattleHoleId;
       readonly value: SelfTransformationModeKind;
+    }
+  | {
+      readonly kind: "wildShapeEquipmentDisposition";
+      readonly holeId: BattleHoleId;
+      readonly value: WildShapeEquipmentDispositionFillValue;
     }
   | {
       readonly kind: "dancingLightsPlacement";

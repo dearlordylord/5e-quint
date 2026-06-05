@@ -272,7 +272,10 @@ export {
   spellSaveDcForCaster,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeLoadoutObjectRefs,
   type ActiveOngoingFeatureOccurrence,
+  type ActiveWildShapeEquipmentDisposition,
   type ActiveOngoingFeatureOccurrenceSnapshot,
   type ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   type BattleAttackDamageDisposition,
@@ -378,6 +381,7 @@ export {
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
+  type BattleWildShapeEquipmentDispositionHole,
   type EndedFlySpeedGrant,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
@@ -398,6 +402,9 @@ export {
   type ThaumaturgyBoomingVoiceSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
+  type WildShapeEquipmentDispositionChoice,
+  type WildShapeEquipmentDispositionFillValue,
+  type WildShapeLoadoutObjectRef,
 } from "./battle-reducer.ts";
 export {
   resolveBattlePossessionAttempt,
