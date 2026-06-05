@@ -3709,6 +3709,20 @@ function breathWeaponDamageAmount(
 }
 
 type DamageEffectAtom = Extract<EffectAtom, { readonly kind: "damage" }>;
+const DRACONIC_ANCESTRY_RESOURCE_SHAPE_WITNESS_DAMAGE_TYPE =
+  "fire" satisfies DraconicAncestryDamageType;
+
+export function unitHasAttackActionAreaSaveDamageReplacementResourceShape(
+  unit: UnitRecord,
+): boolean {
+  return (
+    attackActionAreaSaveDamageReplacementProfileForUnit({
+      unit,
+      draconicAncestryDamageType:
+        DRACONIC_ANCESTRY_RESOURCE_SHAPE_WITNESS_DAMAGE_TYPE,
+    }) !== null
+  );
+}
 
 function draconicAncestryDamageTypeRef(
   damageType: DamageEffectAtom["damageType"],

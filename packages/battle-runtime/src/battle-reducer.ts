@@ -5222,6 +5222,10 @@ export type BattleUnitFeatureRollHole = Extract<
         SupportedUnitFeatureProfile,
         { readonly kind: "magicActionAreaSaveDamageHealing" }
       >
+    | Extract<
+        SupportedUnitFeatureProfile,
+        { readonly kind: "attackActionAreaSaveDamageReplacement" }
+      >
     | {
         readonly unitId: UnitRecord["id"];
         readonly label: string;

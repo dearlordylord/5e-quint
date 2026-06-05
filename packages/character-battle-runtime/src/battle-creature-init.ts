@@ -38,6 +38,7 @@ import {
   characterBuildProficiencies,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
+  characterBuildUnitRefs,
   computeTotalLevel,
   progressionClassLevels,
   type CharacterBuild,
@@ -84,7 +85,7 @@ import {
 } from "./battle-support-profiles.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge unit-feature.attack-action-area-save-damage-replacement
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
@@ -598,11 +599,8 @@ export function characterBattleResourceInitsFromBuild(
   const parsedLevels =
     parsedClassLevels ?? parseCharacterBattleClassLevels(classLevels.right);
   const resources: CharacterBattleResourceInit[] = [];
-  for (const featureUnitId of characterBuildFeatureUnitIds(
-    build,
-    unitLibrary,
-  )) {
-    const unit = unitLibrary.getUnit(featureUnitId);
+  for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
+    const unit = unitLibrary.getUnit(unitRef.unitId);
     if (Option.isNone(unit)) {
       continue;
     }

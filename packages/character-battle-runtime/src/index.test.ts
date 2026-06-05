@@ -609,6 +609,15 @@ describe("Character Sheet battle handoff", () => {
         }),
       ]),
     );
+    expect(init.creatureInit.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({
+            id: "species_dragonborn_breath_weapon",
+          }),
+        }),
+      ]),
+    );
   });
 
   test("rejects duplicated persisted Dragonborn Draconic Ancestry damage type", () => {

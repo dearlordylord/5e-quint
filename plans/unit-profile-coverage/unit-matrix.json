@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 160,
-      "numerator": 160,
+      "denominator": 161,
+      "numerator": 161,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 160,
-      "numerator": 156,
+      "denominator": 161,
+      "numerator": 157,
       "percent": "97.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 160,
-      "percent": "70.2%"
+      "numerator": 161,
+      "percent": "70.6%"
     }
   },
   "metricSemantics": [
@@ -785,16 +785,35 @@
     {
       "id": "unit-feature.attack-action-area-save-damage-replacement",
       "profileKind": "battle-admission",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+      ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/unit-feature-support.ts"
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
       ],
-      "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. This profile is support-profile admission only; battle reducer execution, resource spending, area membership, Saving Throw fills, damage application, QNT, and MBT parity remain deferred to L3MSPEC-03.",
+      "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. Character battle initialization derives battle resources from retained build Unit refs so species traits with supported use-count mechanics are admitted without a parallel species-resource list. Runtime derives the executable Breath Weapon profile from the selected Unit support profile plus the resource Unit at discovery and resolution time, spends one use, replaces one Attack-action attack through the shared action-resource protocol, consumes table-supplied area membership and Saving Throw outcomes, validates the damage dice tier, and applies the selected Draconic Ancestry damage without dispatching on authored species or trait identity.",
       "taskRefs": [
-        "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+        "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE",
+        "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
       ],
-      "title": "Unit feature admits an Attack-action attack replacement that projects an area Saving Throw damage profile",
-      "verificationOwners": []
+      "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+        }
+      ]
     },
     {
       "id": "unit-feature.passive-speed-bonus",
@@ -14381,6 +14400,14 @@
         "unit-feature.attack-action-area-save-damage-replacement"
       ],
       "taskId": "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Dragonborn Breath Weapon discovery from selected Draconic Ancestry source facts, Proficiency Bonus use spending, Attack-action attack replacement, remaining Extra Attack slot opening through the shared action-resource protocol, table-supplied Cone or Line area membership, Dexterity Saving Throw outcomes, selected ancestry damage application, successful-save half damage, character-level damage dice validation, and rejection of mismatched area/outcome or invalid damage-roll fills without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.attack-action-area-save-damage-replacement"
+      ],
+      "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -22005,30 +22032,20 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME",
-            "mechanic": "Battle reducer execution for Breath Weapon: selected-use resource state, Attack-action replacement discovery and spending, area membership witnesses, Dexterity Saving Throw fills, selected Draconic Ancestry damage type application, damage-roll validation, half-damage application, QNT slices, focused MBT, and selected-identity parity."
-          }
-        ],
         "profileIds": [
           "unit-feature.attack-action-area-save-damage-replacement"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "L3MSPEC-02 admits Surface support-profile shape only. No reducer command, selected Unit replay boundary, QNT, or MBT runtime parity is claimed until L3MSPEC-03.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "The Dragonborn species Surface record owns the exact SRD Draconic Ancestry damage-type source table; Breath Weapon and Damage Resistance reference that one source fact instead of carrying trait-local damage choices",
           "Character creation requires one Draconic Ancestry selection for Dragonborn and projects the selected ancestry onto CharacterBuild species choice facts",
           "Battle Unit admission derives the selected Draconic Ancestry damage type from CharacterBuild selected ancestry and the selected species Surface source table together with the Breath Weapon Surface activation mechanics",
-          "The admitted support profile projects replace-one-Attack-action-attack activation, self-origin 15-foot Cone or 30-foot Line 5-foot-wide shape choice, Dexterity innate save DC 8 plus Constitution modifier plus Proficiency Bonus, selected Draconic Ancestry damage type, character-level 1d10/2d10/3d10/4d10 damage tiers, half damage on a successful save, Proficiency Bonus use cap, and Long Rest reset facts without dispatching on Dragonborn or ancestry identity"
+          "The admitted support profile projects replace-one-Attack-action-attack activation, self-origin 15-foot Cone or 30-foot Line 5-foot-wide shape choice, Dexterity innate save DC 8 plus Constitution modifier plus Proficiency Bonus, selected Draconic Ancestry damage type, character-level 1d10/2d10/3d10/4d10 damage tiers, half damage on a successful save, Proficiency Bonus use cap, and Long Rest reset facts without dispatching on Dragonborn or ancestry identity",
+          "Battle reducer execution discovers Breath Weapon from a selected Unit support profile, spends one Proficiency Bonus use, replaces one available Attack-action attack, opens remaining Extra Attack slots through the shared Attack action resource protocol, requires table-supplied Cone or Line area membership, resolves Dexterity Saving Throw outcomes, validates damage dice against the character-level tier, applies selected Draconic Ancestry damage with half damage on successful saves, and rejects mismatched area/outcome or damage-roll fills before spending resources."
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -22036,6 +22053,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -22044,16 +22066,35 @@
         {
           "id": "unit-feature.attack-action-area-save-damage-replacement",
           "profileKind": "battle-admission",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+          ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/unit-feature-support.ts"
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
           ],
-          "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. This profile is support-profile admission only; battle reducer execution, resource spending, area membership, Saving Throw fills, damage application, QNT, and MBT parity remain deferred to L3MSPEC-03.",
+          "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. Character battle initialization derives battle resources from retained build Unit refs so species traits with supported use-count mechanics are admitted without a parallel species-resource list. Runtime derives the executable Breath Weapon profile from the selected Unit support profile plus the resource Unit at discovery and resolution time, spends one use, replaces one Attack-action attack through the shared action-resource protocol, consumes table-supplied area membership and Saving Throw outcomes, validates the damage dice tier, and applies the selected Draconic Ancestry damage without dispatching on authored species or trait identity.",
           "taskRefs": [
-            "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+            "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE",
+            "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
           ],
-          "title": "Unit feature admits an Attack-action attack replacement that projects an area Saving Throw damage profile",
-          "verificationOwners": []
+          "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",

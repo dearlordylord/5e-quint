@@ -4,7 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";

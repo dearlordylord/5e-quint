@@ -33,6 +33,7 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
+  unitHasAttackActionAreaSaveDamageReplacementResourceShape,
 } from "./unit-feature-support.ts";
 import {
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
@@ -40,7 +41,7 @@ import {
 } from "./find-familiar-forms.ts";
 import * as Either from "effect/Either";
 
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.magic-action-healing-pool
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.paladin-sacred-weapon
 
 export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
@@ -706,7 +707,8 @@ function characterBattleResourceForUnitOrNull(
   if (
     unit.kind === "species_trait" &&
     unit.mechanics.family === "activation" &&
-    bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null
+    (bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null ||
+      unitHasAttackActionAreaSaveDamageReplacementResourceShape(unit))
   ) {
     const resource = unit.mechanics.resource;
     if (resource !== undefined) {
