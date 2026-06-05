@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-damage-resistance unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
@@ -40,6 +41,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
+  dwarfDwarvenResilienceUnitId,
   Either,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -56,7 +58,7 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
-describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
+describe("L3MSPEC species battle support", () => {
   const dragonbornSpeciesRecord = decodeSpeciesRecordSync(
     speciesDragonbornInput,
   );
@@ -123,6 +125,15 @@ describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
         kind: "draconicAncestry",
         holeId: "species_dragonborn_draconic_ancestry_damage_type",
         value: "fire",
+      },
+    },
+  } as const;
+  const expectedPoisonResistanceSupport = {
+    kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+    resistance: {
+      damageType: {
+        kind: "fixed",
+        value: "poison",
       },
     },
   } as const;
@@ -448,6 +459,91 @@ describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
 
     expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(4);
     expect(damageAmountAfterTargetAdjustments(target, 9, "cold")).toBe(9);
+  });
+
+  test("dwarf_dwarven_resilience admits only the Poison damage Resistance fact", () => {
+    const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: dwarfDwarvenResilienceUnitId,
+        supportProfiles: [expectedPoisonResistanceSupport],
+      }),
+    );
+    expect(
+      battlePassiveDamageResistanceSupportForUnit({
+        unit,
+        draconicAncestryDamageType: undefined,
+      }),
+    ).toEqual(expectedPoisonResistanceSupport);
+    expect(
+      passiveDamageResistanceProfileForUnit({
+        unit,
+        draconicAncestryDamageType: undefined,
+      }),
+    ).toEqual(expectedPoisonResistanceSupport.resistance);
+  });
+
+  test("Dwarven Resilience fixed Resistance admission follows mechanics shape rather than Unit identity", () => {
+    const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+    if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Dwarven Resilience passive trait.");
+    }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_fixed_poison_resistance_fixture",
+      mechanics: unit.mechanics,
+    });
+
+    expect(
+      battlePassiveDamageResistanceSupportForUnit({
+        unit: syntheticUnit,
+        draconicAncestryDamageType: undefined,
+      }),
+    ).toEqual(expectedPoisonResistanceSupport);
+  });
+
+  test("Dwarven Resilience halves only Poison damage on the target", () => {
+    const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
+    });
+    expect(Either.isRight(unitRef)).toBe(true);
+    if (Either.isLeft(unitRef)) {
+      throw new Error(unitRef.left.message);
+    }
+    const targetId = combatantId("dwarven-resilience-target");
+    const result = startBattle({
+      battleId: battleId("dwarven-resilience"),
+      combatants: [
+        characterCreature({
+          combatantId: targetId,
+          displayName: "Dwarf Target",
+          initiative: 10,
+          side: partySide,
+          characterUnitRefs: [unitRef.right],
+        }),
+        characterCreature({
+          combatantId: combatantId("dwarven-resilience-attacker"),
+          displayName: "Attacker",
+          initiative: 5,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      throw new Error(result.left.message);
+    }
+    const target = result.right.combatants.get(targetId);
+    if (target === undefined) {
+      throw new Error("Expected Dwarven Resilience target combatant.");
+    }
+
+    expect(damageAmountAfterTargetAdjustments(target, 9, "poison")).toBe(4);
+    expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(9);
   });
 });
 

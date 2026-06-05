@@ -31,13 +31,13 @@
     {
       "number": 5,
       "id": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Dwarven Resilience poison resistance"
     },
     {
       "number": 6,
       "id": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Dwarven Resilience poison save roll mode"
     },
     {
@@ -116,8 +116,8 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 2 | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Shape an executable battle profile from typed Draconic Ancestry, shape, DC, dice-tier, use-pool, and Long Rest facts without ancestry identity dispatch. |
 | 3 | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | done | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | Runtime/QNT/MBT vertical slice for breath weapon. |
 | 4 | L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Passive Resistance profile that shares or defines the same typed Draconic Ancestry damage-type source fact expected by Breath Weapon. |
-| 5 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Poison damage Resistance slice only; keep Poisoned saving-throw Advantage in Task 6. |
-| 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | blocked | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
+| 5 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | done | L3MSPEC-01-CANDIDATE-TRIAGE | Poison damage Resistance slice only; keep Poisoned saving-throw Advantage in Task 6. |
+| 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | ready-for-implementation-after-light-research | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
 | 7 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Promote only the battle-relevant Advantage on ability checks to end Grappled; leave carrying capacity to Character Sheet or inventory projection. |
 | 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | ready-for-implementation-after-light-research | none | Audit whether existing `unit-feature.attack-damage-rider` owners already cover Frenzy. |
 | 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | blocked | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Implement only if the audit finds a real missing runtime slice. |

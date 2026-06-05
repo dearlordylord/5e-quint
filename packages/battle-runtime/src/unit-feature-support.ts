@@ -12,6 +12,7 @@ import {
   ARMOR_CATEGORIES,
   CONDITIONS as ALL_CONDITIONS,
   ClassLevel,
+  DAMAGE_TYPES,
   classLevel,
   movementDeltaFeet,
   movementFeet,
@@ -131,6 +132,7 @@ type DraconicAncestryDamageTypeSource =
   DragonbornSpeciesRecord["draconicAncestry"]["damageType"];
 type DraconicAncestryDamageType =
   DraconicAncestryDamageTypeSource["options"][number]["damageType"];
+const DAMAGE_TYPE_VALUES = new Set<string>(DAMAGE_TYPES);
 export type BattleUnitSupportProfileSourceFacts = {
   readonly draconicAncestryDamageType: DraconicAncestryDamageType;
 };
@@ -301,11 +303,16 @@ export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
 };
 export type PassiveDamageResistanceProfile = {
-  readonly damageType: {
-    readonly kind: "draconicAncestry";
-    readonly holeId: typeof DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID;
-    readonly value: DraconicAncestryDamageType;
-  };
+  readonly damageType:
+    | {
+        readonly kind: "draconicAncestry";
+        readonly holeId: typeof DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID;
+        readonly value: DraconicAncestryDamageType;
+      }
+    | {
+        readonly kind: "fixed";
+        readonly value: DamageType;
+      };
 };
 export type BattlePassiveDamageResistanceSupportProfile = {
   readonly kind: typeof PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE;
@@ -2625,9 +2632,6 @@ export function battlePassiveDamageResistanceSupportForUnit(input: {
   if (!hasPassiveDamageResistanceMechanics(input.unit)) {
     return null;
   }
-  if (input.draconicAncestryDamageType === undefined) {
-    return "unsupported";
-  }
   const resistance = passiveDamageResistanceProfileForUnit({
     unit: input.unit,
     draconicAncestryDamageType: input.draconicAncestryDamageType,
@@ -2975,10 +2979,7 @@ function hasPassiveDamageResistanceMechanics(unit: UnitRecord): boolean {
   return unit.mechanics.grants.some(
     (effect) =>
       effect.kind === "grant_resistance" &&
-      typeof effect.damageType === "object" &&
-      effect.damageType !== null &&
-      effect.damageType.kind === "same_choice_as" &&
-      effect.damageType.holeId === DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
+      passiveResistanceDamageTypeMechanicsAreSupported(effect.damageType),
   );
 }
 
@@ -3821,7 +3822,7 @@ type GrantResistanceEffectAtom = Extract<
 
 function draconicAncestryResistanceDamageTypeRef(
   damageType: GrantResistanceEffectAtom["damageType"],
-  selectedDamageType: DraconicAncestryDamageType,
+  selectedDamageType: DraconicAncestryDamageType | undefined,
 ): PassiveDamageResistanceProfile["damageType"] | null {
   if (
     typeof damageType !== "object" ||
@@ -3831,6 +3832,9 @@ function draconicAncestryResistanceDamageTypeRef(
   ) {
     return null;
   }
+  if (selectedDamageType === undefined) {
+    return null;
+  }
   return {
     kind: "draconicAncestry",
     holeId: DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
@@ -3838,22 +3842,68 @@ function draconicAncestryResistanceDamageTypeRef(
   };
 }
 
+function fixedResistanceDamageTypeRef(
+  damageType: GrantResistanceEffectAtom["damageType"],
+): PassiveDamageResistanceProfile["damageType"] | null {
+  return typeof damageType === "string" && isDamageType(damageType)
+    ? { kind: "fixed", value: damageType }
+    : null;
+}
+
+function isDamageType(value: string): value is DamageType {
+  return DAMAGE_TYPE_VALUES.has(value);
+}
+
+function passiveResistanceDamageTypeRef(
+  damageType: GrantResistanceEffectAtom["damageType"],
+  selectedDamageType: DraconicAncestryDamageType | undefined,
+): PassiveDamageResistanceProfile["damageType"] | null {
+  return (
+    fixedResistanceDamageTypeRef(damageType) ??
+    draconicAncestryResistanceDamageTypeRef(damageType, selectedDamageType)
+  );
+}
+
+function passiveResistanceDamageTypeMechanicsAreSupported(
+  damageType: GrantResistanceEffectAtom["damageType"],
+): boolean {
+  return (
+    fixedResistanceDamageTypeRef(damageType) !== null ||
+    draconicAncestryResistanceDamageTypeMechanicsAreSupported(damageType)
+  );
+}
+
+function draconicAncestryResistanceDamageTypeMechanicsAreSupported(
+  damageType: GrantResistanceEffectAtom["damageType"],
+): boolean {
+  return (
+    typeof damageType === "object" &&
+    damageType !== null &&
+    damageType.kind === "same_choice_as" &&
+    damageType.holeId === DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID
+  );
+}
+
 export function passiveDamageResistanceProfileForUnit(input: {
   readonly unit: UnitRecord;
-  readonly draconicAncestryDamageType: DraconicAncestryDamageType;
+  readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
 }): PassiveDamageResistanceProfile | null {
   const { unit } = input;
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
     return null;
   }
-  const [grant, ...extraGrants] = unit.mechanics.grants;
-  if (grant?.kind !== "grant_resistance" || extraGrants.length !== 0) {
+  const resistanceGrants = unit.mechanics.grants.filter(
+    (effect): effect is GrantResistanceEffectAtom =>
+      effect.kind === "grant_resistance",
+  );
+  if (resistanceGrants.length !== 1) {
     return null;
   }
+  const [grant] = resistanceGrants;
   if ("sourceFilter" in grant && grant.sourceFilter !== undefined) {
     return null;
   }
-  const damageType = draconicAncestryResistanceDamageTypeRef(
+  const damageType = passiveResistanceDamageTypeRef(
     grant.damageType,
     input.draconicAncestryDamageType,
   );

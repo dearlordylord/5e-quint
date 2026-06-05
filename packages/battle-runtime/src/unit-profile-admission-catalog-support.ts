@@ -79,6 +79,8 @@ export const speciesDragonbornBreathWeaponUnitId =
 export const speciesDragonbornDamageResistanceUnitId =
   "species_dragonborn_damage_resistance";
 
+export const dwarfDwarvenResilienceUnitId = "dwarf_dwarven_resilience";
+
 export const rogueCunningActionUnitId = "rogue_cunning_action";
 
 export const rogueEvasionUnitId = "rogue_evasion";

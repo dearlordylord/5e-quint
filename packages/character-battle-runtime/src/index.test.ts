@@ -12,6 +12,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
 import type {
   BattleFill,
   BattleCreatureState,
@@ -660,6 +661,36 @@ describe("Character Sheet battle handoff", () => {
           unit: expect.objectContaining({
             id: "species_dragonborn_breath_weapon",
           }),
+        }),
+      ]),
+    );
+  });
+
+  test("projects Dwarven Resilience Poison Resistance support into battle Unit refs", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        dwarfFighterBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "fighter", level: 1 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "dwarf_dwarven_resilience",
+          supportProfiles: [
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "fixed",
+                  value: "poison",
+                },
+              },
+            },
+          ],
         }),
       ]),
     );
@@ -3400,6 +3431,19 @@ function dragonbornFighterBuild(
           },
         }),
     originLanguages: ["Common", "Draconic", "Dwarvish"],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function dwarfFighterBuild(): CharacterBuild {
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    species: "species_dwarf",
+    originLanguages: ["Common", "Dwarvish", "Draconic"],
     features: [],
     equipment: {
       owned: [],
