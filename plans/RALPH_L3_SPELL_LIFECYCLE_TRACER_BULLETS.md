@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field magical area clipping"
     },
     {
@@ -144,7 +144,7 @@ owns branch repair.
 | 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
 | 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Shared magical-effect targeting and delivery interdiction is promoted for represented combatant target/effect-delivery paths. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
-| 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
+| 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed as table-spatial derivation for currently supported area shapes without duplicating map state. |
 | 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
 | 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
@@ -497,7 +497,7 @@ Expected outputs:
 
 ### Task 12 - L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Prevent areas of effect created by spells or other magic from extending into
 Antimagic Field.
@@ -511,11 +511,14 @@ Required behavior:
 - otherwise close specific supported area shapes as table-spatial derivation
   without changing reducer behavior.
 
-Expected outputs:
+Completed output:
 
-- promoted area-clipping owner or explicit table closure for each supported area
-  shape;
-- existing caller-supplied area membership facts remain single-sourced.
+- explicit table-spatial closure for Cone, Cube, Cylinder, Emanation, Line, and
+  Sphere area shapes;
+- existing caller-supplied area identity, affected membership, aura membership,
+  movement/path, and overlap facts remain single-sourced;
+- durable closure evidence is recorded in
+  `plans/unit-profile-coverage/L3_FOLLOWUP_ANTIMAGIC_MAGICAL_AREA_CLIPPING.md`.
 
 ### Task 13 - L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING
 
