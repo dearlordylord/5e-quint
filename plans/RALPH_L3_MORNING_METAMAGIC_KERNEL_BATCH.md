@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Map Transmuted Spell profile to rules-kernel obligations"
     },
     {
@@ -110,7 +110,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 |---:|---|---|---|---|
 | 1 | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL | ready-for-implementation-after-light-research | none | Fix `unit-feature.metamagic-careful-save-protection` rules-kernel join. |
 | 2 | L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED | ready-for-implementation-after-light-research | none | Fix `unit-feature.metamagic-heightened-save-disadvantage` rules-kernel join. |
-| 3 | L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED | ready-for-implementation-after-light-research | none | Fix `unit-feature.metamagic-damage-type-substitution` rules-kernel join. |
+| 3 | L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED | done | none | Fix `unit-feature.metamagic-damage-type-substitution` rules-kernel join. |
 | 4 | L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED | ready-for-implementation-after-light-research | none | Fix `unit-feature.metamagic-effective-level-extra-target` rules-kernel join. |
 | 5 | L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT | ready-for-implementation-after-light-research | none | Decide whether Antimagic MBT QNT drivers need proof rows or explicit non-proof classification. |
 | 6 | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | ready-for-research | none | Produce a runnable next-slice list from actual supported procedures. |

@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 144,
-      "numerator": 142,
-      "percent": "98.6%"
+      "numerator": 143,
+      "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 144,
-      "numerator": 142,
-      "percent": "98.6%"
+      "numerator": 143,
+      "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 154,
@@ -4625,13 +4625,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 144,
-        "numerator": 142,
-        "percent": "98.6%"
+        "numerator": 143,
+        "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 144,
-        "numerator": 142,
-        "percent": "98.6%"
+        "numerator": 143,
+        "percent": "99.3%"
       }
     },
     "profileKinds": [
@@ -6773,8 +6773,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Transmuted Spell Metamagic admits known selected spell damage substitutions, enforces Sorcery Point affordability, requires a listed replacement Damage Type distinct from the source, and projects the replacement without mutating source damage facts"
+          }
+        ],
         "profileId": "unit-feature.metamagic-damage-type-substitution",
         "profileKind": "resource",
         "qntOwners": [
