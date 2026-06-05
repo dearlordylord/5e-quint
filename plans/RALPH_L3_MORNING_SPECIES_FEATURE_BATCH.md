@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MSPEC-01-CANDIDATE-TRIAGE","status":"done","title":"Triage species and class-feature battle candidates"},
-    {"number":2,"id":"L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE","status":"ready-for-implementation-after-light-research","title":"Promote Dragonborn Breath Weapon Surface and support profile"},
-    {"number":3,"id":"L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME","status":"blocked","title":"Promote Dragonborn Breath Weapon runtime parity"},
-    {"number":4,"id":"L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE","status":"ready-for-implementation-after-light-research","title":"Promote Dragonborn Damage Resistance"},
-    {"number":5,"id":"L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE","status":"ready-for-implementation-after-light-research","title":"Promote Dwarven Resilience poison resistance"},
-    {"number":6,"id":"L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE","status":"blocked","title":"Promote Dwarven Resilience poison save roll mode"},
-    {"number":7,"id":"L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE","status":"ready-for-implementation-after-light-research","title":"Promote Goliath Powerful Build grapple escape fact"},
-    {"number":8,"id":"L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit Barbarian Frenzy attack-damage rider"},
-    {"number":9,"id":"L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME","status":"blocked","title":"Promote Barbarian Frenzy runtime parity"},
-    {"number":10,"id":"L3MSPEC-10-SPECIES-DARKVISION-CLOSURE","status":"ready-for-research","title":"Close or plan species Darkvision sense projection"},
-    {"number":11,"id":"L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT","status":"blocked","title":"Audit selected-identity replay for promoted species traits"},
-    {"number":12,"id":"L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION","status":"blocked","title":"Consolidate species and feature candidate evidence"}
+    {
+      "number": 1,
+      "id": "L3MSPEC-01-CANDIDATE-TRIAGE",
+      "status": "done",
+      "title": "Triage species and class-feature battle candidates"
+    },
+    {
+      "number": 2,
+      "id": "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE",
+      "status": "done",
+      "title": "Promote Dragonborn Breath Weapon Surface and support profile"
+    },
+    {
+      "number": 3,
+      "id": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME",
+      "status": "blocked",
+      "title": "Promote Dragonborn Breath Weapon runtime parity"
+    },
+    {
+      "number": 4,
+      "id": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Dragonborn Damage Resistance"
+    },
+    {
+      "number": 5,
+      "id": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Dwarven Resilience poison resistance"
+    },
+    {
+      "number": 6,
+      "id": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+      "status": "blocked",
+      "title": "Promote Dwarven Resilience poison save roll mode"
+    },
+    {
+      "number": 7,
+      "id": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Goliath Powerful Build grapple escape fact"
+    },
+    {
+      "number": 8,
+      "id": "L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit Barbarian Frenzy attack-damage rider"
+    },
+    {
+      "number": 9,
+      "id": "L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME",
+      "status": "blocked",
+      "title": "Promote Barbarian Frenzy runtime parity"
+    },
+    {
+      "number": 10,
+      "id": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Close or plan species Darkvision sense projection"
+    },
+    {
+      "number": 11,
+      "id": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
+      "status": "blocked",
+      "title": "Audit selected-identity replay for promoted species traits"
+    },
+    {
+      "number": 12,
+      "id": "L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Consolidate species and feature candidate evidence"
+    }
   ]
 }
 -->
