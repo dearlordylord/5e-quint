@@ -43,14 +43,32 @@
     {
       "number": 7,
       "id": "L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Wild Shape retained statistics follow-up"
     },
     {
       "number": 8,
       "id": "L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate residual level-3 golden evidence"
+    },
+    {
+      "number": 9,
+      "id": "L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
+      "status": "ready-for-research",
+      "title": "Project Wild Shape sense language and speech facts"
+    },
+    {
+      "number": 10,
+      "id": "L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT",
+      "status": "ready-for-research",
+      "title": "Promote Wild Shape object anatomy and equipment disposition"
+    },
+    {
+      "number": 11,
+      "id": "L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY",
+      "status": "blocked",
+      "title": "Resolve Wild Shape active form persistence boundary"
     }
   ]
 }
@@ -93,8 +111,11 @@ owns branch repair.
 | 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | done | none | Closed as an ASSUMPTIONS-ready owner-decision blocker; no Acid Arrow runtime or Surface repair was modeled. |
 | 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry | Run only after the owner approves an executable initial/later/miss/slot-scaling damage relationship. |
 | 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
-| 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | ready-for-implementation-after-light-research | none | Prefer precise split/closure unless an existing owner makes a small executable slice obvious. |
-| 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | blocked | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation only after the independent residual slices close. |
+| 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | done | none | Closed by replacing the broad retained-statistics blocker with narrower Wild Shape follow-up owners and an ASSUMPTIONS-backed active-form persistence closure. |
+| 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | ready-for-implementation | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation can now run over the closed independent residual slices while keeping the split Wild Shape follow-ups visible as future owner tasks. |
+| 9 | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION - Project Wild Shape sense language and speech facts | ready-for-research | none | Research the shared creature perception/communication projection before any battle/app/MCP consumer claims Wild Shape senses, retained languages, or speech behavior. |
+| 10 | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT - Promote Wild Shape object anatomy and equipment disposition | ready-for-research | none | Research the equipment/loadout, form-anatomy, and GM-witness boundary before promoting object handling or non-merged equipment dispositions. |
+| 11 | L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY - Resolve Wild Shape active form persistence boundary | blocked | future session active-effect persistence owner or owner-approved `ASSUMPTIONS.md` revision | Existing Character Sheet handoff rejection remains correct under A27 until the repo owns cross-session active-form persistence. |
 
 ## Global Acceptance Criteria
 
@@ -324,7 +345,21 @@ Expected outputs:
 
 ### Task 7 - L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- RAW review split the old retained-statistics blocker into three durable
+  follow-up owners: sense/language/speech projection, object/anatomy/equipment
+  disposition, and active-form persistence.
+- No narrow executable owner was promoted in this task because the remaining
+  non-D20 projection work needs shared creature perception/communication,
+  equipment/loadout, form-anatomy, GM-witness, or session active-effect
+  ownership before runtime consumers can claim it without duplicate Wild Shape
+  state.
+- Active Wild Shape non-battle persistence remains closed at the Character
+  Sheet handoff boundary by `ASSUMPTIONS.md` A27 unless a future task revises
+  that assumption and introduces a session active-effect persistence owner.
 
 Split the remaining Wild Shape retained-statistics blocker into executable
 owners or precise closures.
@@ -349,7 +384,7 @@ Expected outputs:
 
 ### Task 8 - L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Consolidate the residual lane after the independent tasks close.
 
@@ -360,3 +395,78 @@ Required behavior:
 - keep true residuals visible in `LEVEL1_3_FULL_SUPPORT.md`,
   `UNIT_REPORT.md`, and task claims;
 - re-run both coverage generators and gates.
+
+### Task 9 - L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
+
+Status: `ready-for-research`
+
+Research and design the shared projection owner for Wild Shape senses,
+languages, and speech.
+
+Required behavior:
+
+- read Wild Shape RAW, Stat Block `Senses` and `Languages` glossary entries,
+  and `UBIQUITOUS_LANGUAGE.md` speech-blocking condition language;
+- inspect existing Character Sheet language facts, active-form facts, Stat
+  Block projection, condition/speech blockers, app views, MCP views, and battle
+  consumers before adding any state;
+- derive Beast-form special Senses and retained character languages/speech from
+  existing active-form, Character Sheet, Stat Block, and condition facts;
+- do not add Wild Shape-local duplicate sense or language fields, and do not
+  dispatch on authored Wild Shape identity.
+
+Expected outputs:
+
+- a concrete implementation plan for typed shared creature
+  perception/communication projection APIs and focused tests;
+- if the research finds an already-local owner, promote only that narrow owner
+  with focused tests and generated coverage evidence.
+
+### Task 10 - L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT
+
+Status: `ready-for-research`
+
+Research and design the Wild Shape Objects rule owner for form-limb object
+handling and equipment disposition.
+
+Required behavior:
+
+- read Wild Shape Objects RAW and inspect equipment/loadout, active-form,
+  object-handling, battle, app, and MCP owners before adding any state;
+- model the player choice among falling, merging, or worn equipment only through
+  an owner that can derive from existing loadout and active-form facts;
+- represent GM practicality and cannot-wear outcomes as typed caller/GM
+  witnesses rather than inferred authored identity behavior;
+- preserve RAW no-resize/no-reshape and merged-equipment no-effect semantics
+  without adding parallel equipment inventories to Wild Shape state.
+
+Expected outputs:
+
+- a concrete implementation plan for typed equipment-disposition and
+  object-handling workflow APIs with focused tests;
+- if the research finds an already-local owner, promote only that narrow owner
+  with generated owner evidence and any needed QNT/runtime parity.
+
+### Task 11 - L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY
+
+Status: `blocked`
+
+Resolve active Wild Shape persistence across non-battle time only after the repo
+has either a future session active-effect persistence owner or owner approval to
+revise `ASSUMPTIONS.md` A27.
+
+Required behavior:
+
+- preserve the existing Character Sheet handoff rejection while A27 remains in
+  force;
+- if the blocker is cleared, derive active-form identity and remaining
+  half-Druid-level duration from the Surface feature, Druid level, and active
+  form facts without duplicating true-form or Stat Block state;
+- update `ASSUMPTIONS.md`, Character Battle handoff, focused tests, and coverage
+  ledgers together if persistence is promoted.
+
+Expected outputs:
+
+- either a retained typed handoff rejection with assumption-backed evidence, or
+  an owner-approved session persistence model with focused runtime tests and any
+  required QNT/MBT parity.
