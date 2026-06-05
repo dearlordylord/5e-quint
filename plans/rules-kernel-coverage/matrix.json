@@ -10404,6 +10404,7 @@
     "stat-block.attack-control",
     "unit-feature.action-surge-resource",
     "unit-feature.alternate-action-cost",
+    "unit-feature.attack-action-area-save-damage-replacement",
     "unit-feature.attack-action-attack-count-scaling",
     "unit-feature.attack-damage-reduction-zero-damage-redirect",
     "unit-feature.attack-damage-rider",

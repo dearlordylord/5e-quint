@@ -24,6 +24,7 @@ import {
   EQUIPMENT_PURCHASE_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
+  characterDraconicAncestrySelection,
   creationFillIndex,
   draftRevision,
   isCharacterSpeciesSizeSelection,
@@ -32,6 +33,7 @@ import {
   type CharacterAlignment,
   type CharacterDraft,
   type CharacterDraftSelections,
+  type CharacterDraconicAncestrySelection,
   type CharacterSpeciesSizeSelection,
   choiceCardinalityBounds,
   type ChoiceCreationHole,
@@ -314,6 +316,12 @@ type AcceptedDraftFill =
       readonly size: CharacterSpeciesSizeSelection;
     }
   | {
+      readonly tag: "draconicAncestry";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly ancestry: CharacterDraconicAncestrySelection;
+    }
+  | {
       readonly tag: "abilityScoreGeneration";
       readonly hole: DraftSourcedAbilityScoreCreationHole;
       readonly fill: AbilityScoreFill;
@@ -589,6 +597,20 @@ function acceptedDraftFill(
         });
   }
 
+  if (path === "draft.draconicAncestry") {
+    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    if (Either.isLeft(singleFill))
+      return applyCreationFillIssue(singleFill.left);
+    return Either.right({
+      tag: "draconicAncestry",
+      hole: choiceFill.right.hole,
+      fill: singleFill.right,
+      ancestry: characterDraconicAncestrySelection(
+        singleFill.right.optionIds[0],
+      ),
+    });
+  }
+
   if (path === "draft.languages") {
     const languages = startingLanguages(choiceFill.right.fill, fillIndex);
     return Either.isLeft(languages)
@@ -805,6 +827,13 @@ export function applyDraftFill(
     return Either.right({
       ...selections,
       speciesSize: acceptedFill.size,
+    });
+  }
+
+  if (acceptedFill.tag === "draconicAncestry") {
+    return Either.right({
+      ...selections,
+      draconicAncestry: acceptedFill.ancestry,
     });
   }
 

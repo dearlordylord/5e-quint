@@ -23,6 +23,7 @@ import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,
   ClassFeatureRecord,
+  DragonbornSpeciesRecord,
   EffectAtom,
   FeatRecord,
   FeatureChoiceMechanics,
@@ -2177,6 +2178,27 @@ export function draftHole(
     });
   }
 
+  if (path === "draft.draconicAncestry") {
+    const speciesId = _draft?.selections.species;
+    if (speciesId === undefined) {
+      return undefined;
+    }
+    const unit = unitLibrary.getUnit(speciesId);
+    if (Option.isNone(unit)) {
+      return undefined;
+    }
+    const source = draconicAncestryDamageTypeSource(unit.value);
+    if (source === undefined) {
+      return undefined;
+    }
+
+    return choiceHole({
+      source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: source.options.map(draconicAncestryOption),
+    });
+  }
+
   if (path === "draft.abilityScoreGeneration") {
     return {
       kind: "abilityScores",
@@ -2215,6 +2237,23 @@ function speciesSizeOption(size: Extract<Size, "medium" | "small">) {
   return {
     optionId: creationChoiceOptionId(size),
     label: size === "medium" ? "Medium" : "Small",
+  };
+}
+
+function draconicAncestryDamageTypeSource(
+  unit: UnitRecord,
+): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
+  return unit.kind === "species" && "draconicAncestry" in unit
+    ? unit.draconicAncestry.damageType
+    : undefined;
+}
+
+function draconicAncestryOption(
+  option: DragonbornSpeciesRecord["draconicAncestry"]["damageType"]["options"][number],
+) {
+  return {
+    optionId: creationChoiceOptionId(option.id),
+    label: option.displayName,
   };
 }
 

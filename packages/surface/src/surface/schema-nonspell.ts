@@ -116,7 +116,9 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
   Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>,
-  ...Array<Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>>,
+  ...Array<
+    Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
+  >,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -3498,12 +3500,75 @@ export const DragonbornSpeciesTraitsSchema = Schema.Struct({
   darkvision: Schema.Literal("species_dragonborn_darkvision"),
 });
 
+const DraconicAncestryDamageTypeSourceSchema = strictStruct({
+  kind: Schema.Literal("choice_table"),
+  holeId: Schema.Literal("species_dragonborn_draconic_ancestry_damage_type"),
+  label: Schema.Literal("draconic ancestry"),
+  options: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal("black"),
+      displayName: Schema.Literal("Black"),
+      damageType: Schema.Literal("acid"),
+    }),
+    strictStruct({
+      id: Schema.Literal("blue"),
+      displayName: Schema.Literal("Blue"),
+      damageType: Schema.Literal("lightning"),
+    }),
+    strictStruct({
+      id: Schema.Literal("brass"),
+      displayName: Schema.Literal("Brass"),
+      damageType: Schema.Literal("fire"),
+    }),
+    strictStruct({
+      id: Schema.Literal("bronze"),
+      displayName: Schema.Literal("Bronze"),
+      damageType: Schema.Literal("lightning"),
+    }),
+    strictStruct({
+      id: Schema.Literal("copper"),
+      displayName: Schema.Literal("Copper"),
+      damageType: Schema.Literal("acid"),
+    }),
+    strictStruct({
+      id: Schema.Literal("gold"),
+      displayName: Schema.Literal("Gold"),
+      damageType: Schema.Literal("fire"),
+    }),
+    strictStruct({
+      id: Schema.Literal("green"),
+      displayName: Schema.Literal("Green"),
+      damageType: Schema.Literal("poison"),
+    }),
+    strictStruct({
+      id: Schema.Literal("red"),
+      displayName: Schema.Literal("Red"),
+      damageType: Schema.Literal("fire"),
+    }),
+    strictStruct({
+      id: Schema.Literal("silver"),
+      displayName: Schema.Literal("Silver"),
+      damageType: Schema.Literal("cold"),
+    }),
+    strictStruct({
+      id: Schema.Literal("white"),
+      displayName: Schema.Literal("White"),
+      damageType: Schema.Literal("cold"),
+    }),
+  ),
+});
+
+const DraconicAncestrySchema = strictStruct({
+  damageType: DraconicAncestryDamageTypeSourceSchema,
+});
+
 export const DragonbornSpeciesRecordSchema = Schema.Struct({
   ...SpeciesRecordBaseSchema.fields,
   species: Schema.Literal("dragonborn"),
   size: FixedMediumSpeciesSizeSchema,
   speed: SpeciesSpeed30Schema,
   traits: DragonbornSpeciesTraitsSchema,
+  draconicAncestry: DraconicAncestrySchema,
 });
 
 export const DwarfSpeciesTraitsSchema = Schema.Struct({

@@ -163,6 +163,8 @@ import {
 } from "./index.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
+  ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleAttackActionAreaSaveDamageReplacementSupportForUnit,
   battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit,
   battleFailedAbilityCheckResourceBoostSupportForUnit,
@@ -212,11 +214,13 @@ export {
   applyPreparedSlotSpellDamage,
   armorClass,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   attackBonus,
   applyInitiativeSwap,
+  battleAttackActionAreaSaveDamageReplacementSupportForUnit,
   finishInitialInitiativeSetup,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleAreaId,

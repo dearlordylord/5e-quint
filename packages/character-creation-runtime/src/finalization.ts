@@ -32,6 +32,7 @@ import type {
   StartingEquipmentChoice,
   EffectAtom,
   PassiveMechanics,
+  DragonbornSpeciesRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
@@ -144,6 +145,7 @@ import {
   type CharacterBuildEquipment,
   type CharacterEquipmentItemSlot,
   type CharacterBuildClassFeatureLanguage,
+  type CharacterBuildSpeciesChoiceFacts,
   type CharacterBuildFeature,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
@@ -325,6 +327,9 @@ export function finalizedSelections(
     ...(selections.speciesSize === undefined
       ? {}
       : { speciesSize: selections.speciesSize }),
+    ...(selections.draconicAncestry === undefined
+      ? {}
+      : { draconicAncestry: selections.draconicAncestry }),
     languages: selections.languages,
     alignment: selections.alignment,
     choices: selections.choices,
@@ -351,6 +356,10 @@ export function executableSupportIssues(
     ...expectedValueIssue(
       speciesSizeSelectionMatchesSurface(selections, unitLibrary),
       "Finalized build species size selection must match the selected species Surface facts.",
+    ),
+    ...expectedValueIssue(
+      draconicAncestrySelectionMatchesSurface(selections, unitLibrary),
+      "Finalized build Draconic Ancestry selection must match the selected species Surface facts.",
     ),
     ...expectedValueIssue(
       isSupportedFinalizableProgression(selections),
@@ -570,6 +579,70 @@ function speciesSizeSelectionMatchesSurface(
   );
 }
 
+function draconicAncestrySelectionMatchesSurface(
+  selections: Pick<
+    FinalizedCharacterSelections,
+    "species" | "draconicAncestry"
+  >,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const speciesUnit = unitLibrary.getUnit(selections.species);
+  if (Option.isNone(speciesUnit)) return false;
+  const source = draconicAncestryDamageTypeSource(speciesUnit.value);
+  if (source === undefined) {
+    return selections.draconicAncestry === undefined;
+  }
+
+  return (
+    selections.draconicAncestry !== undefined &&
+    source.options.some((option) => option.id === selections.draconicAncestry)
+  );
+}
+
+function draconicAncestryDamageTypeSource(
+  unit: UnitRecord,
+): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
+  return unit.kind === "species" && "draconicAncestry" in unit
+    ? unit.draconicAncestry.damageType
+    : undefined;
+}
+
+function finalizedSpeciesChoiceFacts(
+  selections: Pick<FinalizedCharacterSelections, "draconicAncestry">,
+  species: UnitRecord,
+): Either.Either<
+  CharacterBuildSpeciesChoiceFacts | undefined,
+  FinalizationIssues
+> {
+  const source = draconicAncestryDamageTypeSource(species);
+  if (source === undefined) {
+    return selections.draconicAncestry === undefined
+      ? Either.right(undefined)
+      : Either.left([
+          illegalFinalizationIssue(
+            `Cannot project Draconic Ancestry for species without a Draconic Ancestry source fact: ${species.id}.`,
+          ),
+        ]);
+  }
+  const selected = source.options.find(
+    (option) => option.id === selections.draconicAncestry,
+  );
+  if (selected === undefined || selections.draconicAncestry === undefined) {
+    return Either.left([
+      illegalFinalizationIssue(
+        `Cannot project selected Draconic Ancestry for species: ${species.id}.`,
+      ),
+    ]);
+  }
+
+  return Either.right({
+    draconicAncestry: {
+      kind: "draconicAncestry",
+      ancestorId: selections.draconicAncestry,
+    },
+  });
+}
+
 export function illegalFinalizationIssue(
   message: string,
 ): CreationFinalizationIssue {
@@ -742,6 +815,13 @@ export function buildCharacterBuild(input: {
     "species",
   );
   if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
+  const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
+    selections,
+    speciesUnit.right,
+  );
+  if (Either.isLeft(speciesChoiceFacts)) {
+    return Either.left(speciesChoiceFacts.left);
+  }
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
@@ -811,6 +891,9 @@ export function buildCharacterBuild(input: {
     ...(selections.speciesSize === undefined
       ? {}
       : { speciesSize: selections.speciesSize }),
+    ...(speciesChoiceFacts.right === undefined
+      ? {}
+      : { speciesChoiceFacts: speciesChoiceFacts.right }),
     originLanguages: selections.languages,
     classFeatureLanguages: classFeatureLanguages.right,
     alignment: selections.alignment,
@@ -926,7 +1009,10 @@ function classFeatureHitPointMaximumBonus(
   let total = 0;
   const issues: CreationFinalizationIssue[] = [];
 
-  for (const featureUnitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    build,
+    unitLibrary,
+  )) {
     const unit = unitLibrary.getUnit(featureUnitId);
     if (Option.isNone(unit)) {
       issues.push(
@@ -989,10 +1075,7 @@ function deterministicHitPointMaximumDelta(
       const base = deterministicFlatDiceExpr(linear.base);
       const perLevel = deterministicFlatDiceDelta(linear.perLevel);
       if (base === undefined || perLevel === undefined) return undefined;
-      return (
-        base +
-        Math.max(0, classLevel - linear.startingAtLevel) * perLevel
-      );
+      return base + Math.max(0, classLevel - linear.startingAtLevel) * perLevel;
     }),
     Match.when({ kind: "threshold_tiers" }, () => undefined),
     Match.when({ kind: "threshold_tiers_exploding_max_die" }, () => undefined),
@@ -2083,7 +2166,10 @@ export function characterBuildUnitRefs(
 }
 
 function unitRefForSelectedClassChoice(
-  feature: Extract<CharacterBuildFeature, { readonly kind: "selectedClassChoice" }>,
+  feature: Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedClassChoice" }
+  >,
 ): UnitRef {
   return {
     unitId: feature.unitId,

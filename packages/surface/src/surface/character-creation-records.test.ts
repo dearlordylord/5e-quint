@@ -1697,6 +1697,40 @@ describe("character-creation Surface records", () => {
     }
   });
 
+  test("rejects Dragonborn records with malformed Draconic Ancestry source facts", () => {
+    const malformedHoleId = {
+      ...speciesDragonbornInput,
+      draconicAncestry: {
+        ...speciesDragonbornInput.draconicAncestry,
+        damageType: {
+          ...speciesDragonbornInput.draconicAncestry.damageType,
+          holeId: "species_dragonborn_breath_weapon_damage_type",
+        },
+      },
+    };
+    const malformedTable = {
+      ...speciesDragonbornInput,
+      draconicAncestry: {
+        ...speciesDragonbornInput.draconicAncestry,
+        damageType: {
+          ...speciesDragonbornInput.draconicAncestry.damageType,
+          options: [
+            {
+              ...speciesDragonbornInput.draconicAncestry.damageType.options[0],
+              damageType: "fire",
+            },
+            ...speciesDragonbornInput.draconicAncestry.damageType.options.slice(
+              1,
+            ),
+          ],
+        },
+      },
+    };
+
+    expect(() => decodeSpeciesRecordSync(malformedHoleId)).toThrow();
+    expect(() => decodeSpeciesRecordSync(malformedTable)).toThrow();
+  });
+
   test("rejects malformed character creation records at the decode boundary", () => {
     expect(
       Either.isLeft(

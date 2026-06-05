@@ -2,6 +2,7 @@ import {
   battleUnitRefWithSupportProfiles,
   type CharacterBattleCreatureInit,
   type BattleUnitRef,
+  type BattleUnitSupportProfileSourceFacts,
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
@@ -10,6 +11,7 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
+  DragonbornSpeciesRecord,
   UnitRecord,
   WeaponMasteryName,
 } from "@dnd/surface/surface/types";
@@ -47,9 +49,24 @@ export function characterUnitRefsWithBattleSupportProfiles(
   if (Either.isLeft(selectedWeaponMasteries)) {
     return Either.left(selectedWeaponMasteries.left);
   }
+  const sourceFacts = battleSupportProfileSourceFactsForBuild(
+    build,
+    unitLibrary,
+  );
+  if (Either.isLeft(sourceFacts)) {
+    return Either.left([
+      sourceFacts.left,
+    ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
+  }
   const buildUnitRefs = traverseValidation(
     characterBuildUnitRefs(build, unitLibrary),
-    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary, classLevels),
+    (unitRef) =>
+      withBattleSupportProfiles(
+        unitRef,
+        unitLibrary,
+        classLevels,
+        sourceFacts.right,
+      ),
   );
   if (Either.isLeft(buildUnitRefs)) {
     return buildUnitRefs;
@@ -60,14 +77,23 @@ export function characterUnitRefsWithBattleSupportProfiles(
       selectedWeaponMasteries.right,
       unitLibrary,
     ).map((unitId) => ({ unitId })),
-    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary, classLevels),
+    (unitRef) =>
+      withBattleSupportProfiles(
+        unitRef,
+        unitLibrary,
+        classLevels,
+        sourceFacts.right,
+      ),
   );
   if (Either.isLeft(battleMasteryUnitRefs)) {
     return battleMasteryUnitRefs;
   }
 
   return Either.right(
-    uniqueBattleUnitRefs([...buildUnitRefs.right, ...battleMasteryUnitRefs.right]),
+    uniqueBattleUnitRefs([
+      ...buildUnitRefs.right,
+      ...battleMasteryUnitRefs.right,
+    ]),
   );
 }
 
@@ -86,6 +112,7 @@ function withBattleSupportProfiles(
   unitRef: ReturnType<typeof characterBuildUnitRefs>[number],
   unitLibrary: UnitCatalog,
   classLevels: CharacterBattleCreatureInit["classLevels"] | undefined,
+  sourceFacts: BattleUnitSupportProfileSourceFacts | undefined,
 ): Either.Either<BattleUnitRef, BattleSupportProfileIssue> {
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
@@ -97,10 +124,52 @@ function withBattleSupportProfiles(
     unitRef,
     unit: unitOption.value,
     ...(classLevels === undefined ? {} : { classLevels }),
+    ...(sourceFacts === undefined ? {} : { sourceFacts }),
   });
   return Either.isLeft(battleUnitRef)
     ? battleSupportProfileIssue(battleUnitRef.left.message)
     : Either.right(battleUnitRef.right);
+}
+
+function battleSupportProfileSourceFactsForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  BattleUnitSupportProfileSourceFacts | undefined,
+  BattleSupportProfileIssue
+> {
+  const draconicAncestry = build.speciesChoiceFacts?.draconicAncestry;
+  if (draconicAncestry === undefined) return Either.right(undefined);
+
+  const speciesUnit = unitLibrary.getUnit(build.species);
+  if (Option.isNone(speciesUnit)) {
+    return battleSupportProfileIssue(
+      `Unknown Character Build species Unit for battle initialization: ${build.species}.`,
+    );
+  }
+  const source = draconicAncestryDamageTypeSource(speciesUnit.value);
+  if (source === undefined) {
+    return battleSupportProfileIssue(
+      `Character Build Draconic Ancestry fact requires a species with a Draconic Ancestry source: ${build.species}.`,
+    );
+  }
+  const selected = source.options.find(
+    (option) => option.id === draconicAncestry.ancestorId,
+  );
+  if (selected === undefined) {
+    return battleSupportProfileIssue(
+      `Character Build Draconic Ancestry fact must reference the selected species source table: ${build.species}.`,
+    );
+  }
+  return Either.right({ draconicAncestryDamageType: selected.damageType });
+}
+
+function draconicAncestryDamageTypeSource(
+  unit: UnitRecord,
+): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
+  return unit.kind === "species" && "draconicAncestry" in unit
+    ? unit.draconicAncestry.damageType
+    : undefined;
 }
 
 export function characterBattleWeaponMasterySelections(
@@ -170,7 +239,8 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
     if (Option.isNone(weapon) || weapon.value.kind !== "weapon") {
       return [];
     }
-    const masteryUnitId = BATTLE_SUPPORTED_MASTERY_UNIT_IDS[weapon.value.mastery];
+    const masteryUnitId =
+      BATTLE_SUPPORTED_MASTERY_UNIT_IDS[weapon.value.mastery];
     return masteryUnitId === undefined ? [] : [masteryUnitId];
   });
   return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);

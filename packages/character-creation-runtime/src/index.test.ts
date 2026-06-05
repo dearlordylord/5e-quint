@@ -57,6 +57,7 @@ import {
   advanceCharacterBuildClassLevel,
   classUnitIdFromUnitId,
   createCharacterDraft,
+  characterDraconicAncestrySelection,
   creationChoiceOptionId,
   creationHoleId,
   discoverCreationHoles,
@@ -2328,6 +2329,39 @@ describe("character creation hole discovery", () => {
       optionIds(holeById(choiceSpeciesHoles, "cc:draft:draft.speciesSize")),
     ).toEqual(["medium", "small"]);
   });
+
+  test("discovers selected Draconic Ancestry source fact only for Dragonborn", () => {
+    const orcHoles = discoverCreationHoles({
+      draft: draftWithSelections({
+        species: "species_orc",
+      }),
+      unitLibrary,
+    });
+    const dragonbornHoles = discoverCreationHoles({
+      draft: draftWithSelections({
+        species: "species_dragonborn",
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(orcHoles, "cc:draft:draft.draconicAncestry"),
+    ).toBeUndefined();
+    expect(
+      optionIds(holeById(dragonbornHoles, "cc:draft:draft.draconicAncestry")),
+    ).toEqual([
+      "black",
+      "blue",
+      "brass",
+      "bronze",
+      "copper",
+      "gold",
+      "green",
+      "red",
+      "silver",
+      "white",
+    ]);
+  });
 });
 
 describe("character creation QNT slice parity", () => {
@@ -3307,6 +3341,16 @@ describe("character creation finalization", () => {
       } else {
         expect(result.build.speciesSize).toBeUndefined();
       }
+      if (testCase.speciesUnitId === "species_dragonborn") {
+        expect(result.build.speciesChoiceFacts).toEqual({
+          draconicAncestry: {
+            kind: "draconicAncestry",
+            ancestorId: "red",
+          },
+        });
+      } else {
+        expect(result.build.speciesChoiceFacts).toBeUndefined();
+      }
       const unitRefIds = characterBuildUnitRefs(result.build, unitLibrary).map(
         (ref) => ref.unitId,
       );
@@ -3347,6 +3391,42 @@ describe("character creation finalization", () => {
           code: "unsupportedFinalization",
           message:
             "Finalized build species size selection must match the selected species Surface facts.",
+        },
+      ],
+    });
+  });
+
+  test("requires Draconic Ancestry selection exactly for Dragonborn", () => {
+    const dragonbornWithoutAncestry = finalizeCharacterDraft({
+      draft: completeManifestDraftForSpecies({
+        speciesUnitId: "species_dragonborn",
+        draconicAncestry: false,
+      }),
+      unitLibrary,
+    });
+    expect(dragonbornWithoutAncestry).toMatchObject({ tag: "incomplete" });
+
+    const dwarf = completeManifestDraftForSpecies("species_dwarf");
+    const dwarfWithStaleAncestry: CharacterDraft = {
+      ...dwarf,
+      selections: {
+        ...dwarf.selections,
+        draconicAncestry: characterDraconicAncestrySelection("red"),
+      },
+    };
+    const staleAncestry = finalizeCharacterDraft({
+      draft: dwarfWithStaleAncestry,
+      unitLibrary,
+    });
+
+    expect(staleAncestry).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "unsupportedFinalization",
+          code: "unsupportedFinalization",
+          message:
+            "Finalized build Draconic Ancestry selection must match the selected species Surface facts.",
         },
       ],
     });
@@ -7344,7 +7424,9 @@ describe("character creation finalization", () => {
     expect(characterBuildFeatureUnitIds(baseBuild, unitLibrary)).not.toContain(
       "sorcerer_draconic_resilience",
     );
-    expect(expectRight(characterBuildHitPoints(baseBuild, unitLibrary))).toEqual({
+    expect(
+      expectRight(characterBuildHitPoints(baseBuild, unitLibrary)),
+    ).toEqual({
       maximum: 17,
       hitDice: [{ classUnitId: "class_sorcerer", dieSize: 6, total: 3 }],
     });
@@ -8098,6 +8180,7 @@ function completeManifestDraft(): CharacterDraft {
 function completeManifestDraftForSpecies(input: {
   readonly speciesUnitId: UnitRecord["id"];
   readonly speciesSize?: "medium" | "small";
+  readonly draconicAncestry?: "red" | false;
 }): CharacterDraft;
 function completeManifestDraftForSpecies(
   speciesUnitId: UnitRecord["id"],
@@ -8108,10 +8191,18 @@ function completeManifestDraftForSpecies(
     | {
         readonly speciesUnitId: UnitRecord["id"];
         readonly speciesSize?: "medium" | "small";
+        readonly draconicAncestry?: "red" | false;
       },
 ): CharacterDraft {
   const speciesUnitId = typeof input === "string" ? input : input.speciesUnitId;
   const speciesSize = typeof input === "string" ? undefined : input.speciesSize;
+  const draconicAncestry =
+    typeof input === "string"
+      ? speciesUnitId === "species_dragonborn"
+        ? "red"
+        : undefined
+      : (input.draconicAncestry ??
+        (speciesUnitId === "species_dragonborn" ? "red" : undefined));
   const draft = createTestDraft("draft:complete-manifest");
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
@@ -8136,7 +8227,21 @@ function completeManifestDraftForSpecies(
           }),
         );
 
-  return completeManifestDraftAfterProgression(afterSpeciesSize);
+  const afterDraconicAncestry =
+    draconicAncestry === undefined || draconicAncestry === false
+      ? afterSpeciesSize
+      : requireAcceptedBatch(
+          fillCreationHoles({
+            draft: afterSpeciesSize,
+            unitLibrary,
+            expectedRevision: afterSpeciesSize.revision,
+            fills: [
+              choiceFill("cc:draft:draft.draconicAncestry", draconicAncestry),
+            ],
+          }),
+        );
+
+  return completeManifestDraftAfterProgression(afterDraconicAncestry);
 }
 
 function completeFighterTwoDraft(): CharacterDraft {

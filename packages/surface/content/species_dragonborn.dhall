@@ -1,6 +1,25 @@
 let dragonborn =
       { creatureType = "humanoid"
       , description = "Dragonborn species source facts for character creation admission."
+      , draconicAncestry =
+        { damageType =
+          { kind = "choice_table"
+          , holeId = "species_dragonborn_draconic_ancestry_damage_type"
+          , label = "draconic ancestry"
+          , options =
+            [ { id = "black", displayName = "Black", damageType = "acid" }
+            , { id = "blue", displayName = "Blue", damageType = "lightning" }
+            , { id = "brass", displayName = "Brass", damageType = "fire" }
+            , { id = "bronze", displayName = "Bronze", damageType = "lightning" }
+            , { id = "copper", displayName = "Copper", damageType = "acid" }
+            , { id = "gold", displayName = "Gold", damageType = "fire" }
+            , { id = "green", displayName = "Green", damageType = "poison" }
+            , { id = "red", displayName = "Red", damageType = "fire" }
+            , { id = "silver", displayName = "Silver", damageType = "cold" }
+            , { id = "white", displayName = "White", damageType = "cold" }
+            ]
+          }
+        }
       , id = "species_dragonborn"
       , kind = "species"
       , name = "Dragonborn"

@@ -2,9 +2,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
+import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
+import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import {
   barbarianFrenzyUnitId,
   barbarianRageUnitId,
@@ -16,13 +19,16 @@ import {
   rogueCunningActionUnitId,
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
+  speciesDragonbornBreathWeaponUnitId,
   unitLibrary,
   unitMechanicsVariant,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
+  ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  battleAttackActionAreaSaveDamageReplacementSupportForUnit,
   battleMartialArtsAttackProjectionSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
@@ -31,11 +37,280 @@ import {
   Either,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+  movementFeet,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+
+describe("L3MSPEC-02 Dragonborn Breath Weapon Surface support", () => {
+  const dragonbornSpeciesRecord = decodeSpeciesRecordSync(
+    speciesDragonbornInput,
+  );
+  if (dragonbornSpeciesRecord.species !== "dragonborn") {
+    throw new Error("Expected Dragonborn species source record.");
+  }
+  const selectedDraconicAncestry =
+    dragonbornSpeciesRecord.draconicAncestry.damageType.options.find(
+      (option) => option.id === "red",
+    );
+  if (selectedDraconicAncestry === undefined) {
+    throw new Error("Expected Red Draconic Ancestry source option.");
+  }
+  const draconicAncestryDamageType = selectedDraconicAncestry.damageType;
+  const draconicAncestrySourceFacts = {
+    draconicAncestryDamageType,
+  } as const;
+  const expectedBreathWeaponSupport = {
+    kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+    breath: {
+      activationCost: { kind: "replaceAttack" },
+      resource: {
+        cap: { kind: "proficiencyBonus" },
+        resetCadence: "longRest",
+      },
+      area: {
+        origin: { kind: "self" },
+        shapeChoice: [
+          { kind: "cone", lengthFeet: movementFeet(15) },
+          {
+            kind: "line",
+            lengthFeet: movementFeet(30),
+            widthFeet: movementFeet(5),
+          },
+        ],
+      },
+      save: {
+        ability: "dex",
+        dc: { kind: "innate", base: 8, ability: "con" },
+      },
+      damage: {
+        damageType: {
+          kind: "draconicAncestry",
+          holeId: "species_dragonborn_draconic_ancestry_damage_type",
+          value: "fire",
+        },
+        amount: {
+          kind: "characterLevelDice",
+          base: { dice: 1, dieSize: 10 },
+          tiers: [
+            { atLevel: 5, dice: 2 },
+            { atLevel: 11, dice: 3 },
+            { atLevel: 17, dice: 4 },
+          ],
+        },
+        onSuccess: "halfDamage",
+      },
+    },
+  } as const;
+
+  test("species_dragonborn_breath_weapon is admitted from typed attack-replacement facts", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+        sourceFacts: draconicAncestrySourceFacts,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: speciesDragonbornBreathWeaponUnitId,
+        supportProfiles: [expectedBreathWeaponSupport],
+      }),
+    );
+    expect(
+      battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+        unit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedBreathWeaponSupport);
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [], draconicAncestrySourceFacts),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "attackActionAreaSaveDamageReplacement",
+        unit,
+        breath: expectedBreathWeaponSupport.breath,
+      }),
+    );
+  });
+
+  test("Breath Weapon admission requires selected Draconic Ancestry damage type", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+
+    expect(
+      battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+        unit,
+        draconicAncestryDamageType: undefined,
+      }),
+    ).toBe("unsupported");
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Unsupported battle Attack-action area save-damage replacement Unit hook: ${unit.id}.`,
+      }),
+    );
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+  });
+
+  test("Breath Weapon admission follows mechanics shape rather than Unit identity", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Breath Weapon activation species trait.");
+    }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_breath_weapon_fixture",
+      mechanics: unit.mechanics,
+    });
+
+    expect(
+      battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+        unit: syntheticUnit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedBreathWeaponSupport);
+  });
+
+  test("Breath Weapon shape choice admission is order-independent", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Breath Weapon activation species trait.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.attachment.kind !== "area" ||
+      phase.attachment.shape.kind !== "choice" ||
+      phase.onFail.kind !== "damage"
+    ) {
+      throw new Error("Expected Breath Weapon area save-gate damage phase.");
+    }
+    const [cone, line] = phase.attachment.shape.options;
+    if (cone === undefined || line?.kind !== "line") {
+      throw new Error("Expected Breath Weapon Cone/Line shape choice.");
+    }
+    const reversedShapeUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_breath_weapon_reversed_shape_order",
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              shape: {
+                ...phase.attachment.shape,
+                options: [line, cone],
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(
+      battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+        unit: reversedShapeUnit,
+        draconicAncestryDamageType,
+      }),
+    ).toEqual(expectedBreathWeaponSupport);
+  });
+
+  test("Breath Weapon admission rejects malformed shape, source, and rest facts", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Breath Weapon activation species trait.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.attachment.kind !== "area" ||
+      phase.attachment.shape.kind !== "choice" ||
+      phase.onFail.kind !== "damage"
+    ) {
+      throw new Error("Expected Breath Weapon area save-gate damage phase.");
+    }
+    const [cone, line] = phase.attachment.shape.options;
+    if (cone === undefined || line?.kind !== "line") {
+      throw new Error("Expected Breath Weapon Cone/Line shape choice.");
+    }
+
+    const malformedUnits = [
+      unitMechanicsVariant(unit, {
+        id: "synthetic_breath_weapon_wrong_width",
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              attachment: {
+                ...phase.attachment,
+                shape: {
+                  ...phase.attachment.shape,
+                  options: [cone, { ...line, widthFeet: 10 }],
+                },
+              },
+            },
+          ],
+        },
+      }),
+      unitMechanicsVariant(unit, {
+        id: "synthetic_breath_weapon_local_damage_type",
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              onFail: {
+                ...phase.onFail,
+                damageType: {
+                  kind: "same_choice_as",
+                  holeId: "synthetic_local_breath_damage_type",
+                },
+              },
+            },
+          ],
+        },
+      }),
+      unitMechanicsVariant(unit, {
+        id: "synthetic_breath_weapon_wrong_reset",
+        mechanics: {
+          ...unit.mechanics,
+          resetCadence: { kind: "short_rest" },
+        },
+      }),
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const malformedUnit of malformedUnits) {
+      expect(
+        battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+          unit: malformedUnit,
+          draconicAncestryDamageType,
+        }),
+      ).toBe("unsupported");
+      expect(
+        parseSupportedUnitFeatureProfile(
+          malformedUnit,
+          [],
+          draconicAncestrySourceFacts,
+        ),
+      ).toBeNull();
+    }
+  });
+});
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
   test("monk_martial_arts is admitted as an attack projection profile", () => {

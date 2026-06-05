@@ -1,6 +1,65 @@
 {
   "creatureType": "humanoid",
   "description": "Dragonborn species source facts for character creation admission.",
+  "draconicAncestry": {
+    "damageType": {
+      "holeId": "species_dragonborn_draconic_ancestry_damage_type",
+      "kind": "choice_table",
+      "label": "draconic ancestry",
+      "options": [
+        {
+          "damageType": "acid",
+          "displayName": "Black",
+          "id": "black"
+        },
+        {
+          "damageType": "lightning",
+          "displayName": "Blue",
+          "id": "blue"
+        },
+        {
+          "damageType": "fire",
+          "displayName": "Brass",
+          "id": "brass"
+        },
+        {
+          "damageType": "lightning",
+          "displayName": "Bronze",
+          "id": "bronze"
+        },
+        {
+          "damageType": "acid",
+          "displayName": "Copper",
+          "id": "copper"
+        },
+        {
+          "damageType": "fire",
+          "displayName": "Gold",
+          "id": "gold"
+        },
+        {
+          "damageType": "poison",
+          "displayName": "Green",
+          "id": "green"
+        },
+        {
+          "damageType": "fire",
+          "displayName": "Red",
+          "id": "red"
+        },
+        {
+          "damageType": "cold",
+          "displayName": "Silver",
+          "id": "silver"
+        },
+        {
+          "damageType": "cold",
+          "displayName": "White",
+          "id": "white"
+        }
+      ]
+    }
+  },
   "id": "species_dragonborn",
   "kind": "species",
   "name": "Dragonborn",

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -24,6 +24,7 @@ import {
 import type {
   Ability,
   ActionRestriction,
+  AreaShapeSpec,
   ClassName,
   DiceAmount,
   DiceExpr,
@@ -31,6 +32,7 @@ import type {
   EffectAtom,
   EquipmentPredicate,
   CreatureType,
+  DragonbornSpeciesRecord,
   StandardActionKind,
   UnitRecord,
   WeaponRecord,
@@ -66,6 +68,8 @@ export const INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE =
   "initiativeProficiencyAndSwap";
 export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
   "attackRollMissToHitReplacement";
+export const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE =
+  "attackActionAreaSaveDamageReplacement";
 export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
   "passiveSavingThrowRollMode";
 export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
@@ -119,6 +123,15 @@ const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID =
 const MONK_FOCUS_RESOURCE_UNIT_ID =
   "monk_monks_focus" as const satisfies UnitRecord["id"];
 const MONK_FLURRY_OF_BLOWS_OPTION_ID = "flurry_of_blows" as const;
+const DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID =
+  "species_dragonborn_draconic_ancestry_damage_type" as const;
+type DraconicAncestryDamageTypeSource =
+  DragonbornSpeciesRecord["draconicAncestry"]["damageType"];
+type DraconicAncestryDamageType =
+  DraconicAncestryDamageTypeSource["options"][number]["damageType"];
+export type BattleUnitSupportProfileSourceFacts = {
+  readonly draconicAncestryDamageType: DraconicAncestryDamageType;
+};
 const BARDIC_INSPIRATION_DIE_TIERS = [
   { atLevel: 5, dieSize: 8 },
   { atLevel: 10, dieSize: 10 },
@@ -160,6 +173,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -227,6 +241,53 @@ export type BattleAttackRollMissToHitReplacementSupportProfile = {
   readonly kind: typeof ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE;
   readonly replacement: AttackRollMissToHitReplacementProfile;
 };
+export type AttackActionAreaSaveDamageReplacementProfile = {
+  readonly activationCost: { readonly kind: "replaceAttack" };
+  readonly resource: {
+    readonly cap: { readonly kind: "proficiencyBonus" };
+    readonly resetCadence: "longRest";
+  };
+  readonly area: {
+    readonly origin: { readonly kind: "self" };
+    readonly shapeChoice: readonly [
+      { readonly kind: "cone"; readonly lengthFeet: MovementFeet },
+      {
+        readonly kind: "line";
+        readonly lengthFeet: MovementFeet;
+        readonly widthFeet: MovementFeet;
+      },
+    ];
+  };
+  readonly save: {
+    readonly ability: "dex";
+    readonly dc: {
+      readonly kind: "innate";
+      readonly base: 8;
+      readonly ability: "con";
+    };
+  };
+  readonly damage: {
+    readonly damageType: {
+      readonly kind: "draconicAncestry";
+      readonly holeId: typeof DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID;
+      readonly value: DraconicAncestryDamageType;
+    };
+    readonly amount: {
+      readonly kind: "characterLevelDice";
+      readonly base: { readonly dice: 1; readonly dieSize: 10 };
+      readonly tiers: readonly [
+        { readonly atLevel: 5; readonly dice: 2 },
+        { readonly atLevel: 11; readonly dice: 3 },
+        { readonly atLevel: 17; readonly dice: 4 },
+      ];
+    };
+    readonly onSuccess: "halfDamage";
+  };
+};
+export type BattleAttackActionAreaSaveDamageReplacementSupportProfile = {
+  readonly kind: typeof ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE;
+  readonly breath: AttackActionAreaSaveDamageReplacementProfile;
+};
 export type PassiveSavingThrowRollModeProfile = {
   readonly mode: "advantage";
   readonly ability: "dex";
@@ -237,9 +298,7 @@ export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
 };
 export const BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS = [
-  1,
-  2,
-  3,
+  1, 2, 3,
 ] as const satisfies ReadonlyArray<number>;
 export type BattleAttackActionAdditionalAttacks =
   (typeof BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS)[number];
@@ -658,6 +717,7 @@ export type BattleUnitSupportProfile =
   | BattlePassiveRangedAttackRollBonusSupportProfile
   | BattleInitiativeProficiencyAndSwapSupportProfile
   | BattleAttackRollMissToHitReplacementSupportProfile
+  | BattleAttackActionAreaSaveDamageReplacementSupportProfile
   | BattlePassiveSavingThrowRollModeSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
@@ -683,6 +743,7 @@ export type BattleUnitSupportProfile =
       | "passiveRangedAttackRollBonus"
       | "initiativeProficiencyAndSwap"
       | "attackRollMissToHitReplacement"
+      | "attackActionAreaSaveDamageReplacement"
       | "passiveSavingThrowRollMode"
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
@@ -733,6 +794,7 @@ function battleUnitSupportProfileIssue(
 export function battleUnitSupportProfilesForUnit(input: {
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevel[];
+  readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
 }): Either.Either<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
@@ -862,6 +924,20 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (attackRollMissToHitReplacementSupport !== null) {
     supportProfiles.push(attackRollMissToHitReplacementSupport);
+  }
+
+  const attackActionAreaSaveDamageReplacementSupport =
+    battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+      unit: input.unit,
+      draconicAncestryDamageType: input.sourceFacts?.draconicAncestryDamageType,
+    });
+  if (attackActionAreaSaveDamageReplacementSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Attack-action area save-damage replacement Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (attackActionAreaSaveDamageReplacementSupport !== null) {
+    supportProfiles.push(attackActionAreaSaveDamageReplacementSupport);
   }
 
   const passiveSavingThrowRollModeSupport =
@@ -1158,6 +1234,7 @@ export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: Pick<BattleUnitRef, "unitId" | "selectedOption">;
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevelInit[];
+  readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
 }): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
   if (input.unitRef.unitId !== input.unit.id) {
     return battleUnitSupportProfileIssue(
@@ -1169,13 +1246,17 @@ export function battleUnitRefWithSupportProfiles(input: {
     ...(input.classLevels === undefined
       ? {}
       : { classLevels: parseBattleUnitSupportClassLevels(input.classLevels) }),
+    ...(input.sourceFacts === undefined
+      ? {}
+      : { sourceFacts: input.sourceFacts }),
   });
   if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
   if (
     input.unitRef.selectedOption?.kind === "huntersPrey" &&
     !supportProfiles.right.some(
       (profile) =>
-        typeof profile === "object" && profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+        typeof profile === "object" &&
+        profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
     )
   ) {
     return battleUnitSupportProfileIssue(
@@ -1607,6 +1688,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "attackRollMissToHitReplacement";
       readonly unit: UnitRecord;
       readonly replacement: AttackRollMissToHitReplacementProfile;
+    }
+  | {
+      readonly kind: "attackActionAreaSaveDamageReplacement";
+      readonly unit: UnitRecord;
+      readonly breath: AttackActionAreaSaveDamageReplacementProfile;
     }
   | {
       readonly kind: "passiveSavingThrowRollMode";
@@ -2340,6 +2426,11 @@ export type BattleAttackRollMissToHitReplacementSupport =
   | "unsupported"
   | null;
 
+export type BattleAttackActionAreaSaveDamageReplacementSupport =
+  | BattleAttackActionAreaSaveDamageReplacementSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattlePassiveSavingThrowRollModeSupport =
   | BattlePassiveSavingThrowRollModeSupportProfile
   | "unsupported"
@@ -2452,6 +2543,28 @@ export function battleAttackRollMissToHitReplacementSupportForUnit(
     : {
         kind: ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
         replacement,
+      };
+}
+
+export function battleAttackActionAreaSaveDamageReplacementSupportForUnit(input: {
+  readonly unit: UnitRecord;
+  readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
+}): BattleAttackActionAreaSaveDamageReplacementSupport {
+  if (!hasAttackActionAreaSaveDamageReplacementMechanics(input.unit)) {
+    return null;
+  }
+  if (input.draconicAncestryDamageType === undefined) {
+    return "unsupported";
+  }
+  const profile = attackActionAreaSaveDamageReplacementProfileForUnit({
+    unit: input.unit,
+    draconicAncestryDamageType: input.draconicAncestryDamageType,
+  });
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+        breath: profile.breath,
       };
 }
 
@@ -2777,6 +2890,16 @@ function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
     unit.kind === "feat" &&
     unit.mechanics.family === "triggered_replacement" &&
     unit.mechanics.trigger.kind === "miss_with_attack_roll"
+  );
+}
+
+function hasAttackActionAreaSaveDamageReplacementMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "activation" &&
+    unit.mechanics.activationCost.kind === "replace_attack"
   );
 }
 
@@ -3455,6 +3578,157 @@ export function attackRollMissToHitReplacementProfileForUnit(
   };
 }
 
+export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
+  readonly unit: UnitRecord;
+  readonly draconicAncestryDamageType: DraconicAncestryDamageType;
+}): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackActionAreaSaveDamageReplacement" }
+> | null {
+  const { unit } = input;
+  if (unit.kind !== "species_trait" || unit.mechanics.family !== "activation") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const resource = mechanics.resource;
+  const resetCadence = mechanics.resetCadence;
+  const [phase, ...extraPhases] = mechanics.phases;
+  if (
+    mechanics.activationCost.kind !== "replace_attack" ||
+    resource?.kind !== "use_count" ||
+    resource.cap.kind !== "proficiency_bonus" ||
+    resetCadence?.kind !== "long_rest" ||
+    phase?.kind !== "save_gate" ||
+    extraPhases.length !== 0 ||
+    phase.attachment.kind !== "area" ||
+    phase.attachment.origin.kind !== "self" ||
+    phase.ability !== "dex" ||
+    phase.dc.kind !== "innate_dc" ||
+    phase.dc.base !== 8 ||
+    phase.dc.ability !== "con" ||
+    phase.onFail.kind !== "damage" ||
+    phase.onSuccess.kind !== "half_damage"
+  ) {
+    return null;
+  }
+  const shapeChoice = breathWeaponShapeChoice(phase.attachment.shape);
+  const amount = breathWeaponDamageAmount(phase.onFail.amount);
+  const damageType = draconicAncestryDamageTypeRef(
+    phase.onFail.damageType,
+    input.draconicAncestryDamageType,
+  );
+  if (shapeChoice === null || amount === null || damageType === null) {
+    return null;
+  }
+  return {
+    kind: "attackActionAreaSaveDamageReplacement",
+    unit,
+    breath: {
+      activationCost: { kind: "replaceAttack" },
+      resource: {
+        cap: { kind: "proficiencyBonus" },
+        resetCadence: "longRest",
+      },
+      area: {
+        origin: { kind: "self" },
+        shapeChoice,
+      },
+      save: {
+        ability: "dex",
+        dc: { kind: "innate", base: 8, ability: "con" },
+      },
+      damage: {
+        damageType,
+        amount,
+        onSuccess: "halfDamage",
+      },
+    },
+  };
+}
+
+function breathWeaponShapeChoice(
+  shape: AreaShapeSpec,
+): AttackActionAreaSaveDamageReplacementProfile["area"]["shapeChoice"] | null {
+  if (shape.kind !== "choice" || shape.options.length !== 2) return null;
+  const cone = shape.options.find(
+    (option) => option.kind === "cone" && option.lengthFeet === 15,
+  );
+  const line = shape.options.find(
+    (option) =>
+      option.kind === "line" &&
+      option.lengthFeet === 30 &&
+      option.widthFeet === 5,
+  );
+  if (cone === undefined || line === undefined) {
+    return null;
+  }
+  if (
+    shape.options.some(
+      (option) =>
+        (option.kind !== "cone" && option.kind !== "line") ||
+        (option.kind === "cone" && option !== cone) ||
+        (option.kind === "line" && option !== line),
+    )
+  ) {
+    return null;
+  }
+  return [
+    { kind: "cone", lengthFeet: movementFeet(15) },
+    { kind: "line", lengthFeet: movementFeet(30), widthFeet: movementFeet(5) },
+  ];
+}
+
+function breathWeaponDamageAmount(
+  amount: DiceAmount,
+): AttackActionAreaSaveDamageReplacementProfile["damage"]["amount"] | null {
+  if (amount.kind !== "threshold_tiers") return null;
+  const [level5, level11, level17, ...extraTiers] = amount.tiers;
+  if (
+    amount.axis !== "character" ||
+    amount.base.dice !== 1 ||
+    amount.base.dieSize !== 10 ||
+    level5?.atLevel !== 5 ||
+    level5.override.dice !== 2 ||
+    level11?.atLevel !== 11 ||
+    level11.override.dice !== 3 ||
+    level17?.atLevel !== 17 ||
+    level17.override.dice !== 4 ||
+    extraTiers.length !== 0
+  ) {
+    return null;
+  }
+  return {
+    kind: "characterLevelDice",
+    base: { dice: 1, dieSize: 10 },
+    tiers: [
+      { atLevel: 5, dice: 2 },
+      { atLevel: 11, dice: 3 },
+      { atLevel: 17, dice: 4 },
+    ],
+  };
+}
+
+type DamageEffectAtom = Extract<EffectAtom, { readonly kind: "damage" }>;
+
+function draconicAncestryDamageTypeRef(
+  damageType: DamageEffectAtom["damageType"],
+  selectedDamageType: DraconicAncestryDamageType,
+): AttackActionAreaSaveDamageReplacementProfile["damage"]["damageType"] | null {
+  if (
+    typeof damageType !== "object" ||
+    damageType === null ||
+    damageType.kind !== "same_choice_as" ||
+    damageType.holeId !== DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID
+  ) {
+    return null;
+  }
+  return {
+    kind: "draconicAncestry",
+    holeId: DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
+    value: selectedDamageType,
+  };
+}
+
 export function passiveSavingThrowRollModeProfileForUnit(
   unit: UnitRecord,
 ): PassiveSavingThrowRollModeProfile | null {
@@ -3954,6 +4228,7 @@ function reactionRollOrDamageReductionKindsUnique(
 export function parseSupportedUnitFeatureProfile(
   unit: UnitRecord,
   classLevels: readonly CharacterBattleClassLevel[],
+  sourceFacts?: BattleUnitSupportProfileSourceFacts,
 ): SupportedUnitFeatureProfile | null {
   return (
     parseExtraActionGrantUnitFeatureProfile(unit) ??
@@ -3966,6 +4241,12 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
     parseInitiativeProficiencyAndSwapUnitFeatureProfile(unit) ??
     parseAttackRollMissToHitReplacementUnitFeatureProfile(unit) ??
+    (sourceFacts?.draconicAncestryDamageType === undefined
+      ? null
+      : attackActionAreaSaveDamageReplacementProfileForUnit({
+          unit,
+          draconicAncestryDamageType: sourceFacts.draconicAncestryDamageType,
+        })) ??
     parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
