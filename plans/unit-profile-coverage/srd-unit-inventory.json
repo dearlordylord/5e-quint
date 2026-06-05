@@ -156,6 +156,7 @@
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
         "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar",
+        "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
         "srd521:classes/wizard:level-3:subclass-selection:wizard_subclass"
       ],
       "issues": []
@@ -232,24 +233,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 599,
-      "percent": "98.7%",
+      "numerator": 600,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 165,
-        "owner-evidence-required": 6,
+        "owner-evidence-required": 5,
         "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 47,
-      "percent": "92.2%",
+      "numerator": 48,
+      "percent": "94.1%",
       "rowsByStatus": {
-        "accepted": 33,
+        "accepted": 34,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 4
+        "owner-evidence-required": 3
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -276,10 +277,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 33,
+      "catalog-installed-owner-evidence-present": 34,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 4
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -288,9 +289,9 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 468,
+      "catalog-installed-owner-evidence-present": 469,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 5,
+      "catalog-installed-owner-evidence-required": 4,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -29957,7 +29958,7 @@
         "unitId": "wizard_evocation_savant"
       },
       "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
@@ -29971,13 +29972,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime and character-sheet spellbook owner",
-          "evidence": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L3MCHAR-05 Character Creation Wizard spellbook learning acquisition choice; Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The later grant on future new Wizard Spell Slot levels remains closed by the Unit claim as a future character-advancement owner rather than duplicated in level-3 character creation.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",

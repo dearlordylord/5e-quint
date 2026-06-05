@@ -2927,13 +2927,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 599,
-      "percent": "98.7%",
+      "numerator": 600,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 165,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 6,
+        "owner-evidence-required": 5,
         "partial-battle-runtime": 1
       }
     },
