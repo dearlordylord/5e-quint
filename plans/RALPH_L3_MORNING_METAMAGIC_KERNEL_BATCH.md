@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Survey remaining Quickened action-spell procedures"
     },
     {
       "number": 7,
       "id": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote next Quickened Spell procedure slice"
     },
     {
@@ -113,8 +113,8 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 3 | L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED | done | none | Fix `unit-feature.metamagic-damage-type-substitution` rules-kernel join. |
 | 4 | L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED | done | none | Fix `unit-feature.metamagic-effective-level-extra-target` rules-kernel join. |
 | 5 | L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT | done | none | Antimagic action-interdiction and magical-effect-interdiction `.mbt.qnt` owners are explicit MBT-only witnesses, not qnt-proof evidence. |
-| 6 | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | ready-for-research | none | Produce a runnable next-slice list from actual supported procedures. |
-| 7 | L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE | blocked | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | Promote exactly one next Quickened procedure through QNT, runtime, MBT, and ledgers. |
+| 6 | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | done | none | Survey selected `spellAttackSequence` as the next runnable Quickened action-spell slice. |
+| 7 | L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE | ready-for-implementation-after-light-research | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | Promote `spellAttackSequence` through QNT, runtime, MBT, and ledgers. |
 | 8 | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | ready-for-research | none | Close or plan repeat-save selected-target identity without duplicating occurrence state. |
 | 9 | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | ready-for-research | none | Close or plan Distant/Extended/Subtle generic cast-property witnesses. |
 | 10 | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | ready-for-research | none | Close or plan Empowered/Seeking post-roll reroll fill boundary. |
@@ -157,10 +157,28 @@ the Antimagic profile with current qnt-proof evidence.
 Survey remaining Quickened action-spell procedures from current supported
 profiles and produce one runnable next-slice recommendation.
 
+Survey decision: promote exactly `spellAttackSequence` next. The survey artifact
+is `plans/unit-profile-coverage/L3MMETA-06_QUICKENED_REMAINING_ACTION_SPELLS_SURVEY.md`.
+
 ### Task 7 - L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE
 
-Promote exactly one next Quickened Spell procedure slice after Task 6 identifies
-it.
+Promote `spellAttackSequence` as the next Quickened Spell procedure slice.
+
+Recommended scope:
+
+- Change `spellAttackSequenceProfile.metamagicCompatibility` from
+  `actionSpellResolverNotRewritten` to `bonusActionRewrite`.
+- Add runtime tests for Quickened Eldritch Blast discovery and resolution after
+  the Magic Action is spent, including Sorcery Point spend, Bonus Action spend,
+  no Magic Action spend, and same-turn level 1+ spell lock behavior.
+- Add at least one Spell Slot `spellAttackSequence` case using Scorching Ray to
+  confirm Spell Slot spend and same-turn spell-slot accounting.
+- Add a selected-identity MBT witness for the promoted procedure, preferably a
+  narrow Eldritch Blast literal projection with a leaf-only driver.
+- Add a distinct `QuickenedSpellAttackSequenceProcedure` fact or equivalent
+  domain-specific procedure fact to the rule-core Quickened support slice.
+- Update unit-profile and rules-kernel evidence rows only after runtime and
+  parity witnesses exist.
 
 ### Task 8 - L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY
 
