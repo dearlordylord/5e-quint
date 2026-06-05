@@ -37,10 +37,10 @@ import {
   type DamageReductionSpellInvocation,
 } from "../../battle-reducer.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenReactionWindow } from "../dispatcher.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -293,9 +293,9 @@ function resolveDamageReduction(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [input.fillSet.targetId],
@@ -307,7 +307,7 @@ function resolveDamageReduction(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

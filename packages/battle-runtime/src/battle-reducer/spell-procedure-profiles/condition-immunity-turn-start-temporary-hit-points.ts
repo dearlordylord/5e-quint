@@ -15,7 +15,7 @@ import type {
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -29,7 +29,7 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "../spell-condition-effects-helpers.ts";
 import { scalarBuffSpellTargetCount } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
@@ -291,9 +291,9 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: targetSelection.targetIds,
@@ -305,7 +305,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

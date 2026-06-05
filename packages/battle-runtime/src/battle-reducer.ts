@@ -116,9 +116,9 @@ import type {
   CharacterBattleWeaponMasterySelection,
 } from "./battle-init.ts";
 import {
-  type BattleReactionTrigger,
+  type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
-} from "./battle-reaction-triggers.ts";
+} from "./battle-interrupt-triggers.ts";
 import {
   type ActionHideSubject,
   type ActionSearchSubject,
@@ -388,8 +388,8 @@ export {
 export {
   actionHideSubject,
   actionSearchSubject,
-  activeReactionWithReplayContinuationAttackDamageChanges,
-  admittedReactionChoice,
+  activeInterruptWithReplayContinuationAttackDamageChanges,
+  admittedInterruptChoice,
   attackDamageContinuationAmount,
   attackDamageContinuationConcentrationFill,
   attackDamageContinuationConcentrationFrame,
@@ -410,33 +410,33 @@ export {
   attackFillsThroughAttackRoll,
   battleFillEquals,
   battleTurnSnapshot,
-  completeActiveReactionProcedure,
-  completeResolvedActiveReactionIfPending,
+  completeActiveInterruptProcedure,
+  completeResolvedActiveInterruptIfPending,
   consumeOrCloseLegendaryActionWindow,
   currentInterruptFrame,
-  currentReactionFrame,
+  currentInterruptCheckpoint,
   damageAmountByTypeEntriesAfterScalarReduction,
   endTurn,
   hasAttackDamageReductionRedirectTargetSpatialFact,
   isReleaseGrappleSubject,
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
-  openBattleReactionWindow,
-  openCreatureFallsReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+  openBattleInterruptWindow,
+  openCreatureFallsInterruptWindow,
   opportunityAttackReactionChoices,
-  pendingReactionSnapshot,
-  reactionChoices,
-  reactionDecisionHole,
-  reactionFrameAfterModifier,
-  reactionInterruptFrame,
+  pendingInterruptSnapshot,
+  interruptChoices,
+  interruptDecisionHole,
+  interruptCheckpointAfterModifier,
+  interruptCheckpointFrame,
   reactionModifiedAttackRollFills,
-  reactionTriggerLabel,
+  interruptTriggerLabel,
   readiedMovementReactionChoices,
   readiedSpellReactionChoices,
   replayContinuationFrame,
   resolveAttackDamageContinuationConcentration,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveBattleSubjectInternal,
   resolveCastTriggeredReactionSpellCommand,
@@ -447,13 +447,13 @@ export {
   resolveReplayContinuationFromState,
   resumeInterruptedProcedure,
   rolledDiceGroupsEqual,
-  sameReactionProcedureChoice,
+  sameInterruptProcedureChoice,
   snapshotBattle,
   spendAttackDamageReductionRedirectResource,
   spendReaction,
   standardActionKindForSubject,
-  suppressReactionTriggerForActiveReaction,
-  unofferedEligibleReactors,
+  recordHandledInterruptTriggerForActiveInterrupt,
+  unofferedEligibleResponders,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
   type FlySpeedGrantEndFallWitnessResult,
@@ -841,7 +841,7 @@ export type BattleReadiedSpell = {
 // movement alternative for non-spell Ready responses.
 export type BattleReadiedMovement = {
   // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
-  readonly trigger: BattleReactionTrigger;
+  readonly trigger: BattleInterruptTrigger;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
@@ -1026,7 +1026,7 @@ export type AttackDamageReductionZeroDamageRedirectSelection = {
   readonly savingThrowSucceeded: boolean;
   readonly redirectedDamageRoll: number;
 };
-type BattleReactionProcedureChoiceWithSubject = {
+type BattleInterruptProcedureChoiceWithSubject = {
   readonly reactorId: CombatantId;
   readonly subject: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>;
   readonly initialHoles: readonly BattleHole[];
@@ -1114,16 +1114,16 @@ export type BattleAttackDamageDisposition =
       readonly kind: "zeroHitPointReplacement";
       readonly unitId: UnitRecord["id"];
     };
-export type BattleReactionProcedureModifierChoice = {
+export type BattleInterruptProcedureModifierChoice = {
   readonly kind: "reactionRollOrDamageReduction";
   readonly reactorId: CombatantId;
   readonly choice: BattleReactionModifierChoice;
   readonly initialHoles: readonly BattleHole[];
 };
-export type BattleReactionProcedureChoice =
-  | BattleReactionProcedureChoiceWithSubject
-  | BattleReactionProcedureModifierChoice;
-export type BattleReactionProcedureSelection = {
+export type BattleInterruptProcedureChoice =
+  | BattleInterruptProcedureChoiceWithSubject
+  | BattleInterruptProcedureModifierChoice;
+export type BattleInterruptProcedureSelection = {
   readonly fills: readonly BattleFill[];
 } & (
   | {
@@ -1152,11 +1152,11 @@ export type BattleReactionProcedureSelection = {
       readonly modifierKind: BattleReactionModifierChoice["kind"];
     }
 );
-type BattleActiveReactionProcedure = {
-  readonly reactorId: CombatantId;
-  readonly subject: BattleReactionProcedureChoiceWithSubject["subject"];
+type BattleActiveInterruptProcedure = {
+  readonly responderId: CombatantId;
+  readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   readonly pendingAttackDamageReductions?:
     | readonly BattlePendingAttackDamageReduction[]
     | undefined;
@@ -1164,17 +1164,17 @@ type BattleActiveReactionProcedure = {
     | readonly AttackSpellDamageAddition[]
     | undefined;
 };
-type BattleReactionFrameBase = {
-  readonly eligibleReactors: readonly CombatantId[];
-  readonly offeredReactors: readonly CombatantId[];
-  readonly choices: readonly BattleReactionProcedureChoice[];
-  readonly activeReaction?: BattleActiveReactionProcedure;
+type BattleInterruptCheckpointBase = {
+  readonly eligibleResponders: readonly CombatantId[];
+  readonly offeredResponders: readonly CombatantId[];
+  readonly choices: readonly BattleInterruptProcedureChoice[];
+  readonly activeInterrupt?: BattleActiveInterruptProcedure;
 };
-type BattleReactionFrameWithContinuationBase = BattleReactionFrameBase & {
+type BattleInterruptCheckpointWithContinuationBase = BattleInterruptCheckpointBase & {
   readonly continuation: BattleInterruptedProcedure;
 };
-export type BattleReactionFrame =
-  | (BattleReactionFrameWithContinuationBase & {
+export type BattleInterruptCheckpoint =
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "attackHit";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
@@ -1183,11 +1183,11 @@ export type BattleReactionFrame =
       readonly attackHitTriggerKind: BattleAttackHitTriggerKind;
       readonly damageTypes: readonly DamageType[];
     })
-  | (BattleReactionFrameBase & {
+  | (BattleInterruptCheckpointBase & {
       readonly trigger: "attackDamage";
       readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
     })
-  | (BattleReactionFrameWithContinuationBase & {
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "spellCast";
       readonly casterId: CombatantId;
       readonly spellId: SpellRecord["id"];
@@ -1198,24 +1198,24 @@ export type BattleReactionFrame =
       readonly targetIds: readonly CombatantId[];
       readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
     })
-  | (BattleReactionFrameWithContinuationBase & {
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
       readonly sourceSpellId?: SpellRecord["id"];
     })
-  | (BattleReactionFrameWithContinuationBase & {
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "afterDamage";
       readonly damageSourceId: CombatantId;
       readonly damagedId: CombatantId;
       readonly damageAmount: DamageAmount;
       readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
     })
-  | (BattleReactionFrameWithContinuationBase & {
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "creatureFalls";
       readonly fallingCreatureId: CombatantId;
       readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
     })
-  | (BattleReactionFrameWithContinuationBase & {
+  | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
@@ -1230,13 +1230,13 @@ export type BattleFlySpeedGrantEndFallCleanupFrame = {
   readonly endedEffect: EndedFlySpeedGrant;
 };
 export type BattleInterruptFrame =
-  | { readonly kind: "reaction"; readonly frame: BattleReactionFrame }
+  | { readonly kind: "interruptCheckpoint"; readonly frame: BattleInterruptCheckpoint }
   | BattleFlySpeedGrantEndFallCleanupFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame;
-export type BattleReactionInterruptFrame = Extract<
+export type BattleInterruptCheckpointFrame = Extract<
   BattleInterruptFrame,
-  { readonly kind: "reaction" }
+  { readonly kind: "interruptCheckpoint" }
 >;
 export type SpellComponent = "V" | "S" | "M";
 export type BattleSpellCastingTimeResource =
@@ -1257,30 +1257,30 @@ export type BattleReplayContinuationFrame = {
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
-  readonly suppressedReactionTrigger: BattleReactionTrigger;
+  readonly handledInterruptTrigger: BattleInterruptTrigger;
 };
 export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
-  readonly suppressedReactionTrigger: BattleReactionTrigger;
+  readonly handledInterruptTrigger: BattleInterruptTrigger;
 };
-export type BattleReactionFrameInput = BattleReactionFrame extends infer T
-  ? T extends BattleReactionFrame
+export type BattleInterruptCheckpointInput = BattleInterruptCheckpoint extends infer T
+  ? T extends BattleInterruptCheckpoint
     ? Omit<
         T,
-        "eligibleReactors" | "offeredReactors" | "choices" | "activeReaction"
+        "eligibleResponders" | "offeredResponders" | "choices" | "activeInterrupt"
       >
     : never
   : never;
-export type BattleReactionDecision =
+export type BattleInterruptDecision =
   | {
       readonly kind: "decline";
-      readonly reactorId: CombatantId;
+      readonly responderId: CombatantId;
     }
   | {
       readonly kind: "resolve";
-      readonly reactorId: CombatantId;
-      readonly choice: BattleReactionProcedureSelection;
+      readonly responderId: CombatantId;
+      readonly choice: BattleInterruptProcedureSelection;
     };
 export type AttackTargetConstraint =
   | { readonly kind: "meleeReach"; readonly reachFeet: MovementFeet }
@@ -5290,13 +5290,13 @@ export type BattleConcentrationSavingThrowHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly rollMode?: AttackRollMode;
 };
-export type BattleReactionDecisionHole = {
+export type BattleInterruptDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
-  readonly kind: "reactionDecision";
+  readonly kind: "interruptDecision";
   readonly label: string;
-  readonly trigger: BattleReactionTrigger;
-  readonly eligibleReactors: readonly CombatantId[];
+  readonly trigger: BattleInterruptTrigger;
+  readonly eligibleResponders: readonly CombatantId[];
 };
 export type BattleMovementHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5496,7 +5496,7 @@ export type BattleHole =
   | BattleDeathSavingThrowHole
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
-  | BattleReactionDecisionHole
+  | BattleInterruptDecisionHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
   | BattleLevitateInitialRiseHole
@@ -5770,9 +5770,9 @@ export type BattleFill =
       readonly value: BattleSanctuaryInterdictionOutcome;
     }
   | {
-      readonly kind: "reactionDecision";
+      readonly kind: "interruptDecision";
       readonly holeId: BattleHoleId;
-      readonly value: BattleReactionDecision;
+      readonly value: BattleInterruptDecision;
     }
   | {
       readonly kind: "movement";
@@ -5829,7 +5829,7 @@ export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > & {
   readonly replayingInterruptedProcedure?: boolean;
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   readonly pendingAttackDamageReductions?:
     | readonly BattlePendingAttackDamageReduction[]
     | undefined;
@@ -5851,7 +5851,7 @@ export type OffHandAttackBattleResolutionInput =
     >
   > & {
     readonly replayingInterruptedProcedure?: boolean;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
     readonly pendingAttackDamageReductions?:
       | readonly BattlePendingAttackDamageReduction[]
       | undefined;
@@ -5870,7 +5870,7 @@ export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
     >
   > & {
     readonly replayingInterruptedProcedure?: boolean;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
     readonly pendingAttackDamageReductions?:
       | readonly BattlePendingAttackDamageReduction[]
       | undefined;
@@ -5919,7 +5919,7 @@ export type EscapeSpellRestraintBattleResolutionInput =
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > & {
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   readonly reactionContinuationSubject?: BattleSubject | undefined;
   readonly replayingInterruptedProcedure?: boolean | undefined;
   readonly pendingAttackDamageReductions?:
@@ -5933,13 +5933,13 @@ export type BonusActionSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
   > & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 export type BonusActionDashSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionDashSpell" }>
   > & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 export type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
@@ -5953,7 +5953,7 @@ export type MonkFocusOptionBattleResolutionInput =
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> & {
     readonly replayingInterruptedProcedure?: boolean;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
     readonly pendingAttackDamageReductions?:
       | readonly BattlePendingAttackDamageReduction[]
       | undefined;
@@ -6042,10 +6042,10 @@ export type BattleSnapshot = {
     readonly movements: readonly BattleReadiedMovementSnapshot[];
   };
   readonly helpAttackMarkers: readonly BattleHelpAttackSnapshot[];
-  readonly pendingReaction: {
-    readonly trigger: BattleReactionTrigger;
-    readonly decisionHole: BattleReactionDecisionHole;
-    readonly choices: readonly BattleReactionProcedureChoice[];
+  readonly pendingInterrupt: {
+    readonly trigger: BattleInterruptTrigger;
+    readonly decisionHole: BattleInterruptDecisionHole;
+    readonly choices: readonly BattleInterruptProcedureChoice[];
     readonly stackDepth: BattleReplayStackDepth;
   } | null;
 };
@@ -6197,8 +6197,8 @@ export {
   LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
-  REACTION_DECISION_HOLE_ID,
-  REACTION_DECISION_HOLE_INSTANCE,
+  INTERRUPT_DECISION_HOLE_ID,
+  INTERRUPT_DECISION_HOLE_INSTANCE,
   REACTION_MODIFIER_ROLL_HOLE_ID,
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
   SEARCH_ABILITY_CHECK_HOLE_ID,

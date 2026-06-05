@@ -11,7 +11,7 @@ import {
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -29,7 +29,7 @@ import {
   endTurn,
   Hp,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -70,7 +70,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shining Smite attack-hit window.");
     }
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === shiningSmiteUnitId,
@@ -89,13 +89,13 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       ),
     );
 
-    const afterShining = resolveBattleReaction({
+    const afterShining = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -320,7 +320,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(unarmedHit).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           choices: expect.arrayContaining([
             expect.objectContaining({
               kind: "castAttackHitBonusActionSpell",
@@ -373,7 +373,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     expect(rangedHit).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 });

@@ -3,7 +3,7 @@ import type {
   BattleSpellCastReactionFactsHole,
   BattleSpellCastReactionFact,
   BattleInterruptedProcedure,
-  BattleReactionFrameInput,
+  BattleInterruptCheckpointInput,
   BattleSpellCastingTimeResource,
   SpellComponent,
   SupportedSpellInvocation,
@@ -37,14 +37,14 @@ export function spellCastReactionFactsHole(input: {
   };
 }
 
-export function spellCastReactionFrame(input: {
+export function spellCastInterruptFrame(input: {
   readonly casterId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly targetIds: readonly CombatantId[];
   readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
   readonly castingResource: BattleSpellCastingTimeResource;
   readonly continuation: BattleInterruptedProcedure;
-}): Extract<BattleReactionFrameInput, { readonly trigger: "spellCast" }> {
+}): Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }> {
   const resource = input.invocation.resource;
   return {
     trigger: "spellCast",

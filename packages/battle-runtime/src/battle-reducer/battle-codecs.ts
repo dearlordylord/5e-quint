@@ -20,9 +20,9 @@ import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type { StatBlockPartSection } from "../battle-action-options.ts";
 import {
-  BATTLE_REACTION_TRIGGERS,
+  BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
-} from "../battle-reaction-triggers.ts";
+} from "../battle-interrupt-triggers.ts";
 import type {
   ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   BattleDroppedObjectOutcome,
@@ -1559,10 +1559,10 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("reactionDecision"),
+    kind: Schema.Literal("interruptDecision"),
     label: Schema.String,
-    trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
-    eligibleReactors: Schema.Array(CombatantId),
+    trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
+    eligibleResponders: Schema.Array(CombatantId),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2460,16 +2460,16 @@ type BattleFillEncoded =
           };
     }
   | {
-      readonly kind: "reactionDecision";
+      readonly kind: "interruptDecision";
       readonly holeId: string;
       readonly value:
         | {
             readonly kind: "decline";
-            readonly reactorId: string;
+            readonly responderId: string;
           }
         | {
             readonly kind: "resolve";
-            readonly reactorId: string;
+            readonly responderId: string;
             readonly choice:
               | {
                   readonly kind: "releaseReadiedSpell";
@@ -3179,16 +3179,16 @@ export const BattleFillSchema: Schema.Schema<
       ),
     }),
     Schema.Struct({
-      kind: Schema.Literal("reactionDecision"),
+      kind: Schema.Literal("interruptDecision"),
       holeId: BattleHoleIdSchema,
       value: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("decline"),
-          reactorId: CombatantId,
+          responderId: CombatantId,
         }),
         Schema.Struct({
           kind: Schema.Literal("resolve"),
-          reactorId: CombatantId,
+          responderId: CombatantId,
           choice: Schema.Union(
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedSpell"),
@@ -3674,7 +3674,7 @@ const BattleReadiedSpellSnapshotSchema = Schema.Struct({
 
 const BattleReadiedMovementSnapshotSchema = Schema.Struct({
   actorId: CombatantId,
-  trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+  trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
@@ -3744,7 +3744,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
 );
 
-const BattleReactionProcedureChoiceSchema = Schema.Union(
+const BattleInterruptProcedureChoiceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
@@ -3788,9 +3788,9 @@ const BattleReactionProcedureChoiceSchema = Schema.Union(
 );
 
 const BattlePendingReactionSnapshotSchema = Schema.Struct({
-  trigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+  trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
   decisionHole: BattleHoleSchema,
-  choices: Schema.Array(BattleReactionProcedureChoiceSchema),
+  choices: Schema.Array(BattleInterruptProcedureChoiceSchema),
   stackDepth: Schema.Number,
 });
 
@@ -3975,7 +3975,7 @@ export const BattleSnapshotSchema = Schema.Struct({
     movements: Schema.Array(BattleReadiedMovementSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
-  pendingReaction: Schema.Union(
+  pendingInterrupt: Schema.Union(
     BattlePendingReactionSnapshotSchema,
     Schema.Null,
   ),

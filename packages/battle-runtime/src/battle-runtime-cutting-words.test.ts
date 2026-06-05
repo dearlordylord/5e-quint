@@ -8,7 +8,7 @@ import {
   findHole,
   targetFill,
   attackRollFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   damageRollFill,
   rolledDiceGroup,
   characterSeed,
@@ -30,7 +30,7 @@ import {
   holeId,
   Hp,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveSuccessfulAbilityCheckReactionReduction,
 } from "./battle-runtime-test-support.ts";
@@ -101,17 +101,17 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingReaction!.choices,
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        findHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: cuttingWordsAttackOnly.id,
@@ -192,17 +192,17 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected Cutting Words damage Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingReaction!.choices,
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        findHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: cuttingWordsDamageOnly.id,

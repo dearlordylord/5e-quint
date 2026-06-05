@@ -54,7 +54,7 @@ import {
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleConcentrationDamage,
   removeBattleCombatants,
   sameBattleSubject,
@@ -71,7 +71,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
-  type BattleReactionFrame,
+  type BattleInterruptCheckpoint,
   type BattleReadiedSpellTrigger,
   type BattleState,
   type BattleSubject,
@@ -1578,15 +1578,15 @@ export function concentrationSavingThrowFill(
   };
 }
 
-export function reactionDecisionFill(
+export function interruptDecisionFill(
   hole: BattleHole,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  if (hole.kind !== "reactionDecision") {
-    throw new Error("Expected reactionDecision hole.");
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  if (hole.kind !== "interruptDecision") {
+    throw new Error("Expected interruptDecision hole.");
   }
   return {
-    kind: "reactionDecision",
+    kind: "interruptDecision",
     holeId: hole.holeId,
     value,
   };
@@ -3021,7 +3021,7 @@ export function resolveGoblinScimitarHitReduction(input: {
     throw new Error("Expected attack-hit Reaction window.");
   }
   const choice = reactionModifierChoice(
-    setup.result.snapshot.pendingReaction!.choices,
+    setup.result.snapshot.pendingInterrupt!.choices,
     input.unitId,
     "attackDamageReduction",
   );
@@ -3035,13 +3035,13 @@ export function resolveGoblinScimitarHitReduction(input: {
             value: [rolledDiceGroup([input.reductionRoll])] as const,
           },
         ];
-  const afterReaction = resolveBattleReaction({
+  const afterReaction = resolveBattleInterrupt({
     state: setup.result.state,
-    fill: reactionDecisionFill(
-      findHole(setup.result.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      findHole(setup.result.holes, "interruptDecision"),
       {
         kind: "resolve",
-        reactorId: fighterId,
+        responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
           unitId: input.unitId,
@@ -3071,7 +3071,7 @@ export function resolveGoblinScimitarHitReduction(input: {
     return result;
   }
   if (
-    result.snapshot.pendingReaction === null &&
+    result.snapshot.pendingInterrupt === null &&
     !result.holes.some((hole) => hole.kind === "concentrationSavingThrow")
   ) {
     throw new Error("Expected attack-damage Reaction or Concentration window.");
@@ -3082,7 +3082,7 @@ export function resolveGoblinScimitarHitReduction(input: {
 export function reactionModifierChoice(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingReaction"]
+      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
     >["choices"][number]
   >,
   unitId: string,
@@ -3129,7 +3129,7 @@ export function reactionModifierReductionRollFill(
 export function reactionChoiceWithSubject(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingReaction"]
+      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
     >["choices"][number]
   >,
 ) {
@@ -4046,7 +4046,7 @@ export {
   requiredAbilityCheckRollMode,
   resolveBardicInspirationFailedD20Test,
   resolveBattleConcentrationDamage,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   resolveFindFamiliarForm,
@@ -4070,7 +4070,7 @@ export type {
   ActiveOngoingFeatureOccurrence,
   BattleFill,
   BattleHole,
-  BattleReactionFrame,
+  BattleInterruptCheckpoint,
   BattleReadiedSpellTrigger,
   BattleState,
   BattleSubject,

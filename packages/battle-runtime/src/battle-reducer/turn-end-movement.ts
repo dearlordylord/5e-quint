@@ -69,7 +69,7 @@ import {
 } from "../battle-subjects.ts";
 import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
 
-import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 
 import {
   battleObjectId,
@@ -110,7 +110,7 @@ import {
   statBlockRechargeRollHole,
 } from "./damage-apply.ts";
 
-import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
 import {
   flamingSphereDamageAfterSave,
   flamingSphereMoveDistanceAccepted,
@@ -1466,7 +1466,7 @@ export function resolveCommandApproachCommand(
     movement.movement,
   );
   if (threats.length > 0) {
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "opportunityAttack",
@@ -1673,7 +1673,7 @@ export function resolveCommandFleeCommand(
     movement.movement,
   );
   if (threats.length > 0) {
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "opportunityAttack",
@@ -1831,7 +1831,7 @@ export function resolveGreaseGroundHazardSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (input.subject.trigger === "endsTurnInArea") {
@@ -1849,7 +1849,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (
@@ -1900,7 +1900,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   }
   const outcome = savingThrowFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -1912,7 +1912,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2015,7 +2015,7 @@ export function resolveWebRestraintSaveCommand(
         readonly command: "webRestraintSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (
@@ -2085,7 +2085,7 @@ export function resolveWebRestraintSaveCommand(
   }
   const outcome = savingThrowFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -2097,7 +2097,7 @@ export function resolveWebRestraintSaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2210,7 +2210,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
@@ -2289,7 +2289,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   }
   const outcome = matchingGreaseFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -2301,7 +2301,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2434,7 +2434,7 @@ export function resolveGustOfWindLineSaveCommand(
         readonly command: "gustOfWindLineSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   const effect = gustOfWindLineEffectFor(input.state, input.subject);
@@ -2514,7 +2514,7 @@ export function resolveGustOfWindLineSaveCommand(
   }
   const outcome = matchingGustFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -2526,7 +2526,7 @@ export function resolveGustOfWindLineSaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2917,7 +2917,7 @@ export function resolveFlamingSphereSaveCommand(
         readonly command: "movableZoneSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (
@@ -3011,7 +3011,7 @@ export function resolveFlamingSphereSaveCommand(
   }
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -3023,7 +3023,7 @@ export function resolveFlamingSphereSaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -3211,7 +3211,7 @@ export function resolveFlamingSphereRamCommand(
         readonly command: "movableZoneRam";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (
@@ -3389,7 +3389,7 @@ export function resolveFlamingSphereRamCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -3401,7 +3401,7 @@ export function resolveFlamingSphereRamCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -3684,7 +3684,7 @@ export function resolveMoonbeamSaveCommand(
         readonly command: "movableZoneSave";
       }
     >;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (
@@ -3799,7 +3799,7 @@ export function resolveMoonbeamSaveCommand(
   }
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "saveFailed",
@@ -3811,7 +3811,7 @@ export function resolveMoonbeamSaveCommand(
           fills: input.fills,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -5587,7 +5587,7 @@ export function resolveMoveCommand(
     movement.movement,
   );
   if (threats.length > 0) {
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
         trigger: "opportunityAttack",
@@ -5688,7 +5688,7 @@ export function resolveJumpMovementReplacementCommand(
       input.subject.actorId,
       effect,
     );
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       consumedState,
       {
         trigger: "opportunityAttack",

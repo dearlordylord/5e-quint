@@ -19,7 +19,7 @@
 //     Damage Roll, Spell Slot, Concentration, and Spell Effect.
 //
 // What stays in shared infrastructure:
-//   - The attack-hit Reaction window and eligibility orchestration stay in
+//   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The Shining Smite light-emitter projection constant stays in
 //     spells-active-effects.ts with the light-emitter projection code.
@@ -33,7 +33,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { BattleReactionTrigger } from "../../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
@@ -42,7 +42,7 @@ import {
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleInterruptedProcedure,
-  type BattleReactionFrame,
+  type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
@@ -52,11 +52,11 @@ import type { BattleSubject } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices,
-  reactionInterruptFrame,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+  interruptCheckpointFrame,
 } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects.ts";
 import {
   sameStringSet,
@@ -89,7 +89,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
   }
 >;
 type AttackHitDamageReplayFrame = Extract<
-  BattleReactionFrame,
+  BattleInterruptCheckpoint,
   { readonly trigger: "attackHit" }
 > & {
   readonly continuation: Extract<
@@ -101,7 +101,7 @@ type AfterHitDamageAndIlluminationBattleResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly frame: AttackHitDamageReplayFrame;
     readonly target: BattleCreatureState;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 type AfterHitDamageAndIlluminationResolveInput =
   SpellProcedureProfileResolveInput<
@@ -304,7 +304,7 @@ function resolveAfterHitDamageAndIllumination(
     );
   }
 
-  const spellCastFrame = spellCastReactionFrame({
+  const spellCastFrame = spellCastInterruptFrame({
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetIds: [input.input.target.combatantId],
@@ -317,10 +317,10 @@ function resolveAfterHitDamageAndIllumination(
     },
   });
   const spellCastReactionWindow =
-    maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
+    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
       input.input.state,
       spellCastFrame,
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -364,7 +364,7 @@ function resolveAfterHitDamageAndIllumination(
     ...effected,
     interruptStack: [
       ...effected.interruptStack.slice(0, -1),
-      reactionInterruptFrame(nextFrame),
+      interruptCheckpointFrame(nextFrame),
     ],
   };
   const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
@@ -373,7 +373,7 @@ function resolveAfterHitDamageAndIllumination(
     casterId: input.input.subject.casterId,
     spellId: input.invocation.spell.id,
     targetIds: [input.input.target.combatantId],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

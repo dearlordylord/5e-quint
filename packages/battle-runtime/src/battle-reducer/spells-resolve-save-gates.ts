@@ -17,14 +17,14 @@ import {
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   isTargetListSpellInvocation,
-  openAfterDamageSequenceReactionWindow,
+  openAfterDamageSequenceInterruptWindow,
   spendReaction,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
@@ -80,7 +80,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
@@ -527,7 +527,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -539,7 +539,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -635,7 +635,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -647,7 +647,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -775,7 +775,7 @@ export function resolveHideousLaughterSpellAct(input: {
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -787,7 +787,7 @@ export function resolveHideousLaughterSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -898,7 +898,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
     (outcome) => (outcome.succeeded ? [outcome.targetId] : []),
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -910,7 +910,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -1208,9 +1208,9 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Save-gate damage spells do not use an attack roll.",
     );
   }
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: saveGatedDamageSpellCastTargetIds(input.fillSet),
@@ -1226,7 +1226,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -1336,7 +1336,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     invocation: damageInvocation,
   });
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -1348,7 +1348,7 @@ export function resolveSaveGateDamageSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -1917,20 +1917,20 @@ export function resolveSaveGateDamageSpellAct(input: {
     afterDamageEvents,
     objectDamages,
     objectIgnitions,
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (forcedMovement !== null) {
     return forcedMovement;
   }
 
-  return openAfterDamageSequenceReactionWindow({
+  return openAfterDamageSequenceInterruptWindow({
     state: nextState,
     subject: input.input.subject,
     events: afterDamageEvents,
     objectDamages,
     objectIgnitions,
     droppedObjects: [],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
 }
 
@@ -2091,7 +2091,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult | null {
   const forcedMovementRider = input.invocation.failedSavePostDamageRiders.find(
     (rider) => rider.kind === "forcedReactionMovement",
@@ -2144,14 +2144,14 @@ function resolveFailedSaveForcedReactionMovement(input: {
         "Dissonant Whispers movement is unavailable when the failed target cannot move.",
       );
     }
-    return openAfterDamageSequenceReactionWindow({
+    return openAfterDamageSequenceInterruptWindow({
       state: spendReaction(input.state, targetId),
       subject: input.subject,
       events: input.afterDamageEvents,
       objectDamages: input.objectDamages,
       objectIgnitions: input.objectIgnitions,
       droppedObjects: [],
-      suppressedReactionTrigger: input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     });
   }
   if (input.movementFill === undefined) {
@@ -2176,7 +2176,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
   const stateAfterReactionSpend = spendReaction(input.state, targetId);
   const threats = parsedMovement.movement.provokedOpportunityAttacks;
   if (threats.length > 0) {
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       stateAfterReactionSpend,
       {
         trigger: "opportunityAttack",
@@ -2192,13 +2192,13 @@ function resolveFailedSaveForcedReactionMovement(input: {
           droppedObjects: [],
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
     }
   }
-  return openAfterDamageSequenceReactionWindow({
+  return openAfterDamageSequenceInterruptWindow({
     state: applyBattleMovement(
       stateAfterReactionSpend,
       parsedMovement.movement,
@@ -2208,7 +2208,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     objectDamages: input.objectDamages,
     objectIgnitions: input.objectIgnitions,
     droppedObjects: [],
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.handledInterruptTrigger,
   });
 }
 
@@ -2384,7 +2384,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -2396,7 +2396,7 @@ export function resolveSaveGateConditionSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2543,7 +2543,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -2555,7 +2555,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2733,7 +2733,7 @@ export function resolveCommandSpellAct(input: {
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -2746,7 +2746,7 @@ export function resolveCommandSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -2872,7 +2872,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -2885,7 +2885,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;

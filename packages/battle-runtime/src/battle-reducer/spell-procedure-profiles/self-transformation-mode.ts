@@ -27,7 +27,7 @@ import { Either, Match } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -44,7 +44,7 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   applySelfTransformationModeEffect,
   selfTransformationModeLabel,
@@ -405,9 +405,9 @@ function resolveSelfTransformationMode(
     return invalidResult(input.input.state, "invalidFill", modeEffect.message);
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [input.actorId],
@@ -419,7 +419,7 @@ function resolveSelfTransformationMode(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

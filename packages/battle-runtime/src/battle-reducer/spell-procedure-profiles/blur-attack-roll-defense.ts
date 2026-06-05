@@ -30,7 +30,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
@@ -40,7 +40,7 @@ import {
 import { spellId, type CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import {
@@ -239,9 +239,9 @@ function resolveBlurAttackRollDefense(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [input.actorId],
@@ -253,7 +253,7 @@ function resolveBlurAttackRollDefense(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

@@ -13,7 +13,7 @@ import {
   targetFill,
   attackTargetFill,
   attackRollFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   grappleOutcomeFill,
   damageRollFill,
   damageRollFillWithGroups,
@@ -46,7 +46,7 @@ import {
   discoverBattleActs,
   endTurn,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   resourceCount,
@@ -2275,12 +2275,12 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected attack-hit Reaction window.");
     }
 
-    const decision = findHole(awaitingReaction.holes, "reactionDecision");
-    const resumed = resolveBattleReaction({
+    const decision = findHole(awaitingReaction.holes, "interruptDecision");
+    const resumed = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(decision, {
+      fill: interruptDecisionFill(decision, {
         kind: "decline",
-        reactorId: wizardId,
+        responderId: wizardId,
       }),
     });
 

@@ -80,7 +80,7 @@ import {
   attackDamageEventWithEntries,
   attackDamagePrefixFills,
   attackFillsThroughAttackRoll,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
   resumeInterruptedProcedure,
   snapshotBattle,
@@ -583,8 +583,8 @@ export function resolveSelectedAttackProcedure(
             fixedDamageByTypeBeforeTargetAdjustments,
           ),
         );
-  if (hit && input.suppressedReactionTrigger !== "attackHit") {
-    const reactionWindow = maybeOpenReactionWindow(
+  if (hit && input.handledInterruptTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
       {
         trigger: "attackHit",
@@ -607,7 +607,7 @@ export function resolveSelectedAttackProcedure(
           fills: attackFillsThroughAttackRoll(input.fills),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
@@ -810,7 +810,7 @@ export function resolveSelectedAttackProcedure(
     }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
-    const attackDamageReactionWindow = maybeOpenReactionWindow(
+    const attackDamageReactionWindow = maybeOpenInterruptWindow(
       sapRedirectState,
       {
         trigger: "attackDamage",
@@ -827,7 +827,7 @@ export function resolveSelectedAttackProcedure(
           attackDamageRiders: [],
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackDamageReactionWindow !== null) {
       const spent = spendAttackProcedure(
@@ -941,7 +941,7 @@ export function resolveSelectedAttackProcedure(
         damageSourceId: attackerId,
       }),
     } satisfies BattleAfterDamageEvent;
-    const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
+    const primaryAfterDamageReactionWindow = maybeOpenInterruptWindow(
       spent.state,
       {
         trigger: "afterDamage",
@@ -955,7 +955,7 @@ export function resolveSelectedAttackProcedure(
           fillSet,
         }),
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
@@ -966,7 +966,7 @@ export function resolveSelectedAttackProcedure(
       firstTargetId: target.combatantId,
       attack,
       fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
-      suppressedReactionTrigger: input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     });
     return withOpenHandTechniqueShovePushes(
       afterPrimaryDamage,
@@ -1176,7 +1176,7 @@ export function resolveSelectedAttackProcedure(
     }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
-    const attackDamageReactionWindow = maybeOpenReactionWindow(
+    const attackDamageReactionWindow = maybeOpenInterruptWindow(
       sapRedirectState,
       {
         trigger: "attackDamage",
@@ -1196,7 +1196,7 @@ export function resolveSelectedAttackProcedure(
             : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackDamageReactionWindow !== null) {
       const spent = spendAttackProcedure(
@@ -1313,7 +1313,7 @@ export function resolveSelectedAttackProcedure(
         damageSourceId: attackerId,
       }),
     } satisfies BattleAfterDamageEvent;
-    const primaryAfterDamageReactionWindow = maybeOpenReactionWindow(
+    const primaryAfterDamageReactionWindow = maybeOpenInterruptWindow(
       spent.state,
       {
         trigger: "afterDamage",
@@ -1327,7 +1327,7 @@ export function resolveSelectedAttackProcedure(
           fillSet,
         }),
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
@@ -1339,7 +1339,7 @@ export function resolveSelectedAttackProcedure(
         firstTargetId: target.combatantId,
         attack,
         fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
-        suppressedReactionTrigger: input.suppressedReactionTrigger,
+        handledInterruptTrigger: input.handledInterruptTrigger,
       }),
       openHandTechniqueApplied.shovePushes,
     );
@@ -1356,7 +1356,7 @@ export function resolveSelectedAttackProcedure(
       firstTargetId: target.combatantId,
       attack,
       fills: input.fills,
-      suppressedReactionTrigger: input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     }),
     openHandTechniqueApplied.shovePushes,
   );
@@ -1415,7 +1415,7 @@ function resolveAttackFollowUpContinuations(input: {
   readonly firstTargetId: BattleCreatureState["combatantId"];
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
-  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
   const cleaveResult = resolveWeaponMasteryCleaveContinuation(input);
   if (cleaveResult.tag !== "resolved") {
@@ -1448,7 +1448,7 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
   readonly firstTargetId: BattleCreatureState["combatantId"];
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
-  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
   const fillSet = attackFillSet(input.fills);
   if (fillSet.tag === "invalid") {
@@ -1461,7 +1461,7 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
     attack: input.attack,
     fills: input.fills,
     fillSet,
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   return cleaveResolved.tag === "ok"
     ? {
@@ -1504,7 +1504,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
@@ -1717,8 +1717,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.fillSet.weaponMasteryCleaveAttackRoll.value,
     cleaveCriticalThreshold,
   );
-  if (cleaveHit && input.suppressedReactionTrigger !== "attackHit") {
-    const attackHitReactionWindow = maybeOpenReactionWindow(
+  if (cleaveHit && input.handledInterruptTrigger !== "attackHit") {
+    const attackHitReactionWindow = maybeOpenInterruptWindow(
       cleaveAttackRolledState,
       {
         trigger: "attackHit",
@@ -1743,7 +1743,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
           fills: cleaveFillsThroughAttackRoll(input.fills, input.fillSet),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackHitReactionWindow !== null) {
       return { tag: "result", result: attackHitReactionWindow };
@@ -1930,13 +1930,13 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
     attackDamageRiders: [],
   };
-  const attackDamageReactionWindow = maybeOpenReactionWindow(
+  const attackDamageReactionWindow = maybeOpenInterruptWindow(
     cleaveUsedState,
     {
       trigger: "attackDamage",
       continuation,
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (attackDamageReactionWindow !== null) {
     return { tag: "result", result: attackDamageReactionWindow };
@@ -1946,7 +1946,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     result: resumeInterruptedProcedure(
       cleaveUsedState,
       continuation,
-      input.suppressedReactionTrigger ?? "attackDamage",
+      input.handledInterruptTrigger ?? "attackDamage",
     ),
   };
 }
@@ -2053,7 +2053,7 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
   readonly firstTargetId: BattleCreatureState["combatantId"];
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
-  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }): BattleResolutionResult {
   const fillSet = attackFillSet(input.fills);
   if (fillSet.tag === "invalid") {
@@ -2066,7 +2066,7 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
     attack: input.attack,
     fills: input.fills,
     fillSet,
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   return resolved.tag === "ok"
     ? {
@@ -2110,7 +2110,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-  readonly suppressedReactionTrigger: AttackProcedureResolutionInput["suppressedReactionTrigger"];
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
 }):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
@@ -2319,8 +2319,8 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     rolledState.combatants.get(input.subject.actorId),
     input.attack,
   );
-  if (hit && input.suppressedReactionTrigger !== "attackHit") {
-    const attackHitReactionWindow = maybeOpenReactionWindow(
+  if (hit && input.handledInterruptTrigger !== "attackHit") {
+    const attackHitReactionWindow = maybeOpenInterruptWindow(
       rolledState,
       {
         trigger: "attackHit",
@@ -2345,7 +2345,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           fills: hordeBreakerFillsThroughAttackRoll(input.fills, input.fillSet),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackHitReactionWindow !== null) {
       return { tag: "result", result: attackHitReactionWindow };
@@ -2490,13 +2490,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
     attackDamageRiders: hordeBreakerSelectedDamageRiders,
   };
-  const attackDamageReactionWindow = maybeOpenReactionWindow(
+  const attackDamageReactionWindow = maybeOpenInterruptWindow(
     usedState,
     {
       trigger: "attackDamage",
       continuation,
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (attackDamageReactionWindow !== null) {
     return { tag: "result", result: attackDamageReactionWindow };
@@ -2506,7 +2506,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     result: resumeInterruptedProcedure(
       usedState,
       continuation,
-      input.suppressedReactionTrigger ?? "attackDamage",
+      input.handledInterruptTrigger ?? "attackDamage",
     ),
   };
 }

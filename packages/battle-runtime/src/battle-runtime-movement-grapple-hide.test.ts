@@ -15,7 +15,7 @@ import {
   spellTargetAllocationFill,
   abilityCheckFill,
   attackRollFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   movementFill,
   castGroundHazardForMovementTest,
   grappleOutcomeFill,
@@ -50,7 +50,7 @@ import {
   Either,
   endTurn,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   Schema,
   snapshotBattle,
@@ -160,7 +160,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           }),
         ],
       }),
-    ).toMatchObject({ tag: "resolved", snapshot: { pendingReaction: null } });
+    ).toMatchObject({ tag: "resolved", snapshot: { pendingInterrupt: null } });
   });
 
   test("Grease Difficult Terrain facts add extra Movement cost without storing geometry", () => {
@@ -373,12 +373,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const readiedChoice =
-      awaitingReaction.snapshot.pendingReaction?.choices.find(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
           choice.kind === "releaseReadiedMovement" &&
           choice.readiedMovementActorId === fighterId,
       );
-    expect(awaitingReaction.snapshot.pendingReaction?.choices).toEqual(
+    expect(awaitingReaction.snapshot.pendingInterrupt?.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "releaseReadiedMovement",
@@ -399,12 +399,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       provokedOpportunityAttacks: [],
     });
 
-    const decision = requireHole(awaitingReaction, "reactionDecision");
-    const released = resolveBattleReaction({
+    const decision = requireHole(awaitingReaction, "interruptDecision");
+    const released = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(decision, {
+      fill: interruptDecisionFill(decision, {
         kind: "resolve",
-        reactorId: fighterId,
+        responderId: fighterId,
         choice: {
           kind: "releaseReadiedMovement",
           readiedMovementActorId: fighterId,

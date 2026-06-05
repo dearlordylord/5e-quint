@@ -73,7 +73,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   snapshotBattle,
@@ -139,7 +139,7 @@ type RuleCoreFeatureProjection = {
   readonly critical: boolean;
   readonly actorArmorClass: number;
   readonly holes: readonly RuleCoreFeatureMbtHole[];
-  readonly pendingReaction: boolean;
+  readonly pendingInterrupt: boolean;
   readonly lastResult: RuleCoreFeatureResult;
   readonly lastInvalidReason: RuleCoreFeatureInvalidReason;
 };
@@ -667,7 +667,7 @@ function expectedProjection(
     critical: false,
     actorArmorClass: featureMbtBaselineArmorClass,
     holes: [],
-    pendingReaction: false,
+    pendingInterrupt: false,
     lastResult: "init",
     lastInvalidReason: "none",
     ...overrides,
@@ -1402,12 +1402,12 @@ function createRuleCoreFeatureDriver() {
       const damageStart =
         input.modifierKind === "damageRollReduction" &&
         afterHit.tag === "needsHoles" &&
-        afterHit.holes.some((hole) => hole.kind === "reactionDecision")
-          ? resolveBattleReaction({
+        afterHit.holes.some((hole) => hole.kind === "interruptDecision")
+          ? resolveBattleInterrupt({
               state: afterHit.state,
-              fill: reactionDecisionFill(
-                requireHoleFromList(afterHit.holes, "reactionDecision"),
-                { kind: "decline", reactorId: actorId },
+              fill: interruptDecisionFill(
+                requireHoleFromList(afterHit.holes, "interruptDecision"),
+                { kind: "decline", responderId: actorId },
               ),
             })
           : afterHit;
@@ -1429,7 +1429,7 @@ function createRuleCoreFeatureDriver() {
         );
       }
       const choice = reactionModifierChoice(
-        awaited.snapshot.pendingReaction?.choices ?? [],
+        awaited.snapshot.pendingInterrupt?.choices ?? [],
         input.unitId,
         input.modifierKind,
       );
@@ -1442,13 +1442,13 @@ function createRuleCoreFeatureDriver() {
                 [[input.reductionRoll]],
               ),
             ];
-      const afterReaction = resolveBattleReaction({
+      const afterReaction = resolveBattleInterrupt({
         state: awaited.state,
-        fill: reactionDecisionFill(
-          requireHoleFromList(awaited.holes, "reactionDecision"),
+        fill: interruptDecisionFill(
+          requireHoleFromList(awaited.holes, "interruptDecision"),
           {
             kind: "resolve",
-            reactorId: actorId,
+            responderId: actorId,
             choice: {
               kind: "reactionRollOrDamageReduction",
               unitId: input.unitId,
@@ -2252,14 +2252,14 @@ function attackRollFill(
   };
 }
 
-function reactionDecisionFill(
+function interruptDecisionFill(
   hole: BattleHole,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  if (hole.kind !== "reactionDecision") {
-    throw new Error("Expected reactionDecision.");
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  if (hole.kind !== "interruptDecision") {
+    throw new Error("Expected interruptDecision.");
   }
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function savingThrowOutcomeFill(
@@ -2363,7 +2363,7 @@ function rolledDiceGroup(
 function reactionModifierChoice(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingReaction"]
+      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
     >["choices"][number]
   >,
   unitId: string,
@@ -2471,7 +2471,7 @@ function projectRuleCoreFeatureState(input: {
     critical: input.critical,
     actorArmorClass: input.actorArmorClass,
     holes: input.holes.map(projectFeatureHole),
-    pendingReaction: snapshot.pendingReaction !== null,
+    pendingInterrupt: snapshot.pendingInterrupt !== null,
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -2535,7 +2535,7 @@ function projectFeatureHole(hole: BattleHole): RuleCoreFeatureMbtHole {
   if (hole.kind === "rolledDice") return "DamageRoll";
   if (hole.kind === "abilityCheck") return "AbilityCheck";
   if (hole.kind === "savingThrowOutcome") return "SavingThrowOutcome";
-  if (hole.kind === "reactionDecision") return "ReactionDecision";
+  if (hole.kind === "interruptDecision") return "ReactionDecision";
   throw new Error(`Unexpected rule-core Feature MBT hole: ${hole.kind}`);
 }
 
@@ -2582,7 +2582,7 @@ function normalizeRuleCoreFeatureQuintState(
       "qActorArmorClass",
     ),
     holes: quintHoleSet(state["qHoles"]).map(featureHoleName),
-    pendingReaction: booleanField(state, "qPendingReaction"),
+    pendingInterrupt: booleanField(state, "qPendingReaction"),
     lastResult: featureResult(state["qLastResult"]),
     lastInvalidReason: featureInvalidReason(state["qLastInvalidReason"]),
   };

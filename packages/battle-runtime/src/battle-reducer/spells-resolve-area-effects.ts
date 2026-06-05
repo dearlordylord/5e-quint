@@ -30,7 +30,7 @@ import {
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
-import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
 import {
   saveMetamagicSelectionState,
   validateGustOfWindLineAreaPushFacts,
@@ -641,7 +641,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     return invalidResult(input.input.state, "invalidFill", areaValidation);
   }
   if (failedTargetIds.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -654,7 +654,7 @@ export function resolveGustOfWindLineSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;

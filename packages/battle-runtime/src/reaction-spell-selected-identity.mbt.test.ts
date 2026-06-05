@@ -28,7 +28,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -38,7 +38,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleReactionProcedureChoice,
+  type BattleInterruptProcedureChoice,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -201,13 +201,13 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
   const save = requireHole(choice.initialHoles, "savingThrowOutcome");
   const damage = requireHole(choice.initialHoles, "rolledDice");
   return projectResolvedReaction(
-    resolveBattleReaction({
+    resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId,
+          responderId: reactorId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -229,13 +229,13 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
   const awaitingReaction = startMagicMissileWithCounterspell(state);
   const choice = requireCounterspellChoice(awaitingReaction);
   return projectResolvedReaction(
-    resolveBattleReaction({
+    resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId,
+          responderId: reactorId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -248,7 +248,7 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
 }
 
 function projectResolvedReaction(
-  result: ReturnType<typeof resolveBattleReaction>,
+  result: ReturnType<typeof resolveBattleInterrupt>,
 ): ReactionSpellProjection {
   if (result.tag !== "resolved") {
     throw new Error(`Expected Reaction spell to resolve, got ${result.tag}.`);
@@ -546,13 +546,13 @@ function resolveShieldReactionChoice(
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
-): ReturnType<typeof resolveBattleReaction> {
+): ReturnType<typeof resolveBattleInterrupt> {
   const reactionChoice =
-    awaitingReaction.snapshot.pendingReaction?.choices.find(
+    awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (
         choice,
       ): choice is Extract<
-        BattleReactionProcedureChoice,
+        BattleInterruptProcedureChoice,
         { readonly kind: "castTriggeredReactionSpell" }
       > =>
         choice.kind === "castTriggeredReactionSpell" &&
@@ -564,13 +564,13 @@ function resolveShieldReactionChoice(
   if (reactionChoice === undefined) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
-  return resolveBattleReaction({
+  return resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: reactionDecisionFill(
-      requireHole(awaitingReaction.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
       {
         kind: "resolve",
-        reactorId,
+        responderId: reactorId,
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: reactionChoice.invocation,
@@ -587,14 +587,14 @@ function requireCounterspellChoice(
     { readonly tag: "needsHoles" }
   >,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -616,14 +616,14 @@ function requireHellishRebukeChoice(
     { readonly tag: "needsHoles" }
   >,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -639,11 +639,11 @@ function requireHellishRebukeChoice(
   return choice;
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function savingThrowOutcomeFill(

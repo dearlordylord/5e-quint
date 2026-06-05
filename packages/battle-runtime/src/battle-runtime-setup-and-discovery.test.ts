@@ -128,7 +128,7 @@ describe("battle runtime: setup and discovery", () => {
       readiedResponses: { spells: [], movements: [] },
       obscurementZones: [],
       helpAttackMarkers: [],
-      pendingReaction: null,
+      pendingInterrupt: null,
     });
   });
 

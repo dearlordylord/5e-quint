@@ -28,7 +28,7 @@ import type {
   SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
@@ -425,7 +425,7 @@ function resolveHypnoticPattern(
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -438,7 +438,7 @@ function resolveHypnoticPattern(
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;

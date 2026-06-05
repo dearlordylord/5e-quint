@@ -46,9 +46,9 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleHole,
-  BattleReactionFrameInput,
+  BattleInterruptCheckpointInput,
   BattleReactionModifierChoice,
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   BattleRolledDiceFill,
   BattleState,
 } from "../battle-reducer.ts";
@@ -226,8 +226,8 @@ export function isBattleRolledDiceFill(
 
 export function reactionRollOrDamageReductionChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-): readonly BattleReactionProcedureChoice[] {
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
   if (frame.trigger !== "attackHit" && frame.trigger !== "attackDamage") {
     return [];
   }
@@ -256,14 +256,14 @@ export function reactionRollOrDamageReductionChoices(
 
 export function reactionRollOrDamageReductionChoiceForProfile(
   state: BattleState,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
   profile: Extract<
     SupportedUnitFeatureProfile,
     { readonly kind: "reactionRollOrDamageReduction" }
   >,
   modifier: ReactionRollOrDamageReductionProfile,
-): readonly BattleReactionProcedureChoice[] {
+): readonly BattleInterruptProcedureChoice[] {
   if (!reactionModifierResourceAvailable(state, reactorId, profile, modifier)) {
     return [];
   }

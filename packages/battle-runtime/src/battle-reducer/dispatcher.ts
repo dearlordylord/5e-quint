@@ -10,7 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
-// Owns subject resolution, reaction windows, interrupted-procedure replay,
+// Owns subject resolution, interrupt checkpoints, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
@@ -43,7 +43,7 @@ import { Match } from "effect";
 
 import * as Either from "effect/Either";
 
-import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   FindFamiliarPresentState,
   FindFamiliarSnapshot,
@@ -130,7 +130,7 @@ import {
   battleSubjectInterdictedByAntimagicField,
   combatantInsideActiveAntimagicFieldAura,
 } from "./antimagic-field-action-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   activeSelfTransformationModeEffect,
   applySelfTransformationModeEffect,
@@ -238,15 +238,15 @@ import type {
   BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
   BattlePendingAttackDamageReduction,
-  BattleReactionDecision,
-  BattleReactionDecisionHole,
-  BattleReactionFrame,
-  BattleReactionFrameInput,
-  BattleReactionInterruptFrame,
+  BattleInterruptDecision,
+  BattleInterruptDecisionHole,
+  BattleInterruptCheckpoint,
+  BattleInterruptCheckpointInput,
+  BattleInterruptCheckpointFrame,
   BattleReactionModifierChoice,
-  BattleReactionProcedureChoice,
-  BattleReactionProcedureModifierChoice,
-  BattleReactionProcedureSelection,
+  BattleInterruptProcedureChoice,
+  BattleInterruptProcedureModifierChoice,
+  BattleInterruptProcedureSelection,
   BattleReplayContinuationFrame,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -261,8 +261,8 @@ import type {
   SpellSlotInvocationResource,
 } from "../battle-reducer.ts";
 import {
-  REACTION_DECISION_HOLE_ID,
-  REACTION_DECISION_HOLE_INSTANCE,
+  INTERRUPT_DECISION_HOLE_ID,
+  INTERRUPT_DECISION_HOLE_INSTANCE,
   activeOngoingFeaturesPreventSpellcasting,
   applyBattleMovement,
   commandPendingEffectsForActor,
@@ -335,7 +335,7 @@ export function resolveBattleSubjectInternal(
   input: BattleResolutionInput,
   options: {
     readonly replayingInterruptedProcedure?: boolean;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
     readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
     readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
   },
@@ -394,41 +394,41 @@ export function resolveBattleSubjectInternal(
           "Fly Speed end-fall witness must be resolved before other battle subjects.",
         );
       }
-      const activeReaction = activeFrame.frame.activeReaction;
+      const activeInterrupt = activeFrame.frame.activeInterrupt;
       if (
-        activeReaction !== undefined &&
-        sameBattleSubject(input.subject, activeReaction.subject)
+        activeInterrupt !== undefined &&
+        sameBattleSubject(input.subject, activeInterrupt.subject)
       ) {
-        const reactionResult = resolveBattleSubjectInternal(input, {
+        const interruptResult = resolveBattleSubjectInternal(input, {
           replayingInterruptedProcedure: true,
-          ...(activeReaction.suppressedReactionTrigger === undefined
+          ...(activeInterrupt.handledInterruptTrigger === undefined
             ? {}
             : {
-                suppressedReactionTrigger:
-                  activeReaction.suppressedReactionTrigger,
+                handledInterruptTrigger:
+                  activeInterrupt.handledInterruptTrigger,
               }),
-          ...(activeReaction.pendingAttackDamageReductions === undefined
+          ...(activeInterrupt.pendingAttackDamageReductions === undefined
             ? {}
             : {
                 pendingAttackDamageReductions:
-                  activeReaction.pendingAttackDamageReductions,
+                  activeInterrupt.pendingAttackDamageReductions,
               }),
-          ...(activeReaction.pendingAttackDamageAdditions === undefined
+          ...(activeInterrupt.pendingAttackDamageAdditions === undefined
             ? {}
             : {
                 pendingAttackDamageAdditions:
-                  activeReaction.pendingAttackDamageAdditions,
+                  activeInterrupt.pendingAttackDamageAdditions,
               }),
         });
-        return reactionResult.tag === "resolved"
-          ? completeActiveReactionProcedure(reactionResult.state)
-          : reactionResult;
+        return interruptResult.tag === "resolved"
+          ? completeActiveInterruptProcedure(interruptResult.state)
+          : interruptResult;
       }
     }
     return invalidResult(
       input.state,
       "staleSubject",
-      "A pending Reaction window must be resolved before the interrupted procedure can continue.",
+      "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
     );
   }
 
@@ -674,9 +674,9 @@ export function resolveBattleSubjectInternal(
               replayingInterruptedProcedure:
                 options.replayingInterruptedProcedure,
             }),
-        ...(options.suppressedReactionTrigger === undefined
+        ...(options.handledInterruptTrigger === undefined
           ? {}
-          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+          : { handledInterruptTrigger: options.handledInterruptTrigger }),
         ...(options.pendingAttackDamageReductions === undefined
           ? {}
           : {
@@ -701,9 +701,9 @@ export function resolveBattleSubjectInternal(
               replayingInterruptedProcedure:
                 options.replayingInterruptedProcedure,
             }),
-        ...(options.suppressedReactionTrigger === undefined
+        ...(options.handledInterruptTrigger === undefined
           ? {}
-          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+          : { handledInterruptTrigger: options.handledInterruptTrigger }),
         ...(options.pendingAttackDamageReductions === undefined
           ? {}
           : {
@@ -773,9 +773,9 @@ export function resolveBattleSubjectInternal(
               replayingInterruptedProcedure:
                 options.replayingInterruptedProcedure,
             }),
-        ...(options.suppressedReactionTrigger === undefined
+        ...(options.handledInterruptTrigger === undefined
           ? {}
-          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+          : { handledInterruptTrigger: options.handledInterruptTrigger }),
         ...(options.pendingAttackDamageReductions === undefined
           ? {}
           : {
@@ -803,9 +803,9 @@ export function resolveBattleSubjectInternal(
               replayingInterruptedProcedure:
                 options.replayingInterruptedProcedure,
             }),
-        ...(options.suppressedReactionTrigger === undefined
+        ...(options.handledInterruptTrigger === undefined
           ? {}
-          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+          : { handledInterruptTrigger: options.handledInterruptTrigger }),
         ...(options.pendingAttackDamageReductions === undefined
           ? {}
           : {
@@ -836,9 +836,9 @@ export function resolveBattleSubjectInternal(
               replayingInterruptedProcedure:
                 options.replayingInterruptedProcedure,
             }),
-        ...(options.suppressedReactionTrigger === undefined
+        ...(options.handledInterruptTrigger === undefined
           ? {}
-          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+          : { handledInterruptTrigger: options.handledInterruptTrigger }),
         ...(options.pendingAttackDamageReductions === undefined
           ? {}
           : {
@@ -863,7 +863,7 @@ export function resolveBattleSubjectInternal(
       return resolveSpellAct({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
         replayingInterruptedProcedure: options.replayingInterruptedProcedure,
         pendingAttackDamageReductions: options.pendingAttackDamageReductions,
         pendingAttackDamageAdditions: options.pendingAttackDamageAdditions,
@@ -873,14 +873,14 @@ export function resolveBattleSubjectInternal(
       return resolveBonusActionSpellAct({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (subject.tag === "bonusActionDashSpell") {
       return resolveBonusActionDashSpellAct({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (subject.tag === "unitFeature") {
@@ -944,7 +944,7 @@ export function resolveBattleSubjectInternal(
       return resolveGreaseGroundHazardSaveCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -954,7 +954,7 @@ export function resolveBattleSubjectInternal(
       return resolveWebRestraintSaveCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -976,7 +976,7 @@ export function resolveBattleSubjectInternal(
       return resolveGustOfWindLineSaveCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -993,13 +993,13 @@ export function resolveBattleSubjectInternal(
         return resolveFlamingSphereSaveCommand({
           ...input,
           subject,
-          suppressedReactionTrigger: options.suppressedReactionTrigger,
+          handledInterruptTrigger: options.handledInterruptTrigger,
         });
       }
       return resolveMoonbeamSaveCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -1032,7 +1032,7 @@ export function resolveBattleSubjectInternal(
       return resolveFlamingSphereRamCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -1067,7 +1067,7 @@ export function resolveBattleSubjectInternal(
       subject.command === "releaseReadiedSpell"
     ) {
       return resolveReleaseReadiedSpellCommand(input, {
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -1089,7 +1089,7 @@ export function resolveBattleSubjectInternal(
       return resolveCastTriggeredReactionSpellCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -1099,7 +1099,7 @@ export function resolveBattleSubjectInternal(
       return resolveCastAttackHitBonusActionSpellCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
       });
     }
     if (
@@ -1115,7 +1115,7 @@ export function resolveBattleSubjectInternal(
       return resolveOpportunityAttackCommand({
         ...input,
         subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
+        handledInterruptTrigger: options.handledInterruptTrigger,
         pendingAttackDamageReductions: options.pendingAttackDamageReductions,
       });
     }
@@ -1691,31 +1691,31 @@ export function consumeOrCloseLegendaryActionWindow(
     : { ...result, state, snapshot: snapshotBattle(state) };
 }
 
-export function openBattleReactionWindow(input: {
+export function openBattleInterruptWindow(input: {
   readonly state: BattleState;
-  readonly frame: BattleReactionFrame;
+  readonly frame: BattleInterruptCheckpoint;
 }): BattleState {
   return {
     ...input.state,
     interruptStack: [
       ...input.state.interruptStack,
-      reactionInterruptFrame(input.frame),
+      interruptCheckpointFrame(input.frame),
     ],
   };
 }
 
-export function reactionInterruptFrame(
-  frame: BattleReactionFrame,
-): BattleReactionInterruptFrame {
-  return { kind: "reaction", frame };
+export function interruptCheckpointFrame(
+  frame: BattleInterruptCheckpoint,
+): BattleInterruptCheckpointFrame {
+  return { kind: "interruptCheckpoint", frame };
 }
 
-export function openCreatureFallsReactionWindow(input: {
+export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
   readonly fallingCreatureId: CombatantId;
   readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
 }): BattleResolutionResult {
-  const reactionWindow = maybeOpenReactionWindow(
+  const reactionWindow = maybeOpenInterruptWindow(
     input.state,
     {
       trigger: "creatureFalls",
@@ -1865,7 +1865,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       reason: input.witness.reason,
     };
   }
-  const reaction = openCreatureFallsReactionWindow({
+  const reaction = openCreatureFallsInterruptWindow({
     state: cleanedState,
     fallingCreatureId: input.targetId,
     reactionSpellTargetFacts: input.witness.reactionSpellTargetFacts,
@@ -1951,45 +1951,45 @@ export function resolveFeatherFallLanding(input: {
   };
 }
 
-export function resolveBattleReaction(input: {
+export function resolveBattleInterrupt(input: {
   readonly state: BattleState;
-  readonly fill: Extract<BattleFill, { readonly kind: "reactionDecision" }>;
+  readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
 }): BattleResolutionResult {
-  const frame = currentReactionFrame(input.state);
+  const frame = currentInterruptCheckpoint(input.state);
   if (frame === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "No Reaction window is pending.",
+      "No interrupt checkpoint is pending.",
     );
   }
-  if (input.fill.holeId !== REACTION_DECISION_HOLE_ID) {
+  if (input.fill.holeId !== INTERRUPT_DECISION_HOLE_ID) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Reaction decision fill does not match the pending Reaction window.",
+      "Interrupt decision fill does not match the pending interrupt checkpoint.",
     );
   }
 
-  const reactor = input.state.combatants.get(input.fill.value.reactorId);
+  const responder = input.state.combatants.get(input.fill.value.responderId);
   if (
-    reactor === undefined ||
-    !unofferedEligibleReactors(frame).includes(input.fill.value.reactorId)
+    responder === undefined ||
+    !unofferedEligibleResponders(frame).includes(input.fill.value.responderId)
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Reaction decision reactor is not eligible for the pending Reaction window.",
+      "Interrupt decision responder is not eligible for the pending interrupt checkpoint.",
     );
   }
 
   if (input.fill.value.kind === "resolve") {
-    const choice = admittedReactionChoice(frame, input.fill.value);
+    const choice = admittedInterruptChoice(frame, input.fill.value);
     if (choice === null) {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Reaction choice is not admitted for the pending Reaction window.",
+        "Interrupt choice is not admitted for the pending interrupt checkpoint.",
       );
     }
     if (choice.kind === "reactionRollOrDamageReduction") {
@@ -2002,35 +2002,35 @@ export function resolveBattleReaction(input: {
     }
     if (
       choice.kind !== "castAttackHitBonusActionSpell" &&
-      !combatantCanTakeReactions(reactor)
+      !combatantCanTakeReactions(responder)
     ) {
       return invalidResult(
         input.state,
         "staleSubject",
-        "Selected reactor has no Reaction available.",
+        "Selected responder has no Reaction available.",
       );
     }
     const activeFrame = {
       ...frame,
-      activeReaction: {
-        reactorId: input.fill.value.reactorId,
+      activeInterrupt: {
+        responderId: input.fill.value.responderId,
         subject: choice.subject,
         fills: input.fill.value.choice.fills,
       },
     };
     const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
-    const stateWithActiveReaction = {
+    const stateWithActiveInterrupt = {
       ...input.state,
       interruptStack: [
         ...stackWithoutCurrent,
-        reactionInterruptFrame(activeFrame),
+        interruptCheckpointFrame(activeFrame),
       ],
     };
     const activeState =
       choice.kind === "castAttackHitBonusActionSpell"
-        ? stateWithActiveReaction
-        : spendReaction(stateWithActiveReaction, input.fill.value.reactorId);
-    const reactionResult = resolveBattleSubjectInternal(
+        ? stateWithActiveInterrupt
+        : spendReaction(stateWithActiveInterrupt, input.fill.value.responderId);
+    const interruptResult = resolveBattleSubjectInternal(
       {
         state: activeState,
         subject: choice.subject,
@@ -2038,19 +2038,19 @@ export function resolveBattleReaction(input: {
       },
       { replayingInterruptedProcedure: true },
     );
-    return reactionResult.tag === "resolved"
-      ? completeActiveReactionProcedure(reactionResult.state)
-      : reactionResult;
+    return interruptResult.tag === "resolved"
+      ? completeActiveInterruptProcedure(interruptResult.state)
+      : interruptResult;
   }
 
   const updatedFrame = {
     ...frame,
-    offeredReactors: [...frame.offeredReactors, input.fill.value.reactorId],
+    offeredResponders: [...frame.offeredResponders, input.fill.value.responderId],
   };
-  const remainingReactors = unofferedEligibleReactors(updatedFrame);
+  const remainingResponders = unofferedEligibleResponders(updatedFrame);
   const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
   const closedState =
-    remainingReactors.length === 0
+    remainingResponders.length === 0
       ? {
           ...input.state,
           interruptStack: stackWithoutCurrent,
@@ -2059,18 +2059,18 @@ export function resolveBattleReaction(input: {
           ...input.state,
           interruptStack: [
             ...stackWithoutCurrent,
-            reactionInterruptFrame(updatedFrame),
+            interruptCheckpointFrame(updatedFrame),
           ],
         };
   const nextState =
-    remainingReactors.length === 0
-      ? suppressReactionTriggerForActiveReaction(closedState, frame.trigger)
+    remainingResponders.length === 0
+      ? recordHandledInterruptTriggerForActiveInterrupt(closedState, frame.trigger)
       : closedState;
 
-  return remainingReactors.length === 0
-    ? completeResolvedActiveReactionIfPending(
+  return remainingResponders.length === 0
+    ? completeResolvedActiveInterruptIfPending(
         resumeInterruptedProcedure(
-          stateForContinuingReactionFrame(nextState, frame),
+          stateForContinuingInterruptCheckpoint(nextState, frame),
           frame.continuation,
           frame.trigger,
         ),
@@ -2099,9 +2099,9 @@ export function spendReaction(
   };
 }
 
-function stateForOpeningReactionFrame(
+function stateForOpeningInterruptCheckpoint(
   state: BattleState,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
 ): BattleState | null {
   const castingState =
     frame.trigger === "spellCast" &&
@@ -2131,9 +2131,9 @@ function stateForOpeningReactionFrame(
     : { ...castingState, currentTurnResources: claimed.right };
 }
 
-function stateForContinuingReactionFrame(
+function stateForContinuingInterruptCheckpoint(
   state: BattleState,
-  frame: BattleReactionFrame,
+  frame: BattleInterruptCheckpoint,
 ): BattleState {
   return frame.trigger === "spellCast" &&
     frame.spellSlotCommitment.kind === "pendingCasterSpellSlot"
@@ -2149,9 +2149,9 @@ function stateForContinuingReactionFrame(
 
 export function resolveReactionRollOrDamageReduction(input: {
   readonly state: BattleState;
-  readonly frame: BattleReactionFrame;
-  readonly choice: BattleReactionProcedureModifierChoice;
-  readonly selection: BattleReactionProcedureSelection;
+  readonly frame: BattleInterruptCheckpoint;
+  readonly choice: BattleInterruptProcedureModifierChoice;
+  readonly selection: BattleInterruptProcedureSelection;
 }): BattleResolutionResult {
   if (input.selection.kind !== "reactionRollOrDamageReduction") {
     return invalidResult(
@@ -2210,33 +2210,33 @@ export function resolveReactionRollOrDamageReduction(input: {
     input.choice.reactorId,
     input.choice.choice,
   );
-  const updatedFrame = reactionFrameAfterModifier(
+  const updatedFrame = interruptCheckpointAfterModifier(
     input.frame,
     input.choice.reactorId,
     input.choice.choice,
     reduction,
   );
-  const completedFrame: BattleReactionFrame = {
+  const completedFrame: BattleInterruptCheckpoint = {
     ...updatedFrame,
-    offeredReactors: [...updatedFrame.offeredReactors, input.choice.reactorId],
+    offeredResponders: [...updatedFrame.offeredResponders, input.choice.reactorId],
   };
-  const remainingReactors = unofferedEligibleReactors(completedFrame);
+  const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = spent.interruptStack.slice(0, -1);
   const nextState =
-    remainingReactors.length === 0
+    remainingResponders.length === 0
       ? { ...spent, interruptStack: stackWithoutCurrent }
       : {
           ...spent,
           interruptStack: [
             ...stackWithoutCurrent,
-            reactionInterruptFrame(completedFrame),
+            interruptCheckpointFrame(completedFrame),
           ],
         };
 
-  return remainingReactors.length === 0
-    ? completeResolvedActiveReactionIfPending(
+  return remainingResponders.length === 0
+    ? completeResolvedActiveInterruptIfPending(
         resumeInterruptedProcedure(
-          stateForContinuingReactionFrame(nextState, completedFrame),
+          stateForContinuingInterruptCheckpoint(nextState, completedFrame),
           completedFrame.continuation,
           completedFrame.trigger,
         ),
@@ -2258,11 +2258,11 @@ export function resolveCastTriggeredReactionSpellCommand(
       }
     >
   > & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
-  const frame = currentReactionFrame(input.state);
-  const activeReaction = frame?.activeReaction;
+  const frame = currentInterruptCheckpoint(input.state);
+  const activeInterrupt = frame?.activeInterrupt;
   const reactor = input.state.combatants.get(input.subject.reactorId);
   const invocation =
     reactor?.origin.kind === "character"
@@ -2283,14 +2283,14 @@ export function resolveCastTriggeredReactionSpellCommand(
       frame?.trigger !== "spellCast" &&
       frame?.trigger !== "afterDamage" &&
       frame?.trigger !== "creatureFalls") ||
-    activeReaction === undefined ||
-    activeReaction.reactorId !== input.subject.reactorId ||
-    !sameBattleSubject(activeReaction.subject, input.subject)
+    activeInterrupt === undefined ||
+    activeInterrupt.responderId !== input.subject.reactorId ||
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Triggered Reaction spell casting requires an active matching Reaction window.",
+      "Triggered Reaction spell casting requires an active matching interrupt checkpoint.",
     );
   }
   if (
@@ -2334,13 +2334,13 @@ export function resolveCastTriggeredReactionSpellCommand(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenTriggeredReactionSpellCastWindow({
+  const spellCastReactionWindow = maybeOpenTriggeredReactionSpellCastInterrupt({
     state: input.state,
     subject: input.subject,
     frame,
     invocation,
     fills: input.fills,
-    suppressedReactionTrigger: input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -2381,7 +2381,7 @@ export function resolveCastTriggeredReactionSpellCommand(
   });
 }
 
-function maybeOpenTriggeredReactionSpellCastWindow(input: {
+function maybeOpenTriggeredReactionSpellCastInterrupt(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
@@ -2390,7 +2390,7 @@ function maybeOpenTriggeredReactionSpellCastWindow(input: {
       readonly command: "castTriggeredReactionSpell";
     }
   >;
-  readonly frame: BattleReactionFrame;
+  readonly frame: BattleInterruptCheckpoint;
   readonly invocation: Extract<
     ReturnType<typeof supportedSpellActs>[number],
     {
@@ -2402,9 +2402,9 @@ function maybeOpenTriggeredReactionSpellCastWindow(input: {
     }
   >;
   readonly fills: readonly BattleFill[];
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  if (input.suppressedReactionTrigger === "spellCast") {
+  if (input.handledInterruptTrigger === "spellCast") {
     return null;
   }
   const fillSet = spellFillSet(input.fills, input.invocation);
@@ -2417,9 +2417,9 @@ function maybeOpenTriggeredReactionSpellCastWindow(input: {
     invocation: input.invocation,
     fillSet,
   });
-  return maybeOpenReactionWindow(
+  return maybeOpenInterruptWindow(
     input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.subject.reactorId,
       invocation: input.invocation,
       targetIds,
@@ -2431,12 +2431,12 @@ function maybeOpenTriggeredReactionSpellCastWindow(input: {
         fills: input.fills,
       },
     }),
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
 }
 
 function triggeredReactionSpellCastTargetIds(input: {
-  readonly frame: BattleReactionFrame;
+  readonly frame: BattleInterruptCheckpoint;
   readonly reactorId: CombatantId;
   readonly invocation: Extract<
     ReturnType<typeof supportedSpellActs>[number],
@@ -2505,8 +2505,8 @@ function resolveCounterspellReactionSpellCommand(
       }
     >
   > & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
-    readonly frame: BattleReactionFrame;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly frame: BattleInterruptCheckpoint;
     readonly invocation: Extract<
       ReturnType<typeof supportedSpellActs>[number],
       { readonly procedure: "counterspell" }
@@ -2535,7 +2535,7 @@ function resolveFeatherFallReactionSpellCommand(
       }
     >
   > & {
-    readonly frame: BattleReactionFrame;
+    readonly frame: BattleInterruptCheckpoint;
     readonly invocation: Extract<
       ReturnType<typeof supportedSpellActs>[number],
       { readonly procedure: "featherFallMitigation" }
@@ -2564,7 +2564,7 @@ function resolveShieldReactionSpellCommand(
       }
     >
   > & {
-    readonly frame: BattleReactionFrame;
+    readonly frame: BattleInterruptCheckpoint;
     readonly invocation: Extract<
       ReturnType<typeof supportedSpellActs>[number],
       { readonly procedure: "shieldReaction" }
@@ -2593,7 +2593,7 @@ function resolveHellishRebukeReactionSpellCommand(
       }
     >
   > & {
-    readonly frame: BattleReactionFrame;
+    readonly frame: BattleInterruptCheckpoint;
     readonly invocation: Extract<
       ReturnType<typeof supportedSpellActs>[number],
       { readonly procedure: "saveGatedDamage" }
@@ -2880,7 +2880,7 @@ function resolveHellishRebukeReactionSpellCommand(
     ...slotted,
     currentTurnResources: nextTurnResources.right,
   };
-  return openAfterDamageSequenceReactionWindow({
+  return openAfterDamageSequenceInterruptWindow({
     state: nextState,
     subject: input.subject,
     events: [
@@ -2898,7 +2898,7 @@ function resolveHellishRebukeReactionSpellCommand(
     objectDamages: [],
     objectIgnitions: [],
     droppedObjects: [],
-    suppressedReactionTrigger: undefined,
+    handledInterruptTrigger: undefined,
   });
 }
 
@@ -2911,7 +2911,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
 >;
 type AttackHitBonusActionSpellCommandInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 type AttackHitBonusActionSpellInvocation = Extract<
   ReturnType<typeof supportedSpellActs>[number],
@@ -2927,8 +2927,8 @@ type AttackHitBonusActionSpellInvocation = Extract<
 export function resolveCastAttackHitBonusActionSpellCommand(
   input: AttackHitBonusActionSpellCommandInput,
 ): BattleResolutionResult {
-  const frame = currentReactionFrame(input.state);
-  const activeReaction = frame?.activeReaction;
+  const frame = currentInterruptCheckpoint(input.state);
+  const activeInterrupt = frame?.activeInterrupt;
   const actor = input.state.combatants.get(input.subject.casterId);
   const target =
     frame?.trigger === "attackHit"
@@ -2951,9 +2951,9 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   if (
     frame?.trigger !== "attackHit" ||
     frame.continuation.kind !== "replay" ||
-    activeReaction === undefined ||
-    activeReaction.reactorId !== input.subject.casterId ||
-    !sameBattleSubject(activeReaction.subject, input.subject)
+    activeInterrupt === undefined ||
+    activeInterrupt.responderId !== input.subject.casterId ||
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -3111,10 +3111,10 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
   readonly casterId: CombatantId;
   readonly spellId: string;
   readonly targetIds: readonly CombatantId[];
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  return input.suppressedReactionTrigger !== "spellCast"
-    ? maybeOpenReactionWindowWithChoices(
+  return input.handledInterruptTrigger !== "spellCast"
+    ? maybeOpenInterruptWindowWithChoices(
         input.state,
         {
           trigger: "spellCast",
@@ -3131,7 +3131,7 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
             subject: input.subject,
           },
         },
-        input.suppressedReactionTrigger,
+        input.handledInterruptTrigger,
         [
           ...readiedSpellReactionChoices(input.state, "spellCast"),
           ...readiedMovementReactionChoices(input.state, "spellCast"),
@@ -3200,23 +3200,23 @@ function afterHitSpellMatchesAttackTrigger(
   return triggerKind === "meleeWeapon" || triggerKind === "rangedWeapon";
 }
 
-export function completeResolvedActiveReactionIfPending(
+export function completeResolvedActiveInterruptIfPending(
   result: BattleResolutionResult,
 ): BattleResolutionResult {
   if (result.tag !== "resolved") {
     return result;
   }
-  return currentReactionFrame(result.state)?.activeReaction === undefined
+  return currentInterruptCheckpoint(result.state)?.activeInterrupt === undefined
     ? result
-    : completeActiveReactionProcedure(result.state);
+    : completeActiveInterruptProcedure(result.state);
 }
 
-export function reactionFrameAfterModifier(
-  frame: BattleReactionFrame,
+export function interruptCheckpointAfterModifier(
+  frame: BattleInterruptCheckpoint,
   reactorId: CombatantId,
   choice: BattleReactionModifierChoice,
   reduction: number,
-): BattleReactionFrame {
+): BattleInterruptCheckpoint {
   if (frame.trigger === "attackHit" && choice.kind === "attackRollReduction") {
     return {
       ...frame,
@@ -3306,23 +3306,23 @@ export function reactionModifiedAttackRollFills(
   });
 }
 
-export function admittedReactionChoice(
-  frame: BattleReactionFrame,
-  decision: Extract<BattleReactionDecision, { readonly kind: "resolve" }>,
-): BattleReactionProcedureChoice | null {
+export function admittedInterruptChoice(
+  frame: BattleInterruptCheckpoint,
+  decision: Extract<BattleInterruptDecision, { readonly kind: "resolve" }>,
+): BattleInterruptProcedureChoice | null {
   return (
     frame.choices.find(
       (choice) =>
         choice.kind === decision.choice.kind &&
-        choice.reactorId === decision.reactorId &&
-        sameReactionProcedureChoice(choice, decision.choice),
+        choice.reactorId === decision.responderId &&
+        sameInterruptProcedureChoice(choice, decision.choice),
     ) ?? null
   );
 }
 
-export function sameReactionProcedureChoice(
-  choice: BattleReactionProcedureChoice,
-  decisionChoice: BattleReactionProcedureSelection,
+export function sameInterruptProcedureChoice(
+  choice: BattleInterruptProcedureChoice,
+  decisionChoice: BattleInterruptProcedureSelection,
 ): boolean {
   if (
     choice.kind === "reactionRollOrDamageReduction" &&
@@ -3366,44 +3366,44 @@ export function sameReactionProcedureChoice(
   );
 }
 
-export function completeActiveReactionProcedure(
+export function completeActiveInterruptProcedure(
   state: BattleState,
 ): BattleResolutionResult {
-  const frame = currentReactionFrame(state);
-  const activeReaction = frame?.activeReaction;
-  if (frame === null || activeReaction === undefined) {
+  const frame = currentInterruptCheckpoint(state);
+  const activeInterrupt = frame?.activeInterrupt;
+  if (frame === null || activeInterrupt === undefined) {
     return invalidResult(
       state,
       "staleSubject",
-      "No active Reaction procedure is pending completion.",
+      "No active interrupt procedure is pending completion.",
     );
   }
-  const { activeReaction: _completedReaction, ...inactiveFrame } = frame;
-  const completedFrame: BattleReactionFrame = {
+  const { activeInterrupt: _completedInterrupt, ...inactiveFrame } = frame;
+  const completedFrame: BattleInterruptCheckpoint = {
     ...inactiveFrame,
-    offeredReactors: [...frame.offeredReactors, activeReaction.reactorId],
+    offeredResponders: [...frame.offeredResponders, activeInterrupt.responderId],
   };
-  const remainingReactors = unofferedEligibleReactors(completedFrame);
+  const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = state.interruptStack.slice(0, -1);
   const closedState =
-    remainingReactors.length === 0
+    remainingResponders.length === 0
       ? { ...state, interruptStack: stackWithoutCurrent }
       : {
           ...state,
           interruptStack: [
             ...stackWithoutCurrent,
-            reactionInterruptFrame(completedFrame),
+            interruptCheckpointFrame(completedFrame),
           ],
         };
   const nextState =
-    remainingReactors.length === 0
-      ? suppressReactionTriggerForActiveReaction(closedState, frame.trigger)
+    remainingResponders.length === 0
+      ? recordHandledInterruptTriggerForActiveInterrupt(closedState, frame.trigger)
       : closedState;
 
-  return remainingReactors.length === 0
-    ? completeResolvedActiveReactionIfPending(
+  return remainingResponders.length === 0
+    ? completeResolvedActiveInterruptIfPending(
         resumeInterruptedProcedure(
-          stateForContinuingReactionFrame(nextState, frame),
+          stateForContinuingInterruptCheckpoint(nextState, frame),
           frame.continuation,
           frame.trigger,
         ),
@@ -3415,23 +3415,23 @@ export function completeActiveReactionProcedure(
       };
 }
 
-export function suppressReactionTriggerForActiveReaction(
+export function recordHandledInterruptTriggerForActiveInterrupt(
   state: BattleState,
-  suppressedReactionTrigger: BattleReactionTrigger,
+  handledInterruptTrigger: BattleInterruptTrigger,
 ): BattleState {
-  const frame = currentReactionFrame(state);
-  if (frame?.activeReaction === undefined) {
+  const frame = currentInterruptCheckpoint(state);
+  if (frame?.activeInterrupt === undefined) {
     return state;
   }
   return {
     ...state,
     interruptStack: [
       ...state.interruptStack.slice(0, -1),
-      reactionInterruptFrame({
+      interruptCheckpointFrame({
         ...frame,
-        activeReaction: {
-          ...frame.activeReaction,
-          suppressedReactionTrigger,
+        activeInterrupt: {
+          ...frame.activeInterrupt,
+          handledInterruptTrigger,
         },
       }),
     ],
@@ -3441,7 +3441,7 @@ export function suppressReactionTriggerForActiveReaction(
 export function resumeInterruptedProcedure(
   state: BattleState,
   continuation: BattleInterruptedProcedure,
-  suppressedReactionTrigger: BattleReactionTrigger,
+  handledInterruptTrigger: BattleInterruptTrigger,
 ): BattleResolutionResult {
   if (continuation.kind === "resolved") {
     return {
@@ -3451,17 +3451,17 @@ export function resumeInterruptedProcedure(
     };
   }
   if (continuation.kind === "afterDamageSequence") {
-    return openAfterDamageSequenceReactionWindow({
+    return openAfterDamageSequenceInterruptWindow({
       state,
       subject: continuation.subject,
       events: continuation.events,
       objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
       droppedObjects: continuation.droppedObjects,
-      suppressedReactionTrigger:
-        suppressedReactionTrigger === "afterDamage"
+      handledInterruptTrigger:
+        handledInterruptTrigger === "afterDamage"
           ? undefined
-          : suppressedReactionTrigger,
+          : handledInterruptTrigger,
     });
   }
   if (continuation.kind === "weaponMasteryCleave") {
@@ -3471,10 +3471,10 @@ export function resumeInterruptedProcedure(
       firstTargetId: continuation.firstTargetId,
       attack: continuation.attack,
       fills: continuation.fills,
-      suppressedReactionTrigger:
-        suppressedReactionTrigger === "afterDamage"
+      handledInterruptTrigger:
+        handledInterruptTrigger === "afterDamage"
           ? undefined
-          : suppressedReactionTrigger,
+          : handledInterruptTrigger,
     });
   }
   if (continuation.kind === "huntersPreyHordeBreaker") {
@@ -3484,10 +3484,10 @@ export function resumeInterruptedProcedure(
       firstTargetId: continuation.firstTargetId,
       attack: continuation.attack,
       fills: continuation.fills,
-      suppressedReactionTrigger:
-        suppressedReactionTrigger === "afterDamage"
+      handledInterruptTrigger:
+        handledInterruptTrigger === "afterDamage"
           ? undefined
-          : suppressedReactionTrigger,
+          : handledInterruptTrigger,
     });
   }
   if (continuation.kind === "movement") {
@@ -3499,17 +3499,17 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "movementThenAfterDamageSequence") {
-    return openAfterDamageSequenceReactionWindow({
+    return openAfterDamageSequenceInterruptWindow({
       state: applyBattleMovement(state, continuation.movement),
       subject: continuation.subject,
       events: continuation.events,
       objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
       droppedObjects: continuation.droppedObjects,
-      suppressedReactionTrigger:
-        suppressedReactionTrigger === "afterDamage"
+      handledInterruptTrigger:
+        handledInterruptTrigger === "afterDamage"
           ? undefined
-          : suppressedReactionTrigger,
+          : handledInterruptTrigger,
     });
   }
   if (continuation.kind === "commandApproachMovement") {
@@ -3549,7 +3549,7 @@ export function resumeInterruptedProcedure(
           ...state.interruptStack,
           attackDamageContinuationConcentrationFrame(
             continuation,
-            suppressedReactionTrigger,
+            handledInterruptTrigger,
           ),
         ],
       };
@@ -3573,7 +3573,7 @@ export function resumeInterruptedProcedure(
       continuationConcentrationSavingThrows,
       attackDamageContinuationTargetSpatialFacts(continuation),
     );
-    return openAfterDamageSequenceReactionWindow({
+    return openAfterDamageSequenceInterruptWindow({
       state: damagedState,
       subject: continuation.subject,
       events: [
@@ -3591,26 +3591,26 @@ export function resumeInterruptedProcedure(
       objectDamages: [],
       objectIgnitions: [],
       droppedObjects: [],
-      suppressedReactionTrigger,
+      handledInterruptTrigger,
     });
   }
 
   return resolveReplayContinuationFromState(
     state,
     continuation,
-    suppressedReactionTrigger,
+    handledInterruptTrigger,
     continuation.fills,
   );
 }
 
-export function openAfterDamageSequenceReactionWindow(input: {
+export function openAfterDamageSequenceInterruptWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly events: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
   readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-  readonly suppressedReactionTrigger: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   const [event, ...remainingEvents] = input.events;
   if (event === undefined) {
@@ -3629,7 +3629,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
         : { droppedObjects: input.droppedObjects }),
     };
   }
-  const reactionWindow = maybeOpenReactionWindow(
+  const reactionWindow = maybeOpenInterruptWindow(
     input.state,
     {
       trigger: "afterDamage",
@@ -3646,11 +3646,11 @@ export function openAfterDamageSequenceReactionWindow(input: {
         droppedObjects: input.droppedObjects,
       },
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   return (
     reactionWindow ??
-    openAfterDamageSequenceReactionWindow({
+    openAfterDamageSequenceInterruptWindow({
       ...input,
       events: remainingEvents,
     })
@@ -3676,12 +3676,12 @@ export function replayContinuationFrame(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  suppressedReactionTrigger: BattleReactionTrigger,
+  handledInterruptTrigger: BattleInterruptTrigger,
 ): BattleReplayContinuationFrame {
   return {
     kind: "replayContinuation",
     continuation,
-    suppressedReactionTrigger,
+    handledInterruptTrigger,
   };
 }
 
@@ -3698,7 +3698,7 @@ export function resolveReplayContinuation(input: {
   return resolveReplayContinuationFromState(
     stateWithoutFrame,
     input.frame.continuation,
-    input.frame.suppressedReactionTrigger,
+    input.frame.handledInterruptTrigger,
     input.fills,
   );
 }
@@ -3709,7 +3709,7 @@ export function resolveReplayContinuationFromState(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  suppressedReactionTrigger: BattleReactionTrigger,
+  handledInterruptTrigger: BattleInterruptTrigger,
   fills: readonly BattleFill[],
 ): BattleResolutionResult {
   const result = resolveBattleSubjectInternal(
@@ -3720,7 +3720,7 @@ export function resolveReplayContinuationFromState(
     },
     {
       replayingInterruptedProcedure: true,
-      suppressedReactionTrigger,
+      handledInterruptTrigger,
       ...(continuation.attackDamageReductions === undefined
         ? {}
         : {
@@ -3739,13 +3739,13 @@ export function resolveReplayContinuationFromState(
   ) {
     return result;
   }
-  const activeReaction = currentReactionFrame(result.state)?.activeReaction;
+  const activeInterrupt = currentInterruptCheckpoint(result.state)?.activeInterrupt;
   if (
-    activeReaction !== undefined &&
-    sameBattleSubject(activeReaction.subject, continuation.subject)
+    activeInterrupt !== undefined &&
+    sameBattleSubject(activeInterrupt.subject, continuation.subject)
   ) {
     const pendingState =
-      activeReactionWithReplayContinuationAttackDamageChanges(
+      activeInterruptWithReplayContinuationAttackDamageChanges(
         result.state,
         continuation,
       );
@@ -3759,7 +3759,7 @@ export function resolveReplayContinuationFromState(
     ...result.state,
     interruptStack: [
       ...result.state.interruptStack,
-      replayContinuationFrame(continuation, suppressedReactionTrigger),
+      replayContinuationFrame(continuation, handledInterruptTrigger),
     ],
   };
   return {
@@ -3769,7 +3769,7 @@ export function resolveReplayContinuationFromState(
   };
 }
 
-export function activeReactionWithReplayContinuationAttackDamageChanges(
+export function activeInterruptWithReplayContinuationAttackDamageChanges(
   state: BattleState,
   continuation: Extract<
     BattleInterruptedProcedure,
@@ -3782,18 +3782,18 @@ export function activeReactionWithReplayContinuationAttackDamageChanges(
   ) {
     return state;
   }
-  const frame = currentReactionFrame(state);
-  if (frame?.activeReaction === undefined) {
+  const frame = currentInterruptCheckpoint(state);
+  if (frame?.activeInterrupt === undefined) {
     return state;
   }
   return {
     ...state,
     interruptStack: [
       ...state.interruptStack.slice(0, -1),
-      reactionInterruptFrame({
+      interruptCheckpointFrame({
         ...frame,
-        activeReaction: {
-          ...frame.activeReaction,
+        activeInterrupt: {
+          ...frame.activeInterrupt,
           ...(continuation.attackDamageReductions === undefined
             ? {}
             : {
@@ -3814,12 +3814,12 @@ export function activeReactionWithReplayContinuationAttackDamageChanges(
 
 export function attackDamageContinuationConcentrationFrame(
   continuation: BattleAttackDamageContinuationWithoutConcentration,
-  suppressedReactionTrigger: BattleReactionTrigger,
+  handledInterruptTrigger: BattleInterruptTrigger,
 ): BattleAttackDamageContinuationConcentrationFrame {
   return {
     kind: "attackDamageContinuationConcentration",
     continuation,
-    suppressedReactionTrigger,
+    handledInterruptTrigger,
   };
 }
 
@@ -3944,7 +3944,7 @@ export function resolveAttackDamageContinuationConcentration(input: {
         concentrationFill.value,
       ],
     },
-    input.frame.suppressedReactionTrigger,
+    input.frame.handledInterruptTrigger,
   );
 }
 
@@ -4110,7 +4110,7 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       ),
     },
     helpAttackMarkers: state.helpAttacks,
-    pendingReaction: pendingReactionSnapshot(state),
+    pendingInterrupt: pendingInterruptSnapshot(state),
   };
 }
 
@@ -4153,15 +4153,15 @@ function requirePresentFamiliarCombatantInitiative(
   return combatant.initiative;
 }
 
-export function pendingReactionSnapshot(
+export function pendingInterruptSnapshot(
   state: BattleState,
-): BattleSnapshot["pendingReaction"] {
-  const frame = currentReactionFrame(state);
+): BattleSnapshot["pendingInterrupt"] {
+  const frame = currentInterruptCheckpoint(state);
   return frame === null
     ? null
     : {
         trigger: frame.trigger,
-        decisionHole: reactionDecisionHole(frame),
+        decisionHole: interruptDecisionHole(frame),
         choices: frame.choices,
         stackDepth: battleReplayStackDepth(state.interruptStack.length),
       };
@@ -4173,27 +4173,27 @@ export function currentInterruptFrame(
   return state.interruptStack[state.interruptStack.length - 1] ?? null;
 }
 
-export function currentReactionFrame(
+export function currentInterruptCheckpoint(
   state: BattleState,
-): BattleReactionFrame | null {
+): BattleInterruptCheckpoint | null {
   const frame = currentInterruptFrame(state);
-  return frame?.kind === "reaction" ? frame.frame : null;
+  return frame?.kind === "interruptCheckpoint" ? frame.frame : null;
 }
 
-export function reactionDecisionHole(
-  frame: BattleReactionFrame,
-): BattleReactionDecisionHole {
+export function interruptDecisionHole(
+  frame: BattleInterruptCheckpoint,
+): BattleInterruptDecisionHole {
   return {
-    holeInstanceKey: REACTION_DECISION_HOLE_INSTANCE,
-    holeId: REACTION_DECISION_HOLE_ID,
-    kind: "reactionDecision",
-    label: `${reactionTriggerLabel(frame.trigger)} reaction decision`,
+    holeInstanceKey: INTERRUPT_DECISION_HOLE_INSTANCE,
+    holeId: INTERRUPT_DECISION_HOLE_ID,
+    kind: "interruptDecision",
+    label: `${interruptTriggerLabel(frame.trigger)} interrupt decision`,
     trigger: frame.trigger,
-    eligibleReactors: unofferedEligibleReactors(frame),
+    eligibleResponders: unofferedEligibleResponders(frame),
   };
 }
 
-export function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
+export function interruptTriggerLabel(trigger: BattleInterruptTrigger): string {
   return Match.value(trigger).pipe(
     Match.when("attackHit", () => "Attack hit"),
     Match.when("attackDamage", () => "Attack damage"),
@@ -4206,77 +4206,77 @@ export function reactionTriggerLabel(trigger: BattleReactionTrigger): string {
   );
 }
 
-export function unofferedEligibleReactors(
-  frame: BattleReactionFrame,
+export function unofferedEligibleResponders(
+  frame: BattleInterruptCheckpoint,
 ): readonly CombatantId[] {
-  const offered = new Set(frame.offeredReactors);
-  return frame.eligibleReactors.filter((reactorId) => !offered.has(reactorId));
+  const offered = new Set(frame.offeredResponders);
+  return frame.eligibleResponders.filter((reactorId) => !offered.has(reactorId));
 }
 
-export function maybeOpenReactionWindow(
+export function maybeOpenInterruptWindow(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-  suppressedReactionTrigger: BattleReactionTrigger | undefined,
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const reactionState = stateForOpeningReactionFrame(state, frame);
-  if (reactionState === null) {
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  if (checkpointState === null) {
     return null;
   }
-  return maybeOpenReactionWindowWithChoices(
-    reactionState,
+  return maybeOpenInterruptWindowWithChoices(
+    checkpointState,
     frame,
-    suppressedReactionTrigger,
-    reactionChoices(reactionState, frame),
+    handledInterruptTrigger,
+    interruptChoices(checkpointState, frame),
   );
 }
 
-export function maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
+export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-  suppressedReactionTrigger: BattleReactionTrigger | undefined,
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const spellCastReactionState =
-    suppressedReactionTrigger === undefined
-      ? stateForOpeningReactionFrame(state, frame)
+  const spellCastCheckpointState =
+    handledInterruptTrigger === undefined
+      ? stateForOpeningInterruptCheckpoint(state, frame)
       : null;
-  return spellCastReactionState === null
+  return spellCastCheckpointState === null
     ? null
-    : maybeOpenReactionWindowWithChoices(
-        spellCastReactionState,
+    : maybeOpenInterruptWindowWithChoices(
+        spellCastCheckpointState,
         frame,
-        suppressedReactionTrigger,
-        triggeredReactionSpellChoices(spellCastReactionState, frame),
+        handledInterruptTrigger,
+        triggeredReactionSpellChoices(spellCastCheckpointState, frame),
       );
 }
 
-function maybeOpenReactionWindowWithChoices(
+function maybeOpenInterruptWindowWithChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-  suppressedReactionTrigger: BattleReactionTrigger | undefined,
-  choices: readonly BattleReactionProcedureChoice[],
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+  choices: readonly BattleInterruptProcedureChoice[],
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  if (frame.trigger === suppressedReactionTrigger) {
+  if (frame.trigger === handledInterruptTrigger) {
     return null;
   }
-  const reactionState = stateForOpeningReactionFrame(state, frame);
-  if (reactionState === null) {
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  if (checkpointState === null) {
     return null;
   }
   if (choices.length === 0) {
     return null;
   }
-  const eligibleReactors = [
+  const eligibleResponders = [
     ...new Set(choices.map((choice) => choice.reactorId)),
   ];
   const frameCommon = {
-    eligibleReactors,
-    offeredReactors: [],
+    eligibleResponders,
+    offeredResponders: [],
     choices,
   } satisfies Pick<
-    BattleReactionFrame,
-    "eligibleReactors" | "offeredReactors" | "choices"
+    BattleInterruptCheckpoint,
+    "eligibleResponders" | "offeredResponders" | "choices"
   >;
-  const nextFrame: BattleReactionFrame = Match.value(frame).pipe(
+  const nextFrame: BattleInterruptCheckpoint = Match.value(frame).pipe(
     Match.when({ trigger: "attackHit" }, (triggerFrame) => ({
       ...triggerFrame,
       ...frameCommon,
@@ -4307,11 +4307,11 @@ function maybeOpenReactionWindowWithChoices(
     })),
     Match.exhaustive,
   );
-  const nextState = openBattleReactionWindow({
-    state: reactionState,
+  const nextState = openBattleInterruptWindow({
+    state: checkpointState,
     frame: nextFrame,
   });
-  const decisionHole = reactionDecisionHole(nextFrame);
+  const decisionHole = interruptDecisionHole(nextFrame);
   return {
     tag: "needsHoles",
     state: nextState,
@@ -4323,8 +4323,8 @@ function maybeOpenReactionWindowWithChoices(
 
 export function readiedSpellReactionChoices(
   state: BattleState,
-  trigger: BattleReactionTrigger,
-): readonly BattleReactionProcedureChoice[] {
+  trigger: BattleInterruptTrigger,
+): readonly BattleInterruptProcedureChoice[] {
   const readiedChoices = [...state.readiedSpells].flatMap(
     ([casterId, readiedSpell]) => {
       const reactor = state.combatants.get(casterId);
@@ -4356,8 +4356,8 @@ export function readiedSpellReactionChoices(
 
 export function readiedMovementReactionChoices(
   state: BattleState,
-  trigger: BattleReactionTrigger,
-): readonly BattleReactionProcedureChoice[] {
+  trigger: BattleInterruptTrigger,
+): readonly BattleInterruptProcedureChoice[] {
   return [...state.readiedMovements].flatMap(
     ([readiedMovementActorId, readiedMovement]) => {
       const reactor = state.combatants.get(readiedMovementActorId);
@@ -4391,10 +4391,10 @@ export function readiedMovementReactionChoices(
   );
 }
 
-export function reactionChoices(
+export function interruptChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-): readonly BattleReactionProcedureChoice[] {
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
   const readiedChoices = [
     ...readiedSpellReactionChoices(state, frame.trigger),
     ...readiedMovementReactionChoices(state, frame.trigger),
@@ -4424,8 +4424,8 @@ export function reactionChoices(
 
 export function attackHitBonusActionSpellReactionChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-): readonly BattleReactionProcedureChoice[] {
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
   if (
     frame.trigger !== "attackHit" ||
     frame.continuation.subject.tag === "bonusAction" ||
@@ -4449,7 +4449,7 @@ export function attackHitBonusActionSpellReactionChoices(
     return [];
   }
   return supportedSpellActs(actor, state).flatMap(
-    (invocation): readonly BattleReactionProcedureChoice[] => {
+    (invocation): readonly BattleInterruptProcedureChoice[] => {
       if (
         (invocation.procedure !== "afterHitDamage" &&
           invocation.procedure !== "afterHitSaveGatedCondition" &&
@@ -4503,7 +4503,7 @@ export function opportunityAttackReactionChoices(
   state: BattleState,
   moverId: CombatantId,
   threats: readonly BattleOpportunityAttackThreat[],
-): readonly BattleReactionProcedureChoice[] {
+): readonly BattleInterruptProcedureChoice[] {
   return threats.flatMap((threat) => {
     const reactorId = threat.reactorId;
     const reactor = state.combatants.get(reactorId);

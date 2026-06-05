@@ -16,8 +16,8 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   attackRollIsCriticalHit,
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleAttackDamageDisposition,
@@ -75,7 +75,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   chainedSpellAttackRollHole,
   chainedSpellAttackRollHoleId,
@@ -360,9 +360,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
 
     if (stepIndex === 0 && input.opensSpellCastReactionWindow !== false) {
-      const spellCastReactionWindow = maybeOpenReactionWindow(
+      const spellCastReactionWindow = maybeOpenInterruptWindow(
         replayState,
-        spellCastReactionFrame({
+        spellCastInterruptFrame({
           casterId: input.actorId,
           invocation: input.invocation,
           targetIds: [target.combatantId],
@@ -377,7 +377,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
             fills: input.input.fills,
           },
         }),
-        input.input.suppressedReactionTrigger,
+        input.input.handledInterruptTrigger,
       );
       if (spellCastReactionWindow !== null) {
         return spellCastReactionWindow;
@@ -506,7 +506,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       });
     }
 
-    const attackHitReactionWindow = maybeOpenReactionWindow(
+    const attackHitReactionWindow = maybeOpenInterruptWindow(
       replayState,
       {
         trigger: "attackHit",
@@ -522,7 +522,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (attackHitReactionWindow !== null) {
       return attackHitReactionWindow;
@@ -781,14 +781,14 @@ export function resolveCompletedChainedSpell(input: {
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
 }): BattleResolutionResult {
   if (input.input.spendsCastResources === false) {
-    return openAfterDamageSequenceReactionWindow({
+    return openAfterDamageSequenceInterruptWindow({
       state: input.state,
       subject: input.input.input.subject,
       events: input.afterDamageEvents,
       objectDamages: [],
       objectIgnitions: [],
       droppedObjects: [],
-      suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.input.input.handledInterruptTrigger,
     });
   }
   const spentResources = spendSpellCastResources({
@@ -806,14 +806,14 @@ export function resolveCompletedChainedSpell(input: {
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
-  return openAfterDamageSequenceReactionWindow({
+  return openAfterDamageSequenceInterruptWindow({
     state: spentResources.state,
     subject: input.input.input.subject,
     events: input.afterDamageEvents,
     objectDamages: [],
     objectIgnitions: [],
     droppedObjects: [],
-    suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.input.handledInterruptTrigger,
   });
 }
 

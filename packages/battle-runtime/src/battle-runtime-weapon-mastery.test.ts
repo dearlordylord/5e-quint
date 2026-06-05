@@ -23,7 +23,7 @@ import {
   attackRollFill,
   unitFeatureDecisionFill,
   concentrationSavingThrowFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   savingThrowOutcomeFill,
   damageRollFill,
   attackDamageDispositionFill,
@@ -52,7 +52,7 @@ import {
   hasCondition,
   holeId,
   Hp,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
 import type {
@@ -1356,9 +1356,9 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(awaitingPrimaryAfterDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
       snapshot: {
-        pendingReaction: { trigger: "afterDamage" },
+        pendingInterrupt: { trigger: "afterDamage" },
       },
     });
     if (awaitingPrimaryAfterDamage.tag !== "needsHoles") {
@@ -1373,11 +1373,11 @@ describe("battle runtime: Weapon Mastery", () => {
       ]),
     );
 
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingPrimaryAfterDamage.state,
-      fill: reactionDecisionFill(
-        awaitingPrimaryAfterDamage.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: wizardId },
+      fill: interruptDecisionFill(
+        awaitingPrimaryAfterDamage.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: wizardId },
       ),
     });
     expect(afterDecline).toMatchObject({
@@ -1481,9 +1481,9 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(awaitingCleaveAttackHit).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
+      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
       snapshot: {
-        pendingReaction: { trigger: "attackHit" },
+        pendingInterrupt: { trigger: "attackHit" },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: skeletonId, hp: Hp(12) }),
         ]),
@@ -1495,11 +1495,11 @@ describe("battle runtime: Weapon Mastery", () => {
       );
     }
 
-    const afterCleaveHitDecline = resolveBattleReaction({
+    const afterCleaveHitDecline = resolveBattleInterrupt({
       state: awaitingCleaveAttackHit.state,
-      fill: reactionDecisionFill(
-        awaitingCleaveAttackHit.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: skeletonId },
+      fill: interruptDecisionFill(
+        awaitingCleaveAttackHit.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: skeletonId },
       ),
     });
     expect(afterCleaveHitDecline).toMatchObject({

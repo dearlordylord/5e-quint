@@ -41,11 +41,11 @@ import {
   creatureSizeChangeProcedure,
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenReactionWindow } from "../dispatcher.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
@@ -396,9 +396,9 @@ function resolveCreatureSizeChange(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [target.combatantId],
@@ -410,7 +410,7 @@ function resolveCreatureSizeChange(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

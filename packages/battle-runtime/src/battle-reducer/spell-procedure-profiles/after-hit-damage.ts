@@ -16,7 +16,7 @@
 //     Damage Roll, Spell Slot, and Spell Invocation.
 //
 // What stays in shared infrastructure:
-//   - The attack-hit Reaction window and eligibility orchestration stay in
+//   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The metamagic table entry remains Wave 9 migration work.
 
@@ -31,7 +31,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { BattleReactionTrigger } from "../../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
   classFeatureFreeCastSpellInvocationRef,
   type SpellInvocationRef,
@@ -44,7 +44,7 @@ import {
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleInterruptedProcedure,
-  type BattleReactionFrame,
+  type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
@@ -56,12 +56,12 @@ import {
 } from "../../character-battle-resources.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices,
-  reactionInterruptFrame,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+  interruptCheckpointFrame,
 } from "../dispatcher.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
@@ -98,7 +98,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
   }
 >;
 type AttackHitDamageReplayFrame = Extract<
-  BattleReactionFrame,
+  BattleInterruptCheckpoint,
   { readonly trigger: "attackHit" }
 > & {
   readonly continuation: Extract<
@@ -110,7 +110,7 @@ type AfterHitDamageBattleResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly frame: AttackHitDamageReplayFrame;
     readonly target: BattleCreatureState;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 type AfterHitDamageResolveInput = SpellProcedureProfileResolveInput<
   AfterHitDamageInvocation,
@@ -300,7 +300,7 @@ function resolveAfterHitDamage(
     );
   }
 
-  const spellCastFrame = spellCastReactionFrame({
+  const spellCastFrame = spellCastInterruptFrame({
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetIds: [input.input.target.combatantId],
@@ -313,10 +313,10 @@ function resolveAfterHitDamage(
     },
   });
   const spellCastReactionWindow =
-    maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
+    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
       input.input.state,
       spellCastFrame,
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -376,7 +376,7 @@ function resolveAfterHitDamage(
     ...resourced.state,
     interruptStack: [
       ...resourced.state.interruptStack.slice(0, -1),
-      reactionInterruptFrame(nextFrame),
+      interruptCheckpointFrame(nextFrame),
     ],
   };
   const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
@@ -385,7 +385,7 @@ function resolveAfterHitDamage(
     casterId: input.input.subject.casterId,
     spellId: input.invocation.spell.id,
     targetIds: [input.input.target.combatantId],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

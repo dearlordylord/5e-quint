@@ -611,7 +611,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(moved.tag).not.toBe("invalid");
     if (moved.tag === "resolved") {
-      expect(moved.snapshot.pendingReaction).toBeNull();
+      expect(moved.snapshot.pendingInterrupt).toBeNull();
       expect(
         moved.state.combatants.get(remarkableAthleteActorId)?.movementSpentFeet,
       ).toEqual(movementFeet(0));

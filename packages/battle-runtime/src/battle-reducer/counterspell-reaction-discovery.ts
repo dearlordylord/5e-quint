@@ -12,7 +12,7 @@ import {
 import {
   supportedSpellActs,
 } from "./spells-profiles.ts";
-import { spellComponents } from "./spell-cast-reaction-frame.ts";
+import { spellComponents } from "./spell-cast-interrupt-frame.ts";
 
 type CounterspellInvocation = Extract<
   SupportedSpellInvocation,

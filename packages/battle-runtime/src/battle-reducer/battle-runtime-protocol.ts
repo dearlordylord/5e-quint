@@ -136,9 +136,9 @@ export const STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE = holeInstanceKey(
 );
 export const CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX =
   "battle:concentration:saving-throw";
-export const REACTION_DECISION_HOLE_ID = holeId("battle:reaction:decision");
-export const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
-  "battle:reaction:decision",
+export const INTERRUPT_DECISION_HOLE_ID = holeId("battle:interrupt:decision");
+export const INTERRUPT_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:interrupt:decision",
 );
 export const MOVEMENT_HOLE_ID = holeId("battle:movement");
 export const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");

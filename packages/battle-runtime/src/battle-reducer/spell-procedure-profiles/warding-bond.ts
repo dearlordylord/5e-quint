@@ -14,7 +14,7 @@ import { Either } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -34,7 +34,7 @@ import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   applyWardingBondSpellEffect,
   wardingBondCastFactsAreSatisfied,
@@ -349,9 +349,9 @@ function resolveWardingBond(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [target.combatantId],
@@ -363,7 +363,7 @@ function resolveWardingBond(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

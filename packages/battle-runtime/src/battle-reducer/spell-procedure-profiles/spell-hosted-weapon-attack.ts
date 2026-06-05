@@ -299,7 +299,7 @@ function resolveSpellHostedWeaponAttack(
   ];
   const {
     replayingInterruptedProcedure: _replayingInterruptedProcedure,
-    suppressedReactionTrigger: _suppressedReactionTrigger,
+    handledInterruptTrigger: _handledInterruptTrigger,
     pendingAttackDamageReductions: _pendingAttackDamageReductions,
     pendingAttackDamageAdditions: _pendingAttackDamageAdditions,
     ...baseInput
@@ -311,9 +311,9 @@ function resolveSpellHostedWeaponAttack(
           replayingInterruptedProcedure:
             input.input.replayingInterruptedProcedure,
         }),
-    ...(input.input.suppressedReactionTrigger === undefined
+    ...(input.input.handledInterruptTrigger === undefined
       ? {}
-      : { suppressedReactionTrigger: input.input.suppressedReactionTrigger }),
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
     ...(input.input.pendingAttackDamageReductions === undefined
       ? {}
       : {

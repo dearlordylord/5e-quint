@@ -641,7 +641,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         }),
       ],
     });
-    const reaction = requireResultHole(fled, "reactionDecision");
+    const reaction = requireResultHole(fled, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
   });
 });

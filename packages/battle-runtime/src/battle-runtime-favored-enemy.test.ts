@@ -15,7 +15,7 @@ import {
   statBlockCreatureInit,
   paladinsSmiteResource,
   rangerFavoredEnemyResource,
-  reactionDecisionFill,
+  interruptDecisionFill,
   wizardSpellcasting,
   spellRecord,
   fighterId,
@@ -30,7 +30,7 @@ import {
   elapsedTimeTicks,
   requiredAbilityCheckRollMode,
   resolveBattleSubject,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resourceCount,
   snapshotBattle,
   spellFillSet,
@@ -413,7 +413,7 @@ describe("battle runtime: Paladin's Smite", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Paladin's Smite attack-hit window.");
     }
-    const smiteChoice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const smiteChoice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (choice) =>
         choice.kind === "castAttackHitBonusActionSpell" &&
         choice.reactorId === fighterId &&
@@ -433,13 +433,13 @@ describe("battle runtime: Paladin's Smite", () => {
       ),
     );
 
-    const afterSmite = resolveBattleReaction({
+    const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        findHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: smiteChoice.invocation,
@@ -546,7 +546,7 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingReaction?.choices.some(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
         (choice) =>
           choice.kind === "castAttackHitBonusActionSpell" &&
           choice.invocation.tag === "classFeatureFreeCast" &&
@@ -554,7 +554,7 @@ describe("battle runtime: Paladin's Smite", () => {
       ),
     ).toBe(false);
     expect(
-      awaitingReaction.snapshot.pendingReaction?.choices.some(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
         (choice) =>
           choice.kind === "castAttackHitBonusActionSpell" &&
           choice.invocation.tag === "spellSlot" &&
@@ -605,7 +605,7 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingReaction?.choices.some(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
         (choice) =>
           choice.kind === "castAttackHitBonusActionSpell" &&
           choice.invocation.tag === "classFeatureFreeCast" &&
@@ -613,7 +613,7 @@ describe("battle runtime: Paladin's Smite", () => {
       ),
     ).toBe(true);
     expect(
-      awaitingReaction.snapshot.pendingReaction?.choices.some(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.some(
         (choice) =>
           choice.kind === "castAttackHitBonusActionSpell" &&
           choice.invocation.tag === "spellSlot" &&

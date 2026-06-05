@@ -52,7 +52,7 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -959,7 +959,7 @@ function createRuleCoreSpellDriver() {
         }
         state = attackHit.state;
         holes = attackHit.holes;
-        const releaseChoice = attackHit.snapshot.pendingReaction?.choices.find(
+        const releaseChoice = attackHit.snapshot.pendingInterrupt?.choices.find(
           (candidate) =>
             candidate.kind === "releaseReadiedSpell" &&
             candidate.readiedSpellCasterId === casterId,
@@ -968,13 +968,13 @@ function createRuleCoreSpellDriver() {
           throw new Error("Expected Readied Spell release choice.");
         }
         recordResult(
-          resolveBattleReaction({
+          resolveBattleInterrupt({
             state,
-            fill: reactionDecisionFill(
-              requireHoleFromList(holes, "reactionDecision"),
+            fill: interruptDecisionFill(
+              requireHoleFromList(holes, "interruptDecision"),
               {
                 kind: "resolve",
-                reactorId: casterId,
+                responderId: casterId,
                 choice: {
                   kind: "releaseReadiedSpell",
                   readiedSpellCasterId: casterId,
@@ -1880,14 +1880,14 @@ function savingThrowOutcomeFill(
   };
 }
 
-function reactionDecisionFill(
+function interruptDecisionFill(
   hole: BattleHole,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  if (hole.kind !== "reactionDecision") {
-    throw new Error("Expected reactionDecision hole.");
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  if (hole.kind !== "interruptDecision") {
+    throw new Error("Expected interruptDecision hole.");
   }
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function damageRollFillWithGroups(

@@ -10,7 +10,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -23,7 +23,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
@@ -266,9 +266,9 @@ function resolveConditionRemovalProtection(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: targetSelection.targetIds,
@@ -280,7 +280,7 @@ function resolveConditionRemovalProtection(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

@@ -12,8 +12,8 @@ import {
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import {
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
@@ -29,7 +29,7 @@ import {
   type ObjectContactPenaltyActiveEffect,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
@@ -57,7 +57,7 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
@@ -182,9 +182,9 @@ export function resolveObjectContactDamageSpellAct(input: {
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: contactSelection.targetIds,
@@ -196,7 +196,7 @@ export function resolveObjectContactDamageSpellAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -242,7 +242,7 @@ export function resolveObjectContactDamageSpellAct(input: {
       subject: input.input.subject,
       events: damageResolution.events,
       droppedObjects: damageResolution.droppedObjects,
-      suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.input.handledInterruptTrigger,
     });
   }
 
@@ -281,7 +281,7 @@ export function resolveObjectContactDamageSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
 }
 
@@ -367,7 +367,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
 }
 
@@ -1330,17 +1330,17 @@ function finishObjectContactDamageResolution(input: {
     | BonusActionSpellBattleResolutionInput["subject"];
   readonly events: readonly BattleAfterDamageEvent[];
   readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-  readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   if (input.events.length > 0) {
-    const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+    const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({
       state: input.state,
       subject: input.subject,
       events: input.events,
       objectDamages: [],
       objectIgnitions: [],
       droppedObjects: input.droppedObjects,
-      suppressedReactionTrigger: input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     });
     if (afterDamageReactionWindow.tag === "needsHoles") {
       return afterDamageReactionWindow;

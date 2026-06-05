@@ -21,7 +21,7 @@ import { Either } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
@@ -35,7 +35,7 @@ import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "../spells-profile-shared.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetListHole,
@@ -271,9 +271,9 @@ function resolveJumpMovementReplacement(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: input.fillSet.targetList.targetIds,
@@ -285,7 +285,7 @@ function resolveJumpMovementReplacement(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

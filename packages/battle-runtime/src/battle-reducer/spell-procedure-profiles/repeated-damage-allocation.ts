@@ -16,7 +16,7 @@
 //
 // What stays in shared infrastructure: the resolver body remains in
 // spells-resolve-prepared-slot.ts because it owns repeated damage allocation,
-// Shield negation, Sanctuary replacement, after-damage Reaction windows, and
+// Shield negation, Sanctuary replacement, after-damage interrupt checkpoints, and
 // Readied Spell release continuation sequencing.
 
 import { movementFeet } from "@dnd/shared/types";

@@ -64,7 +64,7 @@ import {
   attackDamageEventWithEntries,
   attackDamagePrefixFills,
   attackFillsThroughAttackRoll,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
 } from "./dispatcher.ts";
 
@@ -360,8 +360,8 @@ function resolveBonusActionAttack(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
-  if (hit && input.suppressedReactionTrigger !== "attackHit") {
-    const reactionWindow = maybeOpenReactionWindow(
+  if (hit && input.handledInterruptTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
       {
         trigger: "attackHit",
@@ -384,7 +384,7 @@ function resolveBonusActionAttack(
           fills: attackFillsThroughAttackRoll(input.fills),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
@@ -587,7 +587,7 @@ function resolveBonusActionAttack(
         ]);
       }
     }
-    const attackDamageReactionWindow = maybeOpenReactionWindow(
+    const attackDamageReactionWindow = maybeOpenInterruptWindow(
       spellReducedState,
       {
         trigger: "attackDamage",
@@ -607,7 +607,7 @@ function resolveBonusActionAttack(
             : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackDamageReactionWindow !== null) {
       const spent = spendOffHandBonusAction(attackDamageReactionWindow.state);
@@ -686,7 +686,7 @@ function resolveBonusActionAttack(
     if (spent.tag === "invalid") {
       return spent;
     }
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       spent.state,
       {
         trigger: "afterDamage",
@@ -703,7 +703,7 @@ function resolveBonusActionAttack(
           subject: input.subject,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;

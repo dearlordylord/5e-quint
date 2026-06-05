@@ -10,11 +10,11 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-  reactionDecisionFill,
+  interruptDecisionFill,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type {
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   BattleResolutionResult,
 } from "./index.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
@@ -40,7 +40,7 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
@@ -360,10 +360,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       procedure: "counterspell",
       slotLevel: 3,
     });
-    const countered = resolveBattleReaction({
+    const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingCounterspell.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
@@ -371,7 +371,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(countered).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingReaction: null,
+        pendingInterrupt: null,
         turn: { bonusActionAvailable: false },
       },
     });
@@ -555,7 +555,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ],
       }),
     );
-    expect(awaitingShield.snapshot.pendingReaction).toMatchObject({
+    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
       trigger: "attackHit",
     });
     expect(
@@ -574,17 +574,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       procedure: "shieldReaction",
       slotLevel: 1,
     });
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingShield.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingShield.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingShield.holes, "interruptDecision"),
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null, turn: { bonusActionAvailable: false } },
+      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
@@ -1250,7 +1250,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ],
       }),
     );
-    expect(awaitingShield.snapshot.pendingReaction).toMatchObject({
+    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
       trigger: "attackHit",
     });
 
@@ -1261,17 +1261,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       procedure: "shieldReaction",
       slotLevel: 1,
     });
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingShield.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingShield.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingShield.holes, "interruptDecision"),
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null, turn: { bonusActionAvailable: false } },
+      snapshot: { pendingInterrupt: null, turn: { bonusActionAvailable: false } },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
@@ -1470,14 +1470,14 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingReaction?.choices.find(
+  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -1496,14 +1496,14 @@ function requireTriggeredReactionSpellChoice(input: {
 function triggeredReactionSpellDecision(
   reactorId: typeof spellTargetId,
   choice: Extract<
-    BattleReactionProcedureChoice,
+    BattleInterruptProcedureChoice,
     { readonly kind: "castTriggeredReactionSpell" }
   >,
   fills: readonly BattleFill[],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {
     kind: "resolve",
-    reactorId,
+    responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
       invocation: choice.invocation,

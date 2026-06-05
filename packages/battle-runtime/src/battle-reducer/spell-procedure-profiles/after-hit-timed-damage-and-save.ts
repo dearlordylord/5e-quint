@@ -18,7 +18,7 @@
 //     Damage Roll, Timer, Saving Throw, Spell Slot, and Spell Invocation.
 //
 // What stays in shared infrastructure:
-//   - The attack-hit Reaction window and eligibility orchestration stay in
+//   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The active-effect turn-start damage and save-to-end lifecycle stays with
 //     active-effect processing.
@@ -30,7 +30,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 
-import type { BattleReactionTrigger } from "../../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
@@ -39,7 +39,7 @@ import {
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleInterruptedProcedure,
-  type BattleReactionFrame,
+  type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
@@ -49,11 +49,11 @@ import type { BattleSubject } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices,
-  reactionInterruptFrame,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+  interruptCheckpointFrame,
 } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
@@ -83,7 +83,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
   }
 >;
 type AttackHitDamageReplayFrame = Extract<
-  BattleReactionFrame,
+  BattleInterruptCheckpoint,
   { readonly trigger: "attackHit" }
 > & {
   readonly continuation: Extract<
@@ -95,7 +95,7 @@ type AfterHitTimedDamageAndSaveBattleResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly frame: AttackHitDamageReplayFrame;
     readonly target: BattleCreatureState;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 type AfterHitTimedDamageAndSaveResolveInput = SpellProcedureProfileResolveInput<
   AfterHitTimedDamageAndSaveInvocation,
@@ -311,7 +311,7 @@ function resolveAfterHitTimedDamageAndSave(
     );
   }
 
-  const spellCastFrame = spellCastReactionFrame({
+  const spellCastFrame = spellCastInterruptFrame({
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetIds: [input.input.target.combatantId],
@@ -324,10 +324,10 @@ function resolveAfterHitTimedDamageAndSave(
     },
   });
   const spellCastReactionWindow =
-    maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
+    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
       input.input.state,
       spellCastFrame,
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -370,7 +370,7 @@ function resolveAfterHitTimedDamageAndSave(
     ...effected,
     interruptStack: [
       ...effected.interruptStack.slice(0, -1),
-      reactionInterruptFrame(nextFrame),
+      interruptCheckpointFrame(nextFrame),
     ],
   };
   const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
@@ -379,7 +379,7 @@ function resolveAfterHitTimedDamageAndSave(
     casterId: input.input.subject.casterId,
     spellId: input.invocation.spell.id,
     targetIds: [input.input.target.combatantId],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

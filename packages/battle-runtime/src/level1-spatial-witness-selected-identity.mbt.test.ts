@@ -63,8 +63,8 @@ import {
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   objectInvisibleBenefitDenied,
-  openCreatureFallsReactionWindow,
-  resolveBattleReaction,
+  openCreatureFallsInterruptWindow,
+  resolveBattleInterrupt,
   resolveFeatherFallLanding,
   resolveBattleSubject,
   snapshotBattle,
@@ -1056,13 +1056,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         const unwitnessedTrigger = openFeatherFallWindow(state, []);
         const unwitnessedTriggerRejected =
           unwitnessedTrigger.tag === "resolved" &&
-          unwitnessedTrigger.snapshot.pendingReaction === null;
+          unwitnessedTrigger.snapshot.pendingInterrupt === null;
         const awaitingReaction = openFeatherFallWindow(state, [
           featherFallTriggerFact(),
         ]);
         const triggerOffered =
           awaitingReaction.tag === "needsHoles" &&
-          awaitingReaction.snapshot.pendingReaction?.trigger ===
+          awaitingReaction.snapshot.pendingInterrupt?.trigger ===
             "creatureFalls";
         if (awaitingReaction.tag !== "needsHoles") {
           throw new Error(
@@ -1071,13 +1071,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         }
 
         const choice = featherFallReactionChoice(awaitingReaction);
-        const resolved = resolveBattleReaction({
+        const resolved = resolveBattleInterrupt({
           state: awaitingReaction.state,
-          fill: reactionDecisionFill(
-            requireHole(awaitingReaction.holes, "reactionDecision"),
+          fill: interruptDecisionFill(
+            requireHole(awaitingReaction.holes, "interruptDecision"),
             {
               kind: "resolve",
-              reactorId: casterId,
+              responderId: casterId,
               choice: {
                 kind: "castTriggeredReactionSpell",
                 invocation: choice.invocation,
@@ -3030,7 +3030,7 @@ function openFeatherFallWindow(
   state: BattleState,
   reactionSpellTargetFacts: readonly BattleTargetSpatialFact[],
 ): BattleResolutionResult {
-  return openCreatureFallsReactionWindow({
+  return openCreatureFallsInterruptWindow({
     state,
     fallingCreatureId: featherFallFallingAllyId,
     reactionSpellTargetFacts,
@@ -3053,7 +3053,7 @@ function featherFallTriggerFact(): Extract<
 function featherFallReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ) {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (candidate) =>
       candidate.kind === "castTriggeredReactionSpell" &&
       candidate.invocation.tag === "spellSlot" &&
@@ -3111,11 +3111,11 @@ function fogCloudStrongWindDispersalAct(
   return act;
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function spellTargetFill(

@@ -12,7 +12,7 @@ import { Either } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -26,7 +26,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
@@ -258,9 +258,9 @@ function resolveDirectCondition(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: input.fillSet.targetList.targetIds,
@@ -276,7 +276,7 @@ function resolveDirectCondition(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

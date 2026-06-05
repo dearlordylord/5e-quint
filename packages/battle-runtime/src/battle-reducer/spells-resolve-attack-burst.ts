@@ -15,8 +15,8 @@ import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
   attackRollIsCriticalHit,
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
@@ -62,7 +62,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyPreparedSlotSpellDamage,
   applySpellDamage,
@@ -235,9 +235,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     });
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [target.combatantId],
@@ -252,7 +252,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -388,8 +388,8 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       )
     : [];
 
-  if (hitTarget && input.input.suppressedReactionTrigger !== "attackHit") {
-    const reactionWindow = maybeOpenReactionWindow(
+  if (hitTarget && input.input.handledInterruptTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenInterruptWindow(
       attackResolvedState,
       {
         trigger: "attackHit",
@@ -410,7 +410,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
@@ -681,7 +681,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       damagedByAttack,
       {
         trigger: "saveFailed",
@@ -696,7 +696,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -1142,14 +1142,14 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           ];
     }),
   ];
-  const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+  const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({
     state: spentResources.state,
     subject: input.input.subject,
     events: afterDamageEvents,
     objectDamages: [],
     objectIgnitions: [],
     droppedObjects: [],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (afterDamageReactionWindow.tag === "needsHoles") {
     return afterDamageReactionWindow;

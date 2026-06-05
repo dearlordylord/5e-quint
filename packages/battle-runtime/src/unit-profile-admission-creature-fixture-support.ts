@@ -403,11 +403,11 @@ export function weaponAttackRollHole(input: {
   );
 }
 
-export function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+export function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 export function abilityCheckFill(

@@ -859,16 +859,16 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       interruptStack: [
         ...state.interruptStack,
         {
-          kind: "reaction" as const,
+          kind: "interruptCheckpoint" as const,
           frame: {
             trigger: "opportunityAttack" as const,
             moverId: spellCasterId,
             threats: [],
-            eligibleReactors: [spellTargetId],
-            offeredReactors: [],
+            eligibleResponders: [spellTargetId],
+            offeredResponders: [],
             choices: [],
-            activeReaction: {
-              reactorId: spellTargetId,
+            activeInterrupt: {
+              responderId: spellTargetId,
               subject,
               fills: [],
             },

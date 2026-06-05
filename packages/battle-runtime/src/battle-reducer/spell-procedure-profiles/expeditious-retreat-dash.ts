@@ -20,7 +20,7 @@ import { Either } from "effect";
 
 import {
   activeOngoingFeaturesPreventSpellcasting,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
@@ -36,7 +36,7 @@ import { revealHidden } from "../hole-helpers.ts";
 import { representedMovementSpeedKinds } from "../movement-speed.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import { spellRequiresVerbal } from "../spells-discovery.ts";
 import {
@@ -240,9 +240,9 @@ function resolveExpeditiousRetreatDash(
   const castingState = spellRequiresVerbal(input.invocation.spell)
     ? revealHidden(input.input.state, subject.actorId)
     : input.input.state;
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     castingState,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: subject.actorId,
       invocation: input.invocation,
       targetIds: [subject.actorId],
@@ -254,7 +254,7 @@ function resolveExpeditiousRetreatDash(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

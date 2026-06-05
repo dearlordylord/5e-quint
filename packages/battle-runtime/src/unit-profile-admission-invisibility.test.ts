@@ -22,7 +22,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-  reactionDecisionFill,
+  interruptDecisionFill,
   statBlockAttackAct,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture-support.ts";
@@ -44,7 +44,7 @@ import {
   hasCondition,
   movementFeet,
   proficiencyBonus,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
@@ -55,7 +55,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleReactionProcedureChoice,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
   type CombatantId,
@@ -356,10 +356,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       slotLevel: 3,
     });
     const countered = requireResolved(
-      resolveBattleReaction({
+      resolveBattleInterrupt({
         state: awaitingCounterspell.state,
-        fill: reactionDecisionFill(
-          requireHole(awaitingCounterspell.holes, "reactionDecision"),
+        fill: interruptDecisionFill(
+          requireHole(awaitingCounterspell.holes, "interruptDecision"),
           triggeredReactionSpellDecision(counterspellerId, choice, []),
         ),
       }),
@@ -436,10 +436,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       slotLevel: 1,
     });
     const afterShield = requireNeedsHoles(
-      resolveBattleReaction({
+      resolveBattleInterrupt({
         state: awaitingShield.state,
-        fill: reactionDecisionFill(
-          requireHole(awaitingShield.holes, "reactionDecision"),
+        fill: interruptDecisionFill(
+          requireHole(awaitingShield.holes, "interruptDecision"),
           triggeredReactionSpellDecision(spellTargetId, choice, []),
         ),
       }),
@@ -531,10 +531,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       slotLevel: 3,
     });
     const countered = requireResolved(
-      resolveBattleReaction({
+      resolveBattleInterrupt({
         state: awaitingCounterspell.state,
-        fill: reactionDecisionFill(
-          requireHole(awaitingCounterspell.holes, "reactionDecision"),
+        fill: interruptDecisionFill(
+          requireHole(awaitingCounterspell.holes, "interruptDecision"),
           triggeredReactionSpellDecision(spellTargetId, choice, []),
         ),
       }),
@@ -687,14 +687,14 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingReaction?.choices.find(
+  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -713,14 +713,14 @@ function requireTriggeredReactionSpellChoice(input: {
 function triggeredReactionSpellDecision(
   reactorId: CombatantId,
   choice: Extract<
-    BattleReactionProcedureChoice,
+    BattleInterruptProcedureChoice,
     { readonly kind: "castTriggeredReactionSpell" }
   >,
   fills: readonly BattleFill[],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {
     kind: "resolve",
-    reactorId,
+    responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
       invocation: choice.invocation,

@@ -22,9 +22,9 @@ import {
   spellId as makeSpellId,
 } from "./identity.ts";
 import {
-  BATTLE_REACTION_TRIGGERS,
+  BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
-} from "./battle-reaction-triggers.ts";
+} from "./battle-interrupt-triggers.ts";
 import {
   SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND,
   SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS,
@@ -421,7 +421,7 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("ready"),
-    readyTrigger: Schema.Literal(...BATTLE_REACTION_TRIGGERS),
+    readyTrigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),

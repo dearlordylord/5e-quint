@@ -16,7 +16,7 @@ import {
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -34,7 +34,7 @@ import {
   endTurn,
   Hp,
   proficiencyBonus,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
@@ -73,7 +73,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike attack-hit window.");
     }
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === ensnaringStrikeUnitId,
@@ -86,13 +86,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     expect(save).toMatchObject({ ability: "str" });
-    const afterEnsnaring = resolveBattleReaction({
+    const afterEnsnaring = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -277,7 +277,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Searing Smite attack-hit window.");
     }
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === searingSmiteUnitId,
@@ -296,13 +296,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       ),
     );
 
-    const afterSearing = resolveBattleReaction({
+    const afterSearing = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -546,7 +546,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike attack-hit window.");
     }
-    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === ensnaringStrikeUnitId,
@@ -558,13 +558,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-    const awaitingSaveFailedReaction = resolveBattleReaction({
+    const awaitingSaveFailedReaction = resolveBattleInterrupt({
       state: awaitingAttackHit.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingAttackHit.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -579,23 +579,23 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     });
     expect(awaitingSaveFailedReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
     });
     if (awaitingSaveFailedReaction.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike save-failed reaction.");
     }
 
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingSaveFailedReaction.state,
-      fill: reactionDecisionFill(
-        awaitingSaveFailedReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: spellTargetId },
+      fill: interruptDecisionFill(
+        awaitingSaveFailedReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: spellTargetId },
       ),
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
   test("ensnaring_strike opens a post-cast Ready spell-cast reaction before attack damage", () => {
@@ -676,7 +676,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike attack-hit window.");
     }
-    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === ensnaringStrikeUnitId,
@@ -688,13 +688,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-    const awaitingSpellCastReaction = resolveBattleReaction({
+    const awaitingSpellCastReaction = resolveBattleInterrupt({
       state: awaitingAttackHit.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingAttackHit.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -709,9 +709,9 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     });
     expect(awaitingSpellCastReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "spellCast",
           choices: [
             expect.objectContaining({
@@ -725,17 +725,17 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingSpellCastReaction.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike post-cast Ready window.");
     }
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingSpellCastReaction.state,
-      fill: reactionDecisionFill(
-        awaitingSpellCastReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: spellTargetId },
+      fill: interruptDecisionFill(
+        awaitingSpellCastReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: spellTargetId },
       ),
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
   test("ensnaring_strike still opens post-cast Ready after save-failed decline", () => {
@@ -837,7 +837,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike attack-hit window.");
     }
-    const choice = awaitingAttackHit.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castAttackHitBonusActionSpell" &&
         candidate.invocation.spellId === ensnaringStrikeUnitId,
@@ -849,13 +849,13 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-    const awaitingSaveFailedReaction = resolveBattleReaction({
+    const awaitingSaveFailedReaction = resolveBattleInterrupt({
       state: awaitingAttackHit.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingAttackHit.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingAttackHit.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castAttackHitBonusActionSpell",
             invocation: choice.invocation,
@@ -871,18 +871,18 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (awaitingSaveFailedReaction.tag !== "needsHoles") {
       throw new Error("Expected Ensnaring Strike save-failed reaction.");
     }
-    const afterSaveFailedDecline = resolveBattleReaction({
+    const afterSaveFailedDecline = resolveBattleInterrupt({
       state: awaitingSaveFailedReaction.state,
-      fill: reactionDecisionFill(
-        awaitingSaveFailedReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: spellTargetId },
+      fill: interruptDecisionFill(
+        awaitingSaveFailedReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: spellTargetId },
       ),
     });
     expect(afterSaveFailedDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "spellCast",
           choices: [
             expect.objectContaining({

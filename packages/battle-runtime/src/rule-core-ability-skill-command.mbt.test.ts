@@ -704,7 +704,7 @@ function commandFleeOpportunityAttackScenario(): Projection {
       }),
     ],
   });
-  const reaction = requireResultHole(fled, "reactionDecision");
+  const reaction = requireResultHole(fled, "interruptDecision");
   if (reaction.trigger !== "opportunityAttack" || fled.tag !== "needsHoles") {
     throw new Error("Expected Command Flee to open an opportunity attack.");
   }

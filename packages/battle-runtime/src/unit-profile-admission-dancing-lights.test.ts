@@ -8,7 +8,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
@@ -29,7 +29,7 @@ import {
   holeId,
   movementFeet,
   proficiencyBonus,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -221,9 +221,9 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "spellCast",
           choices: [
             expect.objectContaining({
@@ -238,17 +238,17 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Dancing Lights spell-cast reaction window.");
     }
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        awaitingReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: spellTargetId },
+      fill: interruptDecisionFill(
+        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: spellTargetId },
       ),
     });
     if (afterDecline.tag !== "resolved") {
       throw new Error("Expected declined reaction to replay Dancing Lights.");
     }
-    expect(afterDecline.snapshot.pendingReaction).toBeNull();
+    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
     expect(afterDecline.snapshot.lightEmitters).toHaveLength(2);
     expect(
       canSpendAction(afterDecline.state.currentTurnResources, "magic"),

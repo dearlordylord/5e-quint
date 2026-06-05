@@ -43,7 +43,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -53,7 +53,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
-  type BattleReactionProcedureChoice,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -275,10 +275,10 @@ function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
     dartCount: firstLevelMagicMissileDartCount,
   });
   const choice = requireCounterspellChoice(awaitingReaction);
-  const resolved = resolveBattleReaction({
+  const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: reactionDecisionFill(
-      requireHole(awaitingReaction.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
       triggeredReactionSpellDecision(reactorId, choice, []),
     ),
   });
@@ -309,10 +309,10 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
   });
   const choice = requireCounterspellChoice(awaitingReaction);
   const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-  const resumed = resolveBattleReaction({
+  const resumed = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: reactionDecisionFill(
-      requireHole(awaitingReaction.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: true },
@@ -360,10 +360,10 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
   const choice = requireHellishRebukeChoice(awaitingReaction);
   const save = requireHole(choice.initialHoles, "savingThrowOutcome");
   const damage = requireHole(choice.initialHoles, "rolledDice");
-  const resolved = resolveBattleReaction({
+  const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: reactionDecisionFill(
-      requireHole(awaitingReaction.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: false },
@@ -690,7 +690,7 @@ function counterspellTriggerFact(): CounterspellTriggerFact {
 function requireCounterspellChoice(
   result: NeedsHolesResult,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
   return requireTriggeredReactionSpellChoice({
@@ -704,7 +704,7 @@ function requireCounterspellChoice(
 function requireHellishRebukeChoice(
   result: NeedsHolesResult,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
   return requireTriggeredReactionSpellChoice({
@@ -721,14 +721,14 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingReaction?.choices.find(
+  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -748,7 +748,7 @@ function requirePendingReactionTrigger(
   result: NeedsHolesResult,
   trigger: "spellCast" | "afterDamage",
 ): void {
-  if (result.snapshot.pendingReaction?.trigger !== trigger) {
+  if (result.snapshot.pendingInterrupt?.trigger !== trigger) {
     throw new Error(`Expected ${trigger} Reaction window.`);
   }
 }
@@ -756,14 +756,14 @@ function requirePendingReactionTrigger(
 function triggeredReactionSpellDecision(
   reactor: CombatantId,
   choice: Extract<
-    BattleReactionProcedureChoice,
+    BattleInterruptProcedureChoice,
     { readonly kind: "castTriggeredReactionSpell" }
   >,
   fills: readonly BattleFill[],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {
     kind: "resolve",
-    reactorId: reactor,
+    responderId: reactor,
     choice: {
       kind: "castTriggeredReactionSpell",
       invocation: choice.invocation,
@@ -772,11 +772,11 @@ function triggeredReactionSpellDecision(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function savingThrowOutcomeFill(
@@ -904,7 +904,7 @@ function reactionCastingTimeProjection(
       3,
     ),
     reactionWindowCleared:
-      state.lastResult !== "init" && snapshot.pendingReaction === null,
+      state.lastResult !== "init" && snapshot.pendingInterrupt === null,
     lastResult: state.lastResult,
   };
 }

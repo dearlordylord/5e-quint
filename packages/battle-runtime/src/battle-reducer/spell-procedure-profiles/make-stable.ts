@@ -28,7 +28,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
@@ -36,7 +36,7 @@ import {
 } from "../../battle-reducer.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
@@ -223,9 +223,9 @@ function resolveMakeStable(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [input.fillSet.targetId],
@@ -237,7 +237,7 @@ function resolveMakeStable(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

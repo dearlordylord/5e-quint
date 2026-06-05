@@ -14,7 +14,7 @@ import {
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireHole,
   requireResultHole,
   weaponAttackRollHole,
@@ -31,7 +31,7 @@ import {
   battleUnitRefWithSupportProfiles,
   Either,
   parseSupportedUnitFeatureProfile,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import type {
@@ -164,13 +164,13 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Peerless Aim hit to open Shield reaction.");
     }
     const shieldChoice =
-      awaitingReaction.snapshot.pendingReaction?.choices.find(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
           choice.kind === "castTriggeredReactionSpell" &&
           choice.reactorId === spellTargetId,
@@ -181,13 +181,13 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     ) {
       throw new Error("Expected Shield reaction choice.");
     }
-    const afterShield = resolveBattleReaction({
+    const afterShield = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellTargetId,
+          responderId: spellTargetId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: shieldChoice.invocation,
@@ -199,7 +199,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     expect(afterShield).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (afterShield.tag !== "needsHoles") {
       throw new Error("Expected replayed Peerless Aim attack to need damage.");

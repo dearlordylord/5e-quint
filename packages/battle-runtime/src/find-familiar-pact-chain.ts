@@ -36,9 +36,9 @@ export type PactOfTheChainFamiliarAttackSubject = Extract<
 export type PactOfTheChainFamiliarReactionAttackSubjectInput =
   BattleResolutionInputForSubject<PactOfTheChainFamiliarAttackSubject> & {
     readonly replayingInterruptedProcedure?: boolean;
-    readonly suppressedReactionTrigger?: Parameters<
+    readonly handledInterruptTrigger?: Parameters<
       typeof resolveSelectedAttackProcedure
-    >[0]["suppressedReactionTrigger"];
+    >[0]["handledInterruptTrigger"];
     readonly pendingAttackDamageReductions?: Parameters<
       typeof resolveSelectedAttackProcedure
     >[0]["pendingAttackDamageReductions"];

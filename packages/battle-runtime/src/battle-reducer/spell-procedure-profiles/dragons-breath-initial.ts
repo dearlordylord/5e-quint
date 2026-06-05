@@ -23,7 +23,7 @@ import { Either } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
@@ -36,7 +36,7 @@ import { spellSaveDcForCaster } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { applyDragonsBreathInitialSpellEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
@@ -317,9 +317,9 @@ function resolveDragonsBreathInitial(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: input.fillSet.targetList.targetIds,
@@ -331,7 +331,7 @@ function resolveDragonsBreathInitial(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

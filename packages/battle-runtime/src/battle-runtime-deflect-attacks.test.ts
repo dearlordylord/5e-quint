@@ -8,7 +8,7 @@ import {
   findHole,
   targetFill,
   attackRollFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   savingThrowOutcomeFill,
   damageRollFill,
   damageRollFillWithGroups,
@@ -33,7 +33,7 @@ import {
   Either,
   endTurn,
   Hp,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -81,17 +81,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.choices,
+      setup.result.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
-      fill: reactionDecisionFill(
-        findHole(setup.result.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,
@@ -171,17 +171,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.choices,
+      setup.result.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
-      fill: reactionDecisionFill(
-        findHole(setup.result.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,
@@ -245,17 +245,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.choices,
+      setup.result.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
-      fill: reactionDecisionFill(
-        findHole(setup.result.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,
@@ -341,17 +341,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.choices,
+      setup.result.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
-      fill: reactionDecisionFill(
-        findHole(setup.result.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,
@@ -438,17 +438,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingReaction!.choices,
+      setup.result.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
-      fill: reactionDecisionFill(
-        findHole(setup.result.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,
@@ -553,17 +553,17 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingReaction!.choices,
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
       unit.id,
       "attackDamageReduction",
     );
-    const afterReaction = resolveBattleReaction({
+    const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        findHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        findHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: fighterId,
+          responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
             unitId: unit.id,

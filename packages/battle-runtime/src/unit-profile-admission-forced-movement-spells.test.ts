@@ -710,7 +710,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       ],
     });
 
-    const reaction = requireResultHole(result, "reactionDecision");
+    const reaction = requireResultHole(result, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
   });
 });

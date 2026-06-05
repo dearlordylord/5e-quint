@@ -45,7 +45,7 @@ import type {
 import { Either, Schema } from "effect";
 
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -61,7 +61,7 @@ import {
 } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { applySpellCreatedHeldObjectEffect } from "../spells-active-effects.ts";
 import { spellCreatedHeldObjectEffectForSource } from "../spells-active-effects.ts";
@@ -558,9 +558,9 @@ function resolveSpellCreatedHeldObject(
       handStateError.message,
     );
   }
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [input.actorId],
@@ -572,7 +572,7 @@ function resolveSpellCreatedHeldObject(
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

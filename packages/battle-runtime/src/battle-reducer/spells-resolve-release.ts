@@ -15,7 +15,7 @@ import {
 import { Either } from "effect";
 import {
   attackRollIsCriticalHit,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
@@ -89,7 +89,7 @@ import {
 } from "./statblock-attacks.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
@@ -192,9 +192,9 @@ export function resolveDancingLightsCastSpellAct(input: {
       "Dancing Lights placement does not match the selected form.",
     );
   }
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [],
@@ -206,7 +206,7 @@ export function resolveDancingLightsCastSpellAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -523,9 +523,9 @@ export function resolveReadySpellAct(
     castingState,
     input.subject.actorId,
   );
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     spellCastState,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.subject.actorId,
       invocation,
       targetIds: [],
@@ -537,7 +537,7 @@ export function resolveReadySpellAct(
         fills: input.fills,
       },
     }),
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

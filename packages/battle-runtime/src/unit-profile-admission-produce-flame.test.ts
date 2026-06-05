@@ -10,7 +10,7 @@ import {
 import {
   attackRollFill,
   damageRollFillWithGroups,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
@@ -34,7 +34,7 @@ import {
   elapsedTimeTicks,
   Hp,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
@@ -516,7 +516,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Produce Flame hurl to open attack-hit window.");
@@ -532,18 +532,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ),
     ).toBe(false);
 
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        awaitingReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: spellTargetId },
+      fill: interruptDecisionFill(
+        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: spellTargetId },
       ),
     });
 
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingReaction: null, lightEmitters: [] },
+      snapshot: { pendingInterrupt: null, lightEmitters: [] },
     });
   });
   test("produce_flame hurl object miss spends the Magic action without object damage", () => {

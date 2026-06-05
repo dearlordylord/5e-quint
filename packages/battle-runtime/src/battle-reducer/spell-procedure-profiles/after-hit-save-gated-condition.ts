@@ -20,7 +20,7 @@
 //     Concentration, Spell Slot, and Spell Invocation.
 //
 // What stays in shared infrastructure:
-//   - The attack-hit Reaction window and eligibility orchestration stay in
+//   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The metamagic table entry remains Wave 9 migration work.
 
@@ -31,7 +31,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { type Size } from "@dnd/shared/types";
 
-import type { BattleReactionTrigger } from "../../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
@@ -50,12 +50,12 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import { combatantEffectiveSize } from "../druid-wild-shape.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenReactionWindow,
-  maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices,
+  maybeOpenInterruptWindow,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
 } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import {
   applyFailedSaveSpellConditionEffects,
@@ -94,7 +94,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
 type AfterHitSaveGatedConditionBattleResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly target: BattleCreatureState;
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   };
 type AfterHitSaveGatedConditionFillSet = Extract<
   SpellFillSet,
@@ -256,7 +256,7 @@ function resolveAfterHitSaveGatedCondition(
     );
   }
 
-  const spellCastFrame = spellCastReactionFrame({
+  const spellCastFrame = spellCastInterruptFrame({
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetIds: [input.input.target.combatantId],
@@ -269,10 +269,10 @@ function resolveAfterHitSaveGatedCondition(
     },
   });
   const spellCastReactionWindow =
-    maybeOpenSpellCastReactionWindowWithTriggeredSpellChoices(
+    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
       input.input.state,
       spellCastFrame,
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -295,7 +295,7 @@ function resolveAfterHitSaveGatedCondition(
     ? []
     : [input.input.target.combatantId];
   if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenReactionWindow(
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {
         trigger: "saveFailed",
@@ -307,7 +307,7 @@ function resolveAfterHitSaveGatedCondition(
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (saveFailedReactionWindow !== null) {
       return saveFailedReactionWindow;
@@ -348,7 +348,7 @@ function resolveAfterHitSaveGatedCondition(
     casterId: input.input.subject.casterId,
     spellId: input.invocation.spell.id,
     targetIds: [input.input.target.combatantId],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

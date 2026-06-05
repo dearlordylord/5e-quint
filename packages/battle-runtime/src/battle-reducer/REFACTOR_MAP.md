@@ -39,21 +39,21 @@ Discovers what acts a subject can take. Anchor:
 ### Cluster D — `subject_resolution` (5323..5797, 9 funcs, 475 LOC)
 - 5323 **E** `resolveBattleSubject` (6)
 - 5329 `resolveBattleSubjectInternal` (372) — large dispatcher
-- `actionHideSubject`, `actionSearchSubject`, `isReleaseGrappleSubject`, `standardActionKindForSubject`, `consumeOrCloseLegendaryActionWindow`, plus 5779 `openBattleReactionWindow` (E) and `reactionInterruptFrame` straddling into reactions
+- `actionHideSubject`, `actionSearchSubject`, `isReleaseGrappleSubject`, `standardActionKindForSubject`, `consumeOrCloseLegendaryActionWindow`, plus 5779 `openBattleInterruptWindow` (E) and `interruptCheckpointFrame` straddling into reactions
 
 ### Cluster E — `reactions` (5798..7336, 44 funcs, 1,539 LOC)
-- 5798 **E** `resolveBattleReaction` (131)
+- 5798 **E** `resolveBattleInterrupt` (131)
 - spend/modifier helpers (`spendReaction`, `spendReactionModifierResource`, `reactionModifierResourceUnitId`)
-- `resolveReactionRollOrDamageReduction` (101), `resolveCastTriggeredReactionSpellCommand` (118), `completeResolvedActiveReactionIfPending`
+- `resolveReactionRollOrDamageReduction` (101), `resolveCastTriggeredReactionSpellCommand` (118), `completeResolvedActiveInterruptIfPending`
 - reaction-modifier reduction roll math (`reactionModifierReductionRoll`, `reactionModifierReductionTotal`, `reactionReductionResourceDieRollTotal/Label`, `isBattleRolledDiceFill`, `attackDamageReductionZeroDamageRedirectSelection` (101))
 - after-damage events (`attackDamageEvent*` x 7), `resolveAttackDamageReductionZeroDamageRedirectAfterReduction` (127)
-- continuation/replay frames (`replayContinuationFrame`, `resolveReplayContinuation`, `resolveReplayContinuationFromState`, `activeReactionWithReplayContinuationAttackDamageReductions`, `resolveAttackDamageContinuationConcentration` (48), `attackDamageContinuationConcentrationFill`)
+- continuation/replay frames (`replayContinuationFrame`, `resolveReplayContinuation`, `resolveReplayContinuationFromState`, `activeInterruptWithReplayContinuationAttackDamageReductions`, `resolveAttackDamageContinuationConcentration` (48), `attackDamageContinuationConcentrationFill`)
 - equality helpers (`battleFillEquals`, `rolledDiceGroupsEqual`, `attackDamageRiderSelectionsEqual`)
 
 ### Cluster F — `turn` (7337..8243, 33 funcs, 907 LOC)
 - 7337 **E** `endTurn` (17)
-- 7354 **E** `snapshotBattle` (31) + `battleTurnSnapshot`, `pendingReactionSnapshot`
-- reaction-window orchestration: `currentInterruptFrame`, `currentReactionFrame`, `reactionDecisionHole`, `reactionTriggerLabel`, `unofferedEligibleReactors`, `maybeOpenReactionWindow` (61), `readiedSpellReactionChoices`, `readiedMovementReactionChoices`, `triggeredReactionSpellChoices` (56), `triggeredReactionSpellTurnResourceAvailable`, `currentActorHasPendingSlottedSpellCast`, `shieldReactionSpellMatchesTrigger`, `reactionChoices`, `reactionRollOrDamageReductionChoices`, `reactionRollOrDamageReductionChoiceForProfile` (145)
+- 7354 **E** `snapshotBattle` (31) + `battleTurnSnapshot`, `pendingInterruptSnapshot`
+- reaction-window orchestration: `currentInterruptFrame`, `currentInterruptCheckpoint`, `interruptDecisionHole`, `interruptTriggerLabel`, `unofferedEligibleResponders`, `maybeOpenInterruptWindow` (61), `readiedSpellReactionChoices`, `readiedMovementReactionChoices`, `triggeredReactionSpellChoices` (56), `triggeredReactionSpellTurnResourceAvailable`, `currentActorHasPendingSlottedSpellCast`, `shieldReactionSpellMatchesTrigger`, `interruptChoices`, `reactionRollOrDamageReductionChoices`, `reactionRollOrDamageReductionChoiceForProfile` (145)
 - visibility/hole sundries (`combatantCanSee`, `reactionModifierRollHole`, `attackDamageReductionZeroDamageRedirectHoles` (61), `attackDamageReductionZeroDamageRedirectTargetChoices`, `attackDamageReductionRedirectResourceAvailable`, `spendAttackDamageReductionRedirectResource`, `attackDamageReductionRedirectResource`, `hasAttackDamageReductionRedirectTargetSpatialFact`, `characterAbilityModifier`, `abilityProficiencyDifficultyClass`, `attackDamageReductionOriginalDamageType`, `reactionModifierResourceAvailable`, `reactionModifierResourceSpend`, `opportunityAttackReactionChoices`)
 
 ### Cluster G — `creature_state` (8244..9122, 46 funcs, 879 LOC)
@@ -187,10 +187,10 @@ Schema/snapshot core (4358..4480) and three large `Schema.Union` constants (`Bat
 | 476 | `BattleHelpAttack` | T | Pending help-attack flag |
 | 482 | `BattleInterruptedProcedure` | T | Continuation envelope (broad) |
 | 670 | `BattleAttackDamageDisposition` | T | Disposition of attack damage |
-| 683 | `BattleReactionProcedureChoice` | T | Reaction choice union |
-| 686 | `BattleReactionProcedureSelection` | T | Persisted reaction selection |
-| 729 | `BattleReactionFrame` | T | Active reaction frame |
-| 793 | `BattleReactionDecision` | T | Pending decision |
+| 683 | `BattleInterruptProcedureChoice` | T | Interrupt choice union |
+| 686 | `BattleInterruptProcedureSelection` | T | Persisted interrupt selection |
+| 729 | `BattleInterruptCheckpoint` | T | Active interrupt checkpoint |
+| 793 | `BattleInterruptDecision` | T | Pending decision |
 | 811 | `BattleAttackRangeBand` | T | "normal"/"long" |
 | 812 | `BattleHand` | T | "left"/"right" |
 | 813 | `BattleGrappleLink` | T | Grappler-grapplee link |
@@ -256,9 +256,9 @@ Plus exported `Schema` consts: `ActiveOngoingFeatureOccurrenceSnapshotSchema` (1
 | `BattleFill` | `BattleSpellTargetListSpatialFact` |
 | `BattleHelpAttack` | `TurnAnchoredBattleActiveEffectExpiration` |
 | `BattleInterruptedProcedure` | `BattleAfterDamageEvent`, `BattleAttackDamageEvent`, `BattleAttackDamagePrefixFill`, `BattleAttackHostSubject`, `BattlePendingAttackDamageReduction`, `BattleResolvedMovement`, `WeaponDamageDiceRollChoiceFill` |
-| `BattleReactionFrame` | `BattleAttackDamageContinuationWithoutConcentration`, `BattleAttackKindForRedirect`, `BattleReactionFrameBase`, `BattleReactionFrameWithContinuationBase` |
-| `BattleReactionProcedureChoice` | `BattleReactionProcedureChoiceWithSubject`, `BattleReactionProcedureModifierChoice` |
-| `BattleReactionProcedureSelection` | `BattleReactionModifierChoice` |
+| `BattleInterruptCheckpoint` | `BattleAttackDamageContinuationWithoutConcentration`, `BattleAttackKindForRedirect`, `BattleInterruptCheckpointBase`, `BattleInterruptCheckpointWithContinuationBase` |
+| `BattleInterruptProcedureChoice` | `BattleInterruptProcedureChoiceWithSubject`, `BattleInterruptProcedureModifierChoice` |
+| `BattleInterruptProcedureSelection` | `BattleReactionModifierChoice` |
 | `BattleReadiedMovement` | `TurnAnchoredBattleActiveEffectExpiration` |
 | `BattleReadiedSpell` | `ReadiedSpellInvocation`, `TurnAnchoredBattleActiveEffectExpiration` |
 | `BattleRolledDiceFill` | `WeaponDamageDiceRollChoiceFill` |
@@ -394,10 +394,10 @@ Type-reference edges align mostly with call edges. The dense type-reference fano
 | # | Cycle | Drivers | Proposed resolution |
 |---|---|---|---|
 | 1 | `creature_state ↔ damage_apply` | `damage_apply.applyHpHealing/applyDropToZeroHpLifecycle/applyDamageAtZeroHp/applyInstantDeath` call `creature_state.battleCreatureStateWithoutKnockOut`, `applyHpDamage→battleCreatureStateWithDamageProjection`, `battleCreatureStateWithKnockedOutUnconsciousFields→knockedOutOneHp/knockedOutConditionState` (8761/8769/8730/8734). Reverse: `battleCreatureStateFromInit→applyInitialZeroHpLifecycle` (21459), `combatantCanTakeActions→zeroHpLifecycleIsTerminal` (21786). | Hoist `battleCreatureStateWithoutKnockOut`, `battleCreatureStateWithDamageProjection`, `knockedOutOneHp`, `knockedOutConditionState`, `zeroHpLifecycleIsTerminal`, `applyInitialZeroHpLifecycle` into a shared `creature_lifecycle` leaf (no other clusters call these except G/M/I). |
-| 2 | `reactions ↔ turn` | `turn.maybeOpenReactionWindow/reactionRollOrDamageReductionChoiceForProfile/snapshotBattle/etc.` ↔ `reactions.completeActiveReactionProcedure/resumeInterruptedProcedure/etc.` (15+ pairs each direction). | **Merge** reactions+turn or extract `reaction_window` (the 6 functions in `turn` that call `reactions`) into `reactions`. The merge is cheap (1,539+907=2,446 LOC) and reflects the runtime dispatcher protocol. |
-| 3 | `reactions ↔ subject_resolution` | `subject_resolution.resolveBattleSubjectInternal` calls `reactions.resolveAttackDamageContinuationConcentration/resolveReplayContinuation/completeActiveReactionProcedure/resolveCastTriggeredReactionSpellCommand`. Reverse: `reactions.*→reactionInterruptFrame, resolveBattleSubjectInternal`. | `reactionInterruptFrame` (5792) is a 6-line helper — move it into `reactions`. The remaining `subject_resolution → reactions` calls are unavoidable; declare `reactions` depends on `subject_resolution` interface only via `resolveBattleSubjectInternal` callback (parameterize). |
-| 4 | `subject_resolution ↔ turn` | `subject_resolution.resolveBattleSubjectInternal/consumeOrCloseLegendaryActionWindow → snapshotBattle/endTurn/currentInterruptFrame`. Reverse: `turn.endTurn → resolveBattleSubject`, `turn.maybeOpenReactionWindow → openBattleReactionWindow`. | Treat `endTurn`+`snapshotBattle`+`maybeOpenReactionWindow`+the three subject-resolution exports as one orchestration module. Or: extract `currentInterruptFrame` (7418, 6 LOC) and `endTurn` body's `resolveBattleSubject` invocation behind a passed-in callback. |
-| 5 | `subjects_discovery ↔ turn` | `discoverBattleActs → endTurn/reactionTriggerLabel`; `snapshotBattle → discoverBattleActs`. | `snapshotBattle` only needs `discoverBattleActs` for an `availableActs` field; extract that snapshot call to a higher orchestration layer or accept C→F→C. |
+| 2 | `reactions ↔ turn` | `turn.maybeOpenInterruptWindow/reactionRollOrDamageReductionChoiceForProfile/snapshotBattle/etc.` ↔ `reactions.completeActiveInterruptProcedure/resumeInterruptedProcedure/etc.` (15+ pairs each direction). | **Merge** reactions+turn or extract `reaction_window` (the 6 functions in `turn` that call `reactions`) into `reactions`. The merge is cheap (1,539+907=2,446 LOC) and reflects the runtime dispatcher protocol. |
+| 3 | `reactions ↔ subject_resolution` | `subject_resolution.resolveBattleSubjectInternal` calls `reactions.resolveAttackDamageContinuationConcentration/resolveReplayContinuation/completeActiveInterruptProcedure/resolveCastTriggeredReactionSpellCommand`. Reverse: `reactions.*→interruptCheckpointFrame, resolveBattleSubjectInternal`. | `interruptCheckpointFrame` (5792) is a 6-line helper — move it into `reactions`. The remaining `subject_resolution → reactions` calls are unavoidable; declare `reactions` depends on `subject_resolution` interface only via `resolveBattleSubjectInternal` callback (parameterize). |
+| 4 | `subject_resolution ↔ turn` | `subject_resolution.resolveBattleSubjectInternal/consumeOrCloseLegendaryActionWindow → snapshotBattle/endTurn/currentInterruptFrame`. Reverse: `turn.endTurn → resolveBattleSubject`, `turn.maybeOpenInterruptWindow → openBattleInterruptWindow`. | Treat `endTurn`+`snapshotBattle`+`maybeOpenInterruptWindow`+the three subject-resolution exports as one orchestration module. Or: extract `currentInterruptFrame` (7418, 6 LOC) and `endTurn` body's `resolveBattleSubject` invocation behind a passed-in callback. |
+| 5 | `subjects_discovery ↔ turn` | `discoverBattleActs → endTurn/interruptTriggerLabel`; `snapshotBattle → discoverBattleActs`. | `snapshotBattle` only needs `discoverBattleActs` for an `availableActs` field; extract that snapshot call to a higher orchestration layer or accept C→F→C. |
 | 6 | `subjects_discovery ↔ attack_resolution` | `discoverBattleActs → helpAttackAllyChoices/Hole, hideAbilityCheckHole, escapeSpellRestraintAbilityCheckHole`; reverse: `spendAttackAction → isStatBlockMultiattackActionResource`, `resolveMultiattack → supportedStatBlockMultiattacks/spendTurnAction/isStatBlockBattleCreatureState`, `resolveStatBlockBonusActionOption → supportedStatBlockBonusActionOptions/Standard`, `resolveGrapple → actorHasStatBlockMultiattackActionResource`. | The "supported*StatBlock*MultiattackDispatch" predicates and `spendTurnAction` are properly *helpers*, not discovery. Hoist them to a `multiattack_dispatch_helpers` shared module called by both C and H. |
 | 7 | `subjects_discovery ↔ hole_helpers` | `discoverBattleActs → attackTargetChoices/Hole, searchTargetHole, grappleTargetHole/Choices, escapeGrappleOutcomeHole, canHideInCurrentCircumstances, hiddenSearchTargetChoices`. Reverse: `bonusActionStandardActionActs → bonusActionDashSubjectForSpeedKind`. | One-way: move `bonusActionDashSubjectForSpeedKind` (4979) into hole_helpers; cycle becomes C→R unidirectional. |
 | 8 | `subjects_discovery ↔ attack_damage_apply` | `discoverBattleActs → attackActionOptionsForActor/offHandAttackActionOptionForActor/offHandAttackPrerequisiteMet`; reverse: `attackActionOptionsForActor → isStatBlockMultiattackActionResource`. | Move `isStatBlockMultiattackActionResource` (5199) into the `multiattack_dispatch_helpers` shared module from #6. |
@@ -414,10 +414,10 @@ Type-reference edges align mostly with call edges. The dense type-reference fano
 | 19 | `damage_apply ↔ spells_holes_fills` | `removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly/breakCombatantConcentration → conditionsAfterExpiringSpellConditionEffects`. Reverse: `applySpellDamage/applyPreparedSlotSpellDamage → applyHpDamage/markMarkedDamageRiderTransferAvailable`. | `conditionsAfterExpiringSpellConditionEffects` (26932, 19 LOC) and `removeSpellConditionEffect` (26868) are leaf helpers — move into damage_apply, or extract `spell_condition_effects_helpers` (4 small functions) read by both M and P. |
 | 20 | `attack_roll ↔ unit_features` | `ongoingFeatureGrantsAttackRollMode/attackRollOngoingFeatureActivation* → isCharacterBattleCreatureState` (use #16 fix). `extendAttackRollOngoingFeatures/extendSavingThrowOngoingFeatures → extendOngoingFeatureToEndOfNextTurn`, `stateWithActiveOngoingFeatureOccurrence → activeOngoingFeatureOccurrenceFromProfile`. Reverse: `ongoingFeatureIsAvailable → ongoingFeatureLifecycleHasExtensionTrigger`. | Extract a small shared `ongoing_feature_helpers` (~8 functions) called by both J and T. Both clusters then depend on the helper, no cycle. |
 | 21 | `statblock_attacks ↔ unit_features` | `resolveSuccessfulAbilityCheckReactionReduction/resolveFailedAbilityCheckResourceBoost/resolveExtraActionGrantUnitFeature/resolveSelfBonusActionHealingUnitFeature/resolveOngoingFeatureUnitFeature/discoverLegendaryActionActs/resolveUnitFeature → invalidResult/attackActionOptionName`. Reverse: `eligibleAttackDamageRiders → isCharacterBattleCreatureState`. | Move `invalidResult` (30555, 11 LOC) into a shared `result_helpers` leaf. After #16 reassignment, cycle dissolves. |
-| 22 | `statblock_attacks ↔ turn` | `reactionTriggerLabel/maybeOpenReactionWindow/reactionRollOrDamageReductionChoices*/opportunityAttackReactionChoices → attackDamage/attackActionOptionName`. Reverse: one stray `invalidResult → snapshotBattle`. | One-way after `invalidResult` is moved (cycle 21). Then F→W only. |
+| 22 | `statblock_attacks ↔ turn` | `interruptTriggerLabel/maybeOpenInterruptWindow/reactionRollOrDamageReductionChoices*/opportunityAttackReactionChoices → attackDamage/attackActionOptionName`. Reverse: one stray `invalidResult → snapshotBattle`. | One-way after `invalidResult` is moved (cycle 21). Then F→W only. |
 | 23 | `statblock_attacks ↔ attack_roll` | `attackRollHole → attackActionOptionName/attackActionBonusWithPassiveFeatureBonus/attackRollMissToHitReplacementHolePayloadForAttacker`. Reverse: `targetHasAdjacentNonIncapacitatedAlly → combatantsAreAllies`. | Move `combatantsAreAllies/combatantsAreEnemies` (28679/28691) into G or `creature_state_leaves`. T→W one-way after. |
-| 24 | `turn ↔ turn_end_movement` | `readiedSpellReactionChoices/readiedMovementReactionChoices → readiedSpellInitialHoles/readiedMovementInitialHoles`. Reverse: `resolveOpportunityAttackCommand/resolveEndTurn*/resolveMoveCommand → maybeOpenReactionWindow/snapshotBattle`. | Pull `readiedSpellInitialHoles`/`readiedMovementInitialHoles` (13748/13767, 21 LOC) into F. |
-| 25 | `turn ↔ spells_discovery` | `triggeredReactionSpellChoices → activeOngoingFeaturesPreventSpellcasting`; `readiedSpellAct → reactionTriggerLabel`. | Move `activeOngoingFeaturesPreventSpellcasting` (15327, 12 LOC) into F; move `reactionTriggerLabel` (7442) into a shared `reaction_metadata` helper read by F and K. |
+| 24 | `turn ↔ turn_end_movement` | `readiedSpellReactionChoices/readiedMovementReactionChoices → readiedSpellInitialHoles/readiedMovementInitialHoles`. Reverse: `resolveOpportunityAttackCommand/resolveEndTurn*/resolveMoveCommand → maybeOpenInterruptWindow/snapshotBattle`. | Pull `readiedSpellInitialHoles`/`readiedMovementInitialHoles` (13748/13767, 21 LOC) into F. |
+| 25 | `turn ↔ spells_discovery` | `triggeredReactionSpellChoices → activeOngoingFeaturesPreventSpellcasting`; `readiedSpellAct → interruptTriggerLabel`. | Move `activeOngoingFeaturesPreventSpellcasting` (15327, 12 LOC) into F; move `interruptTriggerLabel` (7442) into a shared `reaction_metadata` helper read by F and K. |
 | 26 | `turn ↔ movement_speed` | `abilityProficiencyDifficultyClass → combatantProficiencyBonus`; `opportunityAttackReactionChoices → opportunityAttackOptionForReactor`. Reverse: `opportunityAttackThreatsForMovement → combatantCanSee`. | Move `combatantCanSee` (7913, 16 LOC) into S or shared. |
 
 After applying these moves, the cluster graph approaches a DAG with the following remaining (necessary) edges:
@@ -494,7 +494,7 @@ Each pass: extract cluster, leave thin re-export shim from `battle-reducer.ts`, 
 | Lines | Function | Cluster | Role |
 |---|---|---|---|
 | 9211–9981 (~771) | **`resolveAttack`** | H | Master attack resolution — owns the entire attack pipeline (target selection, attack roll holes/fills, advantage modes, damage holes/dispositions, post-damage reactions, concentration). The "2,626-line function" the prior agent reported corresponds to a misread of the gap between 1673 and 4481 — that's a 2,808-line *band of types/schemas* between two 6-line helpers, not a single function. The actual largest function is 771 lines. |
-| 12961–13515 (~555) | **`resolveOpportunityAttackCommand`** | I | Opportunity attack pathway with reaction frames and damage continuation. |
+| 12961–13515 (~555) | **`resolveOpportunityAttackCommand`** | I | Opportunity attack pathway with interrupt checkpoints and damage continuation. |
 | 19602–20144 (~543) | `resolveAttackBurstSaveDamageSpellAct` | L | Spell that combines attack-roll target with burst save damage. |
 | 1100–1660 (~561) | `isTargetListSpellInvocation` | A | Predicate with deeply nested narrowings of `SupportedSpellInvocation`. |
 | 15424–16095 (~672) | `resolveSpellAct` | L | Master spell dispatch. |
@@ -510,7 +510,7 @@ Each pass: extract cluster, leave thin re-export shim from `battle-reducer.ts`, 
 - `BattleHoleSchema` (line 2802, ~677 LOC) and `BattleFillSchema` (3481, ~401 LOC) are giant `Schema.Union(...)` literals. They reference dozens of internal helper Schemas defined inline; moving them requires moving the entire chain of small Schemas immediately before each Union. These two schemas are exported and are referenced from outside via `index.ts`.
 
 ### Cycles that cannot be cleanly broken
-- **`reactions ↔ subject_resolution ↔ turn`** (cycles #2, #3, #4): The dispatcher trio cannot be fully separated because `endTurn`, `snapshotBattle`, `resolveBattleSubject`, `resolveBattleReaction`, `openBattleReactionWindow`, and `maybeOpenReactionWindow` form a closed protocol. Recommended: keep them in one file (`dispatcher.ts`).
+- **`reactions ↔ subject_resolution ↔ turn`** (cycles #2, #3, #4): The dispatcher trio cannot be fully separated because `endTurn`, `snapshotBattle`, `resolveBattleSubject`, `resolveBattleInterrupt`, `openBattleInterruptWindow`, and `maybeOpenInterruptWindow` form a closed protocol. Recommended: keep them in one file (`dispatcher.ts`).
 
 ### External references (cross-package consumers)
 `grep -rn "from \"@dnd/battle-runtime\"" packages/*/src/`: imports come from `app`, `character-battle-runtime`, and `mcp` packages. The re-exports they rely on (per `packages/battle-runtime/src/index.ts` lines 96–192) are exactly the 20 exported functions and 60+ exported types from `battle-reducer.ts`. **Action**: `packages/battle-runtime/src/index.ts` must be updated whenever an extraction passes — the import paths change from `./battle-reducer.ts` to the new submodules. There are no direct `from "...battle-reducer"` imports outside `packages/battle-runtime/`.
@@ -519,10 +519,10 @@ Each pass: extract cluster, leave thin re-export shim from `battle-reducer.ts`, 
 56 internal types are referenced by exported types. In particular:
 - `SupportedSpellInvocation` references **22** internal spell-invocation variants. Moving `SupportedSpellInvocation` requires moving (or exporting) all 22.
 - `BattleInterruptedProcedure` references 7 internal types (event/redirect/replay shapes).
-- `BattleReactionFrame` references 4 internal frame-base types.
+- `BattleInterruptCheckpoint` references 4 internal frame-base types.
 - `BattleActiveEffect` references 4 internal modifier/effect types.
 
-When extracting `types_and_schemas` (cluster A) split: `BattleReactionFrame`/`BattleInterruptedProcedure` types live with the dispatcher's reaction logic, while `SupportedSpellInvocation` and its 22 satellites belong with the spell modules. **Pre-condition for spells extraction**: promote those 22 invocation types to `export type` so `spells_*` modules can import them from `types_and_schemas`.
+When extracting `types_and_schemas` (cluster A) split: `BattleInterruptCheckpoint`/`BattleInterruptedProcedure` types live with the dispatcher's reaction logic, while `SupportedSpellInvocation` and its 22 satellites belong with the spell modules. **Pre-condition for spells extraction**: promote those 22 invocation types to `export type` so `spells_*` modules can import them from `types_and_schemas`.
 
 ### Stale-data risk
 - `ongoingFeatureSourceKey/ForUnit/ForSourceKey` at lines 1661/1667/1673 are misplaced — they live among types but are pure helpers used by `creature_state` (G). Easy fix: relocate during pass 1.

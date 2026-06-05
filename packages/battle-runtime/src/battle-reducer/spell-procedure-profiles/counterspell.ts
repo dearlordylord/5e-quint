@@ -30,8 +30,8 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AvailableBattleAct,
-  type BattleReactionFrame,
-  type BattleReactionInterruptFrame,
+  type BattleInterruptCheckpoint,
+  type BattleInterruptCheckpointFrame,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
@@ -81,7 +81,7 @@ type CounterspellBattleResolutionInput = BattleResolutionInputForSubject<
     }
   >
 > & {
-  readonly frame: BattleReactionFrame;
+  readonly frame: BattleInterruptCheckpoint;
 };
 type CounterspellResolveInput = SpellProcedureProfileResolveInput<
   CounterspellInvocation,
@@ -309,18 +309,18 @@ function resolveCounterspell(
 
 function stateAfterCounteredSpellCast(
   state: BattleState,
-  frame: Extract<BattleReactionFrame, { readonly trigger: "spellCast" }>,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
 ):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const interruptFrame = state.interruptStack[state.interruptStack.length - 1];
-  const reactionFrame =
-    interruptFrame?.kind === "reaction" ? interruptFrame.frame : null;
-  if (reactionFrame?.trigger !== "spellCast") {
+  const spellCastCheckpoint =
+    interruptFrame?.kind === "interruptCheckpoint" ? interruptFrame.frame : null;
+  if (spellCastCheckpoint?.trigger !== "spellCast") {
     return {
       tag: "invalid",
       message:
-        "Counterspell can only end the current spell-cast Reaction frame.",
+        "Counterspell can only end the current spell-cast interrupt checkpoint.",
     };
   }
   const releasedResources =
@@ -348,11 +348,11 @@ function stateAfterCounteredSpellCast(
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         counterspellReactionInterruptFrame({
-          ...reactionFrame,
-          offeredReactors: reactionFrame.eligibleReactors,
+          ...spellCastCheckpoint,
+          offeredResponders: spellCastCheckpoint.eligibleResponders,
           continuation: {
             kind: "resolved",
-            subject: reactionFrame.continuation.subject,
+            subject: spellCastCheckpoint.continuation.subject,
           },
         }),
       ],
@@ -362,7 +362,7 @@ function stateAfterCounteredSpellCast(
 
 function turnResourcesAfterWastedSpellCastingResource(
   resources: BattleTurnResources,
-  frame: Extract<BattleReactionFrame, { readonly trigger: "spellCast" }>,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
 ): Either.Either<BattleTurnResources, string> {
   if (frame.castingResource.kind === "magicAction") {
     const spent = spendAction(resources, "magic");
@@ -384,9 +384,9 @@ function turnResourcesAfterWastedSpellCastingResource(
 }
 
 function counterspellReactionInterruptFrame(
-  frame: BattleReactionFrame,
-): BattleReactionInterruptFrame {
-  return { kind: "reaction", frame };
+  frame: BattleInterruptCheckpoint,
+): BattleInterruptCheckpointFrame {
+  return { kind: "interruptCheckpoint", frame };
 }
 
 const CounterspellInvocationSchema = spellProcedureInvocationSchema<

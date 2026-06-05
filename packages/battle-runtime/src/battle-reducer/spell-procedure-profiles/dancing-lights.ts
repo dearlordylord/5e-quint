@@ -17,7 +17,7 @@
 //
 // What stays in shared infrastructure: the resolver body remains in
 // spells-resolve-release.ts because the release resolver owns spell-cast
-// Reaction windows, active-effect commit, spell-resource spend, and placement
+// interrupt checkpoints, active-effect commit, spell-resource spend, and placement
 // validation for held-light and other release-style spells too.
 
 import {

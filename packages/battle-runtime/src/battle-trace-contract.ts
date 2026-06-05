@@ -40,7 +40,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "deathSavingThrow",
   "statBlockRechargeRoll",
   "concentrationSavingThrow",
-  "reactionDecision",
+  "interruptDecision",
   "unitFeatureDecision",
   "movement",
   "levitateAltitudeChange",

@@ -22,7 +22,7 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AvailableBattleAct,
-  type BattleReactionFrame,
+  type BattleInterruptCheckpoint,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
@@ -68,7 +68,7 @@ type ShieldReactionBattleResolutionInput = BattleResolutionInputForSubject<
     }
   >
 > & {
-  readonly frame: BattleReactionFrame;
+  readonly frame: BattleInterruptCheckpoint;
 };
 type ShieldReactionResolveInput = SpellProcedureProfileResolveInput<
   ShieldReactionInvocation,

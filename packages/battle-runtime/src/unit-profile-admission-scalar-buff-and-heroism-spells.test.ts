@@ -46,7 +46,7 @@ import {
   holeId,
   movementDeltaFeet,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFeatherFallLanding,
   resolveFlySpeedGrantEndFallCleanup,
@@ -1044,7 +1044,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       endedEffect,
       reaction: {
         tag: "needsHoles",
-        snapshot: { pendingReaction: { trigger: "creatureFalls" } },
+        snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
       },
     });
     if (fallWitness.tag !== "falls") {
@@ -1065,7 +1065,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     }
 
     const featherFallChoice =
-      fallWitness.reaction.snapshot.pendingReaction?.choices.find(
+      fallWitness.reaction.snapshot.pendingInterrupt?.choices.find(
         (candidate) =>
           candidate.kind === "castTriggeredReactionSpell" &&
           candidate.invocation.tag === "spellSlot" &&
@@ -1082,13 +1082,13 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       featherFallChoice.initialHoles,
       "spellTargetList",
     );
-    const mitigated = resolveBattleReaction({
+    const mitigated = resolveBattleInterrupt({
       state: fallWitness.reaction.state,
-      fill: reactionDecisionFill(
-        requireHole(fallWitness.reaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(fallWitness.reaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: featherFallChoice.invocation,
@@ -1165,7 +1165,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       endedEffect: pendingEndedEffect,
       reaction: { tag: "resolved" },
     });
-    expect(fallWitness.snapshot.pendingReaction).toBeNull();
+    expect(fallWitness.snapshot.pendingInterrupt).toBeNull();
   });
 
   test("fly recast replacement can record a hover-relevant reason instead of opening a fall", () => {
@@ -1195,7 +1195,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       targetId: spellCasterId,
       endedEffect,
       reason: "hovering",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     expect(
       witness.state.combatants.get(spellCasterId)?.activeEffects,
@@ -1247,7 +1247,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
     expect(grounded).toMatchObject({
       tag: "notAloft",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     expect(cannotStop).toMatchObject({
       tag: "falls",
@@ -1678,11 +1678,11 @@ function featherFallTargetListFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {

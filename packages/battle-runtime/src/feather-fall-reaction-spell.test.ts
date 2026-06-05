@@ -25,8 +25,8 @@ import {
   combatantId,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
-  openCreatureFallsReactionWindow,
-  resolveBattleReaction,
+  openCreatureFallsInterruptWindow,
+  resolveBattleInterrupt,
   resolveFeatherFallLanding,
   startBattle,
   type BattleCreatureInit,
@@ -63,13 +63,13 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "creatureFalls" } },
+      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
 
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castTriggeredReactionSpell" &&
         candidate.invocation.tag === "spellSlot" &&
@@ -82,13 +82,13 @@ describe("Feather Fall Reaction spell", () => {
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
     expect(targetList).toMatchObject({ minTargets: 1, maxTargets: 5 });
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: casterId,
+          responderId: casterId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -105,7 +105,7 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Feather Fall Reaction to resolve.");
@@ -218,7 +218,7 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -231,7 +231,7 @@ describe("Feather Fall Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) => candidate.kind === "castTriggeredReactionSpell",
     );
     if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
@@ -240,14 +240,14 @@ describe("Feather Fall Reaction spell", () => {
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
     const decisionHole = requireHole(
       awaitingReaction.holes,
-      "reactionDecision",
+      "interruptDecision",
     );
 
-    const nonFalling = resolveBattleReaction({
+    const nonFalling = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(decisionHole, {
+      fill: interruptDecisionFill(decisionHole, {
         kind: "resolve",
-        reactorId: casterId,
+        responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: choice.invocation,
@@ -267,11 +267,11 @@ describe("Feather Fall Reaction spell", () => {
       reason: "invalidFill",
     });
 
-    const tooMany = resolveBattleReaction({
+    const tooMany = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(decisionHole, {
+      fill: interruptDecisionFill(decisionHole, {
         kind: "resolve",
-        reactorId: casterId,
+        responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: choice.invocation,
@@ -342,7 +342,7 @@ function castFeatherFallOn(
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Feather Fall falling-trigger Reaction window.");
   }
-  const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+  const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
     (candidate) =>
       candidate.kind === "castTriggeredReactionSpell" &&
       candidate.invocation.tag === "spellSlot" &&
@@ -352,13 +352,13 @@ function castFeatherFallOn(
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
-  const resolved = resolveBattleReaction({
+  const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: reactionDecisionFill(
-      requireHole(awaitingReaction.holes, "reactionDecision"),
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
       {
         kind: "resolve",
-        reactorId: casterId,
+        responderId: casterId,
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: choice.invocation,
@@ -428,7 +428,7 @@ function openFeatherFallWindow(
   fallingCreatureId: CombatantId,
   includeTriggerFact: boolean,
 ): BattleResolutionResult {
-  return openCreatureFallsReactionWindow({
+  return openCreatureFallsInterruptWindow({
     state,
     fallingCreatureId,
     reactionSpellTargetFacts: includeTriggerFact
@@ -465,11 +465,11 @@ function featherFallTargetListFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function requireHole<K extends BattleHole["kind"]>(

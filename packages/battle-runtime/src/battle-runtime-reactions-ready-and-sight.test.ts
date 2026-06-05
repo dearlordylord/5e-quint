@@ -13,7 +13,7 @@ import {
   spellTargetAllocationFill,
   attackRollFill,
   concentrationSavingThrowFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   savingThrowOutcomeFill,
   damageRollFill,
   reactionChoiceWithSubject,
@@ -29,7 +29,7 @@ import {
   BattleSubjectSchema,
   cantripSpellInvocationRef,
   Either,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   sameBattleSubject,
   Schema,
@@ -57,11 +57,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
 
-    expect(awaitingReaction.snapshot.pendingReaction).toMatchObject({
+    expect(awaitingReaction.snapshot.pendingInterrupt).toMatchObject({
       decisionHole: {
-        kind: "reactionDecision",
+        kind: "interruptDecision",
         trigger: "attackHit",
-        eligibleReactors: [wizardId],
+        eligibleResponders: [wizardId],
       },
       stackDepth: 1,
     });
@@ -72,11 +72,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       reason: "staleSubject",
     });
 
-    const declined = resolveBattleReaction({
+    const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        awaitingReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: wizardId },
+      fill: interruptDecisionFill(
+        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: wizardId },
       ),
     });
 
@@ -84,7 +84,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingReaction: null,
+        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -113,16 +113,16 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.choices,
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
     );
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+      fill: interruptDecisionFill(
+        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
         {
           kind: "resolve",
-          reactorId: wizardId,
+          responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
@@ -137,7 +137,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       subject: choice.subject,
       holes: [{ kind: "targetChoice" }],
       snapshot: {
-        pendingReaction: { trigger: "attackHit" },
+        pendingInterrupt: { trigger: "attackHit" },
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -183,7 +183,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingReaction: null,
+        pendingInterrupt: null,
         readiedResponses: { spells: [] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -214,15 +214,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       );
     }
     const releaseChoice = reactionChoiceWithSubject(
-      awaitingAttackReaction.snapshot.pendingReaction!.choices,
+      awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
     );
-    const released = resolveBattleReaction({
+    const released = resolveBattleInterrupt({
       state: awaitingAttackReaction.state,
-      fill: reactionDecisionFill(
-        awaitingAttackReaction.snapshot.pendingReaction!.decisionHole,
+      fill: interruptDecisionFill(
+        awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
         {
           kind: "resolve",
-          reactorId: wizardId,
+          responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
@@ -250,9 +250,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(nestedReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           stackDepth: 2,
           trigger: "saveFailed",
           choices: [
@@ -265,11 +265,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error(`Expected nested reaction, got ${nestedReaction.tag}.`);
     }
 
-    const declinedNested = resolveBattleReaction({
+    const declinedNested = resolveBattleInterrupt({
       state: nestedReaction.state,
-      fill: reactionDecisionFill(
-        nestedReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: secondWizardId },
+      fill: interruptDecisionFill(
+        nestedReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: secondWizardId },
       ),
     });
 
@@ -278,7 +278,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       subject: releaseChoice.subject,
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           stackDepth: 1,
           trigger: "attackHit",
         },
@@ -322,7 +322,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       subject,
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingReaction: null,
+        pendingInterrupt: null,
         readiedResponses: { spells: [{ casterId: secondWizardId }] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -356,9 +356,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: { trigger: "spellCast" },
+        pendingInterrupt: { trigger: "spellCast" },
       },
     });
   });
@@ -381,7 +381,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     expect(failedSave).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "saveFailed" }],
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
     });
 
     const damageState = wizardTurnWithReadiedRay("afterDamage");
@@ -424,7 +424,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         : maybeConcentration;
     expect(afterDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
     });
   });
 
@@ -579,7 +579,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
@@ -592,15 +592,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
 
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingReaction!.choices,
+      awaitingReaction.snapshot.pendingInterrupt!.choices,
     );
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+      fill: interruptDecisionFill(
+        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
         {
           kind: "resolve",
-          reactorId: wizardId,
+          responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
             readiedSpellCasterId: wizardId,
@@ -623,11 +623,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("reaction decision schema parses nested reaction procedure fills", () => {
     const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
-      kind: "reactionDecision",
-      holeId: "battle:reaction:decision",
+      kind: "interruptDecision",
+      holeId: "battle:interrupt:decision",
       value: {
         kind: "resolve",
-        reactorId: "wizard",
+        responderId: "wizard",
         choice: {
           kind: "releaseReadiedSpell",
           readiedSpellCasterId: "wizard",

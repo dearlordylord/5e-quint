@@ -1,5 +1,5 @@
 import type {
-  BattleReactionFrameInput,
+  BattleInterruptCheckpointInput,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
@@ -12,7 +12,7 @@ export function shieldReactionSpellMatchesTrigger(
     SupportedSpellInvocation,
     { readonly procedure: "shieldReaction" }
   >,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
 ): boolean {
   const castingTime = invocation.spell.mechanics.castingTime;
   if (castingTime.kind !== "reaction") {

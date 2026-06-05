@@ -2291,7 +2291,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       Match.when({ kind: "damageTypeChoice" }, () => {
         throw new Error("Battle runtime MBT does not model damage type holes.");
       }),
-      Match.when({ kind: "reactionDecision" }, () => {
+      Match.when({ kind: "interruptDecision" }, () => {
         throw new Error("Battle runtime MBT does not model reaction holes.");
       }),
       Match.when({ kind: "movement" }, () => {

@@ -7,7 +7,7 @@ import {
   targetFill,
   spellTargetAllocationFill,
   attackRollFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   savingThrowOutcomeFill,
   damageRollFill,
   damageRollFillWithGroups,
@@ -32,7 +32,7 @@ import {
   endTurn,
   holeId,
   movementDeltaFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime-test-support.ts";
@@ -512,9 +512,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
     expect(awaitingSpellCastReaction).toMatchObject({
       tag: "needsHoles",
       subject: healingWordReactionAct.subject,
-      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "spellCast",
         },
       },
@@ -524,18 +524,18 @@ describe("battle runtime: spellcasting actions and slots", () => {
         `Expected needsHoles, got ${awaitingSpellCastReaction.tag}.`,
       );
     }
-    const afterDecline = resolveBattleReaction({
+    const afterDecline = resolveBattleInterrupt({
       state: awaitingSpellCastReaction.state,
-      fill: reactionDecisionFill(
-        awaitingSpellCastReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: wizardId },
+      fill: interruptDecisionFill(
+        awaitingSpellCastReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: wizardId },
       ),
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       subject: healingWordReactionAct.subject,
       holes: [{ kind: "rolledDice", label: "Healing Word healing (2d4+3)" }],
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
 
     const levelTwoState = startBattleRight({
@@ -689,9 +689,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     expect(splitWithAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "afterDamage",
         },
       },
@@ -699,18 +699,18 @@ describe("battle runtime: spellcasting actions and slots", () => {
     if (splitWithAfterDamageReaction.tag !== "needsHoles") {
       throw new Error("Expected first after-damage reaction window.");
     }
-    const secondAfterDamageReaction = resolveBattleReaction({
+    const secondAfterDamageReaction = resolveBattleInterrupt({
       state: splitWithAfterDamageReaction.state,
-      fill: reactionDecisionFill(
-        splitWithAfterDamageReaction.snapshot.pendingReaction!.decisionHole,
-        { kind: "decline", reactorId: secondWizardId },
+      fill: interruptDecisionFill(
+        splitWithAfterDamageReaction.snapshot.pendingInterrupt!.decisionHole,
+        { kind: "decline", responderId: secondWizardId },
       ),
     });
     expect(secondAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "reactionDecision", trigger: "afterDamage" }],
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
       snapshot: {
-        pendingReaction: {
+        pendingInterrupt: {
           trigger: "afterDamage",
         },
       },

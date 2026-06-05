@@ -46,7 +46,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
   activeOngoingFeaturesPreventSpellcasting,
   attackRollIsCriticalHit,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleCreatureState,
@@ -237,7 +237,7 @@ import {
   battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -549,7 +549,7 @@ function resolveSpellActInternal(
     metamagicAdmission.applications,
   );
   const replayingSpiritualWeaponAttackHit =
-    input.suppressedReactionTrigger === "attackHit" &&
+    input.handledInterruptTrigger === "attackHit" &&
     (invocation.procedure === "spiritualWeaponAttackProxy" ||
       invocation.procedure === "spiritualWeaponRepeatAttack");
   const spiritualWeaponCommitAlreadyApplied =
@@ -684,21 +684,21 @@ function resolveSpellActInternal(
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Triggered Reaction spells must use the pending Reaction decision.",
+      "Triggered Reaction spells must use the pending interrupt decision.",
     );
   }
   if (invocation.procedure === "featherFallMitigation") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Triggered Reaction spells must use the pending Reaction decision.",
+      "Triggered Reaction spells must use the pending interrupt decision.",
     );
   }
   if (invocation.spell.mechanics.family === "triggered_reaction") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      "Triggered Reaction spells must use the pending Reaction decision.",
+      "Triggered Reaction spells must use the pending interrupt decision.",
     );
   }
   if (
@@ -1037,9 +1037,9 @@ function resolveSpellActInternal(
   const spellCastReactionWindow = spellInvocationIsSpellcasting(
     invocationForResolution,
   )
-    ? maybeOpenReactionWindow(
+    ? maybeOpenInterruptWindow(
         castingState,
-        spellCastReactionFrame({
+        spellCastInterruptFrame({
           casterId: subject.actorId,
           invocation: invocationForResolution,
           targetIds: [target.combatantId],
@@ -1056,7 +1056,7 @@ function resolveSpellActInternal(
             fills: input.fills,
           },
         }),
-        input.suppressedReactionTrigger,
+        input.handledInterruptTrigger,
       )
     : null;
   if (spellCastReactionWindow !== null) {
@@ -1275,7 +1275,7 @@ function resolveSpellActInternal(
           target.combatantId,
         )
       : [];
-    if (hit && input.suppressedReactionTrigger !== "attackHit") {
+    if (hit && input.handledInterruptTrigger !== "attackHit") {
       const attackHitDamageTypes = isSupportedDamageSpellInvocation(
         invocationForResolution,
       )
@@ -1286,7 +1286,7 @@ function resolveSpellActInternal(
             ),
           )
         : spellDamageTypes(invocationForResolution);
-      const reactionWindow = maybeOpenReactionWindow(
+      const reactionWindow = maybeOpenInterruptWindow(
         attackRolledStateBeforeHitContinuations,
         {
           trigger: "attackHit",
@@ -1311,7 +1311,7 @@ function resolveSpellActInternal(
             fills: input.fills,
           },
         },
-        input.suppressedReactionTrigger,
+        input.handledInterruptTrigger,
       );
       if (reactionWindow !== null) {
         return reactionWindow;
@@ -1746,7 +1746,7 @@ function resolveSpellActInternal(
     return spentResources;
   }
   const nextState = spentResources.state;
-  const afterDamageReactionWindow = maybeOpenReactionWindow(
+  const afterDamageReactionWindow = maybeOpenInterruptWindow(
     nextState,
     {
       trigger: "afterDamage",
@@ -1763,7 +1763,7 @@ function resolveSpellActInternal(
         subject: input.subject,
       },
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (afterDamageReactionWindow !== null) {
     return afterDamageReactionWindow;
@@ -2211,9 +2211,9 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [],
@@ -2230,7 +2230,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

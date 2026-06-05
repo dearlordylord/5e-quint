@@ -26,7 +26,7 @@ import {
   endTurn,
   initiativeScore,
   resolveBattleConcentrationDamage,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -201,11 +201,11 @@ function createRuleCoreReactionDriver() {
       },
       doDeclineOpportunityAttack: () =>
         recordResult(
-          resolveBattleReaction({
+          resolveBattleInterrupt({
             state,
-            fill: reactionDecisionFill(requireReactionDecisionHole(holes), {
+            fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
               kind: "decline",
-              reactorId,
+              responderId: reactorId,
             }),
           }),
         ),
@@ -251,11 +251,11 @@ function createRuleCoreReactionDriver() {
       },
       doDeclineReadiedMovement: () =>
         recordResult(
-          resolveBattleReaction({
+          resolveBattleInterrupt({
             state,
-            fill: reactionDecisionFill(requireReactionDecisionHole(holes), {
+            fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
               kind: "decline",
-              reactorId,
+              responderId: reactorId,
             }),
           }),
         ),
@@ -292,7 +292,7 @@ function createRuleCoreReactionDriver() {
     };
 
     function resolveReadiedMovementReaction(movementCostFeet: number): void {
-      const choice = snapshotBattle(state).pendingReaction?.choices.find(
+      const choice = snapshotBattle(state).pendingInterrupt?.choices.find(
         (candidate) =>
           candidate.kind === "releaseReadiedMovement" &&
           candidate.readiedMovementActorId === reactorId,
@@ -307,11 +307,11 @@ function createRuleCoreReactionDriver() {
         throw new Error("Expected Readied Movement release hole.");
       }
       recordResult(
-        resolveBattleReaction({
+        resolveBattleInterrupt({
           state,
-          fill: reactionDecisionFill(requireReactionDecisionHole(holes), {
+          fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
             kind: "resolve",
-            reactorId,
+            responderId: reactorId,
             choice: {
               kind: "releaseReadiedMovement",
               readiedMovementActorId: reactorId,
@@ -507,8 +507,8 @@ function projectRuleCoreReactionState(input: {
     reactorMovementSpentFeet: reactor.movement.spentFeet,
     interruptedConcentration: interrupted.concentrating,
     reactorConcentration: reactor.concentrating,
-    pendingTrigger: pendingTrigger(snapshot.pendingReaction?.trigger ?? "none"),
-    pendingStackDepth: snapshot.pendingReaction?.stackDepth ?? 0,
+    pendingTrigger: pendingTrigger(snapshot.pendingInterrupt?.trigger ?? "none"),
+    pendingStackDepth: snapshot.pendingInterrupt?.stackDepth ?? 0,
     holes: input.holes.map(projectReactionHole),
     lastConcentrationSaveDc: input.lastConcentrationSaveDc,
     lastResult: input.lastResult,
@@ -570,12 +570,12 @@ function attackRollFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
   return {
-    kind: "reactionDecision",
+    kind: "interruptDecision",
     holeId: hole.holeId,
     value,
   };
@@ -593,10 +593,10 @@ function requireMovementHole(
 
 function requireReactionDecisionHole(
   holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "reactionDecision" }> {
-  const hole = holes.find((candidate) => candidate.kind === "reactionDecision");
+): Extract<BattleHole, { readonly kind: "interruptDecision" }> {
+  const hole = holes.find((candidate) => candidate.kind === "interruptDecision");
   if (hole === undefined) {
-    throw new Error("Expected Reaction decision hole.");
+    throw new Error("Expected interrupt decision hole.");
   }
   return hole;
 }
@@ -622,7 +622,7 @@ function requireAttackRollHole(
 }
 
 function projectReactionHole(hole: BattleHole): RuleCoreReactionMbtHole {
-  if (hole.kind === "reactionDecision") return "ReactionDecision";
+  if (hole.kind === "interruptDecision") return "ReactionDecision";
   if (hole.kind === "rolledDice") return "DamageRoll";
   throw new Error(`Unexpected rule-core Reaction MBT hole: ${hole.kind}`);
 }

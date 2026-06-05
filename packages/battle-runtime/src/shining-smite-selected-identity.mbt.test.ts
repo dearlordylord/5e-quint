@@ -15,7 +15,7 @@ import {
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireHole,
   requireResultHole,
   weaponAttackSubject,
@@ -26,7 +26,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   elapsedTimeTicks,
   movementFeet,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -87,7 +87,7 @@ defineSelectedIdentityWitness({
               throw new Error("Expected Shining Smite attack-hit window.");
             }
             const choice =
-              awaitingReaction.snapshot.pendingReaction?.choices.find(
+              awaitingReaction.snapshot.pendingInterrupt?.choices.find(
                 (candidate) =>
                   candidate.kind === "castAttackHitBonusActionSpell" &&
                   candidate.invocation.spellId === shiningSmiteUnitId,
@@ -108,13 +108,13 @@ defineSelectedIdentityWitness({
               ),
             );
 
-            const afterShining = resolveBattleReaction({
+            const afterShining = resolveBattleInterrupt({
               state: awaitingReaction.state,
-              fill: reactionDecisionFill(
-                requireHole(awaitingReaction.holes, "reactionDecision"),
+              fill: interruptDecisionFill(
+                requireHole(awaitingReaction.holes, "interruptDecision"),
                 {
                   kind: "resolve",
-                  reactorId: spellCasterId,
+                  responderId: spellCasterId,
                   choice: {
                     kind: "castAttackHitBonusActionSpell",
                     invocation: choice.invocation,

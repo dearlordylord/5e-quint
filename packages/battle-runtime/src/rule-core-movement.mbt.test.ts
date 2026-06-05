@@ -20,7 +20,7 @@ import {
   characterId,
   combatantId,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -209,11 +209,11 @@ function createRuleCoreMovementDriver() {
         }),
       doDeclineOpportunityAttack: () => {
         recordResult(
-          resolveBattleReaction({
+          resolveBattleInterrupt({
             state,
-            fill: reactionDecisionFill(requireReactionDecisionHole(holes), {
+            fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
               kind: "decline",
-              reactorId: observerId,
+              responderId: observerId,
             }),
           }),
         );
@@ -447,7 +447,7 @@ function projectRuleCoreMovementState(input: {
     grappleEscapeDc: grapple === undefined ? 0 : Number(grapple.escapeDc),
     holes: input.holes.map(projectMovementHole),
     pendingOpportunityAttack:
-      snapshot.pendingReaction?.trigger === "opportunityAttack",
+      snapshot.pendingInterrupt?.trigger === "opportunityAttack",
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -502,12 +502,12 @@ function grappleOutcomeFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
   return {
-    kind: "reactionDecision",
+    kind: "interruptDecision",
     holeId: hole.holeId,
     value,
   };
@@ -545,10 +545,10 @@ function requireGrappleOutcomeHole(
 
 function requireReactionDecisionHole(
   holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "reactionDecision" }> {
-  const hole = holes.find((candidate) => candidate.kind === "reactionDecision");
+): Extract<BattleHole, { readonly kind: "interruptDecision" }> {
+  const hole = holes.find((candidate) => candidate.kind === "interruptDecision");
   if (hole === undefined) {
-    throw new Error("Expected Reaction decision hole.");
+    throw new Error("Expected interrupt decision hole.");
   }
   return hole;
 }
@@ -557,7 +557,7 @@ function projectMovementHole(hole: BattleHole): RuleCoreMovementMbtHole {
   if (hole.kind === "movement") return "Movement";
   if (hole.kind === "targetChoice") return "TargetChoice";
   if (hole.kind === "grappleOutcome") return "GrappleOutcome";
-  if (hole.kind === "reactionDecision") return "ReactionDecision";
+  if (hole.kind === "interruptDecision") return "ReactionDecision";
   throw new Error(`Unexpected rule-core Movement MBT hole: ${hole.kind}`);
 }
 

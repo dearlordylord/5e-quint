@@ -65,12 +65,12 @@ import {
 import { activeMarkedDamageRiderEffect } from "../damage-helpers.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenReactionWindow } from "../dispatcher.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellAbilityChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
@@ -558,9 +558,9 @@ function resolveMarkedDamageRider(
     );
   }
   if (input.invocation.action === "cast") {
-    const spellCastReactionWindow = maybeOpenReactionWindow(
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
-      spellCastReactionFrame({
+      spellCastInterruptFrame({
         casterId: input.actorId,
         invocation: input.invocation,
         targetIds: [input.fillSet.targetId],
@@ -572,7 +572,7 @@ function resolveMarkedDamageRider(
           fills: input.input.fills,
         },
       }),
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;

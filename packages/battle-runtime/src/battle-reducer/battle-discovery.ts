@@ -34,7 +34,7 @@ import { Match } from "effect";
 
 import * as Either from "effect/Either";
 
-import { BATTLE_REACTION_TRIGGERS } from "../battle-reaction-triggers.ts";
+import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 
 import {
   type BattleMovementSpeedKind,
@@ -70,7 +70,7 @@ import {
   combatantCanTakeReactions,
 } from "./creature-state.ts";
 
-import { reactionTriggerLabel } from "./dispatcher.ts";
+import { interruptTriggerLabel } from "./dispatcher.ts";
 
 import {
   attackTargetChoices,
@@ -435,7 +435,7 @@ export function discoverBattleActs(
     canSpendAction(state.currentTurnResources, "ready")
   ) {
     acts.push(
-      ...BATTLE_REACTION_TRIGGERS.map((trigger) => ({
+      ...BATTLE_INTERRUPT_TRIGGERS.map((trigger) => ({
         subject: {
           tag: "action" as const,
           actorId,
@@ -443,7 +443,7 @@ export function discoverBattleActs(
           readyTrigger: trigger,
         },
         label: "Ready",
-        summary: `Prepare a Reaction for ${reactionTriggerLabel(trigger)}.`,
+        summary: `Prepare a Reaction for ${interruptTriggerLabel(trigger)}.`,
         initialHoles: [],
       })),
     );

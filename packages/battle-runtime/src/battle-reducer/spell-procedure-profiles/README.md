@@ -28,7 +28,7 @@ A profile is an engine seam, not an SRD concept:
 - Multiple unrelated SRD spells share one profile. Bless, Bane, Guidance,
   Resistance and Shield of Faith all use `rollModifier`.
 - One SRD spell can be split across profiles. A spell with both an
-  action-time effect and a reaction window may have its parts handled by
+  action-time effect and an interrupt checkpoint may have its parts handled by
   different profiles.
 
 ## Why the registry exists

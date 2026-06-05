@@ -28,7 +28,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
@@ -37,8 +37,8 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
-  type BattleReactionProcedureChoice,
-  type BattleReactionFrame,
+  type BattleInterruptProcedureChoice,
+  type BattleInterruptCheckpoint,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -77,7 +77,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "afterDamage" } },
+      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
@@ -93,13 +93,13 @@ describe("Hellish Rebuke Reaction spell", () => {
       }),
     });
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -115,7 +115,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Hellish Rebuke Reaction to resolve.");
@@ -155,13 +155,13 @@ describe("Hellish Rebuke Reaction spell", () => {
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -177,7 +177,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Hellish Rebuke Reaction to resolve.");
@@ -213,16 +213,16 @@ describe("Hellish Rebuke Reaction spell", () => {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
     }
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
-        { kind: "decline", reactorId: spellCasterId },
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellCasterId },
       ),
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected declined Hellish Rebuke Reaction to resolve.");
@@ -269,7 +269,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Triggered Reaction spell casting requires an active matching Reaction window.",
+        "Triggered Reaction spell casting requires an active matching interrupt checkpoint.",
     });
   });
 
@@ -281,7 +281,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -294,7 +294,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -310,7 +310,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -336,7 +336,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -349,7 +349,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
     }
-    const frame = requireTopReactionFrame(awaitingReaction.state);
+    const frame = requireTopInterruptCheckpoint(awaitingReaction.state);
     expect(frame).toMatchObject({
       trigger: "afterDamage",
       damageSourceId: damagerId,
@@ -366,7 +366,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         },
       ],
     });
-    const choice = awaitingReaction.snapshot.pendingReaction?.choices.find(
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         candidate.kind === "castTriggeredReactionSpell" &&
         candidate.reactorId === spellCasterId &&
@@ -417,13 +417,13 @@ describe("Hellish Rebuke Reaction spell", () => {
     const choice = requireHellishRebukeChoice(awaitingReaction, spellCasterId);
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(choice.initialHoles, "rolledDice");
-    const afterHellishRebukeDamage = resolveBattleReaction({
+    const afterHellishRebukeDamage = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: spellCasterId,
+          responderId: spellCasterId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: choice.invocation,
@@ -439,12 +439,12 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(afterHellishRebukeDamage).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "afterDamage" } },
+      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
     if (afterHellishRebukeDamage.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke damage Reaction window.");
     }
-    expect(afterHellishRebukeDamage.snapshot.pendingReaction?.choices).toEqual(
+    expect(afterHellishRebukeDamage.snapshot.pendingInterrupt?.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "castTriggeredReactionSpell",
@@ -457,16 +457,16 @@ describe("Hellish Rebuke Reaction spell", () => {
       ]),
     );
 
-    const resumed = resolveBattleReaction({
+    const resumed = resolveBattleInterrupt({
       state: afterHellishRebukeDamage.state,
-      fill: reactionDecisionFill(
-        requireHole(afterHellishRebukeDamage.holes, "reactionDecision"),
-        { kind: "decline", reactorId: damagerId },
+      fill: interruptDecisionFill(
+        requireHole(afterHellishRebukeDamage.holes, "interruptDecision"),
+        { kind: "decline", responderId: damagerId },
       ),
     });
     expect(resumed).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "resolved") {
       throw new Error("Expected declined reciprocal Reaction to resume.");
@@ -509,7 +509,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       tag: "invalid",
       reason: "unsupportedSubject",
       message:
-        "Triggered Reaction spells must use the pending Reaction decision.",
+        "Triggered Reaction spells must use the pending interrupt decision.",
     });
   });
 
@@ -559,12 +559,12 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(result).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "afterDamage" } },
+      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
     if (result.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage to offer Hellish Rebuke.");
     }
-    expect(result.snapshot.pendingReaction?.choices).toEqual(
+    expect(result.snapshot.pendingInterrupt?.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "castTriggeredReactionSpell",
@@ -833,10 +833,12 @@ function withCombatant(
   };
 }
 
-function requireTopReactionFrame(state: BattleState): BattleReactionFrame {
+function requireTopInterruptCheckpoint(
+  state: BattleState,
+): BattleInterruptCheckpoint {
   const frame = state.interruptStack[state.interruptStack.length - 1];
-  if (frame?.kind !== "reaction") {
-    throw new Error("Expected top interrupt frame to be a Reaction frame.");
+  if (frame?.kind !== "interruptCheckpoint") {
+    throw new Error("Expected top interrupt frame to be an interrupt checkpoint.");
   }
   return frame.frame;
 }
@@ -848,14 +850,14 @@ function requireHellishRebukeChoice(
   >,
   reactorId: CombatantId,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castTriggeredReactionSpell" }
     > =>
       candidate.kind === "castTriggeredReactionSpell" &&
@@ -909,11 +911,11 @@ function magicMissileTargetAllocationFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function savingThrowOutcomeFill(

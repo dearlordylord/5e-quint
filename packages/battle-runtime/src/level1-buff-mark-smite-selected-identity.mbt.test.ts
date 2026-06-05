@@ -58,7 +58,7 @@ import {
   discoverBattleActs,
   endTurn,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -68,7 +68,7 @@ import {
   type BattleDamageRollHole,
   type BattleFill,
   type BattleHole,
-  type BattleReactionProcedureChoice,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleSpellHealingRollHole,
@@ -995,13 +995,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           attackHitWindow,
           divineSmiteUnitId,
         );
-        const afterSmite = resolveBattleReaction({
+        const afterSmite = resolveBattleInterrupt({
           state: attackHitWindow.state,
-          fill: reactionDecisionFill(
-            requireHole(attackHitWindow.holes, "reactionDecision"),
+          fill: interruptDecisionFill(
+            requireHole(attackHitWindow.holes, "interruptDecision"),
             {
               kind: "resolve",
-              reactorId: casterId,
+              responderId: casterId,
               choice: {
                 kind: "castAttackHitBonusActionSpell",
                 invocation: smiteChoice.invocation,
@@ -1043,13 +1043,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           ensnaringChoice.initialHoles,
           "savingThrowOutcome",
         );
-        const afterEnsnaring = resolveBattleReaction({
+        const afterEnsnaring = resolveBattleInterrupt({
           state: attackHitWindow.state,
-          fill: reactionDecisionFill(
-            requireHole(attackHitWindow.holes, "reactionDecision"),
+          fill: interruptDecisionFill(
+            requireHole(attackHitWindow.holes, "interruptDecision"),
             {
               kind: "resolve",
-              reactorId: casterId,
+              responderId: casterId,
               choice: {
                 kind: "castAttackHitBonusActionSpell",
                 invocation: ensnaringChoice.invocation,
@@ -1377,13 +1377,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           attackHitWindow,
           searingSmiteUnitId,
         );
-        const afterSearingSmite = resolveBattleReaction({
+        const afterSearingSmite = resolveBattleInterrupt({
           state: attackHitWindow.state,
-          fill: reactionDecisionFill(
-            requireHole(attackHitWindow.holes, "reactionDecision"),
+          fill: interruptDecisionFill(
+            requireHole(attackHitWindow.holes, "interruptDecision"),
             {
               kind: "resolve",
-              reactorId: casterId,
+              responderId: casterId,
               choice: {
                 kind: "castAttackHitBonusActionSpell",
                 invocation: searingSmiteChoice.invocation,
@@ -2127,11 +2127,11 @@ function rolledDiceGroup(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function savingThrowOutcomeFill(
@@ -2285,7 +2285,7 @@ function requireAttackHitWindow(
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   if (
     result.tag !== "needsHoles" ||
-    result.snapshot.pendingReaction?.trigger !== "attackHit"
+    result.snapshot.pendingInterrupt?.trigger !== "attackHit"
   ) {
     throw new Error("Expected attack-hit reaction window.");
   }
@@ -2357,14 +2357,14 @@ function attackHitBonusActionSpellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   spellId: AttackHitBonusActionSpellId,
 ): Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castAttackHitBonusActionSpell" }
 > {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
-      BattleReactionProcedureChoice,
+      BattleInterruptProcedureChoice,
       { readonly kind: "castAttackHitBonusActionSpell" }
     > =>
       candidate.kind === "castAttackHitBonusActionSpell" &&

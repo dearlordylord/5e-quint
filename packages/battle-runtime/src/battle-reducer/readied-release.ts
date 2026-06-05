@@ -1,7 +1,7 @@
 // Readied spell and movement release handling extracted from turn-end-movement.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
-import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -33,8 +33,8 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-s
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
-  currentReactionFrame,
-  maybeOpenReactionWindow,
+  currentInterruptCheckpoint,
+  maybeOpenInterruptWindow,
   snapshotBattle,
 } from "./dispatcher.ts";
 import type { CombatantId } from "../identity.ts";
@@ -149,7 +149,7 @@ export function readiedMovementInitialHoles(
 export function resolveReleaseReadiedSpellCommand(
   input: BattleResolutionInput,
   options: {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
   if (input.subject.tag !== "runtimeCommand") {
@@ -191,7 +191,7 @@ export function resolveReleaseReadiedSpellCommand(
       state: input.state,
       subject: releaseSubject,
       fills: input.fills,
-      suppressedReactionTrigger: options.suppressedReactionTrigger,
+      handledInterruptTrigger: options.handledInterruptTrigger,
       reactionContinuationSubject: input.subject,
     },
     readied.invocation,
@@ -227,16 +227,16 @@ export function resolveReleaseReadiedMovementCommand(
   >,
 ): BattleResolutionResult {
   const readiedMovementActorId = input.subject.readiedMovementActorId;
-  const activeReaction = currentReactionFrame(input.state)?.activeReaction;
+  const activeInterrupt = currentInterruptCheckpoint(input.state)?.activeInterrupt;
   if (
-    activeReaction === undefined ||
-    activeReaction.reactorId !== readiedMovementActorId ||
-    !sameBattleSubject(activeReaction.subject, input.subject)
+    activeInterrupt === undefined ||
+    activeInterrupt.responderId !== readiedMovementActorId ||
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
   ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Readied Movement release requires an active Reaction window.",
+      "Readied Movement release requires an active interrupt checkpoint.",
     );
   }
   const readied = input.state.readiedMovements.get(readiedMovementActorId);
@@ -301,7 +301,7 @@ export function resolveReleaseReadiedMovementCommand(
     const readiedMovements = new Map(input.state.readiedMovements);
     readiedMovements.delete(readiedMovementActorId);
     const stateWithoutReadied = { ...input.state, readiedMovements };
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       stateWithoutReadied,
       {
         trigger: "opportunityAttack",

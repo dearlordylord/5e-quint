@@ -7,8 +7,8 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
@@ -45,7 +45,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
@@ -265,9 +265,9 @@ export function resolvePreparedSlotSpellAct(input: {
   }
 
   if (input.opensSpellCastReactionWindow !== false) {
-    const spellCastReactionWindow = maybeOpenReactionWindow(
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
-      spellCastReactionFrame({
+      spellCastInterruptFrame({
         casterId: input.actorId,
         invocation: input.invocation,
         targetIds: targetAllocation.allocations.map(
@@ -281,7 +281,7 @@ export function resolvePreparedSlotSpellAct(input: {
           fills: input.input.fills,
         },
       }),
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;
@@ -676,14 +676,14 @@ export function resolvePreparedSlotSpellAct(input: {
         ];
       },
     );
-    const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+    const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({
       state: nextState,
       subject: input.input.subject,
       events: afterDamageEvents,
       objectDamages: [],
       objectIgnitions: [],
       droppedObjects: [],
-      suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+      handledInterruptTrigger: input.input.handledInterruptTrigger,
     });
     if (afterDamageReactionWindow.tag === "needsHoles") {
       return afterDamageReactionWindow;

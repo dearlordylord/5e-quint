@@ -142,11 +142,11 @@ export {
 } from "./find-familiar-telepathy.ts";
 export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 export {
-  BATTLE_REACTION_TRIGGERS,
+  BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
-  type BattleReactionTrigger,
+  type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
-} from "./battle-reaction-triggers.ts";
+} from "./battle-interrupt-triggers.ts";
 export {
   BATTLE_RUNTIME_COMMANDS,
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -245,8 +245,8 @@ export {
   discoverBattleActs,
   endTurn,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
-  openBattleReactionWindow,
-  openCreatureFallsReactionWindow,
+  openBattleInterruptWindow,
+  openCreatureFallsInterruptWindow,
   removeBattleCombatants,
   resolveBattleConcentrationDamage,
   resolveFeatherFallLanding,
@@ -254,7 +254,7 @@ export {
   resolveFailedAbilityCheckResourceBoost,
   requiredInitiativeRollModeForCombatant,
   resolveSuccessfulAbilityCheckReactionReduction,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
   scoreModifier,
@@ -333,11 +333,11 @@ export {
   type BattleAntimagicFieldAuraMembership,
   type BattleAntimagicFieldTransitWitness,
   type BattlePossessionAttemptDisposition,
-  type BattleReactionDecision,
-  type BattleReactionDecisionHole,
-  type BattleReactionFrame,
-  type BattleReactionProcedureChoice,
-  type BattleReactionProcedureSelection,
+  type BattleInterruptDecision,
+  type BattleInterruptDecisionHole,
+  type BattleInterruptCheckpoint,
+  type BattleInterruptProcedureChoice,
+  type BattleInterruptProcedureSelection,
   type BattleReadiedMovement,
   type BattleReadiedSpell,
   type BattleResolutionInput,

@@ -25,7 +25,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   startBattle,
   type AvailableBattleAct,
@@ -99,7 +99,7 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shield to open an attack-hit Reaction window.");
@@ -107,7 +107,7 @@ describe("Shield Reaction spell", () => {
     const resolved = resolveShieldReactionChoice(awaitingReaction);
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shield Reaction to resolve.");
@@ -249,7 +249,7 @@ describe("Shield Reaction spell", () => {
       throw new Error("Expected movement to provoke an Opportunity Attack.");
     }
     const opportunityAttackChoice =
-      awaitingOpportunityAttack.snapshot.pendingReaction?.choices.find(
+      awaitingOpportunityAttack.snapshot.pendingInterrupt?.choices.find(
         (choice) => choice.kind === "opportunityAttack",
       );
     if (
@@ -258,14 +258,14 @@ describe("Shield Reaction spell", () => {
     ) {
       throw new Error("Expected Opportunity Attack Reaction choice.");
     }
-    const startedOpportunityAttack = resolveBattleReaction({
+    const startedOpportunityAttack = resolveBattleInterrupt({
       state: awaitingOpportunityAttack.state,
       fill: {
-        kind: "reactionDecision",
+        kind: "interruptDecision",
         holeId: awaitingOpportunityAttack.holes[0]!.holeId,
         value: {
           kind: "resolve",
-          reactorId: attackerThreeId,
+          responderId: attackerThreeId,
           choice: {
             kind: "opportunityAttack",
             reactorId: attackerThreeId,
@@ -338,7 +338,7 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected spell Attack Roll hit to open Shield window.");
@@ -347,7 +347,7 @@ describe("Shield Reaction spell", () => {
     const resolved = resolveShieldReactionChoice(awaitingReaction);
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded spell attack to resolve as a miss.");
@@ -387,7 +387,7 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "spellCast" } },
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile to open Shield window.");
@@ -409,7 +409,7 @@ describe("Shield Reaction spell", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Magic Missile to resolve.");
@@ -463,7 +463,7 @@ describe("Shield Reaction spell", () => {
 
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -490,7 +490,7 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole without Shield.");
@@ -508,7 +508,7 @@ describe("Shield Reaction spell", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingReaction: null,
+        pendingInterrupt: null,
         turn: {
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
@@ -1056,9 +1056,9 @@ function resolveShieldReactionChoice(
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
-): ReturnType<typeof resolveBattleReaction> {
+): ReturnType<typeof resolveBattleInterrupt> {
   const reactionChoice =
-    awaitingReaction.snapshot.pendingReaction?.choices.find(
+    awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (choice) => choice.kind === "castTriggeredReactionSpell",
     );
   expect(reactionChoice).toEqual(
@@ -1078,14 +1078,14 @@ function resolveShieldReactionChoice(
   ) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
-  return resolveBattleReaction({
+  return resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: {
-      kind: "reactionDecision",
+      kind: "interruptDecision",
       holeId: awaitingReaction.holes[0]!.holeId,
       value: {
         kind: "resolve",
-        reactorId: spellCasterId,
+        responderId: spellCasterId,
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: reactionChoice.invocation,

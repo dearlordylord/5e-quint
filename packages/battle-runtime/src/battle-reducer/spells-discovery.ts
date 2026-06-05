@@ -14,17 +14,17 @@
 //
 // Dependencies on profile predicates (cluster O) and hole/fill helpers
 // (cluster P) currently round-trip through `../battle-reducer.ts`; they will
-// be retargeted after Pass 11/12 land. Likewise `reactionTriggerLabel` and
+// be retargeted after Pass 11/12 land. Likewise `interruptTriggerLabel` and
 // `activeOngoingFeaturesPreventSpellcasting` stay in `../battle-reducer.ts`
 // pending the dispatcher merge (Pass 19, cycle #25).
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
-import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
+import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
-  reactionTriggerLabel,
+  interruptTriggerLabel,
   type BattleHole,
   type AvailableBattleAct,
   type BattleCreatureState,
@@ -48,7 +48,7 @@ import {
   registeredSpellProcedureProfile,
   spellProcedureProfileFor,
 } from "./spell-procedure-profiles/registry.ts";
-import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
+import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
   combatantInsideActiveAntimagicFieldAura,
   spellInvocationActInterdictedByAntimagicField,
@@ -569,7 +569,7 @@ export function readiedSpellAct(
       mode: { tag: "ready" as const, trigger },
     },
     label: `Ready ${invocation.spell.name}`,
-    summary: `Ready ${invocation.spell.name} for ${reactionTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
+    summary: `Ready ${invocation.spell.name} for ${interruptTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
 }

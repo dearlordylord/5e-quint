@@ -24,11 +24,11 @@ import {
   counterspellCapableReactors,
   spellCastCanTriggerCounterspell,
 } from "./counterspell-reaction-discovery.ts";
-import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
+import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import type {
-  BattleReactionFrameInput,
-  BattleReactionProcedureChoice,
+  BattleInterruptCheckpointInput,
+  BattleInterruptProcedureChoice,
   BattleState,
   BattleTargetSpatialFact,
   SupportedSpellInvocation,
@@ -39,8 +39,8 @@ export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts"
 
 export function triggeredReactionSpellChoices(
   state: BattleState,
-  frame: BattleReactionFrameInput,
-): readonly BattleReactionProcedureChoice[] {
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
   if (
     frame.trigger !== "attackHit" &&
     frame.trigger !== "spellCast" &&
@@ -64,7 +64,7 @@ export function triggeredReactionSpellChoices(
           ? featherFallTriggerReactors(frame)
           : spellCastTriggerReactors(frame);
   return reactorIds.flatMap(
-    (reactorId): readonly BattleReactionProcedureChoice[] => {
+    (reactorId): readonly BattleInterruptProcedureChoice[] => {
       const reactor = state.combatants.get(reactorId);
       if (
         reactor?.origin.kind !== "character" ||
@@ -75,7 +75,7 @@ export function triggeredReactionSpellChoices(
         return [];
       }
       return supportedSpellActs(reactor, state).flatMap(
-        (invocation): readonly BattleReactionProcedureChoice[] => {
+        (invocation): readonly BattleInterruptProcedureChoice[] => {
           if (
             (invocation.procedure !== "shieldReaction" &&
               invocation.procedure !== "saveGatedDamage" &&
@@ -174,7 +174,7 @@ export function triggeredReactionSpellMatchesTrigger(
         | "counterspell";
     }
   >,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
   if (invocation.procedure === "shieldReaction") {
@@ -198,7 +198,7 @@ export function counterspellReactionSpellMatchesTrigger(
     SupportedSpellInvocation,
     { readonly procedure: "counterspell" }
   >,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
   const castingTime = invocation.spell.mechanics.castingTime;
@@ -232,7 +232,7 @@ export function hellishRebukeReactionSpellMatchesTrigger(
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
 ): boolean {
   const castingTime = invocation.spell.mechanics.castingTime;
   return (
@@ -273,7 +273,7 @@ export function featherFallReactionSpellMatchesTrigger(
     SupportedSpellInvocation,
     { readonly procedure: "featherFallMitigation" }
   >,
-  frame: BattleReactionFrameInput,
+  frame: BattleInterruptCheckpointInput,
 ): boolean {
   const castingTime = invocation.spell.mechanics.castingTime;
   return (
@@ -294,7 +294,7 @@ export function featherFallReactionSpellMatchesTrigger(
 
 function featherFallTriggerReactors(
   frame: Extract<
-    BattleReactionFrameInput,
+    BattleInterruptCheckpointInput,
     { readonly trigger: "creatureFalls" }
   >,
 ): readonly CombatantId[] {
@@ -311,7 +311,7 @@ function featherFallTriggerReactors(
 }
 
 function spellCastTriggerReactors(
-  frame: Extract<BattleReactionFrameInput, { readonly trigger: "spellCast" }>,
+  frame: Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }>,
 ): readonly CombatantId[] {
   return [
     ...new Set([

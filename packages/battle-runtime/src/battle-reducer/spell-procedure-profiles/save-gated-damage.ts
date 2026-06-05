@@ -12,10 +12,10 @@
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Damage Type, Magic Action, and
 //     Spell Invocation.
 
-import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-reaction-triggers.ts";
+import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
-  reactionTriggerLabel,
+  interruptTriggerLabel,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
   type BattleCreatureState,
@@ -291,7 +291,7 @@ function readiedSaveGatedDamageActs(
       mode: { tag: "ready", trigger },
     },
     label: `Ready ${invocation.spell.name}`,
-    summary: `Ready ${invocation.spell.name} for ${reactionTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
+    summary: `Ready ${invocation.spell.name} for ${interruptTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
 }

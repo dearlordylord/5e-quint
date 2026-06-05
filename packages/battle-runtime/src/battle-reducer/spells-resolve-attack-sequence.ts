@@ -12,8 +12,8 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   attackRollIsCriticalHit,
-  maybeOpenReactionWindow,
-  openAfterDamageSequenceReactionWindow,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
@@ -63,7 +63,7 @@ import {
 } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -161,9 +161,9 @@ export function resolveSpellAttackSequenceAct(input: {
   const targetIds = input.fillSet.attackSequencePartFills.flatMap((partFill) =>
     partFill.target?.kind === "combatant" ? [partFill.target.targetId] : [],
   );
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds: [...new Set(targetIds)],
@@ -178,7 +178,7 @@ export function resolveSpellAttackSequenceAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -249,14 +249,14 @@ export function resolveSpellAttackSequenceAct(input: {
   if (spent.tag !== "resolved") {
     return spent;
   }
-  const afterDamageReactionWindow = openAfterDamageSequenceReactionWindow({
+  const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({
     state: spent.state,
     subject: input.input.subject,
     events: afterDamageEvents,
     objectDamages,
     objectIgnitions: [],
     droppedObjects: [],
-    suppressedReactionTrigger: input.input.suppressedReactionTrigger,
+    handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
   if (afterDamageReactionWindow.tag !== "resolved") {
     return afterDamageReactionWindow;
@@ -567,8 +567,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         target.combatantId,
       )
     : [];
-  if (hit && input.input.suppressedReactionTrigger !== "attackHit") {
-    const reactionWindow = maybeOpenReactionWindow(
+  if (hit && input.input.handledInterruptTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
       {
         trigger: "attackHit",
@@ -589,7 +589,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
           fills: input.input.fills,
         },
       },
-      input.input.suppressedReactionTrigger,
+      input.input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;

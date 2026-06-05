@@ -3,7 +3,7 @@
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
-import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   attackDamageDispositionHole,
@@ -53,7 +53,7 @@ import {
   attackDamageEventWithEntries,
   attackDamagePrefixFills,
   attackFillsThroughAttackRoll,
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
 } from "./dispatcher.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
@@ -88,7 +88,7 @@ export function resolveOpportunityAttackCommand(
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
     >
   > & {
-    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
     readonly pendingAttackDamageReductions?:
       | readonly BattlePendingAttackDamageReduction[]
       | undefined;
@@ -225,8 +225,8 @@ export function resolveOpportunityAttackCommand(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
-  if (hit && input.suppressedReactionTrigger !== "attackHit") {
-    const reactionWindow = maybeOpenReactionWindow(
+  if (hit && input.handledInterruptTrigger !== "attackHit") {
+    const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
       {
         trigger: "attackHit",
@@ -249,7 +249,7 @@ export function resolveOpportunityAttackCommand(
           fills: attackFillsThroughAttackRoll(input.fills),
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
@@ -383,7 +383,7 @@ export function resolveOpportunityAttackCommand(
         ]);
       }
     }
-    const attackDamageReactionWindow = maybeOpenReactionWindow(
+    const attackDamageReactionWindow = maybeOpenInterruptWindow(
       spellReducedState,
       {
         trigger: "attackDamage",
@@ -400,7 +400,7 @@ export function resolveOpportunityAttackCommand(
           attackDamageRiders: [],
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (attackDamageReactionWindow !== null) {
       return attackDamageReactionWindow;
@@ -468,7 +468,7 @@ export function resolveOpportunityAttackCommand(
       fillSet.concentrationSavingThrows,
       fillSet.targetSpatialFacts,
     );
-    const reactionWindow = maybeOpenReactionWindow(
+    const reactionWindow = maybeOpenInterruptWindow(
       nextState,
       {
         trigger: "afterDamage",
@@ -485,7 +485,7 @@ export function resolveOpportunityAttackCommand(
           subject: input.subject,
         },
       },
-      input.suppressedReactionTrigger,
+      input.handledInterruptTrigger,
     );
     if (reactionWindow !== null) {
       return reactionWindow;
@@ -660,7 +660,7 @@ export function resolveOpportunityAttackCommand(
       ]);
     }
   }
-  const attackDamageReactionWindow = maybeOpenReactionWindow(
+  const attackDamageReactionWindow = maybeOpenInterruptWindow(
     spellReducedState,
     {
       trigger: "attackDamage",
@@ -680,7 +680,7 @@ export function resolveOpportunityAttackCommand(
           : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
       },
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (attackDamageReactionWindow !== null) {
     return attackDamageReactionWindow;
@@ -748,7 +748,7 @@ export function resolveOpportunityAttackCommand(
     fillSet.concentrationSavingThrows,
     fillSet.targetSpatialFacts,
   );
-  const reactionWindow = maybeOpenReactionWindow(
+  const reactionWindow = maybeOpenInterruptWindow(
     nextState,
     {
       trigger: "afterDamage",
@@ -765,7 +765,7 @@ export function resolveOpportunityAttackCommand(
         subject: input.subject,
       },
     },
-    input.suppressedReactionTrigger,
+    input.handledInterruptTrigger,
   );
   if (reactionWindow !== null) {
     return reactionWindow;

@@ -48,7 +48,7 @@ import {
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
   removeBattleCombatants,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   shareFindFamiliarSenses,
   snapshotBattle,
@@ -572,11 +572,11 @@ function attackRollFill(
   };
 }
 
-function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value };
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
 }
 
 function damageRollFill(
@@ -1959,11 +1959,11 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") return;
     const shieldChoice =
-      awaitingReaction.snapshot.pendingReaction?.choices.find(
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) => choice.kind === "castTriggeredReactionSpell",
       );
     expect(shieldChoice).toMatchObject({
@@ -1977,13 +1977,13 @@ describe("Find Familiar lifecycle", () => {
       throw new Error("Expected Shield Reaction choice.");
     }
 
-    const resolved = resolveBattleReaction({
+    const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(awaitingReaction.holes, "reactionDecision"),
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
         {
           kind: "resolve",
-          reactorId: enemyId,
+          responderId: enemyId,
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: shieldChoice.invocation,
@@ -1994,7 +1994,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingReaction: null },
+      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") return;
     expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
@@ -2100,7 +2100,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(pendingInterrupt).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (pendingInterrupt.tag !== "needsHoles") return;
     const blockedByInterrupt = resolveBattleSubject({

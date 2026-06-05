@@ -26,7 +26,7 @@ import {
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
-  maybeOpenReactionWindow,
+  maybeOpenInterruptWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
@@ -55,7 +55,7 @@ import {
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
-import { spellCastReactionFrame } from "../spell-cast-reaction-frame.ts";
+import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -379,9 +379,9 @@ function resolveOngoingSpellEndSpellAct(input: {
     );
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
-    spellCastReactionFrame({
+    spellCastInterruptFrame({
       casterId: input.actorId,
       invocation: input.invocation,
       targetIds:
@@ -394,7 +394,7 @@ function resolveOngoingSpellEndSpellAct(input: {
         fills: input.input.fills,
       },
     }),
-    input.input.suppressedReactionTrigger,
+    input.input.handledInterruptTrigger,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
