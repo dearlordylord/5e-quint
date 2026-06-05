@@ -5,6 +5,7 @@ module battleRuntimeShapeShifting {
   // or Polymorph specifies the replacement form, ongoing effects carry over
   // unless said otherwise, and the creature reverts to true form if it dies.
   type ClassFeatureShapeShiftSource = { sourceCombatantId: str, sourceUnitId: str }
+  type SpellEffectShapeShiftSource = { sourceCombatantId: str, sourceSpellId: str }
 
   type ShapeShiftedReplacementFormFacts = {
     armorClass: int,
@@ -25,6 +26,10 @@ module battleRuntimeShapeShifting {
       source: ClassFeatureShapeShiftSource,
       replacementForm: ShapeShiftedReplacementFormFacts,
     })
+  | SpellEffectShapeShifted({
+      source: SpellEffectShapeShiftSource,
+      replacementForm: ShapeShiftedReplacementFormFacts,
+    })
 
   type DruidWildShapeRuntimeState =
     DruidWildShapeTrueForm
@@ -41,12 +46,14 @@ module battleRuntimeShapeShifting {
     match shapeShiftState {
       | TrueForm => false
       | ClassFeatureShapeShifted(_) => true
+      | SpellEffectShapeShifted(_) => true
     }
 
   pure def revertShapeShiftedRuntimeState(shapeShiftState: ShapeShiftedRuntimeState): ShapeShiftReversionResult =
     match shapeShiftState {
       | TrueForm => ShapeShiftAlreadyTrueForm
       | ClassFeatureShapeShifted(_) => ShapeShiftRevertedToTrueForm
+      | SpellEffectShapeShifted(_) => ShapeShiftRevertedToTrueForm
     }
 
   pure def shapeShiftStateAfterReversion(shapeShiftState: ShapeShiftedRuntimeState): ShapeShiftedRuntimeState =
@@ -88,13 +95,23 @@ module battleRuntimeShapeShifting {
       },
       replacementForm: syntheticLargeFastFormFacts,
     })
+    val spellEffectReplacement = SpellEffectShapeShifted({
+      source: {
+        sourceCombatantId: "synthetic_shape_caster",
+        sourceSpellId: "synthetic_shape_spell",
+      },
+      replacementForm: syntheticLargeFastFormFacts,
+    })
     all {
       assert(not(isShapeShifted(TrueForm))),
       assert(isShapeShifted(classFeatureReplacement)),
+      assert(isShapeShifted(spellEffectReplacement)),
       assert(revertShapeShiftedRuntimeState(TrueForm) == ShapeShiftAlreadyTrueForm),
       assert(revertShapeShiftedRuntimeState(classFeatureReplacement) == ShapeShiftRevertedToTrueForm),
+      assert(revertShapeShiftedRuntimeState(spellEffectReplacement) == ShapeShiftRevertedToTrueForm),
       assert(shapeShiftStateAfterReversion(TrueForm) == TrueForm),
       assert(shapeShiftStateAfterReversion(classFeatureReplacement) == TrueForm),
+      assert(shapeShiftStateAfterReversion(spellEffectReplacement) == TrueForm),
     }
   }
 }

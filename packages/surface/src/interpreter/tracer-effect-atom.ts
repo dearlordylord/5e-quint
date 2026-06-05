@@ -59,6 +59,7 @@ export function traceEffectAtom(
     case "apply_condition_while_in_area_or_until_escape":
     case "suppress_condition_self_end":
     case "restrict_action_usage":
+    case "target_effect_escape_action":
     case "command_target_next_turn":
     case "forced_reaction_movement":
     case "jump_movement_replacement":

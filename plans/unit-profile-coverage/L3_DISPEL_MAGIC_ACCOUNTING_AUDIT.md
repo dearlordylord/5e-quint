@@ -62,10 +62,13 @@ No missing profile, evidence, or rules-kernel accounting was found.
   branch.
 - Unit claim: `plans/unit-profile-coverage/unit-claims.jsonl` classifies
   `dispel_magic` as `profile-subset-supported` for
-  `spell.invocation-ongoing-spell-ending`, with broader not-yet-tracked ongoing
-  Spell Effects split to `L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL`
-  and geometry or magical-effect identity derivation closed to the table
-  witness boundary.
+  `spell.invocation-ongoing-spell-ending`, now including tracked Spiritual
+  Weapon active-effect occurrences alongside tracked spell-light emitters and
+  tracked `spellObjectContactDamage` occurrences. Other not-yet-tracked ongoing
+  Spell Effects remain split to
+  `L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL`, and geometry or
+  magical-effect identity derivation remains closed to the table witness
+  boundary.
 - Deterministic admission/projection evidence:
   `plans/unit-profile-coverage/unit-evidence.jsonl` records
   `L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING` evidence at
@@ -73,15 +76,17 @@ No missing profile, evidence, or rules-kernel accounting was found.
 - Profile ownership:
   `plans/unit-profile-coverage/profiles.jsonl` identifies the promoted Quint
   and runtime owners, keeps target/range facts table-supplied, and limits
-  executable support to tracked spell-light emitters plus tracked
-  `spellObjectContactDamage` active-effect occurrences.
+  executable support to tracked spell-light emitters, tracked
+  `spellObjectContactDamage` active-effect occurrences, and tracked Spiritual
+  Weapon active-effect occurrences.
 - Proof and runtime parity evidence:
   `plans/unit-profile-coverage/task-claims.jsonl` records qnt-proof and
   completed runtime parity claims for tracked spell-light emitter ending and
-  tracked object-contact active-effect occurrence ending, including
-  higher-level ability-check gates, higher-slot automatic ending,
-  same-object multi-owner cleanup, and magical-effect targeting by stable
-  occurrence identity.
+  tracked object-contact active-effect occurrence ending, plus Task 5 evidence
+  for tracked Spiritual Weapon magical-effect occurrence ending. Together these
+  cover higher-level ability-check gates, higher-slot automatic ending,
+  same-object multi-owner cleanup, magical-effect targeting by stable
+  occurrence identity, and final-Concentration-effect cleanup.
 - Rules-kernel join:
   `plans/rules-kernel-coverage/profile-obligations.jsonl` maps
   `spell.invocation-ongoing-spell-ending` to
@@ -99,13 +104,27 @@ No missing profile, evidence, or rules-kernel accounting was found.
   `plans/rules-kernel-coverage/REPORT.md` includes the joined covered
   Dispel Magic obligation.
 
+## Task 5 Update
+
+Task 5 promoted one broader already-represented ongoing Spell Effect family:
+tracked Spiritual Weapon active-effect occurrences. The family already carried
+stable `sourceEffectId` identity and `sourceSpellLevel`; the existing Dispel
+Magic target/effect gate consumes those facts through magical-effect targeting,
+uses the same automatic slot-level and higher-level spellcasting Ability Check
+gates, and clears source Concentration only through the shared spell-effect
+cleanup owner when no Concentration effects remain.
+
+This update does not claim all Dispel Magic clauses. Other creature-attached
+active effects, area effects, object effects, spell-specific dispel exceptions
+or immunities, automatic geometry, and table selection of magical-effect
+identity remain outside the current tracked-occurrence subset.
+
 ## Decision
 
 Task 26 lands as an existing supported subset with the broader ongoing Spell
-Effect work already split to
-`L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL`. The current accounting is
-sufficient for the Level 3 Dispel Magic rows, so no new runtime code, generated
-matrix edits, or additional follow-up task split is required.
+Effect work narrowed after Task 5 to the remaining untracked occurrence
+families under `L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL`. The
+current accounting is sufficient for the Level 3 Dispel Magic rows.
 
 This audit did not introduce companion control, autonomous behavior, authored
 identity dispatch, duplicate state, or reducer behavior changes.

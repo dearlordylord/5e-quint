@@ -2,6 +2,7 @@ import type { Attachment, Range } from "../surface/types.ts";
 import type { TraceNode } from "./tracer-model.ts";
 import {
   describeAreaOccupantDispositionFilter,
+  describeAreaOccupantPerceptionFilter,
   describeAreaOrigin,
   describeAreaShape,
   describeAttachmentHole,
@@ -56,11 +57,14 @@ export function traceAttachment(
       const occupantLabel = describeAreaOccupantDispositionFilter(
         a.occupantDispositionFilter,
       );
+      const perceptionLabel = describeAreaOccupantPerceptionFilter(
+        a.occupantPerceptionFilter,
+      );
       nodes.push({
         id,
         category: "attachment",
         atomKind: "area",
-        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}`,
+        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}`,
       });
       return id;
     }

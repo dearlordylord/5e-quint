@@ -19,11 +19,12 @@
 --     separate from target_deals_damage; this is "damage received"
 --     from any source).
 --
--- The "can see the pattern" sight predicate is DM agenda (line-of-
--- sight / visibility resolved by session). "Someone else uses an
--- action to shake the creature out" is both a nested activation (see
--- CONTENT_SURFACE_DEFERRED.md A[detect-magic-like]) and DM agenda
--- (action allocation by an ally). Omitted.
+-- Table/presentation witnesses:
+--   Cube membership, Total Cover, point-of-origin inclusion, and whether a
+--   creature can see the momentary area effect are supplied by the caller/table.
+--   The spell Surface still carries the sight predicate and the target-specific
+--   action-spend escape as typed facts so runtime admission never recovers them
+--   from prose or spell identity.
 
 let hypnoticPattern =
       { kind = "spell"
@@ -52,29 +53,55 @@ let hypnoticPattern =
               , earlyEnd = [ { kind = "target_takes_damage" } ]
               }
           , phases =
-              let CompEffect
+              let HypnoticPatternEffect
                     : Type
-                    = { kind : Text
+                      = { kind : Text
                       , condition : Optional Text
                       , feet : Optional Natural
+                      , actor : Optional Text
+                      , cost : Optional Text
+                      , method : Optional Text
+                      , outcome : Optional Text
                       }
               let charmed
-                    : CompEffect
+                    : HypnoticPatternEffect
                     = { kind = "apply_condition"
                       , condition = Some "charmed"
                       , feet = None Natural
+                      , actor = None Text
+                      , cost = None Text
+                      , method = None Text
+                      , outcome = None Text
                       }
               let incapacitated
-                    : CompEffect
+                    : HypnoticPatternEffect
                     = { kind = "apply_condition"
                       , condition = Some "incapacitated"
                       , feet = None Natural
+                      , actor = None Text
+                      , cost = None Text
+                      , method = None Text
+                      , outcome = None Text
                       }
               let speedZero
-                    : CompEffect
+                    : HypnoticPatternEffect
                     = { kind = "set_speed"
                       , condition = None Text
                       , feet = Some 0
+                      , actor = None Text
+                      , cost = None Text
+                      , method = None Text
+                      , outcome = None Text
+                      }
+              let shakeAwake
+                    : HypnoticPatternEffect
+                    = { kind = "target_effect_escape_action"
+                      , condition = None Text
+                      , feet = None Natural
+                      , actor = Some "another_creature"
+                      , cost = Some "action"
+                      , method = Some "shake_awake"
+                      , outcome = Some "end_current_effect"
                       }
               in  [ { kind = "save_gate"
                     , attachment =
@@ -85,13 +112,16 @@ let hypnoticPattern =
                             { kind = "area"
                             , shape = { kind = "cube", sideFeet = 30 }
                             , origin = { kind = "point_within_range" }
+                            , occupantPerceptionFilter =
+                                "can_see_area_effect"
                             }
                         }
                     , ability = "wis"
                     , dc = { kind = "caster_spell_save_dc" }
                     , onFail =
                         { kind = "composite"
-                        , effects = [ charmed, incapacitated, speedZero ]
+                        , effects =
+                            [ charmed, incapacitated, speedZero, shakeAwake ]
                         }
                     , onSuccess = { kind = "none" }
                     }

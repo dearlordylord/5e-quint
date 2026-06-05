@@ -34,6 +34,7 @@
           "label": "spell origin point",
           "value": {
             "kind": "area",
+            "occupantPerceptionFilter": "can_see_area_effect",
             "origin": {
               "kind": "point_within_range"
             },
@@ -60,6 +61,13 @@
             {
               "feet": 0,
               "kind": "set_speed"
+            },
+            {
+              "actor": "another_creature",
+              "cost": "action",
+              "kind": "target_effect_escape_action",
+              "method": "shake_awake",
+              "outcome": "end_current_effect"
             }
           ],
           "kind": "composite"

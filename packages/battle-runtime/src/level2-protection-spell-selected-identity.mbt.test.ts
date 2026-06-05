@@ -3,7 +3,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH barkskin doDiscoverBarkskinArmorClassFloor
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH blur doDiscoverBlurAttackRollDefense
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH continual_flame doDiscoverContinualFlameObjectLight
-// UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH enhance_ability doDiscoverEnhanceAbilityRollModifier
+// UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH enhance_ability doDiscoverEnhanceAbilityRollModifier doResolveEnhanceAbilityHigherSlotPerTarget
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH enlarge_reduce doDiscoverEnlargeReduceSizeIncrease
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH magic_weapon doDiscoverMagicWeaponEnhancement
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH mirror_image doDiscoverMirrorImageHitInterception
@@ -27,15 +27,26 @@ import {
   mirrorImageUnitId,
   passWithoutTraceUnitId,
   spellCasterId,
+  spellTargetId,
   wardingBondUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   spellAct,
+  spellTargetListFill,
+  targetAbilityChoicesFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
+import {
+  combatantId,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
+} from "./unit-profile-admission-test-support.ts";
+import {
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
 
 const level2ProtectionSpellUnitIds = [
   aidUnitId,
@@ -58,6 +69,7 @@ type Level2ProtectionSpellSelectedIdentityResult =
   | "blurAttackRollDefense"
   | "continualFlameObjectLight"
   | "enhanceAbilityRollModifier"
+  | "enhanceAbilityHigherSlotPerTarget"
   | "enlargeReduceSizeIncrease"
   | "magicWeaponEnhancement"
   | "mirrorImageHitInterception"
@@ -73,6 +85,9 @@ type SelectedLevel2ProtectionSpellInvocation = {
   readonly procedure: Parameters<typeof spellSlotInvocationRef>[2];
   readonly result: Exclude<Level2ProtectionSpellSelectedIdentityResult, "init">;
 };
+const enhanceAbilitySecondTargetId = combatantId(
+  "level2-protection-selected-enhance-ability-second-target",
+);
 
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 protection spell selected identity MBT",
@@ -137,6 +152,13 @@ defineSelectedIdentityWitness({
           procedure: "rollModifier",
           result: "enhanceAbilityRollModifier",
         }),
+        {
+          actionName: "doResolveEnhanceAbilityHigherSlotPerTarget",
+          projectionAfter: expectedProjection(
+            "enhanceAbilityHigherSlotPerTarget",
+          ),
+          discover: resolveEnhanceAbilityHigherSlotPerTarget,
+        },
       ],
     },
     {
@@ -235,6 +257,75 @@ function recordDiscoveredInvocation(
   return expectedProjection(input.result);
 }
 
+function resolveEnhanceAbilityHigherSlotPerTarget(): Level2ProtectionSpellSelectedIdentityProjection {
+  const spell = selectedSpellRecord(enhanceAbilityUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: 3, count: 1 }],
+    extraTargetIds: [enhanceAbilitySecondTargetId],
+  });
+  const act = spellAct({
+    state,
+    spellId: enhanceAbilityUnitId,
+    slotLevel: 3,
+  });
+  expect(act.subject).toEqual({
+    tag: "actionSpell",
+    actorId: spellCasterId,
+    invocation: spellSlotInvocationRef(enhanceAbilityUnitId, 3, "rollModifier"),
+    mode: { tag: "cast" },
+  });
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const abilityByTarget = requireHole(act.initialHoles, "targetAbilityChoices");
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      spellTargetListFill(targetList, spellCasterId, enhanceAbilityUnitId, [
+        spellTargetId,
+        enhanceAbilitySecondTargetId,
+      ]),
+      targetAbilityChoicesFill(abilityByTarget, [
+        { targetId: spellTargetId, ability: "dex" },
+        { targetId: enhanceAbilitySecondTargetId, ability: "wis" },
+      ]),
+    ],
+  });
+  expect(result).toMatchObject({ tag: "resolved" });
+  if (result.tag !== "resolved") {
+    throw new Error("Expected Enhance Ability higher-slot replay to resolve.");
+  }
+  expect(
+    requireCombatant(result.state, spellTargetId).activeEffects,
+  ).toContainEqual(
+    expect.objectContaining({
+      kind: "abilityCheckRollMode",
+      sourceSpellId: enhanceAbilityUnitId,
+      ability: "dex",
+    }),
+  );
+  expect(
+    requireCombatant(result.state, enhanceAbilitySecondTargetId).activeEffects,
+  ).toContainEqual(
+    expect.objectContaining({
+      kind: "abilityCheckRollMode",
+      sourceSpellId: enhanceAbilityUnitId,
+      ability: "wis",
+    }),
+  );
+  const caster = requireCombatant(result.state, spellCasterId);
+  expect(caster.origin.kind).toBe("character");
+  if (caster.origin.kind !== "character") {
+    throw new Error(
+      "Expected selected Enhance Ability caster to be a character.",
+    );
+  }
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 3, count: 1, expended: 1 },
+  ]);
+  return expectedProjection("enhanceAbilityHigherSlotPerTarget");
+}
+
 function expectedProjection(
   lastResult: Level2ProtectionSpellSelectedIdentityResult,
 ): Level2ProtectionSpellSelectedIdentityProjection {
@@ -250,9 +341,7 @@ function selectedSpellBattle(spell: SpellRecord): BattleState {
 
 function selectedSpellRecord(unitId: Level2ProtectionSpellUnitId): SpellRecord {
   if (!level2ProtectionSpellUnitIds.some((candidate) => candidate === unitId)) {
-    throw new Error(
-      `Expected selected level 2 protection spell id ${unitId}.`,
-    );
+    throw new Error(`Expected selected level 2 protection spell id ${unitId}.`);
   }
   return spellRecord(unitId);
 }

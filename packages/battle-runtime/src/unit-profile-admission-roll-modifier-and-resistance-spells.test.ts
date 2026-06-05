@@ -1,6 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-ENHANCE-ABILITY enhance_ability
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET enhance_ability
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME enthrall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
@@ -46,6 +46,7 @@ import {
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import {
+  spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
   spellRollModifierTargetAbilityChoicesHoleId,
   spellSavingThrowOutcomeHoleId,
@@ -670,12 +671,12 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             effect.sourceSpellId === enthrallUnitId,
         ),
     ).toBe(false);
-    expect(
-      passivePerceptionModifierDelta(resolved.state, spellTargetId),
-    ).toBe(-10);
-    expect(
-      passivePerceptionModifierDelta(resolved.state, secondTargetId),
-    ).toBe(0);
+    expect(passivePerceptionModifierDelta(resolved.state, spellTargetId)).toBe(
+      -10,
+    );
+    expect(passivePerceptionModifierDelta(resolved.state, secondTargetId)).toBe(
+      0,
+    );
 
     const ended = breakBattleConcentration(resolved.state, spellCasterId);
     expect(
@@ -787,6 +788,117 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ability: "wis",
       }),
     );
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.origin.kind).toBe("character");
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected Enhance Ability caster to be a character.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 3, count: 1, expended: 1 },
+    ]);
+  });
+
+  test("enhance ability higher-level slot rejects over-targeted and invalid per-target choices", () => {
+    const spell = spellRecord(enhanceAbilityUnitId);
+    const secondTargetId = combatantId("unit-profile-enhance-invalid-target-2");
+    const thirdTargetId = combatantId("unit-profile-enhance-invalid-target-3");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [secondTargetId, thirdTargetId],
+    });
+    const act = spellAct({
+      state,
+      spellId: enhanceAbilityUnitId,
+      slotLevel: 3,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const abilityByTargetHole = requireHole(
+      act.initialHoles,
+      "targetAbilityChoices",
+    );
+    const validTargets = spellTargetListFill(
+      targetListHole,
+      spellCasterId,
+      enhanceAbilityUnitId,
+      [spellTargetId, secondTargetId],
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetListFill(
+            targetListHole,
+            spellCasterId,
+            enhanceAbilityUnitId,
+            [spellTargetId, secondTargetId, thirdTargetId],
+          ),
+          targetAbilityChoicesFill(abilityByTargetHole, [
+            { targetId: spellTargetId, ability: "dex" },
+            { targetId: secondTargetId, ability: "wis" },
+            { targetId: thirdTargetId, ability: "cha" },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [validTargets],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "targetAbilityChoices" })],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          validTargets,
+          {
+            kind: "abilityChoice" as const,
+            holeId: spellRollModifierAbilityChoiceHoleId(
+              abilityByTargetHole.spell,
+            ),
+            value: "dex" as const,
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          validTargets,
+          targetAbilityChoicesFill(abilityByTargetHole, [
+            { targetId: spellTargetId, ability: "con" },
+            { targetId: secondTargetId, ability: "wis" },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          validTargets,
+          targetAbilityChoicesFill(abilityByTargetHole, [
+            { targetId: spellTargetId, ability: "dex" },
+            { targetId: spellTargetId, ability: "wis" },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {
@@ -983,9 +1095,8 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         guidanceSkillFill,
         {
           kind: "targetAbilityChoices" as const,
-          holeId: spellRollModifierTargetAbilityChoicesHoleId(
-            guidanceInvocation,
-          ),
+          holeId:
+            spellRollModifierTargetAbilityChoicesHoleId(guidanceInvocation),
           value: {
             choices: [{ targetId: spellCasterId, ability: "dex" as const }],
           },
@@ -1035,17 +1146,12 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       state: blessState,
       subject: blessAct.subject,
       fills: [
-        spellTargetListFill(
-          blessTargetListHole,
-          spellCasterId,
-          blessUnitId,
-          [spellTargetId],
-        ),
+        spellTargetListFill(blessTargetListHole, spellCasterId, blessUnitId, [
+          spellTargetId,
+        ]),
         {
           kind: "skillChoice" as const,
-          holeId: spellRollModifierSkillChoiceHoleId(
-            blessTargetListHole.spell,
-          ),
+          holeId: spellRollModifierSkillChoiceHoleId(blessTargetListHole.spell),
           value: "stealth" as const,
         },
       ],
@@ -1608,11 +1714,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     const poisonResolved = resolveBattleSubject({
       state: poisonState,
       subject: act.subject,
-      fills: [
-        targetFill,
-        attackFill,
-        damageRollFillWithGroups(damage, [[5]]),
-      ],
+      fills: [targetFill, attackFill, damageRollFillWithGroups(damage, [[5]])],
     });
     expect(poisonResolved).toMatchObject({ tag: "resolved" });
     if (poisonResolved.tag !== "resolved") {

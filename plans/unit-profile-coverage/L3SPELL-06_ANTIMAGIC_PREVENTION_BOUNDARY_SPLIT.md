@@ -1,0 +1,34 @@
+# L3SPELL-06 Antimagic Field Prevention Boundary Split
+
+## RAW And Language Check
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field` lists the remaining prevention clauses: no spellcasting, Magic actions, or magical-effect creation inside the aura; magical targeting/effect prevention for things inside it; magic item property suppression; magical area exclusion; teleportation and planar-travel blocking; temporary portal closure; ongoing spell suppression with Artifact/deity exceptions; and Dispel Magic immunity.
+- `.references/srd-5.2.1/Rules-Glossary.md#Emanation` says an Emanation extends from a creature or object, moves with that origin, and the origin is included only if the creator decides otherwise.
+- `UBIQUITOUS_LANGUAGE.md` distinguishes Magic Action from spellcasting: action-time spellcasting is one Magic Action use, but features and magic items can also require Magic actions.
+
+## Current Promoted Owner
+
+`spell.invocation-antimagic-field-ongoing-spell-suppression` remains the only promoted Antimagic Field runtime owner. It owns level-8-or-higher Spell Slot casting, caller-supplied self-origin 10-foot Emanation identity, Concentration, artifact/deity exception handling, and suppression without deletion for represented tracked ongoing Spell Effect families: spell-light emitters, `spellObjectContactDamage`, and `spiritualWeapon`.
+
+## Split Rows
+
+| Clause | Owner boundary | Task row |
+|---|---|---|
+| Spellcasting prevention and Magic Action prevention inside the aura | Needs typed aura-membership witnesses, including the Emanation origin-inclusion choice, plus one cross-action interdiction owner for action spells, Bonus Action spells, reaction spells, and non-spell Magic actions. | `L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION` |
+| Magical targeting and magical-effect delivery prevention | Needs a generic magical-effect targeting/effect-delivery owner that consumes aura-membership facts for selected targets and affected things. | `L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION` |
+| Magic item property suppression | Deferred until magic item records, equipment/attunement state, and property projection exist; Antimagic Field must not create a parallel item registry. | `L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION` |
+| Magical area clipping | Needs a shared area geometry overlap/clipping owner; current area spells consume caller-supplied area and membership witnesses rather than storing map geometry. | `L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING` |
+| Teleportation and planar travel blocking | Needs represented transit procedures plus origin/destination aura-membership witnesses; current self-teleport support does not derive aura membership or planar travel state. | `L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING` |
+| Portal closure | Deferred until portal occurrences have stable identity, placement, open/closed state, destination, and cleanup semantics. | `L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE` |
+| Dispel Magic immunity on the aura | Needs a typed Dispel Magic exception once Antimagic aura occurrences are otherwise targetable or visible to magical-effect targeting. | `L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY` |
+| Broader ongoing spell suppression | Extend the current suppression owner one represented ongoing Spell Effect family at a time, preserving non-deletion, ticking duration, and Artifact/deity exceptions. | `L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION` |
+
+## Implementation Decision
+
+No new reducer behavior was promoted in this task. The remaining prevention clauses need state that the current promoted boundary does not own: explicit aura membership, generic magical-effect delivery, magic-item runtime state, generic area clipping, transit/plane facts, portal lifecycle, or spell-specific Dispel Magic exception handling. Adding Antimagic-only fields would duplicate table/spatial or future owner state and make invalid combinations representable.
+
+## Reviewer Loop Notes
+
+- RAW traceability: every split row above maps to one clause in the local SRD Antimagic Field text or the Emanation/Magic Action glossary entries.
+- Ubiquitous language: the action-interdiction row uses `Magic Action` separately from spellcasting.
+- Architecture and connascence: the ledger now colocates the old broad follow-up into owner-specific rows so future work can change one owner without relying on a single overloaded Antimagic task label.

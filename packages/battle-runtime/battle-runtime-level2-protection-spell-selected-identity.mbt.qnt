@@ -34,6 +34,11 @@ module battleRuntimeLevel2ProtectionSpellSelectedIdentityMbt {
     recordProjection("enhanceAbilityRollModifier"),
   }
 
+  action doResolveEnhanceAbilityHigherSlotPerTarget = all {
+    qLastResult == "init",
+    recordProjection("enhanceAbilityHigherSlotPerTarget"),
+  }
+
   action doDiscoverEnlargeReduceSizeIncrease = all {
     qLastResult == "init",
     recordProjection("enlargeReduceSizeIncrease"),
@@ -65,6 +70,7 @@ module battleRuntimeLevel2ProtectionSpellSelectedIdentityMbt {
     doDiscoverBlurAttackRollDefense,
     doDiscoverContinualFlameObjectLight,
     doDiscoverEnhanceAbilityRollModifier,
+    doResolveEnhanceAbilityHigherSlotPerTarget,
     doDiscoverEnlargeReduceSizeIncrease,
     doDiscoverMagicWeaponEnhancement,
     doDiscoverMirrorImageHitInterception,
