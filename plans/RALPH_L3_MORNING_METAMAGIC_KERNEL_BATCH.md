@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote next Quickened Spell procedure slice"
     },
     {
