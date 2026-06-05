@@ -13791,6 +13791,12 @@
       "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed local SRD Enlarge/Reduce object, carried/worn item, dropped-item, thrown weapon, ammunition, and creature Size clauses against Surface, the promoted creature-size-change profile, and current battle object boundaries. Creature Size, Strength roll-mode, attack-hit damage, Concentration, and cleanup support remain covered by spell.invocation-creature-size-change. Object Size-category lifecycle, carried or worn item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain closed outside promoted battle runtime until a generic object/item lifecycle owner exists; adding Enlarge/Reduce-local object or item Size state would duplicate that owner.",
+      "profileIds": [],
+      "taskId": "L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Enthrall's Magic Action and level-2-or-higher Spell Slot spend, unbounded caller-supplied target list, Wisdom save gate, failed-save Perception penalty active effect, Passive Perception derivation from the same fixed modifier, and Concentration cleanup.",
       "profileIds": [

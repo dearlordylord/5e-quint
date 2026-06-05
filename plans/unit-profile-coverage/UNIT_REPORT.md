@@ -1680,6 +1680,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST | completed-runtime-parity | `spell.invocation-dragons-breath-initial` |
 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | qnt-proof | `spell.invocation-creature-size-change` |
 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | completed-runtime-parity | `spell.invocation-creature-size-change` |
+| L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME | qnt-proof | `spell.invocation-roll-modifier` |
 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME | completed-runtime-parity | `spell.invocation-roll-modifier` |
 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | qnt-proof | `spell.invocation-levitated-creature` |
