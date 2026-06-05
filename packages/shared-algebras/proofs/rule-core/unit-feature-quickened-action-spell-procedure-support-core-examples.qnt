@@ -12,12 +12,19 @@ module unitFeatureQuickenedActionSpellProcedureSupportCoreExamples {
       assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
         QuickenedScalarBuffProcedure,
       )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedSpellAttackProcedure,
+      )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedDirectRestorationProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedScalarBuffProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSpellAttackProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
     }

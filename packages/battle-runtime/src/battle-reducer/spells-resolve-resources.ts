@@ -11,6 +11,7 @@ import {
 import { Either } from "effect";
 import type {
   BattleResolutionResult,
+  BattleSpellCastingTimeResource,
   BattleState,
   BattleTurnResources,
   SupportedSpellInvocation,
@@ -34,13 +35,31 @@ import {
   markInvocationLevelOnePlusSpellCastThisTurn,
   markQuickenedLevelOnePlusSpellCastThisTurn,
   markSpellSlotExpendedThisTurn,
-  spellInvocationIsLevelOnePlus,
 } from "./spell-turn-resources.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 export type SpellCastResourceSpendResult =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
+
+export function spellCastActionCost(input: {
+  readonly invocation: SupportedSpellInvocation;
+  readonly actionCostOverride?: "magicAction" | "bonusAction" | undefined;
+}): "magicAction" | "bonusAction" {
+  return (
+    input.actionCostOverride ??
+    ("actionCost" in input.invocation
+      ? input.invocation.actionCost
+      : "magicAction")
+  );
+}
+
+export function spellCastingTimeResourceForSpellCast(input: {
+  readonly invocation: SupportedSpellInvocation;
+  readonly actionCostOverride?: "magicAction" | "bonusAction" | undefined;
+}): BattleSpellCastingTimeResource {
+  return { kind: spellCastActionCost(input) };
+}
 
 export function spendSpellCastResources(input: {
   readonly state: BattleState;
@@ -60,11 +79,7 @@ export function spendSpellCastResources(input: {
           input.state,
           input.actorId,
         );
-  const actionCost =
-    input.actionCostOverride ??
-    ("actionCost" in input.invocation
-      ? input.invocation.actionCost
-      : "magicAction");
+  const actionCost = spellCastActionCost(input);
   const spent =
     actionCost === "bonusAction"
       ? spendActivationResource(spellCastState.currentTurnResources, {
@@ -96,7 +111,6 @@ export function spendSpellCastResources(input: {
             input.invocation,
           ),
           input.actorId,
-          input.invocation,
           metamagicApplications,
         ),
         input.actorId,
@@ -159,7 +173,6 @@ export function spendSpellCastResources(input: {
       markQuickenedLevelOnePlusSpellCastForApplications(
         slotTurnResources.right,
         input.actorId,
-        input.invocation,
         metamagicApplications,
       ),
       input.actorId,
@@ -190,11 +203,9 @@ export function spendSpellCastResources(input: {
 function markQuickenedLevelOnePlusSpellCastForApplications(
   resources: BattleTurnResources,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): BattleTurnResources {
-  return spellInvocationIsLevelOnePlus(invocation) &&
-    metamagicApplicationsIncludeQuickened(applications)
+  return metamagicApplicationsIncludeQuickened(applications)
     ? markQuickenedLevelOnePlusSpellCastThisTurn(resources, actorId)
     : resources;
 }

@@ -28,7 +28,9 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
@@ -62,8 +64,11 @@ import {
 
 type AttackBurstSaveDamageResolveInput = SpellProcedureProfileResolveInput<
   AttackBurstSaveDamageInvocation,
-  ActionSpellBattleResolutionInput
->;
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 function admitAttackBurstSaveDamage(
   spell: SpellRecord,
@@ -123,7 +128,18 @@ function attackBurstSaveDamageCastSummary(
 function resolveAttackBurstSaveDamage(
   input: AttackBurstSaveDamageResolveInput,
 ): BattleResolutionResult {
-  return resolveAttackBurstSaveDamageSpellAct(input);
+  return resolveAttackBurstSaveDamageSpellAct({
+    input: input.input,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
+  });
 }
 
 const AttackBurstSaveDamageInvocationSchema = spellProcedureInvocationSchema<

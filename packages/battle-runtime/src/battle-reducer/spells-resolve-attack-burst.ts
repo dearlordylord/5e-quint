@@ -23,8 +23,10 @@ import {
   type BattleFill,
   type BattleHoleId,
   type BattleResolutionResult,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -81,7 +83,10 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spellCastingTimeResourceForSpellCast,
+  spendSpellCastResources,
+} from "./spells-resolve-resources.ts";
 
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
@@ -90,13 +95,17 @@ import { spellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 export function resolveAttackBurstSaveDamageSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "attackBurstSaveDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetList !== undefined ||
@@ -157,6 +166,12 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (sanctuaryCheck.tag === "newTarget") {
@@ -211,6 +226,12 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       fillSet,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
 
@@ -221,7 +242,10 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       invocation: input.invocation,
       targetIds: [target.combatantId],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource: spellCastingTimeResourceForSpellCast({
+        invocation: input.invocation,
+        actionCostOverride: input.actionCostOverride,
+      }),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -666,7 +690,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         continuation: {
           kind: "replay",
           subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+            ("reactionContinuationSubject" in input.input
+              ? input.input.reactionContinuationSubject
+              : undefined) ?? input.input.subject,
           fills: input.input.fills,
         },
       },
@@ -1072,6 +1098,12 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;

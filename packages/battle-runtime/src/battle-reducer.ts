@@ -1214,6 +1214,10 @@ export type BattleSpellCastingTimeResource =
   | { readonly kind: "bonusAction" }
   | { readonly kind: "reaction" }
   | { readonly kind: "alreadySpent" };
+export type SpellInvocationCastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonusAction" }
+  | { readonly kind: "reaction" };
 export type BattleSpellCastSlotCommitment =
   | { readonly kind: "none" }
   | { readonly kind: "pendingCasterSpellSlot" };
@@ -3032,6 +3036,10 @@ export type SupportedSpellInvocation =
   | (DamageSpellSource & {
       readonly procedure: "saveGatedDamage";
       readonly spell: SpellRecord;
+      readonly castingTime: Exclude<
+        SpellInvocationCastingTime,
+        { readonly kind: "bonusAction" }
+      >;
       readonly ability: Ability;
       readonly dc: DcSource;
       readonly targeting: SpellTargeting;

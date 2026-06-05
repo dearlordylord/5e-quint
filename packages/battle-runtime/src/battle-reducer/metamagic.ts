@@ -21,7 +21,6 @@ import {
 import type { CombatantId } from "../identity.ts";
 import {
   combatantHasLevelOnePlusSpellCastThisTurn,
-  spellInvocationIsLevelOnePlus,
 } from "./spell-turn-resources.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import {
@@ -232,7 +231,6 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
     return false;
   }
   if (
-    spellInvocationIsLevelOnePlus(input.invocation) &&
     combatantHasLevelOnePlusSpellCastThisTurn(
       input.state.currentTurnResources,
       input.actorId,
@@ -251,6 +249,9 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
 export function spellInvocationHasMagicActionCastingTime(
   invocation: SupportedSpellInvocation,
 ): boolean {
+  if (invocation.procedure === "saveGatedDamage") {
+    return invocation.castingTime.kind === "action";
+  }
   return (
     !("actionCost" in invocation) || invocation.actionCost === "magicAction"
   );
@@ -463,13 +464,12 @@ function quickenedSpellAdmissionIssue(input: {
     return QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE;
   }
   if (
-    spellInvocationIsLevelOnePlus(input.invocation) &&
     combatantHasLevelOnePlusSpellCastThisTurn(
       input.state.currentTurnResources,
       input.actorId,
     )
   ) {
-    return "Quickened Spell cannot modify a level 1+ spell after this turn has already cast a level 1+ spell.";
+    return "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.";
   }
   return input.actor.origin.kind === "character" &&
     input.actor.origin.metamagic?.knownOptions.some(

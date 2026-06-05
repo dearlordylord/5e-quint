@@ -28,8 +28,10 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
@@ -66,8 +68,11 @@ import {
 
 type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackDamageInvocation,
-  ActionSpellBattleResolutionInput
->;
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 function admitSpellAttackDamage(
   spell: SpellRecord,
@@ -234,7 +239,7 @@ export const spellAttackDamageProfile: SpellProcedureProfile<
 > = {
   procedure: "spellAttackDamage",
   invocationSchema: SpellAttackDamageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],

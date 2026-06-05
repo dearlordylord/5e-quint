@@ -19,8 +19,10 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { spellSubjectTagForInvocation } from "../spells-discovery.ts";
@@ -58,8 +60,11 @@ import {
 
 type SpellAttackSequenceResolveInput = SpellProcedureProfileResolveInput<
   SpellAttackSequenceInvocation,
-  ActionSpellBattleResolutionInput
->;
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 function admitSpellAttackSequence(
   spell: SpellRecord,
@@ -140,7 +145,18 @@ function spellAttackSequenceCastSummary(
 function resolveSpellAttackSequence(
   input: SpellAttackSequenceResolveInput,
 ): BattleResolutionResult {
-  return resolveSpellAttackSequenceAct(input);
+  return resolveSpellAttackSequenceAct({
+    input: input.input,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
+  });
 }
 
 const SpellAttackSequenceInvocationSchema = spellProcedureInvocationSchema<

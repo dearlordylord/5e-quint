@@ -20,6 +20,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
@@ -71,8 +72,9 @@ type SaveGatedDamageSpellInvocation = Extract<
 
 type SaveGatedDamageResolveInput = SpellProcedureProfileResolveInput<
   SaveGatedDamageSpellInvocation,
-  ActionSpellBattleResolutionInput
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 };
 
@@ -335,11 +337,21 @@ function resolveSaveGatedDamage(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
 }
+
+const ActionSpellInvocationCastingTimeSchema = Schema.Struct({
+  kind: Schema.Literal("action"),
+});
+const ReactionSpellInvocationCastingTimeSchema = Schema.Struct({
+  kind: Schema.Literal("reaction"),
+});
 
 const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
   Extract<SupportedSpellInvocation, { readonly procedure: "saveGatedDamage" }>
@@ -350,6 +362,7 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedDamage"),
       spell: BattleRuntimeObjectSchema,
+      castingTime: ActionSpellInvocationCastingTimeSchema,
       ability: Schema.String,
       dc: BattleRuntimeObjectSchema,
       targeting: Schema.Union(
@@ -406,6 +419,10 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedDamage"),
       spell: BattleRuntimeObjectSchema,
+      castingTime: Schema.Union(
+        ActionSpellInvocationCastingTimeSchema,
+        ReactionSpellInvocationCastingTimeSchema,
+      ),
       ability: Schema.String,
       dc: BattleRuntimeObjectSchema,
       targeting: Schema.Union(
@@ -462,7 +479,7 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   invocationSchema: SaveGatedDamageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: true,
   knownWillingTargetSpellIds: [],
@@ -474,5 +491,5 @@ export const saveGatedDamageProfile = {
 } satisfies SpellProcedureProfile<
   "saveGatedDamage",
   SaveGatedDamageSpellInvocation,
-  ActionSpellBattleResolutionInput
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 >;
