@@ -15,7 +15,7 @@ const witnessKindDescriptions = Object.freeze({
   [deterministicQntReplayWitnessKind]:
     "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
   [runtimeTestWitnessKind]:
-    "Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership.",
+    "Focused runtime test evidence for a profile-scoped reducer or projection path that already has profile-level QNT proof ownership or declared semantic-core QNT ownership.",
   [mcpScenarioWitnessKind]:
     "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",
 });

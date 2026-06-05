@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
+// KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
@@ -94,7 +95,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -1611,7 +1612,9 @@ describe("Character Sheet runtime", () => {
     } as const;
 
     expect(
-      requireRight(characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary)),
+      requireRight(
+        characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
+      ),
     ).toEqual([]);
 
     expect(
@@ -2083,6 +2086,56 @@ describe("Character Sheet runtime", () => {
           "Weapon Mastery Long Rest reselection changes too many weapon choices.",
       },
     });
+  });
+
+  test("uses the class-level Weapon Mastery count for Long Rest reselection", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:fighter-level-4-mastery"),
+        build: weaponMasteryBuild({
+          startingClass: "class_fighter",
+          advancements: ["class_fighter", "class_fighter", "class_fighter"],
+          featureUnitId: "fighter_weapon_mastery",
+          selectedWeaponUnitIds: [
+            "weapon_longsword",
+            "weapon_dagger",
+            "weapon_spear",
+            "weapon_shortbow",
+          ],
+        }),
+        maximumHp: Hp(12),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const rested = requireRight(
+      completeLongRest({
+        sheet,
+        unitLibrary,
+        weaponMasteryReselections: [
+          {
+            featureUnitId: "fighter_weapon_mastery",
+            selectedWeaponUnitIds: [
+              "weapon_longsword",
+              "weapon_dagger",
+              "weapon_spear",
+              "weapon_flail",
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(
+      selectedClassChoiceUnitIds(rested.build, "fighter_weapon_mastery"),
+    ).toEqual([
+      "weapon_longsword",
+      "weapon_dagger",
+      "weapon_spear",
+      "weapon_flail",
+    ]);
   });
 
   test(layOnHandsSpendsHealingPoolTestName, () => {
@@ -4425,11 +4478,17 @@ function requireRight<A, E>(either: Either.Either<A, E>): A {
 
 function weaponMasteryBuild(input: {
   readonly startingClass: string;
+  readonly advancements?: readonly string[];
   readonly featureUnitId: string;
   readonly selectedWeaponUnitIds: readonly string[];
 }): CharacterBuild {
   return {
-    ...armorClassBuild({ startingClass: input.startingClass }),
+    ...armorClassBuild({
+      startingClass: input.startingClass,
+      ...(input.advancements === undefined
+        ? {}
+        : { advancements: input.advancements }),
+    }),
     features: input.selectedWeaponUnitIds.map((unitId) => ({
       kind: "selectedClassChoice" as const,
       selectedFromUnitId: input.featureUnitId,

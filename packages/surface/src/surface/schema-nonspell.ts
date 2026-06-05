@@ -116,7 +116,9 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
   Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>,
-  ...Array<Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>>,
+  ...Array<
+    Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
+  >,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -1323,7 +1325,7 @@ export const PotentCantripMechanicsSchema = strictStruct({
 
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
-  choose: PositiveIntegerSchema,
+  choose: Schema.Union(PositiveIntegerSchema, ClassLevelChoiceCountSchema),
   eligibleWeapons: Schema.Struct({
     kind: Schema.Literal("class_proficient_weapons"),
     usage: exactOptional(WeaponUsageSchema),

@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 102
-- Covered obligations: 96
+- Total obligations: 104
+- Covered obligations: 98
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 96 |
+| covered | 98 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -22,8 +22,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | --- | ---: |
 | shared-algebras | 1 |
 | battle | 74 |
-| character-creation | 13 |
-| character-sheet | 11 |
+| character-creation | 14 |
+| character-sheet | 12 |
 | character-battle | 3 |
 
 ## Obligations
@@ -107,6 +107,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | boundary-only | _outside reducer semantics_ |
 | `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.class-feature-feat-choice` |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.weapon-mastery-choice` |
+| `CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT` | character-creation | covered | `character-creation.weapon-mastery-level-gain` |
 | `CREATION.CLASS_FEATURE_OPTION.PROJECTION` | character-creation | covered | `character-creation.class-feature-option-projection` |
 | `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.skill-expertise-choice` |
 | `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` | character-creation | covered | `character-creation.class-feature-resource-projection` |
@@ -127,6 +128,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
 | `SHEET.SPELL_SLOTS.TABLE_DERIVATION` | character-sheet | covered | _direct reducer entrypoint_ |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
+| `SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-class-level-reselection` |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
 | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access`, `character-sheet.druid-circle-land-spell-access` |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
@@ -368,7 +370,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt` | mbt-fixture | `SHEET.SPELL_SLOTS.TABLE_DERIVATION`, `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` |
 | `packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt` | semantic-core | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` |
 | `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` |
-| `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | semantic-core | `SHEET.WEAPON_MASTERY.RESELECTION` |
+| `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | semantic-core | `CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT`, `SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION`, `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
@@ -568,6 +570,8 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `SHEET.SPELL_REST_BENEFIT.APPLICATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `list`, `fold`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `SHEET.FEATURE_RESOURCES.TRANSITIONS` | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `arithmetic`, `boolean-connective`, `all-block`, `pattern-match`, `list`, `set`, `fold`, `set-operators`, `membership`, `size` |  |  |
+| `SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `arithmetic`, `boolean-connective`, `all-block`, `pattern-match`, `list`, `set`, `fold`, `set-operators`, `membership`, `size` |  |  |
+| `CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `arithmetic`, `boolean-connective`, `all-block`, `pattern-match`, `list`, `set`, `fold`, `set-operators`, `membership`, `size` |  |  |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | generation-subset-clean | `import`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `SHEET.SPELL_SLOTS.TABLE_DERIVATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |

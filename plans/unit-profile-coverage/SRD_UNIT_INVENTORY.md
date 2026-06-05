@@ -25,8 +25,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 #### Level-1 Battle Readiness by Status
 
-- accepted: 279
-- accepted-no-battle-effect: 88
+- accepted: 277
+- accepted-no-battle-effect: 90
 
 ### Expanded Progress Metric: Character Levels 1-2 Battle Readiness
 
@@ -36,8 +36,8 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 297
-- accepted-no-battle-effect: 100
+- accepted: 295
+- accepted-no-battle-effect: 102
 - owner-evidence-required: 2
 - partial-battle-runtime: 1
 
@@ -49,8 +49,8 @@ This is the default `%` for character-level-1 through character-level-3 readines
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 438
-- accepted-no-battle-effect: 161
+- accepted: 436
+- accepted-no-battle-effect: 163
 - battle-runtime-required: 1
 - owner-evidence-required: 6
 - partial-battle-runtime: 1
@@ -238,7 +238,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Barbarian Skill Proficiencies|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:10|
 |Barbarian Weapon Proficiencies|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:11|
 |Barbarian Starting Equipment|equipment/weapon/armor pressure|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:13|
-|Barbarian Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level Weapon Mastery count scaling|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:84|
+|Barbarian Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted-no-battle-effect|selection-grant-container: character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:84|
 |Barbarian multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:22|
 |Bard class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:3|
 |Bard Bardic Inspiration|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:57|
@@ -290,7 +290,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter Skill Proficiencies|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:10|
 |Fighter Weapon Proficiencies|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:11|
 |Fighter Starting Equipment|equipment/weapon/armor pressure|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:13|
-|Fighter Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level Weapon Mastery count scaling|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:70|
+|Fighter Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted-no-battle-effect|selection-grant-container: character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:70|
 |Fighter multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:22|
 |Monk class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:3|
 |Monk Martial Arts|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:57|

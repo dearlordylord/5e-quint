@@ -2,33 +2,33 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "obligationJoinRows": {
-      "denominator": 163,
-      "numerator": 163,
+      "denominator": 169,
+      "numerator": 169,
       "percent": "100%"
     },
     "rulesKernelProfiles": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "supportedUnits": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 93,
+      "numerator": 93,
       "percent": "100%"
     },
     "uniqueCoveredObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "uniqueParityWitnessedObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "uniqueQntOwnedObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     }
   },
@@ -584,6 +584,80 @@
       "runtime": "character-sheet",
       "tag": "obligation-evidence",
       "unitId": "barbarian_unarmored_defense"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-level-gain",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-sheet",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
     },
     {
       "gaps": [],
@@ -2586,6 +2660,80 @@
       "runtime": "battle",
       "tag": "obligation-evidence",
       "unitId": "fighter_tactical_mind"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-level-gain",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-sheet",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
     },
     {
       "gaps": [],

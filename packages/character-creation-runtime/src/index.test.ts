@@ -81,6 +81,7 @@ import {
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
   unitChoiceSourceUnitId,
+  weaponMasteryLevelGain,
   warlockLevelGain,
   type CharacterDraft,
   type CharacterChoiceSelection,
@@ -152,8 +153,10 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 
+// KERNEL-COVERAGE: parity-witness CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-level-gain
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
@@ -5171,6 +5174,232 @@ describe("character creation finalization", () => {
     ).toEqual(["defense"]);
   });
 
+  test("requires typed Weapon Mastery choices when Fighter level increases the mastered weapon count", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+    const levelGain = {
+      tag: "classLevelGain",
+      classUnitId: fighterClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    } as const satisfies CharacterBuildClassLevelGain;
+    const levelTwo = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: finalizedCompleteManifestBuild(),
+        unitLibrary,
+        levelGain,
+      }),
+    );
+    const levelThree = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelTwo,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    const staleLevelFour = advanceCharacterBuildClassLevel({
+      build: levelThree,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(staleLevelFour).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelectionCount",
+        expectedCount: 4,
+        actualCount: 3,
+      },
+    });
+
+    const weaponMasteryGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        featureUnitId: "fighter_weapon_mastery",
+        selectedWeaponUnitIds: [
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+          "weapon_shortsword",
+        ],
+      }),
+    );
+    const levelFour = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelThree,
+        unitLibrary,
+        levelGain: weaponMasteryGain,
+      }),
+    );
+
+    expect(computeTotalLevel(levelFour.progression)).toBe(4);
+    expect(
+      selectedBuildClassChoiceUnitIds(levelFour, "fighter_weapon_mastery"),
+    ).toEqual([
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "weapon_shortsword",
+    ]);
+  });
+
+  test("combines Fighter level-4 Weapon Mastery growth with Fighting Style replacement", () => {
+    const fighterClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_fighter",
+      }),
+    );
+    const plainLevelGain = {
+      tag: "classLevelGain",
+      classUnitId: fighterClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    } as const satisfies CharacterBuildClassLevelGain;
+    const levelTwo = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: finalizedCompleteManifestBuild(),
+        unitLibrary,
+        levelGain: plainLevelGain,
+      }),
+    );
+    const levelThree = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelTwo,
+        unitLibrary,
+        levelGain: plainLevelGain,
+      }),
+    );
+    const levelFourGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        featureUnitId: "fighter_weapon_mastery",
+        selectedWeaponUnitIds: [
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+          "weapon_shortsword",
+        ],
+        fightingStyleReplacement: {
+          selectedFeatUnitId: "feat_archery",
+        },
+      }),
+    );
+    expect(levelFourGain.tag).toBe(
+      "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelThree,
+        unitLibrary,
+        levelGain: levelFourGain,
+      }),
+    );
+
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "fighter_weapon_mastery"),
+    ).toEqual([
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "weapon_shortsword",
+    ]);
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+    ).toEqual(["feat_archery"]);
+  });
+
+  test("rejects Fighting Style replacement on non-Fighter Weapon Mastery level gain", () => {
+    const barbarianClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_barbarian",
+      }),
+    );
+
+    const result = weaponMasteryLevelGain({
+      unitLibrary,
+      classUnitId: barbarianClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      featureUnitId: "barbarian_weapon_mastery",
+      selectedWeaponUnitIds: [
+        "weapon_longsword",
+        "weapon_dagger",
+        "weapon_spear",
+      ],
+      fightingStyleReplacement: {
+        selectedFeatUnitId: "feat_archery",
+      },
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "nonFighterClassLevelGain" },
+    });
+  });
+
+  test("adds the Barbarian level-4 Weapon Mastery choice as character-build selected identity", () => {
+    const barbarianClassUnitId = expectRight(
+      classUnitIdFromUnitId({
+        unitLibrary,
+        classUnitId: "class_barbarian",
+      }),
+    );
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-barbarian-weapon-mastery",
+      progression: testProgression("class_barbarian", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "barbarian_weapon_mastery",
+          "weapon_mastery_options",
+        )]: [
+          creationChoiceOptionId("weapon_longsword"),
+          creationChoiceOptionId("weapon_dagger"),
+        ],
+      },
+    });
+    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+    if (finalized.tag !== "ready") {
+      throw new Error(
+        `Expected Barbarian level-3 build to finalize, received ${finalized.tag}.`,
+      );
+    }
+    const weaponMasteryGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: barbarianClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        featureUnitId: "barbarian_weapon_mastery",
+        selectedWeaponUnitIds: [
+          "weapon_longsword",
+          "weapon_dagger",
+          "weapon_spear",
+        ],
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: finalized.build,
+        unitLibrary,
+        levelGain: weaponMasteryGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(4);
+    expect(
+      selectedBuildClassChoiceUnitIds(result, "barbarian_weapon_mastery"),
+    ).toEqual(["weapon_longsword", "weapon_dagger", "weapon_spear"]);
+  });
+
   test("rejects replacing Fighting Style with the already-selected feat", () => {
     const build = finalizedCompleteManifestBuild();
     const fighterClassUnitId = expectRight(
@@ -5329,7 +5558,19 @@ describe("character creation finalization", () => {
           ...complete.selections,
           progression: fighterFour,
           choices: [
-            ...complete.selections.choices,
+            ...withoutUnitChoiceSelection(
+              complete.selections.choices,
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+            ),
+            selectedUnitChoice(
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+              "weapon_longsword",
+              "weapon_spear",
+              "weapon_flail",
+              "weapon_shortsword",
+            ),
             selectedUnitChoice(
               "class_fighter",
               "class_subclass_choice",
@@ -5460,7 +5701,19 @@ describe("character creation finalization", () => {
           ...complete.selections,
           progression: fighterFour,
           choices: [
-            ...complete.selections.choices,
+            ...withoutUnitChoiceSelection(
+              complete.selections.choices,
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+            ),
+            selectedUnitChoice(
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+              "weapon_longsword",
+              "weapon_spear",
+              "weapon_flail",
+              "weapon_shortsword",
+            ),
             selectedUnitChoice(
               "class_fighter",
               "class_subclass_choice",
@@ -5549,7 +5802,19 @@ describe("character creation finalization", () => {
           ...complete.selections,
           progression: fighterSix,
           choices: [
-            ...complete.selections.choices,
+            ...withoutUnitChoiceSelection(
+              complete.selections.choices,
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+            ),
+            selectedUnitChoice(
+              "fighter_weapon_mastery",
+              "weapon_mastery_options",
+              "weapon_longsword",
+              "weapon_spear",
+              "weapon_flail",
+              "weapon_shortsword",
+            ),
             selectedUnitChoice(
               "class_fighter",
               "class_subclass_choice",
@@ -6955,14 +7220,14 @@ describe("character creation finalization", () => {
 
     expect(illegal).toMatchObject({
       tag: "invalid",
-      issues: [
+      issues: expect.arrayContaining([
         {
           tag: "unsupportedFinalization",
           code: "unsupportedFinalization",
           message:
             "Finalized build progression must match a supported progression profile.",
         },
-      ],
+      ]),
     });
   });
 
@@ -7344,7 +7609,9 @@ describe("character creation finalization", () => {
     expect(characterBuildFeatureUnitIds(baseBuild, unitLibrary)).not.toContain(
       "sorcerer_draconic_resilience",
     );
-    expect(expectRight(characterBuildHitPoints(baseBuild, unitLibrary))).toEqual({
+    expect(
+      expectRight(characterBuildHitPoints(baseBuild, unitLibrary)),
+    ).toEqual({
       maximum: 17,
       hitDice: [{ classUnitId: "class_sorcerer", dieSize: 6, total: 3 }],
     });
@@ -9241,6 +9508,20 @@ function selectedChoice(
       optionId: creationChoiceOptionId(optionId),
     })),
   };
+}
+
+function withoutUnitChoiceSelection(
+  selections: readonly CharacterChoiceSelection[],
+  unitId: string,
+  choiceKey: string,
+): readonly CharacterChoiceSelection[] {
+  return selections.filter(
+    (selection) =>
+      selection.kind !== "unitChoice" ||
+      selection.source.tag !== "unitChoice" ||
+      selection.source.unitId !== unitId ||
+      selection.source.choiceKey !== choiceKey,
+  );
 }
 
 function selectedChoiceWithUnitRef(

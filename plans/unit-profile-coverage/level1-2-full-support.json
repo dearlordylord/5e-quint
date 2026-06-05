@@ -65,39 +65,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Barbarian Weapon Mastery",
-          "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 89,
-            "lineStart": 84,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "barbarian_weapon_mastery"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
       "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
@@ -606,39 +573,6 @@
       "status": "blocked-follow-up-split",
       "strictTargetClosed": true,
       "unitId": "druid_wild_shape"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Fighter Weapon Mastery",
-          "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 75,
-            "lineStart": 70,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "fighter_weapon_mastery"
     },
     {
       "catalogDisposition": {
@@ -1163,7 +1097,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 91,
+      "count": 93,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -1174,6 +1108,7 @@
         "barbarian_rage",
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
+        "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
         "bard_jack_of_all_trades",
         "bless",
@@ -1201,6 +1136,7 @@
         "fighter_fighting_style",
         "fighter_second_wind",
         "fighter_tactical_mind",
+        "fighter_weapon_mastery",
         "fire_bolt",
         "fog_cloud",
         "grease",
@@ -1280,13 +1216,11 @@
       ]
     },
     {
-      "count": 6,
+      "count": 4,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
-        "barbarian_weapon_mastery",
         "bard_expertise",
-        "fighter_weapon_mastery",
         "paladin_fighting_style",
         "ranger_favored_enemy",
         "ranger_fighting_style"
@@ -1326,31 +1260,31 @@
       "numerator": 397,
       "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 297,
-        "accepted-no-battle-effect": 100,
+        "accepted": 295,
+        "accepted-no-battle-effect": 102,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 93,
+      "numerator": 93,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 115,
-      "numerator": 91,
-      "percent": "79.1%"
+      "numerator": 93,
+      "percent": "80.9%"
     },
     "strictTargetClosure": {
       "denominator": 115,
@@ -3760,8 +3694,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 91,
-        "numerator": 91,
+        "denominator": 93,
+        "numerator": 93,
         "percent": "100%"
       }
     },
@@ -3946,6 +3880,58 @@
           }
         ],
         "unitId": "barbarian_unarmored_defense"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-level-gain",
+            "profileKind": "character-creation",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+              }
+            ],
+            "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+            "profileKind": "character-sheet",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          }
+        ],
+        "unitId": "barbarian_weapon_mastery"
       },
       {
         "joinStatus": "covered",
@@ -4735,6 +4721,58 @@
           }
         ],
         "unitId": "fighter_tactical_mind"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-level-gain",
+            "profileKind": "character-creation",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+              }
+            ],
+            "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+            "profileKind": "character-sheet",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          }
+        ],
+        "unitId": "fighter_weapon_mastery"
       },
       {
         "joinStatus": "covered",
@@ -7389,19 +7427,19 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 141,
     "groupsByClaimTag": {
-      "profile-subset-supported": 13,
-      "supported-profile": 91,
+      "profile-subset-supported": 11,
+      "supported-profile": 93,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 2,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
-      "closed-later-level-only": 6,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 12,
-      "supported-profile": 91
+      "supported-profile": 93
     },
-    "nonSupportedFrontier": 24,
+    "nonSupportedFrontier": 22,
     "strictDenominator": 115
   }
 }

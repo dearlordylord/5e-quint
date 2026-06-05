@@ -1409,7 +1409,7 @@ export function classFeatureGrantChoiceHoles(
   }
 
   if (isWeaponMasteryChoiceFeature(feature)) {
-    const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary);
+    const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary, input);
     return hole === undefined ? [] : [hole];
   }
 
@@ -2088,10 +2088,12 @@ export function selectedFeatAbilityScoreIncreaseOptions(
 function weaponMasteryFeatureHoleSource(
   feature: WeaponMasteryChoiceFeature,
   unitLibrary: UnitCatalog,
+  input: { readonly classLevel?: number },
 ): ChoiceCreationHole | undefined {
   const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId: feature.id,
     unitLibrary,
+    ...(input.classLevel === undefined ? {} : { classLevel: input.classLevel }),
   });
   if (profile === undefined) {
     return undefined;

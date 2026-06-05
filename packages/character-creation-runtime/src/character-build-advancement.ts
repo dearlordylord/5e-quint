@@ -1,6 +1,7 @@
-// KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighter-fighting-style-advancement-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-level-gain
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
@@ -58,6 +59,11 @@ import {
   type EldritchInvocationRepeatableChoiceRule,
   type EldritchInvocationSelection,
 } from "./eldritch-invocations.ts";
+import {
+  isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForFeature,
+  type WeaponMasteryChoiceFeature,
+} from "./weapon-mastery.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
 const SORCERER_CLASS_NAME = "sorcerer" as const satisfies ClassName;
@@ -85,6 +91,14 @@ export type FightingStyleFeatUnitId = UnitRecord["id"] &
   Brand.Brand<"FightingStyleFeatUnitId">;
 const FightingStyleFeatUnitId = Brand.nominal<FightingStyleFeatUnitId>();
 
+export type WeaponMasteryFeatureUnitId = UnitRecord["id"] &
+  Brand.Brand<"WeaponMasteryFeatureUnitId">;
+const WeaponMasteryFeatureUnitId = Brand.nominal<WeaponMasteryFeatureUnitId>();
+
+export type WeaponMasteryWeaponUnitId = UnitRecord["id"] &
+  Brand.Brand<"WeaponMasteryWeaponUnitId">;
+const WeaponMasteryWeaponUnitId = Brand.nominal<WeaponMasteryWeaponUnitId>();
+
 export type CharacterBuildPlainClassLevelGain = {
   readonly tag: "classLevelGain";
   readonly classUnitId: ClassUnitId;
@@ -99,6 +113,34 @@ export type CharacterBuildFighterFightingStyleReplacementLevelGain = {
     readonly selectedFeatUnitId: FightingStyleFeatUnitId;
   };
 };
+
+export type CharacterBuildWeaponMasteryOnlyLevelGain = {
+  readonly tag: "classLevelGainWithWeaponMasterySelection";
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly weaponMastery: {
+    readonly featureUnitId: WeaponMasteryFeatureUnitId;
+    readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
+  };
+};
+
+export type CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain =
+  {
+    readonly tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement";
+    readonly classUnitId: FighterClassUnitId;
+    readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+    readonly weaponMastery: {
+      readonly featureUnitId: WeaponMasteryFeatureUnitId;
+      readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
+    };
+    readonly fightingStyleReplacement: {
+      readonly selectedFeatUnitId: FightingStyleFeatUnitId;
+    };
+  };
+
+export type CharacterBuildWeaponMasteryLevelGain =
+  | CharacterBuildWeaponMasteryOnlyLevelGain
+  | CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain;
 
 export type CharacterBuildWarlockPactMagicLevelGain = {
   readonly gainedCantrips: readonly UnitRecord["id"][];
@@ -154,6 +196,7 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
 export type CharacterBuildClassLevelGain =
   | CharacterBuildPlainClassLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
+  | CharacterBuildWeaponMasteryLevelGain
   | CharacterBuildSorcererMetamagicLevelGain
   | CharacterBuildWarlockLevelGain;
 
@@ -229,6 +272,69 @@ export type CharacterBuildAdvancementIssue =
   | {
       readonly code: "sameFightingStyleReplacement";
       readonly selectedFeatUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonWeaponMasteryFeature";
+      readonly unitId: UnitRecord["id"];
+      readonly unitKind?: UnitRecord["kind"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonWeaponMasteryWeapon";
+      readonly unitId: UnitRecord["id"];
+      readonly unitKind?: UnitRecord["kind"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingWeaponMasteryFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "ambiguousWeaponMasteryFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitIds: readonly UnitRecord["id"][];
+      readonly message: string;
+    }
+  | {
+      readonly code: "weaponMasteryFeatureClassMismatch";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasterySelectionCount";
+      readonly classLevel: number;
+      readonly featureUnitId: UnitRecord["id"];
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasteryGainCount";
+      readonly classLevel: number;
+      readonly featureUnitId: UnitRecord["id"];
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingExistingWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
       readonly message: string;
     }
   | {
@@ -599,6 +705,124 @@ export function fightingStyleFeatUnitId(input: {
   return Either.right(FightingStyleFeatUnitId(input.unitId));
 }
 
+export function weaponMasteryFeatureUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly unitId: UnitRecord["id"];
+}): Either.Either<WeaponMasteryFeatureUnitId, CharacterBuildAdvancementIssue> {
+  const unit = input.unitLibrary.getUnit(input.unitId);
+  if (Option.isNone(unit)) {
+    return Either.left({
+      code: "unknownUnitId",
+      unitId: input.unitId,
+      message: `Unknown Unit id ${input.unitId}.`,
+    });
+  }
+
+  if (!isWeaponMasteryChoiceFeature(unit.value)) {
+    return Either.left({
+      code: "nonWeaponMasteryFeature",
+      unitId: input.unitId,
+      unitKind: unit.value.kind,
+      message: `${input.unitId} is not a Weapon Mastery class-feature Unit.`,
+    });
+  }
+
+  return Either.right(WeaponMasteryFeatureUnitId(input.unitId));
+}
+
+export function weaponMasteryWeaponUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly unitId: UnitRecord["id"];
+}): Either.Either<WeaponMasteryWeaponUnitId, CharacterBuildAdvancementIssue> {
+  const unit = input.unitLibrary.getUnit(input.unitId);
+  if (Option.isNone(unit)) {
+    return Either.left({
+      code: "unknownUnitId",
+      unitId: input.unitId,
+      message: `Unknown Unit id ${input.unitId}.`,
+    });
+  }
+
+  if (unit.value.kind !== "weapon") {
+    return Either.left({
+      code: "nonWeaponMasteryWeapon",
+      unitId: input.unitId,
+      unitKind: unit.value.kind,
+      message: `${input.unitId} is not a weapon Unit.`,
+    });
+  }
+
+  return Either.right(WeaponMasteryWeaponUnitId(input.unitId));
+}
+
+export function weaponMasteryLevelGain(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly featureUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly fightingStyleReplacement?: {
+    readonly selectedFeatUnitId: UnitRecord["id"];
+  };
+}): Either.Either<
+  CharacterBuildWeaponMasteryLevelGain,
+  CharacterBuildAdvancementIssue
+> {
+  const featureUnitId = weaponMasteryFeatureUnitId({
+    unitLibrary: input.unitLibrary,
+    unitId: input.featureUnitId,
+  });
+  if (Either.isLeft(featureUnitId)) return Either.left(featureUnitId.left);
+
+  const selectedWeaponUnitIds: WeaponMasteryWeaponUnitId[] = [];
+  for (const unitId of input.selectedWeaponUnitIds) {
+    const selectedWeaponUnitId = weaponMasteryWeaponUnitId({
+      unitLibrary: input.unitLibrary,
+      unitId,
+    });
+    if (Either.isLeft(selectedWeaponUnitId)) {
+      return Either.left(selectedWeaponUnitId.left);
+    }
+    selectedWeaponUnitIds.push(selectedWeaponUnitId.right);
+  }
+
+  if (input.fightingStyleReplacement !== undefined) {
+    const classUnitId = fighterClassUnitId(input);
+    if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+
+    const selectedFeatUnitId = fightingStyleFeatUnitId({
+      unitLibrary: input.unitLibrary,
+      unitId: input.fightingStyleReplacement.selectedFeatUnitId,
+    });
+    if (Either.isLeft(selectedFeatUnitId)) {
+      return Either.left(selectedFeatUnitId.left);
+    }
+
+    return Either.right({
+      tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+      classUnitId: classUnitId.right,
+      hitPointRule: input.hitPointRule,
+      weaponMastery: {
+        featureUnitId: featureUnitId.right,
+        selectedWeaponUnitIds,
+      },
+      fightingStyleReplacement: {
+        selectedFeatUnitId: selectedFeatUnitId.right,
+      },
+    });
+  }
+
+  return Either.right({
+    tag: "classLevelGainWithWeaponMasterySelection",
+    classUnitId: input.classUnitId,
+    hitPointRule: input.hitPointRule,
+    weaponMastery: {
+      featureUnitId: featureUnitId.right,
+      selectedWeaponUnitIds,
+    },
+  });
+}
+
 export function fighterLevelGainWithFightingStyleReplacement(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
@@ -745,6 +969,26 @@ export function advanceCharacterBuildClassLevel(input: {
       { tag: "fighterLevelGainWithFightingStyleReplacement" },
       (levelGain) =>
         replaceFightingStyleSelectedFeature({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain,
+        }),
+    ),
+    Match.when(
+      { tag: "classLevelGainWithWeaponMasterySelection" },
+      (levelGain) =>
+        updateWeaponMasterySelectedFeatures({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain,
+        }),
+    ),
+    Match.when(
+      {
+        tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+      },
+      (levelGain) =>
+        updateWeaponMasterySelectedFeatures({
           build: buildForFeatureUpdate,
           unitLibrary: input.unitLibrary,
           levelGain,
@@ -1140,7 +1384,12 @@ function plainClassLevelGainFeatures(input: {
   }
 
   if (facts.value.className !== WARLOCK_CLASS_NAME) {
-    return Either.right(input.build.features);
+    return weaponMasterySelectionsCanRemainUnchanged({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      classUnit: classUnit.right,
+      classUnitId: input.levelGain.classUnitId,
+    });
   }
 
   const featureChoice = eldritchInvocationFeatureForWarlockClass({
@@ -1172,6 +1421,341 @@ function plainClassLevelGainFeatures(input: {
       });
 }
 
+function weaponMasterySelectionsCanRemainUnchanged(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly classUnitId: ClassUnitId;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const feature = weaponMasteryFeatureForClass(input);
+  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (feature.right === undefined) return Either.right(input.build.features);
+
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
+  );
+  const currentProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel,
+  });
+  const nextProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel + 1,
+  });
+  if (currentProfile === undefined || nextProfile === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  const selectedCount = selectedWeaponMasteryFeaturesForFeature(
+    input.build.features,
+    feature.right.id,
+  ).length;
+  if (selectedCount !== currentProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel,
+      featureUnitId: feature.right.id,
+      expectedCount: currentProfile.choiceCount,
+      actualCount: selectedCount,
+      message:
+        "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
+    });
+  }
+
+  return currentProfile.choiceCount === nextProfile.choiceCount
+    ? Either.right(input.build.features)
+    : Either.left({
+        code: "invalidWeaponMasterySelectionCount",
+        classLevel: currentClassLevel + 1,
+        featureUnitId: feature.right.id,
+        expectedCount: nextProfile.choiceCount,
+        actualCount: selectedCount,
+        message:
+          "A plain class level gain would leave the build with the wrong number of Weapon Mastery choices.",
+      });
+}
+
+function updateWeaponMasterySelectedFeatures(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildWeaponMasteryLevelGain;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const feature = weaponMasteryFeatureForClass({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.right,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (feature.right === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.levelGain.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  if (feature.right.id !== input.levelGain.weaponMastery.featureUnitId) {
+    return Either.left({
+      code: "weaponMasteryFeatureClassMismatch",
+      classUnitId: input.levelGain.classUnitId,
+      featureUnitId: input.levelGain.weaponMastery.featureUnitId,
+      message:
+        "Weapon Mastery level gain must select weapons for the gaining class feature.",
+    });
+  }
+
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.levelGain.classUnitId,
+  );
+  const currentProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel,
+  });
+  const nextProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel + 1,
+  });
+  if (currentProfile === undefined || nextProfile === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.levelGain.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  const currentWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
+    input.build.features,
+    feature.right.id,
+  ).map((feature) => feature.unitId);
+  if (currentWeaponUnitIds.length !== currentProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel,
+      featureUnitId: feature.right.id,
+      expectedCount: currentProfile.choiceCount,
+      actualCount: currentWeaponUnitIds.length,
+      message:
+        "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
+    });
+  }
+
+  const selectedWeaponUnitIds =
+    input.levelGain.weaponMastery.selectedWeaponUnitIds;
+  if (selectedWeaponUnitIds.length !== nextProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel + 1,
+      featureUnitId: feature.right.id,
+      expectedCount: nextProfile.choiceCount,
+      actualCount: selectedWeaponUnitIds.length,
+      message:
+        "Weapon Mastery level gain must leave the build with the table count for the new class level.",
+    });
+  }
+
+  const selectedSet = new Set<UnitRecord["id"]>();
+  for (const weaponUnitId of selectedWeaponUnitIds) {
+    if (selectedSet.has(weaponUnitId)) {
+      return Either.left({
+        code: "duplicateWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message: "Weapon Mastery choices must not duplicate weapon Units.",
+      });
+    }
+    selectedSet.add(weaponUnitId);
+  }
+
+  const eligibleWeaponUnitIds = new Set(
+    nextProfile.eligibleWeapons.map((weapon) => weapon.id),
+  );
+  for (const weaponUnitId of selectedWeaponUnitIds) {
+    if (!eligibleWeaponUnitIds.has(weaponUnitId)) {
+      return Either.left({
+        code: "invalidWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message:
+          "Weapon Mastery level gain must choose eligible proficient weapons.",
+      });
+    }
+  }
+
+  const currentSet = new Set(currentWeaponUnitIds);
+  for (const weaponUnitId of currentWeaponUnitIds) {
+    if (!selectedSet.has(weaponUnitId)) {
+      return Either.left({
+        code: "missingExistingWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message:
+          "Weapon Mastery level gain can add the new table choices but cannot replace existing mastered weapons.",
+      });
+    }
+  }
+
+  const actualGains = selectedWeaponUnitIds.filter(
+    (weaponUnitId) => !currentSet.has(weaponUnitId),
+  ).length;
+  const expectedGains = nextProfile.choiceCount - currentProfile.choiceCount;
+  if (actualGains !== expectedGains) {
+    return Either.left({
+      code: "invalidWeaponMasteryGainCount",
+      classLevel: currentClassLevel + 1,
+      featureUnitId: feature.right.id,
+      expectedGains,
+      actualGains,
+      message:
+        "Weapon Mastery level gain must add exactly the new table choices.",
+    });
+  }
+
+  const weaponMasteryFeatures =
+    characterBuildFeaturesWithWeaponMasterySelections(
+      input.build.features,
+      feature.right.id,
+      selectedWeaponUnitIds,
+    );
+
+  return input.levelGain.tag !==
+    "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement"
+    ? Either.right(weaponMasteryFeatures)
+    : fightingStyleSelectedFeaturesReplaced({
+        build: { ...input.build, features: weaponMasteryFeatures },
+        unitLibrary: input.unitLibrary,
+        classUnitId: input.levelGain.classUnitId,
+        selectedFeatUnitId:
+          input.levelGain.fightingStyleReplacement.selectedFeatUnitId,
+      });
+}
+
+function characterBuildFeaturesWithWeaponMasterySelections(
+  features: readonly CharacterBuildFeature[],
+  featureUnitId: UnitRecord["id"],
+  selectedWeaponUnitIds: readonly UnitRecord["id"][],
+): readonly CharacterBuildFeature[] {
+  const nextFeatures: CharacterBuildFeature[] = [];
+  let inserted = false;
+
+  for (const feature of features) {
+    if (
+      feature.kind !== "selectedClassChoice" ||
+      feature.selectedFromUnitId !== featureUnitId
+    ) {
+      nextFeatures.push(feature);
+      continue;
+    }
+
+    if (!inserted) {
+      nextFeatures.push(
+        ...selectedWeaponUnitIds.map((unitId) => ({
+          kind: "selectedClassChoice" as const,
+          unitId,
+          selectedFromUnitId: featureUnitId,
+        })),
+      );
+      inserted = true;
+    }
+  }
+
+  if (!inserted) {
+    nextFeatures.push(
+      ...selectedWeaponUnitIds.map((unitId) => ({
+        kind: "selectedClassChoice" as const,
+        unitId,
+        selectedFromUnitId: featureUnitId,
+      })),
+    );
+  }
+
+  return nextFeatures;
+}
+
+function weaponMasteryFeatureForClass(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly classUnitId: ClassUnitId;
+}): Either.Either<
+  WeaponMasteryChoiceFeature | undefined,
+  CharacterBuildAdvancementIssue
+> {
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
+  );
+  const featureUnitIds = input.classUnit.featureGrants
+    .filter((grant) => grant.level <= currentClassLevel)
+    .map((grant) => grant.unitId)
+    .filter((unitId) => {
+      const unit = input.unitLibrary.getUnit(unitId);
+      return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value);
+    });
+
+  if (featureUnitIds.length > 1) {
+    return Either.left({
+      code: "ambiguousWeaponMasteryFeatureChoice",
+      classUnitId: input.classUnitId,
+      featureUnitIds,
+      message: "Class has more than one Weapon Mastery choice feature.",
+    });
+  }
+
+  const featureUnitId = featureUnitIds[0];
+  if (featureUnitId === undefined) return Either.right(undefined);
+
+  const unit = input.unitLibrary.getUnit(featureUnitId);
+  return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value)
+    ? Either.right(unit.value)
+    : Either.left({
+        code: "missingWeaponMasteryFeatureChoice",
+        classUnitId: input.classUnitId,
+        message: "Cannot find the class Weapon Mastery choice feature.",
+      });
+}
+
+function selectedWeaponMasteryFeaturesForFeature(
+  features: readonly CharacterBuildFeature[],
+  featureUnitId: UnitRecord["id"],
+): readonly Extract<
+  CharacterBuildFeature,
+  { readonly kind: "selectedClassChoice" }
+>[] {
+  return features.filter(
+    (
+      feature,
+    ): feature is Extract<
+      CharacterBuildFeature,
+      { readonly kind: "selectedClassChoice" }
+    > =>
+      feature.kind === "selectedClassChoice" &&
+      feature.selectedFromUnitId === featureUnitId,
+  );
+}
+
 function replaceFightingStyleSelectedFeature(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -1180,9 +1764,41 @@ function replaceFightingStyleSelectedFeature(input: {
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
-  const classUnitId = fighterClassUnitId({
+  const replacedFeatures = fightingStyleSelectedFeaturesReplaced({
+    build: input.build,
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
+    selectedFeatUnitId: input.levelGain.replacement.selectedFeatUnitId,
+  });
+  if (Either.isLeft(replacedFeatures))
+    return Either.left(replacedFeatures.left);
+
+  const classUnit = classUnitRecord({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  return weaponMasterySelectionsCanRemainUnchanged({
+    build: { ...input.build, features: replacedFeatures.right },
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.right,
+    classUnitId: input.levelGain.classUnitId,
+  });
+}
+
+function fightingStyleSelectedFeaturesReplaced(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly selectedFeatUnitId: FightingStyleFeatUnitId;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const classUnitId = fighterClassUnitId({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.classUnitId,
   });
   if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
 
@@ -1196,13 +1812,13 @@ function replaceFightingStyleSelectedFeature(input: {
   if (featureUnitId === undefined) {
     return Either.left({
       code: "missingFightingStyleFeatureChoice",
-      classUnitId: input.levelGain.classUnitId,
+      classUnitId: input.classUnitId,
       message:
         "Cannot find the Fighter class-feature Fighting Style feat choice.",
     });
   }
 
-  const selectedFeatUnitId = input.levelGain.replacement.selectedFeatUnitId;
+  const selectedFeatUnitId = input.selectedFeatUnitId;
   const selectedOptionId = creationChoiceOptionId(selectedFeatUnitId);
   if (!choiceOptionIdsFitHole(hole.right, [selectedOptionId])) {
     return Either.left({
