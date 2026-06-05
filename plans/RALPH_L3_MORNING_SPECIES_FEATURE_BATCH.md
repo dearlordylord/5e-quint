@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Dragonborn Damage Resistance"
     },
     {
