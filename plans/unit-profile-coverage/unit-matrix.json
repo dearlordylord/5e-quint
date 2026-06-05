@@ -23760,7 +23760,7 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "character inventory/equipment spell-component legality owner",
-              "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary."
+              "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual."
             },
             "mechanic": "ruby dust worth 50+ GP Material component availability, hand/access legality, and consumption on cast"
           },

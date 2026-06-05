@@ -19,14 +19,14 @@
     {
       "number": 3,
       "id": "L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Continual Flame component boundary"
     },
     {
       "number": 4,
       "id": "L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION",
-      "status": "blocked",
-      "title": "Promote Continual Flame light projection if owned by runtime"
+      "status": "ready-for-research",
+      "title": "Consolidate Continual Flame light projection evidence"
     },
     {
       "number": 5,
@@ -112,8 +112,8 @@ repair branch state by rebasing against `master`.
 |---:|---|---|---|---|
 | 1 | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER | ready-for-research | none | Classify remaining Antimagic Field gaps as executable battle support or owner-decision blockers. |
 | 2 | L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | done | none | Broader Dispel Magic occurrence support is not represented in the real reducer path; keep it assigned to the broader ongoing Spell Effect occurrence owner. |
-| 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | ready-for-research | none | Resolve material component and inventory ownership before any runtime promotion. |
-| 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | blocked | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Implement only if Task 3 proves a battle-reducer light projection is real. |
+| 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | done | none | Costly consumed Material component availability, hand/access legality, focus/component substitution eligibility, and consumed Material inventory mutation belong to the character equipment/component legality boundary, not battle runtime. |
+| 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | ready-for-research | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; consolidate existing evidence rather than starting a fresh runtime promotion unless research finds a concrete evidence gap. |
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | ready-for-research | none | Split creature support from object/table lifecycle support. |
 | 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | ready-for-research | none | Classify loose-object motion as runtime, object-system, or table narration. |
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | ready-for-research | none | Do not add object damage unless the reducer has a reachable object boundary. |
@@ -148,12 +148,22 @@ ongoing Spell Effect occurrence follow-up owner, not a table-only profile.
 Resolve whether component consumption and inventory state are within the current
 runtime boundary. Do not duplicate inventory facts.
 
+Outcome: costly consumed Material component availability and consumption for
+Continual Flame are outside the current battle-runtime boundary. Surface already
+records the authored component facts, and battle runtime owns Spell Slot
+spending plus the admitted object-attached light Spell Effect. Do not add a
+battle-runtime component stock field, component-spend ledger, copied inventory
+field, or spell-local inventory flag.
+
 ### Task 4 - L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION
 
-Promote a light projection only if Task 3 proves it is a battle-runtime fact.
-Required implementation shape is a full promoted unit tracer bullet: Surface
-shape, QNT witness or obligation, production reducer reachability, MBT replay,
-and coverage ledger update.
+Consolidate Continual Flame light projection evidence against the existing
+`spell.invocation-object-light` support profile. Confirm Surface shape, QNT
+witness/proof ownership, production reducer reachability, MBT replay evidence,
+and coverage ledgers all point at the existing object-light implementation. Do
+not build a second Continual Flame-specific light reducer or a fresh promoted
+unit tracer bullet unless research finds a concrete evidence gap in the existing
+profile.
 
 ### Task 5 - L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE
 
@@ -194,7 +204,8 @@ is connected to that path rather than a dead test-only projection.
 ### Task 12 - L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION
 
 Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
-lane, and record remaining spell pressure.
+lane, and record remaining spell pressure. Include the Task 3 Continual Flame
+component-boundary note and regenerated ledgers.
 
 ## Task Rules
 
