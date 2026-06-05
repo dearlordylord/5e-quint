@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL","status":"ready-for-implementation-after-light-research","title":"Map Careful Spell profile to rules-kernel obligations"},
-    {"number":2,"id":"L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED","status":"ready-for-implementation-after-light-research","title":"Map Heightened Spell profile to rules-kernel obligations"},
-    {"number":3,"id":"L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED","status":"ready-for-implementation-after-light-research","title":"Map Transmuted Spell profile to rules-kernel obligations"},
-    {"number":4,"id":"L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED","status":"ready-for-implementation-after-light-research","title":"Map Twinned Spell profile to rules-kernel obligations"},
-    {"number":5,"id":"L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit Antimagic Field QNT proof evidence rows"},
-    {"number":6,"id":"L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY","status":"ready-for-research","title":"Survey remaining Quickened action-spell procedures"},
-    {"number":7,"id":"L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE","status":"blocked","title":"Promote next Quickened Spell procedure slice"},
-    {"number":8,"id":"L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY","status":"ready-for-research","title":"Resolve Heightened repeat-save lifecycle boundary"},
-    {"number":9,"id":"L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY","status":"ready-for-research","title":"Resolve Distant Extended and Subtle cast-property boundary"},
-    {"number":10,"id":"L3MMETA-10-REROLL-METAMAGIC-BOUNDARY","status":"ready-for-research","title":"Resolve Empowered and Seeking reroll boundary"},
-    {"number":11,"id":"L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit metamagic selected-identity replay completeness"},
-    {"number":12,"id":"L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION","status":"blocked","title":"Consolidate metamagic and kernel evidence"}
+    {
+      "number": 1,
+      "id": "L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL",
+      "status": "done",
+      "title": "Map Careful Spell profile to rules-kernel obligations"
+    },
+    {
+      "number": 2,
+      "id": "L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Map Heightened Spell profile to rules-kernel obligations"
+    },
+    {
+      "number": 3,
+      "id": "L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Map Transmuted Spell profile to rules-kernel obligations"
+    },
+    {
+      "number": 4,
+      "id": "L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Map Twinned Spell profile to rules-kernel obligations"
+    },
+    {
+      "number": 5,
+      "id": "L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit Antimagic Field QNT proof evidence rows"
+    },
+    {
+      "number": 6,
+      "id": "L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY",
+      "status": "ready-for-research",
+      "title": "Survey remaining Quickened action-spell procedures"
+    },
+    {
+      "number": 7,
+      "id": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE",
+      "status": "blocked",
+      "title": "Promote next Quickened Spell procedure slice"
+    },
+    {
+      "number": 8,
+      "id": "L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Heightened repeat-save lifecycle boundary"
+    },
+    {
+      "number": 9,
+      "id": "L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Distant Extended and Subtle cast-property boundary"
+    },
+    {
+      "number": 10,
+      "id": "L3MMETA-10-REROLL-METAMAGIC-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Empowered and Seeking reroll boundary"
+    },
+    {
+      "number": 11,
+      "id": "L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit metamagic selected-identity replay completeness"
+    },
+    {
+      "number": 12,
+      "id": "L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Consolidate metamagic and kernel evidence"
+    }
   ]
 }
 -->
