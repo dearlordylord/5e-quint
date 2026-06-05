@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Antimagic Field Dispel Magic immunity"
     },
     {
@@ -147,7 +147,7 @@ owns branch repair.
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
 | 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
-| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | blocked | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
+| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
 | 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
 
 ## Global Acceptance Criteria
@@ -556,7 +556,7 @@ Expected outputs:
 
 ### Task 15 - L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Represent that Dispel Magic has no effect on an Antimagic Field aura once aura
 occurrences are otherwise targetable or visible to magical-effect targeting.
