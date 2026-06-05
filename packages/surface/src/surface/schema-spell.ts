@@ -522,6 +522,10 @@ type LandChoiceSpellAccessTier = {
   readonly minimumClassLevel: number;
   readonly spellIds: ReadonlyNonEmptyArray<string>;
 };
+type ClassLevelPreparedSpellAccessTier = {
+  readonly minimumClassLevel: number;
+  readonly spellIds: ReadonlyNonEmptyArray<string>;
+};
 type ShapeShiftRevertTrigger = Schema.Schema.Type<
   typeof ShapeShiftRevertTriggerSchema
 >;
@@ -1278,6 +1282,10 @@ type EffectAtom =
       readonly spellLevel: Schema.Schema.Type<typeof SpellLevelSchema>;
       readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
       readonly count: number;
+    }
+  | {
+      readonly kind: "grant_class_level_prepared_spell_access";
+      readonly tiers: ReadonlyNonEmptyArray<ClassLevelPreparedSpellAccessTier>;
     }
   | {
       readonly kind: "grant_land_choice_prepared_spell_access";
@@ -3139,6 +3147,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         spellLevel: SpellLevelSchema,
         mode: SpellAccessModeSchema,
         count: PositiveIntegerSchema,
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_class_level_prepared_spell_access"),
+        tiers: nonEmpty(
+          Schema.Struct({
+            minimumClassLevel: PositiveIntegerSchema,
+            spellIds: nonEmpty(Schema.NonEmptyTrimmedString),
+          }),
+        ),
       }),
       strictStruct({
         kind: Schema.Literal("grant_land_choice_prepared_spell_access"),

@@ -1,31 +1,46 @@
 {
   "acquiredAtLevel": 3,
   "className": "warlock",
-  "description": "The magic of your patron ensures you always have certain spells ready. When you reach Warlock level 3, you thereafter always have Burning Hands, Command, Scorching Ray, and Suggestion prepared.",
+  "description": "The magic of your patron ensures you always have certain spells ready. When you reach Warlock levels 3, 5, 7, and 9, you thereafter always have the listed Fiend spells prepared.",
   "id": "warlock_fiend_spells",
   "kind": "class_feature",
   "mechanics": {
     "family": "passive",
     "grants": [
       {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "burning_hands"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "command"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "scorching_ray"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "suggestion"
+        "kind": "grant_class_level_prepared_spell_access",
+        "tiers": [
+          {
+            "minimumClassLevel": 3,
+            "spellIds": [
+              "burning_hands",
+              "command",
+              "scorching_ray",
+              "suggestion"
+            ]
+          },
+          {
+            "minimumClassLevel": 5,
+            "spellIds": [
+              "fireball",
+              "stinking_cloud"
+            ]
+          },
+          {
+            "minimumClassLevel": 7,
+            "spellIds": [
+              "fire_shield",
+              "wall_of_fire"
+            ]
+          },
+          {
+            "minimumClassLevel": 9,
+            "spellIds": [
+              "geas",
+              "insect_plague"
+            ]
+          }
+        ]
       }
     ]
   },

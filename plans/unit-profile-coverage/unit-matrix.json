@@ -62,9 +62,9 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 163,
+      "denominator": 167,
       "numerator": 163,
-      "percent": "100%"
+      "percent": "97.6%"
     },
     "profileClassificationCoverage": {
       "denominator": 275,
@@ -92,8 +92,8 @@
       "percent": "97.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 157,
-      "numerator": 157,
+      "denominator": 161,
+      "numerator": 161,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 163,
-      "numerator": 159,
-      "percent": "97.5%"
+      "denominator": 167,
+      "numerator": 163,
+      "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 163,
-      "percent": "71.5%"
+      "numerator": 167,
+      "percent": "73.2%"
     }
   },
   "metricSemantics": [
@@ -4148,7 +4148,7 @@
         "packages/character-creation-runtime/src/finalization.ts",
         "packages/character-sheet-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+      "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
       "taskRefs": [
         "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
       ],
@@ -7157,8 +7157,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 157,
-          "numerator": 157,
+          "denominator": 161,
+          "numerator": 161,
           "percent": "100%"
         }
       },
@@ -7930,6 +7930,26 @@
             }
           ],
           "unitId": "cleric_divine_order"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "cleric_life_domain_spells"
         },
         {
           "joinStatus": "covered",
@@ -10026,6 +10046,26 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_oath_of_devotion_spells"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11067,6 +11107,26 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "sorcerer_draconic_spells"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11382,6 +11442,26 @@
             }
           ],
           "unitId": "warlock_eldritch_invocations"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "warlock_fiend_spells"
         },
         {
           "joinStatus": "covered",
@@ -14066,7 +14146,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation and Character Sheet changes retain selected level-3 subclass spell-access feature grants for Cleric Life Domain, Paladin Oath of Devotion, Sorcerer Draconic Sorcery, and Warlock Fiend Patron, then derive prepared spell access from installed Surface grant_spell_access facts without storing duplicate prepared-spell state. Druid Circle of the Land remains split to a selected-land follow-up.",
+      "note": "Focused Character Creation and Character Sheet changes retain selected subclass spell-access feature grants for Cleric Life Domain, Paladin Oath of Devotion, Sorcerer Draconic Sorcery, and Warlock Fiend Patron, then derive prepared spell access from installed Surface grant_class_level_prepared_spell_access tier facts and the existing build class level without storing duplicate prepared-spell state. Druid Circle of the Land remains owned by its selected-land profile.",
       "profileIds": [
         "character-sheet.class-feature-prepared-spell-access"
       ],
@@ -14648,12 +14728,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 109,
-        "profileSubsetSupportedUnits": 14,
+        "profileSubsetSupportedUnits": 10,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 62,
+        "supportedProfileUnits": 66,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16930,25 +17010,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Life Domain Spells table rows gained at Cleric levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Cleric Life Domain subclass ownership retains the level-3 Life Domain Spells class-feature Unit in CharacterBuild feature refs when the Cleric class level is 3 or higher",
-          "Character Sheet projects the level-3 Life Domain Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Cleric Life Domain subclass ownership retains the Life Domain Spells class-feature Unit in CharacterBuild feature refs when the Cleric class level is 3 or higher",
+          "The Surface class-feature record carries the Cleric level 3, 5, 7, and 9 Life Domain Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Life Domain Spells prepared spell access from installed Surface class-level tiers and the existing Cleric class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16969,7 +17040,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -19761,25 +19832,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Draconic Spells table rows gained at Sorcerer levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Sorcerer Draconic Sorcery subclass ownership retains the level-3 Draconic Spells class-feature Unit in CharacterBuild feature refs when the Sorcerer class level is 3 or higher",
-          "Character Sheet projects the level-3 Draconic Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Sorcerer Draconic Sorcery subclass ownership retains the Draconic Spells class-feature Unit in CharacterBuild feature refs when the Sorcerer class level is 3 or higher",
+          "The Surface class-feature record carries the Sorcerer level 3, 5, 7, and 9 Draconic Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Draconic Spells prepared spell access from installed Surface class-level tiers and the existing Sorcerer class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -19800,7 +19862,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -20114,25 +20176,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Fiend Spells table rows gained at Warlock levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Warlock Fiend Patron subclass ownership retains the level-3 Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher",
-          "Character Sheet projects the level-3 Fiend Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Warlock Fiend Patron subclass ownership retains the Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher",
+          "The Surface class-feature record carries the Warlock level 3, 5, 7, and 9 Fiend Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Fiend Spells prepared spell access from installed Surface class-level tiers and the existing Warlock class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20153,7 +20206,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -21162,25 +21215,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Oath of Devotion Spells table rows gained at Paladin levels 5, 9, 13, and 17"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Paladin Oath of Devotion subclass ownership retains the level-3 Oath of Devotion Spells class-feature Unit in CharacterBuild feature refs when the Paladin class level is 3 or higher",
-          "Character Sheet projects the level-3 Oath of Devotion Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Paladin Oath of Devotion subclass ownership retains the Oath of Devotion Spells class-feature Unit in CharacterBuild feature refs when the Paladin class level is 3 or higher",
+          "The Surface class-feature record carries the Paladin level 3, 5, 9, 13, and 17 Oath of Devotion Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Oath of Devotion Spells prepared spell access from installed Surface class-level tiers and the existing Paladin class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -21201,7 +21245,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],

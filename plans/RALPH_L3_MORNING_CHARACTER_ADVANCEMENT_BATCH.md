@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve subclass spell access progression closure"
     },
     {
@@ -112,7 +112,7 @@ repair branch state by rebasing against `master`.
 |---:|---|---|---|---|
 | 1 | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE | ready-for-research | none | Close Fighter/Barbarian later-count support as character-build facts unless battle reducer reachability exists. |
 | 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | done | none | Close later Expertise progression without duplicating skill selection state. |
-| 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | ready-for-research | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
+| 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | done | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
 | 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | ready-for-research | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
 | 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | ready-for-research | none | Decide if later slot support is build-time, spellcasting kernel, or out of L3. |
 | 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | ready-for-research | none | Classify cast witness and rest interaction against current runtime owners. |

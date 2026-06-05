@@ -5,11 +5,14 @@
 --    when you reach a Paladin level specified in the Oath of Devotion
 --    Spells table, you thereafter always have the listed spells prepared."
 --
--- This record covers the level-3 row. Later table rows are separate
--- class-level Spell Access progression work.
+-- This record keeps the whole subclass Spell Access table in one
+-- class-level-gated prepared Spell Access owner.
 
-let GrantSpellAccess =
-      { kind : Text, spellId : Text, mode : Text }
+let ClassLevelPreparedSpellAccessTier =
+      { minimumClassLevel : Natural, spellIds : List Text }
+
+let GrantClassLevelPreparedSpellAccess =
+      { kind : Text, tiers : List ClassLevelPreparedSpellAccessTier }
 
 let oathOfDevotionSpells =
       { kind = "class_feature"
@@ -22,19 +25,32 @@ let oathOfDevotionSpells =
           , section = "Classes/Paladin#Oath of Devotion Spells"
           }
       , description =
-          "The magic of your oath ensures you always have certain spells ready. When you reach Paladin level 3, you thereafter always have Protection from Evil and Good and Shield of Faith prepared."
+          "The magic of your oath ensures you always have certain spells ready. When you reach Paladin levels 3, 5, 9, 13, and 17, you thereafter always have the listed Oath of Devotion spells prepared."
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "grant_spell_access"
-                , spellId = "protection_from_evil_and_good"
-                , mode = "prepared"
+              [ { kind = "grant_class_level_prepared_spell_access"
+                , tiers =
+                  [ { minimumClassLevel = 3
+                    , spellIds =
+                      [ "protection_from_evil_and_good", "shield_of_faith" ]
+                    }
+                  , { minimumClassLevel = 5
+                    , spellIds = [ "aid", "zone_of_truth" ]
+                    }
+                  , { minimumClassLevel = 9
+                    , spellIds = [ "beacon_of_hope", "dispel_magic" ]
+                    }
+                  , { minimumClassLevel = 13
+                    , spellIds =
+                      [ "freedom_of_movement", "guardian_of_faith" ]
+                    }
+                  , { minimumClassLevel = 17
+                    , spellIds = [ "commune", "flame_strike" ]
+                    }
+                  ]
                 }
-              , { kind = "grant_spell_access"
-                , spellId = "shield_of_faith"
-                , mode = "prepared"
-                }
-              ] : List GrantSpellAccess
+              ] : List GrantClassLevelPreparedSpellAccess
           }
       }
 

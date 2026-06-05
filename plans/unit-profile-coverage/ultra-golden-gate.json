@@ -840,15 +840,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 140,
-            "numerator": 140
+            "denominator": 144,
+            "numerator": 144
           },
           "joinedEvidenceRows": {
-            "denominator": 140,
-            "numerator": 140
+            "denominator": 144,
+            "numerator": 144
           },
           "missingJoinRows": {
-            "denominator": 140,
+            "denominator": 144,
             "numerator": 0
           }
         },

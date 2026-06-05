@@ -8951,13 +8951,13 @@
         "state": "installed",
         "unitId": "cleric_life_domain_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -8967,7 +8967,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -17647,13 +17647,13 @@
         "state": "installed",
         "unitId": "paladin_oath_of_devotion_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -17663,7 +17663,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -23295,13 +23295,13 @@
         "state": "installed",
         "unitId": "sorcerer_draconic_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -23311,7 +23311,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -27583,13 +27583,13 @@
         "state": "installed",
         "unitId": "warlock_fiend_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -27599,7 +27599,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],

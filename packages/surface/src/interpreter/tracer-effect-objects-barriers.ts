@@ -49,6 +49,7 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "grant_language_choice"
       | "grant_spell_access"
       | "grant_spell_access_choice"
+      | "grant_class_level_prepared_spell_access"
       | "grant_land_choice_prepared_spell_access"
       | "grant_spell_free_casts"
       | "grant_die_token"
@@ -380,6 +381,22 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "grant_spell_access_choice",
         label: `grant_spell_access_choice\nchoose ${e.count} ${e.spellList} level ${e.spellLevel}\n(${describeSpellAccessMode(e.mode)})`,
+      });
+      return id;
+    }
+    case "grant_class_level_prepared_spell_access": {
+      const id = ids("eff");
+      const tiers = e.tiers
+        .map(
+          (tier) =>
+            `L${tier.minimumClassLevel}: ${tier.spellIds.join(", ")}`,
+        )
+        .join("; ");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_class_level_prepared_spell_access",
+        label: `grant_class_level_prepared_spell_access\n${tiers}`,
       });
       return id;
     }
