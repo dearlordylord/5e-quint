@@ -204,6 +204,9 @@ export function resolveSpellAttackSequenceAct(input: {
       fillSet: input.fillSet,
       partFill,
       partIndex,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
       ...(input.metamagicApplications === undefined
         ? {}
         : { metamagicApplications: input.metamagicApplications }),
@@ -442,6 +445,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       fillSet,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (input.partFill.attackRoll === undefined) {

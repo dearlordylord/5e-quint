@@ -321,6 +321,7 @@ const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
   "saveGatedCondition",
   "saveGatedConditionImmunity",
   "spellAttackDamage",
+  "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 
 function procedureIsIn(
@@ -2663,7 +2664,10 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else if (invocation.procedure === "spellAttackDamage") {
+  } else if (
+    invocation.procedure === "spellAttackDamage" ||
+    invocation.procedure === "spellAttackSequence"
+  ) {
     if (
       actionCostOverride !== "bonusAction" ||
       !spellInvocationHasMagicActionCastingTime(invocation)

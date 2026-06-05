@@ -19160,6 +19160,11 @@
           "taskId": "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS"
         },
         {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE"
