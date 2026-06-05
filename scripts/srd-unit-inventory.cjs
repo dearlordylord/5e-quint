@@ -157,22 +157,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-    {
-      owner: "battle-runtime Channel Divinity healing-action owner",
-      requirement:
-        "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
-    },
-  ],
-  [
-    "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-    {
-      owner: "battle-runtime Wild Shape spend and area damage/healing owner",
-      requirement:
-        "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
-    },
-  ],
-  [
     "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
     {
       owner: "battle-runtime initiative, Athletics, and critical-hit movement owner",
@@ -190,28 +174,12 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
-    {
-      owner: "battle-runtime Channel Divinity weapon-imbue owner",
-      requirement:
-        "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
-    },
-  ],
-  [
     "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
     {
       kind: "catalog-only-closure",
       owner: "runtime-detached table/stat-block knowledge owner",
       reason:
         "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
-    },
-  ],
-  [
-    "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
-    {
-      owner: "character-sheet option selection plus battle-runtime weapon-hit owner",
-      requirement:
-        "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
     },
   ],
   [
@@ -253,14 +221,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
       owner: "character-creation-runtime and character-sheet spellbook owner",
       requirement:
         "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
-    },
-  ],
-  [
-    "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
-    {
-      owner: "battle-runtime cantrip miss/save damage replacement owner",
-      requirement:
-        "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
     },
   ],
 ]);

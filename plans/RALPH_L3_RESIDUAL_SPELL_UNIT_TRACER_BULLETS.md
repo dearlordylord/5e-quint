@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reconcile merged class-feature tracer bullet evidence"
     },
     {
@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit and close or promote Sacred Weapon residual runtime"
     },
     {
@@ -87,9 +87,9 @@ owns branch repair.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | ready-for-implementation-after-light-research | none | Evidence-only cleanup for class-feature runtime work already merged. |
+| 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | done | none | Evidence-only cleanup for class-feature runtime work already merged. |
 | 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | ready-for-implementation-after-light-research | none | Independent runtime/spec scaling slice after level-3 Land's Aid runtime exists. |
-| 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | ready-for-implementation-after-light-research | none | Only implement missing behavior if the merged Sacred Weapon work did not already cover it. |
+| 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | done | none | Closed by the merged evidence reconciliation: Sacred Weapon residual runtime evidence is already covered. |
 | 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | ready-for-implementation-after-light-research | none | RAW/ASSUMPTIONS boundary task; must not invent damage semantics. |
 | 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION | Run only after Task 4 records an executable RAW decision. |
 | 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
@@ -153,7 +153,7 @@ must repeat until no reasonable findings remain.
 
 ### Task 1 - L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Reconcile stale Level 1-3 blocker rows for class-feature runtime work already
 merged through the promoted-unit and class-feature lanes.
@@ -204,7 +204,15 @@ Expected outputs:
 
 ### Task 3 - L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- Task 1 evidence reconciliation confirmed the remaining Sacred Weapon runtime
+  row was stale: activation, retained active weapon binding, attack-roll bonus,
+  normal-or-Radiant damage choice, light projection, dismissal/not-carried
+  cleanup, duration cleanup, QNT ownership, focused tests, and selected-identity
+  evidence are already represented in the ledgers.
 
 Audit the merged Sacred Weapon activation/runtime work against the remaining
 follow-up row and either close the stale row or promote the missing residual

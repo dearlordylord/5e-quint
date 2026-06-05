@@ -232,24 +232,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 594,
-      "percent": "97.9%",
+      "numerator": 599,
+      "percent": "98.7%",
       "rowsByStatus": {
-        "accepted": 433,
+        "accepted": 438,
         "accepted-no-battle-effect": 161,
-        "owner-evidence-required": 11,
+        "owner-evidence-required": 6,
         "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 42,
-      "percent": "82.4%",
+      "numerator": 47,
+      "percent": "92.2%",
       "rowsByStatus": {
-        "accepted": 28,
+        "accepted": 33,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 9
+        "owner-evidence-required": 4
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -276,10 +276,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 28,
+      "catalog-installed-owner-evidence-present": 33,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 9
+      "catalog-installed-owner-evidence-required": 4
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -288,9 +288,9 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 459,
+      "catalog-installed-owner-evidence-present": 464,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 10,
+      "catalog-installed-owner-evidence-required": 5,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -8812,8 +8812,8 @@
         "state": "installed",
         "unitId": "cleric_preserve_life"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8821,13 +8821,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime Channel Divinity healing-action owner",
-          "evidence": "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A16 at packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:level-3:class-table-summary:cleric_level_3_feature_table_row",
@@ -12108,8 +12108,8 @@
         "state": "installed",
         "unitId": "druid_lands_aid"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12117,13 +12117,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime Wild Shape spend and area damage/healing owner",
-          "evidence": "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A16 at packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:level-3:class-table-summary:druid_level_3_feature_table_row",
@@ -16600,7 +16600,7 @@
         "state": "installed",
         "unitId": "monk_open_hand_technique"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17509,7 +17509,7 @@
         "unitId": "paladin_sacred_weapon"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17517,13 +17517,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime Channel Divinity weapon-imbue owner",
-          "evidence": "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-3:class-table-summary:paladin_level_3_feature_table_row",
@@ -19705,8 +19705,8 @@
         "state": "installed",
         "unitId": "ranger_hunters_prey"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -19714,13 +19714,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet option selection plus battle-runtime weapon-hit owner",
-          "evidence": "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME at packages/character-battle-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:level-3:class-table-summary:ranger_level_3_feature_table_row",
@@ -29961,8 +29961,8 @@
         "state": "installed",
         "unitId": "wizard_potent_cantrip"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -29970,13 +29970,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime cantrip miss/save damage replacement owner",
-          "evidence": "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:level-3:class-table-summary:wizard_level_3_feature_table_row",

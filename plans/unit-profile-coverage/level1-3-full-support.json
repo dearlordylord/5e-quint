@@ -543,39 +543,6 @@
       "unitId": "cleric_life_domain_spells"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME: Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap. Owner: battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Cleric Preserve Life",
-          "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 333,
-            "lineStart": 330,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "cleric_preserve_life"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -1153,39 +1120,6 @@
       "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME: Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target. Owner: battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.; L3-FOLLOWUP-DRUID-LANDS-AID-SCALING: Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted. Owner: Surface mechanics plus battle-runtime Land's Aid execution owner. Required output: Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Druid Land's Aid",
-          "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 411,
-            "lineStart": 406,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "druid_lands_aid"
     },
     {
       "catalogStatus": "installed",
@@ -2124,39 +2058,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME: Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success. Owner: battle-runtime Flurry of Blows attack-hit reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Monk Open Hand Technique",
-          "id": "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 201,
-            "lineStart": 192,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "monk_open_hand_technique"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
@@ -2407,39 +2308,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "ranger_fighting_style"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME: Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state. Owner: battle-runtime selected-option attack reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Ranger Hunter's Prey",
-          "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 250,
-            "lineStart": 243,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "ranger_hunters_prey"
     },
     {
       "catalogStatus": "installed",
@@ -3048,39 +2916,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME: Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success. Owner: battle-runtime spell attack/save cantrip-damage reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Wizard Potent Cantrip",
-          "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 420,
-            "lineStart": 417,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "wizard_potent_cantrip"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "social-knowledge-effect"
@@ -3140,7 +2975,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 131,
+      "count": 136,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3168,6 +3003,7 @@
         "cleric_channel_divinity",
         "cleric_disciple_of_life",
         "cleric_divine_order",
+        "cleric_preserve_life",
         "color_spray",
         "command",
         "cure_wounds",
@@ -3177,6 +3013,7 @@
         "divine_smite",
         "dragons_breath",
         "druid_circle_of_the_land_spells",
+        "druid_lands_aid",
         "druid_primal_order",
         "eldritch_blast",
         "enhance_ability",
@@ -3221,6 +3058,7 @@
         "misty_step",
         "monk_deflect_attacks",
         "monk_martial_arts",
+        "monk_open_hand_technique",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
@@ -3234,6 +3072,7 @@
         "protection_from_evil_and_good",
         "protection_from_poison",
         "ranger_deft_explorer",
+        "ranger_hunters_prey",
         "ranger_weapon_mastery",
         "ray_of_enfeeblement",
         "ray_of_frost",
@@ -3273,6 +3112,7 @@
         "warlock_magical_cunning",
         "web",
         "wizard_arcane_recovery",
+        "wizard_potent_cantrip",
         "wizard_ritual_adept",
         "wizard_scholar"
       ]
@@ -3338,21 +3178,6 @@
       ]
     },
     {
-      "count": 8,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "cleric_preserve_life",
-        "druid_lands_aid",
-        "druid_wild_shape",
-        "monk_open_hand_technique",
-        "ranger_hunters_prey",
-        "sorcerer_metamagic",
-        "wizard_potent_cantrip"
-      ]
-    },
-    {
       "count": 7,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
@@ -3364,6 +3189,16 @@
         "moonbeam",
         "prayer_of_healing",
         "rogue_fast_hands"
+      ]
+    },
+    {
+      "count": 3,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "druid_wild_shape",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -3389,13 +3224,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 594,
-      "percent": "97.9%",
+      "numerator": 599,
+      "percent": "98.7%",
       "rowsByStatus": {
-        "accepted": 433,
+        "accepted": 438,
         "accepted-no-battle-effect": 161,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 11,
+        "owner-evidence-required": 6,
         "partial-battle-runtime": 1
       }
     },
@@ -3416,8 +3251,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 131,
-      "percent": "66.5%"
+      "numerator": 136,
+      "percent": "69%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -10743,20 +10578,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 36,
-      "supported-profile": 131,
+      "profile-subset-supported": 31,
+      "supported-profile": 136,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 8,
+      "blocked-follow-up-split": 3,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 131
+      "supported-profile": 136
     },
-    "nonSupportedFrontier": 66,
+    "nonSupportedFrontier": 61,
     "strictDenominator": 197
   }
 }

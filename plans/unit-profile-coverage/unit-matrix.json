@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 154,
-      "numerator": 150,
-      "percent": "97.4%"
+      "denominator": 159,
+      "numerator": 155,
+      "percent": "97.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 154,
-      "percent": "67.8%"
+      "numerator": 159,
+      "percent": "70%"
     }
   },
   "metricSemantics": [
@@ -4093,7 +4093,7 @@
         "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/character-battle-resources.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. Battle runtime retains the selected profile on character combatants, spends the Magic Action and existing Channel Divinity resource, consumes caller-supplied target distribution and range facts, applies healing, and rejects missing-resource, missing-action, non-Bloodied, out-of-range, over-pool, and over-cap fills without authored-identity dispatch or duplicate resource state.",
       "taskRefs": [
         "L13UG-A16",
         "L3PUTB-04"
@@ -4125,7 +4125,7 @@
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle runtime retains the selected profile, spends the Magic Action and existing Wild Shape resource, consumes caller-supplied area membership, Saving Throw, damage-roll, and healing-roll facts, applies the level-3 damage and healing, and rejects missing-resource, invalid-area, invalid-save-fill, invalid-healing-target, and malformed-roll cases without duplicating Wild Shape state or geometry. Druid level 10 and 14 dice scaling remains a later-level task.",
       "taskRefs": [
         "L13UG-A16",
         "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
@@ -4254,7 +4254,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Battle runtime consumes the retained profile from supported Flurry of Blows hit windows, applies Addle Opportunity Attack denial, gates Push and Topple behind the required failed Saving Throws, validates Push distance/disposition facts, treats successful saves as no-ops, and rejects stale, non-Flurry, unsupported-disposition, and missing-profile cases through the existing Monk Focus, attack, Saving Throw, forced-movement, and condition owners.",
       "taskRefs": [
         "L13UG-A18",
         "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
@@ -4328,7 +4328,7 @@
         "packages/character-creation-runtime/src/finalization.ts",
         "packages/character-battle-runtime/src/battle-support-profiles.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization records the selected option on the selected Unit ref, character-to-battle handoff preserves that typed option in BattleUnitRef, and battle runtime consumes existing weapon-hit, target Hit Point, once-per-turn, same-weapon, damage-rider, and caller-supplied target-predicate facts to resolve optional Colossus Slayer and Horde Breaker while rejecting missing selection, same target, invalid predicate, and repeated-use cases without authored-identity dispatch.",
       "taskRefs": [
         "L13UG-A18",
         "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
@@ -4400,7 +4400,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Battle runtime retains the selected profile on character combatants and consumes it in existing spell attack, spell save, cantrip-damage, and additional-effect owners to apply half damage on supported creature-target cantrip misses or successful saves, suppress non-damage effects on those branches, and reject object-target or unsupported cantrip cases without authored cantrip identity dispatch.",
       "taskRefs": [
         "L13UG-A18",
         "L3PUTB-05"
@@ -13598,7 +13598,7 @@
     },
     {
       "claimKind": "admission-projection",
-      "note": "Focused battle-runtime admission tests cover Disciple of Life, Preserve Life, Land's Aid, and Dark One's Blessing Surface mechanics shape admission, malformed-shape rejection, and support-profile projection without authored-identity dispatch. Reducer execution, QNT parity, and later Land's Aid dice scaling remain explicit follow-up work rather than completed runtime parity.",
+      "note": "Focused battle-runtime admission tests cover Disciple of Life, Preserve Life, Land's Aid, and Dark One's Blessing Surface mechanics shape admission, malformed-shape rejection, and support-profile projection without authored-identity dispatch. Later promoted tasks close the executable Preserve Life and level-3 Land's Aid reducer/QNT paths; only Land's Aid level 10 and 14 dice scaling remains split to the later-level scaling task.",
       "profileIds": [
         "unit-feature.spell-slot-healing-modifier",
         "unit-feature.magic-action-healing-pool",
@@ -13626,7 +13626,7 @@
     },
     {
       "claimKind": "admission-projection",
-      "note": "Focused battle-runtime admission tests cover Surface mechanics shape admission, malformed-shape rejection, class/subclass grant reachability, and support-profile projection without authored-identity dispatch. Reducer execution and QNT parity remain explicit follow-up work: the current battle runtime has existing owners for action economy, resources, movement, attack roll modes, attack damage riders, item/light state, and spell cantrip damage that must consume these typed profiles directly rather than a detached Task 18 state machine.",
+      "note": "Focused battle-runtime admission tests cover Surface mechanics shape admission, malformed-shape rejection, class/subclass grant reachability, and support-profile projection without authored-identity dispatch. Later promoted tasks close the executable Open Hand Technique, Hunter's Prey, Potent Cantrip, Sacred Weapon, Steady Aim, and Remarkable Athlete reducer/QNT paths through the existing action economy, resources, movement, attack, item/light, and spell cantrip owners.",
       "profileIds": [
         "unit-feature.remarkable-athlete",
         "unit-feature.open-hand-technique",
@@ -13799,7 +13799,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Sacred Weapon QNT witness covers Attack action activation availability, Paladin Channel Divinity spend, held Melee weapon binding, missing-resource and Ranged-weapon rejection, and recast replacement of the active binding. Attack bonus, Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 scope.",
+      "note": "Focused Sacred Weapon QNT witness covers Attack action activation availability, Paladin Channel Divinity spend, held Melee weapon binding, missing-resource and Ranged-weapon rejection, and recast replacement of the active binding. The paired L3CF-04 QNT witness covers active attack bonus, Radiant damage choice, light projection, dismissal, and no-longer-carried cleanup from that binding.",
       "profileIds": [
         "unit-feature.paladin-sacred-weapon"
       ],
@@ -13807,7 +13807,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Sacred Weapon support profile on selected character combatants, admitting only the Paladin Channel Divinity resource for this battle spend path, discovering activation only with an available Attack action, Channel Divinity use, and held Melee weapon, spending the Attack action and one use, binding the selected weapon item, rejecting stale missing-resource or Ranged-weapon subjects, and replacing the prior binding on recast without duplicating item state. Attack bonus, Radiant damage choice, light projection, dismissal, not-carried cleanup, and active binding expiration remain Task 4 scope.",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Sacred Weapon support profile on selected character combatants, admitting only the Paladin Channel Divinity resource for this battle spend path, discovering activation only with an available Attack action, Channel Divinity use, and held Melee weapon, spending the Attack action and one use, binding the selected weapon item, rejecting stale missing-resource or Ranged-weapon subjects, and replacing the prior binding on recast without duplicating item state. The paired L3CF-04 evidence covers active attack bonus, Radiant damage choice, light projection, dismissal, and no-longer-carried cleanup from that binding.",
       "profileIds": [
         "unit-feature.paladin-sacred-weapon"
       ],
@@ -13815,7 +13815,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Sacred Weapon QNT witness covers the active effect's Charisma attack-roll bonus with minimum +1, normal-or-Radiant hit damage choice, Bright 20-foot plus Dim additional 20-foot light projection, no-action dismissal, and not-carried cleanup.",
+      "note": "Focused Sacred Weapon QNT witness covers the active effect's Charisma attack-roll bonus with minimum +1, normal-or-Radiant hit damage choice, Bright 20-foot plus Dim additional 20-foot light projection, no-action dismissal, and not-carried cleanup. Generic active-effect duration cleanup owns timed expiration for the retained binding.",
       "profileIds": [
         "unit-feature.paladin-sacred-weapon"
       ],
@@ -13823,7 +13823,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity replay cover applying the active binding to the bound weapon attack roll, projecting normal and Radiant damage-type attack options, projecting feature-owned Bright/Dim light without spell provenance, and ending the active binding plus light on dismissal or not carrying the weapon.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover applying the active binding to the bound weapon attack roll, projecting normal and Radiant damage-type attack options, projecting feature-owned Bright/Dim light without spell provenance, and ending the active binding plus light on dismissal or not carrying the weapon. Generic active-effect duration cleanup owns timed expiration for the retained binding.",
       "profileIds": [
         "unit-feature.paladin-sacred-weapon"
       ],
@@ -13979,12 +13979,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 104,
-        "profileSubsetSupportedUnits": 22,
+        "profileSubsetSupportedUnits": 17,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 54,
+        "supportedProfileUnits": 59,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16292,38 +16292,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
-            "mechanic": "Execute Preserve Life as a Magic Action: spend one Channel Divinity use, accept chosen Bloodied creatures within 30 feet including self, distribute a five-times-Cleric-level healing pool, and cap each target at half Hit Point maximum."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE-RUNTIME",
-            "mechanic": "Consume the admitted magic-action-healing-pool profile to spend Channel Divinity and apply caller-distributed Bloodied target healing with the half-Hit-Point-maximum cap.",
-            "owner": "battle-runtime Unit feature Magic Action resource/healing reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, target validation, pool distribution, cap enforcement, and rejection without authored-identity dispatch.",
-            "title": "Cleric Preserve Life Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Channel Divinity healing pool owner plus promoted Quint parity",
         "profileIds": [
           "unit-feature.magic-action-healing-pool"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Magic Action healing pool execution owner consumes this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface magic_action_healing_pool mechanics with Magic Action activation and a referenced Channel Divinity spend",
-          "The projected support profile carries 30-foot Bloodied creature targeting including self, a pool equal to five times class level, and a half-Hit-Point-maximum cap without duplicating Channel Divinity state"
+          "The projected support profile carries 30-foot Bloodied creature targeting including self, a pool equal to five times class level, and a half-Hit-Point-maximum cap without duplicating Channel Divinity state",
+          "Battle runtime discovers Preserve Life only through the retained selected support profile, an available Magic Action, and an existing Cleric Channel Divinity use",
+          "Battle runtime spends the Magic Action and one Cleric Channel Divinity use, consumes caller-supplied Bloodied target choices and 30-foot range facts, distributes a five-times-Cleric-level healing pool including self, enforces the pool and half-Hit-Point-maximum caps, and rejects missing-resource, missing-action, non-Bloodied, out-of-range, over-pool, and over-cap fills without authored-identity dispatch or duplicate resource state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16353,7 +16334,7 @@
             "packages/battle-runtime/src/battle-reducer/unit-features.ts",
             "packages/battle-runtime/src/character-battle-resources.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. It projects those executable facts without duplicating the Channel Divinity resource; healing distribution execution remains a future promoted reducer owner.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_healing_pool shape, a referenced Channel Divinity resource Unit, 30-foot point range, Bloodied creature targeting including self, class-level multiplier pool, and half-Hit-Point-maximum per-target cap. Battle runtime retains the selected profile on character combatants, spends the Magic Action and existing Channel Divinity resource, consumes caller-supplied target distribution and range facts, applies healing, and rejects missing-resource, missing-action, non-Bloodied, out-of-range, over-pool, and over-cap fills without authored-identity dispatch or duplicate resource state.",
           "taskRefs": [
             "L13UG-A16",
             "L3PUTB-04"
@@ -16473,42 +16454,20 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "L3RES-02-DRUID-LANDS-AID-SCALING",
+              "reason": "The promoted runtime currently covers the character-level-3 2d6 Land's Aid profile. The remaining 3d6 and 4d6 thresholds are Druid level 10 and 14 behavior outside the level-1-through-3 support gate and remain assigned to the explicit scaling task."
+            },
             "mechanic": "Add Druid level 10 and 14 dice scaling for Land's Aid damage and healing after the level-3 runtime owner exists."
-          },
-          {
-            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
-            "mechanic": "Execute Land's Aid as a Magic Action: spend one Wild Shape use, consume caller-supplied Sphere area membership, resolve Constitution saves, apply 2d6 Necrotic damage with half damage on success, and heal one chosen creature in the area for 2d6 Hit Points."
           }
         ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
-            "mechanic": "Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target.",
-            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.",
-            "title": "Druid Lands Aid Runtime"
-          },
-          {
-            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
-            "mechanic": "Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted.",
-            "owner": "Surface mechanics plus battle-runtime Land's Aid execution owner",
-            "requiredOutput": "Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
-            "title": "Druid Lands Aid Scaling"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Wild Shape spend area save damage/healing owner plus later Druid-level scaling owner",
         "profileIds": [
           "unit-feature.magic-action-area-save-damage-healing"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface magic_action_area_save_damage_healing mechanics with Magic Action activation and a referenced Wild Shape spend",
           "The projected level-3 support profile carries the 60-foot point origin, 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area without duplicating Wild Shape state or geometry",
@@ -16516,7 +16475,7 @@
           "Battle runtime discovers Land's Aid only when a Magic Action, spell save DC, and existing Wild Shape resource use are available",
           "Battle runtime consumes caller-supplied Sphere membership facts, Saving Throw outcomes, and 2d6 damage/healing fills to spend one Wild Shape use, apply level-3 Necrotic damage with half damage on success, and heal one chosen in-area creature for 2d6 Hit Points without deriving duplicate geometry"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16545,7 +16504,7 @@
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
             "packages/battle-runtime/src/battle-reducer/unit-features.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle runtime retains the selected profile, spends the Magic Action and existing Wild Shape resource, consumes caller-supplied area membership, Saving Throw, damage-roll, and healing-roll facts, applies the level-3 damage and healing, and rejects missing-resource, invalid-area, invalid-save-fill, invalid-healing-target, and malformed-roll cases without duplicating Wild Shape state or geometry. Druid level 10 and 14 dice scaling remains a later-level task.",
           "taskRefs": [
             "L13UG-A16",
             "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
@@ -17429,39 +17388,20 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-            "mechanic": "Execute Open Hand Technique after Flurry of Blows hits, including Addle Opportunity Attack denial and failed-save-gated Push/Topple outcomes."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-            "mechanic": "Consume the admitted open-hand-technique profile after supported Flurry hits, requiring failed Strength/Dexterity saves for Push/Topple and applying Addle without unconditional success.",
-            "owner": "battle-runtime Flurry of Blows attack-hit reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Addle, Push save success/failure, Topple save success/failure, and stale/non-Flurry rejection.",
-            "title": "Monk Open Hand Technique Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime Monk Focus, attack-hit, saving-throw, forced-movement, and condition owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.open-hand-technique"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the Flurry of Blows hit and saving-throw rider owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Warrior of the Open Hand grants Open Hand Technique as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface open_hand_technique mechanics referencing Monk Focus Flurry of Blows",
-          "The projected support profile carries Addle, Push, and Topple rider facts, including the required Strength/Dexterity Saving Throw gates for Push and Topple, without authored-identity dispatch"
+          "The projected support profile carries Addle, Push, and Topple rider facts, including the required Strength/Dexterity Saving Throw gates for Push and Topple, without authored-identity dispatch",
+          "Battle runtime consumes the retained profile only from supported Flurry of Blows hit windows, offers the Addle, Push, and Topple choices, rejects stale and non-Flurry hit windows, and keeps the decision tied to the hit target",
+          "Battle runtime applies Addle Opportunity Attack denial until the target's next turn starts, applies Push only after a failed Strength Saving Throw with a supported non-provoking distance up to 15 feet, applies Topple only after a failed Dexterity Saving Throw, and treats successful saves as no-op outcomes without authored-identity dispatch"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -17492,7 +17432,7 @@
             "packages/battle-runtime/src/battle-reducer/attack-main.ts",
             "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Flurry hit timing, target saves, forced movement, and Prone execution must consume these facts in the existing runtime owners before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface open_hand_technique shape referencing the Monk Focus Flurry of Blows option and projects typed Addle, Push, and Topple rider facts without duplicating Monk Focus resource state or dispatching on subclass identity. Battle runtime consumes the retained profile from supported Flurry of Blows hit windows, applies Addle Opportunity Attack denial, gates Push and Topple behind the required failed Saving Throws, validates Push distance/disposition facts, treats successful saves as no-ops, and rejects stale, non-Flurry, unsupported-disposition, and missing-profile cases through the existing Monk Focus, attack, Saving Throw, forced-movement, and condition owners.",
           "taskRefs": [
             "L13UG-A18",
             "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
@@ -19646,39 +19586,20 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
-            "mechanic": "Execute Potent Cantrip in spell resolution, applying half cantrip damage on attack misses or successful target saves while applying no additional effect."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP-RUNTIME",
-            "mechanic": "Consume the admitted potent-cantrip profile in cantrip spell resolution for supported damaging cantrips targeting creatures, without cantrip identity dispatch and without applying non-damage effects on miss/save success.",
-            "owner": "battle-runtime spell attack/save cantrip-damage reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack-miss half damage, save-success half damage, non-creature/unsupported cantrip rejection, and no additional effect.",
-            "title": "Wizard Potent Cantrip Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell attack, spell save, cantrip damage, and additional-effect owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.potent-cantrip"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until spell attack, spell save, cantrip-damage, and additional-effect owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Evoker grants Potent Cantrip as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface potent_cantrip mechanics",
-          "The projected support profile carries damaging-cantrip creature-target half-damage facts for attack misses and successful target saves, plus the no-additional-effect restriction, without authored-identity dispatch"
+          "The projected support profile carries damaging-cantrip creature-target half-damage facts for attack misses and successful target saves, plus the no-additional-effect restriction, without authored-identity dispatch",
+          "Battle runtime consumes the retained profile in cantrip spell attack and Saving Throw resolution to apply half damage on supported damaging class-cantrip attack misses and successful target saves against creatures",
+          "Battle runtime suppresses non-damage additional effects on those miss/save-success branches and rejects object-target or unsupported cantrip cases from the Potent Cantrip half-damage path without authored cantrip identity dispatch"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -19708,7 +19629,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Existing spell attack, spell save, cantrip-damage, and additional-effect owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface potent_cantrip shape and projects typed damaging-cantrip creature-target half-damage facts for attack misses and successful target saves while excluding additional effects and cantrip identity dispatch. Battle runtime retains the selected profile on character combatants and consumes it in existing spell attack, spell save, cantrip-damage, and additional-effect owners to apply half damage on supported creature-target cantrip misses or successful saves, suppress non-damage effects on those branches, and reject object-target or unsupported cantrip cases without authored cantrip identity dispatch.",
           "taskRefs": [
             "L13UG-A18",
             "L3PUTB-05"
@@ -20477,22 +20398,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
-            "mechanic": "Apply Sacred Weapon's active attack-roll bonus, normal-or-Radiant damage choice, light emission, and dismissal/not-carried ending semantics from the retained active weapon binding."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME",
-            "mechanic": "Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics.",
-            "owner": "battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
-            "title": "Paladin Sacred Weapon Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime attack, damage-type, light, and active-effect lifecycle owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.paladin-sacred-weapon"
         ],
@@ -20794,44 +20699,21 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
-            "mechanic": "Execute the retained Hunter's Prey choice in attack resolution, including Colossus Slayer once-per-turn missing-HP damage and Horde Breaker once-per-turn same-weapon extra attack against a different nearby creature."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
-            "mechanic": "Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state.",
-            "owner": "battle-runtime selected-option attack reducers plus Quint parity",
-            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
-            "title": "Ranger Hunters Prey Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime selected class-feature option, attack damage-rider, target-spatial-fact, and extra-attack owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.hunters-prey"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "selectedIdentityEvidenceDisposition": {
-          "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the selected-option and attack owners consume this profile.",
-          "tag": "not-applicable"
-        },
         "supportedMechanics": [
           "Hunter grants Hunter's Prey as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface hunters_prey choose-one mechanics and projects typed Colossus Slayer and Horde Breaker option facts without authored-identity dispatch",
           "Character finalization records the selected Hunter's Prey option on the existing selected Unit ref, and the character-battle handoff preserves that typed option in BattleUnitRef instead of storing a parallel weapon or target model",
-          "Battle runtime rejects weapon attacks for Hunter's Prey support refs that lack a retained selected option",
+          "Battle runtime rejects Hunter's Prey support refs that lack a retained selected option",
           "Selected Colossus Slayer is offered as an optional once-per-turn same-type weapon damage rider only when a weapon hit target is below its Hit Point maximum, so an eligible hit can be skipped and the use saved for a later hit on the same turn",
-          "Selected Horde Breaker executes as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet-of-original-target, within-weapon-range, and not-attacked-this-turn predicate facts, including non-enemy target choice availability and reuse of existing weapon-attack damage rider owners such as attack damage riders and marked-target damage",
-          "Battle Unit support admits the Surface hunters_prey choose-one mechanics",
-          "The projected support profile carries Colossus Slayer and Horde Breaker option facts, including the target missing-Hit-Point and different-creature-within-5-feet predicates, without authored-identity dispatch"
+          "Selected Horde Breaker executes as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet-of-original-target, within-weapon-range, and not-attacked-this-turn predicate facts, including non-enemy target choice availability and reuse of existing weapon-attack damage rider owners such as attack damage riders and marked-target damage"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20876,7 +20758,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-battle-runtime/src/battle-support-profiles.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization records the selected option on the selected Unit ref, character-to-battle handoff preserves that typed option in BattleUnitRef, and battle runtime consumes existing weapon-hit, target Hit Point, once-per-turn, same-weapon, damage-rider, and caller-supplied target-predicate facts to resolve optional Colossus Slayer and Horde Breaker while rejecting missing selection, same target, invalid predicate, and repeated-use cases without authored-identity dispatch.",
           "taskRefs": [
             "L13UG-A18",
             "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
