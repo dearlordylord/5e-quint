@@ -13712,6 +13712,12 @@
     },
     {
       "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed local SRD Spike Growth camouflaged-terrain recognition, Search action, Wisdom (Perception or Survival) check, caster Spell Save DC, and before-entry timing against UBIQUITOUS_LANGUAGE Action Lifecycle, Skill, Difficult Terrain, Movement, and Vision and Light terms. The promoted movement hazard profile already owns spell resource spending, caster-owned Concentration, caller-supplied area identity, Difficult Terrain movement-cost projection, movement-triggered Piercing damage, and cleanup. Recognition remains a runtime-detached Search/perception witness because it is per observer and depends on table-owned cast-time sight, Search Action declaration before entering, applicable Skill, check result, and recognized-hazard witness; adding Spike Growth-local recognition state would duplicate perception/search ownership and make global recognized terrain states representable.",
+      "profileIds": [],
+      "taskId": "L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
       "note": "Focused battle-runtime tests cover Distant, Extended, and Subtle Spell as typed Metamagic selections that are rejected before Sorcery Point spending. The closure records the missing generic owners: range-bearing spell target witnesses for Distant, duration plus Concentration-saving-throw roll mode for Extended, and component/material witnesses for Subtle. No runtime profile is claimed, and production dispatch remains on typed effectKind facts rather than spell authored identity.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS"

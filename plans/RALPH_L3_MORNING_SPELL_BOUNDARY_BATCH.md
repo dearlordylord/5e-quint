@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Spike Growth hidden hazard discovery closure"
     },
     {
@@ -117,7 +117,7 @@ repair branch state by rebasing against `master`.
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | done | none | Enlarge/Reduce creature support is already represented by `spell.invocation-creature-size-change`; object Size and carried/worn item normalization remain outside battle runtime until a generic object/item lifecycle owner exists. |
 | 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | done | none | Levitate loose-object motion remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists. |
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | done | none | Fireball object ignition is reachable through the production `saveGatedDamage` reducer path; automatic area membership, line of effect, object discovery, flammable/unworn discovery, and grid geometry remain table/spatial derivations. |
-| 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | ready-for-research | none | Resolve hidden hazard discovery without duplicating perception/search state. |
+| 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | done | none | Spike Growth camouflaged terrain recognition remains a runtime-detached Search/perception witness; do not add Spike Growth-local recognized terrain state. |
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | ready-for-research | none | Separate spell duration/drop behavior from absent spatial/falling engine facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | ready-for-research | none | Resolve shapechanger/shapeshift trigger ownership against current unit/profile facts. |
 | 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Confirm promoted spell profiles replay selected identity through production reducer paths. |
@@ -227,6 +227,16 @@ consolidated in
 Resolve hidden terrain discovery and search-state ownership using RAW and
 ubiquitous language.
 
+Outcome: Spike Growth movement hazard support remains under the promoted
+`spell.invocation-spike-growth-movement-hazard` profile. The camouflaged
+terrain recognition clause is real SRD behavior, but it is per creature and
+depends on table-owned cast-time sight, Search Action declaration before entry,
+Skill/check result, caster Spell Save DC comparison, and a recognized-hazard
+witness. Do not add Spike Growth-local recognized/unrecognized terrain state or
+reuse hidden-combatant Search state for terrain recognition. Evidence is
+consolidated in
+`plans/unit-profile-coverage/L3MSPELL_08_SPIKE_GROWTH_SEARCH_CLOSURE.md`.
+
 ### Task 9 - L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE
 
 Resolve whether Fly needs a runtime falling/spatial slice now or an explicit
@@ -249,8 +259,8 @@ Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
 lane, and record remaining spell pressure. Include the Task 3 Continual Flame
 component-boundary note, the Task 4 Continual Flame light-projection evidence
 note, the Task 5 Enlarge/Reduce object-lifecycle note, the Task 6 Levitate
-loose-object boundary note, the Task 7 Fireball area-object closure note, and
-regenerated ledgers.
+loose-object boundary note, the Task 7 Fireball area-object closure note, the
+Task 8 Spike Growth Search/perception closure note, and regenerated ledgers.
 
 ## Task Rules
 

@@ -1666,6 +1666,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT | completed-runtime-parity | `spell.invocation-see-invisible-observer-sight` |
 | L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME | qnt-proof | `spell.invocation-spike-growth-movement-hazard` |
 | L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME | completed-runtime-parity | `spell.invocation-spike-growth-movement-hazard` |
+| L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | qnt-proof | `unit-feature.monk-focus-battle-options`, `spell.invocation-jump-movement-replacement` |
