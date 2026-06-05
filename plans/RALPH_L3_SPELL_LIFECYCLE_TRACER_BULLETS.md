@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Antimagic Field aura action interdiction"
     },
     {
@@ -141,7 +141,7 @@ owns branch repair.
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | done | none | Split into owner-specific executable follow-up rows. |
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
 | 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | done | none | Hypnotic Pattern control runtime is promoted. |
-| 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
+| 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
 | 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
@@ -425,7 +425,7 @@ Expected outputs:
 
 ### Task 9 - L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Represent typed Antimagic Field aura membership and use it to block
 spellcasting and Magic actions for creatures inside the aura.
