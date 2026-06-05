@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote broader Dispel Magic ongoing effect ending"
     },
     {
@@ -89,7 +89,7 @@ owns branch repair.
 | 2 | L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION - Promote or close Darkness object-origin branch | done | none | Closed as table/object-spatial adjudication; point-origin support remains unchanged. |
 | 3 | L3SPELL-03-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Promote spell-effect shape-shift true-form reversion owner | done | none | Spell-effect shape-shift owners are promoted through the shared reversion owner used by Moonbeam. |
 | 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | done | none | Closed as outside promoted battle runtime because SRD Shape-Shift specials lack a structured active-form owner. |
-| 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | ready-for-implementation-after-light-research | none | Independent ongoing-effect cleanup slice. |
+| 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | done | none | Spiritual Weapon tracked active-effect occurrences are now covered by the existing Dispel Magic ongoing-effect gate. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | ready-for-implementation-after-light-research | none | Independent boundary split. |
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | ready-for-implementation-after-light-research | none | Surface repair prerequisite for Task 8. |
 | 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | blocked | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Requires the typed escape Surface shape from Task 7. |
@@ -250,7 +250,7 @@ Result:
 
 ### Task 5 - L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Dispel Magic beyond tracked light and object-contact damage effects.
 
@@ -266,6 +266,17 @@ Expected outputs:
 
 - QNT/parity for one broader occurrence family and rejection/ability-check gate;
 - ledger updates without claiming all possible Dispel Magic clauses.
+
+Result:
+
+- promoted tracked Spiritual Weapon active-effect occurrences as the broader
+  already-represented ongoing Spell Effect family for this tracer bullet;
+- ended those occurrences through the existing Dispel Magic magical-effect
+  target gate by stable source effect identity and source spell level,
+  including higher-level spellcasting Ability Check gating;
+- kept spell-specific exceptions, automatic geometry, magical-effect identity
+  selection, and still-untracked creature/area/object effect families in the
+  existing broader Dispel Magic follow-up.
 
 ### Task 6 - L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT
 

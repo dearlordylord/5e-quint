@@ -739,7 +739,8 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
-        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt",
+        "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -750,7 +751,7 @@
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
-      "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell light emitters and object-contact occurrences, including higher-level ability-check gating"
+      "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell-light, object-contact, and Spiritual Weapon occurrences, including higher-level ability-check gating"
     },
     {
       "id": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
@@ -5932,6 +5933,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt provides focused proof evidence that Dispel Magic ends tracked Spiritual Weapon occurrences through the shared ongoing-spell ending gate; the reusable Dispel Magic semantic core remains in battle-runtime-ongoing-spell-dispel.qnt.",
+      "obligationIds": [
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
@@ -8150,7 +8159,9 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
