@@ -19,6 +19,7 @@ import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { resourceCount } from "@dnd/shared/types";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
@@ -31,9 +32,12 @@ import {
 } from "./battle-reducer/metamagic.ts";
 import {
   type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
+  type CombatantId,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
   resolveBattleSubject,
@@ -47,7 +51,10 @@ import {
   findHole,
   partySide,
   requireResolved,
+  savingThrowOutcomeFill,
+  skeletonId,
   startBattleRight,
+  statBlockCreatureInit,
   targetFill,
   unitLibrary,
   wizardId,
@@ -69,6 +76,10 @@ const INVALID_KIND_SET: ReadonlySet<string> = new Set(INVALID_KINDS);
 const LAST_RESULTS = [
   "init",
   "resolvedQuickenedRestoration",
+  "resolvedQuickenedSaveGatedCondition",
+  "resolvedQuickenedSaveGatedConditionImmunity",
+  "resolvedQuickenedDirectCondition",
+  "resolvedQuickenedRollModifier",
   "resolvedAfterMagicActionSpent",
   "rejectedUnaffordable",
   "rejectedUnknownOption",
@@ -81,6 +92,10 @@ const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
 
 type QuickenedSpellGovernorProjection = {
   readonly quickenedCureWoundsOffered: boolean;
+  readonly colorSprayBlinded: boolean;
+  readonly calmEmotionsImmunity: boolean;
+  readonly invisibilityActive: boolean;
+  readonly blessActive: boolean;
   readonly magicActionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
   readonly sorceryPointsRemaining: number;
@@ -110,6 +125,10 @@ const QUICKENED_HEALING_RESULT_HP = 14;
 const driverSchema = {
   init: {},
   doResolveQuickenedRestoration: {},
+  doResolveQuickenedSaveGatedCondition: {},
+  doResolveQuickenedSaveGatedConditionImmunity: {},
+  doResolveQuickenedDirectCondition: {},
+  doResolveQuickenedRollModifier: {},
   doResolveQuickenedAfterMagicActionSpent: {},
   doRejectUnaffordable: {},
   doRejectUnknownOption: {},
@@ -128,6 +147,20 @@ function createQuickenedSpellGovernorDriver() {
       },
       doResolveQuickenedRestoration: () => {
         state = resolveQuickenedRestoration(initialRuntimeState());
+      },
+      doResolveQuickenedSaveGatedCondition: () => {
+        state = resolveQuickenedSaveGatedCondition(initialRuntimeState());
+      },
+      doResolveQuickenedSaveGatedConditionImmunity: () => {
+        state = resolveQuickenedSaveGatedConditionImmunity(
+          initialRuntimeState(),
+        );
+      },
+      doResolveQuickenedDirectCondition: () => {
+        state = resolveQuickenedDirectCondition(initialRuntimeState());
+      },
+      doResolveQuickenedRollModifier: () => {
+        state = resolveQuickenedRollModifier(initialRuntimeState());
       },
       doResolveQuickenedAfterMagicActionSpent: () => {
         state = resolveQuickenedRestoration({
@@ -169,6 +202,10 @@ describe("Quickened Spell governor MBT parity", () => {
 
     expect(quickenedSpellGovernorProjection(resolved)).toMatchObject({
       quickenedCureWoundsOffered: false,
+      colorSprayBlinded: false,
+      calmEmotionsImmunity: false,
+      invisibilityActive: false,
+      blessActive: false,
       magicActionAvailable: true,
       bonusActionAvailable: false,
       sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
@@ -179,6 +216,85 @@ describe("Quickened Spell governor MBT parity", () => {
       spellSlotActsAvailable: false,
       invalidKind: "none",
       lastResult: "resolvedQuickenedRestoration",
+    });
+  });
+
+  it("resolves Quickened condition and roll modifier procedure families", () => {
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedSaveGatedCondition(initialRuntimeState()),
+      ),
+    ).toMatchObject({
+      colorSprayBlinded: true,
+      calmEmotionsImmunity: false,
+      invisibilityActive: false,
+      blessActive: false,
+      magicActionAvailable: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      invalidKind: "none",
+      lastResult: "resolvedQuickenedSaveGatedCondition",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedSaveGatedConditionImmunity(initialRuntimeState()),
+      ),
+    ).toMatchObject({
+      colorSprayBlinded: false,
+      calmEmotionsImmunity: true,
+      invisibilityActive: false,
+      blessActive: false,
+      magicActionAvailable: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      invalidKind: "none",
+      lastResult: "resolvedQuickenedSaveGatedConditionImmunity",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedDirectCondition(initialRuntimeState()),
+      ),
+    ).toMatchObject({
+      colorSprayBlinded: false,
+      calmEmotionsImmunity: false,
+      invisibilityActive: true,
+      blessActive: false,
+      magicActionAvailable: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      invalidKind: "none",
+      lastResult: "resolvedQuickenedDirectCondition",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedRollModifier(initialRuntimeState()),
+      ),
+    ).toMatchObject({
+      colorSprayBlinded: false,
+      calmEmotionsImmunity: false,
+      invisibilityActive: false,
+      blessActive: true,
+      magicActionAvailable: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      invalidKind: "none",
+      lastResult: "resolvedQuickenedRollModifier",
     });
   });
 
@@ -304,6 +420,90 @@ function resolveQuickenedRestoration(
   };
 }
 
+function resolveQuickenedSaveGatedCondition(
+  state: QuickenedSpellGovernorRuntimeState,
+): QuickenedSpellGovernorRuntimeState {
+  const act = quickenedSpellAct(state.battle, "color_spray");
+  const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: skeletonId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+  return {
+    battle: resolved.state,
+    invalidKind: "none",
+    lastResult: "resolvedQuickenedSaveGatedCondition",
+  };
+}
+
+function resolveQuickenedSaveGatedConditionImmunity(
+  state: QuickenedSpellGovernorRuntimeState,
+): QuickenedSpellGovernorRuntimeState {
+  const act = quickenedSpellAct(state.battle, "calm_emotions");
+  const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: fighterId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+  return {
+    battle: resolved.state,
+    invalidKind: "none",
+    lastResult: "resolvedQuickenedSaveGatedConditionImmunity",
+  };
+}
+
+function resolveQuickenedDirectCondition(
+  state: QuickenedSpellGovernorRuntimeState,
+): QuickenedSpellGovernorRuntimeState {
+  const act = quickenedSpellAct(state.battle, "invisibility");
+  const targetHole = findSpellTargetListHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [spellTargetListFill(targetHole, "invisibility", [fighterId])],
+    }),
+  );
+  return {
+    battle: resolved.state,
+    invalidKind: "none",
+    lastResult: "resolvedQuickenedDirectCondition",
+  };
+}
+
+function resolveQuickenedRollModifier(
+  state: QuickenedSpellGovernorRuntimeState,
+): QuickenedSpellGovernorRuntimeState {
+  const act = quickenedSpellAct(state.battle, "bless");
+  const targetHole = findSpellTargetListHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [spellTargetListFill(targetHole, "bless", [fighterId])],
+    }),
+  );
+  return {
+    battle: resolved.state,
+    invalidKind: "none",
+    lastResult: "resolvedQuickenedRollModifier",
+  };
+}
+
 function rejectUnaffordable(): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
     sorceryPoints: UNAFFORDABLE_SORCERY_POINTS,
@@ -419,7 +619,7 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
       subject: quickenedCureWoundsSubject(),
       fills: [],
     }),
-    "Quickened Spell cannot modify a level 1+ spell after this turn has already cast a level 1+ spell.",
+    "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
   );
   return {
     battle: state.battle,
@@ -432,8 +632,29 @@ function quickenedSpellGovernorProjection(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorProjection {
   const resources = state.battle.currentTurnResources;
+  const skeleton = state.battle.combatants.get(skeletonId);
   return {
     quickenedCureWoundsOffered: hasQuickenedCureWoundsAct(state.battle),
+    colorSprayBlinded:
+      skeleton === undefined
+        ? false
+        : hasCondition(skeleton.conditions, "blinded"),
+    calmEmotionsImmunity:
+      state.battle.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.kind === "conditionImmunity") ??
+      false,
+    invisibilityActive:
+      state.battle.combatants
+        .get(fighterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "targetActionEndedSpellCondition",
+        ) ?? false,
+    blessActive:
+      state.battle.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.kind === "d20RollModifier") ??
+      false,
     magicActionAvailable: canSpendAction(resources, "magic"),
     bonusActionAvailable: resources.currentHasBonusAction,
     sorceryPointsRemaining: Number(sorceryPointsRemaining(state.battle)),
@@ -487,8 +708,17 @@ function metamagicBattle(input?: {
         },
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [spellRecord("cure_wounds")],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
+            preparedSpells: [
+              spellRecord("cure_wounds"),
+              spellRecord("color_spray"),
+              spellRecord("calm_emotions"),
+              spellRecord("invisibility"),
+              spellRecord("bless"),
+            ],
+            spellSlots: [
+              { spellLevel: 1, count: 2 },
+              { spellLevel: 2, count: 2 },
+            ],
           }),
           sourceClassName: "sorcerer",
         },
@@ -500,6 +730,11 @@ function metamagicBattle(input?: {
         side: partySide,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 5,
       }),
     ],
   });
@@ -586,6 +821,59 @@ function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {
   };
 }
 
+type QuickenedSpellId =
+  | "bless"
+  | "calm_emotions"
+  | "color_spray"
+  | "invisibility";
+
+function quickenedSpellAct(
+  state: BattleState,
+  spellId: QuickenedSpellId,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === spellId &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected Quickened ${spellId} act.`);
+  }
+  return act;
+}
+
+function findSpellTargetListHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "spellTargetList" }> {
+  const hole = findHole(holes, "spellTargetList");
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spellTargetList hole.");
+  }
+  return hole;
+}
+
+function spellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  spellId: "bless" | "invisibility",
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId,
+      spellId,
+    })),
+  };
+}
+
 function sorceryPointsRemaining(state: BattleState) {
   const actor = state.combatants.get(wizardId);
   if (actor?.origin.kind !== "character") {
@@ -623,6 +911,10 @@ function normalizeQuickenedSpellGovernorQuintState(
       state,
       "qQuickenedCureWoundsOffered",
     ),
+    colorSprayBlinded: booleanField(state, "qColorSprayBlinded"),
+    calmEmotionsImmunity: booleanField(state, "qCalmEmotionsImmunity"),
+    invisibilityActive: booleanField(state, "qInvisibilityActive"),
+    blessActive: booleanField(state, "qBlessActive"),
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     sorceryPointsRemaining: numberFromQuintInt(

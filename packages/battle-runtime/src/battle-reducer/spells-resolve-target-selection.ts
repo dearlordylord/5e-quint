@@ -237,7 +237,9 @@ export function scalarBuffSpellTargetSelection(input: {
 }
 
 export function rollModifierSpellTargetSelection(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -459,7 +461,9 @@ export function rollModifierSpellEffectSelection(input: {
 }
 
 export function rollModifierSpellAffectedTargets(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,

@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -144,12 +145,12 @@ type SaveMetamagicSelectionState =
       readonly message: string;
     };
 
-type SaveGatedDamageResolutionInput =
+type SaveGatedSpellResolutionInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
 
 function spellReactionContinuationSubject(
-  input: SaveGatedDamageResolutionInput,
+  input: SaveGatedSpellResolutionInput,
 ): BattleSubject {
   return "reactionContinuationSubject" in input
     ? (input.reactionContinuationSubject ?? input.subject)
@@ -290,6 +291,18 @@ export function saveMetamagicSelectionState(input: {
         input.invocation,
       ),
     );
+  }
+  if (
+    includesCareful &&
+    targeting.kind !== "singleCombatant" &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds !== undefined &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds.length === 0
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    };
   }
   const heightenedSpellTargetId =
     includesHeightened && targeting.kind === "singleCombatant"
@@ -510,8 +523,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -619,8 +631,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -760,8 +771,7 @@ export function resolveHideousLaughterSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -884,8 +894,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2188,13 +2197,16 @@ function resolveFailedSaveForcedReactionMovement(input: {
 }
 
 export function resolveSaveGateConditionSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
@@ -2364,8 +2376,7 @@ export function resolveSaveGateConditionSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2381,6 +2392,9 @@ export function resolveSaveGateConditionSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
@@ -2408,13 +2422,16 @@ export function resolveSaveGateConditionSpellAct(input: {
 }
 
 export function resolveSaveGateConditionImmunitySpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedConditionImmunity" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
@@ -2518,8 +2535,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2535,6 +2551,9 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
@@ -3136,10 +3155,7 @@ function validateSavingThrowOutcomeSelections(input: {
       input.state,
       input.actorId,
     );
-    if (
-      input.carefulSpellProtectedTargetIds.length > maxProtectedTargets ||
-      input.carefulSpellProtectedTargetIds.length === 0
-    ) {
+    if (input.carefulSpellProtectedTargetIds.length > maxProtectedTargets) {
       return "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.";
     }
     if (

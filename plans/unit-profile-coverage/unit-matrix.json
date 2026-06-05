@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 101,
-      "numerator": 101,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 101,
-      "numerator": 101,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 137,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 137,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 153,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 101,
-      "numerator": 101,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 101,
-      "numerator": 101,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3567,7 +3567,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
       "taskRefs": [
         "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
       ],
@@ -3580,6 +3580,45 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.metamagic-careful-save-protection",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Careful Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and typed protected-target fills for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, over-count, duplicate, caster, and non-affected protected-target selections before spending resources. Protected non-caster targets must be affected spell targets and must succeed on their Saving Throw; save-for-half damage procedures turn that protected successful save into no damage while save-gated no-effect procedures preserve the base successful-save no-effect result. The profile does not claim Heightened Spell, repeat-save lifecycle targeting, or unsupported cast-property, damage-shape, and reroll Metamagic options.",
+      "taskRefs": [
+        "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+      ],
+      "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -4387,14 +4426,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 137,
+        "denominator": 138,
         "numerator": 137,
-        "percent": "100%"
+        "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 137,
+        "denominator": 138,
         "numerator": 137,
-        "percent": "100%"
+        "percent": "99.3%"
       }
     },
     "profileKinds": [
@@ -6476,6 +6515,15 @@
         ],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.metamagic-careful-save-protection",
+        "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
         ]
@@ -11552,7 +11600,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset with one runtime target pending the per-target upcast follow-up.",
+      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset.",
       "profileIds": [
         "spell.invocation-roll-modifier"
       ],
@@ -11560,7 +11608,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection for one target.",
+      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection.",
       "profileIds": [
         "spell.invocation-roll-modifier"
       ],
@@ -12785,7 +12833,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet and Character Battle tests cover Font of Magic Sorcery Point spending through the installed Creating Spell Slots table as a Character Sheet state transition, RAW point-cost and minimum-Sorcerer-level gates, level-5 table cap rejection, source-aware conversion of ordinary and created Spell Slots back into Sorcery Points, created Spell Slot aggregate projection into battle, source-exact handoff preservation when aggregate battle state is unambiguous, source-ambiguous handoff rejection, and Long Rest expiry. Bonus Action action-economy execution and source-aware battle spell spending remain split to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
+      "note": "Focused Character Sheet and Character Battle tests cover Font of Magic Sorcery Point spending through the installed Creating Spell Slots table as a Character Sheet state transition, RAW point-cost and minimum-Sorcerer-level gates, level-5 table cap rejection, source-aware conversion of ordinary and created Spell Slots back into Sorcery Points, created Spell Slot aggregate projection into battle, source-exact handoff preservation when aggregate battle state is unambiguous, source-ambiguous handoff rejection, and Long Rest expiry. Battle Bonus Action/source handling was later closed by L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE at the Character Sheet conversion and aggregate handoff boundary.",
       "profileIds": [
         "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
         "character-sheet.font-of-magic-slot-to-sorcery-points"
@@ -12811,7 +12859,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. The Step of the Wind doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
       "profileIds": [
         "unit-feature.monk-focus-battle-options"
       ],
@@ -12819,7 +12867,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. The doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
       "profileIds": [
         "unit-feature.monk-focus-battle-options"
       ],
@@ -13115,7 +13163,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin behavior remains a separate follow-up boundary.",
+      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin and spell-created-light overlap dispel behavior remain deferred follow-ups.",
       "profileIds": [
         "spell.invocation-magical-darkness-point-origin"
       ],
@@ -13171,7 +13219,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit, level-1-plus spell cast turn fact commit, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
+      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -13179,7 +13227,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, and rejection of unsupported non-Quickened Metamagic selections.",
+      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus applicable Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, cantrip spell-attack Quickened casts blocking later level-1-plus spells, and rejection of unsupported non-Quickened Metamagic selections.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -13280,31 +13328,6 @@
         "spell.invocation-spike-growth-movement-hazard"
       ],
       "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet and Character Battle tests cover Font of Magic Sorcery Point spending through the installed Creating Spell Slots table as a Character Sheet state transition, RAW point-cost and minimum-Sorcerer-level gates, level-5 table cap rejection, source-aware conversion of ordinary and created Spell Slots back into Sorcery Points, created Spell Slot aggregate projection into battle, source-exact handoff preservation when aggregate battle state is unambiguous, source-ambiguous handoff rejection, and Long Rest expiry. Battle Bonus Action/source handling was later closed by L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE at the Character Sheet conversion and aggregate handoff boundary.",
-      "profileIds": [
-        "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
-        "character-sheet.font-of-magic-slot-to-sorcery-points"
-      ],
-      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS"
-    },
-    {
-      "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
-      "profileIds": [
-        "unit-feature.monk-focus-battle-options"
-      ],
-      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
-      "profileIds": [
-        "unit-feature.monk-focus-battle-options"
-      ],
-      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
     },
     {
       "claimKind": "accepted-runtime-closure",
@@ -13470,7 +13493,7 @@
     },
     {
       "claimKind": "accepted-follow-up-split",
-      "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. The merged subset already covers resource spend, known-form admission, Druid-level Temporary Hit Points, form Armor Class/Size/Speed, Beast Dexterity for Mage Armor, Beast Strength Shove DC, no-spellcasting before Beast Spells, and active-form handoff blocking. Active-form persistence across Character Sheet handoff is accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining battle-owned retained-statistic work is narrowed to L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION for effective ability-score and proficiency reconciliation; equipment/anatomy/sense/communication and broader Stat Block action gaps remain under the shape-shifting runtime split.",
+      "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. Task 22 now closes the battle-owned D20 statistic projection for effective ability scores plus Skill and Saving Throw proficiency reconciliation. Active-form persistence across Character Sheet handoff remains accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining retained-statistic work is non-D20: senses, language, speech, anatomy, active-form duration across non-battle time, and other non-D20 Stat Block-vs-Character Sheet projections under the shared transformation owner.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS"
     },
@@ -13521,20 +13544,6 @@
         "unit-feature.druid-wild-shape-known-form"
       ],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin and spell-created-light overlap dispel behavior remain deferred follow-ups.",
-      "profileIds": [
-        "spell.invocation-magical-darkness-point-origin"
-      ],
-      "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
-    },
-    {
-      "claimKind": "accepted-follow-up-split",
-      "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. Task 22 now closes the battle-owned D20 statistic projection for effective ability scores plus Skill and Saving Throw proficiency reconciliation. Active-form persistence across Character Sheet handoff remains accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining retained-statistic work is non-D20: senses, language, speech, anatomy, active-form duration across non-battle time, and other non-D20 Stat Block-vs-Character Sheet projections under the shared transformation owner.",
-      "profileIds": [],
-      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -13822,38 +13831,6 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
-      "profileIds": [
-        "unit-feature.metamagic-cast-governor-quickened"
-      ],
-      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus applicable Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, cantrip spell-attack Quickened casts blocking later level-1-plus spells, and rejection of unsupported non-Quickened Metamagic selections.",
-      "profileIds": [
-        "unit-feature.metamagic-cast-governor-quickened"
-      ],
-      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
-    },
-    {
-      "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset.",
-      "profileIds": [
-        "spell.invocation-roll-modifier"
-      ],
-      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection.",
-      "profileIds": [
-        "spell.invocation-roll-modifier"
-      ],
-      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
-    },
-    {
-      "claimKind": "qnt-proof",
       "note": "Focused battle-runtime QNT facts and MBT parity cover level-3 Enhance Ability with two targets carrying distinct Ability Check Advantage choices.",
       "profileIds": [
         "spell.invocation-roll-modifier"
@@ -13913,6 +13890,22 @@
       "note": "Task 4 closes stat-block shapechanger true-form reversion as outside promoted battle runtime. The local SRD Stat Block catalog exposes imp and quasit Shape-Shift as prose-only special actions, while battle Stat Block execution currently admits attack actions and rejects specials. A promotion needs a generic structured Stat Block special-action active-form owner for form choices, speed replacement, equipment non-transformation, and return-to-true-form state; adding Moonbeam-local metadata would duplicate true-form Stat Block facts and introduce authored-identity coupling.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Careful Spell admission for supported save-gated damage and save-gated no-effect procedures, known-option and Sorcery Point gates, protected-target count bounds from Charisma modifier minimum one, rejection of non-save procedures, and the protected successful save-for-half damage suppression rule.",
+      "profileIds": [
+        "unit-feature.metamagic-careful-save-protection"
+      ],
+      "taskId": "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Careful Spell discovery and resolution for Burning Hands save-for-half damage and Command save-gated no-effect representatives, protected-target selection consumption, automatic successful Saving Throw outcomes, no successful-save half damage for protected targets, preservation of base successful-save no-effect behavior, Sorcery Point spending through the shared Font of Magic point pool, and rejection of unsupported or invalid save-affecting Metamagic selections.",
+      "profileIds": [
+        "unit-feature.metamagic-careful-save-protection"
+      ],
+      "taskId": "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -13985,7 +13978,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 103,
+        "profileFactDenominator": 104,
         "profileSubsetSupportedUnits": 22,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -18641,11 +18634,11 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
-            "mechanic": "Quickened Spell for action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock to each remaining supported action-casting spell procedure."
+            "mechanic": "Quickened Spell for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock only after each procedure owner has a typed resource-threading and parity witness."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Careful and Heightened Spell saving throw modifiers: protect a Charisma-modifier-limited selected creature set with automatic save success and no half-damage-on-success, and give one target Disadvantage on saves against the spell."
+            "mechanic": "Heightened Spell saving throw modifier: choose one affected target and give it Disadvantage on saves against the spell while preserving ordinary save outcomes and resource spending."
           },
           {
             "battleReadinessClosure": {
@@ -18671,17 +18664,17 @@
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
-            "mechanic": "Promote Quickened Spell from the current direct restoration, scalar buff, save-gated damage, and direct spell-attack damage subset to every remaining supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths.",
+            "mechanic": "Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths.",
             "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
             "title": "Sorcerer Metamagic Quickened All Action Spells"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell.",
+            "mechanic": "Promote Heightened Spell against supported save-gated spell procedures by choosing one affected target and giving it Disadvantage on saves against the spell.",
             "owner": "battle-runtime saving throw spell resolution hooks",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.",
-            "title": "Sorcerer Metamagic Save Options"
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Heightened without option identity dispatch.",
+            "title": "Sorcerer Metamagic Heightened Save Option"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
@@ -18696,7 +18689,8 @@
           "character-creation.class-feature-source-fact-projection",
           "character-creation.class-feature-advancement-replacement",
           "character-sheet.metamagic-battle-resource-bridge",
-          "unit-feature.metamagic-cast-governor-quickened"
+          "unit-feature.metamagic-cast-governor-quickened",
+          "unit-feature.metamagic-careful-save-protection"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -18704,7 +18698,8 @@
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
           "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
-          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts"
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
+          "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures."
         ],
         "tag": "profile-subset-supported"
       },
@@ -18734,6 +18729,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES"
         }
       ],
       "executableMechanics": true,
@@ -18843,7 +18843,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
           "taskRefs": [
             "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
           ],
@@ -18856,6 +18856,45 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-careful-save-protection",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Careful Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and typed protected-target fills for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, over-count, duplicate, caster, and non-affected protected-target selections before spending resources. Protected non-caster targets must be affected spell targets and must succeed on their Saving Throw; save-for-half damage procedures turn that protected successful save into no damage while save-gated no-effect procedures preserve the base successful-save no-effect result. The profile does not claim Heightened Spell, repeat-save lifecycle targeting, or unsupported cast-property, damage-shape, and reroll Metamagic options.",
+          "taskRefs": [
+            "L3META-04-CAREFUL-SPELL-SAVE-PROFILES"
+          ],
+          "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
             }
           ]
         }

@@ -2,6 +2,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 
 module battleRuntimeMetamagic {
@@ -12,6 +13,8 @@ module battleRuntimeMetamagic {
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeConditionSpellResolution.* from "./battle-runtime-condition-spell-resolution"
+  import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -182,6 +185,72 @@ module battleRuntimeMetamagic {
     state.bonusActionAvailable and
     not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
 
+  pure def quickenedSpellCanModifySaveGatedCondition(
+    state: BattleState,
+    invocation: SaveGatedConditionInvocation,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedSaveGatedConditionProcedure, selectedOptions) and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
+  pure def quickenedSpellCanModifySaveGatedConditionImmunity(
+    state: BattleState,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedSaveGatedConditionImmunityProcedure, selectedOptions) and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
+  pure def quickenedSpellCanModifyDirectCondition(
+    state: BattleState,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedDirectConditionProcedure, selectedOptions) and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
+  pure def quickenedSpellCanModifyRollModifier(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedRollModifierProcedure, selectedOptions) and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
   pure def quickenedSpellCanModifySpellAttackDamage(
     state: BattleState,
     invocation: SpellAttackDamageInvocation,
@@ -337,6 +406,160 @@ module battleRuntimeMetamagic {
         sorceryPointsRemaining: sorceryPointsRemaining,
       }
     }
+  }
+
+  pure def quickenedActionSpellResult(
+    before: BattleState,
+    resolvedAsMagicAction: BattleState,
+    selectedCost: int,
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult =
+    if (resolvedAsMagicAction != { ...before, actionAvailable: true }) {
+      {
+        state: commitActorQuickenedLevelOnePlusSpellCast({
+          ...resolvedAsMagicAction,
+          actionAvailable: before.actionAvailable,
+          bonusActionAvailable: false,
+        }, Fighter),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        state: before,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+
+  pure def resolveQuickenedColorSpray(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifySaveGatedCondition(
+      state,
+      ColorSpraySaveGate,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    val actionProbe = { ...state, actionAvailable: true }
+    if (canModify)
+      quickenedActionSpellResult(
+        state,
+        resolveColorSpray(actionProbe, fighterSavingThrowSucceeded, goblinSavingThrowSucceeded),
+        selectedCost,
+        sorceryPointsRemaining,
+      )
+    else
+      { state: state, sorceryPointsRemaining: sorceryPointsRemaining }
+  }
+
+  pure def resolveQuickenedCalmEmotions(
+    state: BattleState,
+    fighterIncluded: bool,
+    fighterSavingThrowSucceeded: bool,
+    goblinIncluded: bool,
+    goblinSavingThrowSucceeded: bool,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifySaveGatedConditionImmunity(
+      state,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    val actionProbe = { ...state, actionAvailable: true }
+    if (canModify)
+      quickenedActionSpellResult(
+        state,
+        resolveCalmEmotions(
+          actionProbe,
+          fighterIncluded,
+          HumanoidCreature,
+          fighterSavingThrowSucceeded,
+          goblinIncluded,
+          HumanoidCreature,
+          goblinSavingThrowSucceeded,
+        ),
+        selectedCost,
+        sorceryPointsRemaining,
+      )
+    else
+      { state: state, sorceryPointsRemaining: sorceryPointsRemaining }
+  }
+
+  pure def resolveQuickenedInvisibility(
+    state: BattleState,
+    targets: Set[Actor],
+    slotLevel: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifyDirectCondition(
+      state,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    val actionProbe = { ...state, actionAvailable: true }
+    if (canModify)
+      quickenedActionSpellResult(
+        state,
+        resolveInvisibilityConditionSpell(actionProbe, targets, slotLevel),
+        selectedCost,
+        sorceryPointsRemaining,
+      )
+    else
+      { state: state, sorceryPointsRemaining: sorceryPointsRemaining }
+  }
+
+  pure def resolveQuickenedRollModifierChoiceSpell(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    selectedTargets: Set[Actor],
+    failedSaveTargets: Set[Actor],
+    slotLevel: int,
+    chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifyRollModifier(
+      state,
+      invocation,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    val actionProbe = { ...state, actionAvailable: true }
+    if (canModify)
+      quickenedActionSpellResult(
+        state,
+        resolveRollModifierChoiceSpell(
+          actionProbe,
+          invocation,
+          selectedTargets,
+          failedSaveTargets,
+          slotLevel,
+          chosenAbility,
+          chosenSkill,
+        ),
+        selectedCost,
+        sorceryPointsRemaining,
+      )
+    else
+      { state: state, sorceryPointsRemaining: sorceryPointsRemaining }
   }
 
   pure def resolveQuickenedRayOfFrost(

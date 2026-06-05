@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
@@ -6,11 +6,15 @@ import {
   spendActivationResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { resourceCount } from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
-import type { BattleActiveEffect } from "./battle-reducer.ts";
+import type {
+  BattleActiveEffect,
+  BattleSpellTargetListHole,
+} from "./battle-reducer.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -25,6 +29,7 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
@@ -53,6 +58,7 @@ import {
   partySide,
   requireResolved,
   resolveBattleSubject,
+  savingThrowOutcomeFill,
   skeletonId,
   startBattleRight,
   statBlockCreatureInit,
@@ -361,6 +367,140 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(3);
   });
 
+  test("discovers Quickened save-gated condition spells as Bonus Action casts", () => {
+    const state = quickenedProfileBattle({
+      preparedSpells: ["color_spray"],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
+    });
+    const act = quickenedSpellAct(state, "color_spray", "saveGatedCondition");
+    const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(saveHole, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    const target = resolved.state.combatants.get(skeletonId);
+    if (target === undefined) {
+      throw new Error("Expected Skeleton combatant.");
+    }
+    expect(hasCondition(target.conditions, "blinded")).toBe(true);
+  });
+
+  test("discovers Quickened save-gated condition-immunity spells as Bonus Action casts", () => {
+    const state = quickenedProfileBattle({
+      preparedSpells: ["calm_emotions"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = quickenedSpellAct(
+      state,
+      "calm_emotions",
+      "saveGatedConditionImmunity",
+    );
+    const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(saveHole, [
+            { targetId: fighterId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(
+      resolved.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.kind === "conditionImmunity"),
+    ).toBe(true);
+  });
+
+  test("discovers Quickened direct condition spells as Bonus Action casts", () => {
+    const state = quickenedProfileBattle({
+      preparedSpells: ["invisibility"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = quickenedSpellAct(state, "invisibility", "directCondition");
+    const targetHole = findSpellTargetListHole(act.initialHoles);
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [spellTargetListFill(targetHole, "invisibility", [fighterId])],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(
+      resolved.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "targetActionEndedSpellCondition",
+        ),
+    ).toBe(true);
+  });
+
+  test("discovers Quickened roll modifier spells as Bonus Action casts", () => {
+    const state = quickenedProfileBattle({
+      preparedSpells: ["bless"],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
+    });
+    const act = quickenedSpellAct(state, "bless", "rollModifier");
+    const targetHole = findSpellTargetListHole(act.initialHoles);
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [spellTargetListFill(targetHole, "bless", [fighterId])],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(
+      resolved.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.kind === "d20RollModifier"),
+    ).toBe(true);
+  });
+
   test("blocks later level 1+ spells after Quickened cantrip spell attacks", () => {
     const state = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption()],
@@ -622,9 +762,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, attackRoll],
     });
     const mirrorImageHole = findHole(
-      awaitingMirrorImage.tag === "needsHoles"
-        ? awaitingMirrorImage.holes
-        : [],
+      awaitingMirrorImage.tag === "needsHoles" ? awaitingMirrorImage.holes : [],
       "rolledDice",
     );
     if (!("mirrorImageDuplicateRoll" in mirrorImageHole)) {
@@ -659,18 +797,16 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const afterMagicAction = magicActionSpent(state);
 
-    expect(
-      canSpendAction(afterMagicAction.currentTurnResources, "magic"),
-    ).toBe(false);
+    expect(canSpendAction(afterMagicAction.currentTurnResources, "magic")).toBe(
+      false,
+    );
     expect(
       afterMagicAction.currentTurnResources.levelOnePlusSpellCastsThisTurn,
     ).not.toContain(wizardId);
 
     const cureWounds = quickenedCureWoundsAct(afterMagicAction);
     const healed = resolveQuickenedCureWounds(afterMagicAction, cureWounds);
-    expect(healed.state.currentTurnResources.currentHasBonusAction).toBe(
-      false,
-    );
+    expect(healed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(canSpendAction(healed.state.currentTurnResources, "magic")).toBe(
       false,
     );
@@ -685,9 +821,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         fills: [damageRollFillWithGroups(tempHpHole, [[4, 3]])],
       }),
     );
-    expect(buffed.state.currentTurnResources.currentHasBonusAction).toBe(
-      false,
-    );
+    expect(buffed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(canSpendAction(buffed.state.currentTurnResources, "magic")).toBe(
       false,
     );
@@ -996,7 +1130,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Quickened Spell can modify only spells with a casting time of an action.",
+      message:
+        "Quickened Spell can modify only spells with a casting time of an action.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -1058,7 +1193,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Bonus Action spell is no longer available for the current actor.",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -1079,7 +1215,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Bonus Action spell is no longer available for the current actor.",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -1359,6 +1496,188 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     );
 
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+  });
+
+  test("Careful Spell rejects protected-target over-selection", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulBurningHandsAct(state);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+    const protectedTargetsFill = {
+      kind: "spellTargetList" as const,
+      holeId: protectedTargetsHole.holeId,
+      value: {
+        targetIds: [
+          fighterId,
+          skeletonId,
+          combatantId("combatant:careful-extra-target-a"),
+          combatantId("combatant:careful-extra-target-b"),
+        ],
+      },
+      spatialFacts: [],
+    };
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [protectedTargetsFill],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          protectedTargetsFill,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [fighterId, skeletonId],
+              },
+              outcomes: [
+                { targetId: fighterId, succeeded: true },
+                { targetId: skeletonId, succeeded: true },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    });
+  });
+
+  test("Careful Spell rejects explicitly empty protected-target selections before spending resources", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulBurningHandsAct(state);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "spellTargetList",
+          holeId: protectedTargetsHole.holeId,
+          value: { targetIds: [] },
+          spatialFacts: [],
+        },
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      message:
+        "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Careful Spell requires enough unexpended Sorcery Points", () => {
+    const state = saveMetamagicBattle({
+      sorceryPoints: 0,
+      knownOptions: [carefulMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "burning_hands" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...burningHandsActionSubject(),
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Metamagic requires enough unexpended Sorcery Points.",
+    });
+  });
+
+  test("Careful Spell rejects non-save spell procedures", () => {
+    const state = metamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "cure_wounds" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...cureWoundsActionSubject(),
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Selected Metamagic option effect is not supported for this spell procedure.",
+    });
+  });
+
+  test("Careful Spell is explicitly closed for unsupported save-affecting spell lifecycles", () => {
+    const state = sleepMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const sleepAct = sleepActionAct(state);
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "sleep" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...sleepAct.subject,
+          metamagic: [{ effectKind: CAREFUL_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.",
+    });
   });
 
   test("Heightened Spell is explicitly closed for repeat-save spell lifecycles", () => {
@@ -1667,6 +1986,66 @@ function saveMetamagicBattle(input: {
   });
 }
 
+function quickenedProfileBattle(input: {
+  readonly preparedSpells: readonly (
+    | "bless"
+    | "calm_emotions"
+    | "color_spray"
+    | "invisibility"
+  )[];
+  readonly spellSlots: readonly {
+    readonly spellLevel: 1 | 2;
+    readonly count: number;
+  }[];
+}): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-quickened-profiles"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: [quickenedMetamagicOption()],
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: input.preparedSpells.map(spellRecord),
+            spellSlots: input.spellSlots,
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Nearby Ally",
+        initiative: 12,
+        side: partySide,
+        currentHp: 12,
+        maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
 function commandMetamagicBattle(input: {
   readonly knownOptions: readonly MetamagicOptionFixture[];
 }): BattleState {
@@ -1840,7 +2219,7 @@ function heightenedMetamagicOption(): MetamagicOptionFixture {
 
 function carefulMetamagicOption(): MetamagicOptionFixture {
   return {
-    effectKind: "saving_throw_protection",
+    effectKind: CAREFUL_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
   };
@@ -2001,7 +2380,9 @@ function quickenedCureWoundsAct(
   return act;
 }
 
-function quickenedFalseLifeAct(state: BattleState): QuickenedBonusActionSpellAct {
+function quickenedFalseLifeAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is QuickenedBonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
@@ -2060,6 +2441,26 @@ function quickenedRayOfFrostAct(
   return act;
 }
 
+function quickenedSpellAct(
+  state: BattleState,
+  spellId: "bless" | "calm_emotions" | "color_spray" | "invisibility",
+  procedure: QuickenedBonusActionSpellAct["subject"]["invocation"]["procedure"],
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === spellId &&
+      candidate.subject.invocation.procedure === procedure &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Quickened ${spellId} act.`);
+  }
+  return act;
+}
+
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
     AvailableBattleAct["subject"],
@@ -2088,7 +2489,7 @@ function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.invocation.spellId === "burning_hands" &&
       candidate.subject.metamagic?.some(
-        (selection) => selection.effectKind === "saving_throw_protection",
+        (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
@@ -2103,7 +2504,7 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.invocation.spellId === "command" &&
       candidate.subject.metamagic?.some(
-        (selection) => selection.effectKind === "saving_throw_protection",
+        (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
@@ -2151,9 +2552,19 @@ function sleepActionAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function findSpellTargetListHole(
+  holes: readonly BattleHole[],
+): BattleSpellTargetListHole {
+  const hole = findHole(holes, "spellTargetList");
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spellTargetList hole.");
+  }
+  return hole;
+}
+
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  spellId: "burning_hands" | "command",
+  spellId: "bless" | "burning_hands" | "command" | "invisibility",
   targetIds: readonly ReturnType<typeof combatantId>[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   return {

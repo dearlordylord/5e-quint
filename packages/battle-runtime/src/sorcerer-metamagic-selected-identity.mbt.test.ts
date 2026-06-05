@@ -31,6 +31,7 @@ defineSelectedIdentityWitness({
     bonusActionAvailable: "bool",
     sorceryPointsRemaining: "int",
     targetHp: "int",
+    targetActiveEffectCount: "int",
     lastResult: "str",
   },
   initialProjection: {
@@ -38,6 +39,7 @@ defineSelectedIdentityWitness({
     bonusActionAvailable: true,
     sorceryPointsRemaining: 4,
     targetHp: 10,
+    targetActiveEffectCount: 0,
     lastResult: "init",
   },
   units: [
@@ -51,6 +53,7 @@ defineSelectedIdentityWitness({
             bonusActionAvailable: false,
             sorceryPointsRemaining: 2,
             targetHp: 1,
+            targetActiveEffectCount: 0,
             lastResult: "quickenedSaveGatedDamage",
           },
           discover: () =>

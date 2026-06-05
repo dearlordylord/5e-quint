@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-module battleRuntimeSorcererMetamagicSelectedIdentityMbt {
+module battleRuntimeSorcererMetamagicCarefulSelectedIdentityMbt {
   var qMagicActionAvailable: bool
   var qBonusActionAvailable: bool
   var qSorceryPointsRemaining: int
@@ -26,12 +26,18 @@ module battleRuntimeSorcererMetamagicSelectedIdentityMbt {
 
   action init = recordProjection(true, true, 4, 10, 0, "init")
 
-  action doResolveQuickenedSaveGatedDamage = all {
+  action doResolveCarefulSaveGatedDamage = all {
     qLastResult == "init",
-    recordProjection(true, false, 2, 1, 0, "quickenedSaveGatedDamage")
+    recordProjection(false, true, 3, 10, 0, "carefulSaveGatedDamage")
+  }
+
+  action doResolveCarefulSaveGatedNoEffect = all {
+    qLastResult == "init",
+    recordProjection(false, true, 3, 10, 0, "carefulSaveGatedNoEffect")
   }
 
   action step = any {
-    doResolveQuickenedSaveGatedDamage,
+    doResolveCarefulSaveGatedDamage,
+    doResolveCarefulSaveGatedNoEffect,
   }
 }

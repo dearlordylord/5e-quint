@@ -21,6 +21,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
@@ -64,8 +65,9 @@ type SaveGatedConditionImmunitySpellInvocation = Extract<
 
 type SaveGatedConditionImmunityResolveInput = SpellProcedureProfileResolveInput<
   SaveGatedConditionImmunitySpellInvocation,
-  ActionSpellBattleResolutionInput
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 };
 
@@ -243,6 +245,9 @@ function resolveSaveGatedConditionImmunity(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
@@ -279,7 +284,7 @@ const SaveGatedConditionImmunityInvocationSchema =
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   invocationSchema: SaveGatedConditionImmunityInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
@@ -291,5 +296,5 @@ export const saveGatedConditionImmunityProfile = {
 } satisfies SpellProcedureProfile<
   "saveGatedConditionImmunity",
   SaveGatedConditionImmunitySpellInvocation,
-  ActionSpellBattleResolutionInput
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 >;
