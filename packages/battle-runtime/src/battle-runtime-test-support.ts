@@ -417,6 +417,7 @@ export function subjectName(
   | "commandFlee"
   | "disperseFogCloud"
   | "wardingBondSeparation"
+  | "shakeAwakeFromHypnoticPattern"
   | "protectionRelevantEffectSave"
   | "creatureFalls" {
   if (subject.tag === "action") {

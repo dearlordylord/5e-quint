@@ -48,6 +48,8 @@ import {
   HIDE_ABILITY_CHECK_HOLE_ID,
   HIDE_ABILITY_CHECK_HOLE_INSTANCE,
   HIDE_DC,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   SEARCH_ABILITY_CHECK_HOLE_ID,
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
@@ -83,7 +85,10 @@ import {
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
 import { combatantCanTakeActions } from "./creature-state.ts";
-import { sleepShakeAwakeTargetChoices } from "./spell-condition-effects-helpers.ts";
+import {
+  hypnoticPatternShakeAwakeTargetChoices,
+  sleepShakeAwakeTargetChoices,
+} from "./spell-condition-effects-helpers.ts";
 
 export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,
@@ -461,6 +466,20 @@ export function sleepShakeAwakeTargetHole(
     label: "Sleep target to shake awake",
     requiresTableSpatialFact: true,
     choices: sleepShakeAwakeTargetChoices(state, actorId),
+  };
+}
+
+export function hypnoticPatternShakeAwakeTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    label: "Hypnotic Pattern target to shake awake",
+    requiresTableSpatialFact: true,
+    choices: hypnoticPatternShakeAwakeTargetChoices(state, actorId),
   };
 }
 

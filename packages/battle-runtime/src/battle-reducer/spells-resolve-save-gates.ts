@@ -201,6 +201,7 @@ export function saveMetamagicSelectionState(input: {
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
+        | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -350,6 +351,7 @@ function saveMetamagicSelectionFills(
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
+        | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";

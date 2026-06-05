@@ -335,6 +335,20 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("hypnoticPatternArea"),
+    cubeSideFeet: Schema.Literal(30),
+    affectedCreatureWitnesses: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        inCube: Schema.Literal(true),
+        canSeePattern: Schema.Literal(true),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: BattleAreaId,
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -703,6 +717,11 @@ const BattleTargetSpatialFactSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("sleepShakeAwakeActorWithin5Feet"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("hypnoticPatternShakeAwakeActorWithin5Feet"),
     actorId: CombatantId,
     targetId: CombatantId,
   }),
@@ -1702,6 +1721,17 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind: "faerieFireArea";
       readonly affectedObjectIds: readonly string[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind: "hypnoticPatternArea";
+      readonly cubeSideFeet: 30;
+      readonly affectedCreatureWitnesses: readonly {
+        readonly targetId: string;
+        readonly inCube: true;
+        readonly canSeePattern: true;
+      }[];
       readonly areaId?: never;
       readonly sleepNonSleeperFacts?: never;
     }

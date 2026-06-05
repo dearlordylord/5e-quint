@@ -64,6 +64,7 @@ module battleRuntimeConcentration {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
+        | HypnoticPatternEffect(_) => false
         | HoldPersonParalyzed(_) => false
         | DancingLightsEffect(_) => false
         | FlameBladeEffect(_) => false

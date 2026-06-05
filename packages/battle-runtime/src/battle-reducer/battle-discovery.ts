@@ -83,6 +83,7 @@ import {
   grappleTargetHole,
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
+  hypnoticPatternShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
   shoveTargetHole,
@@ -96,6 +97,7 @@ import {
 } from "./movement-speed.ts";
 
 import {
+  hypnoticPatternShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
   protectionRelevantEffectsForTarget,
   sleepShakeAwakeTargetChoices,
@@ -406,6 +408,23 @@ export function discoverBattleActs(
       label: "Shake Awake",
       summary: "Use an action to shake an adjacent creature out of Sleep.",
       initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
+    });
+  }
+  if (
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    hasTurnActionResource(state.currentTurnResources) &&
+    hypnoticPatternShakeAwakeTargetChoices(state, actorId).length > 0
+  ) {
+    acts.push({
+      subject: {
+        tag: "action",
+        actorId,
+        action: "shakeAwakeFromHypnoticPattern",
+      },
+      label: "Shake Awake",
+      summary:
+        "Use an action to shake an adjacent creature out of Hypnotic Pattern.",
+      initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (

@@ -45,10 +45,13 @@ type ProtectionRelevantEffect =
   | Extract<BattleActiveEffect, { readonly kind: "possession" }>;
 type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
-
 type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
+>;
+type HypnoticPatternControlEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "hypnoticPatternControl" }
 >;
 export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
@@ -92,11 +95,16 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
     conditionHasNonSpellSource(combatant, condition) ||
     combatant.activeEffects.some(
       (effect) =>
-        "conditionHadNonSpellSource" in effect &&
-        effect.conditionHadNonSpellSource &&
-        (activeEffectSourcesCondition(effect, condition) ||
-          (effect.kind === "conditionImmunity" &&
-            effect.condition === condition)),
+        (effect.kind === "hypnoticPatternControl" &&
+          ((condition === "charmed" &&
+            effect.conditionHadNonSpellCharmedSource) ||
+            (condition === "incapacitated" &&
+              effect.conditionHadNonSpellIncapacitatedSource))) ||
+        ("conditionHadNonSpellSource" in effect &&
+          effect.conditionHadNonSpellSource &&
+          (activeEffectSourcesCondition(effect, condition) ||
+            (effect.kind === "conditionImmunity" &&
+              effect.condition === condition))),
     )
   );
 }
@@ -178,6 +186,16 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
         creatureTypeProtectionAppliesToSource(effect, sourceCreatureType) &&
         effect.preventedConditions.includes(condition),
     )
+  );
+}
+
+export function conditionApplicationPreventedByConditionImmunity(
+  target: BattleCreatureState,
+  condition: Condition,
+): boolean {
+  return target.activeEffects.some(
+    (effect) =>
+      effect.kind === "conditionImmunity" && effect.condition === condition,
   );
 }
 
@@ -462,7 +480,9 @@ function activeEffectDirectlyAppliesCondition(
       condition === "incapacitated") ||
     (effect.kind === "sleepUnconscious" && condition === "unconscious") ||
     (effect.kind === "hideousLaughter" &&
-      (condition === "prone" || condition === "incapacitated"))
+      (condition === "prone" || condition === "incapacitated")) ||
+    (effect.kind === "hypnoticPatternControl" &&
+      (condition === "charmed" || condition === "incapacitated"))
   );
 }
 
@@ -607,6 +627,19 @@ export function sleepShakeAwakeTargetChoices(
     .map(([id]) => id);
 }
 
+export function hypnoticPatternShakeAwakeTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants]
+    .filter(
+      ([id, combatant]) =>
+        id !== actorId &&
+        combatant.activeEffects.some(isHypnoticPatternControlEffect),
+    )
+    .map(([id]) => id);
+}
+
 export function removeSleepEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
@@ -651,6 +684,51 @@ export function combatantHasHideousLaughterEffect(
   combatant: BattleCreatureState | undefined,
 ): combatant is BattleCreatureState {
   return combatant?.activeEffects.some(isHideousLaughterEffect) === true;
+}
+
+export function removeHypnoticPatternControlEffectsFromTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const expiring = target.activeEffects.filter(isHypnoticPatternControlEffect);
+  if (expiring.length === 0) {
+    return state;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => !expiring.some((expired) => expired === effect),
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            expiring,
+          ),
+        }
+      : { ...target, activeEffects };
+  let combatants: ReadonlyMap<CombatantId, BattleCreatureState> = new Map(
+    state.combatants,
+  ).set(targetId, nextCombatant);
+  for (const effect of expiring) {
+    combatants = combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+      combatants,
+      {
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: effect.sourceSpellId,
+      },
+    );
+  }
+  return {
+    ...state,
+    combatants,
+  };
 }
 
 export function removeHideousLaughterEffectFromTarget(
@@ -767,6 +845,12 @@ function isHideousLaughterEffect(
   return effect.kind === "hideousLaughter";
 }
 
+function isHypnoticPatternControlEffect(
+  effect: BattleActiveEffect,
+): effect is HypnoticPatternControlEffect {
+  return effect.kind === "hypnoticPatternControl";
+}
+
 function sameHideousLaughterSpellEffect(
   effect: BattleActiveEffect,
   source: HideousLaughterEffect,
@@ -791,7 +875,6 @@ function sameConcentrationSpellEffectSource(
   );
 }
 
-
 export function conditionsAfterExpiringSpellConditionEffects(
   conditions: ConditionState,
   remainingEffects: readonly BattleActiveEffect[],
@@ -802,6 +885,13 @@ export function conditionsAfterExpiringSpellConditionEffects(
     .reduce((nextConditions, effect) => {
       if (effect.kind === "hideousLaughter") {
         return conditionsAfterExpiringHideousLaughterEffect(
+          nextConditions,
+          remainingEffects,
+          effect,
+        );
+      }
+      if (effect.kind === "hypnoticPatternControl") {
+        return conditionsAfterExpiringHypnoticPatternControlEffect(
           nextConditions,
           remainingEffects,
           effect,
@@ -862,7 +952,6 @@ function conditionsAfterExpiringConditionImmunity(
     : conditions;
 }
 
-
 function conditionsAfterExpiringHideousLaughterEffect(
   conditions: ConditionState,
   remainingEffects: readonly BattleActiveEffect[],
@@ -882,4 +971,22 @@ function conditionsAfterExpiringHideousLaughterEffect(
   ) || expiringEffect.conditionHadNonSpellIncapacitatedSource
     ? withoutProne
     : removeCondition(withoutProne, "incapacitated");
+}
+
+function conditionsAfterExpiringHypnoticPatternControlEffect(
+  conditions: ConditionState,
+  remainingEffects: readonly BattleActiveEffect[],
+  expiringEffect: HypnoticPatternControlEffect,
+): ConditionState {
+  const withoutCharmed =
+    remainingEffects.some((remaining) =>
+      activeEffectDirectlyAppliesCondition(remaining, "charmed"),
+    ) || expiringEffect.conditionHadNonSpellCharmedSource
+      ? conditions
+      : removeCondition(conditions, "charmed");
+  return remainingEffects.some((remaining) =>
+    activeEffectDirectlyAppliesCondition(remaining, "incapacitated"),
+  ) || expiringEffect.conditionHadNonSpellIncapacitatedSource
+    ? withoutCharmed
+    : removeCondition(withoutCharmed, "incapacitated");
 }

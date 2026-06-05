@@ -857,6 +857,7 @@ export function spellSavingThrowOutcomeHole(
         | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
+        | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -1011,6 +1012,7 @@ export function spellSavingThrowAbility(
         | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
+        | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -1044,6 +1046,7 @@ export function spellSavingThrowTargeting(
         | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
+        | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";

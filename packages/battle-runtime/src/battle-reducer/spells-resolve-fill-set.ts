@@ -1871,6 +1871,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "counterspell" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
+        invocation.procedure === "hypnoticPattern" ||
         invocation.procedure === "command" ||
         invocation.procedure === "creatureSizeIncrease" ||
         invocation.procedure === "creatureSizeDecrease" ||

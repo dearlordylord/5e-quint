@@ -158,6 +158,7 @@ module battleRuntimeSpellInvocation {
       | SorcerousBurst => false
       | SpareTheDying => false
       | HideousLaughter => true
+      | HypnoticPattern => true
       | MistyStep => true
       | Blur => true
       | SeeInvisibility => true

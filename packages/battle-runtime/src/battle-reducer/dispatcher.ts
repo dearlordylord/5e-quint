@@ -309,6 +309,7 @@ import {
   resolveReleaseReadiedSpellCommand,
   resolveSearch,
   resolveShove,
+  resolveShakeAwakeFromHypnoticPattern,
   resolveShakeAwakeFromSleep,
   resolveStandFromProneCommand,
   resolveStatBlockBonusActionOption,
@@ -741,6 +742,12 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
       return resolveShakeAwakeFromSleep({ ...input, subject });
+    }
+    if (
+      subject.tag === "action" &&
+      subject.action === "shakeAwakeFromHypnoticPattern"
+    ) {
+      return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -1553,7 +1560,8 @@ function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
         subject.action === "shove" ||
         subject.action === "escapeGrapple" ||
         subject.action === "escapeSpellRestraint" ||
-        subject.action === "shakeAwakeFromSleep"))
+        subject.action === "shakeAwakeFromSleep" ||
+        subject.action === "shakeAwakeFromHypnoticPattern"))
   );
 }
 
@@ -1625,7 +1633,10 @@ export function standardActionKindForSubject(
   if (subject.tag !== "action" || isLegendaryAttackSubject(subject)) {
     return null;
   }
-  if (subject.action === "shakeAwakeFromSleep") {
+  if (
+    subject.action === "shakeAwakeFromSleep" ||
+    subject.action === "shakeAwakeFromHypnoticPattern"
+  ) {
     return null;
   }
   return Match.value(subject.action).pipe(

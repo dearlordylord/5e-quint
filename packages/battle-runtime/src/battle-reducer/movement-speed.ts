@@ -270,6 +270,9 @@ export function battleTerminalSpeedZero(
   return (
     isGrappled ||
     combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "hypnoticPatternControl",
+    ) ||
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||
     hasCondition(combatant.conditions, "restrained") ||

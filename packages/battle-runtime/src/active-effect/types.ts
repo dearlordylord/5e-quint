@@ -481,6 +481,15 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "hypnoticPatternControl";
+      readonly conditionHadNonSpellCharmedSource: boolean;
+      readonly conditionHadNonSpellIncapacitatedSource: boolean;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";
       readonly areaId: BattleAreaId;
       readonly save: {

@@ -47,6 +47,7 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "escapeGrapple",
   "escapeSpellRestraint",
   "shakeAwakeFromSleep",
+  "shakeAwakeFromHypnoticPattern",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
@@ -151,6 +152,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedAttackRollAdvantage",
   "sleepTargetAdmission",
   "hideousLaughter",
+  "hypnoticPattern",
   "greaseGroundHazard",
   "webRestraintHazard",
   "gustOfWindLine",
@@ -452,6 +454,11 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("shakeAwakeFromSleep"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromHypnoticPattern"),
   }),
   Schema.Union(
     Schema.Struct({
@@ -921,6 +928,12 @@ function spellMetamagicSelectionKey(
 
 function battleSubjectKey(subject: BattleSubject): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
+    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
+  }
+  if (
+    subject.tag === "action" &&
+    subject.action === "shakeAwakeFromHypnoticPattern"
+  ) {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
   if (subject.tag === "action" && subject.action === "shove") {

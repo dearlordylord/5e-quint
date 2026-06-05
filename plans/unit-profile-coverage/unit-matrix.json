@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 422,
-      "numerator": 226,
-      "percent": "53.6%"
+      "numerator": 227,
+      "percent": "53.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 507,
-      "numerator": 273,
-      "percent": "53.8%"
+      "numerator": 274,
+      "percent": "54%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 274
+      "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 274,
-      "numerator": 274,
+      "denominator": 275,
+      "numerator": 275,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 138,
-      "numerator": 137,
+      "denominator": 139,
+      "numerator": 138,
       "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 138,
-      "numerator": 137,
+      "denominator": 139,
+      "numerator": 138,
       "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 154,
-      "numerator": 150,
+      "denominator": 155,
+      "numerator": 151,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 227,
-      "numerator": 154,
-      "percent": "67.8%"
+      "denominator": 228,
+      "numerator": 155,
+      "percent": "68%"
     }
   },
   "metricSemantics": [
@@ -2520,6 +2520,31 @@
       ]
     },
     {
+      "id": "spell.invocation-hypnotic-pattern-control",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored Hypnotic Pattern spell facts, caller-supplied Cube affected-creature and sight witnesses, Saving Throw outcomes, damage events, and table-supplied adjacent shake-awake facts; automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation remain caller/table facts.",
+      "taskRefs": [
+        "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+      ],
+      "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-sanctuary-targeting-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4426,13 +4451,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 138,
-        "numerator": 137,
+        "denominator": 139,
+        "numerator": 138,
         "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 138,
-        "numerator": 137,
+        "denominator": 139,
+        "numerator": 138,
         "percent": "99.3%"
       }
     },
@@ -5879,6 +5904,22 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-hypnotic-pattern-control",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
             "runtime": "battle",
             "status": "covered",
@@ -6802,8 +6843,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 153,
-          "numerator": 153,
+          "denominator": 154,
+          "numerator": 154,
           "percent": "100%"
         }
       },
@@ -8724,6 +8765,28 @@
             }
           ],
           "unitId": "hunters_mark"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+                }
+              ],
+              "profileId": "spell.invocation-hypnotic-pattern-control",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+              ]
+            }
+          ],
+          "unitId": "hypnotic_pattern"
         },
         {
           "joinStatus": "covered",
@@ -12492,6 +12555,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Promoted save-spell Quint ownership covers Hypnotic Pattern's save-gated control lifecycle boundary, including Concentration-owned condition lifecycle parity in the shared save spell lane.",
+      "profileIds": [
+        "spell.invocation-hypnotic-pattern-control"
+      ],
+      "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Hypnotic Pattern discovery, level-3 Spell Slot gate, point-origin Cube Saving Throw outcomes, failed-save Charmed and Incapacitated application, Speed 0 projection, caster Concentration ownership, damage cleanup preserving independent conditions, and another-creature Action shake-awake cleanup with table-supplied adjacency facts.",
+      "profileIds": [
+        "spell.invocation-hypnotic-pattern-control"
+      ],
+      "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Sanctuary's Bonus Action ward application, one-minute ward duration, attack-roll and damaging-spell targeting triggers, area-effect exclusion, successful-save pass-through, failed-save loss, failed-save new-target outcome, and early-end lifecycle.",
       "profileIds": [
         "spell.invocation-sanctuary-targeting-interdiction"
@@ -13960,17 +14039,17 @@
         "unsupportedOrOtherUnits": 3
       },
       {
-        "executableUnitDenominator": 126,
-        "installedUnitDenominator": 126,
+        "executableUnitDenominator": 127,
+        "installedUnitDenominator": 127,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 131,
+        "profileFactDenominator": 132,
         "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 108,
+        "selectedIdentityReplayDenominator": 109,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 108,
-        "supportedProfileUnits": 89,
+        "selectedIdentityReplayWitnessUnits": 109,
+        "supportedProfileUnits": 90,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -30951,6 +31030,81 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "table/spatial and sight witness provider",
+          "reason": "Automatic Cube geometry, Total Cover blocking, point-of-origin inclusion, area membership, and sight derivation remain caller-supplied table facts outside promoted battle runtime."
+        },
+        "profileIds": [
+          "spell.invocation-hypnotic-pattern-control"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-3-or-higher Spell Slot casting from the authored SRD Hypnotic Pattern Unit",
+          "caller-supplied point-origin 30-foot Cube affected-creature and sight witnesses",
+          "Wisdom Saving Throw against the caster Spell Save DC",
+          "failed-save source-owned target control effect projecting Charmed, Incapacitated, and Speed 0 without duplicating independent condition sources",
+          "caster Concentration ownership up to 1 minute only when at least one target is controlled",
+          "affected-target damage cleanup removes only the spell-owned Hypnotic Pattern control effect and clears Concentration when no controlled targets remain",
+          "another creature can spend an Action with a table-supplied adjacent witness to shake an affected target awake",
+          "Concentration and duration cleanup remove the active control effect"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-hypnotic-pattern-control",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored Hypnotic Pattern spell facts, caller-supplied Cube affected-creature and sight witnesses, Saving Throw outcomes, damage events, and table-supplied adjacent shake-awake facts; automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation remain caller/table facts.",
+          "taskRefs": [
+            "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME"
+          ],
+          "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
+      "unitId": "hypnotic_pattern"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/material/spatial witness provider",
           "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
         },
@@ -33028,39 +33182,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/holy_aura.json",
       "unitId": "holy_aura"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-            "mechanic": "Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch.",
-            "owner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
-            "title": "Hypnotic Pattern Control Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
-        "reason": "The installed SRD 5.2.1 Hypnotic Pattern Surface Spell Definition encodes Action level-3 Spell Slot casting, 120-foot range, caster-owned Concentration up to 1 minute, a point-origin 30-foot Cube with a sight-gated affected-creature predicate, Wisdom Saving Throw, failed-save Charmed condition, Incapacitated projection while Charmed, Speed 0 while Charmed, target-specific ending when the affected target takes damage, and another-creature action-spend shake-awake escape. No promoted battle-runtime profile exists yet because exact support still needs Unit catalog/runtime admission, caller-supplied Cube affected-creature and sight witnesses, a source-owned runtime target effect that keeps Charmed, Incapacitated, and Speed 0 linked without duplicating independent condition or Speed sources, damage cleanup, shake-awake cleanup, duration cleanup, and promoted Quint/runtime parity without authored-identity dispatch.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hypnotic_pattern.json",
-      "unitId": "hypnotic_pattern"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -117,6 +117,7 @@ module battleRuntimeArmorClass {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
+        | HypnoticPatternEffect(_) => false
         | GreaseGroundHazard(_) => false
         | SpikeGrowthMovementHazard(_) => false
         | FogCloudObscurement(_) => false

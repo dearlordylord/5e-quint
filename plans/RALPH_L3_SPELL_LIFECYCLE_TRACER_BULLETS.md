@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Hypnotic Pattern control runtime after Surface repair"
     },
     {
@@ -140,7 +140,7 @@ owns branch repair.
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | done | none | Spiritual Weapon tracked active-effect occurrences are now covered by the existing Dispel Magic ongoing-effect gate. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | done | none | Split into owner-specific executable follow-up rows. |
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
-| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | ready-for-implementation-after-light-research | none | Surface repair is complete; runtime promotion can start. |
+| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | done | none | Hypnotic Pattern control runtime is promoted. |
 | 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
 | 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
@@ -404,7 +404,7 @@ Result:
 
 ### Task 8 - L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 After Task 7, promote Hypnotic Pattern runtime.
 

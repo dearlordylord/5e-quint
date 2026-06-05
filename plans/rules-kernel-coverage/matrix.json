@@ -329,6 +329,7 @@
       "profiles": [
         "spell.invocation-condition-save",
         "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+        "spell.invocation-hypnotic-pattern-control",
         "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
@@ -5070,6 +5071,12 @@
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
       "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-hypnotic-pattern-control"
     },
     {
       "obligationIds": [
@@ -10221,6 +10228,7 @@
     "spell.invocation-gust-of-wind-line",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+    "spell.invocation-hypnotic-pattern-control",
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-levitated-creature",

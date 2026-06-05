@@ -37,7 +37,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-see-invisible-observer-sight`, `spell.invocation-spiritual-weapon-attack-proxy`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-direct-condition` |
-| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-save-gated-condition-immunity` |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-hypnotic-pattern-control`, `spell.invocation-save-gated-condition-immunity` |
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | covered | `spell.invocation-attack-roll-advantage-save` |
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | battle | covered | `spell.invocation-see-invisible-observer-sight` |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | battle | covered | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` |
