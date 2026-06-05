@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Antimagic Field Dispel Magic immunity"
     },
     {
@@ -147,7 +147,7 @@ owns branch repair.
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Closed as table-spatial derivation for currently supported area shapes without duplicating map state. |
 | 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Represented self-teleport transit blocking is promoted from caller-supplied origin/destination aura-membership witnesses; planar travel is closed until a future planar-travel owner exists. |
 | 14 | L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE - Antimagic Field portal closure | blocked | future portal lifecycle owner | Requires represented portal identity, placement, open/closed state, destination, and cleanup semantics. |
-| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Requires aura occurrences to be targetable or visible to the magical-effect targeting owner. |
+| 15 | L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY - Antimagic Field Dispel Magic immunity | done | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION | Dispel Magic no-effect aura exception is promoted through stable area and source combatant identity. |
 | 16 | L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION - Antimagic Field broader ongoing spell suppression | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Extend suppression one represented ongoing Spell Effect family at a time. |
 
 ## Global Acceptance Criteria
@@ -571,7 +571,7 @@ Expected outputs:
 
 ### Task 15 - L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY
 
-Status: `ready-for-research`
+Status: `done`
 
 Represent that Dispel Magic has no effect on an Antimagic Field aura once aura
 occurrences are otherwise targetable or visible to magical-effect targeting.
@@ -587,6 +587,14 @@ Expected outputs:
 
 - focused tests proving Dispel Magic leaves Antimagic Field active;
 - QNT/runtime parity for the exception once the target boundary exists.
+
+Completed output:
+
+- Dispel Magic magical-effect targeting now exposes active Antimagic Field aura
+  occurrences by stable area identity and source combatant identity;
+- a typed no-effect exception spends Dispel Magic resources while leaving the
+  aura and its Concentration active without authored-identity dispatch;
+- focused runtime tests and MBT parity cover the promoted exception.
 
 ### Task 16 - L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION
 

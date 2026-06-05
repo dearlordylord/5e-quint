@@ -8,7 +8,7 @@
 
 ## Current Promoted Owners
 
-The promoted Antimagic Field runtime owners cover ongoing-spell suppression, aura action interdiction, magical-effect targeting/effect-delivery interdiction, and represented self-teleport destination transit blocking. They consume caller-supplied aura identity and membership witnesses rather than deriving table geometry or map positions.
+The promoted Antimagic Field runtime owners cover ongoing-spell suppression, aura action interdiction, magical-effect targeting/effect-delivery interdiction, represented self-teleport destination transit blocking, and the Dispel Magic no-effect aura exception. They consume caller-supplied aura identity and membership witnesses rather than deriving table geometry or map positions.
 
 ## Split Rows
 
@@ -21,7 +21,7 @@ The promoted Antimagic Field runtime owners cover ongoing-spell suppression, aur
 | Represented self-teleport destination transit blocking | Promoted by `L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING` for self-teleport destinations that consume caller-supplied origin/destination aura-membership witnesses. Automatic aura-membership derivation remains table-owned. | completed |
 | Planar travel blocking | Closed until a planar-travel procedure, plane-location state, and table-owned plane transition witness owner exists; do not add plane metadata to self-teleport or generic teleport state. | future planar-travel owner |
 | Portal closure | Deferred until portal occurrences have stable identity, placement, open/closed state, destination, and cleanup semantics. | `L3-FOLLOWUP-ANTIMAGIC-PORTAL-CLOSURE` |
-| Dispel Magic immunity on the aura | Needs a typed Dispel Magic exception once Antimagic aura occurrences are otherwise targetable or visible to magical-effect targeting. | `L3-FOLLOWUP-ANTIMAGIC-DISPEL-IMMUNITY` |
+| Dispel Magic immunity on the aura | Promoted by Task 15 with a typed Dispel Magic no-effect exception for active Antimagic Field aura targets matched by stable area identity and source combatant identity. | completed |
 | Broader ongoing spell suppression | Extend the current suppression owner one represented ongoing Spell Effect family at a time, preserving non-deletion, ticking duration, and Artifact/deity exceptions. | `L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION` |
 
 ## Implementation Decision

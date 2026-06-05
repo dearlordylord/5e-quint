@@ -40,11 +40,11 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type {
   BattleCommandOption,
   BattleAntimagicFieldAuraMembership,
+  BattleAntimagicFieldOngoingSpellEffectRef,
   BattleD20RollModifierDelta,
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
-  BattleOngoingSpellEffectRef,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
@@ -612,7 +612,7 @@ export type BattleActiveEffect =
       readonly areaId: BattleAreaId;
       readonly auraMembership: BattleAntimagicFieldAuraMembership;
       readonly radiusFeet: MovementFeet;
-      readonly suppressedOngoingSpellEffects: readonly BattleOngoingSpellEffectRef[];
+      readonly suppressedOngoingSpellEffects: readonly BattleAntimagicFieldOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }

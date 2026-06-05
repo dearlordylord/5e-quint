@@ -858,6 +858,11 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union(
     ),
     sourceEffectId: BattleSpellEffectOccurrenceId,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("antimagicFieldAura"),
+    areaId: BattleAreaId,
+    sourceCombatantId: CombatantId,
+  }),
 );
 const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
   Schema.Struct({
@@ -1944,6 +1949,11 @@ type BattleFillEncoded =
                     | "spellObjectContactDamage"
                     | "spiritualWeapon";
                   readonly sourceEffectId: string;
+                }
+              | {
+                  readonly kind: "antimagicFieldAura";
+                  readonly areaId: string;
+                  readonly sourceCombatantId: string;
                 };
           };
       readonly spatialFacts: readonly {
@@ -1972,6 +1982,11 @@ type BattleFillEncoded =
                       | "spellObjectContactDamage"
                       | "spiritualWeapon";
                     readonly sourceEffectId: string;
+                  }
+                | {
+                    readonly kind: "antimagicFieldAura";
+                    readonly areaId: string;
+                    readonly sourceCombatantId: string;
                   };
             };
         readonly rangeFeet: number;

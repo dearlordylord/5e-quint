@@ -691,6 +691,11 @@ export type BattleOngoingSpellEffectRef =
       readonly kind: "spellActiveEffect";
       readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly kind: "antimagicFieldAura";
+      readonly areaId: BattleAreaId;
+      readonly sourceCombatantId: CombatantId;
     };
 export type BattleAntimagicFieldOngoingSpellEffectRef =
   | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellLightEmitter" }>

@@ -8,6 +8,7 @@ import type {
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
 } from "../battle-reducer.ts";
+import type { BattleAreaId, CombatantId } from "../identity.ts";
 
 type TrackedOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
@@ -69,6 +70,21 @@ export function ongoingSpellEffectRefEquals(
   if (left.kind !== right.kind) {
     return false;
   }
+  if (
+    left.kind === "antimagicFieldAura" &&
+    right.kind === "antimagicFieldAura"
+  ) {
+    return (
+      left.areaId === right.areaId &&
+      left.sourceCombatantId === right.sourceCombatantId
+    );
+  }
+  if (
+    left.kind === "antimagicFieldAura" ||
+    right.kind === "antimagicFieldAura"
+  ) {
+    return false;
+  }
   return (
     left.sourceEffectId === right.sourceEffectId &&
     (left.kind !== "spellActiveEffect" ||
@@ -80,9 +96,24 @@ export function ongoingSpellEffectRefEquals(
 export function ongoingSpellEffectRefKey(
   ref: BattleOngoingSpellEffectRef,
 ): string {
-  return ref.kind === "spellLightEmitter"
-    ? `light:${ref.sourceEffectId}`
-    : `active:${ref.activeEffectKind}:${ref.sourceEffectId}`;
+  if (ref.kind === "spellLightEmitter") {
+    return `light:${ref.sourceEffectId}`;
+  }
+  if (ref.kind === "spellActiveEffect") {
+    return `active:${ref.activeEffectKind}:${ref.sourceEffectId}`;
+  }
+  return `antimagic-aura:${ref.sourceCombatantId}:${ref.areaId}`;
+}
+
+export function ongoingSpellEffectRefForAntimagicFieldAura(input: {
+  readonly areaId: BattleAreaId;
+  readonly sourceCombatantId: CombatantId;
+}): BattleOngoingSpellEffectRef {
+  return {
+    kind: "antimagicFieldAura",
+    areaId: input.areaId,
+    sourceCombatantId: input.sourceCombatantId,
+  };
 }
 
 export function isTrackedOngoingSpellLightEmitter(
