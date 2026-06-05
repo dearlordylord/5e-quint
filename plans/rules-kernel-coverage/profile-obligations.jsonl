@@ -131,6 +131,7 @@
 {"profileId":"spell.invocation-creature-size-change","obligationIds":["BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"]}
 {"profileId":"spell.invocation-ongoing-spell-ending","obligationIds":["BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"]}
 {"profileId":"unit-feature.metamagic-cast-governor-quickened","obligationIds":["BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"]}
+{"profileId":"unit-feature.metamagic-careful-save-protection","obligationIds":["BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
 {"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
 {"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}

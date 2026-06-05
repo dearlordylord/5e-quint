@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 144,
-      "numerator": 140,
-      "percent": "97.2%"
+      "numerator": 141,
+      "percent": "97.9%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 144,
-      "numerator": 140,
-      "percent": "97.2%"
+      "numerator": 141,
+      "percent": "97.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 154,
@@ -4625,13 +4625,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 144,
-        "numerator": 140,
-        "percent": "97.2%"
+        "numerator": 141,
+        "percent": "97.9%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 144,
-        "numerator": 140,
-        "percent": "97.2%"
+        "numerator": 141,
+        "percent": "97.9%"
       }
     },
     "profileKinds": [
@@ -6741,8 +6741,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Careful Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and protected-target limits, forces protected Saving Throw success, and suppresses successful-save half damage"
+          }
+        ],
         "profileId": "unit-feature.metamagic-careful-save-protection",
         "profileKind": "resource",
         "qntOwners": [

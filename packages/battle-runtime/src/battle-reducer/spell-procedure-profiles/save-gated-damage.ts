@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION
 //
 // The saveGatedDamage Spell Procedure Profile: action-time cantrip or Spell
 // Slot casting where affected targets make a Saving Throw before spell damage

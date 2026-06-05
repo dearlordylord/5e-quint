@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic
 // UNIT-IDENTITY-MBT-REPLAY: L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic doResolveCarefulSaveGatedDamage doResolveCarefulSaveGatedNoEffect
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-careful-save-protection
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
