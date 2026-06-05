@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit Antimagic Field QNT proof evidence rows"
     },
     {
@@ -112,7 +112,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 2 | L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED | ready-for-implementation-after-light-research | none | Fix `unit-feature.metamagic-heightened-save-disadvantage` rules-kernel join. |
 | 3 | L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED | done | none | Fix `unit-feature.metamagic-damage-type-substitution` rules-kernel join. |
 | 4 | L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED | done | none | Fix `unit-feature.metamagic-effective-level-extra-target` rules-kernel join. |
-| 5 | L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT | ready-for-implementation-after-light-research | none | Decide whether Antimagic MBT QNT drivers need proof rows or explicit non-proof classification. |
+| 5 | L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT | done | none | Antimagic action-interdiction and magical-effect-interdiction `.mbt.qnt` owners are explicit MBT-only witnesses, not qnt-proof evidence. |
 | 6 | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | ready-for-research | none | Produce a runnable next-slice list from actual supported procedures. |
 | 7 | L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE | blocked | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | Promote exactly one next Quickened procedure through QNT, runtime, MBT, and ledgers. |
 | 8 | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | ready-for-research | none | Close or plan repeat-save selected-target identity without duplicating occurrence state. |
@@ -147,6 +147,10 @@ or document the missing obligation precisely.
 
 Audit whether the Antimagic MBT QNT drivers should contribute proof evidence or
 be explicitly classified as MBT-only witnesses.
+
+Audit decision: the Antimagic action-interdiction and magical-effect-interdiction
+`.mbt.qnt` drivers remain MBT-only parity witnesses. Ongoing-spell suppression is
+the Antimagic profile with current qnt-proof evidence.
 
 ### Task 6 - L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY
 

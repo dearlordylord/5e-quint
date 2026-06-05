@@ -5814,7 +5814,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking.",
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
       ],
@@ -5822,7 +5822,7 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses.",
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
       ],
