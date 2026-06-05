@@ -3567,7 +3567,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
       "taskRefs": [
         "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
       ],
@@ -3580,6 +3580,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts"
         }
       ]
     },
@@ -13079,7 +13083,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit, level-1-plus spell cast turn fact commit, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
+      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -13087,7 +13091,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, and rejection of unsupported non-Quickened Metamagic selections.",
+      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus applicable Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, cantrip spell-attack Quickened casts blocking later level-1-plus spells, and rejection of unsupported non-Quickened Metamagic selections.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -13674,7 +13678,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
+      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -13682,7 +13686,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus applicable Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, cantrip spell-attack Quickened casts blocking later level-1-plus spells, and rejection of unsupported non-Quickened Metamagic selections.",
+      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus applicable Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, cantrip spell-attack Quickened casts blocking later level-1-plus spells, and rejection of unsupported non-Quickened Metamagic selections.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
       ],
@@ -18440,7 +18444,7 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
-            "mechanic": "Quickened Spell for action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock to each remaining supported action-casting spell procedure."
+            "mechanic": "Quickened Spell for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock only after each procedure owner has a typed resource-threading and parity witness."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
@@ -18470,9 +18474,9 @@
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
-            "mechanic": "Promote Quickened Spell from the current direct restoration, scalar buff, save-gated damage, and direct spell-attack damage subset to every remaining supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths.",
+            "mechanic": "Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths.",
             "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
             "title": "Sorcerer Metamagic Quickened All Action Spells"
           },
           {
@@ -18503,7 +18507,7 @@
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
           "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
-          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts"
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts"
         ],
         "tag": "profile-subset-supported"
       },
@@ -18642,7 +18646,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
           "taskRefs": [
             "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
           ],
@@ -18655,6 +18659,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts"
             }
           ]
         }

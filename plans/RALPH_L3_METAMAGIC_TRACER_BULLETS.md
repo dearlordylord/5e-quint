@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Quickened Spell for condition and buff action-spell procedures"
     },
     {
@@ -87,7 +87,7 @@ owns branch repair.
 |---:|---|---|---|---|
 | 1 | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS - Promote Quickened Spell for save-gated damage spell procedures | done | none | Independent Quickened save-damage slice. |
 | 2 | L3META-02-QUICKENED-SPELL-ATTACKS - Promote Quickened Spell for spell attack procedures | done | none | Independent Quickened spell-attack slice. |
-| 3 | L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES - Promote Quickened Spell for condition and buff action-spell procedures | ready-for-implementation-after-light-research | none | Independent Quickened condition/buff slice. |
+| 3 | L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES - Promote Quickened Spell for condition and buff action-spell procedures | done | none | Independent Quickened condition/buff slice. |
 | 4 | L3META-04-CAREFUL-SPELL-SAVE-PROFILES - Promote Careful Spell for supported save profiles | ready-for-implementation-after-light-research | none | Independent save-profile slice. |
 | 5 | L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES - Promote Heightened Spell for supported save profiles | ready-for-implementation-after-light-research | none | Independent save-profile slice. |
 | 6 | L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE - Promote Transmuted Spell damage type substitution | ready-for-implementation-after-light-research | none | Independent damage-type substitution slice. |
@@ -169,7 +169,7 @@ Expected outputs:
 
 ### Task 3 - L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Quickened Spell for remaining supported action-cast condition, roll
 modifier, scalar buff, and direct condition spell procedures where the existing

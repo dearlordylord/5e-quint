@@ -43,12 +43,15 @@ import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   snapshotBattle,
+  type ActionSpellBattleResolutionInput,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenReactionWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -93,6 +96,13 @@ type RollModifierInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "rollModifier" }
 >;
+type RollModifierResolveInput = SpellProcedureProfileResolveInput<
+  RollModifierInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 function admitRollModifier(
   spell: SpellRecord,
@@ -290,7 +300,7 @@ function rollModifierCastSummary(invocation: RollModifierInvocation): string {
 }
 
 function resolveRollModifier(
-  input: SpellProcedureProfileResolveInput<RollModifierInvocation>,
+  input: RollModifierResolveInput,
 ): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -346,7 +356,11 @@ function resolveRollModifier(
       invocation: input.invocation,
       targetIds: targetSelection.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource:
+        input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -395,6 +409,12 @@ function resolveRollModifier(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   return resourced.tag === "invalid"
     ? resourced
@@ -429,10 +449,11 @@ const RollModifierInvocationSchema = spellProcedureInvocationSchema<
 );
 export const rollModifierProfile: SpellProcedureProfile<
   "rollModifier",
-  RollModifierInvocation
+  RollModifierInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "rollModifier",
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: ["guidance"] as const satisfies ReadonlyArray<

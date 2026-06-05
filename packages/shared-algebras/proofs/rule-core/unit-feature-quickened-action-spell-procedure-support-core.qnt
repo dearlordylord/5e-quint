@@ -13,15 +13,21 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
   // - UBIQUITOUS_LANGUAGE.md: Magic Action and Bonus Action.
   //
   // This core models the profile support subset owned by these tracer bullets.
-  // Direct Hit Point restoration, scalar buffs, save-gated damage, and the
-  // direct spell-attack damage procedure admit the rewrite; control,
-  // ongoing-effect, and other action procedures stay closed for their dedicated
-  // follow-up tasks.
+  // Direct Hit Point restoration, scalar buffs, save-gated damage,
+  // save-gated condition/immunity, direct condition, roll modifier, and the
+  // direct spell-attack damage procedure admit the rewrite where the runtime
+  // profile threads the shared spell-cast resource boundary; control,
+  // ongoing-effect, and other action procedures stay closed for their
+  // dedicated follow-up tasks.
 
   type BattleRuntimeQuickenedActionSpellProcedure =
     | QuickenedDirectRestorationProcedure
     | QuickenedScalarBuffProcedure
     | QuickenedSaveGatedDamageProcedure
+    | QuickenedSaveGatedConditionProcedure
+    | QuickenedSaveGatedConditionImmunityProcedure
+    | QuickenedDirectConditionProcedure
+    | QuickenedRollModifierProcedure
     | QuickenedSpellAttackProcedure
     | QuickenedDamageProcedure
     | QuickenedControlProcedure
@@ -35,6 +41,10 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
       | QuickenedDirectRestorationProcedure => true
       | QuickenedScalarBuffProcedure => true
       | QuickenedSaveGatedDamageProcedure => true
+      | QuickenedSaveGatedConditionProcedure => true
+      | QuickenedSaveGatedConditionImmunityProcedure => true
+      | QuickenedDirectConditionProcedure => true
+      | QuickenedRollModifierProcedure => true
       | QuickenedSpellAttackProcedure => true
       | QuickenedDamageProcedure => false
       | QuickenedControlProcedure => false

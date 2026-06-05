@@ -89,6 +89,112 @@ module battleRuntimeMetamagicTests {
     }
   }
 
+  run test_quickened_save_gated_condition_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedColorSpray(
+      initialState,
+      false,
+      true,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.fighter.activeEffects.contains(ColorSprayBlinded({
+        source: Fighter,
+        expiresAtRound: 2,
+      }))),
+      assert(not(result.state.goblin.activeEffects.contains(ColorSprayBlinded({
+        source: Fighter,
+        expiresAtRound: 2,
+      })))),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
+  run test_quickened_save_gated_condition_immunity_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedCalmEmotions(
+      initialState,
+      true,
+      false,
+      false,
+      true,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.fighter.activeEffects.contains(CalmEmotionsCharmedImmunity)),
+      assert(result.state.fighter.activeEffects.contains(CalmEmotionsFrightenedImmunity)),
+      assert(not(result.state.goblin.activeEffects.contains(CalmEmotionsCharmedImmunity))),
+      assert(result.state.fighter.concentrating),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
+  run test_quickened_direct_condition_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedInvisibility(
+      initialState,
+      Set(Goblin),
+      2,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.goblin.activeEffects.contains(InvisibilityCondition({
+        source: Fighter,
+        durationTicks: 600,
+      }))),
+      assert(not(result.state.fighter.activeEffects.contains(InvisibilityCondition({
+        source: Fighter,
+        durationTicks: 600,
+      })))),
+      assert(result.state.fighter.concentrating),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
+  run test_quickened_roll_modifier_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedRollModifierChoiceSpell(
+      initialState,
+      BlessRollModifier,
+      Set(Fighter),
+      Set(),
+      1,
+      StrAbility,
+      StealthSkill,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.fighter.activeEffects.contains(BlessD20RollBonus)),
+      assert(not(result.state.goblin.activeEffects.contains(BlessD20RollBonus))),
+      assert(result.state.fighter.concentrating),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
   run test_quickened_save_gated_damage_spends_bonus_action_not_magic_action = {
     val result = resolveQuickenedBurningHands(
       initialState,
@@ -189,6 +295,22 @@ module battleRuntimeMetamagicTests {
         Set(quickenedSpellMetamagicFact),
         2,
       )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionImmunityProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedDirectConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedRollModifierProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
       assert(quickenedSpellCanModifySpellAttackDamage(
         initialState,
         RayOfFrostSpellAttack,
@@ -251,6 +373,22 @@ module battleRuntimeMetamagicTests {
       )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedSpellAttackProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionImmunityProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedDirectConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedRollModifierProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
       assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(

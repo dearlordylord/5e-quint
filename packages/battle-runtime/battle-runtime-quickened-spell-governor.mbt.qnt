@@ -15,6 +15,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
   //   Sorcery Points as a Pool, and Spend.
   var qQuickenedCureWoundsOffered: bool
+  var qColorSprayBlinded: bool
+  var qCalmEmotionsImmunity: bool
+  var qInvisibilityActive: bool
+  var qBlessActive: bool
   var qMagicActionAvailable: bool
   var qBonusActionAvailable: bool
   var qSorceryPointsRemaining: int
@@ -34,6 +38,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action recordQuickenedGovernorState(
     quickenedCureWoundsOffered: bool,
+    colorSprayBlinded: bool,
+    calmEmotionsImmunity: bool,
+    invisibilityActive: bool,
+    blessActive: bool,
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
@@ -46,6 +54,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     lastResult: str,
   ): bool = all {
     qQuickenedCureWoundsOffered' = quickenedCureWoundsOffered,
+    qColorSprayBlinded' = colorSprayBlinded,
+    qCalmEmotionsImmunity' = calmEmotionsImmunity,
+    qInvisibilityActive' = invisibilityActive,
+    qBlessActive' = blessActive,
     qMagicActionAvailable' = magicActionAvailable,
     qBonusActionAvailable' = bonusActionAvailable,
     qSorceryPointsRemaining' = sorceryPointsRemaining,
@@ -60,6 +72,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action init = recordQuickenedGovernorState(
     true,
+    false,
+    false,
+    false,
+    false,
     true,
     true,
     initialSorceryPoints,
@@ -74,6 +90,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action doResolveQuickenedRestoration = recordQuickenedGovernorState(
     false,
+    false,
+    false,
+    false,
+    false,
     true,
     false,
     initialSorceryPoints - 2,
@@ -86,7 +106,83 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     "resolvedQuickenedRestoration",
   )
 
+  action doResolveQuickenedSaveGatedCondition = recordQuickenedGovernorState(
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    "resolvedQuickenedSaveGatedCondition",
+  )
+
+  action doResolveQuickenedSaveGatedConditionImmunity = recordQuickenedGovernorState(
+    false,
+    false,
+    true,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    "resolvedQuickenedSaveGatedConditionImmunity",
+  )
+
+  action doResolveQuickenedDirectCondition = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    "resolvedQuickenedDirectCondition",
+  )
+
+  action doResolveQuickenedRollModifier = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    "resolvedQuickenedRollModifier",
+  )
+
   action doResolveQuickenedAfterMagicActionSpent = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
     false,
     false,
     false,
@@ -102,6 +198,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action doRejectUnaffordable = recordQuickenedGovernorState(
     false,
+    false,
+    false,
+    false,
+    false,
     true,
     true,
     unaffordableSorceryPoints,
@@ -116,6 +216,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action doRejectUnknownOption = recordQuickenedGovernorState(
     true,
+    false,
+    false,
+    false,
+    false,
     true,
     true,
     initialSorceryPoints,
@@ -130,6 +234,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action doRejectUnsupportedSecondOption = recordQuickenedGovernorState(
     true,
+    false,
+    false,
+    false,
+    false,
     true,
     true,
     highSorceryPoints,
@@ -144,6 +252,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action doRejectOnePerSpell = recordQuickenedGovernorState(
     true,
+    false,
+    false,
+    false,
+    false,
     true,
     true,
     highSorceryPoints,
@@ -157,6 +269,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   )
 
   action doRejectPriorLevelOnePlusSpell = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
     false,
     true,
     true,
@@ -172,6 +288,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   action step = any {
     doResolveQuickenedRestoration,
+    doResolveQuickenedSaveGatedCondition,
+    doResolveQuickenedSaveGatedConditionImmunity,
+    doResolveQuickenedDirectCondition,
+    doResolveQuickenedRollModifier,
     doResolveQuickenedAfterMagicActionSpent,
     doRejectUnaffordable,
     doRejectUnknownOption,

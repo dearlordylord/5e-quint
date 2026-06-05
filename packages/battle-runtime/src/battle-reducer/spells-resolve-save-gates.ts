@@ -144,12 +144,12 @@ type SaveMetamagicSelectionState =
       readonly message: string;
     };
 
-type SaveGatedDamageResolutionInput =
+type SaveGatedSpellResolutionInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
 
 function spellReactionContinuationSubject(
-  input: SaveGatedDamageResolutionInput,
+  input: SaveGatedSpellResolutionInput,
 ): BattleSubject {
   return "reactionContinuationSubject" in input
     ? (input.reactionContinuationSubject ?? input.subject)
@@ -510,8 +510,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -619,8 +618,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -760,8 +758,7 @@ export function resolveHideousLaughterSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -884,8 +881,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2188,13 +2184,16 @@ function resolveFailedSaveForcedReactionMovement(input: {
 }
 
 export function resolveSaveGateConditionSpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
@@ -2364,8 +2363,7 @@ export function resolveSaveGateConditionSpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2381,6 +2379,9 @@ export function resolveSaveGateConditionSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
@@ -2408,13 +2409,16 @@ export function resolveSaveGateConditionSpellAct(input: {
 }
 
 export function resolveSaveGateConditionImmunitySpellAct(input: {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "saveGatedConditionImmunity" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
@@ -2518,8 +2522,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
         sourceSpellId: input.invocation.spell.id,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
+          subject: spellReactionContinuationSubject(input.input),
           fills: input.input.fills,
         },
       },
@@ -2535,6 +2538,9 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),

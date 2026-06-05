@@ -18,8 +18,10 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
+  type BonusActionSpellBattleResolutionInput,
   type DirectConditionSpellInvocation,
 } from "../../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -48,6 +50,14 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+type DirectConditionResolveInput = SpellProcedureProfileResolveInput<
+  DirectConditionSpellInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+> & {
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+};
 
 const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_makes_attack_roll",
@@ -198,10 +208,7 @@ function directConditionCastSummary(
 }
 
 function resolveDirectCondition(
-  input: SpellProcedureProfileResolveInput<
-    DirectConditionSpellInvocation,
-    ActionSpellBattleResolutionInput
-  >,
+  input: DirectConditionResolveInput,
 ): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -258,7 +265,11 @@ function resolveDirectCondition(
       invocation: input.invocation,
       targetIds: input.fillSet.targetList.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
+      castingResource:
+        input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -276,6 +287,12 @@ function resolveDirectCondition(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -313,11 +330,12 @@ const DirectConditionInvocationSchema = spellProcedureInvocationSchema<
 );
 export const directConditionProfile: SpellProcedureProfile<
   "directCondition",
-  DirectConditionSpellInvocation
+  DirectConditionSpellInvocation,
+  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "directCondition",
   invocationSchema: DirectConditionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],

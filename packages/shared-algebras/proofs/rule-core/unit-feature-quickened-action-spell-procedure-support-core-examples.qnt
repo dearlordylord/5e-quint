@@ -15,6 +15,18 @@ module unitFeatureQuickenedActionSpellProcedureSupportCoreExamples {
       assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
         QuickenedSpellAttackProcedure,
       )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedSaveGatedConditionProcedure,
+      )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedSaveGatedConditionImmunityProcedure,
+      )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedDirectConditionProcedure,
+      )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedRollModifierProcedure,
+      )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedDirectRestorationProcedure,
         Set(quickenedSpellMetamagicFact),
@@ -25,6 +37,22 @@ module unitFeatureQuickenedActionSpellProcedureSupportCoreExamples {
       )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedSpellAttackProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSaveGatedConditionImmunityProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedDirectConditionProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedRollModifierProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
     }

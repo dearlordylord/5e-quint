@@ -303,7 +303,11 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
 const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
   "scalarBuff",
   "directHitPointRestoration",
+  "directCondition",
+  "rollModifier",
   "saveGatedDamage",
+  "saveGatedCondition",
+  "saveGatedConditionImmunity",
   "spellAttackDamage",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 
@@ -471,15 +475,18 @@ export function resolveSpellAttackDamageAct(
     readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   },
 ): BattleResolutionResult {
-  return resolveSpellActInternal(input.input as ActionSpellBattleResolutionInput, {
-    useSharedSpellAttackDamageResolver: true,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSpellActInternal(
+    input.input as ActionSpellBattleResolutionInput,
+    {
+      useSharedSpellAttackDamageResolver: true,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
+    },
+  );
 }
 
 function resolveSpellActInternal(
@@ -2506,11 +2513,19 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else if (invocation.procedure === "scalarBuff") {
-    if (
-      invocation.actionCost !== "bonusAction" &&
-      actionCostOverride !== "bonusAction"
-    ) {
+  } else if (
+    invocation.procedure === "scalarBuff" ||
+    invocation.procedure === "directCondition" ||
+    invocation.procedure === "rollModifier" ||
+    invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "saveGatedConditionImmunity"
+  ) {
+    const isQuickenedActionSpellRewrite =
+      actionCostOverride === "bonusAction" &&
+      spellInvocationHasMagicActionCastingTime(invocation);
+    const isNativeBonusActionSpell =
+      "actionCost" in invocation && invocation.actionCost === "bonusAction";
+    if (!isNativeBonusActionSpell && !isQuickenedActionSpellRewrite) {
       return invalidResult(
         input.state,
         "unsupportedSubject",
