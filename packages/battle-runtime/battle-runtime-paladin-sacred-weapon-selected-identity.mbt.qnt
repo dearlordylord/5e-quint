@@ -46,10 +46,28 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
     recordProjection(false, 0, "second:weapon_longsword", 1, false, "recast"),
   }
 
+  action doProjectSacredWeaponAttackDamageAndLight = all {
+    qLastResult == "init",
+    recordProjection(false, 1, "main:weapon_longsword", 1, false, "attackEffects"),
+  }
+
+  action doDismissSacredWeapon = all {
+    qLastResult == "init",
+    recordProjection(false, 1, "none", 0, false, "dismissed"),
+  }
+
+  action doEndSacredWeaponWhenNotCarryingWeapon = all {
+    qLastResult == "init",
+    recordProjection(false, 1, "none", 0, false, "notCarryingWeapon"),
+  }
+
   action step = any {
     doActivateSacredWeapon,
     doRejectSacredWeaponNoResource,
     doRejectSacredWeaponRangedWeapon,
     doRecastSacredWeapon,
+    doProjectSacredWeaponAttackDamageAndLight,
+    doDismissSacredWeapon,
+    doEndSacredWeaponWhenNotCarryingWeapon,
   }
 }

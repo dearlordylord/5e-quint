@@ -43,7 +43,7 @@ import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
 import type {
   BattleActiveEffect,
-  BattleLightEmitter,
+  BattleStoredLightEmitter,
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 
@@ -882,7 +882,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 });
 
 function stateWithLightEmitters(
-  lightEmitters: readonly BattleLightEmitter[],
+  lightEmitters: readonly BattleStoredLightEmitter[],
   spellSlots: readonly {
     readonly spellLevel: 3 | 4;
     readonly count: number;

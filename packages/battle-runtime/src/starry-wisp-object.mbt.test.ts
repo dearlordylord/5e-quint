@@ -137,6 +137,17 @@ type LightEmitterMbtProjection =
       readonly expiresAt: LightEmitterExpirationMbtProjection;
     }
   | {
+      readonly kind: "unitFeatureLightEmitter";
+      readonly sourceUnitId: string;
+      readonly sourceCombatantId: string;
+      readonly attachment: LightEmitterAttachmentMbtProjection;
+      readonly emission: LightEmissionMbtProjection;
+      readonly opaqueCoverInteraction:
+        | { readonly kind: "blocksEmission" }
+        | { readonly kind: "doesNotBlockEmission" };
+      readonly expiresAt: LightEmitterExpirationMbtProjection;
+    }
+  | {
       readonly kind: "objectInvisibleRevealLightEmitter";
       readonly sourceSpellId: string;
       readonly sourceCombatantId: string;
@@ -557,6 +568,15 @@ function projectLightEmitter(
       opaqueCoverInteraction: spellEmitter.opaqueCoverInteraction,
       expiresAt: projectLightEmitterExpiration(spellEmitter.expiresAt),
     })),
+    Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) => ({
+      kind: "unitFeatureLightEmitter" as const,
+      sourceUnitId: unitFeatureEmitter.sourceUnitId,
+      sourceCombatantId: unitFeatureEmitter.sourceCombatantId,
+      attachment: projectLightEmitterAttachment(unitFeatureEmitter.attachment),
+      emission: projectLightEmission(unitFeatureEmitter.emission),
+      opaqueCoverInteraction: unitFeatureEmitter.opaqueCoverInteraction,
+      expiresAt: projectLightEmitterExpiration(unitFeatureEmitter.expiresAt),
+    })),
     Match.when(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectRevealEmitter) => ({
@@ -911,18 +931,17 @@ function projectStarryWispObjectHole(
     return ["SpellDamageRoll"];
   }
 
-  throw new Error(
-    `Starry Wisp object MBT does not model ${hole.kind} holes.`,
-  );
+  throw new Error(`Starry Wisp object MBT does not model ${hole.kind} holes.`);
 }
 
-function requireStarryWispObjectHole<
-  Kind extends BattleHole["kind"],
->(holes: readonly BattleHole[], kind: Kind): Extract<BattleHole, { kind: Kind }> {
-  const hole = holes.find((candidate): candidate is Extract<
-    BattleHole,
-    { kind: Kind }
-  > => candidate.kind === kind);
+function requireStarryWispObjectHole<Kind extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: Kind,
+): Extract<BattleHole, { kind: Kind }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { kind: Kind }> =>
+      candidate.kind === kind,
+  );
   if (hole === undefined) {
     throw new Error(`Expected ${kind} hole.`);
   }
@@ -930,9 +949,7 @@ function requireStarryWispObjectHole<
   return hole;
 }
 
-function starryWispObjectHoleName(
-  raw: unknown,
-): StarryWispObjectMbtHole {
+function starryWispObjectHoleName(raw: unknown): StarryWispObjectMbtHole {
   const tag = quintVariantTag(raw);
   if (
     tag === "TargetChoice" ||

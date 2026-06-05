@@ -3742,6 +3742,25 @@ const BattleLightEmitterSchema = Schema.Union(
     sourceSpellLevel: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
+    kind: Schema.Literal("unitFeatureLightEmitter"),
+    sourceUnitId: Schema.String,
+    sourceCombatantId: CombatantId,
+    attachment: BattleLightEmitterAttachmentSchema,
+    emission: Schema.Union(
+      BattleDimLightEmissionSchema,
+      Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+    ),
+    opaqueCoverInteraction: Schema.Union(
+      Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
+      Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
+    ),
+    expiresAt: BattleRuntimeObjectSchema,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
     sourceSpellId: Schema.String,
     sourceCombatantId: CombatantId,

@@ -168,6 +168,7 @@ import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
   BattleSpellEffectBase,
+  BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
   SelfTransformationNaturalWeaponFacts,
   SpellConditionEscape,
@@ -573,6 +574,7 @@ export type {
   BattleShapeShiftReplacementFormFacts,
   BattleSpellEffectEarlyEnd,
   BattleTurnAnchor,
+  BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
   MarkedDamageRiderTransferState,
   ObjectContactPenaltyActiveEffect,
@@ -654,6 +656,13 @@ export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterBase & {
 export type BattleSpellLightEmitter =
   | BattleTrackedOngoingSpellLightEmitter
   | BattleProjectedSpellLightEmitter;
+export type BattleUnitFeatureLightEmitter = BattleUnitFeatureEffectBase & {
+  readonly kind: "unitFeatureLightEmitter";
+  readonly attachment: BattleLightEmitterAttachment;
+  readonly emission: BattleLightEmission;
+  readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
+  readonly expiresAt: BattleActiveEffectExpiration;
+};
 export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
   readonly kind: "objectInvisibleRevealLightEmitter";
   readonly objectId: BattleObjectId;
@@ -663,9 +672,12 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
     { readonly kind: "endOfTurn" }
   >;
 };
-export type BattleLightEmitter =
+export type BattleStoredLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleLightEmitter =
+  | BattleStoredLightEmitter
+  | BattleUnitFeatureLightEmitter;
 export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellLightEmitter";
@@ -3919,7 +3931,7 @@ export type BattleState = {
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly findFamiliars: ReadonlyMap<CombatantId, FindFamiliarState>;
   readonly objectOutlines: readonly BattleObjectOutline[];
-  readonly lightEmitters: readonly BattleLightEmitter[];
+  readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;

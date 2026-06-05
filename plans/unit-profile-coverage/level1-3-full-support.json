@@ -2257,39 +2257,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics. Owner: battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Paladin Sacred Weapon",
-          "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 270,
-            "lineStart": 263,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "paladin_sacred_weapon"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-runtime-presentation-exploration"
       ],
       "collectionId": "srd-5.2.1",
@@ -3175,7 +3142,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 130,
+      "count": 131,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3262,6 +3229,7 @@
         "paladin_channel_divinity",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
+        "paladin_sacred_weapon",
         "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
@@ -3372,7 +3340,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3381,7 +3349,6 @@
         "druid_lands_aid",
         "druid_wild_shape",
         "monk_open_hand_technique",
-        "paladin_sacred_weapon",
         "ranger_hunters_prey",
         "sorcerer_metamagic",
         "wizard_potent_cantrip"
@@ -3435,24 +3402,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 129,
-      "numerator": 129,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 130,
-      "percent": "66%"
+      "numerator": 131,
+      "percent": "66.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6168,8 +6135,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 129,
-        "numerator": 129,
+        "denominator": 130,
+        "numerator": 130,
         "percent": "100%"
       }
     },
@@ -8494,6 +8461,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.paladin-sacred-weapon",
+            "profileKind": "resource",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+            ]
+          }
+        ],
+        "unitId": "paladin_sacred_weapon"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -10756,20 +10745,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 37,
-      "supported-profile": 130,
+      "profile-subset-supported": 36,
+      "supported-profile": 131,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 9,
+      "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 130
+      "supported-profile": 131
     },
-    "nonSupportedFrontier": 67,
+    "nonSupportedFrontier": 66,
     "strictDenominator": 197
   }
 }

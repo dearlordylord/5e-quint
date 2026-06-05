@@ -196,7 +196,8 @@
         "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
         "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
         "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
-        "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4736,6 +4737,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.paladin-sacred-weapon"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.passive-armor-class-bonus"
     },
     {
@@ -5919,6 +5926,22 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "profileId": "unit-feature.remarkable-athlete"
+        }
+      ],
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt is focused proof evidence for the Sacred Weapon activation, bound-weapon attack bonus, damage choice, light projection, and lifecycle cleanup feature profile; it is not a reusable generator semantic core while its run blocks remain profile-local.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.paladin-sacred-weapon"
         }
       ],
       "role": "proof-only"
@@ -7379,6 +7402,18 @@
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.paladin-sacred-weapon",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
+          "role": "proof-only"
         }
       ]
     },

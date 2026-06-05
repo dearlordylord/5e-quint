@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -72,6 +73,7 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
+  type BattleStoredLightEmitter,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
@@ -337,27 +339,29 @@ export function battleLightEmitters(
                         expiresAt: effect.expiresAt,
                       },
                     ]
-                  : effect.kind === "dancingLights"
-                    ? dancingLightsFromEffect(effect).map((light) => ({
-                        kind: "spellLightEmitter" as const,
-                        sourceSpellId: effect.sourceSpellId,
-                        sourceCombatantId: effect.sourceCombatantId,
-                        attachment: {
-                          kind: "dancingLight" as const,
-                          lightId: light.lightId,
-                          positionId: light.positionId,
-                          form: effect.form,
-                        },
-                        emission: {
-                          kind: "dim" as const,
-                          radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
-                        },
-                        opaqueCoverInteraction: {
-                          kind: "doesNotBlockEmission" as const,
-                        },
-                        expiresAt: effect.expiresAt,
-                      }))
-                    : [],
+                  : effect.kind === "paladinSacredWeapon"
+                    ? paladinSacredWeaponLightEmitters(combatant, effect)
+                    : effect.kind === "dancingLights"
+                      ? dancingLightsFromEffect(effect).map((light) => ({
+                          kind: "spellLightEmitter" as const,
+                          sourceSpellId: effect.sourceSpellId,
+                          sourceCombatantId: effect.sourceCombatantId,
+                          attachment: {
+                            kind: "dancingLight" as const,
+                            lightId: light.lightId,
+                            positionId: light.positionId,
+                            form: effect.form,
+                          },
+                          emission: {
+                            kind: "dim" as const,
+                            radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
+                          },
+                          opaqueCoverInteraction: {
+                            kind: "doesNotBlockEmission" as const,
+                          },
+                          expiresAt: effect.expiresAt,
+                        }))
+                      : [],
       ),
   );
   const emitters = [
@@ -620,6 +624,9 @@ function lightEmitterMatchesProjectionFact(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
       lightEmitterAttachmentMatchesFact(spellEmitter.attachment, fact),
     ),
+    Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) =>
+      lightEmitterAttachmentMatchesFact(unitFeatureEmitter.attachment, fact),
+    ),
     Match.when(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectEmitter) =>
@@ -758,6 +765,38 @@ function shiningSmiteCombatantBrightLightEmitter(
   };
 }
 
+function paladinSacredWeaponLightEmitters(
+  combatant: BattleCreatureState,
+  effect: Extract<BattleActiveEffect, { readonly kind: "paladinSacredWeapon" }>,
+): readonly BattleLightEmitter[] {
+  if (combatant.origin.kind !== "character") {
+    return [];
+  }
+  const profile = combatant.origin.paladinSacredWeaponProfiles.get(
+    effect.sourceUnitId,
+  );
+  return profile === undefined
+    ? []
+    : [
+        {
+          kind: "unitFeatureLightEmitter",
+          sourceUnitId: effect.sourceUnitId,
+          sourceCombatantId: effect.sourceCombatantId,
+          attachment: {
+            kind: "combatant",
+            combatantId: combatant.combatantId,
+          },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: profile.sacredWeapon.light.brightRadiusFeet,
+            dimAdditionalFeet: profile.sacredWeapon.light.dimAdditionalFeet,
+          },
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+          expiresAt: effect.expiresAt,
+        },
+      ];
+}
+
 function faerieFireObjectDimLightEmitter(
   outline: BattleObjectOutline,
 ): BattleLightEmitter {
@@ -849,11 +888,12 @@ export function applySpellLightEmitterEffects(
   if (lightRiders.length === 0) {
     return state;
   }
-  const nextEmitters = lightRiders.reduce(
-    (emitters, rider): readonly BattleLightEmitter[] => [
+  const nextEmitters = lightRiders.reduce<readonly BattleStoredLightEmitter[]>(
+    (emitters, rider): readonly BattleStoredLightEmitter[] => [
       ...emitters.filter(
         (emitter) =>
           !(
+            emitter.kind === "spellLightEmitter" &&
             emitter.sourceSpellId === invocation.spell.id &&
             emitter.sourceCombatantId === actorId &&
             lightEmitterMatchesAttachment(emitter, attachment)
@@ -873,16 +913,16 @@ export function applySpellLightEmitterEffects(
 }
 
 export function expireBattleLightEmitters(
-  emitters: readonly BattleLightEmitter[],
-  shouldExpire: (emitter: BattleLightEmitter) => boolean,
-): readonly BattleLightEmitter[] {
+  emitters: readonly BattleStoredLightEmitter[],
+  shouldExpire: (emitter: BattleStoredLightEmitter) => boolean,
+): readonly BattleStoredLightEmitter[] {
   return emitters.filter((emitter) => !shouldExpire(emitter));
 }
 
 export function tickDurationBattleLightEmitters(
-  emitters: readonly BattleLightEmitter[],
-): readonly BattleLightEmitter[] {
-  return emitters.flatMap((emitter): readonly BattleLightEmitter[] => {
+  emitters: readonly BattleStoredLightEmitter[],
+): readonly BattleStoredLightEmitter[] {
+  return emitters.flatMap((emitter): readonly BattleStoredLightEmitter[] => {
     if (emitter.kind === "objectInvisibleRevealLightEmitter") {
       return [emitter];
     }
@@ -939,6 +979,9 @@ function lightEmitterMatchesAttachment(
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
       sameLightEmitterAttachment(spellEmitter.attachment, attachment),
+    ),
+    Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) =>
+      sameLightEmitterAttachment(unitFeatureEmitter.attachment, attachment),
     ),
     Match.when(
       { kind: "objectInvisibleRevealLightEmitter" },
@@ -1167,7 +1210,7 @@ function lightEmitterFromPostDamageRider(
     { readonly procedure: "spellAttackDamage" }
   >,
   rider: SpellLightEmissionPostDamageRider,
-): BattleLightEmitter {
+): BattleStoredLightEmitter {
   const expiresAt = activeEffectExpirationForPostDamageRider(
     state,
     actorId,

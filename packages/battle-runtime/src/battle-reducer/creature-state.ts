@@ -91,6 +91,7 @@ import {
   OngoingFeatureSourceKey as OngoingFeatureSourceKeyBrand,
   zeroHpLifecycleIsTerminal,
   type ActiveOngoingFeatureOccurrence,
+  type BattleActiveEffect,
   type BattleCharacterResourceSnapshot,
   type BattleCreatureKnockOutLifecycle,
   type BattleCreatureOriginSnapshot,
@@ -526,7 +527,7 @@ export function normalizeEarlyEndedOngoingFeatures(
     const activeOngoingFeatureOccurrences =
       activeOngoingFeatureOccurrencesForCombatant(combatant);
     const activeEffects =
-      activeEffectsWithoutDetachedWeaponAttackOverrides(combatant);
+      activeEffectsWithoutDetachedBoundHeldWeaponEffects(combatant);
     if (
       activeOngoingFeatureOccurrences.size !==
         combatant.activeOngoingFeatureOccurrences.size ||
@@ -545,7 +546,7 @@ export function normalizeEarlyEndedOngoingFeatures(
   return changed ? { ...state, combatants } : state;
 }
 
-function activeEffectsWithoutDetachedWeaponAttackOverrides(
+function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
   combatant: BattleCreatureState,
 ): BattleCreatureState["activeEffects"] {
   if (combatant.origin.kind !== "character") {
@@ -555,11 +556,21 @@ function activeEffectsWithoutDetachedWeaponAttackOverrides(
     combatant.origin.selectedLoadout.weapon?.itemId,
     combatant.origin.selectedLoadout.offHandWeapon?.itemId,
   ]);
-  return removeEndedDruidWildShapeEffects(combatant).filter(
-    (effect) =>
-      effect.kind !== "spellWeaponAttackOverride" ||
-      heldWeaponItemIds.has(effect.weaponItemId),
-  );
+  return removeEndedDruidWildShapeEffects(combatant).filter((effect) => {
+    const boundWeaponItemId = activeEffectBoundHeldWeaponItemId(effect);
+    return (
+      boundWeaponItemId === null || heldWeaponItemIds.has(boundWeaponItemId)
+    );
+  });
+}
+
+function activeEffectBoundHeldWeaponItemId(
+  effect: BattleActiveEffect,
+): string | null {
+  return effect.kind === "spellWeaponAttackOverride" ||
+    effect.kind === "paladinSacredWeapon"
+    ? effect.weaponItemId
+    : null;
 }
 
 export function combatantSnapshot(

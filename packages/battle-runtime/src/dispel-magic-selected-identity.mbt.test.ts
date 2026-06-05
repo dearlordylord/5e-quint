@@ -28,9 +28,9 @@ import {
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
-  type BattleLightEmitter,
   type BattleResolutionResult,
   type BattleState,
+  type BattleStoredLightEmitter,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 
@@ -262,7 +262,7 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
 }
 
 function battleWithLightEmitters(
-  lightEmitters: readonly BattleLightEmitter[],
+  lightEmitters: readonly BattleStoredLightEmitter[],
 ): BattleState {
   return {
     ...spellBattle({
@@ -394,8 +394,8 @@ function dispelMagicProjection(
       state.battle.currentTurnResources,
       "magic",
     ),
-    thirdLevelSlotCommitted: state.battle.currentTurnResources
-      .spellSlotUsesThisTurn.some(
+    thirdLevelSlotCommitted:
+      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     spellLightEmitterCount: state.battle.lightEmitters.filter(

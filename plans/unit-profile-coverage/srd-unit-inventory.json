@@ -17508,7 +17508,7 @@
         "state": "installed",
         "unitId": "paladin_sacred_weapon"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
