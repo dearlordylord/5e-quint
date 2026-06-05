@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Dragonborn Breath Weapon runtime parity"
     },
     {
@@ -114,7 +114,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 |---:|---|---|---|---|
 | 1 | L3MSPEC-01-CANDIDATE-TRIAGE | done | none | Triage artifact recorded in `plans/unit-profile-coverage/L3MSPEC_01_CANDIDATE_TRIAGE.md`. |
 | 2 | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Shape an executable battle profile from typed Draconic Ancestry, shape, DC, dice-tier, use-pool, and Long Rest facts without ancestry identity dispatch. |
-| 3 | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | blocked | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | Runtime/QNT/MBT vertical slice for breath weapon. |
+| 3 | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | ready-for-research | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | Runtime/QNT/MBT vertical slice for breath weapon. |
 | 4 | L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Passive Resistance profile that shares or defines the same typed Draconic Ancestry damage-type source fact expected by Breath Weapon. |
 | 5 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Poison damage Resistance slice only; keep Poisoned saving-throw Advantage in Task 6. |
 | 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | blocked | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
