@@ -436,6 +436,39 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
+  test("threads origin and class-feature languages into character battle initialization", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("language-threading-init"),
+        characterId: characterId("character:language-threading-init"),
+        displayName: "Druid",
+        build: {
+          ...build,
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageGrant",
+              sourceUnitId: "synthetic_language_feature",
+              language: "Druidic",
+            },
+            {
+              kind: "classFeatureLanguageChoice",
+              sourceUnitId: "synthetic_language_choice_feature",
+              language: "Goblin",
+            },
+          ],
+        },
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+      }),
+    );
+
+    expect(init.creatureInit).toMatchObject({
+      kind: "character",
+      knownLanguages: ["Common", "Dwarvish", "Goblin", "Druidic"],
+    });
+  });
+
   test("rejects ineligible Druid Wild Shape known forms during battle initialization", () => {
     const init = battleCreatureInitFromCharacterBuild({
       combatantId: combatantId("druid-wild-shape-ineligible-form"),

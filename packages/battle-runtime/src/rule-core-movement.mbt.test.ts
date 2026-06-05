@@ -392,6 +392,7 @@ function movementCreature(input: {
       characterId: characterId(input.characterId),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",

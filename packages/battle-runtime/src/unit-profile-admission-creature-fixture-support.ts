@@ -122,6 +122,7 @@ export function characterCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       ...(input.weaponProficiencies === undefined
         ? {}

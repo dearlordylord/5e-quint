@@ -375,6 +375,7 @@ function weaponMasteryAttackerInit(
       ],
       weaponMasteries: [{ weaponUnitId: scenario.weaponUnitId }],
       classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
@@ -413,6 +414,7 @@ function targetCreatureInit(
       characterId: characterId(`character:${combatantIdValue}`),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",

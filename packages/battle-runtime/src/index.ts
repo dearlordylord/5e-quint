@@ -142,6 +142,14 @@ export {
 } from "./find-familiar-telepathy.ts";
 export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 export {
+  combatantPerceptionCommunicationProjection,
+  type BattleCharacterSpeechProjection,
+  type BattleCreatureCommunicationProjection,
+  type BattleCreaturePerceptionCommunicationProjection,
+  type BattleCreatureSpecialSense,
+  type BattleStatBlockCommunicationText,
+} from "./creature-perception-communication.ts";
+export {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleReactionTrigger,

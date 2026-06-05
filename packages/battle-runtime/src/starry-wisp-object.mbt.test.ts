@@ -387,6 +387,7 @@ function starryWispCasterCreatureInit(input: {
       characterId: characterId("starry-wisp-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",

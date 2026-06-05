@@ -2451,6 +2451,7 @@ function spatialWitnessCreature(input: {
           level: 1,
         },
       ],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",

@@ -1954,6 +1954,10 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly knownLanguages?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["knownLanguages"];
   readonly d20Statistics?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2041,6 +2045,7 @@ export function characterSeed(input: {
       characterId: characterId("fighter-character"),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels,
+      knownLanguages: input.knownLanguages ?? ["Common"],
       d20Statistics:
         input.d20Statistics ?? testCharacterD20Statistics({ str: 16 }),
       armorClass:
