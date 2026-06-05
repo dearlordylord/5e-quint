@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE","status":"ready-for-research","title":"Resolve Weapon Mastery later-count closure"},
-    {"number":2,"id":"L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE","status":"ready-for-research","title":"Resolve Bard Expertise level 9 closure"},
-    {"number":3,"id":"L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION","status":"ready-for-research","title":"Resolve subclass spell access progression closure"},
-    {"number":4,"id":"L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT","status":"ready-for-research","title":"Resolve Fighting Style cantrip replacement closure"},
-    {"number":5,"id":"L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT","status":"ready-for-research","title":"Resolve Wizard Evocation Savant later-slot closure"},
-    {"number":6,"id":"L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS","status":"ready-for-research","title":"Resolve Prayer of Healing cast witness closure"},
-    {"number":7,"id":"L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE","status":"ready-for-research","title":"Resolve Font of Magic battle slot source closure"},
-    {"number":8,"id":"L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP","status":"ready-for-implementation-after-light-research","title":"Deduplicate Fast Hands delegated owner rows"},
-    {"number":9,"id":"L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE","status":"ready-for-research","title":"Resolve Monk focus jump witness closure"},
-    {"number":10,"id":"L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit selected identity for character advancement profiles"},
-    {"number":11,"id":"L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION","status":"blocked","title":"Consolidate character advancement ledgers"},
-    {"number":12,"id":"L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT","status":"blocked","title":"Report next character advancement candidates"}
+    {
+      "number": 1,
+      "id": "L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE",
+      "status": "done",
+      "title": "Resolve Weapon Mastery later-count closure"
+    },
+    {
+      "number": 2,
+      "id": "L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Bard Expertise level 9 closure"
+    },
+    {
+      "number": 3,
+      "id": "L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION",
+      "status": "ready-for-research",
+      "title": "Resolve subclass spell access progression closure"
+    },
+    {
+      "number": 4,
+      "id": "L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT",
+      "status": "ready-for-research",
+      "title": "Resolve Fighting Style cantrip replacement closure"
+    },
+    {
+      "number": 5,
+      "id": "L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT",
+      "status": "ready-for-research",
+      "title": "Resolve Wizard Evocation Savant later-slot closure"
+    },
+    {
+      "number": 6,
+      "id": "L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS",
+      "status": "ready-for-research",
+      "title": "Resolve Prayer of Healing cast witness closure"
+    },
+    {
+      "number": 7,
+      "id": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE",
+      "status": "ready-for-research",
+      "title": "Resolve Font of Magic battle slot source closure"
+    },
+    {
+      "number": 8,
+      "id": "L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Deduplicate Fast Hands delegated owner rows"
+    },
+    {
+      "number": 9,
+      "id": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Monk focus jump witness closure"
+    },
+    {
+      "number": 10,
+      "id": "L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit selected identity for character advancement profiles"
+    },
+    {
+      "number": 11,
+      "id": "L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Consolidate character advancement ledgers"
+    },
+    {
+      "number": 12,
+      "id": "L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT",
+      "status": "blocked",
+      "title": "Report next character advancement candidates"
+    }
   ]
 }
 -->
