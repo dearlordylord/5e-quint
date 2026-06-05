@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Heightened repeat-save lifecycle boundary"
     },
     {
@@ -75,6 +75,18 @@
       "id": "L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION",
       "status": "blocked",
       "title": "Consolidate metamagic and kernel evidence"
+    },
+    {
+      "number": 13,
+      "id": "L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Heightened Hideous Laughter repeat-save carry-through"
+    },
+    {
+      "number": 14,
+      "id": "L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY",
+      "status": "blocked",
+      "title": "Resolve area and multi-target Heightened repeat-save carry-through"
     }
   ]
 }
@@ -115,11 +127,13 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 5 | L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT | done | none | Antimagic action-interdiction and magical-effect-interdiction `.mbt.qnt` owners are explicit MBT-only witnesses, not qnt-proof evidence. |
 | 6 | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | done | none | Survey selected `spellAttackSequence` as the next runnable Quickened action-spell slice. |
 | 7 | L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE | ready-for-implementation-after-light-research | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | Promote `spellAttackSequence` through QNT, runtime, MBT, and ledgers. |
-| 8 | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | ready-for-research | none | Close or plan repeat-save selected-target identity without duplicating occurrence state. |
+| 8 | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | done | none | Boundary artifact identifies occurrence-local repeat-save state and the first Heightened Hideous Laughter slice. |
 | 9 | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | ready-for-research | none | Close or plan Distant/Extended/Subtle generic cast-property witnesses. |
 | 10 | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | ready-for-research | none | Close or plan Empowered/Seeking post-roll reroll fill boundary. |
 | 11 | L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify every promoted Metamagic profile has selected-identity replay or documented non-applicability. |
 | 12 | L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION | blocked | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL, L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED, L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED, L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED, L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT, L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | Regenerate and confirm metrics. |
+| 13 | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | Promote combatant-owned Heightened repeat-save carry-through for Hideous Laughter. |
+| 14 | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | blocked | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | Resolve area and multi-target selected-target carry-through after the combatant-owned slice establishes the occurrence-local pattern. |
 
 ## Task Details
 
@@ -184,6 +198,14 @@ Recommended scope:
 
 Resolve or plan the Heightened repeat-save lifecycle boundary.
 
+Boundary decision: Heightened Spell's "saves against the spell" wording is not
+limited to the initial Saving Throw. Repeat-save lifecycles must carry the
+cast-selected Heightened target from the Spell Invocation into later Spell
+Effect save holes before support can be promoted. The selected roll-mode fact
+should be occurrence-local and should not be inferred from authored spell
+identity or duplicated as a parallel registry. The boundary artifact is
+`plans/unit-profile-coverage/L3MMETA-08_HEIGHTENED_REPEAT_SAVE_BOUNDARY.md`.
+
 ### Task 9 - L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY
 
 Resolve or plan Distant, Extended, and Subtle cast-property witnesses.
@@ -199,6 +221,44 @@ Audit selected-identity replay for promoted Metamagic profiles.
 ### Task 12 - L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION
 
 Regenerate and verify Metamagic/kernel ledgers after dependencies close.
+
+### Task 13 - L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE
+
+Promote Heightened repeat-save carry-through for the combatant-owned
+Hideous Laughter lifecycle.
+
+Recommended scope:
+
+- Add a presence-only Saving Throw roll-mode rider to the Hideous Laughter
+  active-effect occurrence for the selected Heightened target.
+- Thread the existing `heightenedSpellTargetId` from the cast selection only to
+  decide whether that rider belongs on a failed target's active effect. Do not
+  store a duplicate target id on the effect.
+- Apply the rider to both end-turn and damage-triggered repeat-save holes, using
+  existing Saving Throw Advantage/Disadvantage combination semantics so
+  damage-triggered Advantage plus Heightened Disadvantage cancels to normal.
+- Update the focused QNT owner and add focused runtime tests for initial failed
+  save, end-turn repeat save, and damage-triggered cancellation.
+- Add selected-identity MBT evidence and remove `hideousLaughter` from the
+  repeat-save Heightened support rejection only after runtime and QNT evidence
+  exist.
+
+### Task 14 - L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY
+
+Resolve the remaining Heightened repeat-save carry-through shape for persisted
+area and multi-target repeating effects.
+
+Scope after Task 13:
+
+- Decide the occurrence-local selected-target rider shape for
+  `greaseGroundHazard`, `gustOfWindLine`, and repeating `saveGatedCondition`
+  profiles.
+- Keep persisted area occurrence identity separate from authored spell identity.
+- For area effects, colocate any selected target id with the area occurrence
+  only when the active effect is not combatant-owned and therefore cannot derive
+  the target from the owner.
+- Leave support gates closed until focused runtime, QNT, and selected-identity
+  evidence exist for each promoted profile family.
 
 ## Task Rules
 
