@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3RES-04-ACID-ARROW-RAW-RECONCILIATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Resolve Acid Arrow RAW corpus contradiction"
     },
     {
@@ -90,9 +90,9 @@ owns branch repair.
 | 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | done | none | Evidence-only cleanup for class-feature runtime work already merged. |
 | 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | done | none | Land's Aid level 10 and 14 damage/healing scaling is promoted through Surface, runtime projection, focused tests, selected-identity MBT, and coverage ledgers. |
 | 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | done | none | Closed by the merged evidence reconciliation: Sacred Weapon residual runtime evidence is already covered. |
-| 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | ready-for-implementation-after-light-research | none | RAW/ASSUMPTIONS boundary task; must not invent damage semantics. |
-| 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION | Run only after Task 4 records an executable RAW decision. |
-| 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
+| 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | done | none | Closed as an ASSUMPTIONS-ready owner-decision blocker; no Acid Arrow runtime or Surface repair was modeled. |
+| 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry | Run only after the owner approves an executable initial/later/miss/slot-scaling damage relationship. |
+| 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
 | 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | ready-for-implementation-after-light-research | none | Prefer precise split/closure unless an existing owner makes a small executable slice obvious. |
 | 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | blocked | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation only after the independent residual slices close. |
 
@@ -246,7 +246,20 @@ Expected outputs:
 
 ### Task 4 - L3RES-04-ACID-ARROW-RAW-RECONCILIATION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- The active local SRD 5.2.1 Acid Arrow passage still contradicts itself: the
+  hit branch gives only 4d4 Acid damage at the end of the target's next turn,
+  while the miss and higher-slot clauses refer to initial and later damage.
+- `.references/srd-5.2.1-conversion/07-spells.md` has no Acid Arrow-specific
+  conversion note. The archived local SRD 5.1 Acid Arrow text does contain
+  immediate hit damage, later hit damage, miss damage, and higher-slot scaling,
+  but that archived corpus is not an owner-approved SRD 5.2.1 correction.
+- `ASSUMPTIONS.md` contains no Acid Arrow damage relationship decision, so
+  Tasks 5 and 6 remain blocked on owner approval of either a local corpus
+  correction or an `ASSUMPTIONS.md` entry.
 
 Resolve the local SRD Acid Arrow damage contradiction without inventing
 mechanics.
@@ -271,8 +284,8 @@ Expected outputs:
 
 Status: `blocked`
 
-Repair Acid Arrow's Surface damage shape after Task 4 establishes executable RAW
-semantics.
+Repair Acid Arrow's Surface damage shape after the owner approves executable RAW
+semantics for the initial, later, miss, and slot-scaling damage relationship.
 
 Required behavior:
 
@@ -290,7 +303,8 @@ Expected outputs:
 
 Status: `blocked`
 
-Promote Acid Arrow runtime after RAW and Surface shape are settled.
+Promote Acid Arrow runtime after the owner-approved RAW decision and Surface
+shape are settled.
 
 Required behavior:
 
