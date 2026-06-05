@@ -18871,30 +18871,6 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "table/tool-check owner",
-              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile."
-            },
-            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, and success/failure consequences."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "Utilize action owner",
-              "reason": "Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary."
-            },
-            "mechanic": "Execute the object interaction effects of the Utilize action."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "magic-item activation owner",
-              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
-            },
-            "mechanic": "Activate magic items that require a Magic action."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "table/tool-check owner",
               "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper."
             },
             "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, success/failure consequences, and the Fast Hands Bonus Action spend for that concrete procedure."
@@ -18929,8 +18905,6 @@
         },
         "supportedMechanics": [
           "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
-          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
-          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action",
           "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics and preserves the declared Bonus Action cost as delegated permission metadata",
           "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action permission, and a Magic action permission restricted to magic items that require a Magic action"
         ],
