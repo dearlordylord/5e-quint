@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Fly falling and spatial closure"
     },
     {
@@ -118,7 +118,7 @@ repair branch state by rebasing against `master`.
 | 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | done | none | Levitate loose-object motion remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists. |
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | done | none | Fireball object ignition is reachable through the production `saveGatedDamage` reducer path; automatic area membership, line of effect, object discovery, flammable/unworn discovery, and grid geometry remain table/spatial derivations. |
 | 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | done | none | Spike Growth camouflaged terrain recognition remains a runtime-detached Search/perception witness; do not add Spike Growth-local recognized terrain state. |
-| 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | ready-for-research | none | Separate spell duration/drop behavior from absent spatial/falling engine facts. |
+| 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | done | none | Fly cleanup already uses the promoted scalar-buff/end-fall witness boundary; automatic elevation, landing, and can-stop-fall derivation remain table/spatial facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | ready-for-research | none | Resolve shapechanger/shapeshift trigger ownership against current unit/profile facts. |
 | 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Confirm promoted spell profiles replay selected identity through production reducer paths. |
 | 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | blocked | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
@@ -241,6 +241,15 @@ consolidated in
 
 Resolve whether Fly needs a runtime falling/spatial slice now or an explicit
 owner blocker for absent spatial mechanics.
+
+Outcome: Fly does not need a new falling/spatial runtime slice now. The
+promoted `spell.scalar-buff` path already owns cast admission, Spell Slot spend,
+Concentration, fixed Fly Speed, hover, movement/Dash projection, cleanup, and
+the spell-end fall handoff through explicit not-aloft, can-stop-fall, and
+cannot-stop-fall witnesses. Automatic elevation, landing legality, map/path
+geometry, and can-stop-fall derivation remain table/spatial facts. Evidence is
+consolidated in
+`plans/unit-profile-coverage/L3MSPELL_09_FLY_FALLING_SPATIAL_CLOSURE.md`.
 
 ### Task 10 - L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE
 
