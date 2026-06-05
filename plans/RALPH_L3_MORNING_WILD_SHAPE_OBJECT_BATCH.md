@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION","status":"ready-for-implementation-after-light-research","title":"Implement Wild Shape perception and communication projection"},
-    {"number":2,"id":"L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER","status":"ready-for-implementation-after-light-research","title":"Implement Wild Shape equipment disposition owner"},
-    {"number":3,"id":"L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT","status":"blocked","title":"Promote Wild Shape worn-equipment effective-loadout projection"},
-    {"number":4,"id":"L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY","status":"blocked","title":"Promote Wild Shape fallen-equipment object boundary"},
-    {"number":5,"id":"L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY","status":"blocked","title":"Promote merged-equipment no-effect parity"},
-    {"number":6,"id":"L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE","status":"blocked","title":"Close form-limb object-consumer boundary"},
-    {"number":7,"id":"L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER","status":"ready-for-research","title":"Record active-form persistence owner-decision blocker"},
-    {"number":8,"id":"L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER","status":"ready-for-research","title":"Record Acid Arrow RAW owner-decision blocker"},
-    {"number":9,"id":"L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION","status":"blocked","title":"Consolidate residual Wild Shape and Acid Arrow ledgers"},
-    {"number":10,"id":"L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit Wild Shape selected-identity replay after split owners"},
-    {"number":11,"id":"L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT","status":"ready-for-research","title":"Audit Wild Companion boundary after Find Familiar and Wild Shape splits"},
-    {"number":12,"id":"L3MWILD-12-MORNING-WILD-SHAPE-CONSOLIDATION","status":"blocked","title":"Final Wild Shape morning lane consolidation"}
+    {
+      "number": 1,
+      "id": "L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION",
+      "status": "done",
+      "title": "Implement Wild Shape perception and communication projection"
+    },
+    {
+      "number": 2,
+      "id": "L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Implement Wild Shape equipment disposition owner"
+    },
+    {
+      "number": 3,
+      "id": "L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT",
+      "status": "blocked",
+      "title": "Promote Wild Shape worn-equipment effective-loadout projection"
+    },
+    {
+      "number": 4,
+      "id": "L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY",
+      "status": "blocked",
+      "title": "Promote Wild Shape fallen-equipment object boundary"
+    },
+    {
+      "number": 5,
+      "id": "L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY",
+      "status": "blocked",
+      "title": "Promote merged-equipment no-effect parity"
+    },
+    {
+      "number": 6,
+      "id": "L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE",
+      "status": "blocked",
+      "title": "Close form-limb object-consumer boundary"
+    },
+    {
+      "number": 7,
+      "id": "L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER",
+      "status": "ready-for-research",
+      "title": "Record active-form persistence owner-decision blocker"
+    },
+    {
+      "number": 8,
+      "id": "L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER",
+      "status": "ready-for-research",
+      "title": "Record Acid Arrow RAW owner-decision blocker"
+    },
+    {
+      "number": 9,
+      "id": "L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Consolidate residual Wild Shape and Acid Arrow ledgers"
+    },
+    {
+      "number": 10,
+      "id": "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit Wild Shape selected-identity replay after split owners"
+    },
+    {
+      "number": 11,
+      "id": "L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit Wild Companion boundary after Find Familiar and Wild Shape splits"
+    },
+    {
+      "number": 12,
+      "id": "L3MWILD-12-MORNING-WILD-SHAPE-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Final Wild Shape morning lane consolidation"
+    }
   ]
 }
 -->
