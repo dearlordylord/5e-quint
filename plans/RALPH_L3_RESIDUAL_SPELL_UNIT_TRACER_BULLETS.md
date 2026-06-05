@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Project Wild Shape sense language and speech facts"
     },
     {
@@ -69,6 +69,12 @@
       "id": "L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY",
       "status": "blocked",
       "title": "Resolve Wild Shape active form persistence boundary"
+    },
+    {
+      "number": 12,
+      "id": "L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION",
+      "status": "ready-for-implementation",
+      "title": "Implement shared creature perception communication projection"
     }
   ]
 }
@@ -113,9 +119,10 @@ owns branch repair.
 | 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
 | 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | done | none | Closed by replacing the broad retained-statistics blocker with narrower Wild Shape follow-up owners and an ASSUMPTIONS-backed active-form persistence closure. |
 | 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | ready-for-implementation | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation can now run over the closed independent residual slices while keeping the split Wild Shape follow-ups visible as future owner tasks. |
-| 9 | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION - Project Wild Shape sense language and speech facts | ready-for-research | none | Research the shared creature perception/communication projection before any battle/app/MCP consumer claims Wild Shape senses, retained languages, or speech behavior. |
+| 9 | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION - Project Wild Shape sense language and speech facts | done | none | Closed by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`: shared creature projection should derive senses, retained languages, and speech blocking from existing active-form, Character Build, Stat Block, and condition facts. |
 | 10 | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT - Promote Wild Shape object anatomy and equipment disposition | ready-for-research | none | Research the equipment/loadout, form-anatomy, and GM-witness boundary before promoting object handling or non-merged equipment dispositions. |
 | 11 | L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY - Resolve Wild Shape active form persistence boundary | blocked | future session active-effect persistence owner or owner-approved `ASSUMPTIONS.md` revision | Existing Character Sheet handoff rejection remains correct under A27 until the repo owns cross-session active-form persistence. |
+| 12 | L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION - Implement shared creature perception communication projection | ready-for-implementation | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | Implement the shared battle-runtime projection described in `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`; do not wire it into visibility, Mirror Image, app, or MCP consumers until those owners are promoted. |
 
 ## Global Acceptance Criteria
 
@@ -398,7 +405,17 @@ Required behavior:
 
 ### Task 9 - L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
 
-Status: `ready-for-research`
+Status: `done`
+
+Closure:
+
+- Research completed in `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`.
+- The shared owner should be a battle-runtime creature projection, not
+  Wild Shape-local sense, language, or speech fields.
+- The implementation task should derive Beast-form special senses from the
+  active Wild Shape form, retained languages from existing Character Build
+  language facts threaded through battle initialization, and speech blocking
+  from `isIncapacitated`.
 
 Research and design the shared projection owner for Wild Shape senses,
 languages, and speech.
@@ -470,3 +487,34 @@ Expected outputs:
 - either a retained typed handoff rejection with assumption-backed evidence, or
   an owner-approved session persistence model with focused runtime tests and any
   required QNT/MBT parity.
+
+### Task 12 - L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION
+
+Status: `ready-for-implementation`
+
+Implement the shared creature perception/communication projection designed by
+Task 9.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors named in
+  `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md` before coding;
+- thread existing Character Build language facts through character battle
+  initialization without adding Wild Shape-local duplicate language state;
+- add a shared battle-runtime projection helper that derives ordinary Stat
+  Block senses/language text, active Wild Shape Beast-form special senses,
+  retained character languages, and retained character speech blocked by
+  `isIncapacitated`;
+- keep Stat Block `languages` as authored text until a separate parser owns
+  entries such as `None`, `caster_languages`, and cannot-speak prose;
+- do not wire the projection into visibility, Mirror Image, app, or MCP
+  consumers in this task.
+
+Expected outputs:
+
+- typed battle-runtime projection APIs and focused runtime tests for Stat Block,
+  character, Incapacitated character, and active Wild Shape cases;
+- character-battle initialization tests proving origin and class-feature
+  language threading;
+- coverage evidence only for the promoted projection claim, with no battle MBT
+  unless a reducer behavior consumer is added.
