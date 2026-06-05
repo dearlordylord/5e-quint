@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Bard Expertise level 9 closure"
     },
     {
@@ -111,7 +111,7 @@ repair branch state by rebasing against `master`.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE | ready-for-research | none | Close Fighter/Barbarian later-count support as character-build facts unless battle reducer reachability exists. |
-| 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | ready-for-research | none | Close later Expertise progression without duplicating skill selection state. |
+| 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | done | none | Close later Expertise progression without duplicating skill selection state. |
 | 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | ready-for-research | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
 | 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | ready-for-research | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
 | 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | ready-for-research | none | Decide if later slot support is build-time, spellcasting kernel, or out of L3. |

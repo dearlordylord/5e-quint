@@ -2593,8 +2593,8 @@
     },
     "srd521:classes/bard:level-2:class-feature-grant:bard_expertise": {
       "taskId": "L12G-AUTHOR-BARD-EXPERTISE",
-      "profile": "level-2 Bard Expertise support profile",
-      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+      "profile": "Bard Expertise support profile",
+      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise at Bard level 2, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts. The same Surface grant-expertise choiceCount discovers Bard level 9 as one four-skill owned-proficiency choice source, excluding skills that already have Expertise instead of storing a second level-9 selection state.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
         "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
@@ -2613,7 +2613,8 @@
       ],
       "tests": [
         "packages/character-creation-runtime/src/bard-expertise.test.ts:finalizes two owned skills as Bard level-2 Expertise",
-        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies"
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies",
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:discovers Bard level-9 Expertise as one four-skill owned-proficiency choice"
       ]
     },
     "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {

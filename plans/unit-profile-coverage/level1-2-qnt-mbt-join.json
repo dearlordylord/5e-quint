@@ -2,8 +2,8 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "obligationJoinRows": {
-      "denominator": 169,
-      "numerator": 169,
+      "denominator": 170,
+      "numerator": 170,
       "percent": "100%"
     },
     "rulesKernelProfiles": {
@@ -12,8 +12,8 @@
       "percent": "100%"
     },
     "supportedUnits": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "uniqueCoveredObligations": {
@@ -782,6 +782,32 @@
       "runtime": "battle",
       "tag": "obligation-evidence",
       "unitId": "bard_bardic_inspiration"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.skill-expertise-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "bard_expertise"
     },
     {
       "gaps": [],

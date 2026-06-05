@@ -42,9 +42,9 @@ Level 1-2 QNT/MBT join open gaps: **0**.
 
 | Join metric | Result |
 | --- | ---: |
-| Supported Units in join | 93/93 (100%) |
+| Supported Units in join | 94/94 (100%) |
 | Rules-kernel profiles in join | 72/72 (100%) |
-| Obligation join rows without open gaps | 169/169 (100%) |
+| Obligation join rows without open gaps | 170/170 (100%) |
 | Unique covered obligations | 49/49 (100%) |
 | Unique QNT-owned obligations | 49/49 (100%) |
 | Unique parity-witnessed obligations | 49/49 (100%) |

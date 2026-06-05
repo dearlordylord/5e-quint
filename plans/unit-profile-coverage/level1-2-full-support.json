@@ -60,39 +60,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/bard_expertise.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Expertise",
-          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 98,
-            "lineStart": 93,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "bard_expertise"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
@@ -1097,7 +1064,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 93,
+      "count": 94,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -1110,6 +1077,7 @@
         "barbarian_unarmored_defense",
         "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
+        "bard_expertise",
         "bard_jack_of_all_trades",
         "bless",
         "burning_hands",
@@ -1216,17 +1184,6 @@
       ]
     },
     {
-      "count": 4,
-      "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
-      "status": "closed-later-level-only",
-      "unitIds": [
-        "bard_expertise",
-        "paladin_fighting_style",
-        "ranger_favored_enemy",
-        "ranger_fighting_style"
-      ]
-    },
-    {
       "count": 3,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -1234,6 +1191,16 @@
         "druid_druidic",
         "rogue_thieves_cant",
         "sorcerer_font_of_magic"
+      ]
+    },
+    {
+      "count": 3,
+      "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "paladin_fighting_style",
+        "ranger_favored_enemy",
+        "ranger_fighting_style"
       ]
     },
     {
@@ -1277,14 +1244,14 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 115,
-      "numerator": 93,
-      "percent": "80.9%"
+      "numerator": 94,
+      "percent": "81.7%"
     },
     "strictTargetClosure": {
       "denominator": 115,
@@ -3694,8 +3661,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 93,
-        "numerator": 93,
+        "denominator": 94,
+        "numerator": 94,
         "percent": "100%"
       }
     },
@@ -3970,6 +3937,26 @@
           }
         ],
         "unitId": "bard_bardic_inspiration"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
+            "profileId": "character-creation.skill-expertise-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "bard_expertise"
       },
       {
         "joinStatus": "covered",
@@ -7427,19 +7414,19 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 141,
     "groupsByClaimTag": {
-      "profile-subset-supported": 11,
-      "supported-profile": 93,
+      "profile-subset-supported": 10,
+      "supported-profile": 94,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 2,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 12,
-      "supported-profile": 93
+      "supported-profile": 94
     },
-    "nonSupportedFrontier": 22,
+    "nonSupportedFrontier": 21,
     "strictDenominator": 115
   }
 }

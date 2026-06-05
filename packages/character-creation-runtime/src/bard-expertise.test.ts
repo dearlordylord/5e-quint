@@ -30,6 +30,7 @@ import {
   type UnitChoiceKey,
 } from "./index.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
+import { classFeatureGrantChoiceHoles } from "./discovery.ts";
 import {
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
@@ -39,6 +40,7 @@ import { supportedHoleOptionIds } from "./support-gates.ts";
 import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-BARD-EXPERTISE bard_expertise
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE bard_expertise
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -141,6 +143,38 @@ describe("Bard Expertise", () => {
     expect(
       finalizeCharacterDraft({ draft: invalidExpertise, unitLibrary }),
     ).toMatchObject({ tag: "invalid" });
+  });
+
+  test("discovers Bard level-9 Expertise as one four-skill owned-proficiency choice", () => {
+    const holes = classFeatureGrantChoiceHoles("bard_expertise", unitLibrary, {
+      classLevel: 9,
+      ownedSkillProficiencies: [
+        "athletics",
+        "intimidation",
+        "performance",
+        "persuasion",
+        "stealth",
+      ],
+      ownedSkillExpertise: ["stealth"],
+    });
+
+    expect(holes).toHaveLength(1);
+    const [hole] = holes;
+    expect(hole?.source).toMatchObject({
+      tag: "unitChoice",
+      unitId: "bard_expertise",
+      choiceKey: CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+    });
+    expect(choiceCardinalityBounds(hole.cardinality)).toEqual({
+      min: 4,
+      max: 4,
+    });
+    expect(hole.options.map((option) => option.optionId)).toEqual([
+      "athletics",
+      "intimidation",
+      "performance",
+      "persuasion",
+    ]);
   });
 });
 

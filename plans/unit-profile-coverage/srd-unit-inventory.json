@@ -4925,14 +4925,8 @@
         "state": "installed",
         "unitId": "bard_expertise"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Bard level-9 character advancement owner",
-        "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4941,7 +4935,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-BARD-EXPERTISE level-2 Bard Expertise support profile; Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-BARD-EXPERTISE Bard Expertise support profile; Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise at Bard level 2, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts. The same Surface grant-expertise choiceCount discovers Bard level 9 as one four-skill owned-proficiency choice source, excluding skills that already have Expertise instead of storing a second level-9 selection state.",
           "status": "owner evidence present"
         }
       ],

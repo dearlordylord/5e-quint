@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "97.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 156,
-      "numerator": 156,
+      "denominator": 157,
+      "numerator": 157,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 162,
-      "numerator": 158,
+      "denominator": 163,
+      "numerator": 159,
       "percent": "97.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 162,
-      "percent": "71.1%"
+      "numerator": 163,
+      "percent": "71.5%"
     }
   },
   "metricSemantics": [
@@ -7157,8 +7157,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 156,
-          "numerator": 156,
+          "denominator": 157,
+          "numerator": 157,
           "percent": "100%"
         }
       },
@@ -7593,6 +7593,26 @@
             }
           ],
           "unitId": "bard_cutting_words"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
+              "profileId": "character-creation.skill-expertise-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "bard_expertise"
         },
         {
           "joinStatus": "covered",
@@ -14628,12 +14648,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 109,
-        "profileSubsetSupportedUnits": 15,
+        "profileSubsetSupportedUnits": 14,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 61,
+        "supportedProfileUnits": 62,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16588,27 +16608,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Bard level-9 character advancement owner",
-              "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane."
-            },
-            "mechanic": "Bard level 9 Expertise grants two more selected owned skill proficiencies"
-          }
-        ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
         ],
+        "rawRequirementIds": [],
         "supportedMechanics": [
           "Bard Expertise is installed as a level-2 Surface class-feature grant on class_bard",
           "Surface Bard spellcasting carries level-1 and level-2 table rows so admitting same-class Bard 2 projects five prepared spells and three level-1 Spell Slots",
           "Surface grant_expertise represents the level-2 acquisition choice as owned skill proficiencies without existing Expertise",
           "Character Creation admits supported Bard level-2 progression, discovers exactly two Bard Expertise choices from owned skill proficiencies without existing Expertise, and rejects skills that are not owned proficiencies",
-          "Character Creation finalizes the selected Bard Expertise skills as CharacterBuild Expertise without duplicating skill proficiency state"
+          "Character Creation finalizes the selected Bard Expertise skills as CharacterBuild Expertise without duplicating skill proficiency state",
+          "The same Surface grant_expertise choiceCount records Bard level 9 as four total selected owned skill proficiencies through one Bard Expertise choice source, excluding skills that already have Expertise rather than duplicating skill selection state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16616,6 +16628,11 @@
           "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-BARD-EXPERTISE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE"
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
