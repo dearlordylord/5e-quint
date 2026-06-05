@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER","status":"ready-for-research","title":"Close Antimagic Field remaining blocker ledger"},
-    {"number":2,"id":"L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY","status":"ready-for-research","title":"Resolve Dispel Magic ongoing effect boundary"},
-    {"number":3,"id":"L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY","status":"ready-for-research","title":"Resolve Continual Flame component boundary"},
-    {"number":4,"id":"L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION","status":"blocked","title":"Promote Continual Flame light projection if owned by runtime"},
-    {"number":5,"id":"L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE","status":"ready-for-research","title":"Resolve Enlarge Reduce object lifecycle boundary"},
-    {"number":6,"id":"L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY","status":"ready-for-research","title":"Resolve Levitate loose object boundary"},
-    {"number":7,"id":"L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE","status":"ready-for-research","title":"Resolve Fireball area object closure"},
-    {"number":8,"id":"L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE","status":"ready-for-research","title":"Resolve Spike Growth hidden hazard discovery closure"},
-    {"number":9,"id":"L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE","status":"ready-for-research","title":"Resolve Fly falling and spatial closure"},
-    {"number":10,"id":"L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE","status":"ready-for-research","title":"Resolve Moonbeam shapeshift trigger closure"},
-    {"number":11,"id":"L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit selected-identity replay for promoted spells"},
-    {"number":12,"id":"L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION","status":"blocked","title":"Consolidate spell boundary evidence"}
+    {
+      "number": 1,
+      "id": "L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER",
+      "status": "done",
+      "title": "Close Antimagic Field remaining blocker ledger"
+    },
+    {
+      "number": 2,
+      "id": "L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Dispel Magic ongoing effect boundary"
+    },
+    {
+      "number": 3,
+      "id": "L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Continual Flame component boundary"
+    },
+    {
+      "number": 4,
+      "id": "L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION",
+      "status": "blocked",
+      "title": "Promote Continual Flame light projection if owned by runtime"
+    },
+    {
+      "number": 5,
+      "id": "L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Resolve Enlarge Reduce object lifecycle boundary"
+    },
+    {
+      "number": 6,
+      "id": "L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY",
+      "status": "ready-for-research",
+      "title": "Resolve Levitate loose object boundary"
+    },
+    {
+      "number": 7,
+      "id": "L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Fireball area object closure"
+    },
+    {
+      "number": 8,
+      "id": "L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Spike Growth hidden hazard discovery closure"
+    },
+    {
+      "number": 9,
+      "id": "L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Fly falling and spatial closure"
+    },
+    {
+      "number": 10,
+      "id": "L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Resolve Moonbeam shapeshift trigger closure"
+    },
+    {
+      "number": 11,
+      "id": "L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Audit selected-identity replay for promoted spells"
+    },
+    {
+      "number": 12,
+      "id": "L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION",
+      "status": "blocked",
+      "title": "Consolidate spell boundary evidence"
+    }
   ]
 }
 -->
