@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Consolidate Continual Flame light projection evidence"
     },
     {
@@ -113,7 +113,7 @@ repair branch state by rebasing against `master`.
 | 1 | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER | ready-for-research | none | Classify remaining Antimagic Field gaps as executable battle support or owner-decision blockers. |
 | 2 | L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | done | none | Broader Dispel Magic occurrence support is not represented in the real reducer path; keep it assigned to the broader ongoing Spell Effect occurrence owner. |
 | 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | done | none | Costly consumed Material component availability, hand/access legality, focus/component substitution eligibility, and consumed Material inventory mutation belong to the character equipment/component legality boundary, not battle runtime. |
-| 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | ready-for-research | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; consolidate existing evidence rather than starting a fresh runtime promotion unless research finds a concrete evidence gap. |
+| 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | done | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_04_CONTINUAL_FLAME_LIGHT_PROJECTION.md`. |
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | ready-for-research | none | Split creature support from object/table lifecycle support. |
 | 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | ready-for-research | none | Classify loose-object motion as runtime, object-system, or table narration. |
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | ready-for-research | none | Do not add object damage unless the reducer has a reachable object boundary. |
@@ -165,6 +165,15 @@ not build a second Continual Flame-specific light reducer or a fresh promoted
 unit tracer bullet unless research finds a concrete evidence gap in the existing
 profile.
 
+Outcome: Continual Flame light projection is already represented by the existing
+`spell.invocation-object-light` implementation. Surface content, the object-light
+QNT owner/proofs, production reducer admission and resolution, deterministic
+admission tests, selected-identity MBT replay metadata, and coverage ledgers all
+point at the shared object-light path. Do not add a Continual Flame-specific
+light reducer, remover registry, duplicate light projection state, or fresh
+promoted unit tracer bullet. Evidence is consolidated in
+`plans/unit-profile-coverage/L3MSPELL_04_CONTINUAL_FLAME_LIGHT_PROJECTION.md`.
+
 ### Task 5 - L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE
 
 Classify object growth, object carried/worn interactions, and creature size
@@ -205,7 +214,8 @@ is connected to that path rather than a dead test-only projection.
 
 Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
 lane, and record remaining spell pressure. Include the Task 3 Continual Flame
-component-boundary note and regenerated ledgers.
+component-boundary note, the Task 4 Continual Flame light-projection evidence
+note, and regenerated ledgers.
 
 ## Task Rules
 
