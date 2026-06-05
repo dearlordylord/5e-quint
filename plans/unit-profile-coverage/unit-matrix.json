@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 104,
+      "denominator": 105,
       "numerator": 103,
-      "percent": "99%"
+      "percent": "98.1%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 140,
-      "numerator": 139,
+      "denominator": 141,
+      "numerator": 140,
       "percent": "99.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 140,
-      "numerator": 139,
+      "denominator": 141,
+      "numerator": 140,
       "percent": "99.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3738,6 +3738,35 @@
       ]
     },
     {
+      "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity and caller-supplied aura-membership witnesses created by the existing Antimagic Field suppression/action-interdiction owners. It owns a generic magical-effect source classification for spells, future magic items, and other magical effects, and uses that shared boundary to reject selected spell targets, table-supplied spell area affected creatures, object-contact spell affected creatures, and supported non-spell Magic Action feature targets that are inside an active aura. It does not derive table geometry, duplicate spell-specific target state, dispatch on authored spell, feature, or item identity, suppress magic-item properties, clip represented area geometry, block teleport/planar transit, close portals, model Dispel Magic immunity, or broaden ongoing Spell Effect suppression.",
+      "taskRefs": [
+        "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+      ],
+      "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
+      "verificationOwners": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-spike-growth-movement-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4482,13 +4511,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 140,
-        "numerator": 139,
+        "denominator": 141,
+        "numerator": 140,
         "percent": "99.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 140,
-        "numerator": 139,
+        "denominator": 141,
+        "numerator": 140,
         "percent": "99.3%"
       }
     },
@@ -6647,6 +6676,22 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
+          }
+        ],
+        "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
         ]
       },
       {
@@ -14028,6 +14073,14 @@
       "taskId": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover a shared magical-effect interdiction boundary for spell target selection, spell area effect delivery, and supported non-spell Magic Action feature targeting, consuming existing Antimagic Field aura membership witnesses without authored-identity dispatch or duplicate spell-specific target state.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-magical-effect-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+    },
+    {
       "claimKind": "accepted-runtime-closure",
       "note": "Task 4 closes stat-block shapechanger true-form reversion as outside promoted battle runtime. The local SRD Stat Block catalog exposes imp and quasit Shape-Shift as prose-only special actions, while battle Stat Block execution currently admits attack actions and rejects specials. A promotion needs a generic structured Stat Block special-action active-form owner for form choices, speed replacement, equipment non-transformation, and return-to-true-form state; adding Moonbeam-local metadata would duplicate true-form Stat Block facts and introduce authored-identity coupling.",
       "profileIds": [],
@@ -14106,7 +14159,7 @@
         "installedUnitDenominator": 127,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 133,
+        "profileFactDenominator": 134,
         "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 109,
@@ -22168,15 +22221,6 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "magical-effect targeting and effect-delivery interdiction owner",
-              "reason": "Promoted spell procedures consume spell-specific target, range, and area witnesses. There is no generic magical-effect delivery boundary that classifies spell, magic-item, and other magical effects and checks whether selected targets or affected things are inside an Antimagic Field aura."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-            "mechanic": "magical targeting prevention and the rule that magical effects can't otherwise affect anything inside the aura"
-          },
-          {
-            "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "magic item record, equipment, attunement, and property-projection owner",
               "reason": "The SRD magic-item corpus is not represented as battle Unit records or runtime equipment/property effects at this boundary, so Antimagic Field must not add a parallel magic-item suppression registry before the magic-item owner exists."
@@ -22227,13 +22271,6 @@
         ],
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-            "mechanic": "Block spells, magic items, and other magical effects from targeting or otherwise affecting things inside Antimagic Field, using typed magical-effect source classification and target/affected-thing aura-membership facts.",
-            "owner": "generic magical-effect target/effect-delivery owner with aura-membership witnesses",
-            "requiredOutput": "One shared interdiction boundary consumed by spell and later magic-item procedures, with tests proving target and effect delivery rejection without duplicating spell-specific target state.",
-            "title": "Antimagic Field Magical Targeting And Effect Interdiction"
-          },
-          {
             "id": "L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION",
             "mechanic": "Suppress magical properties of represented magic items inside the aura or on things inside it while preserving the item/equipment occurrence and restoring properties when the aura no longer applies.",
             "owner": "magic item record, equipment/attunement state, property projection, and Antimagic aura-membership owner",
@@ -22276,10 +22313,11 @@
             "title": "Antimagic Field Broader Ongoing Spell Suppression"
           }
         ],
-        "futureProfileOwner": "split Antimagic Field magical-effect targeting, magic-item, area-clipping, transit, portal, dispel-exception, and broader ongoing Spell Effect owners",
+        "futureProfileOwner": "split Antimagic Field magic-item, area-clipping, transit, portal, dispel-exception, and broader ongoing Spell Effect owners",
         "profileIds": [
           "spell.invocation-antimagic-field-ongoing-spell-suppression",
-          "spell.invocation-antimagic-field-action-interdiction"
+          "spell.invocation-antimagic-field-action-interdiction",
+          "spell.invocation-antimagic-field-magical-effect-interdiction"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -22299,7 +22337,12 @@
           "caller-supplied Antimagic Field aura membership witnesses identify creatures inside an active aura by area identity and source combatant without deriving table geometry",
           "the Emanation origin-inclusion choice is represented explicitly so the caster is blocked only when the caller-selected origin-inclusive aura says so",
           "spellcasting is blocked for creatures inside an active Antimagic Field aura across Action spell discovery, Bonus Action spell discovery, triggered Reaction spell discovery, and stale spell subject resolution",
-          "supported non-spell Magic Action feature subjects are blocked for creatures inside an active Antimagic Field aura across discovery and stale subject resolution"
+          "supported non-spell Magic Action feature subjects are blocked for creatures inside an active Antimagic Field aura across discovery and stale subject resolution",
+          "generic magical-effect source classification distinguishes spells, future magic items, and other magical effects at the shared Antimagic Field targeting/effect-delivery boundary without authored-identity dispatch",
+          "selected spell targets inside an active Antimagic Field aura are rejected by consuming the caller-supplied aura membership witness rather than storing duplicate spell-specific target state",
+          "table-supplied spell area affected creatures inside an active Antimagic Field aura are rejected at effect delivery by consuming the same aura membership witness",
+          "object-contact spell affected creatures inside an active Antimagic Field aura are rejected at effect delivery by consuming the same aura membership witness",
+          "supported non-spell Magic Action feature targets and affected creatures inside an active Antimagic Field aura are rejected through the shared magical-effect interdiction boundary"
         ],
         "tag": "profile-subset-supported"
       },
@@ -22380,6 +22423,35 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the active Antimagic Field aura identity and caller-supplied aura-membership witnesses created by the existing Antimagic Field suppression/action-interdiction owners. It owns a generic magical-effect source classification for spells, future magic items, and other magical effects, and uses that shared boundary to reject selected spell targets, table-supplied spell area affected creatures, object-contact spell affected creatures, and supported non-spell Magic Action feature targets that are inside an active aura. It does not derive table geometry, duplicate spell-specific target state, dispatch on authored spell, feature, or item identity, suppress magic-item properties, clip represented area geometry, block teleport/planar transit, close portals, model Dispel Magic immunity, or broaden ongoing Spell Effect suppression.",
+          "taskRefs": [
+            "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+          ],
+          "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
+          "verificationOwners": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
             }
           ]
         }

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 100,
-    "covered": 94,
+    "total": 101,
+    "covered": 95,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 72,
+      "battle": 73,
       "character-creation": 13,
       "character-sheet": 11,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 94,
+      "covered": 95,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -905,6 +905,39 @@
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
       "title": "Battle Antimagic Field aura membership blocks spellcasting and Magic actions for creatures inside the aura"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-antimagic-field-magical-effect-interdiction"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/Rules-Glossary.md#Magical Effect",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
     },
     {
       "id": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
@@ -5506,6 +5539,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
+      ],
+      "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
       ],
       "profileId": "spell.invocation-spike-growth-movement-hazard"
@@ -5558,6 +5597,14 @@
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -10249,6 +10296,7 @@
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
     "spell.invocation-antimagic-field-action-interdiction",
+    "spell.invocation-antimagic-field-magical-effect-interdiction",
     "spell.invocation-antimagic-field-ongoing-spell-suppression",
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",

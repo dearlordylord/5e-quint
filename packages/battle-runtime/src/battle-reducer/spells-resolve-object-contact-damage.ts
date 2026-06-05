@@ -1,6 +1,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -84,6 +86,10 @@ import {
   antimagicFieldOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
+import {
+  SPELL_MAGICAL_EFFECT_SOURCE,
+  magicalEffectTargetsInterdictionMessage,
+} from "./antimagic-field-magical-effect-interdiction.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<
@@ -415,6 +421,14 @@ function validateObjectContactTargets(input: {
       tag: "invalid",
       message: "Object-contact targets must be combatants in this battle.",
     };
+  }
+  const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
+    state: input.state,
+    source: SPELL_MAGICAL_EFFECT_SOURCE,
+    targetIds,
+  });
+  if (antimagicInterdiction !== null) {
+    return { tag: "invalid", message: antimagicInterdiction };
   }
   const rangeFacts = fill.spatialFacts.filter(
     (

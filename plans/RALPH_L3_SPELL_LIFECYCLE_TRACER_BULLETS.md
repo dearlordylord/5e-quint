@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Antimagic Field magical targeting and effect interdiction"
     },
     {
@@ -142,7 +142,7 @@ owns branch repair.
 | 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
 | 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | done | none | Hypnotic Pattern control runtime is promoted. |
 | 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | done | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
-| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
+| 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | done | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Shared magical-effect targeting and delivery interdiction is promoted for represented combatant target/effect-delivery paths. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
 | 12 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-AREA-CLIPPING - Antimagic Field magical area clipping | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Promote a shared area clipping owner or close specific supported area shapes without duplicating map state. |
 | 13 | L3-FOLLOWUP-ANTIMAGIC-TRANSIT-BLOCKING - Antimagic Field teleportation and planar travel blocking | ready-for-research | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires aura origin/destination membership witnesses; planar-travel state may need a separate owner. |
@@ -447,7 +447,7 @@ Expected outputs:
 
 ### Task 10 - L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION
 
-Status: `ready-for-research`
+Status: `done`
 
 Block spells, magic items, and other magical effects from targeting or otherwise
 affecting things inside Antimagic Field.
@@ -464,6 +464,17 @@ Expected outputs:
 - one shared interdiction boundary with tests for target rejection and effect
   delivery rejection;
 - no production dispatch on authored spell, feature, or item identity.
+
+Result:
+
+- promoted a shared magical-effect target/effect-delivery interdiction boundary
+  that consumes Task 9's Antimagic Field aura-membership witness;
+- covered selected spell targets, table-supplied spell area affected creatures,
+  object-contact spell affected creatures, repeated object-contact delivery, and
+  supported non-spell Magic Action feature targets;
+- left magic-item property suppression, area clipping, transit blocking, portal
+  closure, Dispel Magic immunity, and broader ongoing Spell Effect suppression
+  in their existing follow-up task rows.
 
 ### Task 11 - L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION
 

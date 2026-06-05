@@ -1,11 +1,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   damageAmount as toDamageAmount,
@@ -119,6 +121,10 @@ import {
   spendSpellCastResources,
   spellRequiresConcentration,
 } from "./spells-resolve-resources.ts";
+import {
+  SPELL_MAGICAL_EFFECT_SOURCE,
+  magicalEffectTargetsInterdictionMessage,
+} from "./antimagic-field-magical-effect-interdiction.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
@@ -3119,6 +3125,14 @@ export function validateSavingThrowOutcomes(
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell area affected target must be a combatant in this battle.";
     }
+  }
+  const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
+    state,
+    source: SPELL_MAGICAL_EFFECT_SOURCE,
+    targetIds: value.area.affectedTargetIds,
+  });
+  if (antimagicInterdiction !== null) {
+    return antimagicInterdiction;
   }
   const seenTargets = new Set<CombatantId>();
   for (const outcome of outcomes) {

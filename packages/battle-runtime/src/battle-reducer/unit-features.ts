@@ -1,7 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // Unit feature discovery and resolution extracted from ../battle-reducer.ts.
 // Owns unit-feature act discovery, feature command resolution, ongoing feature
 // activation, failed/successful ability-check feature reactions, and self-heal
@@ -87,6 +89,10 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
+import {
+  OTHER_MAGICAL_EFFECT_SOURCE,
+  magicalEffectTargetsInterdictionMessage,
+} from "./antimagic-field-magical-effect-interdiction.ts";
 
 import { snapshotBattle, spendReaction } from "./dispatcher.ts";
 import {
@@ -1760,6 +1766,14 @@ function validateMagicActionHealingPoolDistribution(input: {
         message: `${input.unitFeature.unit.name} target must be a creature in this battle.`,
       };
     }
+    const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
+      state: input.state,
+      source: OTHER_MAGICAL_EFFECT_SOURCE,
+      targetIds: [allocation.targetId],
+    });
+    if (antimagicInterdiction !== null) {
+      return { tag: "invalid", message: antimagicInterdiction };
+    }
     if (!combatantIsBloodied(target)) {
       return {
         tag: "invalid",
@@ -1865,6 +1879,14 @@ function magicActionHealingPoolTargetChoices(
 ): readonly CombatantId[] {
   return [...state.combatants.values()]
     .filter(combatantIsBloodied)
+    .filter(
+      (combatant) =>
+        magicalEffectTargetsInterdictionMessage({
+          state,
+          source: OTHER_MAGICAL_EFFECT_SOURCE,
+          targetIds: [combatant.combatantId],
+        }) === null,
+    )
     .map((combatant) => combatant.combatantId);
 }
 
@@ -2081,6 +2103,14 @@ function validateMagicActionAreaSaveDamageHealing(input: {
       message: `${input.unitFeature.unit.name} healing target must be a creature in this battle.`,
     };
   }
+  const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
+    state: input.state,
+    source: OTHER_MAGICAL_EFFECT_SOURCE,
+    targetIds: [...outcomesByTargetId.keys(), healingTarget],
+  });
+  if (antimagicInterdiction !== null) {
+    return { tag: "invalid", message: antimagicInterdiction };
+  }
   const areaFact = magicActionAreaSaveDamageHealingAreaFact(
     input.savingThrows.spatialFacts ?? [],
     input.actorId,
@@ -2189,7 +2219,14 @@ function magicActionAreaSaveDamageHealingSavingThrowHole(
     },
     ability: unitFeature.damageHealing.save.ability,
     dc: { kind: "fixed", dc },
-    targetIds: [...state.combatants.keys()],
+    targetIds: [...state.combatants.keys()].filter(
+      (targetId) =>
+        magicalEffectTargetsInterdictionMessage({
+          state,
+          source: OTHER_MAGICAL_EFFECT_SOURCE,
+          targetIds: [targetId],
+        }) === null,
+    ),
     targetRollModes: savingThrowRollModeProjections(
       state,
       unitFeature.damageHealing.save.ability,
@@ -2209,7 +2246,14 @@ function magicActionAreaSaveDamageHealingHealingTargetHole(
       magicActionAreaSaveDamageHealingHealingTargetHoleInstanceKey(unitFeature),
     label: `${unitFeature.unit.name} healing target`,
     requiresTableSpatialFact: true,
-    choices: [...state.combatants.keys()],
+    choices: [...state.combatants.keys()].filter(
+      (targetId) =>
+        magicalEffectTargetsInterdictionMessage({
+          state,
+          source: OTHER_MAGICAL_EFFECT_SOURCE,
+          targetIds: [targetId],
+        }) === null,
+    ),
   };
 }
 
