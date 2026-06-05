@@ -14,14 +14,14 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 94/115 (81.7%) |
+| Strict runtime/profile support | 96/115 (83.5%) |
 | Strict target closure | 115/115 (100%) |
 | Selected identity readiness | 104/104 (100%) |
 | Diagnostic product readiness | 397/400 (99.3%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 72/72 (100%) |
 | Rules-kernel covered profile join | 72/72 (100%) |
-| Supported Unit rules-kernel chain | 94/94 (100%) |
+| Supported Unit rules-kernel chain | 96/96 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -33,8 +33,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 295 |
-| accepted-no-battle-effect | 102 |
+| accepted | 293 |
+| accepted-no-battle-effect | 104 |
 | owner-evidence-required | 2 |
 | partial-battle-runtime | 1 |
 
@@ -99,18 +99,18 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD pressure with no Unit matrix row | 13 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 115 |
-| Non-supported frontier | 21 |
+| Non-supported frontier | 19 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 94 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_expertise`, `bard_jack_of_all_trades`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 96 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_expertise`, `bard_jack_of_all_trades`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_fighting_style`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 12 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `monk_monks_focus`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
-| closed-later-level-only | 3 | `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | blocked-follow-up-split | 2 | `druid_wild_shape`, `sorcerer_metamagic` |
 | closed-companion-control-boundary | 1 | `druid_wild_companion` |
+| closed-later-level-only | 1 | `ranger_favored_enemy` |
 
 ## Open Frontier
 
@@ -142,9 +142,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
 | `monk_monks_focus` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane. |
-| `paladin_fighting_style` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete. |
 | `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Favored Enemy free-cast count changes occur only after level 1. |
-| `ranger_fighting_style` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete. |
 | `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | not-required | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
 | `sorcerer_font_of_magic` | closed-character-fact-and-runtime-detached-split | profile-subset-supported | witness-present | installed | character-fact-and-runtime-detached-split | RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger. |

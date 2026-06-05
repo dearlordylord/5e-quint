@@ -1282,6 +1282,10 @@ type EffectAtom =
       readonly spellLevel: Schema.Schema.Type<typeof SpellLevelSchema>;
       readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
       readonly count: number;
+      readonly replacement?: {
+        readonly trigger: "class_level_gain";
+        readonly replacementCount: number;
+      };
     }
   | {
       readonly kind: "grant_class_level_prepared_spell_access";
@@ -3147,6 +3151,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         spellLevel: SpellLevelSchema,
         mode: SpellAccessModeSchema,
         count: PositiveIntegerSchema,
+        replacement: optionalExact(
+          strictStruct({
+            trigger: Schema.Literal("class_level_gain"),
+            replacementCount: PositiveIntegerSchema,
+          }),
+        ),
       }),
       strictStruct({
         kind: Schema.Literal("grant_class_level_prepared_spell_access"),

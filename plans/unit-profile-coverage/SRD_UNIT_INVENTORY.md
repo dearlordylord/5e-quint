@@ -36,8 +36,8 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 295
-- accepted-no-battle-effect: 102
+- accepted: 293
+- accepted-no-battle-effect: 104
 - owner-evidence-required: 2
 - partial-battle-runtime: 1
 
@@ -49,8 +49,8 @@ This is the default `%` for character-level-1 through character-level-3 readines
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 436
-- accepted-no-battle-effect: 163
+- accepted: 434
+- accepted-no-battle-effect: 165
 - battle-runtime-required: 1
 - owner-evidence-required: 6
 - partial-battle-runtime: 1
@@ -406,11 +406,11 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Monk Unarmored Movement|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:92|
 |Monk Uncanny Metabolism|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:96|
 |Monk level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:33|
-|Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future Paladin advancement cantrip replacement owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:90|
+|Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted-no-battle-effect|selection-grant-container: character-creation-runtime selected cantrip refs plus selected spell Unit profiles|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:90|
 |Paladin Paladin's Smite|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:96|
 |Paladin level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:36|
 |Ranger Deft Explorer|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:88|
-|Ranger Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future Ranger advancement cantrip replacement owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:96|
+|Ranger Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted-no-battle-effect|selection-grant-container: character-creation-runtime selected cantrip refs plus selected spell Unit profiles|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:96|
 |Ranger level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:36|
 |Rogue Cunning Action|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:81|
 |Rogue level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:37|

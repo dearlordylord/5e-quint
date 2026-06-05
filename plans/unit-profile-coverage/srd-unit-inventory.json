@@ -224,8 +224,8 @@
       "numerator": 397,
       "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 295,
-        "accepted-no-battle-effect": 102,
+        "accepted": 293,
+        "accepted-no-battle-effect": 104,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 1
       }
@@ -235,8 +235,8 @@
       "numerator": 599,
       "percent": "98.7%",
       "rowsByStatus": {
-        "accepted": 436,
-        "accepted-no-battle-effect": 163,
+        "accepted": 434,
+        "accepted-no-battle-effect": 165,
         "owner-evidence-required": 6,
         "partial-battle-runtime": 1,
         "battle-runtime-required": 1
@@ -17346,13 +17346,13 @@
         "state": "installed",
         "unitId": "paladin_fighting_style"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Paladin advancement cantrip replacement owner",
-        "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+        "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
       },
       "ownerEvidence": [
         {
@@ -17367,7 +17367,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",
@@ -19600,13 +19600,13 @@
         "state": "installed",
         "unitId": "ranger_fighting_style"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Ranger advancement cantrip replacement owner",
-        "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+        "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
       },
       "ownerEvidence": [
         {
@@ -19621,7 +19621,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",

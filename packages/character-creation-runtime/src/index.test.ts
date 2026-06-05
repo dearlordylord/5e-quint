@@ -55,6 +55,7 @@ import {
   UNIT_CHOICE_KEYS,
   abilityScoreAssignment,
   advanceCharacterBuildClassLevel,
+  classLevelGainWithFightingStyleCantripReplacement,
   classUnitIdFromUnitId,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -161,6 +162,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-advancement-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.fighting-style-cantrip-advancement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
@@ -5467,6 +5469,280 @@ describe("character creation finalization", () => {
     expect(result).toMatchObject({
       _tag: "Left",
       left: { code: "nonFighterClassLevelGain" },
+    });
+  });
+
+  test("advances a Paladin level and replaces one Fighting Style cantrip", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-blessed-warrior-replacement",
+      progression: testProgression("class_paladin", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("blessed_warrior")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("sacred_flame"),
+        ],
+      },
+    });
+    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+    expect(finalized.tag).toBe("ready");
+    if (finalized.tag !== "ready") return;
+    const classUnitId = testClassUnitId("class_paladin");
+    const levelGain = expectRight(
+      classLevelGainWithFightingStyleCantripReplacement({
+        unitLibrary,
+        classUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replaceCantripId: "guidance",
+        selectedCantripId: "thaumaturgy",
+        preparedSpellcasting: {
+          gainedPreparedSpells: ["command"],
+        },
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: finalized.build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(3);
+    expect(spellcastingSourceCantrips(result, "class_paladin")).toEqual([
+      "thaumaturgy",
+      "sacred_flame",
+    ]);
+    expect(
+      result.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_paladin",
+      )?.preparedSpells,
+    ).toEqual(["heroism", "searing_smite", "bless", "command"]);
+    expect(result.spellcasting?.slotPools.spellcasting?.slots).toEqual([
+      { count: 3, spellLevel: 1 },
+    ]);
+  });
+
+  test("advances a Ranger level and replaces one Fighting Style cantrip", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:ranger-druidic-warrior-replacement",
+      progression: testProgression("class_ranger", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_ranger",
+          CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("animal_handling"),
+          creationChoiceOptionId("perception"),
+          creationChoiceOptionId("survival"),
+        ],
+        [testUnitChoiceSourceKey(
+          "ranger_deft_explorer",
+          CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+        )]: [creationChoiceOptionId("athletics")],
+        [testUnitChoiceSourceKey(
+          "ranger_deft_explorer",
+          CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("Elvish"),
+          creationChoiceOptionId("Gnomish"),
+        ],
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          RANGER_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("druidic_warrior")],
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("starry_wisp"),
+        ],
+      },
+    });
+    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+    expect(finalized.tag).toBe("ready");
+    if (finalized.tag !== "ready") return;
+    const classUnitId = testClassUnitId("class_ranger");
+    const levelGain = expectRight(
+      classLevelGainWithFightingStyleCantripReplacement({
+        unitLibrary,
+        classUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replaceCantripId: "starry_wisp",
+        selectedCantripId: "druidcraft",
+        preparedSpellcasting: {
+          gainedPreparedSpells: ["hunters_mark"],
+        },
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: finalized.build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(3);
+    expect(spellcastingSourceCantrips(result, "class_ranger")).toEqual([
+      "guidance",
+      "druidcraft",
+    ]);
+    expect(
+      result.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_ranger",
+      )?.preparedSpells,
+    ).toEqual([
+      "cure_wounds",
+      "ensnaring_strike",
+      "longstrider",
+      "hunters_mark",
+    ]);
+    expect(result.spellcasting?.slotPools.spellcasting?.slots).toEqual([
+      { count: 3, spellLevel: 1 },
+    ]);
+  });
+
+  test("rejects Fighting Style cantrip replacement outside the granted spell list", () => {
+    const classUnitId = testClassUnitId("class_paladin");
+
+    const result = classLevelGainWithFightingStyleCantripReplacement({
+      unitLibrary,
+      classUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      replaceCantripId: "guidance",
+      selectedCantripId: "fire_bolt",
+      preparedSpellcasting: {
+        gainedPreparedSpells: ["command"],
+      },
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "invalidFightingStyleCantripReplacement" },
+    });
+  });
+
+  test("rejects cantrip-granting class features without a level-gain replacement fact", () => {
+    const classUnitId = testClassUnitId("class_cleric");
+
+    const result = classLevelGainWithFightingStyleCantripReplacement({
+      unitLibrary,
+      classUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      replaceCantripId: "guidance",
+      selectedCantripId: "thaumaturgy",
+      preparedSpellcasting: {
+        gainedPreparedSpells: ["command"],
+      },
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingFightingStyleCantripFeatureChoice" },
+    });
+  });
+
+  test("rejects duplicate Fighting Style cantrips after replacement", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-blessed-warrior-duplicate-replacement",
+      progression: testProgression("class_paladin", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("blessed_warrior")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("sacred_flame"),
+        ],
+      },
+    });
+    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+    expect(finalized.tag).toBe("ready");
+    if (finalized.tag !== "ready") return;
+    const classUnitId = testClassUnitId("class_paladin");
+    const levelGain = expectRight(
+      classLevelGainWithFightingStyleCantripReplacement({
+        unitLibrary,
+        classUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replaceCantripId: "guidance",
+        selectedCantripId: "sacred_flame",
+        preparedSpellcasting: {
+          gainedPreparedSpells: ["command"],
+        },
+      }),
+    );
+
+    const result = advanceCharacterBuildClassLevel({
+      build: finalized.build,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "duplicateFightingStyleCantripSelection" },
+    });
+  });
+
+  test("rejects replacing a Fighting Style cantrip the build does not know", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-blessed-warrior-missing-replacement",
+      progression: testProgression("class_paladin", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("blessed_warrior")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("sacred_flame"),
+        ],
+      },
+    });
+    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
+    expect(finalized.tag).toBe("ready");
+    if (finalized.tag !== "ready") return;
+    const classUnitId = testClassUnitId("class_paladin");
+    const levelGain = expectRight(
+      classLevelGainWithFightingStyleCantripReplacement({
+        unitLibrary,
+        classUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replaceCantripId: "thaumaturgy",
+        selectedCantripId: "guidance",
+        preparedSpellcasting: {
+          gainedPreparedSpells: ["command"],
+        },
+      }),
+    );
+
+    const result = advanceCharacterBuildClassLevel({
+      build: finalized.build,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingFightingStyleCantripReplacement" },
     });
   });
 

@@ -2,8 +2,8 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "obligationJoinRows": {
-      "denominator": 170,
-      "numerator": 170,
+      "denominator": 174,
+      "numerator": 174,
       "percent": "100%"
     },
     "rulesKernelProfiles": {
@@ -12,8 +12,8 @@
       "percent": "100%"
     },
     "supportedUnits": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "uniqueCoveredObligations": {
@@ -4996,6 +4996,58 @@
     {
       "gaps": [],
       "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
       "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
       "obligationStatus": "covered",
       "obligationTitle": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions",
@@ -5622,6 +5674,58 @@
       "runtime": "character-creation",
       "tag": "obligation-evidence",
       "unitId": "ranger_deft_explorer"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "ranger_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "ranger_fighting_style"
     },
     {
       "gaps": [],

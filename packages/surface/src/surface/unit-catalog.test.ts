@@ -5447,6 +5447,10 @@ describe("SRD Unit catalog boundary", () => {
                   count: 2,
                   kind: "grant_spell_access_choice",
                   mode: "known",
+                  replacement: {
+                    replacementCount: 1,
+                    trigger: "class_level_gain",
+                  },
                   spellLevel: 0,
                   spellList: "druid",
                 },

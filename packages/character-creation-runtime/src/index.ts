@@ -280,8 +280,10 @@ export {
 } from "./character-progression-types.ts";
 export {
   advanceCharacterBuildClassLevel,
+  classLevelGainWithFightingStyleCantripReplacement,
   fighterClassUnitId,
   fighterLevelGainWithFightingStyleReplacement,
+  fightingStyleCantripUnitId,
   fightingStyleFeatUnitId,
   sorcererClassUnitId,
   sorcererLevelGain,
@@ -293,6 +295,8 @@ export {
   type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
+  type CharacterBuildFightingStyleCantripReplacementLevelGain,
+  type CharacterBuildListPreparedSpellcastingLevelGain,
   type CharacterBuildPlainClassLevelGain,
   type CharacterBuildSorcererMetamagicLevelGain,
   type CharacterBuildWeaponMasteryLevelGain,
@@ -300,6 +304,7 @@ export {
   type CharacterBuildWarlockLevelGain,
   type CharacterBuildWarlockPactMagicLevelGain,
   type FighterClassUnitId,
+  type FightingStyleCantripUnitId,
   type FightingStyleFeatUnitId,
   type SorcererClassUnitId,
   type WeaponMasteryFeatureUnitId,

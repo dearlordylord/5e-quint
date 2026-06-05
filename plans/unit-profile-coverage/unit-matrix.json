@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 167,
-      "numerator": 163,
+      "denominator": 169,
+      "numerator": 165,
       "percent": "97.6%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "97.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 161,
-      "numerator": 161,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 167,
-      "numerator": 163,
+      "denominator": 169,
+      "numerator": 165,
       "percent": "97.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 167,
-      "percent": "73.2%"
+      "numerator": 169,
+      "percent": "74.1%"
     }
   },
   "metricSemantics": [
@@ -2676,6 +2676,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+      "taskRefs": [
+        "L3MCHAR-04"
+      ],
+      "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
         }
       ]
     },
@@ -7157,8 +7176,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 161,
-          "numerator": 161,
+          "denominator": 163,
+          "numerator": 163,
           "percent": "100%"
         }
       },
@@ -10021,6 +10040,40 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_fighting_style"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -10321,6 +10374,40 @@
             }
           ],
           "unitId": "ranger_extra_attack"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "ranger_fighting_style"
         },
         {
           "joinStatus": "covered",
@@ -14655,6 +14742,14 @@
         "character-sheet.weapon-mastery-class-level-reselection"
       ],
       "taskId": "L3MCHAR-01"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Paladin Blessed Warrior and Ranger Druidic Warrior same-class level gains replacing one existing granted cantrip with a different cantrip from the Surface grant spell list, advancing the same class spellcasting source to the next list-prepared spell count and Spell Slot row, and rejecting wrong-list, duplicate, missing-current, and acquisition-only cantrip-grant replacements.",
+      "profileIds": [
+        "character-creation.fighting-style-cantrip-advancement-replacement"
+      ],
+      "taskId": "L3MCHAR-04"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -14727,13 +14822,13 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 109,
-        "profileSubsetSupportedUnits": 10,
+        "profileFactDenominator": 111,
+        "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 66,
+        "supportedProfileUnits": 68,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -18399,28 +18494,25 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Ranger advancement cantrip replacement owner",
-              "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
-            },
-            "mechanic": "Druidic Warrior cantrip replacement when later gaining Ranger levels after acquiring the feature"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+          "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
+        },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-option-projection"
+          "character-creation.class-feature-option-projection",
+          "character-creation.fighting-style-cantrip-advancement-replacement"
         ],
         "supportedMechanics": [
           "Ranger Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Druidic Warrior branch",
           "Character Creation admits a supported Ranger level-2 same-class progression, discovers the Ranger Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
           "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId ranger_fighting_style",
           "Character Creation admits the Druidic Warrior branch, discovers exactly two Druid cantrip choices from the selected branch, and projects selected cantrips as Ranger spellcasting cantrips using the Ranger Wisdom spellcasting source",
-          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Ranger feature owns only the branch and grant selection container"
+          "When a Ranger level is gained after Druidic Warrior acquisition, Character Creation can replace one existing granted Druid cantrip with a different Druid cantrip by rewriting the Ranger spellcasting source cantrip list, advancing list-prepared spell choices and Spell Slots from the Surface Ranger progression row, and avoiding a duplicate branch marker",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Ranger feature owns branch selection, grant selection, and same-class cantrip replacement"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -18469,6 +18561,25 @@
             "AT-L1-03S"
           ],
           "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+          "taskRefs": [
+            "L3MCHAR-04"
+          ],
+          "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -21057,28 +21168,25 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Paladin advancement cantrip replacement owner",
-              "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
-            },
-            "mechanic": "Blessed Warrior cantrip replacement when later gaining Paladin levels after acquiring the feature"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+          "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
+        },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-option-projection"
+          "character-creation.class-feature-option-projection",
+          "character-creation.fighting-style-cantrip-advancement-replacement"
         ],
         "supportedMechanics": [
           "Paladin Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Blessed Warrior branch",
           "Character Creation admits a supported Paladin level-2 same-class progression, discovers the Paladin Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
           "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId paladin_fighting_style",
           "Character Creation admits the Blessed Warrior branch, discovers exactly two Cleric cantrip choices from the selected branch, and projects selected cantrips as Paladin spellcasting cantrips using the Paladin Charisma spellcasting source",
-          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns only the branch and grant selection container"
+          "When a Paladin level is gained after Blessed Warrior acquisition, Character Creation can replace one existing granted Cleric cantrip with a different Cleric cantrip by rewriting the Paladin spellcasting source cantrip list, advancing list-prepared spell choices and Spell Slots from the Surface Paladin progression row, and avoiding a duplicate branch marker",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns branch selection, grant selection, and same-class cantrip replacement"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -21127,6 +21235,25 @@
             "AT-L1-03S"
           ],
           "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+          "taskRefs": [
+            "L3MCHAR-04"
+          ],
+          "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
           "verificationOwners": [
             {
               "kind": "runtime-test",

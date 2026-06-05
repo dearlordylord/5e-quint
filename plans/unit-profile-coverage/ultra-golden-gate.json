@@ -821,15 +821,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 97,
-            "numerator": 97
+            "denominator": 99,
+            "numerator": 99
           },
           "joinedEvidenceRows": {
-            "denominator": 97,
-            "numerator": 97
+            "denominator": 99,
+            "numerator": 99
           },
           "missingJoinRows": {
-            "denominator": 97,
+            "denominator": 99,
             "numerator": 0
           }
         },
@@ -840,15 +840,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 144,
-            "numerator": 144
+            "denominator": 146,
+            "numerator": 146
           },
           "joinedEvidenceRows": {
-            "denominator": 144,
-            "numerator": 144
+            "denominator": 146,
+            "numerator": 146
           },
           "missingJoinRows": {
-            "denominator": 144,
+            "denominator": 146,
             "numerator": 0
           }
         },

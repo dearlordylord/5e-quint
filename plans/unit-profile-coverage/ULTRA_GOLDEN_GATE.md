@@ -87,8 +87,8 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |
 | --- | ---: | ---: | ---: |
 | level-1 | 83 | 83/83 | 0 |
-| level-1-2 | 97 | 97/97 | 0 |
-| level-1-3 | 144 | 144/144 | 0 |
+| level-1-2 | 99 | 99/99 | 0 |
+| level-1-3 | 146 | 146/146 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
