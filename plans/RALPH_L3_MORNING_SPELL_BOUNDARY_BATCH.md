@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Fireball area object closure"
     },
     {
@@ -116,7 +116,7 @@ repair branch state by rebasing against `master`.
 | 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | done | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_04_CONTINUAL_FLAME_LIGHT_PROJECTION.md`. |
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | done | none | Enlarge/Reduce creature support is already represented by `spell.invocation-creature-size-change`; object Size and carried/worn item normalization remain outside battle runtime until a generic object/item lifecycle owner exists. |
 | 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | done | none | Levitate loose-object motion remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists. |
-| 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | ready-for-research | none | Do not add object damage unless the reducer has a reachable object boundary. |
+| 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | done | none | Fireball object ignition is reachable through the production `saveGatedDamage` reducer path; automatic area membership, line of effect, object discovery, flammable/unworn discovery, and grid geometry remain table/spatial derivations. |
 | 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | ready-for-research | none | Resolve hidden hazard discovery without duplicating perception/search state. |
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | ready-for-research | none | Separate spell duration/drop behavior from absent spatial/falling engine facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | ready-for-research | none | Resolve shapechanger/shapeshift trigger ownership against current unit/profile facts. |
@@ -210,6 +210,18 @@ objects. Evidence is consolidated in
 Audit flammable object and area-effect support. Promote only if object effects
 are reachable from the real reducer path.
 
+Outcome: Fireball is promoted to `supported-profile` for the existing
+`spell.invocation-damage-save-or-attack` path. Its runtime-owned slice is Magic
+Action and level-3-or-higher Spell Slot casting, caller-supplied point-origin
+Sphere affected-creature facts, Dexterity save-gated Fire damage, slot scaling,
+explicit caller-supplied unattended flammable-object ignition facts, and emitted
+starts-burning outcomes through the production `saveGatedDamage` reducer path.
+Automatic area membership, line of effect, object inventory discovery,
+flammable-material discovery, worn/carried discovery, grid geometry, and ongoing
+Burning hazard damage remain outside the Fireball reducer. Evidence is
+consolidated in
+`plans/unit-profile-coverage/L3MSPELL_07_FIREBALL_AREA_OBJECT_CLOSURE.md`.
+
 ### Task 8 - L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE
 
 Resolve hidden terrain discovery and search-state ownership using RAW and
@@ -237,7 +249,8 @@ Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
 lane, and record remaining spell pressure. Include the Task 3 Continual Flame
 component-boundary note, the Task 4 Continual Flame light-projection evidence
 note, the Task 5 Enlarge/Reduce object-lifecycle note, the Task 6 Levitate
-loose-object boundary note, and regenerated ledgers.
+loose-object boundary note, the Task 7 Fireball area-object closure note, and
+regenerated ledgers.
 
 ## Task Rules
 

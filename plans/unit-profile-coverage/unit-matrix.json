@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 160,
-      "numerator": 160,
+      "denominator": 161,
+      "numerator": 161,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "97.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 160,
-      "numerator": 156,
+      "denominator": 161,
+      "numerator": 157,
       "percent": "97.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 160,
-      "percent": "70.2%"
+      "numerator": 161,
+      "percent": "70.6%"
     }
   },
   "metricSemantics": [
@@ -7082,8 +7082,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 154,
-          "numerator": 154,
+          "denominator": 155,
+          "numerator": 155,
           "percent": "100%"
         }
       },
@@ -8597,6 +8597,34 @@
             }
           ],
           "unitId": "fire_bolt"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
+            }
+          ],
+          "unitId": "fireball"
         },
         {
           "joinStatus": "covered",
@@ -14430,12 +14458,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 135,
-        "profileSubsetSupportedUnits": 19,
+        "profileSubsetSupportedUnits": 18,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 109,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 109,
-        "supportedProfileUnits": 90,
+        "supportedProfileUnits": 91,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -25337,17 +25365,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of effect, object inventory discovery, and grid geometry derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "SRDINV66 table/spatial owner",
+          "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -25361,7 +25383,7 @@
           "slot-scaled Fire damage dice",
           "caller-supplied unattended flammable-object ignition facts emit starts-burning outcomes"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

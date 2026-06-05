@@ -26310,13 +26310,13 @@
         "state": "installed",
         "unitId": "fireball"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
         "owner": "SRDINV66 table/spatial owner",
-        "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
+        "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
       },
       "ownerEvidence": [
         {
@@ -33884,13 +33884,13 @@
         "state": "installed",
         "unitId": "fireball"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
         "owner": "SRDINV66 table/spatial owner",
-        "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
+        "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
       },
       "ownerEvidence": [
         {
