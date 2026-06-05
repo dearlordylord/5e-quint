@@ -26,6 +26,7 @@ import type {
   ActionRestriction,
   ClassName,
   DiceAmount,
+  DiceExpr,
   DamageType,
   EffectAtom,
   EquipmentPredicate,
@@ -323,10 +324,10 @@ export type BattleMagicActionHealingPoolSupportProfile = {
   readonly kind: typeof MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE;
   readonly healingPool: MagicActionHealingPoolProfile;
 };
-export type FixedTwoD6AmountProfile = {
+export type FixedD6AmountProfile = {
   readonly kind: "fixed";
   readonly expr: {
-    readonly dice: 2;
+    readonly dice: 2 | 3 | 4;
     readonly dieSize: 6;
   };
 };
@@ -355,13 +356,13 @@ export type MagicActionAreaSaveDamageHealingProfile = {
   };
   readonly damage: {
     readonly targetSelection: "creaturesOfYourChoiceInArea";
-    readonly amount: FixedTwoD6AmountProfile;
+    readonly amount: FixedD6AmountProfile;
     readonly damageType: "necrotic";
     readonly onSuccess: "halfDamage";
   };
   readonly healing: {
     readonly targetSelection: "oneCreatureOfYourChoiceInArea";
-    readonly amount: FixedTwoD6AmountProfile;
+    readonly amount: FixedD6AmountProfile;
   };
 };
 export type BattleMagicActionAreaSaveDamageHealingSupportProfile = {
@@ -997,7 +998,10 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
 
   const magicActionAreaSaveDamageHealingSupport =
-    battleMagicActionAreaSaveDamageHealingSupportForUnit(input.unit);
+    battleMagicActionAreaSaveDamageHealingSupportForUnit(
+      input.unit,
+      input.classLevels,
+    );
   if (magicActionAreaSaveDamageHealingSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Magic Action area save damage/healing Unit hook: ${input.unit.id}.`,
@@ -2603,11 +2607,15 @@ export function battleMagicActionHealingPoolSupportForUnit(
 
 export function battleMagicActionAreaSaveDamageHealingSupportForUnit(
   unit: UnitRecord,
+  classLevels?: readonly CharacterBattleClassLevel[],
 ): BattleMagicActionAreaSaveDamageHealingSupport {
   if (!hasMagicActionAreaSaveDamageHealingMechanics(unit)) {
     return null;
   }
-  const profile = magicActionAreaSaveDamageHealingProfileForUnit(unit);
+  const profile = magicActionAreaSaveDamageHealingProfileForUnit(
+    unit,
+    classLevels,
+  );
   return profile === null
     ? "unsupported"
     : {
@@ -3087,6 +3095,7 @@ export function magicActionHealingPoolProfileForUnit(
 
 export function magicActionAreaSaveDamageHealingProfileForUnit(
   unit: UnitRecord,
+  classLevels?: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "magicActionAreaSaveDamageHealing" }
@@ -3111,16 +3120,26 @@ export function magicActionAreaSaveDamageHealingProfileForUnit(
     mechanics.save.dc.kind !== "class_spellcasting_spell_save_dc" ||
     mechanics.damage.targetSelection.mode !==
       "creatures_of_your_choice_in_area" ||
-    !fixedTwoD6AmountMatches(mechanics.damage.amount) ||
+    !landsAidScalingAmountMatches(mechanics.damage.amount) ||
     mechanics.damage.damageType !== "necrotic" ||
     mechanics.damage.onSuccess !== "half_damage" ||
     mechanics.healing.targetSelection.mode !==
       "one_creature_of_your_choice_in_area" ||
-    !fixedTwoD6AmountMatches(mechanics.healing.amount)
+    !landsAidScalingAmountMatches(mechanics.healing.amount)
   ) {
     return null;
   }
-  const amount = fixedTwoD6AmountProfile();
+  const druidLevel =
+    classLevels === undefined
+      ? classLevel(unit.acquiredAtLevel)
+      : findCharacterClassLevel(classLevels, unit.className);
+  if (druidLevel === undefined) {
+    return null;
+  }
+  if (druidLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  const amount = landsAidFixedAmountProfile(druidLevel);
   return {
     kind: "magicActionAreaSaveDamageHealing",
     unit,
@@ -3190,15 +3209,70 @@ export function enemyZeroHitPointTemporaryHitPointsProfileForUnit(
   };
 }
 
-function fixedTwoD6AmountProfile(): FixedTwoD6AmountProfile {
-  return { kind: "fixed", expr: { dice: 2, dieSize: 6 } };
+function landsAidFixedAmountProfile(
+  druidLevel: ClassLevel,
+): FixedD6AmountProfile {
+  return {
+    kind: "fixed",
+    expr: { dice: landsAidDiceAtDruidLevel(druidLevel), dieSize: 6 },
+  };
 }
 
-function fixedTwoD6AmountMatches(amount: DiceAmount): boolean {
+function landsAidScalingAmountMatches(amount: DiceAmount): boolean {
   return (
-    amount.kind === "fixed" &&
-    amount.expr.dice === 2 &&
-    amount.expr.dieSize === 6
+    amount.kind === "threshold_tiers" &&
+    amount.axis === "class" &&
+    amount.base.dice === 2 &&
+    amount.base.dieSize === 6 &&
+    amount.base.flat === undefined &&
+    amount.base.spellcastingMod === undefined &&
+    amount.base.abilityModifier === undefined &&
+    sameDiceExprDeltaTiers(amount.tiers, [
+      { atLevel: 10, override: { dice: 3 } },
+      { atLevel: 14, override: { dice: 4 } },
+    ])
+  );
+}
+
+function landsAidDiceAtDruidLevel(druidLevel: ClassLevel): 2 | 3 | 4 {
+  if (Number(druidLevel) >= 14) return 4;
+  if (Number(druidLevel) >= 10) return 3;
+  return 2;
+}
+
+function sameDiceExprDeltaTiers(
+  actual: readonly {
+    readonly atLevel: number;
+    readonly override: Partial<DiceExpr>;
+  }[],
+  expected: readonly {
+    readonly atLevel: number;
+    readonly override: Partial<DiceExpr>;
+  }[],
+): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((tier, index) => {
+      const expectedTier = expected[index];
+      return (
+        expectedTier !== undefined &&
+        tier.atLevel === expectedTier.atLevel &&
+        sameDiceExprDelta(tier.override, expectedTier.override)
+      );
+    })
+  );
+}
+
+function sameDiceExprDelta(
+  actual: Partial<DiceExpr>,
+  expected: Partial<DiceExpr>,
+): boolean {
+  return (
+    actual.dice === expected.dice &&
+    actual.dieSize === expected.dieSize &&
+    actual.flat === expected.flat &&
+    actual.spellcastingMod === expected.spellcastingMod &&
+    actual.abilityModifier === expected.abilityModifier
   );
 }
 
@@ -3905,7 +3979,7 @@ export function parseSupportedUnitFeatureProfile(
     failedAbilityCheckResourceBoostProfileForUnit(unit) ??
     spellSlotHealingModifierProfileForUnit(unit) ??
     magicActionHealingPoolProfileForUnit(unit) ??
-    magicActionAreaSaveDamageHealingProfileForUnit(unit) ??
+    magicActionAreaSaveDamageHealingProfileForUnit(unit, classLevels) ??
     enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit) ??
     bonusActionDelegatedStandardActionsProfileForUnit(unit) ??
     remarkableAthleteProfileForUnit(unit) ??

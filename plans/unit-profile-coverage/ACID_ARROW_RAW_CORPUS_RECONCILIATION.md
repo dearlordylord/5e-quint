@@ -2,12 +2,19 @@
 
 Date: 2026-05-22
 
+Ralph L3 residual Task 4 update: 2026-06-05
+
 ## Decision
 
-Task 22 is blocked on owner input. Do not admit `acid_arrow` into the installed
-Unit catalog, do not repair its Surface damage shape, and do not promote delayed
-runtime support until the owner approves a local SRD corpus correction or an
-`ASSUMPTIONS.md` entry for the damage relationship.
+The Acid Arrow RAW reconciliation remains blocked on owner input. Do not admit
+`acid_arrow` into the installed Unit catalog, do not repair its Surface damage
+shape, and do not promote delayed runtime support until the owner approves a
+local SRD corpus correction or an `ASSUMPTIONS.md` entry for the damage
+relationship.
+
+Ralph Task 4 (`L3RES-04-ACID-ARROW-RAW-RECONCILIATION`) closes by recording
+this unresolved disposition. Ralph Tasks 5 and 6 remain blocked; there is no
+owner-approved executable RAW decision to feed Surface authoring or runtime.
 
 This task does not add a modeling assumption itself. `ASSUMPTIONS.md` is an
 owner-curated boundary, and the local SRD 5.2.1 passage is insufficient to
@@ -36,8 +43,13 @@ and places it at the end of the target's next turn. The local passage does not
 define the missing initial hit damage or a separate later-damage amount.
 
 Checked `.references/srd-5.2.1-conversion/07-spells.md`; it does not provide an
-Acid Arrow-specific conversion note. Checked `.references/srd/`; no archived SRD
-Acid Arrow passage is present in the local corpus.
+Acid Arrow-specific conversion note. Checked `.references/srd/Spells/Acid
+Arrow.md` and `.references/srd/Spells (Alt)/Spells A.md`; the archived local
+SRD 5.1 corpus does contain immediate hit damage, later hit damage, miss damage,
+and higher-slot scaling text. That archived text is useful evidence that the
+active SRD 5.2.1 passage may be a local corpus regression, but it is not an
+owner-approved SRD 5.2.1 correction or `ASSUMPTIONS.md` entry. The active
+runtime-facing decision therefore remains unresolved.
 
 ## Ubiquitous Language Check
 
@@ -91,27 +103,29 @@ miss and higher-level clauses, but the hit branch omits an explicit initial
 damage amount and does not separately define the later damage amount. This entry
 is the owner-approved corpus reconciliation for that local contradiction.
 
-**Changes:** Task 23 may repair `packages/surface/content/acid_arrow.dhall` and
-generated JSON to encode the approved initial, miss, later, and higher-level
-damage facts. Task 24 may then promote delayed runtime support against the
-repaired Surface shape.
+**Changes:** Ralph Task 5 may repair
+`packages/surface/content/acid_arrow.dhall` and generated JSON to encode the
+approved initial, miss, later, and higher-level damage facts. Ralph Task 6 may
+then promote delayed runtime support against the repaired Surface shape.
 ```
 
 ## Plan Impact
 
-- Task 22 should be marked `blocked` unless the owner supplies the decision
-  above in the decider pass.
-- Task 23 remains blocked on Task 22 because Surface authoring cannot honestly
-  encode immediate, miss, delayed, or slot-scaled damage facts without the owner
-  decision.
-- Task 24 remains blocked on Task 23 because runtime support must project from
-  the repaired Surface shape rather than dispatch on Acid Arrow identity.
+- Task 4 can be marked `done`: it rechecked the local SRD 5.2.1 spell text,
+  local conversion notes, archived local SRD corpus, `ASSUMPTIONS.md`, and
+  ubiquitous-language terms, and found no owner-approved executable decision.
+- Task 5 remains `blocked`: Surface authoring cannot honestly encode immediate,
+  miss, delayed, or slot-scaled damage facts without the owner decision.
+- Task 6 remains `blocked`: runtime support must project from the repaired
+  Surface shape rather than dispatch on Acid Arrow identity.
 
 ## Verification
 
-- `pnpm unit-profile-coverage:check` passed: Unit profile coverage OK, 246
-  Units and 130 profiles.
-- `git diff --cached --check` passed in the integration worktree.
+- `git diff --check` passed.
+- `pnpm quality` passed, including authored-identity dispatch,
+  QA-generated-identity self-test, MBT driver closure, rules-kernel coverage,
+  unit-profile coverage, lint, circular dependency checks, and typecheck. Unit
+  profile coverage reported 274 Units and 148 profiles.
 - MBT was not run because this reconciliation changes no runtime, Quint, or MBT
   bridge behavior.
 

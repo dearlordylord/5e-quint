@@ -7,25 +7,25 @@
     {
       "number": 1,
       "id": "L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reconcile merged class-feature tracer bullet evidence"
     },
     {
       "number": 2,
       "id": "L3RES-02-DRUID-LANDS-AID-SCALING",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Druid Land's Aid level scaling"
     },
     {
       "number": 3,
       "id": "L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit and close or promote Sacred Weapon residual runtime"
     },
     {
       "number": 4,
       "id": "L3RES-04-ACID-ARROW-RAW-RECONCILIATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Resolve Acid Arrow RAW corpus contradiction"
     },
     {
@@ -43,14 +43,50 @@
     {
       "number": 7,
       "id": "L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Wild Shape retained statistics follow-up"
     },
     {
       "number": 8,
       "id": "L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate residual level-3 golden evidence"
+    },
+    {
+      "number": 9,
+      "id": "L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
+      "status": "done",
+      "title": "Project Wild Shape sense language and speech facts"
+    },
+    {
+      "number": 10,
+      "id": "L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT",
+      "status": "done",
+      "title": "Promote Wild Shape object anatomy and equipment disposition"
+    },
+    {
+      "number": 11,
+      "id": "L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY",
+      "status": "blocked",
+      "title": "Resolve Wild Shape active form persistence boundary"
+    },
+    {
+      "number": 12,
+      "id": "L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION",
+      "status": "ready-for-implementation",
+      "title": "Implement shared creature perception communication projection"
+    },
+    {
+      "number": 13,
+      "id": "L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER",
+      "status": "ready-for-implementation",
+      "title": "Implement Wild Shape equipment disposition owner"
+    },
+    {
+      "number": 14,
+      "id": "L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS",
+      "status": "blocked",
+      "title": "Promote Wild Shape worn-equipment and object-handling consumers"
     }
   ]
 }
@@ -87,14 +123,20 @@ owns branch repair.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | ready-for-implementation-after-light-research | none | Evidence-only cleanup for class-feature runtime work already merged. |
-| 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | ready-for-implementation-after-light-research | none | Independent runtime/spec scaling slice after level-3 Land's Aid runtime exists. |
-| 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | ready-for-implementation-after-light-research | none | Only implement missing behavior if the merged Sacred Weapon work did not already cover it. |
-| 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | ready-for-implementation-after-light-research | none | RAW/ASSUMPTIONS boundary task; must not invent damage semantics. |
-| 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION | Run only after Task 4 records an executable RAW decision. |
-| 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
-| 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | ready-for-implementation-after-light-research | none | Prefer precise split/closure unless an existing owner makes a small executable slice obvious. |
-| 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | blocked | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation only after the independent residual slices close. |
+| 1 | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE - Reconcile merged class-feature tracer bullet evidence | done | none | Evidence-only cleanup for class-feature runtime work already merged. |
+| 2 | L3RES-02-DRUID-LANDS-AID-SCALING - Promote Druid Land's Aid level scaling | done | none | Land's Aid level 10 and 14 damage/healing scaling is promoted through Surface, runtime projection, focused tests, selected-identity MBT, and coverage ledgers. |
+| 3 | L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT - Audit and close or promote Sacred Weapon residual runtime | done | none | Closed by the merged evidence reconciliation: Sacred Weapon residual runtime evidence is already covered. |
+| 4 | L3RES-04-ACID-ARROW-RAW-RECONCILIATION - Resolve Acid Arrow RAW corpus contradiction | done | none | Closed as an ASSUMPTIONS-ready owner-decision blocker; no Acid Arrow runtime or Surface repair was modeled. |
+| 5 | L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry | Run only after the owner approves an executable initial/later/miss/slot-scaling damage relationship. |
+| 6 | L3RES-06-ACID-ARROW-DELAYED-RUNTIME - Promote Acid Arrow delayed runtime | blocked | owner-approved Acid Arrow RAW corpus correction or `ASSUMPTIONS.md` entry, L3RES-05-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Runtime only after RAW and Surface shape are settled. |
+| 7 | L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT - Split Wild Shape retained statistics follow-up | done | none | Closed by replacing the broad retained-statistics blocker with narrower Wild Shape follow-up owners and an ASSUMPTIONS-backed active-form persistence closure. |
+| 8 | L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION - Consolidate residual level-3 golden evidence | ready-for-implementation | L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE, L3RES-02-DRUID-LANDS-AID-SCALING, L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT, L3RES-04-ACID-ARROW-RAW-RECONCILIATION, L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT | Consolidation can now run over the closed independent residual slices while keeping the split Wild Shape follow-ups visible as future owner tasks. |
+| 9 | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION - Project Wild Shape sense language and speech facts | done | none | Closed by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`: shared creature projection should derive senses, retained languages, and speech blocking from existing active-form, Character Build, Stat Block, and condition facts. |
+| 10 | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT - Promote Wild Shape object anatomy and equipment disposition | done | none | Closed by `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`: Wild Shape equipment disposition should be a battle-runtime owner derived from existing selected loadout and typed caller/GM witnesses, with no Wild Shape-local inventory or authored-form identity table. |
+| 11 | L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY - Resolve Wild Shape active form persistence boundary | blocked | future session active-effect persistence owner or owner-approved `ASSUMPTIONS.md` revision | Existing Character Sheet handoff rejection remains correct under A27 until the repo owns cross-session active-form persistence. |
+| 12 | L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION - Implement shared creature perception communication projection | ready-for-implementation | L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | Implement the shared battle-runtime projection described in `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`; do not wire it into visibility, Mirror Image, app, or MCP consumers until those owners are promoted. |
+| 13 | L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER - Implement Wild Shape equipment disposition owner | ready-for-implementation | L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT | Implement the first battle-runtime owner described in `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`: loadout object identity repair, disposition hole/fill validation, active-effect disposition storage, all-merged parity, and fallen-equipment boundary outcomes. |
+| 14 | L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS - Promote Wild Shape worn-equipment and object-handling consumers | blocked | L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER | Only run after the disposition owner exists; then promote effective-loadout projection for worn equipment and object/Utilize consumers for the form-limb witness. |
 
 ## Global Acceptance Criteria
 
@@ -153,7 +195,7 @@ must repeat until no reasonable findings remain.
 
 ### Task 1 - L3RES-01-RECONCILE-MERGED-CLASS-FEATURE-EVIDENCE
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Reconcile stale Level 1-3 blocker rows for class-feature runtime work already
 merged through the promoted-unit and class-feature lanes.
@@ -179,7 +221,18 @@ Expected outputs:
 
 ### Task 2 - L3RES-02-DRUID-LANDS-AID-SCALING
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- Land's Aid damage/healing scaling is modeled as class-axis threshold dice in
+  the Surface content and projected to fixed 2d6, 3d6, or 4d6 executable
+  profiles from existing Druid class-level facts.
+- Focused battle-runtime tests and the selected-identity MBT witness cover
+  Druid levels 3, 10, and 14, including rejection of fills whose dice counts do
+  not match the derived class-level threshold.
+- Unit/profile coverage ledgers no longer carry the level 10 and 14 scaling as
+  deferred Land's Aid behavior.
 
 Promote Land's Aid Druid level 10 and 14 damage/healing dice scaling now that
 the level-3 runtime owner exists.
@@ -204,7 +257,15 @@ Expected outputs:
 
 ### Task 3 - L3RES-03-PALADIN-SACRED-WEAPON-RESIDUAL-AUDIT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- Task 1 evidence reconciliation confirmed the remaining Sacred Weapon runtime
+  row was stale: activation, retained active weapon binding, attack-roll bonus,
+  normal-or-Radiant damage choice, light projection, dismissal/not-carried
+  cleanup, duration cleanup, QNT ownership, focused tests, and selected-identity
+  evidence are already represented in the ledgers.
 
 Audit the merged Sacred Weapon activation/runtime work against the remaining
 follow-up row and either close the stale row or promote the missing residual
@@ -227,7 +288,20 @@ Expected outputs:
 
 ### Task 4 - L3RES-04-ACID-ARROW-RAW-RECONCILIATION
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- The active local SRD 5.2.1 Acid Arrow passage still contradicts itself: the
+  hit branch gives only 4d4 Acid damage at the end of the target's next turn,
+  while the miss and higher-slot clauses refer to initial and later damage.
+- `.references/srd-5.2.1-conversion/07-spells.md` has no Acid Arrow-specific
+  conversion note. The archived local SRD 5.1 Acid Arrow text does contain
+  immediate hit damage, later hit damage, miss damage, and higher-slot scaling,
+  but that archived corpus is not an owner-approved SRD 5.2.1 correction.
+- `ASSUMPTIONS.md` contains no Acid Arrow damage relationship decision, so
+  Tasks 5 and 6 remain blocked on owner approval of either a local corpus
+  correction or an `ASSUMPTIONS.md` entry.
 
 Resolve the local SRD Acid Arrow damage contradiction without inventing
 mechanics.
@@ -252,8 +326,8 @@ Expected outputs:
 
 Status: `blocked`
 
-Repair Acid Arrow's Surface damage shape after Task 4 establishes executable RAW
-semantics.
+Repair Acid Arrow's Surface damage shape after the owner approves executable RAW
+semantics for the initial, later, miss, and slot-scaling damage relationship.
 
 Required behavior:
 
@@ -271,7 +345,8 @@ Expected outputs:
 
 Status: `blocked`
 
-Promote Acid Arrow runtime after RAW and Surface shape are settled.
+Promote Acid Arrow runtime after the owner-approved RAW decision and Surface
+shape are settled.
 
 Required behavior:
 
@@ -291,7 +366,21 @@ Expected outputs:
 
 ### Task 7 - L3RES-07-WILD-SHAPE-RETAINED-STATISTICS-SPLIT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
+
+Closure:
+
+- RAW review split the old retained-statistics blocker into three durable
+  follow-up owners: sense/language/speech projection, object/anatomy/equipment
+  disposition, and active-form persistence.
+- No narrow executable owner was promoted in this task because the remaining
+  non-D20 projection work needs shared creature perception/communication,
+  equipment/loadout, form-anatomy, GM-witness, or session active-effect
+  ownership before runtime consumers can claim it without duplicate Wild Shape
+  state.
+- Active Wild Shape non-battle persistence remains closed at the Character
+  Sheet handoff boundary by `ASSUMPTIONS.md` A27 unless a future task revises
+  that assumption and introduces a session active-effect persistence owner.
 
 Split the remaining Wild Shape retained-statistics blocker into executable
 owners or precise closures.
@@ -316,7 +405,7 @@ Expected outputs:
 
 ### Task 8 - L3RES-08-RESIDUAL-LEDGER-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Consolidate the residual lane after the independent tasks close.
 
@@ -327,3 +416,208 @@ Required behavior:
 - keep true residuals visible in `LEVEL1_3_FULL_SUPPORT.md`,
   `UNIT_REPORT.md`, and task claims;
 - re-run both coverage generators and gates.
+
+### Task 9 - L3RES-09-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
+
+Status: `done`
+
+Closure:
+
+- Research completed in `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`.
+- The shared owner should be a battle-runtime creature projection, not
+  Wild Shape-local sense, language, or speech fields.
+- The implementation task should derive Beast-form special senses from the
+  active Wild Shape form, retained languages from existing Character Build
+  language facts threaded through battle initialization, and speech blocking
+  from `isIncapacitated`.
+
+Research and design the shared projection owner for Wild Shape senses,
+languages, and speech.
+
+Required behavior:
+
+- read Wild Shape RAW, Stat Block `Senses` and `Languages` glossary entries,
+  and `UBIQUITOUS_LANGUAGE.md` speech-blocking condition language;
+- inspect existing Character Sheet language facts, active-form facts, Stat
+  Block projection, condition/speech blockers, app views, MCP views, and battle
+  consumers before adding any state;
+- derive Beast-form special Senses and retained character languages/speech from
+  existing active-form, Character Sheet, Stat Block, and condition facts;
+- do not add Wild Shape-local duplicate sense or language fields, and do not
+  dispatch on authored Wild Shape identity.
+
+Expected outputs:
+
+- a concrete implementation plan for typed shared creature
+  perception/communication projection APIs and focused tests;
+- if the research finds an already-local owner, promote only that narrow owner
+  with focused tests and generated coverage evidence.
+
+### Task 10 - L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT
+
+Status: `done`
+
+Closure:
+
+- Research completed in `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`.
+- The Wild Shape equipment-disposition owner should derive candidates from
+  `origin.selectedLoadout`, not from a copied Wild Shape inventory or durable
+  `equipment.owned`.
+- `CharacterBattleLoadoutRef` already preserves weapon item identity, but armor
+  and shield refs are currently bare Unit ids. The implementation must repair
+  that boundary before per-object armor or shield disposition and fallen-object
+  outcomes can be correct.
+- Form-limb object handling and equipment practicality are typed caller/GM
+  witness facts, not authored Beast identity behavior. Fallen Wild Shape
+  equipment needs a Wild Shape-specific outcome or a generic source union; the
+  current spell-sourced `BattleDroppedObjectOutcome` is not the right boundary.
+
+Research and design the Wild Shape Objects rule owner for form-limb object
+handling and equipment disposition.
+
+Required behavior:
+
+- read Wild Shape Objects RAW and inspect equipment/loadout, active-form,
+  object-handling, battle, app, and MCP owners before adding any state;
+- model the player choice among falling, merging, or worn equipment only through
+  an owner that can derive from existing loadout and active-form facts;
+- represent GM practicality and cannot-wear outcomes as typed caller/GM
+  witnesses rather than inferred authored identity behavior;
+- preserve RAW no-resize/no-reshape and merged-equipment no-effect semantics
+  without adding parallel equipment inventories to Wild Shape state.
+
+Expected outputs:
+
+- a concrete implementation plan for typed equipment-disposition and
+  object-handling workflow APIs with focused tests;
+- if the research finds an already-local owner, promote only that narrow owner
+  with generated owner evidence and any needed QNT/runtime parity.
+
+### Task 11 - L3RES-11-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-BOUNDARY
+
+Status: `blocked`
+
+Resolve active Wild Shape persistence across non-battle time only after the repo
+has either a future session active-effect persistence owner or owner approval to
+revise `ASSUMPTIONS.md` A27.
+
+Required behavior:
+
+- preserve the existing Character Sheet handoff rejection while A27 remains in
+  force;
+- if the blocker is cleared, derive active-form identity and remaining
+  half-Druid-level duration from the Surface feature, Druid level, and active
+  form facts without duplicating true-form or Stat Block state;
+- update `ASSUMPTIONS.md`, Character Battle handoff, focused tests, and coverage
+  ledgers together if persistence is promoted.
+
+Expected outputs:
+
+- either a retained typed handoff rejection with assumption-backed evidence, or
+  an owner-approved session persistence model with focused runtime tests and any
+  required QNT/MBT parity.
+
+### Task 12 - L3RES-12-WILD-SHAPE-PERCEPTION-COMMUNICATION-IMPLEMENTATION
+
+Status: `ready-for-implementation`
+
+Implement the shared creature perception/communication projection designed by
+Task 9.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors named in
+  `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md` before coding;
+- thread existing Character Build language facts through character battle
+  initialization without adding Wild Shape-local duplicate language state;
+- add a shared battle-runtime projection helper that derives ordinary Stat
+  Block senses/language text, active Wild Shape Beast-form special senses,
+  retained character languages, and retained character speech blocked by
+  `isIncapacitated`;
+- keep Stat Block `languages` as authored text until a separate parser owns
+  entries such as `None`, `caster_languages`, and cannot-speak prose;
+- do not wire the projection into visibility, Mirror Image, app, or MCP
+  consumers in this task.
+
+Expected outputs:
+
+- typed battle-runtime projection APIs and focused runtime tests for Stat Block,
+  character, Incapacitated character, and active Wild Shape cases;
+- character-battle initialization tests proving origin and class-feature
+  language threading;
+- coverage evidence only for the promoted projection claim, with no battle MBT
+  unless a reducer behavior consumer is added.
+
+### Task 13 - L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER
+
+Status: `ready-for-implementation`
+
+Implement the first Wild Shape equipment-disposition owner described in
+`plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors in
+  `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md` before coding;
+- repair `CharacterBattleLoadoutRef["armor" | "shield"]` to carry the existing
+  Character Build item id plus the equipment Unit id, matching weapon refs,
+  without synthesizing inventory identity;
+- derive Wild Shape equipment candidates from `origin.selectedLoadout` only:
+  armor, shield, main weapon, and off-hand weapon when present;
+- expose and fill a typed Wild Shape equipment-disposition battle hole when
+  candidates are non-empty, validating unknown, duplicated, and missing item
+  choices as typed fill failures;
+- represent form-limb object handling and GM wear practicality as typed
+  caller/GM witnesses, with `notPracticalToWear` forced to a fall-or-merge
+  fallback before storing the active disposition;
+- store only completed active-form equipment dispositions on the active Wild
+  Shape effect; do not add equipment fields to `BattleState`, character build,
+  character sheet, or Wild Shape local state;
+- preserve all-merged Wild Shape lifecycle behavior and make merged and fallen
+  equipment have no AC, shield, weapon, magic-item, or hand-use effect while
+  active;
+- return a Wild Shape-specific fallen-equipment boundary outcome, or introduce a
+  generic dropped-equipment source union that includes `druidWildShape`; do not
+  reuse the current spell-sourced `BattleDroppedObjectOutcome`.
+
+Expected outputs:
+
+- focused character-battle projection tests for armor/shield item identity;
+- focused Wild Shape equipment candidate, fill-validation, all-merged, and
+  all-falls runtime tests;
+- App/MCP battle-fill plumbing only where needed to pass typed witness values
+  through existing battle APIs, with no local practicality inference;
+- QNT/rule-core witness and focused MBT only if the active-effect shape or
+  subject protocol changes are observed by existing parity bridges;
+- coverage artifacts updated only for behavior that is production-reachable and
+  tested.
+
+### Task 14 - L3RES-14-WILD-SHAPE-WORN-EQUIPMENT-OBJECT-CONSUMERS
+
+Status: `blocked`
+
+Promote worn-equipment combat consequences and form-limb object-handling
+consumers after `L3RES-13-WILD-SHAPE-EQUIPMENT-DISPOSITION-OWNER` exists.
+
+Required behavior:
+
+- re-read the RAW and ubiquitous-language anchors in
+  `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md` before coding;
+- derive an effective combat loadout from the active Wild Shape equipment
+  disposition, where worn equipment can function normally only after typed GM
+  practicality was supplied and merged/fallen equipment has no effect;
+- wire form-limb object handling into object/Utilize workflows through the
+  stored limb witness, not through authored Beast ids, names, recommended-form
+  ids, size tables, or provenance sections;
+- update App and MCP consumers only to surface the shared battle workflow and
+  typed witness choices; they must not infer practicality locally;
+- update QNT/runtime parity because AC, attack, hand-use, and action/object
+  availability can change.
+
+Expected outputs:
+
+- focused runtime tests for worn armor, shield, weapon, and object-handling
+  consequences in active Wild Shape;
+- QNT/rule-core parity evidence and focused MBT where the promoted behavior
+  touches existing battle-runtime bridges;
+- coverage artifacts updated only for production-reachable behavior.

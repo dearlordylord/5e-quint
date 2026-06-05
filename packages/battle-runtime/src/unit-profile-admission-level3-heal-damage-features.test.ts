@@ -201,6 +201,15 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       kind: "fixed",
       expr: { dice: 2, dieSize: 6 },
     } as const;
+    const landsAidScalingAmount = {
+      kind: "threshold_tiers",
+      axis: "class",
+      base: { dice: 2, dieSize: 6 },
+      tiers: [
+        { atLevel: 10, override: { dice: 3 } },
+        { atLevel: 14, override: { dice: 4 } },
+      ],
+    } as const;
     const supportProfile = {
       kind: MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
       damageHealing: {
@@ -235,6 +244,12 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(battleMagicActionAreaSaveDamageHealingSupportForUnit(unit)).toEqual(
       supportProfile,
     );
+    expect(unit).toMatchObject({
+      mechanics: {
+        damage: { amount: landsAidScalingAmount },
+        healing: { amount: landsAidScalingAmount },
+      },
+    });
     expect(
       parseSupportedUnitFeatureProfile(unit, [
         { className: "druid", level: classLevel(3) },
@@ -244,6 +259,39 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
         kind: "magicActionAreaSaveDamageHealing",
         unit,
         damageHealing: supportProfile.damageHealing,
+      }),
+    );
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "druid", level: classLevel(10) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        damageHealing: expect.objectContaining({
+          damage: expect.objectContaining({
+            amount: { kind: "fixed", expr: { dice: 3, dieSize: 6 } },
+          }),
+          healing: expect.objectContaining({
+            amount: { kind: "fixed", expr: { dice: 3, dieSize: 6 } },
+          }),
+        }),
+      }),
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "druid", level: classLevel(14) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        damageHealing: expect.objectContaining({
+          damage: expect.objectContaining({
+            amount: { kind: "fixed", expr: { dice: 4, dieSize: 6 } },
+          }),
+          healing: expect.objectContaining({
+            amount: { kind: "fixed", expr: { dice: 4, dieSize: 6 } },
+          }),
+        }),
       }),
     );
   });
@@ -271,6 +319,38 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
       battleMagicActionAreaSaveDamageHealingSupportForUnit(
         unitLibrary.requireUnit(fighterSecondWindUnitId),
       ),
+    ).toBeNull();
+  });
+
+  test("druid_lands_aid rejects malformed Druid-level scaling", () => {
+    const unit = unitLibrary.requireUnit(druidLandsAidUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "magic_action_area_save_damage_healing"
+    ) {
+      throw new Error("Expected Land's Aid damage/healing mechanics.");
+    }
+    const malformedUnit = unitMechanicsVariant(unit, {
+      id: "druid_lands_aid_wrong_scaling",
+      mechanics: {
+        ...unit.mechanics,
+        damage: {
+          ...unit.mechanics.damage,
+          amount: {
+            ...unit.mechanics.damage.amount,
+            tiers: [{ atLevel: 10, override: { dice: 4 } }],
+          },
+        },
+      },
+    });
+
+    expect(
+      battleMagicActionAreaSaveDamageHealingSupportForUnit(malformedUnit),
+    ).toBe("unsupported");
+    expect(
+      parseSupportedUnitFeatureProfile(malformedUnit, [
+        { className: "druid", level: classLevel(10) },
+      ]),
     ).toBeNull();
   });
 
