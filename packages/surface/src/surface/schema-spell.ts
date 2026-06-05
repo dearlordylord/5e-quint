@@ -423,6 +423,13 @@ type SavingThrowSourceFilter = Schema.Schema.Type<
 type ActionRestriction = Schema.Schema.Type<typeof ActionRestrictionSchema>;
 type ActionEconomyKind = "action" | "bonus_action" | "reaction";
 type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
+type TargetEffectEscapeAction = {
+  readonly kind: "target_effect_escape_action";
+  readonly actor: "another_creature";
+  readonly cost: "action";
+  readonly method: "shake_awake";
+  readonly outcome: "end_current_effect";
+};
 type AlternateActionCost = Schema.Schema.Type<typeof AlternateActionCostSchema>;
 type ExileDestination =
   | "demiplane"
@@ -737,6 +744,7 @@ type EffectAtom =
       readonly whileCondition?: Condition;
       readonly duration?: "current_turn" | "spell_duration";
     }
+  | TargetEffectEscapeAction
   | {
       readonly kind: "command_target_next_turn";
       readonly execution: "target_next_turn";
@@ -1798,6 +1806,9 @@ export const AreaOccupantDispositionFilterSchema = Schema.Literal(
   "friendly_to_source",
   "hostile_to_source",
 );
+export const AreaOccupantPerceptionFilterSchema = Schema.Literal(
+  "can_see_area_effect",
+);
 
 export const TargetCountSlotScalingSchema = Schema.Struct({
   kind: Schema.Literal("linear"),
@@ -2093,6 +2104,7 @@ export const AreaAttachmentBaseSchema = Schema.Struct({
   origin: AreaOriginSchema,
   selection: optionalExact(TargetSelectionSchema),
   occupantDispositionFilter: optionalExact(AreaOccupantDispositionFilterSchema),
+  occupantPerceptionFilter: optionalExact(AreaOccupantPerceptionFilterSchema),
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
@@ -2648,6 +2660,13 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         duration: optionalExact(
           Schema.Literal("current_turn", "spell_duration"),
         ),
+      }),
+      strictStruct({
+        kind: Schema.Literal("target_effect_escape_action"),
+        actor: Schema.Literal("another_creature"),
+        cost: Schema.Literal("action"),
+        method: Schema.Literal("shake_awake"),
+        outcome: Schema.Literal("end_current_effect"),
       }),
       strictStruct({
         kind: Schema.Literal("command_target_next_turn"),

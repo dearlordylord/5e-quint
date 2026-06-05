@@ -43,13 +43,13 @@
     {
       "number": 7,
       "id": "L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Repair Hypnotic Pattern typed escape Surface shape"
     },
     {
       "number": 8,
       "id": "L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Promote Hypnotic Pattern control runtime after Surface repair"
     },
     {
@@ -139,8 +139,8 @@ owns branch repair.
 | 4 | L3SPELL-04-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Promote or close stat-block shapechanger true-form reversion owner | done | none | Closed as outside promoted battle runtime because SRD Shape-Shift specials lack a structured active-form owner. |
 | 5 | L3SPELL-05-DISPEL-BROADER-ONGOING-EFFECTS - Promote broader Dispel Magic ongoing effect ending | done | none | Spiritual Weapon tracked active-effect occurrences are now covered by the existing Dispel Magic ongoing-effect gate. |
 | 6 | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT - Split Antimagic Field prevention and broader suppression owners | done | none | Split into owner-specific executable follow-up rows. |
-| 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | ready-for-implementation-after-light-research | none | Surface repair prerequisite for Task 8. |
-| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | blocked | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Requires the typed escape Surface shape from Task 7. |
+| 7 | L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Repair Hypnotic Pattern typed escape Surface shape | done | none | Surface repair prerequisite for Task 8 is complete. |
+| 8 | L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Promote Hypnotic Pattern control runtime after Surface repair | ready-for-implementation-after-light-research | none | Surface repair is complete; runtime promotion can start. |
 | 9 | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION - Antimagic Field aura action interdiction | ready-for-implementation-after-light-research | L3SPELL-06-ANTIMAGIC-PREVENTION-BOUNDARY-SPLIT | Establishes typed aura-membership witnesses and shared spellcasting/Magic Action interdiction. |
 | 10 | L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION - Antimagic Field magical targeting and effect interdiction | blocked | L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION | Requires the shared aura-membership witness from Task 9. |
 | 11 | L3-FOLLOWUP-ANTIMAGIC-MAGIC-ITEM-SUPPRESSION - Antimagic Field magic item suppression | blocked | future magic-item runtime owner | Requires represented magic item records, equipment/attunement state, and property projection. |
@@ -375,7 +375,7 @@ Result:
 
 ### Task 7 - L3SPELL-07-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Repair Hypnotic Pattern Surface shape before runtime admission.
 
@@ -391,9 +391,20 @@ Expected outputs:
 
 - Surface/unit catalog tests and honest runtime follow-up.
 
+Result:
+
+- encoded Hypnotic Pattern's 30-foot Cube, sight-gated affected-creature
+  predicate, failed-save Charmed/Incapacitated/Speed 0 bundle, target-damage
+  early end, and another-creature Action shake-awake escape as typed Surface
+  facts;
+- updated Dhall, generated JSON, schema/tracer handling, focused Surface catalog
+  coverage, and generated unit-profile artifacts;
+- left runtime behavior unpromoted and kept Task 8 as the executable runtime
+  follow-up.
+
 ### Task 8 - L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 After Task 7, promote Hypnotic Pattern runtime.
 

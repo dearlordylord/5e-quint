@@ -32330,13 +32330,6 @@
       "claim": {
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
-            "mechanic": "Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior.",
-            "owner": "Surface Spell Definition authoring and Unit catalog admission boundary",
-            "requiredOutput": "Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.",
-            "title": "Hypnotic Pattern Surface Escape Repair"
-          },
-          {
             "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
             "mechanic": "Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch.",
             "owner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
@@ -32344,8 +32337,8 @@
             "title": "Hypnotic Pattern Control Runtime"
           }
         ],
-        "futureProfileOwner": "Surface sight/escape authoring plus battle-runtime save-gated composite condition/effect lifecycle and promoted Quint parity",
-        "reason": "The installed SRD 5.2.1 Hypnotic Pattern Surface Spell Definition encodes Action level-3 Spell Slot casting, 120-foot range, caster-owned Concentration up to 1 minute, a point-origin 30-foot Cube, Wisdom Saving Throw, failed-save Charmed condition, Incapacitated projection while Charmed, Speed 0 while Charmed, and target-specific ending when the affected target takes damage. No promoted battle-runtime profile exists yet because exact support needs structured Surface facts for sight-gated affected creatures and another-creature action-spend shake-awake escape, plus a source-owned runtime target effect that keeps Charmed, Incapacitated, and Speed 0 linked without duplicating independent condition or Speed sources.",
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
+        "reason": "The installed SRD 5.2.1 Hypnotic Pattern Surface Spell Definition encodes Action level-3 Spell Slot casting, 120-foot range, caster-owned Concentration up to 1 minute, a point-origin 30-foot Cube with a sight-gated affected-creature predicate, Wisdom Saving Throw, failed-save Charmed condition, Incapacitated projection while Charmed, Speed 0 while Charmed, target-specific ending when the affected target takes damage, and another-creature action-spend shake-awake escape. No promoted battle-runtime profile exists yet because exact support still needs Unit catalog/runtime admission, caller-supplied Cube affected-creature and sight witnesses, a source-owned runtime target effect that keeps Charmed, Incapacitated, and Speed 0 linked without duplicating independent condition or Speed sources, damage cleanup, shake-awake cleanup, duration cleanup, and promoted Quint/runtime parity without authored-identity dispatch.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

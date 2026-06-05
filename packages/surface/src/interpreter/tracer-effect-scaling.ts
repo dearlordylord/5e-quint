@@ -79,6 +79,7 @@ export function traceEffectAtomScaling(
     case "apply_condition":
     case "apply_condition_while_in_area_or_until_escape":
     case "suppress_condition_self_end":
+    case "target_effect_escape_action":
     case "restrict_action_usage":
     case "command_target_next_turn":
     case "forced_reaction_movement":

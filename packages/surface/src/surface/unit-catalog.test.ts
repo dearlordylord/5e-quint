@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
+import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
@@ -3954,6 +3955,63 @@ describe("SRD Unit catalog boundary", () => {
           onSuccess: "ends_on_target",
         },
       ]);
+    }
+  });
+
+  test("decodes Hypnotic Pattern as sight-gated Cube control with typed target escapes", () => {
+    const hypnoticPatternCollection = defineSrdUnitCollection({
+      units: [assertSrd521Unit(decodeUnitRecordSync(hypnoticPatternInput))],
+    });
+    const result = buildUnitCatalog({
+      collections: [hypnoticPatternCollection],
+    });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const hypnoticPattern = result.catalog.requireUnit("hypnotic_pattern");
+      expect(hypnoticPattern.kind).toBe("spell");
+      if (hypnoticPattern.kind !== "spell") return;
+      expect(hypnoticPattern.mechanics.family).toBe("activation");
+      if (hypnoticPattern.mechanics.family !== "activation") return;
+
+      expect(hypnoticPattern.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+        earlyEnd: [{ kind: "target_takes_damage" }],
+      });
+
+      const phase = hypnoticPattern.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "hypnotic_pattern_point",
+        label: "spell origin point",
+        value: {
+          kind: "area",
+          shape: { kind: "cube", sideFeet: 30 },
+          origin: { kind: "point_within_range" },
+          occupantPerceptionFilter: "can_see_area_effect",
+        },
+      });
+      expect(phase.ability).toBe("wis");
+      expect(phase.onSuccess).toEqual({ kind: "none" });
+      expect(phase.onFail).toEqual({
+        kind: "composite",
+        effects: [
+          { kind: "apply_condition", condition: "charmed" },
+          { kind: "apply_condition", condition: "incapacitated" },
+          { kind: "set_speed", feet: 0 },
+          {
+            kind: "target_effect_escape_action",
+            actor: "another_creature",
+            cost: "action",
+            method: "shake_awake",
+            outcome: "end_current_effect",
+          },
+        ],
+      });
     }
   });
 

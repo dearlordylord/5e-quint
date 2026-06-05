@@ -14,6 +14,7 @@ export {
   AreaDirectEffectAtomSchema,
   AudibleEffectSchema,
   AreaOccupantDispositionFilterSchema,
+  AreaOccupantPerceptionFilterSchema,
   AreaOriginSchema,
   AreaPushUnsecuredObjectsSchema,
   AreaShapeDescriptorSchema,

@@ -40,6 +40,7 @@ export type OutcomeEffectAtom = Extract<
       | "apply_condition_while_in_area_or_until_escape"
       | "suppress_condition_self_end"
       | "restrict_action_usage"
+      | "target_effect_escape_action"
       | "command_target_next_turn"
       | "forced_reaction_movement"
       | "jump_movement_replacement"
@@ -404,6 +405,22 @@ export function traceOutcomeEffectAtom(
         category: "effect",
         atomKind: "restrict_action_usage",
         label: `restrict_action_usage\n${e.actions.join(", ")}${condition}${duration}`,
+      });
+      return id;
+    }
+    case "target_effect_escape_action": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "target_effect_escape_action",
+        label: [
+          "target_effect_escape_action",
+          `actor: ${e.actor}`,
+          `cost: ${e.cost}`,
+          `method: ${e.method}`,
+          `outcome: ${e.outcome}`,
+        ].join("\n"),
       });
       return id;
     }

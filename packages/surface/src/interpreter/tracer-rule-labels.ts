@@ -9,6 +9,7 @@ import * as Either from "effect/Either";
 
 import type {
   AreaOccupantDispositionFilter,
+  AreaOccupantPerceptionFilter,
   AreaOrigin,
   AreaShapeDescriptor,
   AreaShapeSpec,
@@ -178,7 +179,10 @@ export function describeAttachmentHole(
       const occupantLabel = describeAreaOccupantDispositionFilter(
         a.value.occupantDispositionFilter,
       );
-      return `${labelPrefix}\narea\n${describeAreaShape(a.value.shape)}\n${originLabel}${occupantLabel}`;
+      const perceptionLabel = describeAreaOccupantPerceptionFilter(
+        a.value.occupantPerceptionFilter,
+      );
+      return `${labelPrefix}\narea\n${describeAreaShape(a.value.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}`;
     }
     case "mark": {
       const transferLabel = a.value.transfer
@@ -394,6 +398,23 @@ export function describeAreaOccupantDispositionFilter(
       const _: never = filter;
       throw new Error(
         `unhandled area occupant disposition filter: ${String(_)}`,
+      );
+    }
+  }
+}
+
+export function describeAreaOccupantPerceptionFilter(
+  filter: AreaOccupantPerceptionFilter | undefined,
+): string {
+  switch (filter) {
+    case undefined:
+      return "";
+    case "can_see_area_effect":
+      return "\naffects: creatures that can see the area effect";
+    default: {
+      const _: never = filter;
+      throw new Error(
+        `unhandled area occupant perception filter: ${String(_)}`,
       );
     }
   }

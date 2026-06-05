@@ -41,6 +41,12 @@ let Effect : Type =
       , damageType : Optional Text
       , amount : Optional DiceAmount
       , expiresAt : Optional Text
+      , condition : Optional Text
+      , feet : Optional Natural
+      , actor : Optional Text
+      , cost : Optional Text
+      , method : Optional Text
+      , outcome : Optional Text
       }
 
 let defaultEffect : Effect =
@@ -48,6 +54,12 @@ let defaultEffect : Effect =
       , damageType = None Text
       , amount = None DiceAmount
       , expiresAt = None Text
+      , condition = None Text
+      , feet = None Natural
+      , actor = None Text
+      , cost = None Text
+      , method = None Text
+      , outcome = None Text
       }
 
 let Trigger : Type =
@@ -89,6 +101,7 @@ let AttachmentValue : Type =
       , shape : Optional AreaShape
       , origin : Optional { kind : Text }
       , count : Optional Natural
+      , occupantPerceptionFilter : Optional Text
       }
 
 let defaultAttachmentValue : AttachmentValue =
@@ -97,6 +110,7 @@ let defaultAttachmentValue : AttachmentValue =
       , shape = None AreaShape
       , origin = None { kind : Text }
       , count = None Natural
+      , occupantPerceptionFilter = None Text
       }
 
 let Attachment : Type =
@@ -108,6 +122,7 @@ let Attachment : Type =
       , shape : Optional AreaShape
       , origin : Optional { kind : Text }
       , count : Optional Natural
+      , occupantPerceptionFilter : Optional Text
       }
 
 let defaultAttachment : Attachment =
@@ -119,6 +134,7 @@ let defaultAttachment : Attachment =
       , shape = None AreaShape
       , origin = None { kind : Text }
       , count = None Natural
+      , occupantPerceptionFilter = None Text
       }
 
 let DcSource : Type = { kind : Text, dc : Optional Natural }
