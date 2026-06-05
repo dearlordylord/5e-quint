@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Levitate loose object boundary"
     },
     {
@@ -115,7 +115,7 @@ repair branch state by rebasing against `master`.
 | 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | done | none | Costly consumed Material component availability, hand/access legality, focus/component substitution eligibility, and consumed Material inventory mutation belong to the character equipment/component legality boundary, not battle runtime. |
 | 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | done | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_04_CONTINUAL_FLAME_LIGHT_PROJECTION.md`. |
 | 5 | L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE | done | none | Enlarge/Reduce creature support is already represented by `spell.invocation-creature-size-change`; object Size and carried/worn item normalization remain outside battle runtime until a generic object/item lifecycle owner exists. |
-| 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | ready-for-research | none | Classify loose-object motion as runtime, object-system, or table narration. |
+| 6 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | done | none | Levitate loose-object motion remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists. |
 | 7 | L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE | ready-for-research | none | Do not add object damage unless the reducer has a reachable object boundary. |
 | 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | ready-for-research | none | Resolve hidden hazard discovery without duplicating perception/search state. |
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | ready-for-research | none | Separate spell duration/drop behavior from absent spatial/falling engine facts. |
@@ -193,6 +193,18 @@ state. Evidence is consolidated in
 Classify loose-object support and avoid adding unreachable object state to the
 battle reducer.
 
+Outcome: Levitate creature support remains under the promoted
+`spell.invocation-levitated-creature` profile. The loose-object branch is real
+SRD behavior and Surface already records its loose-object target shape,
+500-pound weight gate, suspension, movement restriction, caster altitude
+control, range constraint, and gentle-grounding text, but the current battle
+runtime has no canonical loose-object position, weight, aloft/grounded state,
+fixed-object attachment, surface reach, range derivation, map geometry, or
+gentle-grounding lifecycle owner to mutate and clean up. Do not add
+Levitate-local object altitude state or reuse the creature active effect for
+objects. Evidence is consolidated in
+`plans/unit-profile-coverage/L3MSPELL_06_LEVITATE_LOOSE_OBJECT_BOUNDARY.md`.
+
 ### Task 7 - L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE
 
 Audit flammable object and area-effect support. Promote only if object effects
@@ -224,7 +236,8 @@ is connected to that path rather than a dead test-only projection.
 Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
 lane, and record remaining spell pressure. Include the Task 3 Continual Flame
 component-boundary note, the Task 4 Continual Flame light-projection evidence
-note, the Task 5 Enlarge/Reduce object-lifecycle note, and regenerated ledgers.
+note, the Task 5 Enlarge/Reduce object-lifecycle note, the Task 6 Levitate
+loose-object boundary note, and regenerated ledgers.
 
 ## Task Rules
 

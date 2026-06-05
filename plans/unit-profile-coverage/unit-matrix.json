@@ -13830,9 +13830,9 @@
     },
     {
       "claimKind": "accepted-runtime-closure",
-      "note": "Task 13 closes Levitate's loose-object branch as runtime-detached object/spatial adjudication. The Surface Spell Definition already records the SRD loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude-control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
+      "note": "Reviewed local SRD Levitate loose-object clauses against Surface, the promoted levitated-creature profile, and current battle object/spatial boundaries. The Surface Spell Definition already records the loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, range derivation, map geometry, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
       "profileIds": [],
-      "taskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH"
+      "taskId": "L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY"
     },
     {
       "claimKind": "qnt-proof",
