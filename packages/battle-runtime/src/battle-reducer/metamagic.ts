@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import * as Either from "effect/Either";
@@ -21,14 +22,13 @@ import {
   type CharacterBattlePointPoolResourceState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
-import {
-  combatantHasLevelOnePlusSpellCastThisTurn,
-} from "./spell-turn-resources.ts";
+import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
+  isNonTransmutedSpellMetamagicApplicationFact,
   metamagicApplicationsIncludeQuickened,
   metamagicSorceryPointCost,
   metamagicSorceryPointSpendIssue,
@@ -37,11 +37,15 @@ import {
   SEEKING_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  transmutedSpellDamageTypeSubstitutionIssue,
+  transmutedSpellSelectionTargetDamageType,
   TWINNED_METAMAGIC_EFFECT_KIND,
+  type SpellMetamagicApplicationFact,
 } from "./metamagic-support.ts";
 export {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
+  discoverTransmutedSpellMetamagicSelections,
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
@@ -54,7 +58,9 @@ export {
   spellMetamagicApplications,
   spellMetamagicLabel,
   SUBTLE_METAMAGIC_EFFECT_KIND,
+  transmutedSpellDamageInvocation,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  transmutedSpellMetamagicLabel,
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 
@@ -64,8 +70,6 @@ export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Extended Spell is not supported until spell duration and Concentration-saving-throw roll mode are owned by a generic cast-property boundary.";
 export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Subtle Spell is not supported until spell-cast component witnesses can suppress Verbal and Somatic components while preserving consumed or priced Material components.";
-export const TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE =
-  "Transmuted Spell is not supported until spell damage procedure facts carry a cast-time damage-type substitution boundary that rewrites only Acid, Cold, Fire, Lightning, Poison, or Thunder damage without duplicating damage dice.";
 export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Twinned Spell is not supported until upcast target-count projection can increase effective spell level by 1 only for procedures whose higher-slot shape targets one additional creature without duplicating spell slot state.";
 export const EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -111,8 +115,7 @@ function quickenedActionRewriteProcedureDispositionTable(): QuickenedActionRewri
 }
 
 type QuickenedActionRewriteProcedure = {
-  [Procedure in keyof QuickenedActionRewriteProcedureDispositions]: QuickenedActionRewriteProcedureDispositions[Procedure] extends
-    "bonusActionRewrite"
+  [Procedure in keyof QuickenedActionRewriteProcedureDispositions]: QuickenedActionRewriteProcedureDispositions[Procedure] extends "bonusActionRewrite"
     ? Procedure
     : never;
 }[keyof QuickenedActionRewriteProcedureDispositions];
@@ -125,7 +128,7 @@ export type SpellMetamagicAdmissionIssue = {
 export type SpellMetamagicAdmission =
   | {
       readonly tag: "ok";
-      readonly applications: readonly CharacterBattleMetamagicOptionFact[];
+      readonly applications: readonly SpellMetamagicApplicationFact[];
     }
   | SpellMetamagicAdmissionIssue;
 
@@ -161,7 +164,7 @@ export function admitSpellMetamagicApplications(input: {
       "Metamagic selections must not repeat an option effect.",
     );
   }
-  const knownApplications: CharacterBattleMetamagicOptionFact[] = [];
+  const knownApplications: SpellMetamagicApplicationFact[] = [];
   for (const selection of selections) {
     const application = metamagic.knownOptions.find(
       (option) => option.effectKind === selection.effectKind,
@@ -171,7 +174,14 @@ export function admitSpellMetamagicApplications(input: {
         "Metamagic selection must be one of the actor's known Metamagic options.",
       );
     }
-    knownApplications.push(application);
+    const admittedApplication = metamagicApplicationForSelection(
+      application,
+      selection,
+    );
+    if (typeof admittedApplication === "string") {
+      return metamagicIssue(admittedApplication);
+    }
+    knownApplications.push(admittedApplication);
   }
   const quickenedSelected =
     metamagicApplicationsIncludeQuickened(knownApplications);
@@ -352,7 +362,7 @@ function metamagicStackingIssue(
 }
 
 function spellMetamagicSupportIssue(input: {
-  readonly applications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: SupportedSpellInvocation;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
@@ -380,9 +390,12 @@ function spellMetamagicSupportIssue(input: {
   if (castPropertyIssue !== null) {
     return castPropertyIssue;
   }
-  const damageShapeIssue = damageShapeMetamagicSupportIssue(effectKinds);
+  const damageShapeIssue = damageShapeMetamagicSupportIssue(effectKinds, input);
   if (damageShapeIssue !== null) {
     return damageShapeIssue;
+  }
+  if (effectKinds.has(TRANSMUTED_METAMAGIC_EFFECT_KIND)) {
+    return null;
   }
   const rerollIssue = rerollMetamagicSupportIssue(effectKinds);
   if (rerollIssue !== null) {
@@ -432,13 +445,33 @@ function castPropertyMetamagicSupportIssue(
 
 function damageShapeMetamagicSupportIssue(
   effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
+  input: {
+    readonly applications: readonly SpellMetamagicApplicationFact[];
+    readonly invocation: SupportedSpellInvocation;
+    readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+  },
 ): string | null {
   if (effectKinds.has(TRANSMUTED_METAMAGIC_EFFECT_KIND)) {
-    return TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE;
+    return transmutedSpellDamageTypeSubstitutionIssue(input);
   }
   return effectKinds.has(TWINNED_METAMAGIC_EFFECT_KIND)
     ? TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE
     : null;
+}
+
+function metamagicApplicationForSelection(
+  application: CharacterBattleMetamagicOptionFact,
+  selection: SpellMetamagicSelection,
+): SpellMetamagicApplicationFact | string {
+  if (isNonTransmutedSpellMetamagicApplicationFact(application)) {
+    return application;
+  }
+  const targetDamageType = transmutedSpellSelectionTargetDamageType([
+    selection,
+  ]);
+  return targetDamageType === undefined
+    ? "Transmuted Spell requires one selected replacement damage type."
+    : { ...application, targetDamageType };
 }
 
 function rerollMetamagicSupportIssue(

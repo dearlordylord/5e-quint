@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -57,7 +58,6 @@ import {
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -152,7 +152,9 @@ import {
   admitSpellMetamagicApplications,
   metamagicActionCostOverride,
   spellInvocationHasMagicActionCastingTime,
+  transmutedSpellDamageInvocation,
 } from "./metamagic.ts";
+import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import {
   spellCastingTimeResourceForSpellCast,
   spendSpellCastResources,
@@ -252,7 +254,7 @@ type ResolveSpellActInternalOptions = {
   readonly allowBonusActionInvocation?: boolean;
   readonly useSharedSpellAttackDamageResolver?: true;
   readonly actionCostOverride?: SpellProcedureActionCostOverride;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 type SpellProcedureActionCostOverride = "magicAction" | "bonusAction";
@@ -270,7 +272,7 @@ type SpellProcedureResolveDispatchInput = {
     | Extract<SpellFillSet, { readonly tag: "ok" }>
     | Extract<ChainedSpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: SpellProcedureActionCostOverride;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 type SpellProcedureProfileResolver = {
@@ -298,6 +300,8 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "gustOfWindLine",
   "command",
   "directHitPointRestoration",
+  "spellAttackDamage",
+  "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 
 const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
@@ -472,7 +476,7 @@ export function resolveSpellAttackDamageAct(
     ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
   > & {
     readonly actionCostOverride?: SpellProcedureActionCostOverride;
-    readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   },
 ): BattleResolutionResult {
   return resolveSpellActInternal(
@@ -792,6 +796,12 @@ function resolveSpellActInternal(
     );
   }
   const invocationForResolution = selectedInvocation.invocation;
+  const metamagicApplicationsForResolution = procedureIsIn(
+    invocation.procedure,
+    ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES,
+  )
+    ? metamagicAdmission.applications
+    : options.metamagicApplications;
   if (
     (invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
@@ -863,9 +873,9 @@ function resolveSpellActInternal(
       ...(options.actionCostOverride === undefined
         ? {}
         : { actionCostOverride: options.actionCostOverride }),
-      ...(options.metamagicApplications === undefined
+      ...(metamagicApplicationsForResolution === undefined
         ? {}
-        : { metamagicApplications: options.metamagicApplications }),
+        : { metamagicApplications: metamagicApplicationsForResolution }),
     });
   }
   if (fillSet.targetId == null) {
@@ -945,9 +955,9 @@ function resolveSpellActInternal(
         ...(options.actionCostOverride === undefined
           ? {}
           : { actionCostOverride: options.actionCostOverride }),
-        ...(options.metamagicApplications === undefined
+        ...(metamagicApplicationsForResolution === undefined
           ? {}
-          : { metamagicApplications: options.metamagicApplications }),
+          : { metamagicApplications: metamagicApplicationsForResolution }),
         ...(spiritualWeaponForcePosition === undefined
           ? {}
           : { spiritualWeaponForcePosition }),
@@ -1154,9 +1164,9 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(options.metamagicApplications === undefined
+          ...(metamagicApplicationsForResolution === undefined
             ? {}
-            : { metamagicApplications: options.metamagicApplications }),
+            : { metamagicApplications: metamagicApplicationsForResolution }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1238,9 +1248,9 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(options.metamagicApplications === undefined
+          ...(metamagicApplicationsForResolution === undefined
             ? {}
-            : { metamagicApplications: options.metamagicApplications }),
+            : { metamagicApplications: metamagicApplicationsForResolution }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1256,6 +1266,16 @@ function resolveSpellActInternal(
         )
       : [];
     if (hit && input.suppressedReactionTrigger !== "attackHit") {
+      const attackHitDamageTypes = isSupportedDamageSpellInvocation(
+        invocationForResolution,
+      )
+        ? spellDamageTypes(
+            transmutedSpellDamageInvocation(
+              invocationForResolution,
+              metamagicApplicationsForResolution,
+            ),
+          )
+        : spellDamageTypes(invocationForResolution);
       const reactionWindow = maybeOpenReactionWindow(
         attackRolledStateBeforeHitContinuations,
         {
@@ -1269,7 +1289,7 @@ function resolveSpellActInternal(
           attackHitTriggerKind: "otherAttack",
           damageTypes: [
             ...new Set([
-              ...spellDamageTypes(invocationForResolution),
+              ...attackHitDamageTypes,
               ...spellMarkedDamageRiders.map(
                 (rider) => rider.damage.damageType,
               ),
@@ -1307,12 +1327,16 @@ function resolveSpellActInternal(
           "Selected spell act does not use a damage roll.",
         );
       }
+      const requestedDamageInvocation = transmutedSpellDamageInvocation(
+        invocationForResolution,
+        metamagicApplicationsForResolution,
+      );
       return needsHolesResult(
         spellResolutionStateAfterCriticalMovement,
         input.subject,
         [
           spellDamageHole(
-            invocationForResolution,
+            requestedDamageInvocation,
             hit && critical,
             spellMarkedDamageRiders,
           ),
@@ -1341,9 +1365,9 @@ function resolveSpellActInternal(
         ...(options.actionCostOverride === undefined
           ? {}
           : { actionCostOverride: options.actionCostOverride }),
-        ...(options.metamagicApplications === undefined
+        ...(metamagicApplicationsForResolution === undefined
           ? {}
-          : { metamagicApplications: options.metamagicApplications }),
+          : { metamagicApplications: metamagicApplicationsForResolution }),
         ...(spiritualWeaponForcePosition === undefined
           ? {}
           : { spiritualWeaponForcePosition }),
@@ -1364,7 +1388,10 @@ function resolveSpellActInternal(
       "Selected spell act does not use a damage roll.",
     );
   }
-  const damageInvocation = invocationForResolution;
+  const damageInvocation = transmutedSpellDamageInvocation(
+    invocationForResolution,
+    metamagicApplicationsForResolution,
+  );
   if (fillSet.damageRoll == null) {
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
       return invalidResult(
@@ -1404,29 +1431,29 @@ function resolveSpellActInternal(
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null
       ? (spellResolutionStateAfterCriticalMovement ??
-          recordAttackRollMissToHitReplacementUsed(
-            consumeHelpAttackForAttackRoll(
-              recordAttackRollOngoingFeatures(
-                stateAfterSpellAttackRollMadeForInvocation(
-                  castingState,
-                  subject.actorId,
-                  invocationForResolution,
-                ),
+        recordAttackRollMissToHitReplacementUsed(
+          consumeHelpAttackForAttackRoll(
+            recordAttackRollOngoingFeatures(
+              stateAfterSpellAttackRollMadeForInvocation(
+                castingState,
                 subject.actorId,
-                target.combatantId,
-                null,
+                invocationForResolution,
               ),
               subject.actorId,
               target.combatantId,
+              null,
             ),
             subject.actorId,
-            spellAttackMissToHitReplacement,
-            {
-              subject: input.subject,
-              targetId: target.combatantId,
-              attackRoll: fillSet.attackRoll,
-            },
-          ))
+            target.combatantId,
+          ),
+          subject.actorId,
+          spellAttackMissToHitReplacement,
+          {
+            subject: input.subject,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+          },
+        ))
       : castingState;
   const spellDamageBaseStateResult =
     stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
@@ -1698,9 +1725,9 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(options.metamagicApplications === undefined
+          ...(metamagicApplicationsForResolution === undefined
             ? {}
-            : { metamagicApplications: options.metamagicApplications }),
+            : { metamagicApplications: metamagicApplicationsForResolution }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1906,7 +1933,7 @@ function spendSpellActResolutionResources(input: {
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly spiritualWeaponForcePosition?: Extract<
     BattleFill,
     { readonly kind: "spiritualWeaponForcePosition" }
@@ -2088,7 +2115,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
         { readonly procedure: "spellAttackDamage" }
       >;
   readonly actionCostOverride?: SpellProcedureActionCostOverride;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }> & {
     readonly objectTarget: NonNullable<
       Extract<SpellFillSet, { readonly tag: "ok" }>["objectTarget"]
@@ -2115,6 +2142,10 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Spell object target must include a matching table-supplied range and object Armor Class fact.",
     );
   }
+  const damageInvocation = transmutedSpellDamageInvocation(
+    input.invocation,
+    input.metamagicApplications,
+  );
   const sightFact = spellObjectTargetSightFact(
     input.fillSet.objectTarget.spatialFacts.filter(
       (
@@ -2244,14 +2275,15 @@ function resolveSpellAttackDamageObjectTarget(input: {
     },
     input.actorId,
   );
-  const remarkableAthleteMovement =
-    resolveRemarkableAthleteCriticalHitMovement({
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
       state: attackRolledState,
       subject: input.input.subject,
       attackerId: input.actorId,
       scoredCriticalHit: hit && critical,
       fills: input.fillSet,
-    });
+    },
+  );
   if (remarkableAthleteMovement.tag === "result") {
     return remarkableAthleteMovement.result;
   }
@@ -2297,12 +2329,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
       input.input.subject,
-      [spellDamageHole(input.invocation, critical)],
+      [spellDamageHole(damageInvocation, critical)],
     );
   }
   const damageValidation = validateSpellDamageFill(
     input.fillSet.damageRoll,
-    input.invocation,
+    damageInvocation,
     critical,
   );
   if (damageValidation !== null) {
@@ -2320,12 +2352,13 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
   const objectDamageByType = spellObjectDamageByType(
-    input.invocation,
+    damageInvocation,
     input.fillSet.damageRoll,
     critical,
   );
-  const objectDamageSource =
-    postRemarkableAthleteMovementState.combatants.get(input.actorId);
+  const objectDamageSource = postRemarkableAthleteMovementState.combatants.get(
+    input.actorId,
+  );
   const expectedSourcePenaltyHole =
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       objectDamageSource,
@@ -2398,7 +2431,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
   }
   const objectDamage = spellObjectDamageOutcomeFromDamageByType({
     objectId: input.fillSet.objectTarget.objectId,
-    damageType: input.invocation.damage.damageType,
+    damageType: damageInvocation.damage.damageType,
     damageByType: sourcePenalty.damageByType,
     disposition: objectFact.damageDisposition,
   });

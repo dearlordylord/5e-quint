@@ -5,7 +5,7 @@ module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
   // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
   // - Classes/Sorcerer.md: Careful Spell, Empowered Spell, Heightened Spell,
-  //   and Quickened Spell Sorcery Point costs.
+  //   Quickened Spell, and Transmuted Spell Sorcery Point costs.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
 
   type BattleRuntimeMetamagicEffectKind =
@@ -13,6 +13,7 @@ module unitFeatureMetamagicOptionFactCore {
     | DamageDiceRerollStackingException
     | SavingThrowProtection
     | SavingThrowDisadvantage
+    | DamageTypeSubstitution
 
   type BattleRuntimeMetamagicStackingMode =
     | OnePerSpell
@@ -23,6 +24,7 @@ module unitFeatureMetamagicOptionFactCore {
     | DamageDiceRerollStackingExceptionOptionFact
     | SavingThrowProtectionOptionFact
     | SavingThrowDisadvantageOptionFact
+    | DamageTypeSubstitutionOptionFact
 
   pure def quickenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact
@@ -36,6 +38,9 @@ module unitFeatureMetamagicOptionFactCore {
   pure def heightenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     SavingThrowDisadvantageOptionFact
 
+  pure def transmutedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
+    DamageTypeSubstitutionOptionFact
+
   pure def battleRuntimeMetamagicOptionEffectKind(
     option: BattleRuntimeMetamagicOptionFact
   ): BattleRuntimeMetamagicEffectKind =
@@ -46,6 +51,7 @@ module unitFeatureMetamagicOptionFactCore {
         DamageDiceRerollStackingException
       | SavingThrowProtectionOptionFact => SavingThrowProtection
       | SavingThrowDisadvantageOptionFact => SavingThrowDisadvantage
+      | DamageTypeSubstitutionOptionFact => DamageTypeSubstitution
     }
 
   pure def battleRuntimeMetamagicOptionStackingMode(
@@ -57,6 +63,7 @@ module unitFeatureMetamagicOptionFactCore {
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => OnePerSpell
       | SavingThrowProtectionOptionFact => OnePerSpell
       | SavingThrowDisadvantageOptionFact => OnePerSpell
+      | DamageTypeSubstitutionOptionFact => OnePerSpell
     }
 
   pure def battleRuntimeMetamagicOptionSorceryPointCost(
@@ -67,6 +74,7 @@ module unitFeatureMetamagicOptionFactCore {
       | DamageDiceRerollStackingExceptionOptionFact => 1
       | SavingThrowProtectionOptionFact => 1
       | SavingThrowDisadvantageOptionFact => 2
+      | DamageTypeSubstitutionOptionFact => 1
     }
 
   pure def supportedBattleRuntimeMetamagicEffectKinds: Set[BattleRuntimeMetamagicEffectKind] =
@@ -75,6 +83,7 @@ module unitFeatureMetamagicOptionFactCore {
       DamageDiceRerollStackingException,
       SavingThrowProtection,
       SavingThrowDisadvantage,
+      DamageTypeSubstitution,
     )
 
   pure def battleRuntimeMetamagicOptionEffectSupported(

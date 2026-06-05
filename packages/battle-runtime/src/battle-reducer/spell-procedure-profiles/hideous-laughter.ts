@@ -29,9 +29,9 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
+  type SpellMetamagicApplicationFact,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -85,7 +85,7 @@ type HideousLaughterResolveInput = SpellProcedureProfileResolveInput<
   HideousLaughterSpellInvocation,
   ActionSpellBattleResolutionInput
 > & {
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 function admitHideousLaughter(
@@ -317,7 +317,7 @@ function hideousLaughterMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
   invocation: HideousLaughterSpellInvocation,
-  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
+  metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const holes: BattleHole[] = [];
   if (

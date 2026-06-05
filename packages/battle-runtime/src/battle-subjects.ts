@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -13,6 +14,7 @@ import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
+import type { DamageType } from "@dnd/surface/surface/types";
 import {
   BattleLineDirectionId,
   CombatantId,
@@ -31,6 +33,10 @@ import {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   type CharacterBattleMetamagicEffectKind,
 } from "./character-battle-resources.ts";
+import {
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_SPELL_DAMAGE_TYPES,
+} from "./battle-reducer/metamagic-transmuted-facts.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -318,9 +324,29 @@ export const SpellSubjectModeSchema = Schema.Union(
 );
 export type SpellSubjectMode = typeof SpellSubjectModeSchema.Type;
 
-export const SpellMetamagicSelectionSchema = Schema.Struct({
-  effectKind: Schema.Literal(...CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS),
-});
+const NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS = [
+  ...CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS.filter(
+    (
+      effectKind,
+    ): effectKind is Exclude<
+      CharacterBattleMetamagicEffectKind,
+      typeof TRANSMUTED_METAMAGIC_EFFECT_KIND
+    > => effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  ),
+] as const;
+const TransmutedSpellDamageTypeSchema = Schema.Literal(
+  ...TRANSMUTED_SPELL_DAMAGE_TYPES,
+);
+
+export const SpellMetamagicSelectionSchema = Schema.Union(
+  Schema.Struct({
+    effectKind: Schema.Literal(...NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS),
+  }),
+  Schema.Struct({
+    effectKind: Schema.Literal(TRANSMUTED_METAMAGIC_EFFECT_KIND),
+    targetDamageType: TransmutedSpellDamageTypeSchema,
+  }),
+);
 export type SpellMetamagicSelection = typeof SpellMetamagicSelectionSchema.Type;
 
 const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
@@ -911,12 +937,20 @@ function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
 
 function spellMetamagicSelectionKey(
   selections:
-    | readonly { readonly effectKind: CharacterBattleMetamagicEffectKind }[]
+    | readonly {
+        readonly effectKind: CharacterBattleMetamagicEffectKind;
+        readonly targetDamageType?: DamageType;
+      }[]
     | undefined,
 ): readonly unknown[] {
   return selections === undefined
     ? []
-    : [...selections].map((selection) => selection.effectKind).sort();
+    : [...selections]
+        .map((selection) => [
+          selection.effectKind,
+          selection.targetDamageType ?? null,
+        ])
+        .sort(([left], [right]) => String(left).localeCompare(String(right)));
 }
 
 function battleSubjectKey(subject: BattleSubject): string {

@@ -51,7 +51,7 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenReactionWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -101,7 +101,7 @@ type RollModifierResolveInput = SpellProcedureProfileResolveInput<
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 function admitRollModifier(

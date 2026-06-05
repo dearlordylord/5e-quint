@@ -30,7 +30,7 @@ import {
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
@@ -67,7 +67,7 @@ type AttackBurstSaveDamageResolveInput = SpellProcedureProfileResolveInput<
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 function admitAttackBurstSaveDamage(

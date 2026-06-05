@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
@@ -18,6 +19,11 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "../character-battle-resources.ts";
+import {
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_SPELL_DAMAGE_TYPES,
+  type TransmutedSpellDamageType,
+} from "./metamagic-transmuted-facts.ts";
 
 export const QUICKENED_METAMAGIC_EFFECT_KIND =
   "action_casting_time_to_bonus_action_with_spell_turn_limit" satisfies CharacterBattleMetamagicEffectKind;
@@ -31,8 +37,6 @@ export const EXTENDED_METAMAGIC_EFFECT_KIND =
   "duration_extension_and_concentration_save_advantage" satisfies CharacterBattleMetamagicEffectKind;
 export const SUBTLE_METAMAGIC_EFFECT_KIND =
   "component_suppression" satisfies CharacterBattleMetamagicEffectKind;
-export const TRANSMUTED_METAMAGIC_EFFECT_KIND =
-  "damage_type_substitution" satisfies CharacterBattleMetamagicEffectKind;
 export const TWINNED_METAMAGIC_EFFECT_KIND =
   "effective_spell_level_increase_for_extra_target" satisfies CharacterBattleMetamagicEffectKind;
 export const EMPOWERED_METAMAGIC_EFFECT_KIND =
@@ -44,6 +48,29 @@ export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
 
+export { TRANSMUTED_METAMAGIC_EFFECT_KIND } from "./metamagic-transmuted-facts.ts";
+export type { TransmutedSpellDamageType } from "./metamagic-transmuted-facts.ts";
+
+export type TransmutedSpellApplicationFact = Omit<
+  CharacterBattleMetamagicOptionFact,
+  "effectKind"
+> & {
+  readonly effectKind: typeof TRANSMUTED_METAMAGIC_EFFECT_KIND;
+  readonly targetDamageType: TransmutedSpellDamageType;
+};
+
+export type NonTransmutedSpellMetamagicApplicationFact =
+  CharacterBattleMetamagicOptionFact & {
+    readonly effectKind: Exclude<
+      CharacterBattleMetamagicEffectKind,
+      typeof TRANSMUTED_METAMAGIC_EFFECT_KIND
+    >;
+  };
+
+export type SpellMetamagicApplicationFact =
+  | NonTransmutedSpellMetamagicApplicationFact
+  | TransmutedSpellApplicationFact;
+
 type SpellMetamagicSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" | "bonusActionSpell" }
@@ -54,6 +81,53 @@ export function metamagicApplicationsIncludeQuickened(
 ): boolean {
   return applications.some(
     (application) => application.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+  );
+}
+
+export function transmutedSpellDamageTypeChoices(
+  invocation: SupportedSpellInvocation,
+): readonly TransmutedSpellDamageType[] {
+  const sourceDamageType = transmutableSpellInvocationDamageType(invocation);
+  return sourceDamageType === null
+    ? []
+    : TRANSMUTED_SPELL_DAMAGE_TYPES.filter(
+        (damageType) => damageType !== sourceDamageType,
+      );
+}
+
+export function discoverTransmutedSpellMetamagicSelections(input: {
+  readonly actor: BattleCreatureState;
+  readonly invocation: SupportedSpellInvocation;
+}): readonly (readonly [SpellMetamagicSelection])[] {
+  if (
+    input.actor.origin.kind !== "character" ||
+    input.actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const transmuted = input.actor.origin.metamagic.knownOptions.find(
+    (application) =>
+      application.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  );
+  if (transmuted === undefined) {
+    return [];
+  }
+  if (
+    metamagicSorceryPointSpendIssue({
+      actor: input.actor,
+      applications: [transmuted],
+    }) !== null
+  ) {
+    return [];
+  }
+  return transmutedSpellDamageTypeChoices(input.invocation).map(
+    (targetDamageType) =>
+      [
+        {
+          effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+          targetDamageType,
+        },
+      ] as const,
   );
 }
 
@@ -106,7 +180,7 @@ export function discoverSpellMetamagicSelections(input: {
 export function spellMetamagicApplications(
   actor: BattleCreatureState,
   metamagic: readonly Pick<SpellMetamagicSelection, "effectKind">[],
-): readonly CharacterBattleMetamagicOptionFact[] {
+): readonly NonTransmutedSpellMetamagicApplicationFact[] {
   if (
     actor.origin.kind !== "character" ||
     actor.origin.metamagic === undefined
@@ -115,7 +189,11 @@ export function spellMetamagicApplications(
   }
   const knownOptions = actor.origin.metamagic.knownOptions;
   return metamagic.flatMap((selection) =>
-    knownOptions.filter((option) => option.effectKind === selection.effectKind),
+    knownOptions.filter(
+      (option): option is NonTransmutedSpellMetamagicApplicationFact =>
+        option.effectKind === selection.effectKind &&
+        isNonTransmutedSpellMetamagicApplicationFact(option),
+    ),
   );
 }
 
@@ -127,6 +205,31 @@ export function spellMetamagicLabel(
     : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
       ? "Heightened Spell"
       : "Quickened Spell";
+}
+
+export function transmutedSpellMetamagicLabel(
+  metamagic: readonly SpellMetamagicSelection[],
+): string {
+  const targetDamageType = transmutedSpellSelectionTargetDamageType(metamagic);
+  return targetDamageType === undefined
+    ? "Transmuted Spell"
+    : `Transmuted Spell (${targetDamageType})`;
+}
+
+export function transmutedSpellSelectionTargetDamageType(
+  metamagic: readonly SpellMetamagicSelection[],
+): TransmutedSpellDamageType | undefined {
+  const selection = metamagic.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      SpellMetamagicSelection,
+      { readonly effectKind: typeof TRANSMUTED_METAMAGIC_EFFECT_KIND }
+    > => candidate.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  );
+  return isTransmutedSpellDamageType(selection?.targetDamageType)
+    ? selection.targetDamageType
+    : undefined;
 }
 
 export function saveMetamagicSupportIssue(input: {
@@ -225,5 +328,131 @@ function spellInvocationHasRepeatSavingThrowLifecycle(
     invocation.procedure === "gustOfWindLine" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.effect.repeatSave !== null)
+  );
+}
+
+export function transmutedSpellDamageTypeSubstitutionIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): string | null {
+  if (
+    !input.applications.every(
+      (application) =>
+        application.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return "Selected Metamagic option effect is not supported for this spell procedure.";
+  }
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.mode.tag !== "cast"
+  ) {
+    return "Transmuted Spell is supported only for action-time spell casts.";
+  }
+  const targetDamageType = transmutedSpellApplicationTargetDamageType(
+    input.applications,
+  );
+  if (targetDamageType === undefined) {
+    return "Transmuted Spell requires one selected replacement damage type.";
+  }
+  const sourceDamageType = transmutableSpellInvocationDamageType(
+    input.invocation,
+  );
+  if (sourceDamageType === null) {
+    return "Transmuted Spell is supported only for spell damage procedures with Acid, Cold, Fire, Lightning, Poison, or Thunder damage.";
+  }
+  return sourceDamageType === targetDamageType
+    ? "Transmuted Spell must change the source damage type to one of the other listed damage types."
+    : null;
+}
+
+export function transmutedSpellDamageInvocation<
+  I extends SupportedSpellInvocation,
+>(
+  invocation: I,
+  applications: readonly SpellMetamagicApplicationFact[] | undefined,
+): I {
+  const targetDamageType =
+    applications === undefined
+      ? undefined
+      : transmutedSpellApplicationTargetDamageType(applications);
+  if (targetDamageType === undefined) {
+    return invocation;
+  }
+  if (
+    invocation.procedure === "saveGatedDamage" ||
+    invocation.procedure === "spellAttackSequence"
+  ) {
+    // TypeScript cannot preserve the exact generic invocation subtype through
+    // this nested spread. The procedure guard establishes the shape, and the
+    // spread changes only the supported damage type field.
+    return {
+      ...invocation,
+      damage: { ...invocation.damage, damageType: targetDamageType },
+    } as I;
+  }
+  if (
+    invocation.procedure === "spellAttackDamage" &&
+    (invocation.damage.kind === "fixedSpellAttackDamage" ||
+      invocation.damage.kind === "selectedSorcerousBurstDamage")
+  ) {
+    // TypeScript cannot preserve the exact generic invocation subtype through
+    // this nested spread. The procedure and damage-kind guards establish the
+    // shape, and the spread changes only the supported damage type field.
+    return {
+      ...invocation,
+      damage: { ...invocation.damage, damageType: targetDamageType },
+    } as I;
+  }
+  return invocation;
+}
+
+function transmutableSpellInvocationDamageType(
+  invocation: SupportedSpellInvocation,
+): TransmutedSpellDamageType | null {
+  if (
+    invocation.procedure === "saveGatedDamage" ||
+    invocation.procedure === "spellAttackSequence"
+  ) {
+    return isTransmutedSpellDamageType(invocation.damage.damageType)
+      ? invocation.damage.damageType
+      : null;
+  }
+  if (
+    invocation.procedure === "spellAttackDamage" &&
+    (invocation.damage.kind === "fixedSpellAttackDamage" ||
+      invocation.damage.kind === "selectedSorcerousBurstDamage") &&
+    isTransmutedSpellDamageType(invocation.damage.damageType)
+  ) {
+    return invocation.damage.damageType;
+  }
+  return null;
+}
+
+function transmutedSpellApplicationTargetDamageType(
+  applications: readonly SpellMetamagicApplicationFact[],
+): TransmutedSpellDamageType | undefined {
+  const application = applications.find(
+    (candidate): candidate is TransmutedSpellApplicationFact =>
+      candidate.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  );
+  return application?.targetDamageType;
+}
+
+export function isNonTransmutedSpellMetamagicApplicationFact(
+  application: CharacterBattleMetamagicOptionFact,
+): application is NonTransmutedSpellMetamagicApplicationFact {
+  return application.effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND;
+}
+
+function isTransmutedSpellDamageType(
+  damageType: unknown,
+): damageType is TransmutedSpellDamageType {
+  if (typeof damageType !== "string") {
+    return false;
+  }
+  return TRANSMUTED_SPELL_DAMAGE_TYPES.some(
+    (candidate) => candidate === damageType,
   );
 }

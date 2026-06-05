@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -25,7 +26,6 @@ import {
   type SpellDamageReductionRoll,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -96,6 +96,10 @@ import {
   spellCastingTimeResourceForSpellCast,
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
+import {
+  transmutedSpellDamageInvocation,
+  type SpellMetamagicApplicationFact,
+} from "./metamagic-support.ts";
 
 type ResolvedSpellAttackSequencePart = {
   readonly tag: "resolved";
@@ -116,7 +120,7 @@ export function resolveSpellAttackSequenceAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -192,10 +196,16 @@ export function resolveSpellAttackSequenceAct(input: {
       state,
       input: input.input,
       actorId: input.actorId,
-      invocation: input.invocation,
+      invocation: transmutedSpellDamageInvocation(
+        input.invocation,
+        input.metamagicApplications,
+      ),
       fillSet: input.fillSet,
       partFill,
       partIndex,
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
     if (resolved.tag !== "resolved") {
       return resolved;
@@ -263,7 +273,9 @@ export function resolveSpellAttackSequenceAct(input: {
 
 function resolveSpellAttackSequencePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -273,7 +285,7 @@ function resolveSpellAttackSequencePart(input: {
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.partFill.target;
   if (target === undefined) {
@@ -292,7 +304,9 @@ function resolveSpellAttackSequencePart(input: {
 
 function resolveSpellAttackSequenceCreaturePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -302,7 +316,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly target: Extract<
     NonNullable<SpellAttackSequencePartFillSet["target"]>,
     { readonly kind: "combatant" }
@@ -581,14 +595,15 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       return reactionWindow;
     }
   }
-  const remarkableAthleteMovement =
-    resolveRemarkableAthleteCriticalHitMovement({
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
       state: attackRolledState,
       subject: input.input.subject,
       attackerId: input.actorId,
       scoredCriticalHit: critical,
       fills: input.partFill,
-    });
+    },
+  );
   if (remarkableAthleteMovement.tag === "result") {
     return remarkableAthleteMovement.result;
   }
@@ -883,7 +898,9 @@ function isResolvedSpellAttackSequencePart(
 
 function resolveSpellAttackSequenceObjectPart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
-  readonly input: ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput;
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
@@ -1002,14 +1019,15 @@ function resolveSpellAttackSequenceObjectPart(input: {
     },
     input.actorId,
   );
-  const remarkableAthleteMovement =
-    resolveRemarkableAthleteCriticalHitMovement({
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
       state: attackRolledState,
       subject: input.input.subject,
       attackerId: input.actorId,
       scoredCriticalHit: hit && critical,
       fills: input.partFill,
-    });
+    },
+  );
   if (remarkableAthleteMovement.tag === "result") {
     return remarkableAthleteMovement.result;
   }

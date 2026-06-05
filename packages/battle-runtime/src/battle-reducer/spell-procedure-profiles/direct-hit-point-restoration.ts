@@ -44,7 +44,7 @@ import {
   type HealingSpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -79,7 +79,7 @@ type DirectHitPointRestorationResolveInput = SpellProcedureProfileResolveInput<
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 };
 
 function admitDirectHitPointRestoration(

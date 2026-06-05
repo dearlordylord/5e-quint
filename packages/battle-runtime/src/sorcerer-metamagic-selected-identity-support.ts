@@ -5,6 +5,7 @@ import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
 import {
   type AvailableBattleAct,
@@ -46,7 +47,9 @@ export type SorcererMetamagicProjection = {
     | "carefulSaveGatedNoEffect"
     | "heightenedSaveGatedDamage"
     | "quickenedSaveGatedDamage"
-    | "quickenedSpellAttack";
+    | "quickenedSpellAttack"
+    | "transmutedSaveGatedDamage"
+    | "transmutedSpellAttack";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -239,6 +242,75 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
   ).state;
 }
 
+export function resolveTransmutedBurningHandsToPoison(
+  state: BattleState,
+): BattleState {
+  const act = transmutedBurningHandsToPoisonAct(state);
+  const savingThrowFill = burningHandsSaveFill(act.initialHoles);
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [savingThrowFill],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  assertTransmutedDamageHole(damageHole);
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowFill,
+        damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+      ],
+    }),
+  ).state;
+}
+
+export function resolveTransmutedRayOfFrostToPoison(
+  state: BattleState,
+): BattleState {
+  const act = transmutedRayOfFrostToPoisonAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const attackRoll = attackRollFill(attackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, attackRoll],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  assertTransmutedDamageHole(damageHole);
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        attackRoll,
+        damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  ).state;
+}
+
 export function projectBattleState(
   state: BattleState,
   lastResult: SorcererMetamagicProjection["lastResult"],
@@ -264,6 +336,10 @@ export function carefulSorcererMetamagicBattle(): BattleState {
 
 export function heightenedSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([heightenedMetamagicOption()]);
+}
+
+export function transmutedSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([transmutedMetamagicOption()]);
 }
 
 function sorcererMetamagicBattleWithOptions(
@@ -332,6 +408,14 @@ function heightenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
     effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(2),
+  };
+}
+
+function transmutedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
   };
 }
 
@@ -429,6 +513,40 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function transmutedBurningHandsToPoisonAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "saveGatedDamage" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
+          selection.targetDamageType === "poison",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Transmuted Burning Hands to Poison act.");
+  }
+  return act;
+}
+
+function transmutedRayOfFrostToPoisonAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "spellAttackDamage" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
+          selection.targetDamageType === "poison",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Transmuted Ray of Frost to Poison act.");
+  }
+  return act;
+}
+
 function burningHandsSaveFill(
   holes: readonly BattleHole[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -444,6 +562,18 @@ function burningHandsSaveFill(
       outcomes: [{ targetId: skeletonId, succeeded: false }],
     },
   };
+}
+
+function assertTransmutedDamageHole(damageHole: BattleHole): void {
+  if (
+    damageHole.kind !== "rolledDice" ||
+    !("spell" in damageHole) ||
+    !("damage" in damageHole.spell) ||
+    !("damageType" in damageHole.spell.damage) ||
+    damageHole.spell.damage.damageType !== "poison"
+  ) {
+    throw new Error("Expected Transmuted Spell damage hole to use Poison.");
+  }
 }
 
 function protectedTargetsFill(

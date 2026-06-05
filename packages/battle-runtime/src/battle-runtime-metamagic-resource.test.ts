@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
@@ -44,7 +44,6 @@ import {
   SUBTLE_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
-  TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE,
   TWINNED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
 } from "./battle-reducer/metamagic.ts";
@@ -987,16 +986,12 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
-  test("explicitly closes damage-shape Metamagic options before Sorcery Point spending", () => {
+  test("explicitly closes unsupported damage-shape Metamagic options before Sorcery Point spending", () => {
     const state = saveMetamagicBattle({
       knownOptions: [transmutedMetamagicOption(), twinnedMetamagicOption()],
     });
 
     for (const closure of [
-      {
-        effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
-        message: TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE,
-      },
       {
         effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
         message: TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
@@ -1018,6 +1013,137 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     }
 
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects invalid Transmuted Spell damage substitutions before Sorcery Point spending", () => {
+    const damageState = saveMetamagicBattle({
+      knownOptions: [transmutedMetamagicOption()],
+    });
+    const restorationState = metamagicBattle({
+      knownOptions: [transmutedMetamagicOption()],
+    });
+
+    for (const closure of [
+      {
+        state: damageState,
+        subject: {
+          ...burningHandsActionSubject(),
+          metamagic: [
+            {
+              effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+              targetDamageType: "fire",
+            },
+          ],
+        },
+        message:
+          "Transmuted Spell must change the source damage type to one of the other listed damage types.",
+      },
+      {
+        state: damageState,
+        subject: {
+          ...burningHandsActionSubject(),
+          metamagic: [{ effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND }],
+        } as unknown as Extract<
+          AvailableBattleAct["subject"],
+          { readonly tag: "actionSpell" }
+        >,
+        message:
+          "Transmuted Spell requires one selected replacement damage type.",
+      },
+      {
+        state: damageState,
+        subject: {
+          ...burningHandsActionSubject(),
+          metamagic: [
+            {
+              effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+              targetDamageType: "force",
+            },
+          ],
+        } as unknown as Extract<
+          AvailableBattleAct["subject"],
+          { readonly tag: "actionSpell" }
+        >,
+        message:
+          "Transmuted Spell requires one selected replacement damage type.",
+      },
+      {
+        state: restorationState,
+        subject: {
+          ...cureWoundsActionSubject(),
+          metamagic: [
+            {
+              effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+              targetDamageType: "fire",
+            },
+          ],
+        },
+        message:
+          "Transmuted Spell is supported only for spell damage procedures with Acid, Cold, Fire, Lightning, Poison, or Thunder damage.",
+      },
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state: closure.state,
+          subject: closure.subject,
+          fills: [],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        message: closure.message,
+      });
+    }
+
+    expect(sorceryPointsRemaining(damageState)).toBe(resourceCount(4));
+    expect(sorceryPointsRemaining(restorationState)).toBe(resourceCount(4));
+  });
+
+  test("threads Transmuted Spell through spell attack sequence resolution", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [transmutedMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = transmutedScorchingRayToPoisonAct(state);
+    const targetFills = targetChoiceHoles(act.initialHoles).map((hole) =>
+      targetFill(hole, fighterId, [
+        {
+          kind: "spellTarget",
+          casterId: wizardId,
+          targetId: fighterId,
+          spellId: "scorching_ray",
+        },
+      ]),
+    );
+    const fills: BattleFill[] = [...targetFills];
+
+    const firstAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(firstAttack, { total: 15, naturalD20: 10 }));
+    const firstDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+    assertTransmutedDamageHole(firstDamage);
+    fills.push(damageRollFillWithGroups(firstDamage, [[1, 1]]));
+
+    const secondAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(secondAttack, { total: 15, naturalD20: 10 }));
+    const secondDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+    assertTransmutedDamageHole(secondDamage);
+    fills.push(damageRollFillWithGroups(secondDamage, [[1, 1]]));
+
+    const thirdAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(thirdAttack, { total: 15, naturalD20: 10 }));
+    const thirdDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+    assertTransmutedDamageHole(thirdDamage);
+    fills.push(damageRollFillWithGroups(thirdDamage, [[1, 1]]));
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills,
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
   });
 
   test("explicitly closes reroll Metamagic options before Sorcery Point spending", () => {
@@ -1989,6 +2115,11 @@ function metamagicBattle(input?: {
 function saveMetamagicBattle(input: {
   readonly sorceryPoints?: number;
   readonly knownOptions: readonly MetamagicOptionFixture[];
+  readonly preparedSpells?: readonly ("burning_hands" | "scorching_ray")[];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 2;
+    readonly count: number;
+  }[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-save"),
@@ -2015,8 +2146,10 @@ function saveMetamagicBattle(input: {
         },
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [spellRecord("burning_hands")],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
+            preparedSpells: (input.preparedSpells ?? ["burning_hands"]).map(
+              spellRecord,
+            ),
+            spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
           }),
           sourceClassName: "sorcerer",
         },
@@ -2355,6 +2488,72 @@ function rayOfFrostActionSubject(): Extract<
     invocation: cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
     mode: { tag: "cast" },
   };
+}
+
+function transmutedScorchingRayToPoisonAct(
+  state: BattleState,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        AvailableBattleAct["subject"],
+        { readonly tag: "actionSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "spellAttackSequence" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND &&
+          selection.targetDamageType === "poison",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Transmuted Scorching Ray to Poison act.");
+  }
+  return act;
+}
+
+function targetChoiceHoles(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "targetChoice" }>[] {
+  return holes.filter(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+}
+
+function nextSpellHole(
+  state: BattleState,
+  subject: AvailableBattleAct["subject"],
+  fills: readonly BattleFill[],
+  kind: BattleHole["kind"],
+): BattleHole {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    const detail = "message" in result ? `: ${result.message}` : "";
+    throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
+  }
+  return findHole(result.holes, kind);
+}
+
+function assertTransmutedDamageHole(damageHole: BattleHole): void {
+  if (
+    damageHole.kind !== "rolledDice" ||
+    !("spell" in damageHole) ||
+    !("damage" in damageHole.spell) ||
+    !("damageType" in damageHole.spell.damage) ||
+    damageHole.spell.damage.damageType !== "poison"
+  ) {
+    throw new Error("Expected Transmuted Spell damage hole to use Poison.");
+  }
 }
 
 function quickenedCureWoundsSubject(): QuickenedBonusActionSpellAct["subject"] {

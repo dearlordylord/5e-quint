@@ -21,9 +21,9 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import {
+  type SpellMetamagicApplicationFact,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -65,7 +65,7 @@ type SaveGatedAttackRollAdvantageResolveInput =
     SaveGatedAttackRollAdvantageSpellInvocation,
     ActionSpellBattleResolutionInput
   > & {
-    readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   };
 
 function admitSaveGatedAttackRollAdvantage(
@@ -183,7 +183,7 @@ function saveGatedAttackRollAdvantageMetamagicInitialHoles(
   state: BattleState,
   actorId: CombatantId,
   invocation: SaveGatedAttackRollAdvantageSpellInvocation,
-  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
+  metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
   const holes: BattleHole[] = [];

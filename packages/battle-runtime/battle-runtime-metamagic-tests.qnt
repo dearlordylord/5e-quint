@@ -2,6 +2,7 @@
 
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -497,6 +498,90 @@ module battleRuntimeMetamagicTests {
         Fighter,
         true,
       ))),
+    }
+  }
+
+  run test_transmuted_spell_damage_type_admission = {
+    val known = Set(transmutedSpellMetamagicFact)
+    all {
+      assert(transmutedSpellCanModifyDamageSpell(
+        TransmutedSaveGatedDamageProcedure,
+        Fire,
+        Cold,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      )),
+      assert(transmutedSpellCanModifyDamageSpell(
+        TransmutedSpellAttackDamageProcedure,
+        Cold,
+        Thunder,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      )),
+      assert(not(transmutedSpellCanModifyDamageSpell(
+        TransmutedSpellAttackSequenceProcedure,
+        Force,
+        Thunder,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(transmutedSpellCanModifyDamageSpell(
+        TransmutedSpellAttackDamageProcedure,
+        Fire,
+        Fire,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(transmutedSpellCanModifyDamageSpell(
+        NonTransmutedDamageProcedure,
+        Fire,
+        Cold,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(transmutedSpellCanModifyDamageSpell(
+        TransmutedSaveGatedDamageProcedure,
+        Fire,
+        Cold,
+        Set(carefulSpellMetamagicFact),
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ))),
+    }
+  }
+
+  run test_transmuted_spell_projects_damage_type_without_changing_source = {
+    val known = Set(transmutedSpellMetamagicFact)
+    all {
+      assert(transmutedSpellDamageTypeProjection(
+        TransmutedSaveGatedDamageProcedure,
+        Fire,
+        Lightning,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ) == Lightning),
+      assert(transmutedSpellDamageTypeProjection(
+        TransmutedSpellAttackDamageProcedure,
+        Cold,
+        Acid,
+        known,
+        Set(transmutedSpellMetamagicFact),
+        1,
+      ) == Acid),
+      assert(transmutedSpellDamageTypeProjection(
+        TransmutedSpellAttackSequenceProcedure,
+        Fire,
+        Poison,
+        known,
+        Set(),
+        1,
+      ) == Fire),
     }
   }
 }

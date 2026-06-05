@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
@@ -52,8 +53,10 @@ import {
 } from "./counterspell-reaction-discovery.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
+  discoverTransmutedSpellMetamagicSelections,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   spellInvocationSupportsQuickenedActionRewrite,
+  transmutedSpellMetamagicLabel,
 } from "./metamagic.ts";
 
 type SpellProcedureProfileDiscovery = {
@@ -151,6 +154,13 @@ export function discoverSupportedSpellInvocations(
         invocations,
       }),
     )
+    .flatMap((act) =>
+      spellActWithTransmutedDamageType({
+        act,
+        actor,
+        invocations,
+      }),
+    )
     .map((act) =>
       spellCastReactionFactsAct(
         actorId,
@@ -212,6 +222,43 @@ function spellActWithQuickenedRewrite(input: {
         ]
       : [];
   return [...naturalActs, ...quickenedActs];
+}
+
+function spellActWithTransmutedDamageType(input: {
+  readonly act: AvailableBattleAct;
+  readonly actor: BattleCreatureState;
+  readonly invocations: readonly SupportedSpellInvocation[];
+}): readonly AvailableBattleAct[] {
+  const subject = input.act.subject;
+  if (
+    subject.tag !== "actionSpell" ||
+    subject.mode.tag !== "cast" ||
+    subject.metamagic !== undefined
+  ) {
+    return [input.act];
+  }
+  const invocation = input.invocations.find((candidate) =>
+    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+  );
+  if (invocation === undefined) {
+    return [input.act];
+  }
+  const transmutedActs = discoverTransmutedSpellMetamagicSelections({
+    actor: input.actor,
+    invocation,
+  }).map((metamagic) => {
+    const label = transmutedSpellMetamagicLabel(metamagic);
+    return {
+      ...input.act,
+      subject: {
+        ...subject,
+        metamagic,
+      },
+      label: `${input.act.label} (${label})`,
+      summary: `${input.act.summary} Cast with ${label}.`,
+    };
+  });
+  return [input.act, ...transmutedActs];
 }
 
 function spellCastReactionFactsAct(
@@ -420,7 +467,10 @@ export function readiedSpellAct(
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): readonly AvailableBattleAct[] {
-  if (!isReadiedSpellInvocation(invocation) || state.readiedSpells.has(actorId)) {
+  if (
+    !isReadiedSpellInvocation(invocation) ||
+    state.readiedSpells.has(actorId)
+  ) {
     return [];
   }
   return BATTLE_READIED_SPELL_TRIGGERS.map((trigger) => ({

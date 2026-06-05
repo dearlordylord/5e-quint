@@ -4,8 +4,10 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -33,6 +35,12 @@ module battleRuntimeMetamagic {
     | SaveGatedNonDamageProcedure
     | SleepTargetAdmissionProcedure
     | NonSaveMetamagicProcedure
+
+  type BattleRuntimeTransmutedDamageProcedure =
+    | TransmutedSaveGatedDamageProcedure
+    | TransmutedSpellAttackDamageProcedure
+    | TransmutedSpellAttackSequenceProcedure
+    | NonTransmutedDamageProcedure
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -65,6 +73,65 @@ module battleRuntimeMetamagic {
       sorceryPointsRemaining,
     ) and
     selectedMetamagicOptionsSupportedBySaveSpell(procedure, selectedOptions)
+
+  pure def transmutedSpellDamageTypeAllowed(damageType: DamageType): bool =
+    damageType == Acid or
+    damageType == Cold or
+    damageType == Fire or
+    damageType == Lightning or
+    damageType == Poison or
+    damageType == Thunder
+
+  pure def transmutedSpellProcedureSupportsDamageSubstitution(
+    procedure: BattleRuntimeTransmutedDamageProcedure,
+  ): bool =
+    match procedure {
+      | TransmutedSaveGatedDamageProcedure => true
+      | TransmutedSpellAttackDamageProcedure => true
+      | TransmutedSpellAttackSequenceProcedure => true
+      | NonTransmutedDamageProcedure => false
+    }
+
+  pure def transmutedSpellCanModifyDamageSpell(
+    procedure: BattleRuntimeTransmutedDamageProcedure,
+    sourceDamageType: DamageType,
+    targetDamageType: DamageType,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(transmutedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    transmutedSpellProcedureSupportsDamageSubstitution(procedure) and
+    transmutedSpellDamageTypeAllowed(sourceDamageType) and
+    transmutedSpellDamageTypeAllowed(targetDamageType) and
+    sourceDamageType != targetDamageType
+
+  pure def transmutedSpellDamageTypeProjection(
+    procedure: BattleRuntimeTransmutedDamageProcedure,
+    sourceDamageType: DamageType,
+    targetDamageType: DamageType,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): DamageType =
+    if (
+      transmutedSpellCanModifyDamageSpell(
+        procedure,
+        sourceDamageType,
+        targetDamageType,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    )
+      targetDamageType
+    else
+      sourceDamageType
 
   pure def carefulSpellMaxProtectedTargets(charismaModifier: int): int =
     if (charismaModifier < 1) 1 else charismaModifier

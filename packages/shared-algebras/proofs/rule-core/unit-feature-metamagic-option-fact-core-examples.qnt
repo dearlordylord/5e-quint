@@ -9,10 +9,12 @@ module unitFeatureMetamagicOptionFactCoreExamples {
       assert(battleRuntimeMetamagicOptionEffectSupported(empoweredSpellMetamagicFact)),
       assert(battleRuntimeMetamagicOptionEffectSupported(carefulSpellMetamagicFact)),
       assert(battleRuntimeMetamagicOptionEffectSupported(heightenedSpellMetamagicFact)),
+      assert(battleRuntimeMetamagicOptionEffectSupported(transmutedSpellMetamagicFact)),
       assert(battleRuntimeMetamagicOptionSorceryPointCost(quickenedSpellMetamagicFact) == 2),
       assert(battleRuntimeMetamagicOptionSorceryPointCost(empoweredSpellMetamagicFact) == 1),
       assert(battleRuntimeMetamagicOptionSorceryPointCost(carefulSpellMetamagicFact) == 1),
       assert(battleRuntimeMetamagicOptionSorceryPointCost(heightenedSpellMetamagicFact) == 2),
+      assert(battleRuntimeMetamagicOptionSorceryPointCost(transmutedSpellMetamagicFact) == 1),
     }
   }
 

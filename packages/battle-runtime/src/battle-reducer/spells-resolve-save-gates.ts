@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -114,6 +115,8 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  transmutedSpellDamageInvocation,
+  type SpellMetamagicApplicationFact,
 } from "./metamagic-support.ts";
 
 import {
@@ -420,7 +423,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     { readonly procedure: "greaseGroundHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -675,7 +678,7 @@ export function resolveHideousLaughterSpellAct(input: {
     { readonly procedure: "hideousLaughter" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   const targetHole = spellTargetListHole(
     input.input.state,
@@ -1033,7 +1036,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
@@ -1246,6 +1249,10 @@ export function resolveSaveGateDamageSpellAct(input: {
   }
   const savingThrowArea =
     "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined;
+  const damageInvocation = transmutedSpellDamageInvocation(
+    input.invocation,
+    input.metamagicApplications,
+  );
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
@@ -1318,7 +1325,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   );
   const objectDamageFacts = postSaveAreaObjectDamageFacts({
     area: savingThrowArea,
-    invocation: input.invocation,
+    invocation: damageInvocation,
   });
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenReactionWindow(
@@ -1390,13 +1397,13 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageHole(input.invocation),
+      spellDamageHole(damageInvocation),
     ]);
   }
   const damageRoll = input.fillSet.damageRoll;
   const damageValidation = validateSpellDamageFill(
     damageRoll,
-    input.invocation,
+    damageInvocation,
     false,
   );
   if (damageValidation !== null) {
@@ -1405,7 +1412,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   const objectDamageByType =
     objectDamageFacts.length === 0
       ? undefined
-      : spellObjectDamageByType(input.invocation, damageRoll, false);
+      : spellObjectDamageByType(damageInvocation, damageRoll, false);
   const sourceCombatant = stateAfterCastConcentrationBreak.combatants.get(
     input.actorId,
   );
@@ -1417,7 +1424,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       }
       const damageByType = spellDamageByTypeForTarget(
         target,
-        input.invocation,
+        damageInvocation,
         damageRoll,
         "full",
       );
@@ -1458,7 +1465,7 @@ export function resolveSaveGateDamageSpellAct(input: {
           ? new Map()
           : spellDamageByTypeForTarget(
               target,
-              input.invocation,
+              damageInvocation,
               damageRoll,
               "full",
             );
@@ -1528,7 +1535,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       ? []
       : postSaveAreaObjectDamages({
           facts: objectDamageFacts,
-          invocation: input.invocation,
+          invocation: damageInvocation,
           damageByType: objectSourcePenalty.damageByType,
         });
   const spellReductionChecks = damageTargets.map((targetId) => {
@@ -1538,7 +1545,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     }
     const damageByType = spellDamageByTypeForTarget(
       target,
-      input.invocation,
+      damageInvocation,
       damageRoll,
       "full",
     );
@@ -1762,7 +1769,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     }
     const damageByType = spellDamageByTypeForTarget(
       target,
-      input.invocation,
+      damageInvocation,
       damageRoll,
       "full",
     );
@@ -1821,7 +1828,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     return applySpellDamage(
       state,
       targetId,
-      input.invocation,
+      damageInvocation,
       damageRoll,
       false,
       {
@@ -2208,7 +2215,7 @@ export function resolveSaveGateConditionSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
@@ -2433,7 +2440,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -2609,7 +2616,7 @@ export function resolveCommandSpellAct(input: {
     { readonly procedure: "command" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   const targetHole = spellTargetListHole(
     input.input.state,
@@ -2777,7 +2784,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     { readonly procedure: "saveGatedAttackRollAdvantage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
   if (input.fillSet.targetId !== undefined) {
     return invalidResult(
