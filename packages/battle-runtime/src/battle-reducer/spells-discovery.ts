@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
@@ -54,9 +55,12 @@ import {
 import {
   actorCanOfferQuickenedSpellMetamagic,
   discoverTransmutedSpellMetamagicSelections,
+  discoverTwinnedSpellMetamagicSelections,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
+  spellMetamagicApplications,
   spellInvocationSupportsQuickenedActionRewrite,
   transmutedSpellMetamagicLabel,
+  twinnedSpellTargetCountInvocation,
 } from "./metamagic.ts";
 
 type SpellProcedureProfileDiscovery = {
@@ -161,6 +165,15 @@ export function discoverSupportedSpellInvocations(
         invocations,
       }),
     )
+    .flatMap((act) =>
+      spellActWithTwinnedTargetCount({
+        act,
+        state,
+        actor,
+        actorId,
+        invocations,
+      }),
+    )
     .map((act) =>
       spellCastReactionFactsAct(
         actorId,
@@ -259,6 +272,64 @@ function spellActWithTransmutedDamageType(input: {
     };
   });
   return [input.act, ...transmutedActs];
+}
+
+function spellActWithTwinnedTargetCount(input: {
+  readonly act: AvailableBattleAct;
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocations: readonly SupportedSpellInvocation[];
+}): readonly AvailableBattleAct[] {
+  const subject = input.act.subject;
+  if (
+    (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+    subject.mode.tag !== "cast" ||
+    subject.metamagic !== undefined
+  ) {
+    return [input.act];
+  }
+  const invocation = input.invocations.find((candidate) =>
+    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+  );
+  if (invocation === undefined) {
+    return [input.act];
+  }
+  const twinnedActs = discoverTwinnedSpellMetamagicSelections({
+    actor: input.actor,
+    invocation,
+  }).flatMap((metamagic) => {
+    const twinnedInvocation = twinnedSpellTargetCountInvocation(
+      invocation,
+      spellMetamagicApplications(input.actor, metamagic),
+    );
+    const profile = spellProcedureProfileFor(twinnedInvocation.procedure);
+    return discoverRegisteredSpellProcedureCastAct(
+      profile,
+      input.state,
+      input.actorId,
+      twinnedInvocation,
+    )
+      .filter((act) => {
+        const generatedSubject = act.subject;
+        return (
+          (generatedSubject.tag === "actionSpell" ||
+            generatedSubject.tag === "bonusActionSpell") &&
+          generatedSubject.mode.tag === "cast" &&
+          generatedSubject.metamagic === undefined
+        );
+      })
+      .map((act) => ({
+        ...act,
+        subject: {
+          ...act.subject,
+          metamagic,
+        },
+        label: `${act.label} (Twinned Spell)`,
+        summary: `${act.summary} Cast with Twinned Spell.`,
+      }));
+  });
+  return [input.act, ...twinnedActs];
 }
 
 function spellCastReactionFactsAct(

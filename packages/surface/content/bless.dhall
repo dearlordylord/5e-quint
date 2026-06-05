@@ -33,6 +33,7 @@ let bless =
                           , perSlotAboveBase = 1
                           , baseLevel = 1
                           }
+                      , targetKinds = [ "creature" ]
                       }
                   }
               }

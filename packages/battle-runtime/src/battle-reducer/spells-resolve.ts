@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -153,6 +154,7 @@ import {
   metamagicActionCostOverride,
   spellInvocationHasMagicActionCastingTime,
   transmutedSpellDamageInvocation,
+  twinnedSpellTargetCountInvocation,
 } from "./metamagic.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import {
@@ -300,6 +302,9 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "gustOfWindLine",
   "command",
   "directHitPointRestoration",
+  "directCondition",
+  "rollModifier",
+  "scalarBuff",
   "spellAttackDamage",
   "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
@@ -538,6 +543,10 @@ function resolveSpellActInternal(
       metamagicAdmission.message,
     );
   }
+  invocation = twinnedSpellTargetCountInvocation(
+    invocation,
+    metamagicAdmission.applications,
+  );
   const replayingSpiritualWeaponAttackHit =
     input.suppressedReactionTrigger === "attackHit" &&
     (invocation.procedure === "spiritualWeaponAttackProxy" ||
@@ -2497,6 +2506,10 @@ export function resolveBonusActionSpellAct(
       metamagicAdmission.message,
     );
   }
+  invocation = twinnedSpellTargetCountInvocation(
+    invocation,
+    metamagicAdmission.applications,
+  );
   const actionCostOverride = metamagicActionCostOverride(
     metamagicAdmission.applications,
   );

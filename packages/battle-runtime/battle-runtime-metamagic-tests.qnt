@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -582,6 +583,44 @@ module battleRuntimeMetamagicTests {
         Set(),
         1,
       ) == Fire),
+    }
+  }
+
+  run test_twinned_spell_projects_next_effective_target_count_without_changing_actual_slot = {
+    val result = resolveTwinnedTargetCountProjection(
+      TwinnedOneAdditionalCreatureTargetProcedure,
+      1,
+      2,
+      3,
+      4,
+      Set(twinnedSpellMetamagicFact),
+      Set(twinnedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.actualSlotLevel == 1),
+      assert(result.effectiveSpellLevel == 2),
+      assert(result.maximumTargets == 4),
+      assert(result.sorceryPointsRemaining == 3),
+    }
+  }
+
+  run test_twinned_spell_rejects_non_target_count_projection = {
+    val result = resolveTwinnedTargetCountProjection(
+      NonTwinnedTargetCountProcedure,
+      1,
+      2,
+      1,
+      1,
+      Set(twinnedSpellMetamagicFact),
+      Set(twinnedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.actualSlotLevel == 1),
+      assert(result.effectiveSpellLevel == 1),
+      assert(result.maximumTargets == 1),
+      assert(result.sorceryPointsRemaining == 4),
     }
   }
 }

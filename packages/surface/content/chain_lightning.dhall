@@ -14,7 +14,7 @@
 --    above 6."
 --
 -- Consolidated validation reference for:
---   • Single-phase save_gate with choose_up_to (up to 4 creatures at
+--   • Single-phase save_gate with choose_up_to (up to 4 targets at
 --     base; +1 per slot above 6). Default-absent repeatsAllowed gives
 --     the "only one of the bolts" distinctness rule for free.
 --
@@ -22,7 +22,7 @@
 -- 30 feet of it" geometry is spatial (distance / adjacency). Per
 -- ARCHITECTURE.md §1, spatial relationships are caller-provided
 -- inputs, not owned by the spec. The session resolves whether a
--- chosen set of ≤4 creatures satisfies the geometry; the content
+-- chosen set of ≤4 targets satisfies the geometry; the content
 -- surface only declares "up to N targets, DEX save, 10d8 Lightning."
 -- This collapses an earlier two-phase model (primary + secondaries
 -- with a within_of_primary eligibility predicate) into Bless's shape.
@@ -65,6 +65,7 @@ let chainLightning =
                                 , perSlotAboveBase = 1
                                 , baseLevel = 6
                                 }
+                            , targetKinds = [ "creature", "object" ]
                             }
                         }
                     }

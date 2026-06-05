@@ -43,13 +43,13 @@
     {
       "number": 7,
       "id": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Twinned Spell higher-slot target-count projection"
     },
     {
       "number": 8,
       "id": "L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate Metamagic golden tracer bullet evidence"
     }
   ]
@@ -91,8 +91,8 @@ owns branch repair.
 | 4 | L3META-04-CAREFUL-SPELL-SAVE-PROFILES - Promote Careful Spell for supported save profiles | done | none | Independent save-profile slice. |
 | 5 | L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES - Promote Heightened Spell for supported save profiles | done | none | Independent save-profile slice. |
 | 6 | L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE - Promote Transmuted Spell damage type substitution | done | none | Independent damage-type substitution slice. |
-| 7 | L3META-07-TWINNED-SPELL-UPCAST-TARGETING - Promote Twinned Spell higher-slot target-count projection | ready-for-implementation-after-light-research | none | Independent target-count projection slice. |
-| 8 | L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION - Consolidate Metamagic golden tracer bullet evidence | blocked | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS, L3META-02-QUICKENED-SPELL-ATTACKS, L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES, L3META-04-CAREFUL-SPELL-SAVE-PROFILES, L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES, L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE, L3META-07-TWINNED-SPELL-UPCAST-TARGETING | Consolidation only after all Metamagic slices close. |
+| 7 | L3META-07-TWINNED-SPELL-UPCAST-TARGETING - Promote Twinned Spell higher-slot target-count projection | done | none | Independent target-count projection slice. |
+| 8 | L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION - Consolidate Metamagic golden tracer bullet evidence | ready-for-implementation | L3META-01-QUICKENED-SAVE-DAMAGE-SPELLS, L3META-02-QUICKENED-SPELL-ATTACKS, L3META-03-QUICKENED-CONDITION-AND-BUFF-PROFILES, L3META-04-CAREFUL-SPELL-SAVE-PROFILES, L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES, L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE, L3META-07-TWINNED-SPELL-UPCAST-TARGETING | Consolidation after all Metamagic slices close. |
 
 ## Global Acceptance Criteria
 
@@ -234,7 +234,7 @@ Expected outputs:
 
 ### Task 7 - L3META-07-TWINNED-SPELL-UPCAST-TARGETING
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Twinned Spell for supported spells whose higher-slot profile targets
 one additional creature.
@@ -252,7 +252,7 @@ Expected outputs:
 
 ### Task 8 - L3META-08-METAMAGIC-GOLDEN-LEDGER-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Consolidate `sorcerer_metamagic` claims after Tasks 1-7.
 

@@ -6,6 +6,7 @@ import {
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
 import {
   type AvailableBattleAct,
@@ -22,9 +23,11 @@ import {
   battleId,
   characterSeed,
   damageRollFillWithGroups,
+  fighterId,
   findHole,
   partySide,
   requireResolved,
+  secondSkeletonId,
   skeletonId,
   spellRecord,
   startBattleRight,
@@ -49,7 +52,8 @@ export type SorcererMetamagicProjection = {
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack"
     | "transmutedSaveGatedDamage"
-    | "transmutedSpellAttack";
+    | "transmutedSpellAttack"
+    | "twinnedTargetCount";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -311,6 +315,28 @@ export function resolveTransmutedRayOfFrostToPoison(
   ).state;
 }
 
+export function resolveTwinnedBless(state: BattleState): BattleState {
+  const act = twinnedBlessAct(state);
+  const targetHole = findHole(act.initialHoles, "spellTargetList");
+  if (targetHole.kind !== "spellTargetList") {
+    throw new Error("Expected Twinned Bless to request a target-list hole.");
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetListFill(
+          act.initialHoles,
+          "Bless targets",
+          "bless",
+          [wizardId, fighterId, skeletonId, secondSkeletonId],
+        ),
+      ],
+    }),
+  ).state;
+}
+
 export function projectBattleState(
   state: BattleState,
   lastResult: SorcererMetamagicProjection["lastResult"],
@@ -342,6 +368,10 @@ export function transmutedSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([transmutedMetamagicOption()]);
 }
 
+export function twinnedSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([twinnedMetamagicOption()]);
+}
+
 function sorcererMetamagicBattleWithOptions(
   knownOptions: readonly CharacterBattleMetamagicOptionFact[],
 ): BattleState {
@@ -370,6 +400,7 @@ function sorcererMetamagicBattleWithOptions(
           ...wizardSpellcasting({
             cantrips: [spellRecord("ray_of_frost")],
             preparedSpells: [
+              spellRecord("bless"),
               spellRecord("burning_hands"),
               spellRecord("command"),
             ],
@@ -382,6 +413,19 @@ function sorcererMetamagicBattleWithOptions(
         combatantId: skeletonId,
         displayName: "Skeleton",
         initiative: 10,
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Nearby Ally",
+        initiative: 9,
+        side: partySide,
+        currentHp: 12,
+        maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: secondSkeletonId,
+        displayName: "Second Skeleton",
+        initiative: 8,
       }),
     ],
   });
@@ -414,6 +458,14 @@ function heightenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
 function transmutedMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
     effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function twinnedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
   };
@@ -547,6 +599,21 @@ function transmutedRayOfFrostToPoisonAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function twinnedBlessAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "rollModifier" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Twinned Bless act.");
+  }
+  return act;
+}
+
 function burningHandsSaveFill(
   holes: readonly BattleHole[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -589,7 +656,8 @@ function protectedTargetsFill(
 function targetListFill(
   holes: readonly BattleHole[],
   label: string,
-  spellId: "burning_hands" | "command",
+  spellId: "bless" | "burning_hands" | "command",
+  targetIds: readonly typeof wizardId[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(
     (candidate) =>
@@ -601,15 +669,13 @@ function targetListFill(
   return {
     kind: "spellTargetList",
     holeId: hole.holeId,
-    value: { targetIds: [skeletonId] },
-    spatialFacts: [
-      {
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
         kind: "spellTarget",
         casterId: wizardId,
-        targetId: skeletonId,
+        targetId,
         spellId,
-      },
-    ],
+      })),
   };
 }
 

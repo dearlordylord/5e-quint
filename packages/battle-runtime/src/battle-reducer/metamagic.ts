@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import * as Either from "effect/Either";
@@ -40,12 +41,14 @@ import {
   transmutedSpellDamageTypeSubstitutionIssue,
   transmutedSpellSelectionTargetDamageType,
   TWINNED_METAMAGIC_EFFECT_KIND,
+  twinnedSpellTargetCountProjectionIssue,
   type SpellMetamagicApplicationFact,
 } from "./metamagic-support.ts";
 export {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
   discoverTransmutedSpellMetamagicSelections,
+  discoverTwinnedSpellMetamagicSelections,
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
@@ -62,6 +65,8 @@ export {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   transmutedSpellMetamagicLabel,
   TWINNED_METAMAGIC_EFFECT_KIND,
+  TWINNED_SPELL_METAMAGIC_SELECTION,
+  twinnedSpellTargetCountInvocation,
 } from "./metamagic-support.ts";
 
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -397,6 +402,9 @@ function spellMetamagicSupportIssue(input: {
   if (effectKinds.has(TRANSMUTED_METAMAGIC_EFFECT_KIND)) {
     return null;
   }
+  if (effectKinds.has(TWINNED_METAMAGIC_EFFECT_KIND)) {
+    return null;
+  }
   const rerollIssue = rerollMetamagicSupportIssue(effectKinds);
   if (rerollIssue !== null) {
     return rerollIssue;
@@ -455,7 +463,7 @@ function damageShapeMetamagicSupportIssue(
     return transmutedSpellDamageTypeSubstitutionIssue(input);
   }
   return effectKinds.has(TWINNED_METAMAGIC_EFFECT_KIND)
-    ? TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE
+    ? twinnedSpellTargetCountProjectionIssue(input)
     : null;
 }
 

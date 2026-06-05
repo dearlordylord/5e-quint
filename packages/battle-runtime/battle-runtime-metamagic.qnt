@@ -5,9 +5,11 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -30,6 +32,13 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeTwinnedTargetCountResult = {
+    actualSlotLevel: int,
+    effectiveSpellLevel: int,
+    maximumTargets: int,
+    sorceryPointsRemaining: int,
+  }
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -41,6 +50,10 @@ module battleRuntimeMetamagic {
     | TransmutedSpellAttackDamageProcedure
     | TransmutedSpellAttackSequenceProcedure
     | NonTransmutedDamageProcedure
+
+  type BattleRuntimeTwinnedTargetCountProcedure =
+    | TwinnedOneAdditionalCreatureTargetProcedure
+    | NonTwinnedTargetCountProcedure
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -132,6 +145,76 @@ module battleRuntimeMetamagic {
       targetDamageType
     else
       sourceDamageType
+
+  pure def twinnedSpellProcedureSupportsTargetCountProjection(
+    procedure: BattleRuntimeTwinnedTargetCountProcedure,
+  ): bool =
+    match procedure {
+      | TwinnedOneAdditionalCreatureTargetProcedure => true
+      | NonTwinnedTargetCountProcedure => false
+    }
+
+  pure def twinnedSpellCanModifyTargetCountSpell(
+    procedure: BattleRuntimeTwinnedTargetCountProcedure,
+    actualSlotLevel: int,
+    effectiveSpellLevel: int,
+    currentMaximumTargets: int,
+    effectiveMaximumTargets: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(twinnedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    twinnedSpellProcedureSupportsTargetCountProjection(procedure) and
+    actualSlotLevel >= 1 and
+    actualSlotLevel < 9 and
+    effectiveSpellLevel == actualSlotLevel + 1 and
+    currentMaximumTargets >= 1 and
+    effectiveMaximumTargets == currentMaximumTargets + 1
+
+  pure def resolveTwinnedTargetCountProjection(
+    procedure: BattleRuntimeTwinnedTargetCountProcedure,
+    actualSlotLevel: int,
+    effectiveSpellLevel: int,
+    currentMaximumTargets: int,
+    effectiveMaximumTargets: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeTwinnedTargetCountResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    if (
+      twinnedSpellCanModifyTargetCountSpell(
+        procedure,
+        actualSlotLevel,
+        effectiveSpellLevel,
+        currentMaximumTargets,
+        effectiveMaximumTargets,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    ) {
+      {
+        actualSlotLevel: actualSlotLevel,
+        effectiveSpellLevel: effectiveSpellLevel,
+        maximumTargets: effectiveMaximumTargets,
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        actualSlotLevel: actualSlotLevel,
+        effectiveSpellLevel: actualSlotLevel,
+        maximumTargets: currentMaximumTargets,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
 
   pure def carefulSpellMaxProtectedTargets(charismaModifier: int): int =
     if (charismaModifier < 1) 1 else charismaModifier

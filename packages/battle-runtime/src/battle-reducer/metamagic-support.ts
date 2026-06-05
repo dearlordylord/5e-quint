@@ -2,12 +2,19 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
-import { resourceCount, type ResourceCount } from "@dnd/shared/types";
-import type {
-  BattleCreatureState,
-  SupportedSpellInvocation,
+import {
+  resourceCount,
+  spellSlotLevel,
+  type ResourceCount,
+} from "@dnd/shared/types";
+import type { Attachment, TargetSelection } from "@dnd/surface/surface/types";
+import {
+  isTargetListSpellInvocation,
+  type BattleCreatureState,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type {
   BattleSubject,
@@ -24,6 +31,7 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
   type TransmutedSpellDamageType,
 } from "./metamagic-transmuted-facts.ts";
+import { targetCountBySlot } from "./spells-profile-shared.ts";
 
 export const QUICKENED_METAMAGIC_EFFECT_KIND =
   "action_casting_time_to_bonus_action_with_spell_turn_limit" satisfies CharacterBattleMetamagicEffectKind;
@@ -46,6 +54,9 @@ export const SEEKING_METAMAGIC_EFFECT_KIND =
 
 export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
+] as const satisfies readonly [SpellMetamagicSelection];
+export const TWINNED_SPELL_METAMAGIC_SELECTION = [
+  { effectKind: TWINNED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
 
 export { TRANSMUTED_METAMAGIC_EFFECT_KIND } from "./metamagic-transmuted-facts.ts";
@@ -131,6 +142,36 @@ export function discoverTransmutedSpellMetamagicSelections(input: {
   );
 }
 
+export function discoverTwinnedSpellMetamagicSelections(input: {
+  readonly actor: BattleCreatureState;
+  readonly invocation: SupportedSpellInvocation;
+}): readonly (readonly [SpellMetamagicSelection])[] {
+  if (
+    input.actor.origin.kind !== "character" ||
+    input.actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const twinned = input.actor.origin.metamagic.knownOptions.find(
+    (application) => application.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+  );
+  if (twinned === undefined) {
+    return [];
+  }
+  if (
+    metamagicSorceryPointSpendIssue({
+      actor: input.actor,
+      applications: [twinned],
+    }) !== null
+  ) {
+    return [];
+  }
+  return twinnedSpellTargetCountInvocation(input.invocation, [twinned]) ===
+    input.invocation
+    ? []
+    : [TWINNED_SPELL_METAMAGIC_SELECTION];
+}
+
 export function metamagicActionCostOverride(
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): "bonusAction" | undefined {
@@ -204,7 +245,9 @@ export function spellMetamagicLabel(
     ? "Careful Spell"
     : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
       ? "Heightened Spell"
-      : "Quickened Spell";
+      : metamagic[0]?.effectKind === TWINNED_METAMAGIC_EFFECT_KIND
+        ? "Twinned Spell"
+        : "Quickened Spell";
 }
 
 export function transmutedSpellMetamagicLabel(
@@ -367,6 +410,61 @@ export function transmutedSpellDamageTypeSubstitutionIssue(input: {
     : null;
 }
 
+export function twinnedSpellTargetCountProjectionIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "mode">;
+}): string | null {
+  if (
+    !input.applications.every(
+      (application) => application.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return "Selected Metamagic option effect is not supported for this spell procedure.";
+  }
+  if (input.subject.mode.tag !== "cast") {
+    return "Twinned Spell is supported only while casting a spell.";
+  }
+  return twinnedSpellTargetCountInvocation(
+    input.invocation,
+    input.applications,
+  ) === input.invocation
+    ? "Twinned Spell is supported only for Spell Slot casts whose target-count profile adds exactly one creature at the next effective spell level."
+    : null;
+}
+
+export function twinnedSpellTargetCountInvocation(
+  invocation: SupportedSpellInvocation,
+  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+): SupportedSpellInvocation {
+  if (
+    applications === undefined ||
+    !applications.some(
+      (application) => application.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return invocation;
+  }
+  if (!isTargetListSpellInvocation(invocation)) {
+    return invocation;
+  }
+  const maxTargets = twinnedSpellEffectiveTargetCount(invocation);
+  if (maxTargets === null) {
+    return invocation;
+  }
+  // `isTargetListSpellInvocation` establishes that this invocation is one of
+  // the target-list union members. Replacing only the numeric maxTargets keeps
+  // the procedure/targeting pairing intact, but object spread loses that union
+  // correlation, so the assertion restates the locally proven union member.
+  return {
+    ...invocation,
+    targeting: {
+      ...invocation.targeting,
+      maxTargets,
+    },
+  } as SupportedSpellInvocation;
+}
+
 export function transmutedSpellDamageInvocation<
   I extends SupportedSpellInvocation,
 >(
@@ -454,5 +552,108 @@ function isTransmutedSpellDamageType(
   }
   return TRANSMUTED_SPELL_DAMAGE_TYPES.some(
     (candidate) => candidate === damageType,
+  );
+}
+
+function twinnedSpellEffectiveTargetCount(
+  invocation: SupportedSpellInvocation,
+): number | null {
+  if (
+    invocation.resource.tag !== "spellSlot" ||
+    Number(invocation.resource.slotLevel) >= 9 ||
+    !("targeting" in invocation) ||
+    invocation.targeting.kind !== "targetList" ||
+    typeof invocation.targeting.maxTargets !== "number"
+  ) {
+    return null;
+  }
+  const selection = spellTwinnedTargetSelection(invocation.spell);
+  if (selection === null) {
+    return null;
+  }
+  const countByEffectiveLevel = targetCountBySlot(
+    selection,
+    invocation.spell.mechanics.level,
+  );
+  if (countByEffectiveLevel === null) {
+    return null;
+  }
+  const currentCount = countByEffectiveLevel(invocation.resource.slotLevel);
+  const nextEffectiveLevel = spellSlotLevel(
+    Number(invocation.resource.slotLevel) + 1,
+  );
+  const nextCount = countByEffectiveLevel(nextEffectiveLevel);
+  return currentCount === invocation.targeting.maxTargets &&
+    nextCount === currentCount + 1
+    ? nextCount
+    : null;
+}
+
+function spellTwinnedTargetSelection(
+  spell: SupportedSpellInvocation["spell"],
+): TargetSelection | null {
+  const selections = spellTargetSelections(spell).filter((selection) => {
+    if (!("count" in selection)) {
+      return false;
+    }
+    const count = selection.count;
+    const baseLevel =
+      typeof count === "object" && count !== null && "baseLevel" in count
+        ? (count.baseLevel ?? spell.mechanics.level)
+        : undefined;
+    return (
+      selection.mode === "choose_up_to" &&
+      !targetSelectionAllowsRepeatedTargets(selection) &&
+      targetSelectionTargetsOnlyCreatures(selection) &&
+      typeof count === "object" &&
+      count !== null &&
+      count.kind === "linear" &&
+      count.perSlotAboveBase === 1 &&
+      baseLevel === spell.mechanics.level
+    );
+  });
+  return selections.length === 1 ? selections[0]! : null;
+}
+
+function spellTargetSelections(
+  spell: SupportedSpellInvocation["spell"],
+): readonly TargetSelection[] {
+  if (spell.mechanics.family === "ongoing_effect") {
+    const selection = targetSelectionFromAttachment(spell.mechanics.attachment);
+    return selection === null ? [] : [selection];
+  }
+  if (spell.mechanics.family !== "activation") {
+    return [];
+  }
+  return spell.mechanics.phases.flatMap((phase) => {
+    if (!("attachment" in phase)) {
+      return [];
+    }
+    const selection = targetSelectionFromAttachment(phase.attachment);
+    return selection === null ? [] : [selection];
+  });
+}
+
+function targetSelectionFromAttachment(
+  attachment: Attachment,
+): TargetSelection | null {
+  return attachment.kind === "hole" && attachment.value.kind === "target"
+    ? attachment.value.selection
+    : null;
+}
+
+function targetSelectionAllowsRepeatedTargets(
+  selection: TargetSelection,
+): boolean {
+  return "repeatsAllowed" in selection && selection.repeatsAllowed === true;
+}
+
+function targetSelectionTargetsOnlyCreatures(
+  selection: TargetSelection,
+): boolean {
+  return (
+    selection.targetKinds !== undefined &&
+    selection.targetKinds.length === 1 &&
+    selection.targetKinds[0] === "creature"
   );
 }

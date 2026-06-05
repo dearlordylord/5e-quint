@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 140,
+      "denominator": 141,
       "numerator": 137,
-      "percent": "97.9%"
+      "percent": "97.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 140,
+      "denominator": 141,
       "numerator": 137,
-      "percent": "97.9%"
+      "percent": "97.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 153,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 104,
-      "numerator": 104,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3694,6 +3694,38 @@
       ]
     },
     {
+      "id": "unit-feature.metamagic-effective-level-extra-target",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Character Battle Twinned Spell typed effectKind facts, the existing Font of Magic point-pool resource, actual Spell Slot level, and Surface target-count projection facts for spells whose higher-level slot shape targets one additional creature. It admits only Spell Slot casts whose current target-list projection matches the actual Spell Slot level being cast and whose next effective spell level increases maximum creature targets by exactly one, projects the invocation target maximum without changing actual Spell Slot spending, spends 1 Sorcery Point from the shared Font of Magic point pool, and rejects unsupported target-count shapes before Sorcery Point spending without dispatching on spell authored identity.",
+      "taskRefs": [
+        "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
+      ],
+      "title": "Unit feature increases effective spell level for Twinned Spell target projection",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -4497,14 +4529,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 140,
+        "denominator": 141,
         "numerator": 137,
-        "percent": "97.9%"
+        "percent": "97.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 140,
+        "denominator": 141,
         "numerator": 137,
-        "percent": "97.9%"
+        "percent": "97.2%"
       }
     },
     "profileKinds": [
@@ -6612,6 +6644,15 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "unit-feature.metamagic-damage-type-substitution",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.metamagic-effective-level-extra-target",
         "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
@@ -14027,6 +14068,22 @@
         "unit-feature.metamagic-damage-type-substitution"
       ],
       "taskId": "L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Twinned Spell admission for one-additional-creature target-count projection, known-option and Sorcery Point gates, actual Spell Slot level preservation, effective spell level increment, target maximum increment, and rejection of unsupported target-count procedures.",
+      "profileIds": [
+        "unit-feature.metamagic-effective-level-extra-target"
+      ],
+      "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Twinned Spell discovery and resolution for Bless as a target-count representative, next-effective-level target maximum projection, actual level-1 Spell Slot spending, 1 Sorcery Point spending through the shared Font of Magic point pool, all selected targets receiving the spell effect, and rejection of unsupported target-count shapes before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-effective-level-extra-target"
+      ],
+      "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -14099,7 +14156,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 106,
+        "profileFactDenominator": 107,
         "profileSubsetSupportedUnits": 22,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -18770,10 +18827,6 @@
             "mechanic": "Distant, Extended, and Subtle Spell cast-property modifiers: double range only for spells with a range of at least 5 feet or make Touch range 30 feet, double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
-            "mechanic": "Twinned Spell shape modifier: increase effective spell level by 1 only for spells whose higher-slot shape targets one additional creature."
-          },
-          {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "typed post-roll spell reroll fill boundary owner",
@@ -18796,13 +18849,6 @@
             "owner": "battle-runtime later-save command owners plus Metamagic selected-target threading",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed later-save target threading, focused runtime tests, and promoted Quint/runtime parity for repeat-save lifecycle Heightened behavior without option identity dispatch.",
             "title": "Sorcerer Metamagic Repeat Save Lifecycles"
-          },
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
-            "mechanic": "Promote Twinned Spell for supported spell procedures by increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.",
-            "owner": "battle-runtime spell damage profile and upcast targeting projection",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for higher-slot target-count projection without duplicating spell slot state.",
-            "title": "Sorcerer Metamagic Twinned Spell Target Projection"
           }
         ],
         "profileIds": [
@@ -18813,7 +18859,8 @@
           "unit-feature.metamagic-cast-governor-quickened",
           "unit-feature.metamagic-careful-save-protection",
           "unit-feature.metamagic-heightened-save-disadvantage",
-          "unit-feature.metamagic-damage-type-substitution"
+          "unit-feature.metamagic-damage-type-substitution",
+          "unit-feature.metamagic-effective-level-extra-target"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -18824,7 +18871,8 @@
           "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
           "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures.",
           "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, and rejecting non-affected selected targets before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending."
+          "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending."
         ],
         "tag": "profile-subset-supported"
       },
@@ -18859,6 +18907,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
@@ -19101,6 +19154,38 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-effective-level-extra-target",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Character Battle Twinned Spell typed effectKind facts, the existing Font of Magic point-pool resource, actual Spell Slot level, and Surface target-count projection facts for spells whose higher-level slot shape targets one additional creature. It admits only Spell Slot casts whose current target-list projection matches the actual Spell Slot level being cast and whose next effective spell level increases maximum creature targets by exactly one, projects the invocation target maximum without changing actual Spell Slot spending, spends 1 Sorcery Point from the shared Font of Magic point pool, and rejects unsupported target-count shapes before Sorcery Point spending without dispatching on spell authored identity.",
+          "taskRefs": [
+            "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
+          ],
+          "title": "Unit feature increases effective spell level for Twinned Spell target projection",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts"
             }
           ]
         }

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
@@ -45,8 +45,9 @@ import {
   SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
-  TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
+  twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import {
   characterSeed,
   battleId,
@@ -986,6 +987,94 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
+  test("discovers Twinned target-count spells with the next effective target maximum", () => {
+    const extraTargetId = combatantId("combatant:twinned-bless-extra-target");
+    const state = twinnedTargetCountBattle(extraTargetId);
+    const act = twinnedBlessAct(state);
+    const targetHole = requireSpellTargetListHole(
+      act.initialHoles,
+      "Bless targets",
+    );
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef("bless", 1, "rollModifier"),
+      mode: { tag: "cast" },
+      metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
+    });
+    expect(targetHole).toMatchObject({
+      minTargets: 1,
+      maxTargets: 4,
+      choices: expect.arrayContaining([
+        wizardId,
+        fighterId,
+        skeletonId,
+        extraTargetId,
+      ]),
+    });
+
+    const resolved = requireResolvedWithDetail(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetListFill(targetHole, "bless", [
+            wizardId,
+            fighterId,
+            skeletonId,
+            extraTargetId,
+          ]),
+        ],
+      }),
+    );
+
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+    expect(sorcererSpellSlots(resolved.state)).toEqual([
+      { spellLevel: 1, count: 1, expended: 1 },
+    ]);
+    for (const targetId of [wizardId, fighterId, skeletonId, extraTargetId]) {
+      expect(
+        resolved.state.combatants
+          .get(targetId)
+          ?.activeEffects.some((effect) => effect.kind === "d20RollModifier"),
+      ).toBe(true);
+    }
+  });
+
+  test("rejects Twinned Spell for spells without one-additional-creature target scaling before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      knownOptions: [twinnedMetamagicOption()],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "cure_wounds" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...cureWoundsActionSubject(),
+          metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Twinned Spell is supported only for Spell Slot casts whose target-count profile adds exactly one creature at the next effective spell level.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
   test("explicitly closes unsupported damage-shape Metamagic options before Sorcery Point spending", () => {
     const state = saveMetamagicBattle({
       knownOptions: [transmutedMetamagicOption(), twinnedMetamagicOption()],
@@ -994,7 +1083,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     for (const closure of [
       {
         effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
-        message: TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
+        message:
+          "Twinned Spell is supported only for Spell Slot casts whose target-count profile adds exactly one creature at the next effective spell level.",
       },
     ] as const) {
       expect(
@@ -1011,6 +1101,126 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         message: closure.message,
       });
     }
+
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Twinned Spell for repeated-effect target scaling before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      knownOptions: [twinnedMetamagicOption()],
+      preparedSpells: ["magic_missile"],
+    });
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "magic_missile" &&
+          candidate.subject.metamagic?.some(
+            (selection) =>
+              selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "magic_missile",
+            1,
+            "repeatedDamageAllocation",
+          ),
+          mode: { tag: "cast" },
+          metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Twinned Spell is supported only for Spell Slot casts whose target-count profile adds exactly one creature at the next effective spell level.",
+    });
+
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Twinned Spell for non-creature-only target scaling before Sorcery Point spending", () => {
+    const chainLightning = spellRecord("chain_lightning");
+    if (
+      chainLightning.mechanics.family !== "activation" ||
+      chainLightning.mechanics.phases[0]?.kind !== "save_gate"
+    ) {
+      throw new Error("Expected Chain Lightning save-gate spell record.");
+    }
+    const chainTarget =
+      chainLightning.mechanics.phases[0].attachment.kind === "hole"
+        ? chainLightning.mechanics.phases[0].attachment.value
+        : chainLightning.mechanics.phases[0].attachment;
+    if (chainTarget.kind !== "target") {
+      throw new Error("Expected Chain Lightning target selection.");
+    }
+    expect(chainTarget.selection).toMatchObject({
+      mode: "choose_up_to",
+      targetKinds: ["creature", "object"],
+    });
+
+    const state = twinnedTargetCountBattle(
+      combatantId("combatant:twinned-non-creature-extra-target"),
+    );
+    const actor = state.combatants.get(wizardId);
+    if (actor === undefined) {
+      throw new Error("Expected Twinned Spell actor.");
+    }
+    const baseBlessInvocation = supportedSpellActs(actor, state).find(
+      (invocation) =>
+        invocation.spell.id === "bless" &&
+        invocation.procedure === "rollModifier" &&
+        invocation.resource.tag === "spellSlot" &&
+        Number(invocation.resource.slotLevel) === 1,
+    );
+    if (baseBlessInvocation === undefined) {
+      throw new Error("Expected base Bless invocation.");
+    }
+    const blessSpell = baseBlessInvocation.spell;
+    if (blessSpell.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Bless ongoing-effect spell record.");
+    }
+    const blessAttachment = blessSpell.mechanics.attachment;
+    if (
+      blessAttachment.kind !== "hole" ||
+      blessAttachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Bless target selection.");
+    }
+    const creatureOrObjectTargetScalingInvocation = {
+      ...baseBlessInvocation,
+      spell: {
+        ...blessSpell,
+        mechanics: {
+          ...blessSpell.mechanics,
+          attachment: {
+            ...blessAttachment,
+            value: {
+              ...blessAttachment.value,
+              selection: {
+                ...blessAttachment.value.selection,
+                targetKinds: ["creature", "object"] as const,
+              },
+            },
+          },
+        },
+      },
+    };
+
+    expect(
+      twinnedSpellTargetCountInvocation(
+        creatureOrObjectTargetScalingInvocation,
+        [twinnedMetamagicOption()],
+      ),
+    ).toBe(creatureOrObjectTargetScalingInvocation);
 
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -2064,6 +2274,7 @@ function metamagicBattle(input?: {
     | "false_life"
     | "healing_word"
     | "hellish_rebuke"
+    | "magic_missile"
   )[];
 }): BattleState {
   return startBattleRight({
@@ -2226,6 +2437,62 @@ function quickenedProfileBattle(input: {
         combatantId: skeletonId,
         displayName: "Skeleton",
         initiative: 10,
+      }),
+    ],
+  });
+}
+
+function twinnedTargetCountBattle(
+  extraTargetId: ReturnType<typeof combatantId>,
+): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-twinned-target-count"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: [twinnedMetamagicOption()],
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("bless")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Nearby Ally",
+        initiative: 12,
+        side: partySide,
+        currentHp: 12,
+        maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+      statBlockCreatureInit({
+        combatantId: extraTargetId,
+        displayName: "Extra Target",
+        initiative: 9,
       }),
     ],
   });
@@ -2765,6 +3032,22 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function twinnedBlessAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "bless" &&
+      candidate.subject.invocation.procedure === "rollModifier" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Twinned Bless act.");
+  }
+  return act;
+}
+
 function gustOfWindActionAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
@@ -2908,4 +3191,24 @@ function sorceryPointsRemaining(state: BattleState) {
     throw new Error("Expected Sorcery Point resource.");
   }
   return resource.pointsRemaining;
+}
+
+function requireResolvedWithDetail(
+  result: ReturnType<typeof resolveBattleSubject>,
+) {
+  if (result.tag !== "resolved") {
+    const detail = "message" in result ? `: ${result.message}` : "";
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}${detail}.`,
+    );
+  }
+  return result;
+}
+
+function sorcererSpellSlots(state: BattleState) {
+  const actor = state.combatants.get(wizardId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Sorcerer combatant.");
+  }
+  return actor.origin.spellcasting?.spellSlots;
 }

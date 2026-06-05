@@ -161,6 +161,7 @@ import fireBoltInput from "../../surface/content/fire_bolt.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
 import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
+import chainLightningInput from "../../surface/content/chain_lightning.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import iceKnifeInput from "../../surface/content/ice_knife.json";
 import greaseInput from "../../surface/content/grease.json";
@@ -297,6 +298,7 @@ const testSpellRecords = new Map(
     starryWispInput,
     viciousMockeryInput,
     burningHandsInput,
+    chainLightningInput,
     colorSprayInput,
     iceKnifeInput,
     greaseInput,
