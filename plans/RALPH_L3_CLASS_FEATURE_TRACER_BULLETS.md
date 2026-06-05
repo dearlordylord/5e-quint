@@ -25,19 +25,19 @@
     {
       "number": 4,
       "id": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup"
     },
     {
       "number": 5,
       "id": "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Close or promote Fast Hands battle-owned delegated action economy"
     },
     {
       "number": 6,
       "id": "L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate class-feature golden tracer bullet evidence and stale follow-ups"
     }
   ]
@@ -86,9 +86,9 @@ owns branch repair.
 | 1 | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES - Promote Remarkable Athlete Initiative and Strength Athletics roll modes | done | none | Independent roll-mode slice. |
 | 2 | L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT - Promote Remarkable Athlete post-critical half-Speed movement | done | none | Independent movement-trigger slice. |
 | 3 | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION - Promote Sacred Weapon activation, Channel Divinity spend, and held weapon binding | done | none | Established activation/effect binding. |
-| 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | ready-for-implementation-after-light-research | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Consumes the activation/effect binding from Task 3. |
-| 5 | L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT - Close or promote Fast Hands battle-owned delegated action economy | ready-for-implementation-after-light-research | none | Independent closure-or-promotion audit. |
-| 6 | L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION - Consolidate class-feature golden tracer bullet evidence and stale follow-ups | blocked | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES, L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT, L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION, L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT, L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT | Consolidation only after all class-feature slices close. |
+| 4 | L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT - Promote Sacred Weapon attack bonus, Radiant choice, light, and lifecycle cleanup | done | L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION | Consumes the activation/effect binding from Task 3. |
+| 5 | L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT - Close or promote Fast Hands battle-owned delegated action economy | done | none | Closed as deterministic admission metadata with table/tool-check, Utilize, and magic-item activation owners responsible for the concrete Bonus Action spend when they consume the profile. |
+| 6 | L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION - Consolidate class-feature golden tracer bullet evidence and stale follow-ups | ready-for-implementation | L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES, L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT, L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION, L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT, L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT | All class-feature slices are closed; consolidation can now reconcile the golden ledger and remaining explicit table-owned closures. |
 
 ## Global Acceptance Criteria
 
@@ -214,7 +214,7 @@ Expected outputs:
 
 ### Task 4 - L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Promote Sacred Weapon effects after activation.
 
@@ -232,7 +232,7 @@ Expected outputs:
 
 ### Task 5 - L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Audit whether any Fast Hands delegated action-economy clause is genuinely owned
 by battle runtime today.
@@ -250,9 +250,17 @@ Expected outputs:
 - either a promoted reducer/QNT tracer bullet or a precise closure disposition;
 - no item/object state invented for Fast Hands.
 
+Closure result:
+
+- no independent battle-owned Bonus Action shell was promoted;
+- lock, trap, and pocket procedures remain table/tool-check owned;
+- generic Utilize object effects remain owned by a future Utilize action owner;
+- magic-item Magic action activation remains owned by a future magic-item
+  activation owner.
+
 ### Task 6 - L3CF-06-CLASS-FEATURE-GOLDEN-LEDGER-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Consolidate class-feature ledger state after Tasks 1-5.
 

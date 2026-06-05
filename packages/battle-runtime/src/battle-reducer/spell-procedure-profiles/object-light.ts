@@ -365,6 +365,7 @@ function applyObjectLightEffect(
       ? state.lightEmitters.filter(
           (emitter) =>
             !(
+              emitter.kind === "spellLightEmitter" &&
               emitter.sourceSpellId === invocation.spell.id &&
               emitter.sourceCombatantId === actorId
             ),

@@ -346,6 +346,7 @@ export {
   type BattleSightObserver,
   type BattleSightObscurement,
   type BattleSnapshot,
+  type BattleStoredLightEmitter,
   type BattleSpellAreaChoice,
   type BattleSpellAttackRollHole,
   type BattleSpellConditionChoiceHole,

@@ -1158,6 +1158,39 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME: Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target. Owner: battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.; L3-FOLLOWUP-DRUID-LANDS-AID-SCALING: Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted. Owner: Surface mechanics plus battle-runtime Land's Aid execution owner. Required output: Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Land's Aid",
+          "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 411,
+            "lineStart": 406,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "druid_lands_aid"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "companion-control-boundary"
       ],
       "collectionId": "srd-5.2.1",
@@ -2223,39 +2256,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON-RUNTIME: Consume the retained Sacred Weapon active binding for attack bonus, damage type choice, light emission, dismissal, and not-carried lifecycle semantics. Owner: battle-runtime attack/light reducers plus active-effect lifecycle owners and Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for attack bonus minimum, Radiant choice, light projection, dismissal/not-carried ending, and active binding expiration.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Paladin Sacred Weapon",
-          "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
-          "levelBand": "level-3",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 270,
-            "lineStart": 263,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "paladin_sacred_weapon"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-runtime-presentation-exploration"
       ],
       "collectionId": "srd-5.2.1",
@@ -2412,15 +2412,48 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME: Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state. Owner: battle-runtime selected-option attack reducers plus Quint parity. Required output: Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Ranger Hunter's Prey",
+          "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
+          "levelBand": "level-3",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 250,
+            "lineStart": 243,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "ranger_hunters_prey"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.",
+      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.; Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.",
       "selectedIdentity": {
         "owner": "battle-runtime deterministic admission/projection owner",
-        "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+        "reason": "Tasks L13UG-A17 and L3CF-05 admit Surface shape and support-profile projection only. L3CF-05 found no independent battle-owned Bonus Action shell to promote because the current runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation subject for this profile to wrap.",
         "status": "not-applicable"
       },
       "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
@@ -3107,7 +3140,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 132,
+      "count": 131,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3144,7 +3177,6 @@
         "divine_smite",
         "dragons_breath",
         "druid_circle_of_the_land_spells",
-        "druid_lands_aid",
         "druid_primal_order",
         "eldritch_blast",
         "enhance_ability",
@@ -3195,13 +3227,13 @@
         "paladin_channel_divinity",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
+        "paladin_sacred_weapon",
         "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
         "protection_from_poison",
         "ranger_deft_explorer",
-        "ranger_hunters_prey",
         "ranger_weapon_mastery",
         "ray_of_enfeeblement",
         "ray_of_frost",
@@ -3306,15 +3338,16 @@
       ]
     },
     {
-      "count": 7,
+      "count": 8,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "cleric_preserve_life",
+        "druid_lands_aid",
         "druid_wild_shape",
         "monk_open_hand_technique",
-        "paladin_sacred_weapon",
+        "ranger_hunters_prey",
         "sorcerer_metamagic",
         "wizard_potent_cantrip"
       ]
@@ -3367,24 +3400,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 98,
-      "numerator": 98,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 129,
-      "numerator": 129,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 132,
-      "percent": "67%"
+      "numerator": 131,
+      "percent": "66.5%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -6100,8 +6133,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 129,
-        "numerator": 129,
+        "denominator": 130,
+        "numerator": 130,
         "percent": "100%"
       }
     },
@@ -8426,6 +8459,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.paladin-sacred-weapon",
+            "profileKind": "resource",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+            ]
+          }
+        ],
+        "unitId": "paladin_sacred_weapon"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -10688,20 +10743,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 35,
-      "supported-profile": 132,
+      "profile-subset-supported": 36,
+      "supported-profile": 131,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 7,
+      "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 11,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 132
+      "supported-profile": 131
     },
-    "nonSupportedFrontier": 65,
+    "nonSupportedFrontier": 66,
     "strictDenominator": 197
   }
 }

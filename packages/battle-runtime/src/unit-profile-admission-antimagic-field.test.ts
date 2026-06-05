@@ -41,8 +41,8 @@ import {
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleFill,
   type BattleHole,
-  type BattleLightEmitter,
   type BattleState,
+  type BattleStoredLightEmitter,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 
@@ -114,7 +114,10 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       antimagicAffectedLight(artifactEffectId, "artifact"),
     ]);
 
-    expect(resolved.state.lightEmitters).toEqual([ordinaryLight, artifactLight]);
+    expect(resolved.state.lightEmitters).toEqual([
+      ordinaryLight,
+      artifactLight,
+    ]);
     expect(resolved.snapshot.lightEmitters).toEqual([artifactLight]);
     expect(
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
@@ -205,7 +208,10 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       ],
     });
     const suppressed = antimagicFieldSuppressing(state, [
-      antimagicAffectedSpellObjectContactDamage(sourceEffectId, "ordinarySpell"),
+      antimagicAffectedSpellObjectContactDamage(
+        sourceEffectId,
+        "ordinarySpell",
+      ),
     ]);
 
     expect(
@@ -291,9 +297,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
             effect.sourceEffectId === sourceEffectId,
         ),
     ).toBe(true);
-    expect(
-      maybeSpiritualWeaponRepeatAct(suppressed),
-    ).toBeUndefined();
+    expect(maybeSpiritualWeaponRepeatAct(suppressed)).toBeUndefined();
 
     const targetTurn = endTurn({
       state: suppressed,
@@ -353,7 +357,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const staleAct = maybeSpiritualWeaponRepeatAct(state);
     expect(staleAct).toBeDefined();
     if (staleAct === undefined) {
-      throw new Error("Expected Spiritual Weapon repeat act before suppression.");
+      throw new Error(
+        "Expected Spiritual Weapon repeat act before suppression.",
+      );
     }
     const suppressed = antimagicFieldSuppressing(state, [
       antimagicAffectedSpiritualWeapon(sourceEffectId, "ordinarySpell"),
@@ -397,7 +403,6 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       forcePositionId: spiritualWeaponEffect.forcePositionId,
     });
   });
-
 });
 
 function maybeSpiritualWeaponRepeatAct(state: BattleState) {
@@ -410,13 +415,15 @@ function maybeSpiritualWeaponRepeatAct(state: BattleState) {
 }
 
 function antimagicFieldBattle(input?: {
-  readonly lightEmitters?: readonly BattleLightEmitter[];
+  readonly lightEmitters?: readonly BattleStoredLightEmitter[];
   readonly activeEffects?: readonly BattleActiveEffect[];
   readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
   readonly spellSlots?: SpellBattleSlots;
 }): BattleState {
   const base = spellBattle({
-    preparedSpells: input?.preparedSpells ?? [spellRecord(antimagicFieldUnitId)],
+    preparedSpells: input?.preparedSpells ?? [
+      spellRecord(antimagicFieldUnitId),
+    ],
     spellSlots: input?.spellSlots ?? [{ spellLevel: 8, count: 1 }],
   });
   if (input?.activeEffects === undefined) {
@@ -443,7 +450,10 @@ function antimagicFieldBattle(input?: {
 function castAntimagicField(
   state: BattleState,
   affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
-): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
   const act = spellAct({
     state,
     spellId: antimagicFieldUnitId,

@@ -62,8 +62,8 @@
       "value": 274
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 155,
-      "numerator": 155,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 136,
-      "numerator": 136,
+      "denominator": 137,
+      "numerator": 137,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 136,
-      "numerator": 136,
+      "denominator": 137,
+      "numerator": 137,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 152,
-      "numerator": 152,
+      "denominator": 153,
+      "numerator": 153,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 100,
-      "numerator": 100,
+      "denominator": 101,
+      "numerator": 101,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 155,
-      "numerator": 151,
+      "denominator": 154,
+      "numerator": 150,
       "percent": "97.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 227,
-      "numerator": 155,
-      "percent": "68.3%"
+      "numerator": 154,
+      "percent": "67.8%"
     }
   },
   "metricSemantics": [
@@ -4086,7 +4086,7 @@
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle initialization retains the parsed support profile on selected character combatants, and battle runtime consumes existing Magic Action, Wild Shape resource, spell save DC, caller-supplied Sphere membership, save outcomes, and 2d6 damage/healing fills to apply level-3 Necrotic damage with half damage on success plus one chosen in-area healing target without authored-identity dispatch, duplicate Wild Shape state, or duplicate geometry; later Druid-level dice scaling remains future promoted reducer work.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
       "taskRefs": [
         "L13UG-A16",
         "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
@@ -4147,9 +4147,10 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape and preserves its Bonus Action cost as delegated permission metadata. This profile does not claim an independent battle reducer or QNT shell: current battle runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation BattleSubject that Fast Hands can wrap without inventing item or object state. The concrete delegated owners must spend the Bonus Action when they consume this profile.",
       "taskRefs": [
-        "L13UG-A17"
+        "L13UG-A17",
+        "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
       ],
       "title": "Unit feature admits delegated Bonus Action standard-action permissions",
       "verificationOwners": []
@@ -4237,7 +4238,7 @@
     },
     {
       "id": "unit-feature.paladin-sacred-weapon",
-      "profileKind": "battle-admission",
+      "profileKind": "resource",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
       ],
@@ -4245,14 +4246,17 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/character-battle-resources.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, light facts, and dismissal facts without duplicating item or resource state. Battle initialization retains the selected Sacred Weapon support profile on character combatants. Battle resource projection admits only the Paladin Channel Divinity use-count resource required by this Sacred Weapon spend path, not every Channel Divinity-shaped resource container. Battle action discovery and resolution consume existing action economy state, existing Paladin Channel Divinity resource state, and existing selected loadout/weapon attack facts to offer Sacred Weapon only for an available Attack action, an available use, and a held Melee weapon; activation spends the Attack action and one use, records a single active binding to the selected weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces the previous binding on recast. The active binding is then consumed by attack, damage-type, light-projection, no-action dismissal, timed-expiration, and no-longer-carried cleanup owners, deriving all executable facts from the support profile, existing character statistics, selected loadout weapon state, and active-effect lifecycle.",
       "taskRefs": [
         "L13UG-A18",
-        "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+        "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
+        "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
       ],
-      "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
+      "title": "Unit feature activates Sacred Weapon and applies the bound weapon attack, damage, light, and lifecycle effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -4285,12 +4289,12 @@
         "packages/character-creation-runtime/src/finalization.ts",
         "packages/character-battle-runtime/src/battle-support-profiles.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization retains the selected Hunter's Prey option on the existing selected Unit ref and the character-battle handoff preserves that typed option in BattleUnitRef. Battle runtime rejects missing retained options, offers selected Colossus Slayer as an optional once-per-turn same-type weapon damage rider only on weapon hits against targets below Hit Point maximum, and executes selected Horde Breaker as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet, within-weapon-range, and not-attacked-this-turn predicate facts while exposing non-enemy target choices and reusing existing weapon-attack damage rider owners such as attack damage riders and marked-target damage.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
       "taskRefs": [
         "L13UG-A18",
         "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
       ],
-      "title": "Unit feature executes Hunter's Prey Colossus Slayer and Horde Breaker selected options",
+      "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -4383,13 +4387,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 136,
-        "numerator": 136,
+        "denominator": 137,
+        "numerator": 137,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 136,
-        "numerator": 136,
+        "denominator": 137,
+        "numerator": 137,
         "percent": "100%"
       }
     },
@@ -6719,6 +6723,22 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.paladin-sacred-weapon",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.rogue-steady-aim",
         "profileKind": "bonus-action",
         "qntOwners": [
@@ -6734,8 +6754,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 152,
-          "numerator": 152,
+          "denominator": 153,
+          "numerator": 153,
           "percent": "100%"
         }
       },
@@ -9464,6 +9484,28 @@
             }
           ],
           "unitId": "paladin_paladins_smite"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.paladin-sacred-weapon",
+              "profileKind": "resource",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
+              ]
+            }
+          ],
+          "unitId": "paladin_sacred_weapon"
         },
         {
           "joinStatus": "covered",
@@ -13566,6 +13608,14 @@
       "taskId": "L13UG-A17"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed SRD 5.2.1 Rogue Fast Hands, UBIQUITOUS_LANGUAGE action terms, the Surface bonus_action_delegated_standard_actions shape, and current battle subjects. Fast Hands has no battle-owned reducer or QNT shell independent of the concrete delegated procedures: lock/trap/pocket checks are table/tool-check owned, generic Utilize object effects are not a current battle subject, and magic-item Magic action activation requires item-owned procedure state. The admission profile remains deterministic metadata only; concrete delegated owners must spend the Bonus Action when they consume it.",
+      "profileIds": [
+        "unit-feature.bonus-action-delegated-standard-actions"
+      ],
+      "taskId": "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
+    },
+    {
       "claimKind": "admission-projection",
       "note": "Focused battle-runtime admission tests cover Surface mechanics shape admission, malformed-shape rejection, class/subclass grant reachability, and support-profile projection without authored-identity dispatch. Reducer execution and QNT parity remain explicit follow-up work: the current battle runtime has existing owners for action economy, resources, movement, attack roll modes, attack damage riders, item/light state, and spell cantrip damage that must consume these typed profiles directly rather than a detached Task 18 state machine.",
       "profileIds": [
@@ -13756,6 +13806,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Focused Sacred Weapon QNT witness covers the active effect's Charisma attack-roll bonus with minimum +1, normal-or-Radiant hit damage choice, Bright 20-foot plus Dim additional 20-foot light projection, no-action dismissal, and not-carried cleanup.",
+      "profileIds": [
+        "unit-feature.paladin-sacred-weapon"
+      ],
+      "taskId": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity replay cover applying the active binding to the bound weapon attack roll, projecting normal and Radiant damage-type attack options, projecting feature-owned Bright/Dim light without spell provenance, and ending the active binding plus light on dismissal or not carrying the weapon.",
+      "profileIds": [
+        "unit-feature.paladin-sacred-weapon"
+      ],
+      "taskId": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration, scalar buff, save-gated damage, and direct spell-attack damage action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit where applicable, Quickened same-turn level-1-plus spell lock commit for both slotted spells and cantrip spell attacks, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
       "profileIds": [
         "unit-feature.metamagic-cast-governor-quickened"
@@ -13920,12 +13986,12 @@
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 103,
-        "profileSubsetSupportedUnits": 21,
+        "profileSubsetSupportedUnits": 22,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 55,
+        "supportedProfileUnits": 54,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -16416,14 +16482,40 @@
           {
             "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
             "mechanic": "Add Druid level 10 and 14 dice scaling for Land's Aid damage and healing after the level-3 runtime owner exists."
+          },
+          {
+            "followUpTaskId": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
+            "mechanic": "Execute Land's Aid as a Magic Action: spend one Wild Shape use, consume caller-supplied Sphere area membership, resolve Constitution saves, apply 2d6 Necrotic damage with half damage on success, and heal one chosen creature in the area for 2d6 Hit Points."
           }
         ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-RUNTIME",
+            "mechanic": "Consume the admitted magic-action-area-save-damage-healing profile to spend Wild Shape, validate caller-supplied area membership, resolve Constitution saves, deal level-3 Necrotic damage, and heal one chosen target.",
+            "owner": "battle-runtime Unit feature Magic Action area save damage/healing reducers plus Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for resource spend, area membership fills, save outcomes, damage, healing, and rejection without authored-identity dispatch.",
+            "title": "Druid Lands Aid Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-DRUID-LANDS-AID-SCALING",
+            "mechanic": "Represent and execute the SRD Druid level 10 and 14 3d6/4d6 Land's Aid damage and healing scaling after the level-3 runtime behavior is promoted.",
+            "owner": "Surface mechanics plus battle-runtime Land's Aid execution owner",
+            "requiredOutput": "Updated Surface mechanics, support-profile projection, focused tests, generated matrix artifacts, and runtime/QNT parity for level-threshold dice scaling.",
+            "title": "Druid Lands Aid Scaling"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Wild Shape spend area save damage/healing owner plus later Druid-level scaling owner",
         "profileIds": [
           "unit-feature.magic-action-area-save-damage-healing"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A16 admits level-3 Surface shape and support-profile projection only. No reducer execution, selected Unit identity replay boundary, or later-level dice scaling is claimed until the Land's Aid execution owners consume this profile.",
+          "tag": "not-applicable"
+        },
         "supportedMechanics": [
           "Battle Unit support admits the Surface magic_action_area_save_damage_healing mechanics with Magic Action activation and a referenced Wild Shape spend",
           "The projected level-3 support profile carries the 60-foot point origin, 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area without duplicating Wild Shape state or geometry",
@@ -16431,7 +16523,7 @@
           "Battle runtime discovers Land's Aid only when a Magic Action, spell save DC, and existing Wild Shape resource use are available",
           "Battle runtime consumes caller-supplied Sphere membership facts, Saving Throw outcomes, and 2d6 damage/healing fills to spend one Wild Shape use, apply level-3 Necrotic damage with half damage on success, and heal one chosen in-area creature for 2d6 Hit Points without deriving duplicate geometry"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16460,7 +16552,7 @@
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
             "packages/battle-runtime/src/battle-reducer/unit-features.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. Battle initialization retains the parsed support profile on selected character combatants, and battle runtime consumes existing Magic Action, Wild Shape resource, spell save DC, caller-supplied Sphere membership, save outcomes, and 2d6 damage/healing fills to apply level-3 Necrotic damage with half damage on success plus one chosen in-area healing target without authored-identity dispatch, duplicate Wild Shape state, or duplicate geometry; later Druid-level dice scaling remains future promoted reducer work.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface magic_action_area_save_damage_healing shape, a referenced Wild Shape resource Unit, a point within 60 feet, a 10-foot-radius Sphere, Constitution save against class spell save DC, Necrotic damage with half damage on success, and one 2d6 healing target in the area. It projects those facts without duplicating Wild Shape resource state or geometry; area membership, save resolution, damage, healing execution, and later Druid-level dice scaling remain future promoted reducer work.",
           "taskRefs": [
             "L13UG-A16",
             "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
@@ -17964,6 +18056,30 @@
               "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
             },
             "mechanic": "Activate magic items that require a Magic action."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "table/tool-check owner",
+              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper."
+            },
+            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, success/failure consequences, and the Fast Hands Bonus Action spend for that concrete procedure."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "Utilize action owner",
+              "reason": "Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure."
+            },
+            "mechanic": "Execute the object interaction effects of the Utilize action, including the Fast Hands Bonus Action spend when a generic object-use owner exists."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "magic-item activation owner",
+              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner."
+            },
+            "mechanic": "Activate magic items that require a Magic action, including the Fast Hands Bonus Action spend for the selected magic-item procedure."
           }
         ],
         "profileIds": [
@@ -17974,13 +18090,15 @@
         ],
         "selectedIdentityEvidenceDisposition": {
           "owner": "battle-runtime deterministic admission/projection owner",
-          "reason": "Task L13UG-A17 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until delegated action owners consume this profile.",
+          "reason": "Tasks L13UG-A17 and L3CF-05 admit Surface shape and support-profile projection only. L3CF-05 found no independent battle-owned Bonus Action shell to promote because the current runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation subject for this profile to wrap.",
           "tag": "not-applicable"
         },
         "supportedMechanics": [
           "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
           "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
-          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action"
+          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action",
+          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics and preserves the declared Bonus Action cost as delegated permission metadata",
+          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action permission, and a Magic action permission restricted to magic items that require a Magic action"
         ],
         "tag": "profile-subset-supported"
       },
@@ -18002,9 +18120,10 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape. It projects Fast Hands' Bonus Action permission for Dexterity (Sleight of Hand) lock, trap, and pocket checks, the Utilize action, and magic-item Magic action use while leaving Ability Check adjudication, object interaction effects, and item activation execution to the table/action/item owners.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface bonus_action_delegated_standard_actions shape and preserves its Bonus Action cost as delegated permission metadata. This profile does not claim an independent battle reducer or QNT shell: current battle runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation BattleSubject that Fast Hands can wrap without inventing item or object state. The concrete delegated owners must spend the Bonus Action when they consume this profile.",
           "taskRefs": [
-            "L13UG-A17"
+            "L13UG-A17",
+            "L3CF-05-ROGUE-FAST-HANDS-BATTLE-CLOSURE-AUDIT"
           ],
           "title": "Unit feature admits delegated Bonus Action standard-action permissions",
           "verificationOwners": []
@@ -20346,9 +20465,13 @@
           "Battle Unit support admits the Surface sacred_weapon mechanics with Attack action activation and referenced Paladin Channel Divinity spend",
           "The projected support profile carries Attack action activation, Paladin Channel Divinity spend, held Melee weapon target, Charisma attack-roll bonus with minimum 1, normal-or-Radiant hit damage choice, light radii, and dismissal triggers without authored-identity dispatch",
           "Battle runtime discovers Sacred Weapon only for selected support-profile character combatants that can spend the Attack action, have a Paladin Channel Divinity use remaining, and hold a selected Melee weapon",
-          "Sacred Weapon activation spends the Attack action and one Paladin Channel Divinity use, binds the active effect to the selected held weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces a prior Sacred Weapon binding on recast"
+          "Sacred Weapon activation spends the Attack action and one Paladin Channel Divinity use, binds the active effect to the selected held weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces a prior Sacred Weapon binding on recast",
+          "The active Sacred Weapon binding adds the character's Charisma modifier, minimum +1, to attack rolls with the bound weapon using existing character statistics",
+          "The bound weapon attack surface offers the weapon's normal damage type or Radiant damage through the existing weapon damage-type choice path",
+          "The active Sacred Weapon binding projects Bright 20-foot plus Dim additional 20-foot light through the battle light-emitter projection without duplicating item state",
+          "The active Sacred Weapon binding ends on explicit no-action dismissal, recast replacement, timed expiration, or no-longer-carried cleanup through the existing active-effect lifecycle"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20361,6 +20484,11 @@
           "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
         }
       ],
       "executableMechanics": true,
@@ -20368,7 +20496,7 @@
       "profiles": [
         {
           "id": "unit-feature.paladin-sacred-weapon",
-          "profileKind": "battle-admission",
+          "profileKind": "resource",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt"
           ],
@@ -20376,14 +20504,17 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/character-battle-resources.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
-            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, and light facts without duplicating item or resource state. Existing action discovery, resource, item, attack, damage-type, light, and dismissal owners must consume these facts before this profile can claim promoted reducer/QNT parity.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface sacred_weapon shape and referenced Paladin Channel Divinity resource and projects typed action, resource-spend, held-melee-weapon, Charisma attack-roll bonus, normal-or-Radiant damage choice, light facts, and dismissal facts without duplicating item or resource state. Battle initialization retains the selected Sacred Weapon support profile on character combatants. Battle resource projection admits only the Paladin Channel Divinity use-count resource required by this Sacred Weapon spend path, not every Channel Divinity-shaped resource container. Battle action discovery and resolution consume existing action economy state, existing Paladin Channel Divinity resource state, and existing selected loadout/weapon attack facts to offer Sacred Weapon only for an available Attack action, an available use, and a held Melee weapon; activation spends the Attack action and one use, records a single active binding to the selected weapon item, rejects stale missing-resource or Ranged-weapon subjects, and replaces the previous binding on recast. The active binding is then consumed by attack, damage-type, light-projection, no-action dismissal, timed-expiration, and no-longer-carried cleanup owners, deriving all executable facts from the support profile, existing character statistics, selected loadout weapon state, and active-effect lifecycle.",
           "taskRefs": [
             "L13UG-A18",
-            "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+            "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
+            "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
           ],
-          "title": "Unit feature admits Sacred Weapon Channel Divinity attack enhancement facts",
+          "title": "Unit feature activates Sacred Weapon and applies the bound weapon attack, damage, light, and lifecycle effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -20624,21 +20755,44 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
+            "mechanic": "Execute the retained Hunter's Prey choice in attack resolution, including Colossus Slayer once-per-turn missing-HP damage and Horde Breaker once-per-turn same-weapon extra attack against a different nearby creature."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY-RUNTIME",
+            "mechanic": "Consume the admitted hunters-prey profile from retained selected-option state and caller-visible attack/target facts without assuming predicates are true or storing parallel weapon/target state.",
+            "owner": "battle-runtime selected-option attack reducers plus Quint parity",
+            "requiredOutput": "Supported-profile Unit claim with focused runtime tests and promoted QNT/runtime parity for Colossus Slayer hit/missing-HP/once-per-turn gates, Horde Breaker different-nearby-target and same-weapon extra attack gates, and selected-option rejection.",
+            "title": "Ranger Hunters Prey Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime selected class-feature option, attack damage-rider, target-spatial-fact, and extra-attack owners plus promoted Quint parity",
         "profileIds": [
           "unit-feature.hunters-prey"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "battle-runtime deterministic admission/projection owner",
+          "reason": "Task L13UG-A18 admits Surface shape and support-profile projection only. No reducer execution or selected Unit identity replay boundary is claimed until the selected-option and attack owners consume this profile.",
+          "tag": "not-applicable"
+        },
         "supportedMechanics": [
           "Hunter grants Hunter's Prey as a level-3 subclass feature Unit",
           "Battle Unit support admits the Surface hunters_prey choose-one mechanics and projects typed Colossus Slayer and Horde Breaker option facts without authored-identity dispatch",
           "Character finalization records the selected Hunter's Prey option on the existing selected Unit ref, and the character-battle handoff preserves that typed option in BattleUnitRef instead of storing a parallel weapon or target model",
           "Battle runtime rejects weapon attacks for Hunter's Prey support refs that lack a retained selected option",
           "Selected Colossus Slayer is offered as an optional once-per-turn same-type weapon damage rider only when a weapon hit target is below its Hit Point maximum, so an eligible hit can be skipped and the use saved for a later hit on the same turn",
-          "Selected Horde Breaker executes as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet-of-original-target, within-weapon-range, and not-attacked-this-turn predicate facts, including non-enemy target choice availability and reuse of existing weapon-attack damage rider owners such as attack damage riders and marked-target damage"
+          "Selected Horde Breaker executes as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet-of-original-target, within-weapon-range, and not-attacked-this-turn predicate facts, including non-enemy target choice availability and reuse of existing weapon-attack damage rider owners such as attack damage riders and marked-target damage",
+          "Battle Unit support admits the Surface hunters_prey choose-one mechanics",
+          "The projected support profile carries Colossus Slayer and Horde Breaker option facts, including the target missing-Hit-Point and different-creature-within-5-feet predicates, without authored-identity dispatch"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20683,12 +20837,12 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-battle-runtime/src/battle-support-profiles.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Character finalization retains the selected Hunter's Prey option on the existing selected Unit ref and the character-battle handoff preserves that typed option in BattleUnitRef. Battle runtime rejects missing retained options, offers selected Colossus Slayer as an optional once-per-turn same-type weapon damage rider only on weapon hits against targets below Hit Point maximum, and executes selected Horde Breaker as a once-per-turn same-weapon extra attack after a hit or miss with a weapon against a caller-supplied different creature target with explicit within-5-feet, within-weapon-range, and not-attacked-this-turn predicate facts while exposing non-enemy target choices and reusing existing weapon-attack damage rider owners such as attack damage riders and marked-target damage.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hunters_prey choose-one shape and projects typed Colossus Slayer and Horde Breaker option facts without storing a parallel weapon or target model. Selected-option state, missing-Hit-Point target checks, once-per-turn use, different-target and within-5-feet witnesses, same-weapon extra attack, and damage-rider execution must be owned by the existing attack runtime before this profile can claim promoted reducer/QNT parity.",
           "taskRefs": [
             "L13UG-A18",
             "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
           ],
-          "title": "Unit feature executes Hunter's Prey Colossus Slayer and Horde Breaker selected options",
+          "title": "Unit feature admits Hunter's Prey Colossus Slayer and Horde Breaker choice facts",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

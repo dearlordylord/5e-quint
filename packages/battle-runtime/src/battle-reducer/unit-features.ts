@@ -146,11 +146,12 @@ export function supportedUnitFeatureActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   const actor = state.combatants.get(actorId);
-  if (
-    !isCharacterBattleCreatureState(actor) ||
-    !combatantCanTakeActions(actor)
-  ) {
+  if (!isCharacterBattleCreatureState(actor)) {
     return [];
+  }
+  const noActionActs = paladinSacredWeaponDismissActs(actor);
+  if (!combatantCanTakeActions(actor)) {
+    return noActionActs;
   }
 
   const classLevels = actor.origin.classLevels;
@@ -257,6 +258,7 @@ export function supportedUnitFeatureActs(
     ...magicActionHealingPoolActs(state, actor),
     ...magicActionAreaSaveDamageHealingActs(state, actor),
     ...paladinSacredWeaponActs(state, actor),
+    ...noActionActs,
     ...rogueSteadyAimActs(state, actor),
   ];
 }
@@ -380,6 +382,36 @@ function paladinSacredWeaponActs(
       }));
     },
   );
+}
+
+function paladinSacredWeaponDismissActs(
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  const activeUnitIds = new Set(
+    actor.activeEffects.flatMap((effect) =>
+      effect.kind === "paladinSacredWeapon" &&
+      effect.sourceCombatantId === actor.combatantId
+        ? [effect.sourceUnitId]
+        : [],
+    ),
+  );
+  return [...activeUnitIds].flatMap((unitId) => {
+    const unitFeature = actor.origin.paladinSacredWeaponProfiles.get(unitId);
+    return unitFeature === undefined
+      ? []
+      : [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId: actor.combatantId,
+              unitId: unitFeature.unit.id,
+            },
+            label: `${unitFeature.unit.name}: Dismiss`,
+            summary: "End the active Sacred Weapon effect.",
+            initialHoles: [],
+          },
+        ];
+  });
 }
 
 function sacredWeaponHeldMeleeWeapons(
@@ -546,6 +578,16 @@ export function resolveUnitFeature(
     const rogueSteadyAim = actor.origin.rogueSteadyAimProfiles.get(
       subject.unitId,
     );
+    const sacredWeapon = actor.origin.paladinSacredWeaponProfiles.get(
+      subject.unitId,
+    );
+    if (sacredWeapon !== undefined) {
+      return resolvePaladinSacredWeaponDismissUnitFeature(
+        input,
+        actor,
+        sacredWeapon,
+      );
+    }
     if (rogueSteadyAim !== undefined) {
       return resolveRogueSteadyAimUnitFeature(input, actor, rogueSteadyAim);
     }
@@ -702,6 +744,50 @@ export function resolveUnitFeatureHeldWeaponActivation(
       actor.combatantId,
       nextActor,
     ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolvePaladinSacredWeaponDismissUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "paladinSacredWeapon" }
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sacred Weapon dismissal does not accept battle fills.",
+    );
+  }
+  const activeEffects = actor.activeEffects.filter(
+    (effect) =>
+      !(
+        effect.kind === "paladinSacredWeapon" &&
+        effect.sourceUnitId === unitFeature.unit.id &&
+        effect.sourceCombatantId === actor.combatantId
+      ),
+  );
+  if (activeEffects.length === actor.activeEffects.length) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon is not active for this actor.",
+    );
+  }
+  const nextState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(actor.combatantId, {
+      ...actor,
+      activeEffects,
+    }),
   };
   return {
     tag: "resolved",

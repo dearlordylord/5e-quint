@@ -309,6 +309,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | proof-only | profile-scoped: `unit-feature.paladin-sacred-weapon` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
@@ -466,6 +467,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.innate-sorcery-activation` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.martial-arts-attack-projection` | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.monk-focus-battle-options` | `packages/battle-runtime/battle-runtime-monk-focus.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.paladin-sacred-weapon` | `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.passive-armor-class-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.passive-ranged-attack-roll-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.passive-saving-throw-roll-mode` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

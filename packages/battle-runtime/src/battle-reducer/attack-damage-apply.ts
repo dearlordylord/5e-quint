@@ -1,6 +1,6 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
@@ -57,6 +57,7 @@ import {
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
 import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-effects.ts";
+import { scoreModifier } from "./domain-helpers.ts";
 import {
   statBlockAttackActionOptions,
   statBlockAttackResourceAvailable,
@@ -461,9 +462,101 @@ function weaponAttackWithActiveSpellEffects(
   return weaponAttackWithMagicWeaponEnhancement(
     state,
     actor.combatantId,
-    weaponAttackWithActiveSpellOverride(actor, attack, attachedWeaponItemId),
+    weaponAttackWithActiveSacredWeapon(
+      actor,
+      weaponAttackWithActiveSpellOverride(actor, attack, attachedWeaponItemId),
+      attachedWeaponItemId,
+    ),
     attachedWeaponItemId,
   );
+}
+
+function weaponAttackWithActiveSacredWeapon(
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption {
+  if (
+    actor.origin.kind !== "character" ||
+    attachedWeaponItemId === undefined ||
+    attack.weapon.damage.kind !== "dice"
+  ) {
+    return attack;
+  }
+  const effect = actor.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "paladinSacredWeapon" }
+    > =>
+      candidate.kind === "paladinSacredWeapon" &&
+      candidate.sourceCombatantId === actor.combatantId &&
+      candidate.weaponItemId === attachedWeaponItemId,
+  );
+  if (effect === undefined) {
+    return attack;
+  }
+  const profile = actor.origin.paladinSacredWeaponProfiles.get(
+    effect.sourceUnitId,
+  );
+  if (profile === undefined) {
+    return attack;
+  }
+  const sacredWeaponAttackBonus = Math.max(
+    profile.sacredWeapon.attackRollBonus.minimum,
+    scoreModifier(actor.origin.d20Statistics.abilityScores.cha),
+  );
+  return {
+    ...attack,
+    attackBonus: attackBonus(
+      Number(
+        attack.attackBonus ?? attackBonus(Number(attack.abilityModifier)),
+      ) + sacredWeaponAttackBonus,
+    ),
+    ...(attack.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: sacredWeaponAbilityChoices(
+            attack.alternateAbilityChoices,
+            sacredWeaponAttackBonus,
+          ),
+        }),
+    ...(profile.sacredWeapon.hitDamageTypeChoice.includes("radiant") &&
+    attack.weapon.damage.damageType !== "radiant"
+      ? {
+          damageTypeChoices: [
+            attack.weapon.damage.damageType,
+            "radiant",
+          ] as const,
+        }
+      : {}),
+  };
+}
+
+function sacredWeaponAbilityChoices(
+  choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+  sacredWeaponAttackBonus: number,
+): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
+  const [first, ...rest] = choices;
+  return [
+    sacredWeaponAbilityChoice(first, sacredWeaponAttackBonus),
+    ...rest.map((choice) =>
+      sacredWeaponAbilityChoice(choice, sacredWeaponAttackBonus),
+    ),
+  ];
+}
+
+function sacredWeaponAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+  sacredWeaponAttackBonus: number,
+): CharacterWeaponAttackAbilityChoice {
+  return {
+    ...choice,
+    attackBonus: attackBonus(
+      Number(choice.attackBonus) + sacredWeaponAttackBonus,
+    ),
+  };
 }
 
 function weaponAttackWithActiveSpellOverride(

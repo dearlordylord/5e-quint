@@ -1,5 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
 // UNIT-IDENTITY-MBT-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
+// UNIT-IDENTITY-MBT-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import * as path from "node:path";
@@ -8,6 +10,7 @@ import { describe, expect, test } from "vitest";
 
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  attackTargetFill,
   battleId,
   battleUnitRefWithSupportProfiles,
   combatantId,
@@ -15,11 +18,15 @@ import {
   Either,
   oppositionSide,
   partySide,
+  requireResultHole,
   resolveBattleSubject,
+  snapshotBattle,
   startBattle,
   type AvailableBattleAct,
   type BattleActiveEffect,
+  type BattleHole,
   type BattleState,
+  type BattleSubject,
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -30,7 +37,7 @@ import {
   characterCreature,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
-import { characterBattleResourceSupportedForUnit } from "./character-battle-resources.ts";
+import { normalizeEarlyEndedOngoingFeatures } from "./battle-reducer/creature-state.ts";
 
 type SacredWeaponProjection = {
   readonly activationOffered: boolean;
@@ -43,7 +50,10 @@ type SacredWeaponProjection = {
     | "activated"
     | "noResource"
     | "rangedWeapon"
-    | "recast";
+    | "recast"
+    | "attackEffects"
+    | "dismissed"
+    | "notCarryingWeapon";
 };
 
 const paladinId = combatantId("sacred-weapon-paladin");
@@ -52,16 +62,12 @@ const clericChannelDivinityUnitId = "cleric_channel_divinity";
 
 describe("Sacred Weapon activation", () => {
   test("admits only the Sacred Weapon Channel Divinity spend resource for this battle path", () => {
+    expect(sacredWeaponActorResourceUnitIds(sacredWeaponBattle({}))).toEqual([
+      paladinChannelDivinityUnitId,
+    ]);
     expect(
-      characterBattleResourceSupportedForUnit(
-        unitLibrary.requireUnit(paladinChannelDivinityUnitId),
-      ),
-    ).toBe(true);
-    expect(
-      characterBattleResourceSupportedForUnit(
-        unitLibrary.requireUnit(clericChannelDivinityUnitId),
-      ),
-    ).toBe(false);
+      sacredWeaponActorResourceUnitIds(sacredWeaponBattle({})),
+    ).not.toContain(clericChannelDivinityUnitId);
   });
 
   test("discovers activation only for selected profile, Channel Divinity use, and held Melee weapon", () => {
@@ -141,6 +147,94 @@ describe("Sacred Weapon activation", () => {
       activeEffectCount: 1,
       rejected: false,
     });
+  });
+
+  test("active binding adds Charisma attack-roll bonus with minimum 1 and offers normal or Radiant damage", () => {
+    const state = sacredWeaponBattle({ charismaScore: 8 });
+    const activated = withFreshAttackAction(
+      resolveSacredWeapon(state, requireSacredWeaponAct(state)),
+      state,
+    );
+
+    const attackNames = discoverBattleActs(activated)
+      .filter(
+        (
+          act,
+        ): act is AvailableBattleAct & {
+          readonly subject: Extract<
+            BattleSubject,
+            { readonly tag: "action"; readonly action: "attack" }
+          >;
+        } => isPaladinAttackAct(act),
+      )
+      .map((act) => act.subject.attackName);
+    expect(attackNames).toEqual(
+      expect.arrayContaining(["Longsword (slashing)", "Longsword (radiant)"]),
+    );
+
+    const attackRoll = sacredWeaponAttackRoll(activated, "Longsword (radiant)");
+    expect(Number(attackRoll.attackBonus)).toBe(1);
+    if (!("attack" in attackRoll)) {
+      throw new Error("Expected weapon attack roll hole.");
+    }
+    expect(attackRoll.attack.kind).toBe("weapon");
+    if (attackRoll.attack.kind !== "weapon") return;
+    expect(attackRoll.attack.weapon.damage.damageType).toBe("radiant");
+  });
+
+  test("active binding projects Bright and Dim light from the carried weapon", () => {
+    const state = sacredWeaponBattle({});
+    const activated = resolveSacredWeapon(state, requireSacredWeaponAct(state));
+
+    expect(snapshotBattle(activated).lightEmitters).toEqual([
+      expect.objectContaining({
+        kind: "unitFeatureLightEmitter",
+        sourceUnitId: paladinSacredWeaponUnitId,
+        sourceCombatantId: paladinId,
+        attachment: { kind: "combatant", combatantId: paladinId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        },
+      }),
+    ]);
+  });
+
+  test("dismissal and no-longer-carried cleanup end the active binding and light", () => {
+    const state = sacredWeaponBattle({});
+    const activated = resolveSacredWeapon(state, requireSacredWeaponAct(state));
+    const dismiss = sacredWeaponDismissAct(activated);
+    expect(dismiss).toBeDefined();
+    if (dismiss === undefined) return;
+
+    const dismissed = resolveBattleSubject({
+      state: activated,
+      subject: dismiss.subject,
+      fills: [],
+    });
+    expect(dismissed).toMatchObject({
+      tag: "resolved",
+      state: { lightEmitters: [] },
+      snapshot: { lightEmitters: [] },
+    });
+    if (dismissed.tag !== "resolved") return;
+    expect(sacredWeaponProjection(dismissed.state, "dismissed")).toMatchObject({
+      activeEffectCount: 0,
+      boundWeaponItemId: "none",
+    });
+
+    const detached = normalizeEarlyEndedOngoingFeatures(
+      withMainWeaponItemId(activated, "dropped:weapon_longsword"),
+    );
+    expect(snapshotBattle(detached).lightEmitters).toEqual([]);
+    expect(sacredWeaponProjection(detached, "notCarryingWeapon")).toMatchObject(
+      {
+        activeEffectCount: 0,
+        boundWeaponItemId: "none",
+      },
+    );
+    expect(sacredWeaponDismissAct(detached)).toBeUndefined();
   });
 });
 
@@ -250,6 +344,79 @@ defineSelectedIdentityWitness({
             );
           },
         },
+        {
+          actionName: "doProjectSacredWeaponAttackDamageAndLight",
+          projectionAfter: {
+            activationOffered: false,
+            channelDivinityUsesRemaining: 1,
+            boundWeaponItemId: "main:weapon_longsword",
+            activeEffectCount: 1,
+            rejected: false,
+            lastResult: "attackEffects",
+          },
+          discover: () => {
+            const state = sacredWeaponBattle({});
+            return sacredWeaponProjection(
+              resolveSacredWeapon(state, requireSacredWeaponAct(state)),
+              "attackEffects",
+            );
+          },
+        },
+        {
+          actionName: "doDismissSacredWeapon",
+          projectionAfter: {
+            activationOffered: false,
+            channelDivinityUsesRemaining: 1,
+            boundWeaponItemId: "none",
+            activeEffectCount: 0,
+            rejected: false,
+            lastResult: "dismissed",
+          },
+          discover: () => {
+            const state = sacredWeaponBattle({});
+            const activated = resolveSacredWeapon(
+              state,
+              requireSacredWeaponAct(state),
+            );
+            const dismiss = sacredWeaponDismissAct(activated);
+            if (dismiss === undefined) {
+              throw new Error("Expected Sacred Weapon dismissal act.");
+            }
+            const dismissed = resolveBattleSubject({
+              state: activated,
+              subject: dismiss.subject,
+              fills: [],
+            });
+            if (dismissed.tag !== "resolved") {
+              throw new Error("Expected Sacred Weapon dismissal to resolve.");
+            }
+            return sacredWeaponProjection(dismissed.state, "dismissed");
+          },
+        },
+        {
+          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",
+          projectionAfter: {
+            activationOffered: false,
+            channelDivinityUsesRemaining: 1,
+            boundWeaponItemId: "none",
+            activeEffectCount: 0,
+            rejected: false,
+            lastResult: "notCarryingWeapon",
+          },
+          discover: () => {
+            const state = sacredWeaponBattle({});
+            const activated = resolveSacredWeapon(
+              state,
+              requireSacredWeaponAct(state),
+            );
+            return sacredWeaponProjection(
+              normalizeEarlyEndedOngoingFeatures(
+                withMainWeaponItemId(activated, "dropped:weapon_longsword"),
+              ),
+              "notCarryingWeapon",
+            );
+          },
+        },
       ],
     },
   ],
@@ -259,6 +426,7 @@ function sacredWeaponBattle(input: {
   readonly selectedProfile?: boolean;
   readonly channelDivinityUsesRemaining?: number;
   readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
+  readonly charismaScore?: number;
 }): BattleState {
   const sacredWeapon = unitLibrary.requireUnit(paladinSacredWeaponUnitId);
   const channelDivinity = unitLibrary.requireUnit(paladinChannelDivinityUnitId);
@@ -302,7 +470,9 @@ function sacredWeaponBattle(input: {
   if (Either.isLeft(state)) {
     throw new Error(state.left.message);
   }
-  return state.right;
+  return input.charismaScore === undefined
+    ? state.right
+    : withCharismaScore(state.right, input.charismaScore);
 }
 
 function sacredWeaponAct(state: BattleState): AvailableBattleAct | undefined {
@@ -310,6 +480,21 @@ function sacredWeaponAct(state: BattleState): AvailableBattleAct | undefined {
     (act) =>
       act.subject.tag === "unitFeatureHeldWeaponActivation" &&
       act.subject.unitId === paladinSacredWeaponUnitId,
+  );
+}
+
+function isPaladinAttackAct(
+  act: AvailableBattleAct,
+): act is AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+} {
+  return (
+    act.subject.tag === "action" &&
+    act.subject.actorId === paladinId &&
+    act.subject.action === "attack"
   );
 }
 
@@ -326,6 +511,24 @@ function requireSacredWeaponAct(state: BattleState): AvailableBattleAct & {
   return { ...act, subject: act.subject };
 }
 
+function sacredWeaponDismissAct(state: BattleState):
+  | (AvailableBattleAct & {
+      readonly subject: Extract<
+        AvailableBattleAct["subject"],
+        { readonly tag: "unitFeature" }
+      >;
+    })
+  | undefined {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "unitFeature" &&
+      candidate.subject.unitId === paladinSacredWeaponUnitId,
+  );
+  return act?.subject.tag === "unitFeature"
+    ? { ...act, subject: act.subject }
+    : undefined;
+}
+
 function resolveSacredWeapon(
   state: BattleState,
   act: ReturnType<typeof requireSacredWeaponAct>,
@@ -339,6 +542,30 @@ function resolveSacredWeapon(
     throw new Error("Expected Sacred Weapon activation to resolve.");
   }
   return resolved.state;
+}
+
+function sacredWeaponAttackRoll(
+  state: BattleState,
+  attackName: "Longsword (slashing)" | "Longsword (radiant)",
+): Extract<BattleHole, { readonly kind: "attackRoll" }> {
+  const subject = {
+    tag: "action" as const,
+    actorId: paladinId,
+    action: "attack" as const,
+    attackName,
+  };
+  const target = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  return requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [attackTargetFill(target, paladinId, targetId, attackName)],
+    }),
+    "attackRoll",
+  );
 }
 
 function sacredWeaponProjection(
@@ -364,6 +591,14 @@ function sacredWeaponProjection(
     rejected: lastResult === "noResource" || lastResult === "rangedWeapon",
     lastResult,
   };
+}
+
+function sacredWeaponActorResourceUnitIds(state: BattleState): readonly string[] {
+  const actor = state.combatants.get(paladinId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Sacred Weapon character actor.");
+  }
+  return actor.origin.resources.map((resource) => resource.unit.id);
 }
 
 function isSacredWeaponEffect(
@@ -393,6 +628,32 @@ function withMainWeaponItemId(state: BattleState, itemId: string): BattleState {
         selectedLoadout: {
           ...actor.origin.selectedLoadout,
           weapon: { ...weapon, itemId },
+        },
+      },
+    }),
+  };
+}
+
+function withCharismaScore(
+  state: BattleState,
+  charismaScore: number,
+): BattleState {
+  const actor = state.combatants.get(paladinId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Sacred Weapon character actor.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(paladinId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        d20Statistics: {
+          ...actor.origin.d20Statistics,
+          abilityScores: {
+            ...actor.origin.d20Statistics.abilityScores,
+            cha: charismaScore,
+          },
         },
       },
     }),

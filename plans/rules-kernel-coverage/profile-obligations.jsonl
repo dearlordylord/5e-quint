@@ -15,6 +15,7 @@
 {"profileId":"unit-feature.innate-sorcery-activation","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.martial-arts-attack-projection","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.monk-focus-battle-options","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.paladin-sacred-weapon","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-armor-class-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-ranged-attack-roll-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.initiative-proficiency-and-swap","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
