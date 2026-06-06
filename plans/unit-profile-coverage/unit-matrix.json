@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 422,
-      "numerator": 227,
-      "percent": "53.8%"
+      "numerator": 228,
+      "percent": "54%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 507,
-      "numerator": 274,
-      "percent": "54%"
+      "numerator": 275,
+      "percent": "54.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 275
+      "value": 276
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 174,
-      "numerator": 170,
+      "denominator": 175,
+      "numerator": 171,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 275,
-      "numerator": 275,
+      "denominator": 276,
+      "numerator": 276,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 115,
-      "numerator": 112,
+      "denominator": 116,
+      "numerator": 113,
       "percent": "97.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 153,
-      "numerator": 153,
+      "denominator": 154,
+      "numerator": 154,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 167,
-      "numerator": 167,
+      "denominator": 168,
+      "numerator": 168,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 174,
-      "numerator": 170,
+      "denominator": 175,
+      "numerator": 171,
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 228,
-      "numerator": 174,
-      "percent": "76.3%"
+      "denominator": 229,
+      "numerator": 175,
+      "percent": "76.4%"
     }
   },
   "metricSemantics": [
@@ -4951,19 +4951,53 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-acid-arrow-attack-timing",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-attack-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Acid Arrow spell-attack Surface shape with fixed Acid initial damage, an explicit half-initial-only miss branch, and one fixed Acid end-of-next-turn later damage effect. It owns Magic Action and level-2-or-higher Spell Slot spending, ranged Spell Attack hit/miss adjudication, initial hit damage, miss-half-initial-only damage, hit-only target-end delayed damage storage, slot-scaled immediate and later damage dice, shared turn-boundary damage lifecycle holes, and cleanup of the one-shot delayed effect. Target visibility, cover, range path geometry, and spatial derivation remain caller/table facts.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+        "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT"
+      ],
+      "title": "Spell invocation resolves Acid Arrow immediate damage, miss-half damage, and target-end delayed damage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 153,
-        "numerator": 153,
+        "denominator": 154,
+        "numerator": 154,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 153,
-        "numerator": 153,
+        "denominator": 154,
+        "numerator": 154,
         "percent": "100%"
       }
     },
@@ -7578,6 +7612,28 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Acid Arrow applies immediate Acid damage, miss-half-initial-only damage, hit-only target-end delayed Acid damage, slot scaling, and one-shot cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-acid-arrow-attack-timing",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -7588,12 +7644,40 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 167,
-          "numerator": 167,
+          "denominator": 168,
+          "numerator": 168,
           "percent": "100%"
         }
       },
       "units": [
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Acid Arrow applies immediate Acid damage, miss-half-initial-only damage, hit-only target-end delayed Acid damage, slot scaling, and one-shot cleanup"
+                }
+              ],
+              "profileId": "spell.invocation-acid-arrow-attack-timing",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+              ]
+            }
+          ],
+          "unitId": "acid_arrow"
+        },
         {
           "joinStatus": "covered",
           "profiles": [
@@ -15418,10 +15502,20 @@
       "taskId": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE"
     },
     {
-      "claimKind": "accepted-owner-decision-blocker",
-      "note": "Task 8 records Acid Arrow RAW reconciliation as an explicit owner-decision blocker: the active local SRD 5.2.1 passage gives delayed hit damage but refers to initial damage in miss and higher-slot clauses. Do not admit acid_arrow, repair its Surface damage shape, or promote delayed runtime support until the owner approves a local corpus correction or ASSUMPTIONS.md entry answering the initial hit damage, later hit damage, miss damage derivation, and higher-slot scaling questions.",
-      "profileIds": [],
+      "claimKind": "qnt-proof",
+      "note": "Owner-approved local SRD corpus repair restores Acid Arrow's immediate 4d4 Acid damage plus later 2d4 Acid damage sentence, allowing the package-local Acid Arrow Quint witness to model immediate dice, target-end later dice, miss-half-initial-only damage, and slot scaling without an ASSUMPTIONS.md override.",
+      "profileIds": [
+        "spell.invocation-acid-arrow-attack-timing"
+      ],
       "taskId": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface and battle-runtime tests cover Acid Arrow catalog installation, structural spell-attack admission, immediate hit damage, miss-half-initial-only damage, hit-only target-end delayed damage, slot scaling facts, and delayed effect cleanup through End Turn.",
+      "profileIds": [
+        "spell.invocation-acid-arrow-attack-timing"
+      ],
+      "taskId": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -15565,17 +15659,17 @@
         "unsupportedOrOtherUnits": 3
       },
       {
-        "executableUnitDenominator": 127,
-        "installedUnitDenominator": 127,
+        "executableUnitDenominator": 128,
+        "installedUnitDenominator": 128,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 135,
+        "profileFactDenominator": 136,
         "profileSubsetSupportedUnits": 18,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 109,
+        "selectedIdentityReplayDenominator": 110,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 109,
-        "supportedProfileUnits": 91,
+        "selectedIdentityReplayWitnessUnits": 110,
+        "supportedProfileUnits": 92,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -23862,6 +23956,89 @@
       ],
       "sourceRecordPath": "packages/surface/content/acid_splash.json",
       "unitId": "acid_splash"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "table/spatial owner",
+          "reason": "Automatic target visibility, cover, range path geometry, and spatial derivation remain caller/table facts outside the Acid Arrow runtime profile."
+        },
+        "profileIds": [
+          "spell.invocation-acid-arrow-attack-timing"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting from installed Surface spell access",
+          "one visible creature target within 90 feet supplied by caller-owned target facts",
+          "ranged Spell Attack hit/miss adjudication against the target's Armor Class",
+          "hit-applied immediate Acid damage of 4d4 plus 1d4 per Spell Slot level above 2",
+          "miss-applied half of the initial Acid damage only, without storing a separate fixed miss-damage approximation",
+          "hit-only target-end-of-next-turn Acid damage of 2d4 plus 1d4 per Spell Slot level above 2",
+          "turn-end delayed damage cleanup through the shared spell damage lifecycle, including Concentration, zero-Hit-Point disposition, and hideous-laughter damage-trigger holes where applicable"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-acid-arrow-attack-timing",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-attack-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Acid Arrow spell-attack Surface shape with fixed Acid initial damage, an explicit half-initial-only miss branch, and one fixed Acid end-of-next-turn later damage effect. It owns Magic Action and level-2-or-higher Spell Slot spending, ranged Spell Attack hit/miss adjudication, initial hit damage, miss-half-initial-only damage, hit-only target-end delayed damage storage, slot-scaled immediate and later damage dice, shared turn-boundary damage lifecycle holes, and cleanup of the one-shot delayed effect. Target visibility, cover, range path geometry, and spatial derivation remain caller/table facts.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+            "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT"
+          ],
+          "title": "Spell invocation resolves Acid Arrow immediate damage, miss-half damage, and target-end delayed damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/acid_arrow.json",
+      "unitId": "acid_arrow"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -33713,53 +33890,6 @@
       "sourceRecordPath": "plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json",
       "syntheticLabel": "Mycelium Step",
       "unitId": "mycelium_step"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
-            "mechanic": "Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies.",
-            "owner": "RAW corpus and ASSUMPTIONS owner",
-            "requiredOutput": "Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.",
-            "title": "Acid Arrow RAW Corpus Reconciliation"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
-            "mechanic": "After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.",
-            "title": "Acid Arrow Surface Damage Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
-            "mechanic": "After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence.",
-            "owner": "battle-runtime spell invocation/effect lifecycle",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
-            "title": "Acid Arrow Delayed Runtime Support"
-          }
-        ],
-        "futureProfileOwner": "RAW corpus reconciliation plus surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle",
-        "reason": "Acid Arrow remains unsupported because the local SRD 5.2.1 passage is internally contradictory at the damage-timing boundary: the hit branch states only 4d4 Acid damage at the end of the target's next turn, while the miss branch refers to half of the initial damage and the higher-level clause says both initial and later damage increase. No ASSUMPTIONS.md entry or owner-approved corpus correction defines the missing initial hit damage, so the installed Unit catalog must not admit Acid Arrow as a runtime source, and the follow-up Surface repair must not model immediate initial damage or derive the miss branch from implication alone.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/acid_arrow.json",
-      "unitId": "acid_arrow"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

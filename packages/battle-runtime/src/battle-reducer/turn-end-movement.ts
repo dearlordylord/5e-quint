@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -23,6 +24,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { Either, Match } from "effect";
@@ -247,6 +249,7 @@ import type {
   BattleSleepRepeatSavingThrowOutcomeHole,
   BattleSpellAreaChoice,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
+  BattleSpellTurnEndDamageRollHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
   BattleStatBlockRechargeRollHole,
@@ -285,6 +288,10 @@ export function resolveEndTurn(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
+  spellTurnEndDamageRolls: readonly Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[] = [],
   spellTurnStartDamageRolls: readonly Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -293,7 +300,7 @@ export function resolveEndTurn(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
-  spellTurnStartHideousLaughterDamageRepeatSaves: readonly Extract<
+  turnBoundaryHideousLaughterDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -385,8 +392,20 @@ export function resolveEndTurn(
       currentActorId(state),
       abilityD20TestRollModeEndTurnSaves,
     );
+  const combatantsAfterSpellTurnEndDamage = applyEndTurnSpellDamageFills(
+    {
+      ...state,
+      combatants: combatantsAfterAbilityD20TestRepeatSaves,
+    },
+    currentActorId(state),
+    state.initiative.round,
+    spellTurnEndDamageRolls,
+    concentrationSavingThrows,
+    damageDispositions,
+    turnBoundaryHideousLaughterDamageRepeatSaves,
+  ).combatants;
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
-    combatantsAfterAbilityD20TestRepeatSaves,
+    combatantsAfterSpellTurnEndDamage,
     currentActorId(state),
     state.initiative.round,
   );
@@ -430,7 +449,7 @@ export function resolveEndTurn(
     spellTurnStartSaves,
     concentrationSavingThrows,
     damageDispositions,
-    spellTurnStartHideousLaughterDamageRepeatSaves,
+    turnBoundaryHideousLaughterDamageRepeatSaves,
   ).combatants;
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
@@ -654,6 +673,69 @@ type SpellTurnStartDamageEffect =
       BattleActiveEffect,
       { readonly kind: "spellTurnStartDamageAndSave" }
     >;
+
+export function spellTurnEndDamageEffects(
+  combatant: BattleCreatureState | undefined,
+  actorId: CombatantId,
+  round: RoundType,
+): readonly SpellTurnEndDamageEffect[] {
+  if (combatant === undefined) {
+    return [];
+  }
+  return combatant.activeEffects.filter(
+    (effect): effect is SpellTurnEndDamageEffect =>
+      effect.kind === "spellTurnEndDamage" &&
+      effect.expiresAt.combatantId === actorId &&
+      effect.expiresAt.round === round,
+  );
+}
+
+type SpellTurnEndDamageEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellTurnEndDamage" }
+>;
+
+export function spellTurnEndDamageRollHole(
+  targetId: CombatantId,
+  effect: SpellTurnEndDamageEffect,
+): BattleSpellTurnEndDamageRollHole {
+  const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
+  const key = `battle:spell-turn-end-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${expr}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} turn-end damage (${expr})`,
+    spellTurnEndDamage: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      damage: effect.damage,
+    },
+  };
+}
+
+function spellTurnEndDamageRollFor(
+  fills: readonly BattleFill[],
+  hole: BattleSpellTurnEndDamageRollHole,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  return fills.find(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === hole.holeId,
+  );
+}
+
+function spellTurnEndDamageAmount(
+  target: BattleCreatureState,
+  effect: SpellTurnEndDamageEffect,
+  roll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  return damageAmountAfterTargetAdjustments(
+    target,
+    rolledDiceTotal(roll.value) + (effect.damage.expr.flat ?? 0),
+    effect.damage.damageType,
+  );
+}
 
 function spellTurnStartDamageForEffect(
   effect: SpellTurnStartDamageEffect,
@@ -4483,6 +4565,103 @@ function applyStartTurnSpellDamageFills(
   }, state);
 }
 
+function applyEndTurnSpellDamageFills(
+  state: BattleState,
+  actorId: CombatantId,
+  round: RoundType,
+  rolls: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  concentrationSavingThrows: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[],
+  damageDispositions: readonly Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >[],
+  hideousLaughterDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  const effects = spellTurnEndDamageEffects(actor, actorId, round);
+  return effects.reduce((nextState, effect) => {
+    const hole = spellTurnEndDamageRollHole(actorId, effect);
+    const roll = spellTurnEndDamageRollFor(rolls, hole);
+    const target = nextState.combatants.get(actorId);
+    if (roll === undefined || target === undefined) {
+      return nextState;
+    }
+    const damageAmount = spellTurnEndDamageAmount(target, effect, roll);
+    const concentrationHole = concentrationSavingThrowHole(
+      target,
+      damageAmount,
+    );
+    const concentrationLifecycleHoles =
+      damageLifecycleConcentrationSavingThrowHoles({
+        state: nextState,
+        target,
+        damageAmount,
+      });
+    const concentrationLifecycleFills = fillsMatchingHoleIds(
+      concentrationSavingThrows,
+      concentrationLifecycleHoles,
+    );
+    const hideousLaughterLifecycleHoles =
+      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: nextState,
+        target,
+        damageAmount,
+      });
+    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+      hideousLaughterDamageRepeatSaves,
+      hideousLaughterLifecycleHoles,
+    );
+    return applyPreparedSlotSpellDamage(nextState, actorId, damageAmount, {
+      concentrationSavingThrow:
+        concentrationHole === null
+          ? undefined
+          : concentrationSavingThrowFillFor(
+              concentrationLifecycleFills,
+              concentrationHole,
+            ),
+      wardingBondDamageShareConcentrationSavingThrows:
+        concentrationLifecycleFills,
+      damageDisposition: damageDispositionForTarget(
+        endTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
+        damageDispositions,
+        actorId,
+      ),
+      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      damageSourceId: effect.sourceCombatantId,
+      spatialFacts: [],
+    });
+  }, state);
+}
+
+function endTurnDamageDispositionHoles(
+  state: BattleState,
+  actorId: CombatantId,
+  damageRolls: readonly {
+    readonly effect: SpellTurnEndDamageEffect;
+    readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  }[],
+): readonly BattleAttackDamageDispositionHole[] {
+  return damageRolls.flatMap(({ effect, roll }) => {
+    const target = state.combatants.get(actorId);
+    if (target === undefined) {
+      return [];
+    }
+    return (
+      zeroHitPointReplacementDispositionHole({
+        damageSourceId: effect.sourceCombatantId,
+        target,
+        damageAmount: spellTurnEndDamageAmount(target, effect, roll),
+      }) ?? []
+    );
+  });
+}
+
 function startTurnDamageDispositionHoles(
   state: BattleState,
   actorId: CombatantId,
@@ -4943,6 +5122,18 @@ export function resolveEndTurnCommand(
   const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(
     (request) => request.hole,
   );
+  const endTurnDamageEffects = spellTurnEndDamageEffects(
+    actor,
+    actorId,
+    input.state.initiative.round,
+  );
+  const endTurnDamageRequests = endTurnDamageEffects.map((effect) => ({
+    effect,
+    hole: spellTurnEndDamageRollHole(actorId, effect),
+  }));
+  const endTurnDamageHoles = endTurnDamageRequests.map(
+    (request) => request.hole,
+  );
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -4979,6 +5170,7 @@ export function resolveEndTurnCommand(
     ...hideousLaughterRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
     ...abilityD20TestEndTurnSaveHoles,
+    ...endTurnDamageHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
     ...(rechargeHole === null ? [] : [rechargeHole]),
     ...startTurnDamageHoles,
@@ -5123,6 +5315,26 @@ export function resolveEndTurnCommand(
       ...missingAbilityD20TestEndTurnSaveHoles,
     ]);
   }
+  const endTurnDamageRolls = endTurnDamageRequests.flatMap((request) => {
+    const fill = spellTurnEndDamageRollFor(input.fills, request.hole);
+    return fill === undefined ? [] : [fill];
+  });
+  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap(
+    (request) => {
+      const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
+      return roll === undefined ? [] : [{ ...request, roll }];
+    },
+  );
+  const missingEndTurnDamageHoles = endTurnDamageRequests.flatMap((request) =>
+    spellTurnEndDamageRollFor(input.fills, request.hole) === undefined
+      ? [request.hole]
+      : [],
+  );
+  if (missingEndTurnDamageHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingEndTurnDamageHoles,
+    ]);
+  }
   const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
     const fill = spellTurnStartDamageRollFor(input.fills, request.hole);
     return fill === undefined ? [] : [fill];
@@ -5144,29 +5356,32 @@ export function resolveEndTurnCommand(
       ...missingStartTurnDamageHoles,
     ]);
   }
-  const startTurnDamageHoleIds = new Set<BattleHoleId>(
-    startTurnDamageHoles.map((hole) => hole.holeId),
+  const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
+    [...endTurnDamageHoles, ...startTurnDamageHoles].map(
+      (hole) => hole.holeId,
+    ),
   );
   if (
     input.fills.some(
       (fill) =>
-        fill.kind === "rolledDice" && !startTurnDamageHoleIds.has(fill.holeId),
+        fill.kind === "rolledDice" &&
+        !turnBoundaryDamageHoleIds.has(fill.holeId),
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn rolled dice fills must match a requested start-turn damage hole.",
+      "End Turn rolled dice fills must match a requested turn-boundary damage hole.",
     );
   }
   if (
     input.fills.filter((fill) => fill.kind === "rolledDice").length !==
-    startTurnDamageRolls.length
+    endTurnDamageRolls.length + startTurnDamageRolls.length
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn received duplicate rolled dice fills for start-turn damage.",
+      "End Turn received duplicate rolled dice fills for turn-boundary damage.",
     );
   }
   const startTurnSaves = startTurnSaveRequests.flatMap((request) => {
@@ -5187,6 +5402,52 @@ export function resolveEndTurnCommand(
   if (missingStartTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingStartTurnSaveHoles,
+    ]);
+  }
+  const endTurnHideousLaughterDamageRepeatSaveChecks =
+    endTurnDamageRollRequests.map((request) => {
+      if (actor === undefined) {
+        return { tag: "ok" as const, holes: [] };
+      }
+      const damageAmount = spellTurnEndDamageAmount(
+        actor,
+        request.effect,
+        request.roll,
+      );
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.state,
+        target: actor,
+        damageAmount,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: input.state,
+        target: actor,
+        damageAmount,
+        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+      });
+    });
+  const invalidEndTurnHideousLaughterDamageRepeatSaveCheck =
+    endTurnHideousLaughterDamageRepeatSaveChecks.find(
+      (check) => check.tag === "invalid",
+    );
+  if (invalidEndTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      invalidEndTurnHideousLaughterDamageRepeatSaveCheck.message,
+    );
+  }
+  const endTurnHideousLaughterDamageRepeatSaveHoles =
+    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+    );
+  const missingEndTurnHideousLaughterDamageRepeatSaveHoles =
+    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    );
+  if (missingEndTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingEndTurnHideousLaughterDamageRepeatSaveHoles,
     ]);
   }
   const startTurnHideousLaughterDamageRepeatSaveChecks =
@@ -5243,6 +5504,18 @@ export function resolveEndTurnCommand(
       );
       return fill === undefined ? [] : [fill];
     });
+  const endTurnHideousLaughterDamageRepeatSaves =
+    endTurnHideousLaughterDamageRepeatSaveHoles.flatMap((hole) => {
+      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
+  const turnBoundaryHideousLaughterDamageRepeatSaves = [
+    ...endTurnHideousLaughterDamageRepeatSaves,
+    ...startTurnHideousLaughterDamageRepeatSaves,
+  ];
   const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
     [
       ...sleepRepeatSaveHoles,
@@ -5250,6 +5523,7 @@ export function resolveEndTurnCommand(
       ...spellConditionEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
       ...startTurnSaveHoles,
+      ...endTurnHideousLaughterDamageRepeatSaveHoles,
       ...startTurnHideousLaughterDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
   );
@@ -5273,6 +5547,7 @@ export function resolveEndTurnCommand(
       spellConditionEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
       startTurnSaves.length +
+      endTurnHideousLaughterDamageRepeatSaves.length +
       startTurnHideousLaughterDamageRepeatSaves.length
   ) {
     return invalidResult(
@@ -5357,6 +5632,18 @@ export function resolveEndTurnCommand(
       return invalidResult(input.state, "invalidFill", validation);
     }
   }
+  for (const fill of endTurnHideousLaughterDamageRepeatSaves) {
+    const hole = endTurnHideousLaughterDamageRepeatSaveHoles.find(
+      (candidate) => candidate.holeId === fill.holeId,
+    );
+    const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      hole?.hideousLaughterRepeatSave.targetId ?? actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
   for (const request of startTurnSaveRequests) {
     const fill = spellTurnStartSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
@@ -5373,6 +5660,15 @@ export function resolveEndTurnCommand(
       return invalidResult(input.state, "invalidFill", validation);
     }
   }
+  for (const request of endTurnDamageRollRequests) {
+    const validation = validateRolledDiceFillForDiceExpr(
+      request.roll,
+      request.effect.damage.expr,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
   for (const request of startTurnDamageRollRequests) {
     const damage = spellTurnStartDamageForEffect(request.effect);
     const validation = validateRolledDiceFillForDiceExpr(
@@ -5383,6 +5679,23 @@ export function resolveEndTurnCommand(
       return invalidResult(input.state, "invalidFill", validation);
     }
   }
+  const endTurnConcentrationHoles = endTurnDamageRollRequests.flatMap(
+    (request) => {
+      const target = actor;
+      if (target === undefined) {
+        return [];
+      }
+      return damageLifecycleConcentrationSavingThrowHoles({
+        state: input.state,
+        target,
+        damageAmount: spellTurnEndDamageAmount(
+          target,
+          request.effect,
+          request.roll,
+        ),
+      });
+    },
+  );
   const startTurnConcentrationHoles = startTurnDamageRollRequests.flatMap(
     (request) => {
       const target = nextActor;
@@ -5400,7 +5713,11 @@ export function resolveEndTurnCommand(
       });
     },
   );
-  const missingConcentrationHoles = startTurnConcentrationHoles.filter(
+  const turnBoundaryConcentrationHoles = [
+    ...endTurnConcentrationHoles,
+    ...startTurnConcentrationHoles,
+  ];
+  const missingConcentrationHoles = turnBoundaryConcentrationHoles.filter(
     (hole) =>
       concentrationSavingThrowFillFor(concentrationSavingThrowFills, hole) ===
       undefined,
@@ -5413,7 +5730,7 @@ export function resolveEndTurnCommand(
     );
   }
   const concentrationHoleIds = new Set<BattleHoleId>(
-    startTurnConcentrationHoles.map((hole) => hole.holeId),
+    turnBoundaryConcentrationHoles.map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
@@ -5425,22 +5742,26 @@ export function resolveEndTurnCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Concentration Saving Throw fill is only valid for a concentrating start-turn damage target.",
+      "Concentration Saving Throw fill is only valid for a concentrating turn-boundary damage target.",
     );
   }
   if (
-    concentrationSavingThrowFills.length !== startTurnConcentrationHoles.length
+    concentrationSavingThrowFills.length !== turnBoundaryConcentrationHoles.length
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "End Turn received duplicate Concentration Saving Throw fills for start-turn damage.",
+      "End Turn received duplicate Concentration Saving Throw fills for turn-boundary damage.",
     );
   }
-  const damageDispositionHoles = startTurnDamageRollRequests.flatMap(
-    (request) =>
+  const damageDispositionHoles = [
+    ...endTurnDamageRollRequests.flatMap((request) =>
+      endTurnDamageDispositionHoles(input.state, actorId, [request]),
+    ),
+    ...startTurnDamageRollRequests.flatMap((request) =>
       startTurnDamageDispositionHoles(input.state, nextActorId, [request]),
-  );
+    ),
+  ];
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
     fills: damageDispositionFills,
@@ -5532,9 +5853,10 @@ export function resolveEndTurnCommand(
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
     abilityD20TestEndTurnSaves,
+    endTurnDamageRolls,
     startTurnDamageRolls,
     startTurnSaves,
-    startTurnHideousLaughterDamageRepeatSaves,
+    turnBoundaryHideousLaughterDamageRepeatSaves,
     concentrationSavingThrowFills,
     damageDispositionFills,
   );

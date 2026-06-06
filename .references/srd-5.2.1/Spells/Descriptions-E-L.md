@@ -89,7 +89,7 @@ You touch a creature and choose Strength, Dexterity, Intelligence, Wisdom, or Ch
 **Components:** V, S, M (a pinch of powdered iron)
 **Duration:** Concentration, up to 1 minute
 
-For the duration, the spell enlarges or reduces a creature or an object you can see within range. A targeted object must be neither worn nor carried. If the target is an unwilling creature, it can make a Constitution saving throw. On a successful save, the spell has no effect.
+For the duration, the spell enlarges or reduces a creature or an object you can see within range (see the chosen effect below). A targeted object must be neither worn nor carried. If the target is an unwilling creature, it can make a Constitution saving throw. On a successful save, the spell has no effect.
 
 Everything that a targeted creature is wearing and carrying changes size with it. Any item it drops returns to normal size at once. A thrown weapon or piece of ammunition returns to normal size immediately after it hits or misses a target.
 
@@ -1566,7 +1566,7 @@ You touch a creature and end one condition on it: Blinded, Deafened, Paralyzed, 
 **Components:** V, S, M (a metal spring)
 **Duration:** Concentration, up to 10 minutes
 
-One creature or loose object of your choice that you can see rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected.
+One creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected.
 
 The target can move only by pushing or pulling against a fixed object or surface within reach (such as a wall or a ceiling), which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range.
 
@@ -1598,7 +1598,7 @@ Covering the object with something opaque blocks the light. The spell ends if yo
 **Components:** V, S, M (a bit of fur and a crystal rod)
 **Duration:** Instantaneous
 
-A stroke of lightning forming a 100-foot-long, 5-foot-wide Line blasts from you in a direction you choose. Each creature in the Line makes a Dexterity saving throw, taking 8d6 Lightning damage on a failed save or half as much damage on a successful one.
+A stroke of lightning forming a 100-foot-long, 5-foot-wide Line blasts out from you in a direction you choose. Each creature in the Line makes a Dexterity saving throw, taking 8d6 Lightning damage on a failed save or half as much damage on a successful one.
 
 **Using a Higher-Level Spell Slot.** The damage increases by 1d6 for each spell slot level above 3.
 

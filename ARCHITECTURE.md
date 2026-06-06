@@ -24,6 +24,14 @@ If a public record cites an official source, that source must be redistributable
 under the license declared on the record. Otherwise the record must use
 synthetic identity and mechanics-only structured fields.
 
+SRD 5.2.1 authored identity is not a byte-for-byte public subset of closed
+official books. Some redistributable SRD records use SRD-specific names where
+the closed source uses protected named-character identity. The SRD name is the
+only publishable authored identity for those records in this repo. Closed names
+may appear only in private import diagnostics that are not committed or shipped.
+Runtime semantics must still dispatch on parsed shape, support profiles, and
+typed procedure facts rather than on either SRD names or closed-source names.
+
 Licenses:
 
 - Project code: [Apache License 2.0](LICENSE)

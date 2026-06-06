@@ -626,6 +626,7 @@ type EffectAtom =
       readonly amount: DiceAmount;
       readonly timing?: "end_of_next_turn";
     }
+  | { readonly kind: "half_initial_damage_only" }
   | {
       readonly kind: "conditional_bonus_damage";
       readonly when:
@@ -2543,6 +2544,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         damageType: DamageTypeRefSchema,
         amount: DiceAmountSchema,
         timing: optionalExact(Schema.Literal("end_of_next_turn")),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("half_initial_damage_only"),
       }),
       Schema.Struct({
         kind: Schema.Literal("conditional_bonus_damage"),

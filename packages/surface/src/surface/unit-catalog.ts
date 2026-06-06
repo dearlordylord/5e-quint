@@ -6,6 +6,7 @@ import { Option } from "effect";
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import armorChainShirtInput from "../../content/armor_chain_shirt.json";
 import armorLeatherInput from "../../content/armor_leather.json";
+import acidArrowInput from "../../content/acid_arrow.json";
 import aidInput from "../../content/aid.json";
 import alertInput from "../../content/alert.json";
 import alterSelfInput from "../../content/alter_self.json";
@@ -524,6 +525,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,
+    acidArrowInput,
     aidInput,
     alterSelfInput,
     animalFriendshipInput,

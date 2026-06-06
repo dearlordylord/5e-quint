@@ -3,6 +3,8 @@
 // pure type vocabulary with leaf dependencies only; the BattleActiveEffect union
 // and its runtime live in battle-reducer.ts / battle-reducer/ and depend on these
 // types one-directionally. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -197,6 +199,10 @@ export type SpellConditionEscape =
       readonly kind: "targetDamagedByCasterOrAlly";
     };
 export type SpellTurnStartDamage = {
+  readonly expr: DiceExpr;
+  readonly damageType: DamageType;
+};
+export type SpellTurnEndDamage = {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
 };
@@ -655,6 +661,14 @@ export type BattleActiveEffect =
       readonly damage: SpellTurnStartDamage;
       readonly save: SpellTurnStartDamageSave;
       readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellTurnEndDamage";
+      readonly damage: SpellTurnEndDamage;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "endOfTurn" }
+      >;
     })
   | ((BattleSpellEffectBase | BattleUnitFeatureEffectBase) & {
       readonly kind: "opportunityAttackDenied";

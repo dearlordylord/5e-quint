@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 113
-- Covered obligations: 107
+- Total obligations: 114
+- Covered obligations: 108
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 107 |
+| covered | 108 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 83 |
+| battle | 84 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -100,7 +100,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | battle | covered | `spell.invocation-command-approach-route`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-flee-route`, `spell.invocation-command-halt-grovel` |
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | battle | covered | _direct reducer entrypoint_ |
-| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | battle | covered | `spell.invocation-acid-arrow-attack-timing`, `spell.invocation-damage-save-or-attack`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | battle | covered | `spell.invocation-damage-reduction`, `unit-feature.passive-damage-resistance` |
 | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | battle | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | battle | covered | _direct reducer entrypoint_ |
@@ -143,19 +143,20 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | battle | covered | `unit-feature.metamagic-missed-spell-attack-reroll` |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
+| `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` | battle | covered | `spell.invocation-acid-arrow-attack-timing` |
 
 ## Battle Hole Frontier
 
-- Total classified rows: 114
+- Total classified rows: 115
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 71 |
+| battle-hole-family | 72 |
 | battle-fill-kind | 43 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 89 |
+| semantic-frontier | 90 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 25 |
 | unsupported-dead-branch | 0 |
@@ -181,6 +182,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSourceDamageRollPenaltyRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-hole-family | `BattleMirrorImageDuplicateRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | _none_ |
 | battle-hole-family | `BattleSpellTurnStartDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | _none_ |
+| battle-hole-family | `BattleSpellTurnEndDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleFlamingSphereDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpellHealingRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.HIT_POINT_RESTORATION` | _none_ |
 | battle-hole-family | `BattleHitPointHealingPoolDistributionHole` | `hitPointHealingDistribution` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
@@ -401,6 +403,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | proof-only | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt` | semantic-core | `BATTLE.SPELL.HIT_POINT_RESTORATION` |

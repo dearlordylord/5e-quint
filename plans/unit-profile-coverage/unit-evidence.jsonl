@@ -181,6 +181,7 @@
 {"unitId":"eldritch_blast","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV39","ownerPath":"packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"}}
 {"unitId":"eldritch_blast","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-ELDRITCH-BLAST","ownerPath":"packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts"}}
 {"unitId":"scorching_ray","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-SCORCHING-RAY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"}}
+{"unitId":"acid_arrow","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"dragons_breath","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"flame_blade","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"flaming_sphere","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
@@ -428,3 +429,4 @@
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"}}
+{"unitId":"acid_arrow","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}

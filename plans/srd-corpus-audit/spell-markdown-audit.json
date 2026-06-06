@@ -1,0 +1,1402 @@
+{
+  "generatedAt": "2026-06-06T20:58:07.966Z",
+  "scope": "SRD 5.2.1 spell markdown cross-check against local Open5e SRD-2024 structured data and local 5e-tools SRD aliases; PDF text line hints are provenance-review anchors, not automated replacement text.",
+  "inputs": {
+    "markdownDir": ".references/srd-5.2.1/Spells",
+    "open5ePath": ".references/inspirations/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
+    "fiveToolsPath": ".references/5etools-src/data/spells/spells-xphb.json",
+    "pdfTextPath": "/tmp/dnd-srd-audit/srd521.txt"
+  },
+  "metrics": {
+    "markdownSpellSections": 339,
+    "open5eStructuredSpells": 339,
+    "fiveToolsSrdAliasRows": 339,
+    "fiveToolsRenamedSrdAliasRows": 17,
+    "issueCount": 75,
+    "lowLevelIssueCount": 27,
+    "higherLevelIssueCount": 48
+  },
+  "issues": [
+    {
+      "name": "Acid Arrow",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 5,
+      "kind": "low-level-needs-pdf-review",
+      "manualDisposition": "real-markdown-corruption",
+      "manualEvidence": "PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown omits the later 2d4 phrase from the hit sentence.",
+      "open5eReferenceCoverage": 0.95,
+      "open5eMarkdownCoverage": 0.9268,
+      "fiveToolsReferenceCoverage": 0.9419,
+      "fiveToolsMarkdownCoverage": 0.9878,
+      "missingReferenceWords": [
+        "2d4",
+        "acid",
+        "damage",
+        "and"
+      ],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Aid",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 35,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8571,
+      "fiveToolsReferenceCoverage": 0.9762,
+      "fiveToolsMarkdownCoverage": 0.9762,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Animate Dead",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 134,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9774,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.9774,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Animate Objects",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 153,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.6694,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.6861,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "animated",
+        "object",
+        "huge",
+        "or",
+        "smaller",
+        "construct",
+        "unaligned",
+        "ac",
+        "15",
+        "hp",
+        "10",
+        "medium",
+        "20",
+        "large",
+        "40",
+        "speed",
+        "30",
+        "ft",
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis"
+      ]
+    },
+    {
+      "name": "Antipathy/Sympathy",
+      "level": 8,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 227,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9915,
+      "open5eMarkdownCoverage": 0.9915,
+      "fiveToolsReferenceCoverage": 0.9915,
+      "fiveToolsMarkdownCoverage": 0.9915,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Arcane Hand",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 260,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.3886,
+      "fiveToolsReferenceCoverage": 0.991,
+      "fiveToolsMarkdownCoverage": 0.991,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "strikes",
+        "a",
+        "target",
+        "within",
+        "it",
+        "make",
+        "melee",
+        "attack",
+        "on",
+        "hit",
+        "takes",
+        "5d8",
+        "force",
+        "forceful",
+        "hand",
+        "attempts",
+        "push",
+        "huge",
+        "or",
+        "smaller",
+        "creature",
+        "5",
+        "must",
+        "succeed"
+      ]
+    },
+    {
+      "name": "Augury",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 352,
+      "kind": "formatting-or-prose-needs-review",
+      "manualDisposition": "table-title-rendering-only",
+      "manualEvidence": "PDF text around lines 6761-6779 uses an Omens table; markdown keeps the same table as a heading plus markdown table.",
+      "open5eReferenceCoverage": 0.9905,
+      "open5eMarkdownCoverage": 1,
+      "fiveToolsReferenceCoverage": 0.9875,
+      "fiveToolsMarkdownCoverage": 0.7596,
+      "missingReferenceWords": [
+        "table"
+      ],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Banishment",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 421,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.95,
+      "fiveToolsReferenceCoverage": 0.9917,
+      "fiveToolsMarkdownCoverage": 0.9917,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Blade Barrier",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 518,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9917,
+      "open5eMarkdownCoverage": 0.9917,
+      "fiveToolsReferenceCoverage": 0.9917,
+      "fiveToolsMarkdownCoverage": 0.9917,
+      "missingReferenceWords": [
+        "it"
+      ],
+      "extraMarkdownWords": [
+        "its"
+      ]
+    },
+    {
+      "name": "Blight",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 548,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.925,
+      "fiveToolsReferenceCoverage": 0.9875,
+      "fiveToolsMarkdownCoverage": 0.9875,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 6889
+    },
+    {
+      "name": "Burning Hands",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 608,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.913,
+      "fiveToolsReferenceCoverage": 0.9067,
+      "fiveToolsMarkdownCoverage": 0.9855,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Call Lightning",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 625,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9634,
+      "fiveToolsReferenceCoverage": 0.976,
+      "fiveToolsMarkdownCoverage": 0.9939,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Chromatic Orb",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 724,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9615,
+      "fiveToolsReferenceCoverage": 0.9936,
+      "fiveToolsMarkdownCoverage": 0.9936,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Circle of Death",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 741,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9032,
+      "fiveToolsReferenceCoverage": 0.9385,
+      "fiveToolsMarkdownCoverage": 0.9839,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 7030
+    },
+    {
+      "name": "Cloudkill",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 788,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9574,
+      "fiveToolsReferenceCoverage": 0.8974,
+      "fiveToolsMarkdownCoverage": 0.9929,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Cone of Cold",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 909,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9143,
+      "fiveToolsReferenceCoverage": 0.9452,
+      "fiveToolsMarkdownCoverage": 0.9857,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Confusion",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 924,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 0.9667,
+      "open5eMarkdownCoverage": 0.9667,
+      "fiveToolsReferenceCoverage": 0.9231,
+      "fiveToolsMarkdownCoverage": 0.5333,
+      "missingReferenceWords": [
+        "table",
+        "d10",
+        "turn",
+        "behavior",
+        "the",
+        "for"
+      ],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Conjure Animals",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 948,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9632,
+      "fiveToolsReferenceCoverage": 0.9939,
+      "fiveToolsMarkdownCoverage": 0.9939,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Conjure Celestial",
+      "level": 7,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 967,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.7432,
+      "fiveToolsReferenceCoverage": 0.9055,
+      "fiveToolsMarkdownCoverage": 0.9945,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "target",
+        "regains",
+        "hit",
+        "points",
+        "equal",
+        "4d12",
+        "plus",
+        "spellcasting",
+        "ability",
+        "modifier",
+        "searing",
+        "light",
+        "makes",
+        "dexterity",
+        "saving",
+        "throw",
+        "taking",
+        "6d12",
+        "radiant",
+        "failed",
+        "save",
+        "half",
+        "as",
+        "much"
+      ]
+    },
+    {
+      "name": "Conjure Elemental",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 989,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9623,
+      "fiveToolsReferenceCoverage": 0.9937,
+      "fiveToolsMarkdownCoverage": 0.9937,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 7269
+    },
+    {
+      "name": "Conjure Fey",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1008,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9605,
+      "fiveToolsReferenceCoverage": 0.9934,
+      "fiveToolsMarkdownCoverage": 0.9934,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 7233
+    },
+    {
+      "name": "Conjure Minor Elementals",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1025,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9302,
+      "fiveToolsReferenceCoverage": 0.8947,
+      "fiveToolsMarkdownCoverage": 0.9884,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Conjure Woodland Beings",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1042,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9483,
+      "fiveToolsReferenceCoverage": 0.92,
+      "fiveToolsMarkdownCoverage": 0.9914,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Contact Other Plane",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1059,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9927,
+      "open5eMarkdownCoverage": 0.9855,
+      "fiveToolsReferenceCoverage": 0.9854,
+      "fiveToolsMarkdownCoverage": 0.9783,
+      "missingReferenceWords": [
+        "longdead"
+      ],
+      "extraMarkdownWords": [
+        "dead",
+        "long"
+      ]
+    },
+    {
+      "name": "Control Weather",
+      "level": 8,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1139,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9831,
+      "open5eMarkdownCoverage": 1,
+      "fiveToolsReferenceCoverage": 0.9916,
+      "fiveToolsMarkdownCoverage": 0.6743,
+      "missingReferenceWords": [
+        "table"
+      ],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Create Undead",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1231,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9794,
+      "fiveToolsReferenceCoverage": 0.9525,
+      "fiveToolsMarkdownCoverage": 0.9656,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Creation",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1250,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9932,
+      "open5eMarkdownCoverage": 0.9603,
+      "fiveToolsReferenceCoverage": 0.9549,
+      "fiveToolsMarkdownCoverage": 0.8411,
+      "missingReferenceWords": [
+        "table"
+      ],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Delayed Blast Fireball",
+      "level": 7,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1369,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9691,
+      "fiveToolsReferenceCoverage": 0.9797,
+      "fiveToolsMarkdownCoverage": 0.9948,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Disintegrate",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1507,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9597,
+      "fiveToolsReferenceCoverage": 0.961,
+      "fiveToolsMarkdownCoverage": 0.9933,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Dispel Magic",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1543,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9302,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.9884,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Dissonant Whispers",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1558,
+      "kind": "low-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.7907,
+      "fiveToolsReferenceCoverage": 0.9884,
+      "fiveToolsMarkdownCoverage": 0.9884,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "the",
+        "damage",
+        "increases",
+        "by",
+        "1d6",
+        "for",
+        "each",
+        "above",
+        "1"
+      ]
+    },
+    {
+      "name": "Divine Smite",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1601,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8605,
+      "fiveToolsReferenceCoverage": 0.9767,
+      "fiveToolsMarkdownCoverage": 0.9767,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Divine Word",
+      "level": 7,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1616,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 0.9933,
+      "open5eMarkdownCoverage": 0.9801,
+      "fiveToolsReferenceCoverage": 0.9903,
+      "fiveToolsMarkdownCoverage": 0.6755,
+      "missingReferenceWords": [
+        "target"
+      ],
+      "extraMarkdownWords": [
+        "divine",
+        "word",
+        "effects"
+      ]
+    },
+    {
+      "name": "Dragon's Breath",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "line": 1695,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9231,
+      "fiveToolsReferenceCoverage": 0.9506,
+      "fiveToolsMarkdownCoverage": 0.9872,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Enlarge/Reduce",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 83,
+      "kind": "formatting-or-prose-needs-review",
+      "manualDisposition": "real-markdown-corruption",
+      "manualEvidence": "PDF text around lines 7919-7925 includes the parenthetical '(see the chosen effect below)'; markdown omits it.",
+      "open5eReferenceCoverage": 0.9738,
+      "open5eMarkdownCoverage": 1,
+      "fiveToolsReferenceCoverage": 0.9738,
+      "fiveToolsMarkdownCoverage": 1,
+      "missingReferenceWords": [
+        "see",
+        "chosen",
+        "effect",
+        "the",
+        "below"
+      ],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Find Steed",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 319,
+      "kind": "low-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.4409,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.4536,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "otherworldly",
+        "steed",
+        "large",
+        "celestial",
+        "fey",
+        "or",
+        "fiend",
+        "your",
+        "choice",
+        "neutral",
+        "ac",
+        "10",
+        "+",
+        "1",
+        "per",
+        "hp",
+        "5",
+        "the",
+        "has",
+        "number",
+        "of",
+        "hit",
+        "dice"
+      ]
+    },
+    {
+      "name": "Fireball",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 418,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9326,
+      "fiveToolsReferenceCoverage": 0.9565,
+      "fiveToolsMarkdownCoverage": 0.9888,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Flame Blade",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 482,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9469,
+      "fiveToolsReferenceCoverage": 0.9912,
+      "fiveToolsMarkdownCoverage": 0.9912,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 8260
+    },
+    {
+      "name": "Flame Strike",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 501,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9855,
+      "open5eMarkdownCoverage": 0.8947,
+      "fiveToolsReferenceCoverage": 0.9494,
+      "fiveToolsMarkdownCoverage": 0.9868,
+      "missingReferenceWords": [
+        "foothigh"
+      ],
+      "extraMarkdownWords": [
+        "high",
+        "a"
+      ]
+    },
+    {
+      "name": "Flaming Sphere",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 516,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9661,
+      "fiveToolsReferenceCoverage": 0.9944,
+      "fiveToolsMarkdownCoverage": 0.9944,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Giant Insect",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 762,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.3493,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.3662,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "giant",
+        "insect",
+        "large",
+        "beast",
+        "unaligned",
+        "ac",
+        "11",
+        "+",
+        "the",
+        "spell's",
+        "hp",
+        "30",
+        "10",
+        "for",
+        "each",
+        "above",
+        "4",
+        "speed",
+        "40",
+        "ft",
+        "climb",
+        "fly",
+        "wasp"
+      ],
+      "pdfTextLine": 8485
+    },
+    {
+      "name": "Guiding Bolt",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 992,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9032,
+      "fiveToolsReferenceCoverage": 0.9839,
+      "fiveToolsMarkdownCoverage": 0.9839,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Heal",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1106,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.88,
+      "fiveToolsReferenceCoverage": 0.98,
+      "fiveToolsMarkdownCoverage": 0.98,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Heat Metal",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1136,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9595,
+      "fiveToolsReferenceCoverage": 0.9932,
+      "fiveToolsMarkdownCoverage": 0.9932,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 8751
+    },
+    {
+      "name": "Hellish Rebuke",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1153,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8846,
+      "fiveToolsReferenceCoverage": 0.9808,
+      "fiveToolsMarkdownCoverage": 0.9808,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Ice Knife",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1307,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9241,
+      "fiveToolsReferenceCoverage": 0.9873,
+      "fiveToolsMarkdownCoverage": 0.9873,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Ice Storm",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1322,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9294,
+      "fiveToolsReferenceCoverage": 0.8936,
+      "fiveToolsMarkdownCoverage": 0.9882,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Inflict Wounds",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1417,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8636,
+      "fiveToolsReferenceCoverage": 0.9773,
+      "fiveToolsMarkdownCoverage": 0.9773,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Insect Plague",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1432,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9464,
+      "fiveToolsReferenceCoverage": 0.9407,
+      "fiveToolsMarkdownCoverage": 0.9911,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Levitate",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1560,
+      "kind": "formatting-or-prose-needs-review",
+      "manualDisposition": "real-markdown-corruption",
+      "manualEvidence": "PDF text around lines 9128-9130 says the target is one creature or loose object that you can see within range; markdown omits 'within range' from that sentence.",
+      "open5eReferenceCoverage": 0.9868,
+      "open5eMarkdownCoverage": 1,
+      "fiveToolsReferenceCoverage": 0.9868,
+      "fiveToolsMarkdownCoverage": 1,
+      "missingReferenceWords": [
+        "within",
+        "range"
+      ],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Lightning Bolt",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "line": 1592,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9104,
+      "fiveToolsReferenceCoverage": 0.9041,
+      "fiveToolsMarkdownCoverage": 0.9851,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Mass Cure Wounds",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 172,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9016,
+      "fiveToolsReferenceCoverage": 0.9375,
+      "fiveToolsMarkdownCoverage": 0.9836,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Mass Healing Word",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 200,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8571,
+      "fiveToolsReferenceCoverage": 0.9762,
+      "fiveToolsMarkdownCoverage": 0.9762,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Mind Spike",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 322,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9487,
+      "fiveToolsReferenceCoverage": 0.9915,
+      "fiveToolsMarkdownCoverage": 0.9915,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Moonbeam",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 445,
+      "kind": "low-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.6686,
+      "fiveToolsReferenceCoverage": 0.913,
+      "fiveToolsMarkdownCoverage": 0.9941,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "silvery",
+        "beam",
+        "pale",
+        "light",
+        "shines",
+        "down",
+        "5",
+        "radius",
+        "40",
+        "high",
+        "centered",
+        "point",
+        "within",
+        "dim",
+        "fills",
+        "you",
+        "can",
+        "take",
+        "magic",
+        "later",
+        "turns",
+        "move",
+        "cylinder",
+        "60"
+      ]
+    },
+    {
+      "name": "Phantasmal Killer",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 541,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9512,
+      "fiveToolsReferenceCoverage": 0.9919,
+      "fiveToolsMarkdownCoverage": 0.9919,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Prayer of Healing",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 718,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9048,
+      "fiveToolsReferenceCoverage": 0.9841,
+      "fiveToolsMarkdownCoverage": 0.9841,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Prismatic Spray",
+      "level": 7,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "line": 758,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9918,
+      "fiveToolsReferenceCoverage": 0.8667,
+      "fiveToolsMarkdownCoverage": 0.1598,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "prismatic",
+        "rays"
+      ]
+    },
+    {
+      "name": "Ray of Sickness",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-Q-R.md",
+      "line": 56,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8947,
+      "fiveToolsReferenceCoverage": 0.9825,
+      "fiveToolsMarkdownCoverage": 0.9825,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Reincarnate",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-Q-R.md",
+      "line": 84,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 0.9355,
+      "open5eMarkdownCoverage": 0.9206,
+      "fiveToolsReferenceCoverage": 0.9901,
+      "fiveToolsMarkdownCoverage": 0.7937,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "1d10",
+        "species"
+      ]
+    },
+    {
+      "name": "Shatter",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 198,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9318,
+      "fiveToolsReferenceCoverage": 0.956,
+      "fiveToolsMarkdownCoverage": 0.9886,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Shining Smite",
+      "level": 2,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 258,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9016,
+      "fiveToolsReferenceCoverage": 0.9836,
+      "fiveToolsMarkdownCoverage": 0.9836,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Shocking Grasp",
+      "level": 0,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 273,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9667,
+      "fiveToolsReferenceCoverage": 0.9833,
+      "fiveToolsMarkdownCoverage": 0.9833,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Sorcerous Burst",
+      "level": 0,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 384,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9806,
+      "fiveToolsReferenceCoverage": 0.9903,
+      "fiveToolsMarkdownCoverage": 0.9903,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": []
+    },
+    {
+      "name": "Spirit Guardians",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 495,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9595,
+      "fiveToolsReferenceCoverage": 0.9187,
+      "fiveToolsMarkdownCoverage": 0.9932,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Summon Dragon",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 623,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.3252,
+      "fiveToolsReferenceCoverage": 1,
+      "fiveToolsMarkdownCoverage": 0.3436,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "draconic",
+        "spirit",
+        "large",
+        "dragon",
+        "neutral",
+        "ac",
+        "14",
+        "+",
+        "the",
+        "spell's",
+        "hp",
+        "50",
+        "10",
+        "for",
+        "each",
+        "above",
+        "5",
+        "speed",
+        "30",
+        "ft",
+        "fly",
+        "60",
+        "swim"
+      ],
+      "pdfTextLine": 10603
+    },
+    {
+      "name": "Sunbeam",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 679,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.8537,
+      "fiveToolsReferenceCoverage": 0.9211,
+      "fiveToolsMarkdownCoverage": 0.8537,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a",
+        "the",
+        "damage",
+        "increases",
+        "by",
+        "1d8",
+        "for",
+        "each",
+        "above",
+        "1"
+      ]
+    },
+    {
+      "name": "Teleport",
+      "level": 7,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 786,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.6415,
+      "fiveToolsReferenceCoverage": 0.9951,
+      "fiveToolsMarkdownCoverage": 0.8747,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "outcome",
+        "familiarity",
+        "here",
+        "meanings",
+        "of",
+        "terms",
+        "in",
+        "table's",
+        "column",
+        "teleportation",
+        "the",
+        "are",
+        "mishap",
+        "spell's",
+        "unpredictable",
+        "magic",
+        "results",
+        "a",
+        "difficult",
+        "journey",
+        "each",
+        "teleporting",
+        "creature",
+        "or"
+      ]
+    },
+    {
+      "name": "Thunderwave",
+      "level": 1,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 873,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9375,
+      "fiveToolsReferenceCoverage": 0.9314,
+      "fiveToolsMarkdownCoverage": 0.9896,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Vampiric Touch",
+      "level": 3,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1075,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9368,
+      "fiveToolsReferenceCoverage": 0.9895,
+      "fiveToolsMarkdownCoverage": 0.9895,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ],
+      "pdfTextLine": 10925
+    },
+    {
+      "name": "Vitriolic Sphere",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1107,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9326,
+      "fiveToolsReferenceCoverage": 0.9565,
+      "fiveToolsMarkdownCoverage": 0.9888,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Wall of Fire",
+      "level": 4,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1122,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9647,
+      "fiveToolsReferenceCoverage": 0.9941,
+      "fiveToolsMarkdownCoverage": 0.9941,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Wall of Force",
+      "level": 5,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1141,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 0.9882,
+      "open5eMarkdownCoverage": 0.9767,
+      "fiveToolsReferenceCoverage": 0.9882,
+      "fiveToolsMarkdownCoverage": 0.9767,
+      "missingReferenceWords": [
+        "instantly",
+        "however"
+      ],
+      "extraMarkdownWords": [
+        "without",
+        "harming",
+        "anything",
+        "inside"
+      ]
+    },
+    {
+      "name": "Wall of Ice",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1156,
+      "kind": "formatting-or-prose-needs-review",
+      "open5eReferenceCoverage": 1,
+      "open5eMarkdownCoverage": 0.9767,
+      "fiveToolsReferenceCoverage": 0.9922,
+      "fiveToolsMarkdownCoverage": 0.9922,
+      "missingReferenceWords": [],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    },
+    {
+      "name": "Wall of Thorns",
+      "level": 6,
+      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "line": 1200,
+      "kind": "higher-level-needs-pdf-review",
+      "open5eReferenceCoverage": 0.9847,
+      "open5eMarkdownCoverage": 0.9698,
+      "fiveToolsReferenceCoverage": 0.9802,
+      "fiveToolsMarkdownCoverage": 0.995,
+      "missingReferenceWords": [
+        "within",
+        "range",
+        "damage"
+      ],
+      "extraMarkdownWords": [
+        "a"
+      ]
+    }
+  ]
+}

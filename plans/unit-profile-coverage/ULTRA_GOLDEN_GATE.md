@@ -32,7 +32,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | --- | --- | ---: | ---: |
 | level-1 | pass | 4/4 | 46 |
 | level-1-2 | pass | 4/4 | 49 |
-| level-1-3 | pass | 4/4 | 69 |
+| level-1-3 | pass | 4/4 | 70 |
 
 ## Layer Results
 
@@ -88,7 +88,7 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | --- | ---: | ---: | ---: |
 | level-1 | 83 | 83/83 | 0 |
 | level-1-2 | 99 | 99/99 | 0 |
-| level-1-3 | 146 | 146/146 | 0 |
+| level-1-3 | 147 | 147/147 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

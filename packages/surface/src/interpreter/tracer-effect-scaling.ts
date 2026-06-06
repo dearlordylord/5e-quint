@@ -73,6 +73,7 @@ export function traceEffectAtomScaling(
       traceDiceAmountScaling(e.damageDie, effectId, slotId, nodes, edges, ids);
       return;
     case "none":
+    case "half_initial_damage_only":
     case "modify_ac":
     case "modify_ac_set_base":
     case "modify_save_dc":

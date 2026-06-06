@@ -19,6 +19,7 @@ import {
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { CombatantId } from "../identity.ts";
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 import {
   ELDRITCH_BLAST_BEAM_COUNTS,
   SCORCHING_RAY_RAY_COUNTS,
@@ -297,6 +298,11 @@ export const SpellAttackDamagePayloadSchema = Schema.Union(
       Schema.greaterThanOrEqualTo(0),
     ),
   }),
+);
+
+export const SpellAttackMissDamageSchema = Schema.Literal(
+  "none",
+  "halfInitialOnly",
 );
 
 export const SpellFailedSaveConditionExpirationSchema = Schema.Union(

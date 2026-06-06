@@ -151,3 +151,4 @@
 {"profileId":"spell.invocation-spiritual-weapon-attack-proxy","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.metamagic-missed-spell-attack-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"]}
 {"profileId":"unit-feature.metamagic-damage-dice-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"]}
+{"profileId":"spell.invocation-acid-arrow-attack-timing","obligationIds":["BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"]}

@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
@@ -35,7 +36,7 @@
 // (creature-state). Calls into dispatcher-layer functions (`endTurn`,
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 
 import {
@@ -1536,7 +1537,14 @@ function resolveSpellActInternal(
       return remarkableAthleteMovement.result;
     }
     spellResolutionStateAfterCriticalMovement = remarkableAthleteMovement.state;
-    if ((hit || potentCantripMiss) && fillSet.damageRoll == null) {
+    const spellAttackHalfInitialMiss =
+      !hit &&
+      invocationForResolution.procedure === "spellAttackDamage" &&
+      invocationForResolution.missDamage === "halfInitialOnly";
+    if (
+      (hit || potentCantripMiss || spellAttackHalfInitialMiss) &&
+      fillSet.damageRoll == null
+    ) {
       if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
         return invalidResult(
           input.state,
@@ -1566,6 +1574,7 @@ function resolveSpellActInternal(
     if (
       !hit &&
       !potentCantripMiss &&
+      !spellAttackHalfInitialMiss &&
       (fillSet.damageRoll != null ||
         fillSet.damageDispositions.length > 0 ||
         fillSet.sourceDamageRollPenaltyRolls.length > 0)
@@ -1576,7 +1585,7 @@ function resolveSpellActInternal(
         "Spell damage can only be filled after a hit.",
       );
     }
-    if (!hit && !potentCantripMiss) {
+    if (!hit && !potentCantripMiss && !spellAttackHalfInitialMiss) {
       return spendSpellActResolutionResources({
         state: attackRolledStateAfterHurl,
         actorId: subject.actorId,
@@ -1719,13 +1728,17 @@ function resolveSpellActInternal(
       spellAttackMissToHitReplacement !== null);
   const spellDamageResult =
     !spellAttackHit &&
-    potentCantripAppliesToMissedSpellAttack({
-      actor: castingState.combatants.get(subject.actorId),
-      invocation: invocationForResolution,
-      target,
-    })
+    invocationForResolution.procedure === "spellAttackDamage" &&
+    invocationForResolution.missDamage === "halfInitialOnly"
       ? "half"
-      : "full";
+      : !spellAttackHit &&
+          potentCantripAppliesToMissedSpellAttack({
+            actor: castingState.combatants.get(subject.actorId),
+            invocation: invocationForResolution,
+            target,
+          })
+        ? "half"
+        : "full";
   const originalDamageValidation = validateSpellDamageFill(
     fillSet.damageRoll,
     damageInvocation,

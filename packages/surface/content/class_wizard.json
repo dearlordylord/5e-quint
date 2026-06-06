@@ -73,6 +73,7 @@
         "sleep",
         "thunderwave",
         "chromatic_orb",
+        "acid_arrow",
         "continual_flame",
         "darkness",
         "gust_of_wind",
@@ -129,6 +130,10 @@
         {
           "spellId": "chromatic_orb",
           "spellLevel": 1
+        },
+        {
+          "spellId": "acid_arrow",
+          "spellLevel": 2
         },
         {
           "spellId": "continual_flame",

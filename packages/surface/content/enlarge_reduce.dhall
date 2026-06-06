@@ -2,7 +2,7 @@
 --
 -- RAW (Spells / Descriptions E-L / Enlarge/Reduce):
 --   "For the duration, the spell enlarges or reduces a creature or an
---    object you can see within range."
+--    object you can see within range (see the chosen effect below)."
 --   "An unwilling creature can make a Constitution saving throw. On a
 --    successful save, the spell has no effect."
 --   Enlarge changes the target one size category larger, grants Advantage
@@ -159,7 +159,7 @@ let enlargeReduce =
           , section = "Spells/Descriptions-E-L#Enlarge/Reduce"
           }
       , description =
-          "For the duration, the spell enlarges or reduces a creature or an object you can see within range. The object can't be worn or carried. An unwilling creature can make a Constitution saving throw; on a successful save, the spell has no effect. Enlarge increases the target's size by one category, grants Advantage on Strength checks and Strength saving throws, and adds 1d4 damage to attacks with enlarged weapons or Unarmed Strikes. Reduce decreases the target's size by one category, imposes Disadvantage on Strength checks and Strength saving throws, and subtracts 1d4 damage from attacks with reduced weapons or Unarmed Strikes, to a minimum of 1 damage."
+          "For the duration, the spell enlarges or reduces a creature or an object you can see within range (see the chosen effect below). The object can't be worn or carried. An unwilling creature can make a Constitution saving throw; on a successful save, the spell has no effect. Enlarge increases the target's size by one category, grants Advantage on Strength checks and Strength saving throws, and adds 1d4 damage to attacks with enlarged weapons or Unarmed Strikes. Reduce decreases the target's size by one category, imposes Disadvantage on Strength checks and Strength saving throws, and subtracts 1d4 damage from attacks with reduced weapons or Unarmed Strikes, to a minimum of 1 damage."
       , mechanics =
           { family = "activation"
           , level = 2

@@ -4181,7 +4181,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("finalizes a level-3 Wizard with a level-2 prepared spell from the selected spellbook", () => {
+  test("finalizes a level-3 Wizard with Acid Arrow prepared from the selected spellbook", () => {
     const spellbookSpellIds = [
       "detect_magic",
       "feather_fall",
@@ -4191,7 +4191,7 @@ describe("character creation finalization", () => {
       "sleep",
       "thunderwave",
       "chromatic_orb",
-      "mirror_image",
+      "acid_arrow",
       "misty_step",
     ] as const;
     const preparedSpellIds = [
@@ -4200,10 +4200,10 @@ describe("character creation finalization", () => {
       "mage_armor",
       "magic_missile",
       "shield",
-      "mirror_image",
+      "acid_arrow",
     ] as const;
     const draft = completeSupportedProgressionDraft({
-      draftId: "draft:srd-level-3-class_wizard-mirror-image-prepared",
+      draftId: "draft:srd-level-3-class_wizard-acid-arrow-prepared",
       progression: testProgression("class_wizard", 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:

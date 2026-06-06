@@ -9,6 +9,11 @@ module battleRuntimeLevel2DamageSpellSelectedIdentityMbt {
 
   action init = recordProjection("init")
 
+  action doDiscoverAcidArrowAttackTiming = all {
+    qLastResult == "init",
+    recordProjection("acidArrowAttackTiming"),
+  }
+
   action doDiscoverDragonsBreathInitial = all {
     qLastResult == "init",
     recordProjection("dragonsBreathInitial"),
@@ -55,6 +60,7 @@ module battleRuntimeLevel2DamageSpellSelectedIdentityMbt {
   }
 
   action step = any {
+    doDiscoverAcidArrowAttackTiming,
     doDiscoverDragonsBreathInitial,
     doDiscoverFlameBladeHeldObject,
     doDiscoverFlamingSphereHazard,

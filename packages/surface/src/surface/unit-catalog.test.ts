@@ -488,13 +488,65 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
-  test("keeps Acid Arrow out of the installed SRD catalog until RAW damage timing is reconciled", () => {
+  test("installs Acid Arrow with immediate, later, and miss-only damage authored from SRD", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
-    if (result.tag === "ok") {
-      expect(Option.isNone(result.catalog.getUnit("acid_arrow"))).toBe(true);
-    }
+    if (result.tag !== "ok") return;
+
+    const acidArrow = result.catalog.requireUnit("acid_arrow");
+    expect(acidArrow).toMatchObject({
+      id: "acid_arrow",
+      kind: "spell",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-A-D#Acid Arrow",
+      },
+    });
+    if (acidArrow.kind !== "spell") return;
+    expect(acidArrow.description).toContain(
+      "4d4 Acid damage and 2d4 Acid damage at the end of its next turn",
+    );
+    expect(acidArrow.mechanics).toMatchObject({
+      family: "activation",
+      level: 2,
+      school: "evocation",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 90 },
+      duration: { kind: "instantaneous" },
+    });
+    if (acidArrow.mechanics.family !== "activation") return;
+    const phase = acidArrow.mechanics.phases[0];
+    expect(phase).toMatchObject({
+      kind: "attack_roll",
+      attackKind: "ranged_spell_attack",
+      onHit: [
+        {
+          kind: "damage",
+          damageType: "acid",
+          amount: {
+            kind: "linear_per_level",
+            axis: "slot",
+            base: { dice: 4, dieSize: 4 },
+            perLevel: { dice: 1 },
+            startingAtLevel: 2,
+          },
+        },
+        {
+          kind: "damage",
+          damageType: "acid",
+          amount: {
+            kind: "linear_per_level",
+            axis: "slot",
+            base: { dice: 2, dieSize: 4 },
+            perLevel: { dice: 1 },
+            startingAtLevel: 2,
+          },
+          timing: "end_of_next_turn",
+        },
+      ],
+      onMiss: [{ kind: "half_initial_damage_only" }],
+    });
   });
 
   test("installs Dragon's Breath with authored SRD spell facts", () => {

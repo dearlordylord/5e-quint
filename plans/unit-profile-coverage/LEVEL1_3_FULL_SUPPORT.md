@@ -14,18 +14,18 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 145/197 (73.6%) |
+| Strict runtime/profile support | 146/197 (74.1%) |
 | Strict target closure | 197/197 (100%) |
-| Selected identity readiness | 167/167 (100%) |
-| Diagnostic product readiness | 604/607 (99.5%) |
+| Selected identity readiness | 168/168 (100%) |
+| Diagnostic product readiness | 605/607 (99.7%) |
 | SRD authored product readiness | 79/79 (100%) |
-| Rules-kernel profile join | 102/102 (100%) |
-| Rules-kernel covered profile join | 102/102 (100%) |
-| Supported Unit rules-kernel chain | 139/139 (100%) |
+| Rules-kernel profile join | 103/103 (100%) |
+| Rules-kernel covered profile join | 103/103 (100%) |
+| Supported Unit rules-kernel chain | 140/140 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 604/607 (99.5%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 605/607 (99.7%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,9 +33,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 439 |
+| accepted | 440 |
 | accepted-no-battle-effect | 165 |
-| battle-runtime-required | 1 |
 | owner-evidence-required | 1 |
 | partial-battle-runtime | 1 |
 
@@ -46,8 +45,8 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Selected identity status | Rows |
 | --- | ---: |
 | not-applicable | 5 |
-| not-required | 30 |
-| witness-present | 162 |
+| not-required | 29 |
+| witness-present | 163 |
 
 ### Selected Identity Blockers
 
@@ -60,7 +59,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 197/197 (100%) | _none_ |
-| Selected identity readiness | pass | 167/167 (100%) | _none_ |
+| Selected identity readiness | pass | 168/168 (100%) | _none_ |
 | SRD authored product readiness | pass | 79/79 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
@@ -101,16 +100,16 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 197 |
-| Non-supported frontier | 52 |
+| Non-supported frontier | 51 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 145 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `cleric_preserve_life`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_lands_aid`, `druid_primal_order`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_open_hand_technique`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_fighting_style`, `ranger_hunters_prey`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_potent_cantrip`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 146 | `acid_arrow`, `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `cleric_preserve_life`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_lands_aid`, `druid_primal_order`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_open_hand_technique`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_fighting_style`, `ranger_hunters_prey`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_potent_cantrip`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 35 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `comprehend_languages`, `darkness`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `pass_without_trace`, `rope_trick`, `silence`, `silent_image`, `speak_with_animals`, `spike_growth`, `suggestion`, `thaumaturgy`, `zone_of_truth` |
 | closed-outside-battle-runtime-boundary | 7 | `bard_bonus_proficiencies`, `continual_flame`, `enlarge_reduce`, `levitate`, `moonbeam`, `prayer_of_healing`, `rogue_fast_hands` |
-| blocked-follow-up-split | 4 | `acid_arrow`, `druid_wild_shape`, `sorcerer_metamagic`, `wizard_evocation_savant` |
+| blocked-follow-up-split | 3 | `druid_wild_shape`, `sorcerer_metamagic`, `wizard_evocation_savant` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
 | closed-companion-control-boundary | 2 | `druid_wild_companion`, `find_steed` |
 | closed-later-level-only | 1 | `ranger_favored_enemy` |
@@ -133,7 +132,6 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Status | Claim | Selected identity | Catalog | Closure kinds | Reason |
 | --- | --- | --- | --- | --- | --- | --- |
-| `acid_arrow` | blocked-follow-up-split | unsupported-profile | not-required | not-in-unit-catalog | follow-up-split | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION: Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Owner: RAW corpus and ASSUMPTIONS owner. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior. |
 | `alarm` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication. |
 | `animal_messenger` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime. |
 | `arcane_lock` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic. |

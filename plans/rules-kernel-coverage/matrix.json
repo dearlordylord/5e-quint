@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 113,
-    "covered": 107,
+    "total": 114,
+    "covered": 108,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 83,
+      "battle": 84,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 107,
+      "covered": 108,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -26,13 +26,13 @@
     "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
-    "total": 114,
+    "total": 115,
     "bySubject": {
-      "battle-hole-family": 71,
+      "battle-hole-family": 72,
       "battle-fill-kind": 43
     },
     "byClassification": {
-      "semantic-frontier": 89,
+      "semantic-frontier": 90,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 25,
       "unsupported-dead-branch": 0
@@ -2517,6 +2517,7 @@
         }
       ],
       "profiles": [
+        "spell.invocation-acid-arrow-attack-timing",
         "spell.invocation-damage-save-or-attack",
         "spell.invocation-flaming-sphere-hazard-ram",
         "spell.invocation-moonbeam-movable-zone",
@@ -3804,6 +3805,40 @@
         "UBIQUITOUS_LANGUAGE.md#Sorcery Points"
       ],
       "title": "Battle Empowered Spell Metamagic admits selected single spell damage dice rerolls, enforces known-option, Sorcery Point affordability, Charisma-modifier selected-die limits, and different-Metamagic stacking gates, and resolves forced replacement dice before damage"
+    },
+    {
+      "id": "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-acid-arrow-attack-timing"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-attack-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Acid Arrow",
+        "packages/surface/content/acid_arrow.dhall",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Damage Roll"
+      ],
+      "title": "Battle Acid Arrow applies immediate Acid damage, miss-half-initial-only damage, hit-only target-end delayed Acid damage, slot scaling, and one-shot cleanup"
     }
   ],
   "battleHoleFrontier": [
@@ -4047,6 +4082,19 @@
       "holeKind": "rolledDice",
       "id": "BattleSpellTurnStartDamageRollHole",
       "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; timed after-hit spell damage lifecycle is covered by the after-hit rider obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleSpellTurnEndDamageRollHole",
+      "reason": "Turn-end spell damage rolls currently carry Acid Arrow's target-end delayed damage. The Acid Arrow timing obligation owns when the hole opens and the one-shot effect cleanup; shared HP damage and the generic damage-disposition split own damage application and zero-Hit-Point follow-up.",
       "subject": "battle-hole-family"
     },
     {
@@ -6124,6 +6172,13 @@
         "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"
       ],
       "profileId": "unit-feature.metamagic-damage-dice-reroll"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "profileId": "spell.invocation-acid-arrow-attack-timing"
     }
   ],
   "qntOwnerRoles": [
@@ -7298,6 +7353,14 @@
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-acid-arrow.qnt is focused proof evidence for Acid Arrow's SRD-specific immediate damage, miss-half-initial-only damage, target-end delayed damage, and slot-scaling facts; it is not a reusable generator semantic core while the proof is profile-local.",
+      "obligationIds": [
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt is the covered obligation QNT owner carrying QCORE10 Spell Invocation target-cardinality semantics without importing authored Spell Definition records.",
@@ -11320,6 +11383,7 @@
     "spell.creature-type-protection-and-charm",
     "spell.find-familiar-lifecycle",
     "spell.hit-point-restoration",
+    "spell.invocation-acid-arrow-attack-timing",
     "spell.invocation-after-hit-damage",
     "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",

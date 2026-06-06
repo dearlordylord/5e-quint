@@ -11,7 +11,7 @@
 **Components:** V, S, M (powdered rhubarb leaf)
 **Duration:** Instantaneous
 
-A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 Acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage only.
+A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 Acid damage and 2d4 Acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage only.
 
 ***Using a Higher-Level Spell Slot.*** The damage (both initial and later) increases by 1d4 for each spell slot level above 2.
 
@@ -344,6 +344,8 @@ A target's astral form resembles its body in almost every way, replicating its g
 A target's astral form can travel through the Astral Plane. The moment an astral form leaves that plane, the target's body and possessions travel along the silver cord, causing the target to re-enter its body on the new plane.
 
 Any damage or other effects that apply to an astral form have no effect on the target's body and vice versa. If a target's body or astral form drops to 0 Hit Points, the spell ends for that target. The spell ends for all the targets if you take a Magic action to dismiss it.
+
+When the spell ends for a target who isn't dead, the target reappears in its body and exits the state of suspended animation.
 
 ---
 
@@ -781,8 +783,6 @@ You touch a creature or at least 1 cubic inch of its flesh. An inert duplicate o
 
 If the original creature dies after the clone finishes forming, the creature's soul transfers to the clone if the soul is free and willing to return. The clone is physically identical to the original and has the same personality, memories, and abilities, but none of the original's equipment. The creature's original remains, if any, become inert and can't be revived, since the creature's soul is elsewhere.
 
-When the spell ends for a target who isn't dead, the target reappears in its body and exits the state of suspended animation.
-
 ---
 
 ## Cloudkill
@@ -873,6 +873,8 @@ Choose three of the following facts; you learn those facts as they pertain to th
 - Location of one Challenge Rating 10+ creature (GM's choice) that is a Celestial, an Elemental, a Fey, a Fiend, or an Undead
 - The most prevalent kind of plant, mineral, or Beast (you choose which to learn)
 - Locations of bodies of water
+
+For example, you could determine the location of a powerful monster in the area, the locations of bodies of water, and the locations of any towns.
 
 ---
 
@@ -1192,8 +1194,6 @@ When you change the weather conditions, find a current condition on the followin
 **Duration:** Instantaneous
 
 You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn't expended.
-
-***Using a Higher-Level Spell Slot.*** You automatically end a spell on the target if the spell's level is equal to or less than the level of the spell slot you use.
 
 ---
 

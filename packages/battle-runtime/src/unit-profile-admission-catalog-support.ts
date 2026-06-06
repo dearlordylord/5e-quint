@@ -250,6 +250,8 @@ export const savageAttackerUnitId = "feat_savage_attacker";
 
 export const acidSplashUnitId = "acid_splash";
 
+export const acidArrowUnitId = "acid_arrow";
+
 export const animalFriendshipUnitId = "animal_friendship";
 
 export const antimagicFieldUnitId = "antimagic_field";

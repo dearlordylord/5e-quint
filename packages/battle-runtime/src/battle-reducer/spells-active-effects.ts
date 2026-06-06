@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
@@ -15,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 export { applyDirectConditionSpellEffects } from "./direct-condition-lifecycle.ts";
@@ -237,13 +239,25 @@ export function applySpellActiveEffects(
   if (invocation.procedure !== "spellAttackDamage") {
     return state;
   }
-  if (invocation.postDamageRiders.length === 0) {
+  if (invocation.postDamageRiders.length === 0 && invocation.laterDamage === null) {
     return state;
   }
   const target = state.combatants.get(targetId);
   if (target == null) {
     return state;
   }
+  const laterDamageEffect =
+    invocation.laterDamage === null
+      ? []
+      : [
+          {
+            kind: "spellTurnEndDamage" as const,
+            sourceSpellId: invocation.spell.id,
+            sourceCombatantId: actorId,
+            damage: invocation.laterDamage,
+            expiresAt: endOfNextTurnExpiration(state, targetId),
+          },
+        ];
   const activeEffects = invocation.postDamageRiders
     .filter(isSpellActiveEffectPostDamageRider)
     .reduce((effects, rider): readonly BattleActiveEffect[] => {
@@ -265,7 +279,7 @@ export function applySpellActiveEffects(
           rider,
         }),
       ];
-    }, target.activeEffects);
+    }, [...target.activeEffects, ...laterDamageEffect]);
 
   return {
     ...state,

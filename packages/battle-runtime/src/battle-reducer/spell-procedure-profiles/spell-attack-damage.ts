@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 //
 // The spellAttackDamage Spell Procedure Profile: an action-time spell attack
 // that chooses one target, makes a Spell Attack, and rolls spell damage on a
@@ -61,6 +61,7 @@ import {
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   SpellAttackDamagePayloadSchema,
+  SpellAttackMissDamageSchema,
   SpellAttackDamageTargetingSchema,
   SpellPostDamageRiderSchema,
   SpellSlotInvocationResourceSchema,
@@ -205,6 +206,8 @@ const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
+      missDamage: SpellAttackMissDamageSchema,
+      laterDamage: Schema.NullOr(BattleRuntimeObjectSchema),
       postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
@@ -223,6 +226,8 @@ const SpellAttackDamageInvocationSchema = spellProcedureInvocationSchema<
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
       attackBonus: AttackBonus,
+      missDamage: SpellAttackMissDamageSchema,
+      laterDamage: Schema.NullOr(BattleRuntimeObjectSchema),
       postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
       objectHitEffect: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),

@@ -1,4 +1,6 @@
 // Spell attack damage profile projections extracted from spells-profiles.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 
 import {
   attackBonus,
@@ -188,6 +190,50 @@ export function supportedSpellPostDamageRiders(
     return null;
   }
   return riders;
+}
+
+function supportedSpellAttackMissDamage(
+  effect: SpellAttackHitEffect | undefined,
+): SpellAttackDamageInvocation["missDamage"] | null {
+  if (effect?.kind === "none") {
+    return "none";
+  }
+  if (effect?.kind === "half_initial_damage_only") {
+    return "halfInitialOnly";
+  }
+  return null;
+}
+
+function supportedSpellAttackLaterDamage(
+  effects: readonly SpellAttackHitEffect[],
+): {
+  readonly laterDamageEffect: (Extract<
+    SpellAttackHitEffect,
+    { readonly kind: "damage" }
+  > & { readonly damageType: DamageType }) | null;
+  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+} | null {
+  const laterDamageEffects = effects.filter(
+    (
+      effect,
+    ): effect is Extract<SpellAttackHitEffect, { readonly kind: "damage" }> & {
+      readonly damageType: DamageType;
+    } =>
+      effect.kind === "damage" &&
+      typeof effect.damageType === "string" &&
+      effect.timing === "end_of_next_turn",
+  );
+  if (laterDamageEffects.length > 1) {
+    return null;
+  }
+  const laterDamageEffect = laterDamageEffects[0] ?? null;
+  return {
+    laterDamageEffect,
+    postDamageEffects:
+      laterDamageEffect === null
+        ? effects
+        : effects.filter((effect) => effect !== laterDamageEffect),
+  };
 }
 
 export function isStarryWispInvisibleBenefitDenialRiderShape(
@@ -605,8 +651,7 @@ export function supportedSpellAttackDamageProfile(
     !supportedSpellAttackKind(phase.attackKind) ||
     targeting === null ||
     phase.onHit.length < 1 ||
-    phase.onMiss.length !== 1 ||
-    phase.onMiss[0]?.kind !== "none"
+    phase.onMiss.length !== 1
   ) {
     return [];
   }
@@ -614,10 +659,27 @@ export function supportedSpellAttackDamageProfile(
   if (damageEffect?.kind !== "damage") {
     return [];
   }
+  const missDamage = supportedSpellAttackMissDamage(phase.onMiss[0]);
+  if (missDamage === null) {
+    return [];
+  }
+  const laterDamageProjection = supportedSpellAttackLaterDamage(
+    postDamageEffects,
+  );
+  if (laterDamageProjection === null) {
+    return [];
+  }
   const fixedDamageType =
     typeof damageEffect.damageType === "string"
       ? damageEffect.damageType
       : null;
+  if (
+    laterDamageProjection.laterDamageEffect !== null &&
+    (fixedDamageType === null ||
+      laterDamageProjection.laterDamageEffect.damageType !== fixedDamageType)
+  ) {
+    return [];
+  }
   const sorcerousBurstProjection = supportedSorcerousBurstProjection(
     spell,
     damageEffect,
@@ -631,7 +693,7 @@ export function supportedSpellAttackDamageProfile(
     phase,
     targeting,
     damageEffect,
-    postDamageEffects,
+    postDamageEffects: laterDamageProjection.postDamageEffects,
   });
   if (objectHitProjection === null) {
     return [];
@@ -651,6 +713,21 @@ export function supportedSpellAttackDamageProfile(
     characterLevel: input.characterLevel,
   });
   if (damageExpr == null) {
+    return [];
+  }
+  const laterDamageExpr =
+    laterDamageProjection.laterDamageEffect === null
+      ? null
+      : supportedDamageAmountExpr({
+          amount: laterDamageProjection.laterDamageEffect.amount,
+          spellLevel: spell.mechanics.level,
+          slotLevel: input.slotLevel,
+          characterLevel: input.characterLevel,
+        });
+  if (
+    laterDamageProjection.laterDamageEffect !== null &&
+    laterDamageExpr === null
+  ) {
     return [];
   }
   const chosenDamageProjection = sorcerousBurstProjection;
@@ -683,6 +760,14 @@ export function supportedSpellAttackDamageProfile(
       Number(input.spellcastingAbilityModifier) +
         Number(input.proficiencyBonus),
     ),
+    missDamage,
+    laterDamage:
+      laterDamageExpr === null || fixedDamageType === null
+        ? null
+        : {
+            expr: laterDamageExpr,
+            damageType: fixedDamageType,
+          },
     postDamageRiders,
     objectHitEffect: objectHitProjection.objectHitEffect,
   };

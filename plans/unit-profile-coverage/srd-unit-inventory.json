@@ -232,14 +232,13 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 604,
-      "percent": "99.5%",
+      "numerator": 605,
+      "percent": "99.7%",
       "rowsByStatus": {
-        "accepted": 439,
+        "accepted": 440,
         "accepted-no-battle-effect": 165,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 1,
-        "battle-runtime-required": 1
+        "owner-evidence-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -284,18 +283,16 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 473,
+      "catalog-installed-owner-evidence-present": 474,
       "non-runtime": 36,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-installed-needs-owner-evidence": 1,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 248,
-      "catalog-only/dead-for-now": 118,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-installed-owner-evidence-present": 249,
+      "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
@@ -31993,14 +31990,31 @@
         "sourceRecordPath": "packages/surface/content/acid_arrow.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "acid_arrow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION owns Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE owns After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT owns After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "table/spatial owner",
+        "reason": "Automatic target visibility, cover, range path geometry, and spatial derivation remain caller/table facts outside the Acid Arrow runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit acid_arrow is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_alter_self",

@@ -1,4 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
+// UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow doDiscoverAcidArrowAttackTiming
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath doDiscoverDragonsBreathInitial
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flame_blade doDiscoverFlameBladeHeldObject
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flaming_sphere doDiscoverFlamingSphereHazard
@@ -19,6 +20,7 @@ import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.js
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleState } from "./index.ts";
 import {
+  acidArrowUnitId,
   dragonsBreathUnitId,
   flameBladeUnitId,
   flamingSphereUnitId,
@@ -39,6 +41,7 @@ import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts
 
 const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
 const level2DamageSpellUnitIds = [
+  acidArrowUnitId,
   dragonsBreathUnitId,
   flameBladeUnitId,
   flamingSphereUnitId,
@@ -52,6 +55,7 @@ const level2DamageSpellUnitIds = [
 type Level2DamageSpellUnitId = (typeof level2DamageSpellUnitIds)[number];
 type Level2DamageSpellSelectedIdentityResult =
   | "init"
+  | "acidArrowAttackTiming"
   | "dragonsBreathInitial"
   | "flameBladeHeldObject"
   | "flamingSphereHazard"
@@ -83,6 +87,18 @@ defineSelectedIdentityWitness({
   projectionSchema: { lastResult: "str" },
   initialProjection: expectedProjection("init"),
   units: [
+    {
+      unitId: acidArrowUnitId,
+      procedures: [
+        selectedSpellProcedure("doDiscoverAcidArrowAttackTiming", {
+          spellId: acidArrowUnitId,
+          actionTag: "actionSpell",
+          slotLevel: 2,
+          procedure: "spellAttackDamage",
+          result: "acidArrowAttackTiming",
+        }),
+      ],
+    },
     {
       unitId: dragonsBreathUnitId,
       procedures: [

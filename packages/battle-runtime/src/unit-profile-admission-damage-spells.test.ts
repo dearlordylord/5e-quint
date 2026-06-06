@@ -7,10 +7,13 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV55 shatter
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MIND-SPIKE mind_spike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY lightning_bolt
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT acid_arrow
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { describe, expect, test } from "vitest";
 import {
+  acidArrowUnitId,
   acidSplashUnitId,
   burningHandsUnitId,
   chillTouchUnitId,
@@ -32,6 +35,7 @@ import {
   viciousMockeryUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
+  attackRollFill,
   damageRollFillWithGroups,
   requireCombatant,
   requireHole,
@@ -52,6 +56,7 @@ import {
   battleObjectId,
   cantripSpellInvocationRef,
   combatantId,
+  endTurn,
   Hp,
   resolveBattleSubject,
   snapshotBattle,
@@ -204,6 +209,235 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         targetRollModes: [],
       }),
     ]);
+  });
+  test("acid_arrow is admitted as ranged spell attack with hit-later and miss-half damage", () => {
+    const spell = spellRecord(acidArrowUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: acidArrowUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "acid_arrow",
+        2,
+        "spellAttackDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            acidArrowUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(spellHoleInvocation([attackRoll])).toEqual(
+      expect.objectContaining({
+        procedure: "spellAttackDamage",
+        spell,
+        attackKind: "ranged_spell_attack",
+        damage: {
+          kind: "fixedSpellAttackDamage",
+          expr: { dice: 4, dieSize: 4 },
+          damageType: "acid",
+        },
+        missDamage: "halfInitialOnly",
+        laterDamage: {
+          expr: { dice: 2, dieSize: 4 },
+          damageType: "acid",
+        },
+        rangeFeet: 90,
+        postDamageRiders: [],
+      }),
+    );
+  });
+  test("acid_arrow hit applies initial damage and target-end later damage; miss applies half initial only", () => {
+    const spell = spellRecord(acidArrowUnitId);
+    const hitState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 2 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const hitAct = spellAct({
+      state: hitState,
+      spellId: acidArrowUnitId,
+      slotLevel: 2,
+    });
+    const hitTargetHole = requireHole(hitAct.initialHoles, "targetChoice");
+    const hitAttackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: hitState,
+        subject: hitAct.subject,
+        fills: [
+          spellTargetFill(
+            hitTargetHole,
+            acidArrowUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    const hitDamage = requireResultHole(
+      resolveBattleSubject({
+        state: hitState,
+        subject: hitAct.subject,
+        fills: [
+          spellTargetFill(
+            hitTargetHole,
+            acidArrowUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+          attackRollFill(hitAttackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hitResolved = resolveBattleSubject({
+      state: hitState,
+      subject: hitAct.subject,
+      fills: [
+        spellTargetFill(
+          hitTargetHole,
+          acidArrowUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        attackRollFill(hitAttackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(hitDamage, [[4, 4, 4, 4]]),
+      ],
+    });
+    expect(hitResolved.tag).toBe("resolved");
+    if (hitResolved.tag !== "resolved") return;
+    expect(requireCombatant(hitResolved.state, spellTargetId).hp).toBe(Hp(14));
+    expect(
+      requireCombatant(hitResolved.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellTurnEndDamage",
+        sourceSpellId: acidArrowUnitId,
+        damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
+      }),
+    );
+
+    const targetTurn = endTurn({
+      state: hitResolved.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const laterRequest = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    const laterDamage = requireResultHole(laterRequest, "rolledDice");
+    expect(laterDamage).toMatchObject({
+      spellTurnEndDamage: {
+        targetId: spellTargetId,
+        sourceSpellId: acidArrowUnitId,
+        damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
+      },
+    });
+    const laterResolved = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [damageRollFillWithGroups(laterDamage, [[2, 2]])],
+    });
+    expect(laterResolved.tag).toBe("resolved");
+    if (laterResolved.tag !== "resolved") return;
+    expect(requireCombatant(laterResolved.state, spellTargetId).hp).toBe(
+      Hp(10),
+    );
+    expect(
+      requireCombatant(laterResolved.state, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellTurnEndDamage",
+      ),
+    ).toBe(false);
+
+    const missState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const missAct = spellAct({
+      state: missState,
+      spellId: acidArrowUnitId,
+      slotLevel: 2,
+    });
+    const missTargetHole = requireHole(missAct.initialHoles, "targetChoice");
+    const missAttackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: missState,
+        subject: missAct.subject,
+        fills: [
+          spellTargetFill(
+            missTargetHole,
+            acidArrowUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "attackRoll",
+    );
+    const missDamage = requireResultHole(
+      resolveBattleSubject({
+        state: missState,
+        subject: missAct.subject,
+        fills: [
+          spellTargetFill(
+            missTargetHole,
+            acidArrowUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+          attackRollFill(missAttackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const missResolved = resolveBattleSubject({
+      state: missState,
+      subject: missAct.subject,
+      fills: [
+        spellTargetFill(
+          missTargetHole,
+          acidArrowUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        attackRollFill(missAttackRoll, { total: 1, naturalD20: 1 }),
+        damageRollFillWithGroups(missDamage, [[4, 4, 4, 4]]),
+      ],
+    });
+    expect(missResolved.tag).toBe("resolved");
+    if (missResolved.tag !== "resolved") return;
+    expect(requireCombatant(missResolved.state, spellTargetId).hp).toBe(Hp(22));
+    expect(
+      requireCombatant(missResolved.state, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellTurnEndDamage",
+      ),
+    ).toBe(false);
   });
   test("poison_spray is admitted through catalog spell access and projected as a pure damage cantrip spell attack", () => {
     const spell = spellRecord(poisonSprayUnitId);

@@ -35,6 +35,16 @@ export function traceEffectAtom(
       });
       return id;
     }
+    case "half_initial_damage_only": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "half_initial_damage_only",
+        label: "half_initial_damage_only",
+      });
+      return id;
+    }
     case "object_contact_damage":
     case "none":
     case "damage":

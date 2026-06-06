@@ -1,8 +1,9 @@
 -- Levitate - SRD 5.2.1 Spell, level 2, Transmutation.
 --
 -- RAW (Spells/Descriptions-E-L#Levitate):
---   "One creature or loose object of your choice that you can see rises
---    vertically up to 20 feet and remains suspended there for the duration."
+--   "One creature or loose object of your choice that you can see within range
+--    rises vertically up to 20 feet and remains suspended there for the
+--    duration."
 --   "The spell can levitate an object that weighs up to 500 pounds."
 --   "An unwilling creature that succeeds on a Constitution saving throw is
 --    unaffected."
@@ -78,7 +79,7 @@ let levitate =
           , section = "Spells/Descriptions-E-L#Levitate"
           }
       , description =
-          "One creature or loose object of your choice that you can see rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach, which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range. When the spell ends, the target floats gently to the ground if it is still aloft."
+          "One creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach, which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range. When the spell ends, the target floats gently to the ground if it is still aloft."
       , mechanics =
           { family = "activation"
           , level = 2

@@ -579,8 +579,8 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 167,
-              "numerator": 167,
+              "denominator": 168,
+              "numerator": 168,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
@@ -605,8 +605,8 @@
               "numerator": 58
             },
             "qntCoveredObligations": {
-              "denominator": 69,
-              "numerator": 69
+              "denominator": 70,
+              "numerator": 70
             }
           },
           "generatorBlockingRows": [],
@@ -618,13 +618,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 69,
-              "numerator": 69
+              "denominator": 70,
+              "numerator": 70
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
               "focused-mbt": 61,
-              "runtime-test": 23
+              "runtime-test": 24
             }
           },
           "id": "mbt-parity-evidence",
@@ -724,6 +724,7 @@
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
         "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
@@ -840,15 +841,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 146,
-            "numerator": 146
+            "denominator": 147,
+            "numerator": 147
           },
           "joinedEvidenceRows": {
-            "denominator": 146,
-            "numerator": 146
+            "denominator": 147,
+            "numerator": 147
           },
           "missingJoinRows": {
-            "denominator": 146,
+            "denominator": 147,
             "numerator": 0
           }
         },

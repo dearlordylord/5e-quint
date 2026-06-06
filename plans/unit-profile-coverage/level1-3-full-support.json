@@ -15,44 +15,6 @@
       "catalogStatus": "not-in-unit-catalog",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION: Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Owner: RAW corpus and ASSUMPTIONS owner. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/acid_arrow.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Acid Arrow",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_acid_arrow",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 197,
-            "lineStart": 197,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "acid_arrow"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
         "outside-runtime-presentation-exploration"
       ],
       "collectionId": "srd-5.2.1",
@@ -2678,10 +2640,11 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 145,
+      "count": 146,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
+        "acid_arrow",
         "acid_splash",
         "aid",
         "alter_self",
@@ -2886,11 +2849,10 @@
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
-        "acid_arrow",
         "druid_wild_shape",
         "sorcerer_metamagic",
         "wizard_evocation_savant"
@@ -2927,35 +2889,34 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 604,
-      "percent": "99.5%",
+      "numerator": 605,
+      "percent": "99.7%",
       "rowsByStatus": {
-        "accepted": 439,
+        "accepted": 440,
         "accepted-no-battle-effect": 165,
-        "battle-runtime-required": 1,
         "owner-evidence-required": 1,
         "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 103,
+      "numerator": 103,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 139,
-      "numerator": 139,
+      "denominator": 140,
+      "numerator": 140,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 145,
-      "percent": "73.6%"
+      "numerator": 146,
+      "percent": "74.1%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -5671,12 +5632,40 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 139,
-        "numerator": 139,
+        "denominator": 140,
+        "numerator": 140,
         "percent": "100%"
       }
     },
     "units": [
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Acid Arrow applies immediate Acid damage, miss-half-initial-only damage, hit-only target-end delayed Acid damage, slot scaling, and one-shot cleanup"
+              }
+            ],
+            "profileId": "spell.invocation-acid-arrow-attack-timing",
+            "profileKind": "spell-invocation",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+            ]
+          }
+        ],
+        "unitId": "acid_arrow"
+      },
       {
         "joinStatus": "covered",
         "profiles": [
@@ -9641,18 +9630,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 167,
-      "numerator": 167,
+      "denominator": 168,
+      "numerator": 168,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 5,
-      "witness-present": 162
+      "witness-present": 163
     },
     "rowsByStatus": {
       "not-applicable": 5,
-      "not-required": 30,
-      "witness-present": 162
+      "not-required": 29,
+      "witness-present": 163
     }
   },
   "sourceArtifacts": {
@@ -10561,19 +10550,19 @@
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
       "profile-subset-supported": 22,
-      "supported-profile": 145,
-      "unsupported-profile": 30
+      "supported-profile": 146,
+      "unsupported-profile": 29
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 4,
+      "blocked-follow-up-split": 3,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 1,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 145
+      "supported-profile": 146
     },
-    "nonSupportedFrontier": 52,
+    "nonSupportedFrontier": 51,
     "strictDenominator": 197
   }
 }
