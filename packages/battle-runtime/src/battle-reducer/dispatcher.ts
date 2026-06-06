@@ -1992,16 +1992,9 @@ export function resolveBattleInterrupt(input: {
         "Interrupt choice is not admitted for the pending interrupt checkpoint.",
       );
     }
-    if (choice.kind === "reactionRollOrDamageReduction") {
-      return resolveReactionRollOrDamageReduction({
-        state: input.state,
-        frame,
-        choice,
-        selection: input.fill.value.choice,
-      });
-    }
+    const choiceTurnResource = interruptChoiceTurnResource(choice);
     if (
-      choice.kind !== "castAttackHitBonusActionSpell" &&
+      choiceTurnResource === "reaction" &&
       !combatantCanTakeReactions(responder)
     ) {
       return invalidResult(
@@ -2009,6 +2002,14 @@ export function resolveBattleInterrupt(input: {
         "staleSubject",
         "Selected responder has no Reaction available.",
       );
+    }
+    if (choice.kind === "reactionRollOrDamageReduction") {
+      return resolveReactionRollOrDamageReduction({
+        state: input.state,
+        frame,
+        choice,
+        selection: input.fill.value.choice,
+      });
     }
     const activeFrame = {
       ...frame,
@@ -2027,7 +2028,7 @@ export function resolveBattleInterrupt(input: {
       ],
     };
     const activeState =
-      choice.kind === "castAttackHitBonusActionSpell"
+      choiceTurnResource === "none"
         ? stateWithActiveInterrupt
         : spendReaction(stateWithActiveInterrupt, input.fill.value.responderId);
     const interruptResult = resolveBattleSubjectInternal(
@@ -3317,6 +3318,22 @@ export function admittedInterruptChoice(
         choice.reactorId === decision.responderId &&
         sameInterruptProcedureChoice(choice, decision.choice),
     ) ?? null
+  );
+}
+
+type BattleInterruptChoiceTurnResource = "none" | "reaction";
+
+function interruptChoiceTurnResource(
+  choice: BattleInterruptProcedureChoice,
+): BattleInterruptChoiceTurnResource {
+  return Match.value(choice.kind).pipe(
+    Match.when("releaseReadiedSpell", () => "reaction" as const),
+    Match.when("releaseReadiedMovement", () => "reaction" as const),
+    Match.when("castTriggeredReactionSpell", () => "reaction" as const),
+    Match.when("castAttackHitBonusActionSpell", () => "none" as const),
+    Match.when("opportunityAttack", () => "reaction" as const),
+    Match.when("reactionRollOrDamageReduction", () => "reaction" as const),
+    Match.exhaustive,
   );
 }
 
