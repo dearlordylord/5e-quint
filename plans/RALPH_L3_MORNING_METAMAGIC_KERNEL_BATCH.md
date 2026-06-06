@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L3MMETA-15-DISTANT-CAST-RANGE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Distant Spell cast-local range slice"
     },
     {
