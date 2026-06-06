@@ -232,24 +232,23 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 603,
-      "percent": "99.3%",
+      "numerator": 604,
+      "percent": "99.5%",
       "rowsByStatus": {
-        "accepted": 438,
+        "accepted": 439,
         "accepted-no-battle-effect": 165,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 2,
+        "owner-evidence-required": 1,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 50,
-      "percent": "98%",
+      "numerator": 51,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 36,
-        "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 1
+        "accepted": 37,
+        "accepted-no-battle-effect": 14
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -274,10 +273,9 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 36,
+      "catalog-installed-owner-evidence-present": 37,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-only/dead-for-now": 2
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -286,12 +284,11 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 472,
+      "catalog-installed-owner-evidence-present": 473,
       "non-runtime": 36,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-installed-owner-evidence-required": 1,
       "catalog-installed-needs-owner-evidence": 1,
       "catalog-authored-executable-follow-up": 1
     },
@@ -22379,7 +22376,7 @@
         "unitId": "rogue_steady_aim"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -22387,13 +22384,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime turn movement and attack-roll Advantage owner",
-          "evidence": "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME at packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-3:class-table-summary:rogue_level_3_feature_table_row",

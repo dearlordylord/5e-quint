@@ -89,6 +89,15 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
       },
     ],
   ],
+  [
+    "rogue_steady_aim",
+    [
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME",
+      },
+    ],
+  ],
 ]);
 
 const ownerEvidenceRequired = new Map([
@@ -200,14 +209,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
-    {
-      owner: "battle-runtime turn movement and attack-roll Advantage owner",
-      requirement:
-        "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
-    },
-  ],
-  [
     "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
     {
       owner: "character-sheet Hit Point Maximum and Armor Class formula owner",
@@ -298,6 +299,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "ranger_favored_enemy",
   "ranger_fighting_style",
   "ranger_weapon_mastery",
+  "rogue_steady_aim",
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",

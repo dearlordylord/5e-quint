@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Steady Aim inventory row evidence"
     }
   ]
@@ -149,7 +149,7 @@ repair branch state by rebasing against `master`.
 | 13 | L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected the existing Character Sheet Jack of All Trades owner evidence to the generated inventory readiness path. |
 | 14 | L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Disciple of Life battle-runtime and QNT evidence to the generated inventory readiness path. |
 | 15 | L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Remarkable Athlete deterministic admission and selected-identity MBT evidence to the generated inventory readiness path. |
-| 16 | L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Steady Aim Bonus Action, movement, next-attack Advantage, and Speed owner evidence. |
+| 16 | L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Steady Aim deterministic admission and selected-identity MBT evidence to the generated inventory readiness path. |
 
 ## Task Details
 
