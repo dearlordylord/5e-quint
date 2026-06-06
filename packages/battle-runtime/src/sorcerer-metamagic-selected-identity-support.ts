@@ -16,6 +16,7 @@ import {
   type BattleHole,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
+  battleLineDirectionId,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
   resolveBattleSubject,
@@ -62,7 +63,8 @@ export type SorcererMetamagicProjection = {
     | "transmutedSpellAttack"
     | "twinnedTargetCount"
     | "heightenedHideousLaughter"
-    | "heightenedGreaseEntrySave";
+    | "heightenedGreaseEntrySave"
+    | "heightenedGustOfWindEndTurnSave";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -517,6 +519,103 @@ export function resolveHeightenedGreaseEntrySave(state: BattleState): BattleStat
   ).state;
 }
 
+export function resolveHeightenedGustOfWindEndTurnSave(
+  state: BattleState,
+): BattleState {
+  const act = heightenedGustOfWindAct(state);
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Gust of Wind to request a save hole.");
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const areaId = battleAreaId("heightened-gust-of-wind-line-area");
+  const directionId = battleLineDirectionId(
+    "heightened-gust-of-wind-line-north",
+  );
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            area: {
+              kind: "gustOfWindLineArea",
+              areaId,
+              directionId,
+              originAnchorId: wizardId,
+              affectedTargetIds: [skeletonId],
+              creaturePushes: [],
+            },
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+  const targetTurn = requireResolved(endTurn({ state: cast, actorId: wizardId }))
+    .state;
+  const endTurnAct = discoverBattleActs(targetTurn).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (endTurnAct === undefined) {
+    throw new Error("Expected Heightened Gust of Wind end-turn save act.");
+  }
+  const endTurnSave = findHole(endTurnAct.initialHoles, "savingThrowOutcome");
+  if (endTurnSave.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Heightened Gust of Wind end-turn save hole.");
+  }
+  if (
+    !endTurnSave.targetRollModes.some(
+      (projection) =>
+        projection.targetId === endTurnAct.subject.actorId &&
+        projection.rollMode === "disadvantage",
+    )
+  ) {
+    throw new Error(
+      "Expected Heightened Gust of Wind end-turn save to project Disadvantage for the selected target.",
+    );
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: endTurnAct.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: endTurnSave.holeId,
+          value: {
+            area: {
+              kind: "gustOfWindLineArea",
+              areaId,
+              directionId,
+              originAnchorId: wizardId,
+              affectedTargetIds: [endTurnAct.subject.actorId],
+              creaturePushes: [],
+            },
+            outcomes: [{ targetId: endTurnAct.subject.actorId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
 export function resolveTransmutedBurningHandsToPoison(
   state: BattleState,
 ): BattleState {
@@ -686,9 +785,13 @@ function sorcererMetamagicBattleWithOptions(
               spellRecord("burning_hands"),
               spellRecord("command"),
               spellRecord("grease"),
+              spellRecord("gust_of_wind"),
               spellRecord("hideous_laughter"),
             ],
-            spellSlots: [{ spellLevel: 1, count: 3 }],
+            spellSlots: [
+              { spellLevel: 1, count: 3 },
+              { spellLevel: 2, count: 1 },
+            ],
           }),
           sourceClassName: "sorcerer",
         },
@@ -956,6 +1059,22 @@ function heightenedGreaseAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Heightened Grease act.");
+  }
+  return act;
+}
+
+function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "gustOfWindLine" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Gust of Wind act.");
   }
   return act;
 }

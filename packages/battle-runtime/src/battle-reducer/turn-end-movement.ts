@@ -10,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -2381,11 +2382,22 @@ export function gustOfWindLineSavingThrowOutcomeHole(
     targetRollModes: savingThrowRollModeProjections(
       state,
       effect.save.ability,
+      undefined,
+      gustOfWindLineHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
     targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
       (projection) => projection.targetId === targetId,
     ),
   };
+}
+
+function gustOfWindLineHeightenedRollModeProjection(
+  effect: GustOfWindLineEffect,
+  targetId: CombatantId,
+): BattleSavingThrowRollModeProjection | undefined {
+  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
+    ? { targetId, rollMode: "disadvantage" }
+    : undefined;
 }
 
 export function gustOfWindLineDirectionChoiceHole(

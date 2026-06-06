@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -2126,6 +2127,7 @@ export function applyGustOfWindLineCastEffect(input: {
     SupportedSpellInvocation,
     { readonly procedure: "gustOfWindLine" }
   >;
+  readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
   const caster = combatants.get(input.actorId);
@@ -2147,6 +2149,13 @@ export function applyGustOfWindLineCastEffect(input: {
       sourceCombatantId: input.actorId,
       areaId: input.area.areaId,
       directionId: input.area.directionId,
+      heightenedSpellTargetDisadvantage:
+        input.heightenedSpellTargetId === null
+          ? null
+          : {
+              kind: "heightenedSpellTargetDisadvantage" as const,
+              targetId: input.heightenedSpellTargetId,
+            },
       castTurn: {
         actorId: input.actorId,
         round: input.state.initiative.round,

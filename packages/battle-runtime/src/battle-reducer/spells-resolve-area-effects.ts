@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
@@ -678,6 +679,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     actorId: input.actorId,
     area,
     invocation: input.invocation,
+    heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId ?? null,
   });
   return {
     tag: "resolved",

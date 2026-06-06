@@ -4,6 +4,7 @@
 // and its runtime live in battle-reducer.ts / battle-reducer/ and depend on these
 // types one-directionally. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -582,6 +583,7 @@ export type BattleActiveEffect =
       readonly kind: "gustOfWindLine";
       readonly areaId: BattleAreaId;
       readonly directionId: BattleLineDirectionId;
+      readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
       readonly castTurn: BattleTurnAnchor;
       readonly line: {
         readonly lengthFeet: MovementFeet;

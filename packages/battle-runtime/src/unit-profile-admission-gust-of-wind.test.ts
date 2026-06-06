@@ -1,7 +1,16 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
+import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import {
+  characterSeed,
+  startBattleRight,
+  statBlockCreatureInit,
+  wizardSpellcasting,
+} from "./battle-runtime-test-support.ts";
 import {
   movementFill,
   requireCombatant,
@@ -18,6 +27,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleId,
   breakBattleConcentration,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -25,6 +35,7 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
+  type AvailableBattleAct,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -34,8 +45,11 @@ import {
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
   gustOfWindUnitId,
+  partySide,
   spellCasterId,
   spellTargetId,
+  thunderwaveSecondTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 
 describe("L12G deterministic Gust of Wind Line admission", () => {
@@ -154,6 +168,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         sourceCombatantId: spellCasterId,
         areaId: gustOfWindAreaId,
         directionId: gustOfWindNorthDirectionId,
+        heightenedSpellTargetDisadvantage: null,
         castTurn: {
           actorId: spellCasterId,
           round: 1,
@@ -409,6 +424,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       expect.objectContaining({
         areaId: gustOfWindAreaId,
         directionId: gustOfWindEastDirectionId,
+        heightenedSpellTargetDisadvantage: null,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -416,6 +432,119 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         },
       }),
     );
+  });
+
+  test("Heightened Gust of Wind stores the selected target on the Line occurrence", () => {
+    const cast = castHeightenedGustOfWindWithSelectedTarget();
+
+    expect(gustOfWindLineEffect(cast)).toEqual(
+      expect.objectContaining({
+        areaId: gustOfWindAreaId,
+        directionId: gustOfWindNorthDirectionId,
+        heightenedSpellTargetDisadvantage: {
+          kind: "heightenedSpellTargetDisadvantage",
+          targetId: spellTargetId,
+        },
+      }),
+    );
+  });
+
+  test("Heightened Gust of Wind end-turn saves project Disadvantage only for the selected target", () => {
+    const cast = castHeightenedGustOfWindWithSelectedTarget();
+    const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+
+    const selectedAct = gustOfWindLineEndTurnSaveAct(
+      targetTurn.state,
+      spellTargetId,
+    );
+    const selectedSave = requireHole(
+      selectedAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    expect(selectedSave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+
+    const secondTargetTurn = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: selectedAct.subject,
+      fills: [
+        gustOfWindLineSavingThrowOutcomeFill(selectedSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (secondTargetTurn.tag !== "resolved") {
+      throw new Error("Expected selected target End Turn to resolve.");
+    }
+
+    const unselectedAct = gustOfWindLineEndTurnSaveAct(
+      secondTargetTurn.state,
+      thunderwaveSecondTargetId,
+    );
+    const unselectedSave = requireHole(
+      unselectedAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    expect(unselectedSave.targetRollModes).not.toContainEqual({
+      targetId: thunderwaveSecondTargetId,
+      rollMode: "disadvantage",
+    });
+  });
+
+  test("Heightened Gust of Wind preserves the selected target through direction replacement", () => {
+    const cast = castHeightenedGustOfWindWithSelectedTarget();
+    const laterTurn = advanceHeightenedGustOfWindToCasterLaterTurn(cast);
+    const directionAct = gustOfWindLineDirectionChangeAct(laterTurn);
+    const directionHole = requireHole(
+      directionAct.initialHoles,
+      "gustOfWindLineDirectionChoice",
+    );
+    const changed = resolveBattleSubject({
+      state: laterTurn,
+      subject: directionAct.subject,
+      fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+    });
+    if (changed.tag !== "resolved") {
+      throw new Error("Expected Gust of Wind direction change to resolve.");
+    }
+
+    expect(gustOfWindLineEffect(changed.state)).toEqual(
+      expect.objectContaining({
+        areaId: gustOfWindAreaId,
+        directionId: gustOfWindEastDirectionId,
+        heightenedSpellTargetDisadvantage: {
+          kind: "heightenedSpellTargetDisadvantage",
+          targetId: spellTargetId,
+        },
+      }),
+    );
+
+    const targetTurn = endTurn({
+      state: changed.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const endTurnAct = gustOfWindLineEndTurnSaveAct(
+      targetTurn.state,
+      spellTargetId,
+      gustOfWindAreaId,
+      gustOfWindEastDirectionId,
+    );
+    const endTurnSave = requireHole(
+      endTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    expect(endTurnSave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
   });
 
   test("breaking Concentration removes the active Line", () => {
@@ -453,6 +582,111 @@ function castGustOfWind(
     throw new Error("Expected Gust of Wind cast to resolve.");
   }
   return resolved;
+}
+
+function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
+  const spell = spellRecord(gustOfWindUnitId);
+  const state = startBattleRight({
+    battleId: battleId("heightened-gust-of-wind-line"),
+    combatants: [
+      characterSeed({
+        combatantId: spellCasterId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: [
+            {
+              effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+              stackingMode: "one_per_spell",
+              sorceryPointCost: resourceCount(2),
+            },
+          ],
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      statBlockCreatureInit({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+      }),
+      statBlockCreatureInit({
+        combatantId: thunderwaveSecondTargetId,
+        displayName: "Second Target",
+        initiative: 9,
+      }),
+    ],
+  });
+  const act = heightenedGustOfWindAct(state);
+  const heightenedTarget = requireHole(act.initialHoles, "targetChoice");
+  const heightenedTargetFill = {
+    kind: "targetChoice" as const,
+    holeId: heightenedTarget.holeId,
+    value: spellTargetId,
+  };
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTargetFill],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Gust of Wind to request a save hole.");
+  }
+  const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      heightenedTargetFill,
+      gustOfWindLineSavingThrowOutcomeFill(savingThrow, [
+        { targetId: spellTargetId, succeeded: true },
+        { targetId: thunderwaveSecondTargetId, succeeded: true },
+      ]),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Heightened Gust of Wind to resolve.");
+  }
+  return resolved.state;
+}
+
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+};
+
+function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "gustOfWindLine" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Gust of Wind act.");
+  }
+  return act;
 }
 
 function gustOfWindWithLineHoleId(
@@ -563,6 +797,33 @@ function advanceToCasterLaterTurn(state: BattleState) {
   });
   if (casterNextTurn.tag !== "resolved") {
     throw new Error("Expected target End Turn in Gust of Wind to resolve.");
+  }
+  return casterNextTurn.state;
+}
+
+function advanceHeightenedGustOfWindToCasterLaterTurn(state: BattleState) {
+  const secondTargetTurn = advanceToCasterLaterTurn(state);
+  const endTurnAct = gustOfWindLineEndTurnSaveAct(
+    secondTargetTurn,
+    thunderwaveSecondTargetId,
+  );
+  const endTurnSave = requireHole(
+    endTurnAct.initialHoles,
+    "savingThrowOutcome",
+  );
+  const casterNextTurn = resolveBattleSubject({
+    state: secondTargetTurn,
+    subject: endTurnAct.subject,
+    fills: [
+      gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+        { targetId: thunderwaveSecondTargetId, succeeded: true },
+      ]),
+    ],
+  });
+  if (casterNextTurn.tag !== "resolved") {
+    throw new Error(
+      "Expected second target End Turn in Gust of Wind to resolve.",
+    );
   }
   return casterNextTurn.state;
 }
