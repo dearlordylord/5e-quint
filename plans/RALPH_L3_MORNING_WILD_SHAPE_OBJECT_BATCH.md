@@ -79,13 +79,13 @@
     {
       "number": 13,
       "id": "L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research remaining Wild Shape generic object and Utilize consumers"
     },
     {
       "number": 14,
       "id": "L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Final Wild Shape morning lane consolidation"
     }
   ]
@@ -134,8 +134,8 @@ repair branch state by rebasing against `master`.
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | done                                          | none                                                                                                                                                                                                                           | Wild Shape selected-identity replay is covered by the focused form-lifecycle MBT witness.                                             |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | done                                          | none                                                                                                                                                                                                                           | Wild Companion now closes only the explicit SRDINV86 companion-control residue and delegates familiar lifecycle to the promoted Find Familiar Unit. |
 |    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | done                                          | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promoted practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers from the stored form-limb witness. |
-|    13 | L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER    | ready-for-research                            | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION                                                                                                                                                                                   | Narrow and implement or explicitly close remaining generic non-weapon object/Utilize, dropped-object table-use, and non-resizing/non-reshaping object lifecycle work. |
-|    14 | L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION, L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER | Final lane report and cleanup.                                                                                                        |
+|    13 | L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER    | done                                          | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION                                                                                                                                                                                   | Closed remaining generic non-weapon object/Utilize, dropped-object table-use, and non-resizing/non-reshaping object lifecycle work to a future generic object/Utilize/table-placement owner. |
+|    14 | L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION    | ready-for-implementation                      | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION, L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER | Final lane report and cleanup after all listed dependencies closed.                                                                    |
 
 ## Task Details
 
@@ -346,6 +346,24 @@ Outputs:
   non-resizing/non-reshaping object lifecycle, deriving from existing loadout,
   active-form, form-limb witness, dropped-object, and table-position facts.
 - No parallel Wild Shape inventory, equipment, or table-placement state.
+
+Landed scope:
+
+- Reviewed the local Wild Shape Objects and object interaction / Utilize RAW
+  plus ubiquitous-language terms for the remaining object branches.
+- No additional Wild Shape-specific generic non-weapon object or generic
+  Utilize consumer was promoted. The current battle runtime has selected-loadout
+  object refs, `droppedObjects` boundary outcomes, Command Drop caller/table
+  facts, and the active `formLimbs` witness, but no canonical generic
+  carried-object inventory or table-placement lifecycle for loose objects.
+- Remaining generic non-weapon held objects, downstream use of Wild Shape
+  `droppedObjects`, generic object interaction / Utilize procedures, and
+  durable non-resizing/non-reshaping loose-object lifecycle are closed outside
+  the promoted Wild Shape battle-runtime profile to a future generic
+  object/Utilize/table-placement owner. Future consumers must use existing
+  selected-loadout refs, dropped-object boundary outcomes, and the stored
+  form-limb witness without adding Wild Shape-local inventory or authored form
+  identity dispatch.
 
 ### Task 14 - L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION
 

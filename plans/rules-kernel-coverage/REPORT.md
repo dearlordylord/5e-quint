@@ -269,8 +269,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpikeGrowthMovementDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpiritualWeaponForcePositionHole` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `spiritualWeaponForcePosition` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
-| battle-hole-family | `BattleWildShapeEquipmentDispositionHole` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP` |
-| battle-fill-kind | `wildShapeEquipmentDisposition` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP` |
+| battle-hole-family | `BattleWildShapeEquipmentDispositionHole` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `wildShapeEquipmentDisposition` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 
 ## QNT Owner Roles
 
