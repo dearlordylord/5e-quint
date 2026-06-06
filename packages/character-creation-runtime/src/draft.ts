@@ -5,6 +5,7 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   abilityScoreAssignment,
   characterDraftId,
+  characterDraconicAncestrySelection,
   creationChoiceOptionId,
   draftRevision,
   isCharacterSpeciesSizeSelection,
@@ -16,6 +17,7 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
   type CharacterDraftSelections,
+  type CharacterDraconicAncestrySelection,
   type CharacterEquipmentSelection,
   type CharacterSpeciesSizeSelection,
   type CharacterSelectedChoiceOption,
@@ -149,6 +151,17 @@ function parseDraftSelections(
         );
   if (Either.isLeft(speciesSize)) return failIssue(speciesSize.left);
 
+  const draconicAncestry =
+    selections.right.draconicAncestry === undefined
+      ? Either.right(undefined)
+      : parseCharacterDraconicAncestry(
+          selections.right.draconicAncestry,
+          `${path}.draconicAncestry`,
+        );
+  if (Either.isLeft(draconicAncestry)) {
+    return failIssue(draconicAncestry.left);
+  }
+
   const languages =
     selections.right.languages === undefined
       ? Either.right(undefined)
@@ -188,6 +201,9 @@ function parseDraftSelections(
     ...(speciesSize.right === undefined
       ? {}
       : { speciesSize: speciesSize.right }),
+    ...(draconicAncestry.right === undefined
+      ? {}
+      : { draconicAncestry: draconicAncestry.right }),
     ...(languages.right === undefined ? {} : { languages: languages.right }),
     ...(alignment.right === undefined ? {} : { alignment: alignment.right }),
     ...(equipment.right === undefined ? {} : { equipment: equipment.right }),
@@ -205,6 +221,15 @@ function parseCharacterSpeciesSize(
   }
 
   return invalid(path, "Character species size must be medium or small.");
+}
+
+function parseCharacterDraconicAncestry(
+  value: unknown,
+  path: string,
+): ParseResult<CharacterDraconicAncestrySelection> {
+  return typeof value === "string"
+    ? Either.right(characterDraconicAncestrySelection(value))
+    : invalid(path, "Character Draconic Ancestry must be a string.");
 }
 
 function parseCharacterProgression(

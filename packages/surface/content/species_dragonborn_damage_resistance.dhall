@@ -5,10 +5,8 @@
 --    Draconic Ancestry trait."
 --
 -- The damage type is chosen at character creation from the Draconic
--- Ancestors table (10 subspecies options collapsing to 5 distinct
--- types: acid, cold, fire, lightning, poison). This encodes as a
--- `choice` DamageTypeRef, matching the same pattern used
--- by species_dragonborn_breath_weapon.
+-- Ancestors table on the Dragonborn species record and referenced here
+-- through the same Draconic Ancestry source fact used by Breath Weapon.
 --
 -- Mechanics: passive grant of grant_resistance — always-on while the
 -- species trait is in effect (i.e., always). No activation cost, no
@@ -30,20 +28,8 @@ let damageResistance =
           , grants =
               [ { kind = "grant_resistance"
                 , damageType =
-                    { kind = "hole"
-                    , holeId = "species_dragonborn_damage_resistance_damage_type"
-                    , label = "draconic ancestry"
-                    , value =
-                        { kind = "choice"
-                        , label = "draconic ancestry"
-                        , options =
-                            [ "acid"
-                            , "cold"
-                            , "fire"
-                            , "lightning"
-                            , "poison"
-                            ]
-                        }
+                    { kind = "same_choice_as"
+                    , holeId = "species_dragonborn_draconic_ancestry_damage_type"
                     }
                 }
               ]

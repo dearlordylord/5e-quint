@@ -48,6 +48,7 @@ import {
   thresholdTierValueAtClassLevel,
   validateDruidWildShapeKnownForms,
   weaponMasteryChoiceProfileForFeature,
+  characterDraconicAncestrySelection,
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
@@ -59,6 +60,7 @@ import {
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
   type CharacterBuildMonkUncannyMetabolismFacts,
+  type CharacterBuildSpeciesChoiceFacts,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
@@ -142,6 +144,7 @@ import type {
   SpellRecord,
   UnitRecord,
   UseCountResource,
+  DragonbornSpeciesRecord,
 } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
@@ -6306,6 +6309,14 @@ function parseCharacterBuild(
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
+  const speciesChoiceFacts = parseStoredSpeciesChoiceFacts(
+    value.species,
+    value.speciesChoiceFacts,
+    unitLibrary,
+  );
+  if (Either.isLeft(speciesChoiceFacts)) {
+    return Either.left(speciesChoiceFacts.left);
+  }
   const features = parseStoredFeatures(value.features, unitLibrary);
   if (Either.isLeft(features)) return Either.left(features.left);
   const classFeatureLanguages = parseStoredClassFeatureLanguages({
@@ -6336,6 +6347,9 @@ function parseCharacterBuild(
     alignment: alignment.right,
     abilityScores: abilityScores.right,
     proficiencyChoices: proficiencyChoices.right,
+    ...(speciesChoiceFacts.right === undefined
+      ? {}
+      : { speciesChoiceFacts: speciesChoiceFacts.right }),
     features: features.right,
     ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
     equipment: equipment.right,
@@ -6359,6 +6373,111 @@ function parseCharacterBuild(
   return Either.isLeft(sorcererMetamagicIssue)
     ? Either.left(sorcererMetamagicIssue.left)
     : Either.right(build);
+}
+
+type DraconicAncestryDamageTypeSource =
+  DragonbornSpeciesRecord["draconicAncestry"]["damageType"];
+
+function parseStoredSpeciesChoiceFacts(
+  speciesId: UnitRecord["id"],
+  value: unknown,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterBuildSpeciesChoiceFacts | undefined,
+  CharacterSheetIssue
+> {
+  const source = storedDraconicAncestryDamageTypeSource(speciesId, unitLibrary);
+  if (Either.isLeft(source)) return Either.left(source.left);
+  if (value === undefined) {
+    return source.right === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Character Build requires selected Draconic Ancestry fact for species with a Draconic Ancestry source.",
+        );
+  }
+  if (!isRecord(value)) {
+    return characterSheetIssue(
+      "Expected Character Build species choice facts.",
+    );
+  }
+  if (
+    Object.keys(value).some((key) => key !== "draconicAncestry") ||
+    !Object.hasOwn(value, "draconicAncestry")
+  ) {
+    return characterSheetIssue(
+      "Character Build species choice facts must contain exactly supported species choice facts.",
+    );
+  }
+  if (source.right === undefined) {
+    return characterSheetIssue(
+      "Character Build cannot carry Draconic Ancestry fact for species without a Draconic Ancestry source.",
+    );
+  }
+  const draconicAncestry = parseStoredDraconicAncestryFact(
+    value.draconicAncestry,
+    source.right,
+  );
+  return Either.isLeft(draconicAncestry)
+    ? Either.left(draconicAncestry.left)
+    : Either.right({ draconicAncestry: draconicAncestry.right });
+}
+
+function storedDraconicAncestryDamageTypeSource(
+  speciesId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  DraconicAncestryDamageTypeSource | undefined,
+  CharacterSheetIssue
+> {
+  const speciesUnit = unitLibrary.getUnit(speciesId);
+  if (Option.isNone(speciesUnit)) {
+    return characterSheetIssue("Character Build species Unit id is unknown.");
+  }
+  if (speciesUnit.value.kind !== "species") {
+    return characterSheetIssue(
+      "Character Build species Unit id must reference a species Unit.",
+    );
+  }
+  return Either.right(
+    "draconicAncestry" in speciesUnit.value
+      ? speciesUnit.value.draconicAncestry.damageType
+      : undefined,
+  );
+}
+
+function parseStoredDraconicAncestryFact(
+  value: unknown,
+  source: DraconicAncestryDamageTypeSource,
+): Either.Either<
+  NonNullable<CharacterBuildSpeciesChoiceFacts["draconicAncestry"]>,
+  CharacterSheetIssue
+> {
+  if (!isRecord(value)) {
+    return characterSheetIssue(
+      "Expected Character Build Draconic Ancestry fact.",
+    );
+  }
+  if (
+    Object.keys(value).some((key) => key !== "kind" && key !== "ancestorId") ||
+    value.kind !== "draconicAncestry" ||
+    typeof value.ancestorId !== "string"
+  ) {
+    return characterSheetIssue(
+      "Character Build Draconic Ancestry fact must contain exactly selected ancestry fact fields.",
+    );
+  }
+  const selected = source.options.find(
+    (option) => option.id === value.ancestorId,
+  );
+  if (selected === undefined) {
+    return characterSheetIssue(
+      "Character Build Draconic Ancestry fact must reference the selected species source table.",
+    );
+  }
+  return Either.right({
+    kind: "draconicAncestry",
+    ancestorId: characterDraconicAncestrySelection(value.ancestorId),
+  });
 }
 
 function storedSorcererMetamagicSelectionIssue(

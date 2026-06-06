@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 160,
-      "numerator": 160,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 108,
+      "denominator": 109,
       "numerator": 106,
-      "percent": "98.1%"
+      "percent": "97.2%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 144,
-      "numerator": 144,
+      "denominator": 145,
+      "numerator": 145,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 144,
-      "numerator": 144,
+      "denominator": 145,
+      "numerator": 145,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 160,
-      "numerator": 156,
-      "percent": "97.5%"
+      "denominator": 162,
+      "numerator": 157,
+      "percent": "96.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 160,
-      "percent": "70.2%"
+      "numerator": 162,
+      "percent": "71.1%"
     }
   },
   "metricSemantics": [
@@ -758,6 +758,35 @@
       ]
     },
     {
+      "id": "unit-feature.passive-damage-resistance",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+      ],
+      "sourceBoundary": "Character creation preserves selected source facts when a passive Resistance depends on a species-owned choice table, such as Draconic Ancestry. Fixed passive Resistance facts, such as Dwarven Resilience's Poison damage Resistance, derive their damage type directly from the passive grant_resistance Surface shape. Battle damage adjustment consumes the admitted character Unit support profile directly from characterUnitRefs without storing a separate resistance-only damage type field.",
+      "taskRefs": [
+        "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE",
+        "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+      ],
+      "title": "Unit feature passively grants target-side Resistance keyed to a typed or fixed damage fact",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.attack-roll-miss-to-hit-replacement",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -779,6 +808,39 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-combat-prowess.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-action-area-save-damage-replacement",
+      "profileKind": "battle-admission",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
+      ],
+      "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. Character battle initialization derives battle resources from retained build Unit refs so species traits with supported use-count mechanics are admitted without a parallel species-resource list. Runtime derives the executable Breath Weapon profile from the selected Unit support profile plus the resource Unit at discovery and resolution time, spends one use, replaces one Attack-action attack through the shared action-resource protocol, consumes table-supplied area membership and Saving Throw outcomes, validates the damage dice tier, and applies the selected Draconic Ancestry damage without dispatching on authored species or trait identity.",
+      "taskRefs": [
+        "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE",
+        "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+      ],
+      "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
         }
       ]
     },
@@ -982,7 +1044,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reaction-triggers.ts",
+        "packages/battle-runtime/src/battle-interrupt-triggers.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
@@ -2202,7 +2264,7 @@
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reaction-triggers.ts",
+        "packages/battle-runtime/src/battle-interrupt-triggers.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
@@ -4624,13 +4686,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 144,
-        "numerator": 144,
+        "denominator": 145,
+        "numerator": 145,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 144,
-        "numerator": 144,
+        "denominator": 145,
+        "numerator": 145,
         "percent": "100%"
       }
     },
@@ -4944,6 +5006,23 @@
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+          }
+        ],
+        "profileId": "unit-feature.passive-damage-resistance",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
         ]
       },
       {
@@ -7110,8 +7189,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 154,
-          "numerator": 154,
+          "denominator": 155,
+          "numerator": 155,
           "percent": "100%"
         }
       },
@@ -10968,6 +11047,29 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+                }
+              ],
+              "profileId": "unit-feature.passive-damage-resistance",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_dragonborn_damage_resistance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11349,8 +11451,43 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 0,
-    "rows": []
+    "rowCount": 2,
+    "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.passive-damage-resistance"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "dwarf_dwarven_resilience"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.passive-damage-resistance"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "species_dragonborn_damage_resistance"
+      }
+    ]
   },
   "taskClaims": [
     {
@@ -14387,6 +14524,38 @@
         "unit-feature.metamagic-effective-level-extra-target"
       ],
       "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
+    },
+    {
+      "claimKind": "admission-projection",
+      "note": "Focused Surface, character-creation, character-battle, and battle-runtime admission tests cover the Dragonborn Breath Weapon support-profile projection from the exact Draconic Ancestry source table through a selected CharacterBuild ancestry fact with battle-derived damage type, order-independent Cone/Line shape facts, Constitution innate DC, character-level damage tiers, Proficiency Bonus use pool, and Long Rest reset. Reducer execution, QNT, MBT, and selected-identity runtime parity remain deferred to L3MSPEC-03.",
+      "profileIds": [
+        "unit-feature.attack-action-area-save-damage-replacement"
+      ],
+      "taskId": "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Dragonborn Breath Weapon discovery from selected Draconic Ancestry source facts, Proficiency Bonus use spending, Attack-action attack replacement, remaining Extra Attack slot opening through the shared action-resource protocol, table-supplied Cone or Line area membership, Dexterity Saving Throw outcomes, selected ancestry damage application, successful-save half damage, character-level damage dice validation, and rejection of mismatched area/outcome or invalid damage-roll fills without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.attack-action-area-save-damage-replacement"
+      ],
+      "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle tests cover Dragonborn Damage Resistance admission from the shared selected Draconic Ancestry source fact, rejection when that source fact is absent, identity-independent passive grant_resistance shape admission, character handoff projection, and matching target-side damage halving through the existing Resistance adjustment math without storing a separate resistance-only damage type.",
+      "profileIds": [
+        "unit-feature.passive-damage-resistance"
+      ],
+      "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle tests cover Dwarven Resilience Poison damage Resistance admission from its fixed passive grant_resistance Surface fact, identity-independent fixed-resistance shape admission, character handoff projection, and matching target-side Poison damage halving through the existing Resistance adjustment math. The separate Poisoned saving-throw Advantage grant remains outside this claim for Task 6.",
+      "profileIds": [
+        "unit-feature.passive-damage-resistance"
+      ],
+      "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16341,7 +16510,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
@@ -18352,7 +18521,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
@@ -22016,19 +22185,71 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future species attack-replacement feature profile owner",
-          "reason": "Breath Weapon needs an explicit species feature profile that composes Attack-action attack replacement, area membership, Dexterity save-for-half damage, Draconic Ancestry damage-type selection, character-level dice scaling, and Proficiency Bonus Long Rest resource tracking."
-        },
-        "reason": "Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.attack-action-area-save-damage-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "The Dragonborn species Surface record owns the exact SRD Draconic Ancestry damage-type source table; Breath Weapon and Damage Resistance reference that one source fact instead of carrying trait-local damage choices",
+          "Character creation requires one Draconic Ancestry selection for Dragonborn and projects the selected ancestry onto CharacterBuild species choice facts",
+          "Battle Unit admission derives the selected Draconic Ancestry damage type from CharacterBuild selected ancestry and the selected species Surface source table together with the Breath Weapon Surface activation mechanics",
+          "The admitted support profile projects replace-one-Attack-action-attack activation, self-origin 15-foot Cone or 30-foot Line 5-foot-wide shape choice, Dexterity innate save DC 8 plus Constitution modifier plus Proficiency Bonus, selected Draconic Ancestry damage type, character-level 1d10/2d10/3d10/4d10 damage tiers, half damage on a successful save, Proficiency Bonus use cap, and Long Rest reset facts without dispatching on Dragonborn or ancestry identity",
+          "Battle reducer execution discovers Breath Weapon from a selected Unit support profile, spends one Proficiency Bonus use, replaces one available Attack-action attack, opens remaining Extra Attack slots through the shared Attack action resource protocol, requires table-supplied Cone or Line area membership, resolves Dexterity Saving Throw outcomes, validates damage dice against the character-level tier, applies selected Draconic Ancestry damage with half damage on successful saves, and rejects mismatched area/outcome or damage-roll fills before spending resources."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.attack-action-area-save-damage-replacement",
+          "profileKind": "battle-admission",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
+          ],
+          "sourceBoundary": "Character creation preserves one selected CharacterBuild Draconic Ancestry fact from the species-owned source table. Battle Unit admission derives that selected damage type from the CharacterBuild ancestry selection and selected species Surface source table together with the authored Breath Weapon Surface activation shape: replace one Attack-action attack, self-origin Cone or Line choice, Dexterity innate save DC from Constitution, character-level d10 damage tiers, half damage on success, Proficiency Bonus use cap, and Long Rest reset. Character battle initialization derives battle resources from retained build Unit refs so species traits with supported use-count mechanics are admitted without a parallel species-resource list. Runtime derives the executable Breath Weapon profile from the selected Unit support profile plus the resource Unit at discovery and resolution time, spends one use, replaces one Attack-action attack through the shared action-resource protocol, consumes table-supplied area membership and Saving Throw outcomes, validates the damage dice tier, and applies the selected Draconic Ancestry damage without dispatching on authored species or trait identity.",
+          "taskRefs": [
+            "L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE",
+            "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+          ],
+          "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
       "unitId": "species_dragonborn_breath_weapon"
     },
@@ -22039,19 +22260,61 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
-          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
-        },
-        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.passive-damage-resistance"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "The Dragonborn species Surface record owns the exact SRD Draconic Ancestry damage-type source table; Damage Resistance references that same source fact rather than carrying a trait-local or resistance-only damage choice.",
+          "Character creation requires one Draconic Ancestry selection for Dragonborn and projects the selected ancestry onto CharacterBuild species choice facts.",
+          "Battle Unit admission derives the selected Draconic Ancestry damage type from CharacterBuild selected ancestry and the selected species Surface source table together with the passive grant_resistance Surface mechanics, without dispatching on Dragonborn or ancestry identity.",
+          "Battle damage adjustment consumes the admitted passive damage Resistance support profile from characterUnitRefs and halves only matching target-side damage through the existing Resistance math without storing a duplicate resistance damage-type field."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-damage-resistance",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/character-battle-runtime/src/battle-support-profiles.ts"
+          ],
+          "sourceBoundary": "Character creation preserves selected source facts when a passive Resistance depends on a species-owned choice table, such as Draconic Ancestry. Fixed passive Resistance facts, such as Dwarven Resilience's Poison damage Resistance, derive their damage type directly from the passive grant_resistance Surface shape. Battle damage adjustment consumes the admitted character Unit support profile directly from characterUnitRefs without storing a separate resistance-only damage type field.",
+          "taskRefs": [
+            "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE",
+            "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+          ],
+          "title": "Unit feature passively grants target-side Resistance keyed to a typed or fixed damage fact",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
       "unitId": "species_dragonborn_damage_resistance"
     },
@@ -22108,19 +22371,71 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future target-side resistance and poison saving-throw roll-mode owner",
-          "reason": "Dwarven Resilience should be modeled at a target-side damage adjustment and condition-scoped Saving Throw roll-mode boundary, preserving its single species trait identity without claiming a generic grant_resistance profile."
-        },
-        "reason": "Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "mechanic": "Advantage on saving throws to avoid or end the Poisoned condition."
+          }
+        ],
+        "profileIds": [
+          "unit-feature.passive-damage-resistance"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "The Dwarven Resilience Surface record owns separate grants for Poison damage Resistance and Advantage on saving throws to avoid or end the Poisoned condition; this subset claim admits only the target-side Poison Resistance fact.",
+          "Battle Unit admission derives the fixed Poison damage type from the passive grant_resistance Surface mechanics without dispatching on Dwarf or Dwarven Resilience authored identity.",
+          "Battle damage adjustment consumes the admitted passive damage Resistance support profile from characterUnitRefs and halves only matching target-side Poison damage through the existing Resistance math without storing duplicate resistance state."
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-damage-resistance",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/character-battle-runtime/src/battle-support-profiles.ts"
+          ],
+          "sourceBoundary": "Character creation preserves selected source facts when a passive Resistance depends on a species-owned choice table, such as Draconic Ancestry. Fixed passive Resistance facts, such as Dwarven Resilience's Poison damage Resistance, derive their damage type directly from the passive grant_resistance Surface shape. Battle damage adjustment consumes the admitted character Unit support profile directly from characterUnitRefs without storing a separate resistance-only damage type field.",
+          "taskRefs": [
+            "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE",
+            "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+          ],
+          "title": "Unit feature passively grants target-side Resistance keyed to a typed or fixed damage fact",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
       "unitId": "dwarf_dwarven_resilience"
     },
@@ -30142,7 +30457,7 @@
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reaction-triggers.ts",
+            "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [

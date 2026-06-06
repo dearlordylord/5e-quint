@@ -6,11 +6,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-damage-resistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
 import type {
   BattleFill,
   BattleCreatureState,
@@ -21,6 +23,8 @@ import type {
   CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
+  ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
@@ -36,6 +40,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
+  characterDraconicAncestrySelection,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
@@ -55,6 +60,7 @@ import {
   characterSheetTempHp,
   convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
+  parseCharacterSheet,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
@@ -537,6 +543,227 @@ describe("Character Sheet battle handoff", () => {
           ]),
         }),
       ]),
+    );
+  });
+
+  test("rejects Dragonborn Breath Weapon support without selected Draconic Ancestry", () => {
+    const refs = characterUnitRefsWithBattleSupportProfiles(
+      dragonbornFighterBuild({ draconicAncestry: false }),
+      unitLibrary,
+      undefined,
+      [{ className: "fighter", level: 1 }],
+    );
+
+    expect(refs).toEqual(
+      Either.left([
+        {
+          tag: "battleSupportProfileIssue",
+          message:
+            "Unsupported battle Attack-action area save-damage replacement Unit hook: species_dragonborn_breath_weapon.",
+        },
+        {
+          tag: "battleSupportProfileIssue",
+          message:
+            "Unsupported battle passive damage Resistance Unit hook: species_dragonborn_damage_resistance.",
+        },
+      ]),
+    );
+  });
+
+  test("projects Dragonborn Breath Weapon support from selected Draconic Ancestry", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        dragonbornFighterBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "fighter", level: 1 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_breath_weapon",
+          supportProfiles: expect.arrayContaining([
+            expect.objectContaining({
+              kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+              breath: expect.objectContaining({
+                damage: expect.objectContaining({
+                  damageType: {
+                    kind: "draconicAncestry",
+                    holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                    value: "fire",
+                  },
+                }),
+              }),
+            }),
+          ]),
+        }),
+      ]),
+    );
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_damage_resistance",
+          supportProfiles: expect.arrayContaining([
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "draconicAncestry",
+                  holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                  value: "fire",
+                },
+              },
+            },
+          ]),
+        }),
+      ]),
+    );
+  });
+
+  test("preserves Dragonborn Breath Weapon support after Character Sheet parsing", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:dragonborn-breath-parse"),
+        build: dragonbornFighterBuild(),
+        maximumHp: Hp(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const parsed = expectRight(parseCharacterSheet(sheet, unitLibrary));
+    const init = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("dragonborn-breath-parse"),
+        displayName: "Dragonborn",
+        sheet: parsed,
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_breath_weapon",
+          supportProfiles: expect.arrayContaining([
+            expect.objectContaining({
+              kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+              breath: expect.objectContaining({
+                damage: expect.objectContaining({
+                  damageType: {
+                    kind: "draconicAncestry",
+                    holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                    value: "fire",
+                  },
+                }),
+              }),
+            }),
+          ]),
+        }),
+      ]),
+    );
+    expect(init.creatureInit.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_dragonborn_damage_resistance",
+          supportProfiles: expect.arrayContaining([
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "draconicAncestry",
+                  holeId: "species_dragonborn_draconic_ancestry_damage_type",
+                  value: "fire",
+                },
+              },
+            },
+          ]),
+        }),
+      ]),
+    );
+    expect(init.creatureInit.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({
+            id: "species_dragonborn_breath_weapon",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("projects Dwarven Resilience Poison Resistance support into battle Unit refs", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        dwarfFighterBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "fighter", level: 1 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "dwarf_dwarven_resilience",
+          supportProfiles: [
+            {
+              kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+              resistance: {
+                damageType: {
+                  kind: "fixed",
+                  value: "poison",
+                },
+              },
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  test("rejects duplicated persisted Dragonborn Draconic Ancestry damage type", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:dragonborn-breath-mismatch"),
+        build: dragonbornFighterBuild(),
+        maximumHp: Hp(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      parseCharacterSheet(
+        {
+          ...sheet,
+          build: {
+            ...sheet.build,
+            speciesChoiceFacts: {
+              draconicAncestry: {
+                kind: "draconicAncestry",
+                ancestorId: "red",
+                damageType: "fire",
+              },
+            },
+          },
+        },
+        unitLibrary,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message:
+          "Character Build Draconic Ancestry fact must contain exactly selected ancestry fact fields.",
+      }),
     );
   });
 
@@ -3212,6 +3439,48 @@ function defenseBuild(input: {
     equipment: {
       owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
+    },
+  };
+}
+
+function dragonbornFighterBuild(
+  input: { readonly draconicAncestry?: "red" | false } = {},
+): CharacterBuild {
+  const draconicAncestry =
+    input.draconicAncestry === false
+      ? undefined
+      : (input.draconicAncestry ?? "red");
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    species: "species_dragonborn",
+    ...(draconicAncestry === undefined
+      ? {}
+      : {
+          speciesChoiceFacts: {
+            draconicAncestry: {
+              kind: "draconicAncestry",
+              ancestorId: characterDraconicAncestrySelection(draconicAncestry),
+            },
+          },
+        }),
+    originLanguages: ["Common", "Draconic", "Dwarvish"],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function dwarfFighterBuild(): CharacterBuild {
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    species: "species_dwarf",
+    originLanguages: ["Common", "Dwarvish", "Draconic"],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
     },
   };
 }

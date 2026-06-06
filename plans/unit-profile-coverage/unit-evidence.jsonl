@@ -363,6 +363,7 @@
 {"unitId":"levitate","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"}}
 {"unitId":"spiritual_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts"}}
 {"unitId":"barbarian_frenzy","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-BARBARIAN-FRENZY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
+{"unitId":"species_dragonborn_breath_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
 {"unitId":"barbarian_frenzy","evidence":{"tag":"selected-identity-mbt","taskId":"L3-FOLLOWUP-BARBARIAN-FRENZY","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"wizard_evocation_savant","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}
 {"unitId":"alert","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts"}}
@@ -411,3 +412,7 @@
 {"unitId":"wizard_potent_cantrip","evidence":{"tag":"selected-identity-mbt","taskId":"L3PUTB-05","ownerPath":"packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_hunters_prey","evidence":{"tag":"deterministic-admission-projection","taskId":"L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"ranger_hunters_prey","evidence":{"tag":"deterministic-admission-projection","taskId":"L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"species_dragonborn_breath_weapon","evidence":{"tag":"selected-identity-mbt","taskId":"L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME","ownerPath":"packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts"}}
+{"unitId":"species_dragonborn_damage_resistance","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
+{"unitId":"dwarf_dwarven_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
+{"unitId":"dwarf_dwarven_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}

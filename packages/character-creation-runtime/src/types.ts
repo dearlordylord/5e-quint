@@ -85,6 +85,7 @@ export const CHARACTER_DRAFT_PATHS = [
   "draft.backgroundAbilityScoreIncrease",
   "draft.species",
   "draft.speciesSize",
+  "draft.draconicAncestry",
   "draft.languages",
   "draft.alignment",
   "draft.choices",
@@ -98,6 +99,7 @@ export const CHARACTER_DRAFT_CHOICE_PATHS = [
   "draft.background",
   "draft.species",
   "draft.speciesSize",
+  "draft.draconicAncestry",
   "draft.languages",
   "draft.alignment",
 ] as const satisfies ReadonlyArray<
@@ -799,6 +801,24 @@ export function isCharacterSpeciesSizeSelection(
   return CHARACTER_SPECIES_SIZE_SELECTIONS.some((size) => size === value);
 }
 
+export type CharacterDraconicAncestrySelection = string &
+  Brand.Brand<"CharacterDraconicAncestrySelection">;
+const CharacterDraconicAncestrySelection =
+  Brand.nominal<CharacterDraconicAncestrySelection>();
+export const characterDraconicAncestrySelection = (
+  value: string,
+): CharacterDraconicAncestrySelection =>
+  CharacterDraconicAncestrySelection(value);
+
+export type CharacterBuildDraconicAncestryFact = {
+  readonly kind: "draconicAncestry";
+  readonly ancestorId: CharacterDraconicAncestrySelection;
+};
+
+export type CharacterBuildSpeciesChoiceFacts = {
+  readonly draconicAncestry: CharacterBuildDraconicAncestryFact;
+};
+
 export type CharacterDraftSelections = {
   readonly progression?: CharacterProgression;
   readonly background?: UnitRecord["id"];
@@ -806,6 +826,7 @@ export type CharacterDraftSelections = {
   readonly backgroundAbilityScoreIncrease?: BackgroundAbilityScoreIncreaseSelection;
   readonly species?: UnitRecord["id"];
   readonly speciesSize?: CharacterSpeciesSizeSelection;
+  readonly draconicAncestry?: CharacterDraconicAncestrySelection;
   readonly languages?: CharacterStartingLanguages;
   readonly alignment?: CharacterAlignment;
   readonly choices: readonly CharacterChoiceSelection[];
@@ -989,6 +1010,9 @@ export type FinalizedCharacterSelections = {
   // Present only when the selected species has a size choice in Surface.
   // Absence means the species has a fixed authored size.
   readonly speciesSize?: CharacterSpeciesSizeSelection;
+  // Present only when the selected species has Draconic Ancestry in Surface.
+  // Absence means the species has no Draconic Ancestry choice.
+  readonly draconicAncestry?: CharacterDraconicAncestrySelection;
   readonly languages: CharacterStartingLanguages;
   readonly alignment: CharacterAlignment;
   readonly choices: readonly CharacterChoiceSelection[];
@@ -1218,6 +1242,8 @@ export type CharacterBuild = {
   // Present only when the selected species has a size choice in Surface.
   // Absence means the species has a fixed authored size.
   readonly speciesSize?: CharacterSpeciesSizeSelection;
+  // Present only when selected species choices produce durable character facts.
+  readonly speciesChoiceFacts?: CharacterBuildSpeciesChoiceFacts;
   readonly originLanguages: CharacterStartingLanguages;
   readonly classFeatureLanguages: readonly CharacterBuildClassFeatureLanguage[];
   readonly alignment: CharacterAlignment;

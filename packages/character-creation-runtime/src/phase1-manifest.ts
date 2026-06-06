@@ -32,6 +32,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.species",
   "draft.abilityScoreGeneration",
   "draft.speciesSize",
+  "draft.draconicAncestry",
   "draft.languages",
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;

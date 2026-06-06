@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-damage-resistance
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -29,7 +30,10 @@ import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import type { OngoingFeatureDamageModifier } from "../unit-feature-support.ts";
+import {
+  PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+  type OngoingFeatureDamageModifier,
+} from "../unit-feature-support.ts";
 import {
   type AttackDamageRider,
   type BattleCreatureState,
@@ -240,10 +244,7 @@ function subtractDamageAmountForType(input: {
     (sum, amount) => sum + Math.max(0, amount),
     0,
   );
-  const maximumReduction = Math.max(
-    0,
-    currentTotal - input.minimumDamageTotal,
-  );
+  const maximumReduction = Math.max(0, currentTotal - input.minimumDamageTotal);
   const remainingReduction = Math.min(
     Math.max(0, input.amount),
     maximumReduction,
@@ -280,7 +281,9 @@ export function isSpellDamageReductionRollFill(
 ): boolean {
   return (
     fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX) ||
-    fill.holeId.startsWith(SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX)
+    fill.holeId.startsWith(
+      SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
+    )
   );
 }
 
@@ -456,7 +459,11 @@ export function applyAvailableSpellDamageReduction(
       ? { tag: "ok", target, damageByType }
       : { tag: "needsHoles", holes: [rollHoleForReduction(reduction)] };
   }
-  if (reduction === null || reductionHole === null || roll.holeId !== reductionHole.holeId) {
+  if (
+    reduction === null ||
+    reductionHole === null ||
+    roll.holeId !== reductionHole.holeId
+  ) {
     return { tag: "invalid" };
   }
   const validation = validateRolledDiceForDiceExpr(roll.value, {
@@ -704,9 +711,12 @@ export function activeMarkedDamageRiders(
 
 export function ongoingFeatureDamageModifierApplies(
   modifier: OngoingFeatureDamageModifier,
-  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption,
 ): boolean {
-  const ability = attack.kind === "weapon" ? attack.ability : attack.attackAbility;
+  const ability =
+    attack.kind === "weapon" ? attack.ability : attack.attackAbility;
   const abilityMatches =
     modifier.abilityFilter === undefined ||
     (ability !== "spellcasting" && modifier.abilityFilter.includes(ability));
@@ -775,15 +785,32 @@ function targetHasRuntimeDamageResistance(
   return (
     target.activeEffects.some(
       (effect) =>
-        effect.kind === "damageResistance" &&
-        effect.damageType === damageType,
+        effect.kind === "damageResistance" && effect.damageType === damageType,
     ) ||
     combatantHasWardingBondResistance(target) ||
+    characterUnitRefsGrantPassiveDamageResistance(target, damageType) ||
     [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
       ([key]) =>
         ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
           damageType,
         ) === true,
+    )
+  );
+}
+
+function characterUnitRefsGrantPassiveDamageResistance(
+  target: BattleCreatureState,
+  damageType: DamageType,
+): boolean {
+  return (
+    target.origin.kind === "character" &&
+    target.origin.characterUnitRefs.some((unitRef) =>
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE &&
+          profile.resistance.damageType.value === damageType,
+      ),
     )
   );
 }

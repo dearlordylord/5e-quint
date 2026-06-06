@@ -1938,7 +1938,7 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-cast-reaction-frame.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2427,7 +2427,8 @@
         }
       ],
       "profiles": [
-        "spell.invocation-damage-reduction"
+        "spell.invocation-damage-reduction",
+        "unit-feature.passive-damage-resistance"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
@@ -4117,9 +4118,9 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "followUpTaskIds": [],
-      "holeKind": "reactionDecision",
-      "id": "BattleReactionDecisionHole",
-      "reason": "Reaction decisions decide decline or resolve, spend the reactor's Reaction when a procedure is taken, carry nested fills for the chosen procedure, and resume the interrupted procedure afterward. BATTLE.REACTION.OFFER_DECLINE_RESUME owns this shared sequencing contract; later feature or spell tasks may join additional procedure profiles, but the generic reactionDecision hole has no remaining Task 6 work.",
+      "holeKind": "interruptDecision",
+      "id": "BattleInterruptDecisionHole",
+      "reason": "Reaction decisions decide decline or resolve, spend the reactor's Reaction when a procedure is taken, carry nested fills for the chosen procedure, and resume the interrupted procedure afterward. BATTLE.REACTION.OFFER_DECLINE_RESUME owns this shared sequencing contract; later feature or spell tasks may join additional procedure profiles, but the generic interruptDecision hole has no remaining Task 6 work.",
       "subject": "battle-hole-family"
     },
     {
@@ -4399,7 +4400,7 @@
       "fillKind": "targetSpatialFacts",
       "followUpTaskIds": [],
       "id": "targetSpatialFacts",
-      "reason": "Spatial, visibility, range, and separation witnesses are table facts. Spell-cast Reaction admission facts use this same fill kind, but their offer/decision/resume semantics are covered by the reactionDecision hole and BATTLE.REACTION.OFFER_DECLINE_RESUME rather than by the generic spatial-fact fill.",
+      "reason": "Spatial, visibility, range, and separation witnesses are table facts. Spell-cast Reaction admission facts use this same fill kind, but their offer/decision/resume semantics are covered by the interruptDecision hole and BATTLE.REACTION.OFFER_DECLINE_RESUME rather than by the generic spatial-fact fill.",
       "subject": "battle-fill-kind"
     },
     {
@@ -4540,9 +4541,9 @@
       "coveredByObligationIds": [
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
-      "fillKind": "reactionDecision",
+      "fillKind": "interruptDecision",
       "followUpTaskIds": [],
-      "id": "reactionDecision",
+      "id": "interruptDecision",
       "reason": "Reaction fills decide decline or resolve and may carry nested fills for the chosen Reaction procedure. The existing Reaction obligation covers quota spend, bounded continuation resume, and restoring the interrupted procedure; unsupported or not-yet-joined spell/feature reaction profiles remain separate profile tasks.",
       "subject": "battle-fill-kind"
     },
@@ -5055,6 +5056,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.passive-saving-throw-roll-mode"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "profileId": "unit-feature.passive-damage-resistance"
     },
     {
       "obligationIds": [
@@ -10787,6 +10794,7 @@
     "stat-block.attack-control",
     "unit-feature.action-surge-resource",
     "unit-feature.alternate-action-cost",
+    "unit-feature.attack-action-area-save-damage-replacement",
     "unit-feature.attack-action-attack-count-scaling",
     "unit-feature.attack-damage-reduction-zero-damage-redirect",
     "unit-feature.attack-damage-rider",
@@ -10815,6 +10823,7 @@
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",
     "unit-feature.passive-armor-class-bonus",
+    "unit-feature.passive-damage-resistance",
     "unit-feature.passive-ranged-attack-roll-bonus",
     "unit-feature.passive-saving-throw-roll-mode",
     "unit-feature.passive-speed-bonus",

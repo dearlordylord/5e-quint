@@ -1,6 +1,6 @@
-import { BATTLE_REACTION_TRIGGERS } from "@dnd/battle-runtime";
+import { BATTLE_INTERRUPT_TRIGGERS } from "@dnd/battle-runtime";
 
-export const GENERIC_READY_TRIGGERS = BATTLE_REACTION_TRIGGERS;
+export const GENERIC_READY_TRIGGERS = BATTLE_INTERRUPT_TRIGGERS;
 
 export const GENERIC_COMBAT_ACTION_LABELS = [
   "Dash",

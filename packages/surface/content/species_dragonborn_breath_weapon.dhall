@@ -23,7 +23,7 @@
 --   • Attachment.area.shape = AreaShapeSpec.choice
 --   • AreaOrigin.self (cone/line emanate from caster)
 --   • DcSource.innate_dc (base 8 + CON mod + PB)
---   • DamageTypeRef.choice (picked from draconic ancestry)
+--   • DamageTypeRef.same_choice_as (picked from draconic ancestry)
 --   • UseCountCap.proficiency_bonus
 --   • DiceAmount.threshold_tiers on character axis for +1d10 ramp
 
@@ -74,20 +74,8 @@ let breathWeapon =
                 , onFail =
                     { kind = "damage"
                     , damageType =
-                        { kind = "hole"
-                        , holeId = "species_dragonborn_breath_weapon_damage_type"
-                        , label = "draconic ancestry"
-                        , value =
-                            { kind = "choice"
-                            , label = "draconic ancestry"
-                            , options =
-                                [ "acid"
-                                , "cold"
-                                , "fire"
-                                , "lightning"
-                                , "poison"
-                                ]
-                            }
+                        { kind = "same_choice_as"
+                        , holeId = "species_dragonborn_draconic_ancestry_damage_type"
                         }
                     , amount =
                         { kind = "threshold_tiers"
