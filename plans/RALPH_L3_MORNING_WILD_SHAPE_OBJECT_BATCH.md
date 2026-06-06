@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Consolidate residual Wild Shape and Acid Arrow ledgers"
     },
     {
@@ -124,7 +124,7 @@ repair branch state by rebasing against `master`.
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted explicit form-limb object-handling witness storage on the active Wild Shape effect.                                          |
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | done                                          | none                                                                                                                                                                                                                           | Replaced stale dependency text with an explicit owner-decision blocker.                                                               |
 |     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Recorded Acid Arrow as blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                        |
-|     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | ready-for-implementation-after-light-research | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerate reports after blockers/owners are real rows.                                                                               |
+|     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | done                                          | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerated and verified residual ledgers; generated artifacts were already current.                                                  |
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Ensure no selected-identity replay is orphaned after the split.                                                                       |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | ready-for-research                            | none                                                                                                                                                                                                                           | Audit whether Wild Companion still has only explicit companion-control closure.                                                       |
 |    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | ready-for-research                            | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promote concrete Wild Shape object/Utilize consumers from the stored form-limb witness without deriving anatomy from authored identity. |
@@ -243,6 +243,12 @@ that Ralph can understand. Do not invent Acid Arrow damage semantics.
 
 Regenerate and verify residual ledgers after the ready tasks and explicit
 blockers land.
+
+Landed scope:
+
+- Unit-profile and rules-kernel residual ledgers were regenerated and verified
+  current after Tasks 7 and 8 recorded explicit blocker rows; no generated
+  artifact changes were needed.
 
 ### Task 10 - L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT
 
