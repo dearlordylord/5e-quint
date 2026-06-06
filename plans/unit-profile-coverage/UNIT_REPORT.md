@@ -1672,6 +1672,8 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | qnt-proof | `unit-feature.monk-focus-battle-options`, `spell.invocation-jump-movement-replacement` |
 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | completed-runtime-parity | `unit-feature.monk-focus-battle-options`, `spell.invocation-jump-movement-replacement` |
+| L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | qnt-proof | `unit-feature.monk-focus-battle-options`, `spell.invocation-jump-movement-replacement` |
+| L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | completed-runtime-parity | `unit-feature.monk-focus-battle-options`, `spell.invocation-jump-movement-replacement` |
 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE | accepted-runtime-closure | _none_ |
 | L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE | runtime-test | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` |

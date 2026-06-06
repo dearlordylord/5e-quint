@@ -377,7 +377,8 @@
       "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
       "taskRefs": [
         "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+        "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
       ],
       "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
       "verificationOwners": [
@@ -1875,7 +1876,8 @@
       "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
         "SRDINV53",
-        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+        "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
       ],
       "title": "Spell invocation grants once-per-target-turn jump movement replacement",
       "verificationOwners": [
@@ -14082,6 +14084,24 @@
       "taskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Task 9 resolves Monk Focus jump support against the existing movement model: promoted Quint facts retain the paid Step of the Wind turn-scoped jump-distance multiplier only where the reducer can consume it through Jump spell movement replacement witnesses, while ordinary Long Jump and High Jump route, obstacle, destination, and landing derivations remain table-owned movement adjudication.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover paid Step of the Wind recording the turn-scoped jump-distance multiplier, projecting the doubled Jump spell movement replacement maximum, accepting a 60-foot caller-supplied Jump witness, rejecting a 61-foot witness, and clearing the multiplier at turn handoff without adding ordinary jump route or landing state.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
+    },
+    {
       "claimKind": "accepted-runtime-closure",
       "note": "Focused Character Battle tests cover Font of Magic created Spell Slots entering battle only as aggregate Spell Slot capacity, absence of a battle Unit feature Bonus Action for Creating Spell Slots, and source-ambiguous ordinary-versus-created Spell Slot handoff rejection. The closure keeps Character Sheet as the canonical owner of created Spell Slot source state and avoids a duplicate battle-local Spell Slot source pool or source ledger.",
       "profileIds": [],
@@ -17806,7 +17826,7 @@
             "battleReadinessClosure": {
               "kind": "outside-runtime-presentation-exploration",
               "owner": "table movement adjudication and any future ordinary jump movement witness owner",
-              "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
+              "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
             },
             "mechanic": "Ordinary Long Jump and High Jump movement witnesses are not promoted as standalone runtime commands; their distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this Monk Focus battle profile."
           }
@@ -17939,7 +17959,8 @@
           "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
           "taskRefs": [
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
           ],
           "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
           "verificationOwners": [
@@ -27158,7 +27179,8 @@
           "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
             "SRDINV53",
-            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
           ],
           "title": "Spell invocation grants once-per-target-turn jump movement replacement",
           "verificationOwners": [
