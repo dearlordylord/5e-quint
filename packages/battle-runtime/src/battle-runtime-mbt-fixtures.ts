@@ -2239,7 +2239,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   }
   if (hole.kind === "wildShapeEquipmentDisposition") {
     throw new Error(
-      "Battle runtime MBT does not model Wild Shape equipment disposition holes.",
+      "Generic battle runtime MBT leaves Wild Shape equipment disposition holes to focused Wild Shape equipment witnesses.",
     );
   }
   return [

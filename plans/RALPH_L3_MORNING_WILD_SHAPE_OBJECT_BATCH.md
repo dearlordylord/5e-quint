@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit merged-equipment no-effect parity after disposition owner"
     },
     {
@@ -114,7 +114,7 @@ repair branch state by rebasing against `master`.
 |     2 | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER         | done                                          | none                                                                                                                                                                                                                           | Implemented merge-only disposition owner, selected-loadout object refs, active-effect storage, and all-merged no-effect preservation. |
 |     3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT    | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted practical worn armor/Shield effective-loadout projection.                                                                    |
 |     4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY    | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Fallen equipment now emits explicit dropped-object outcomes without adding table placement state.                                     |
-|     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | ready-for-research                            | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Audit remaining merged-equipment parity/coverage after Task 2's merge-only active storage and no-effect behavior.                     |
+|     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Merged-equipment no-effect parity is covered in the Wild Shape lifecycle MBT witness; generated coverage text no longer treats it as unsupported residue. |
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Close or promote object/Utilize consumers that need form-limb witnesses.                                                              |
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | ready-for-research                            | none                                                                                                                                                                                                                           | Replace stale dependency text with an explicit owner-decision blocker.                                                                |
 |     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | ready-for-research                            | none                                                                                                                                                                                                                           | Keep Acid Arrow blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                                |
@@ -195,6 +195,17 @@ Audit merged-equipment no-effect parity and generated coverage after Task 2's
 merge-only owner. Close this task by confirming whether any QNT, MBT, coverage,
 or report residue still treats merged equipment as an unsupported follow-up; fix
 only those remaining parity/ledger gaps and avoid duplicating inventory state.
+
+Landed scope:
+
+- The focused Wild Shape lifecycle MBT witness now exercises selected-loadout
+  equipment resolved as all `merges`, verifies that merged equipment is stored
+  on the active Wild Shape effect, and verifies that Beast statistics rather
+  than merged equipment project while the form is active.
+- Rules-kernel coverage artifacts now describe merged equipment as covered
+  no-effect parity while keeping durable fallen-object consumers, worn weapons,
+  held objects, non-resizing/non-reshaping behavior, and form-limb object
+  handling assigned to L3MWILD-06.
 
 ### Task 6 - L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE
 

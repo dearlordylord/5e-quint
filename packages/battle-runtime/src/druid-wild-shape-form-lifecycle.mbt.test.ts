@@ -5,7 +5,8 @@
 //   Bonus Action known Beast form assumption, use spending, Temporary Hit
 //   Points equal to Druid level, Beast stat-block projection, no spellcasting,
 //   reuse replacement, Bonus Action dismissal, and ending on Incapacitated or
-//   death.
+//   death. The Objects bullet says merged equipment has no effect while in that
+//   form.
 // - .references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting:
 //   shape-shifting effects specify their own form rules and revert on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
@@ -20,6 +21,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
   combatantD20AbilityModifier,
   combatantD20ProficiencyBonus,
@@ -28,6 +30,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   type BattleCreatureState,
+  type BattleFill,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -37,6 +40,7 @@ import {
   battleId,
   characterSeed,
   combatantId,
+  heavyArmorClassState,
   requireResolved,
   spellRecord,
   startBattleRight,
@@ -74,6 +78,7 @@ type DruidWildShapeFormLifecycleProjection = {
   readonly shoveDc: number;
   readonly spellAvailable: boolean;
   readonly activeFormEffectCount: number;
+  readonly mergedEquipmentCount: number;
   readonly druidAlive: boolean;
   readonly lastResult: LastResult;
 };
@@ -153,6 +158,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       shoveDc: 13,
       spellAvailable: false,
       activeFormEffectCount: 1,
+      mergedEquipmentCount: 2,
       druidAlive: true,
       lastResult: "assumedRidingHorse",
     });
@@ -174,6 +180,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       shoveDc: 6,
       spellAvailable: false,
       activeFormEffectCount: 1,
+      mergedEquipmentCount: 2,
       lastResult: "reusedCat",
     });
   });
@@ -191,6 +198,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       tempHp: 2,
       spellAvailable: true,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: true,
       lastResult: "dismissed",
     });
@@ -198,6 +206,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       activeForm: "trueForm",
       spellAvailable: false,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: true,
       lastResult: "incapacitated",
     });
@@ -205,6 +214,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       activeForm: "trueForm",
       spellAvailable: false,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: false,
       lastResult: "dead",
     });
@@ -239,7 +249,18 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeKnownForms: druidWildShapeKnownForms(),
-          selectedLoadout: {},
+          armorClass: heavyArmorClassState(),
+          selectedLoadout: {
+            armor: {
+              itemId: "armor:armor_chain_mail",
+              unitId: "armor_chain_mail",
+            },
+            weapon: {
+              itemId: "main:weapon_quarterstaff",
+              unitId: "weapon_quarterstaff",
+              grip: "one_handed",
+            },
+          },
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [spellRecord("produce_flame")],
@@ -360,7 +381,23 @@ function resolveDruidWildShape(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
 ): BattleResolutionResult {
-  return resolveBattleSubject({ state, subject, fills: [] });
+  const initial = resolveBattleSubject({ state, subject, fills: [] });
+  if (initial.tag !== "needsHoles") return initial;
+  const equipmentDispositionHole = initial.holes.find(
+    (hole) => hole.kind === "wildShapeEquipmentDisposition",
+  );
+  if (equipmentDispositionHole === undefined) return initial;
+  const allMergedFill: BattleFill = {
+    kind: "wildShapeEquipmentDisposition",
+    holeId: equipmentDispositionHole.holeId,
+    value: {
+      choices: equipmentDispositionHole.candidates.map((item) => ({
+        item,
+        disposition: "merges" as const,
+      })),
+    },
+  };
+  return resolveBattleSubject({ state, subject, fills: [allMergedFill] });
 }
 
 function druidWildShapeFormProjection(
@@ -369,16 +406,23 @@ function druidWildShapeFormProjection(
   const druid = requireCharacter(state.battle, druidId);
   const snapshot = snapshotCreature(snapshotBattle(state.battle), druidId);
   const form = activeDruidWildShapeForm(druid);
+  const mergedEquipmentCount =
+    activeDruidWildShapeEffect(druid)?.equipmentDisposition.filter(
+      (disposition) => disposition.disposition === "merges",
+    ).length ?? 0;
   const activeFormEffectCount = combatantHasActiveDruidWildShape(druid)
-    ? druid.activeEffects.filter((effect) => effect.kind === "druidWildShapeForm")
-        .length
+    ? druid.activeEffects.filter(
+        (effect) => effect.kind === "druidWildShapeForm",
+      ).length
     : 0;
   const spellAvailable = discoverBattleActs(state.battle).some(
     (act) => act.subject.tag === "actionSpell",
   );
   const projection = {
     activeForm: activeFormFromStatBlock(form),
-    bonusActionAvailable: canSpendBonusAction(state.battle.currentTurnResources),
+    bonusActionAvailable: canSpendBonusAction(
+      state.battle.currentTurnResources,
+    ),
     usesRemaining: druidWildShapeUsesRemaining(druid),
     tempHp: Number(druid.tempHp),
     armorClass: Number(snapshot.armorClass),
@@ -390,6 +434,7 @@ function druidWildShapeFormProjection(
       Number(combatantD20ProficiencyBonus(druid)),
     spellAvailable,
     activeFormEffectCount,
+    mergedEquipmentCount,
     druidAlive: druidIsAlive(druid),
     lastResult: state.lastResult,
   } satisfies DruidWildShapeFormLifecycleProjection;
@@ -508,6 +553,10 @@ function normalizeDruidWildShapeFormQuintState(
     activeFormEffectCount: numberFromQuintInt(
       state["qActiveFormEffectCount"],
       "qActiveFormEffectCount",
+    ),
+    mergedEquipmentCount: numberFromQuintInt(
+      state["qMergedEquipmentCount"],
+      "qMergedEquipmentCount",
     ),
     druidAlive: druidStatusIsAlive(
       literalField(state["qDruidStatus"], DRUID_STATUSES),
