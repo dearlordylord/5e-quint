@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Heightened multi-target repeating save-gated conditions"
     }
   ]
