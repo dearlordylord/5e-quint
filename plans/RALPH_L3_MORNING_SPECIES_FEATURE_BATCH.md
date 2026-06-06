@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit selected-identity replay for promoted species traits"
     },
     {
@@ -122,7 +122,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | done | none | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`. |
 | 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | done | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Closed without implementation: Task 8 found no missing runtime slice, and existing attack-damage rider owners already cover Frenzy. |
 | 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | ready-for-research | none | Close species Darkvision as table-owned sight projection, or create concrete shared sense-source projection follow-up work if repository evidence shows that owner already exists. |
-| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | blocked | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
+| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | ready-for-research | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
 | 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | blocked | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
 
 ## Task Details
