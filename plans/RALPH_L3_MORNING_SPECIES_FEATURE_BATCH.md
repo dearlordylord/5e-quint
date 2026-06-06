@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Goliath Powerful Build grapple escape fact"
     },
     {
