@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 155,
-      "numerator": 155,
+      "denominator": 156,
+      "numerator": 156,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 162,
-      "numerator": 157,
+      "denominator": 163,
+      "numerator": 158,
       "percent": "96.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 162,
-      "percent": "71.1%"
+      "numerator": 163,
+      "percent": "71.5%"
     }
   },
   "metricSemantics": [
@@ -3623,7 +3623,7 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, and additional spell-specific dispel exceptions or immunities are not represented in the real battle reducer path and remain assigned to the broader ongoing Spell Effect occurrence model; automatic geometry and table selection of magical-effect identity remain outside this subset boundary.",
       "taskRefs": [
         "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
         "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
@@ -7189,8 +7189,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 155,
-          "numerator": 155,
+          "denominator": 156,
+          "numerator": 156,
           "percent": "100%"
         }
       },
@@ -8704,6 +8704,34 @@
             }
           ],
           "unitId": "fire_bolt"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              ]
+            }
+          ],
+          "unitId": "fireball"
         },
         {
           "joinStatus": "covered",
@@ -13794,6 +13822,12 @@
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-BROADER-ONGOING-SPELL-SUPPRESSION"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task research found no broader ongoing Spell Effect occurrence family represented in the real Dispel Magic reducer path beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, tracked Spiritual Weapon active-effect occurrences, and the Antimagic Field aura no-effect exception. Dispel Magic expansion should promote through the broader ongoing Spell Effect occurrence owner only after an additional family carries stable occurrence identity, source spell level, target association, and cleanup semantics; no table-only Dispel profile is claimed by this closure.",
+      "profileIds": [],
+      "taskId": "L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
       "profileIds": [
@@ -13840,6 +13874,12 @@
         "spell.invocation-spike-growth-movement-hazard"
       ],
       "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed local SRD Spike Growth camouflaged-terrain recognition, Search action, Wisdom (Perception or Survival) check, caster Spell Save DC, and before-entry timing against UBIQUITOUS_LANGUAGE Action Lifecycle, Skill, Difficult Terrain, Movement, and Vision and Light terms. The promoted movement hazard profile already owns spell resource spending, caster-owned Concentration, caller-supplied area identity, Difficult Terrain movement-cost projection, movement-triggered Piercing damage, and cleanup. Recognition remains a runtime-detached Search/perception witness because it is per observer and depends on table-owned cast-time sight, Search Action declaration before entering, applicable Skill, check result, and recognized-hazard witness; adding Spike Growth-local recognition state would duplicate perception/search ownership and make global recognized terrain states representable.",
+      "profileIds": [],
+      "taskId": "L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE"
     },
     {
       "claimKind": "accepted-runtime-closure",
@@ -13950,6 +13990,12 @@
       "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed local SRD Enlarge/Reduce object, carried/worn item, dropped-item, thrown weapon, ammunition, and creature Size clauses against Surface, the promoted creature-size-change profile, and current battle object boundaries. Creature Size, Strength roll-mode, attack-hit damage, Concentration, and cleanup support remain covered by spell.invocation-creature-size-change. Object Size-category lifecycle, carried or worn item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain closed outside promoted battle runtime until a generic object/item lifecycle owner exists; adding Enlarge/Reduce-local object or item Size state would duplicate that owner.",
+      "profileIds": [],
+      "taskId": "L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Enthrall's Magic Action and level-2-or-higher Spell Slot spend, unbounded caller-supplied target list, Wisdom save gate, failed-save Perception penalty active effect, Passive Perception derivation from the same fixed modifier, and Concentration cleanup.",
       "profileIds": [
@@ -13983,9 +14029,9 @@
     },
     {
       "claimKind": "accepted-runtime-closure",
-      "note": "Task 13 closes Levitate's loose-object branch as runtime-detached object/spatial adjudication. The Surface Spell Definition already records the SRD loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude-control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
+      "note": "Reviewed local SRD Levitate loose-object clauses against Surface, the promoted levitated-creature profile, and current battle object/spatial boundaries. The Surface Spell Definition already records the loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, range derivation, map geometry, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
       "profileIds": [],
-      "taskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH"
+      "taskId": "L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY"
     },
     {
       "claimKind": "qnt-proof",
@@ -14615,12 +14661,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 135,
-        "profileSubsetSupportedUnits": 19,
+        "profileSubsetSupportedUnits": 18,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 109,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 109,
-        "supportedProfileUnits": 90,
+        "supportedProfileUnits": 91,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -23056,7 +23102,7 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, and additional spell-specific dispel exceptions or immunities are not represented in the real battle reducer path and remain assigned to the broader ongoing Spell Effect occurrence model; automatic geometry and table selection of magical-effect identity remain outside this subset boundary.",
           "taskRefs": [
             "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
             "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
@@ -24102,7 +24148,7 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "character inventory/equipment spell-component legality owner",
-              "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary."
+              "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual."
             },
             "mechanic": "ruby dust worth 50+ GP Material component availability, hand/access legality, and consumption on cast"
           },
@@ -24490,6 +24536,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "broader ongoing Spell Effect occurrence model",
+              "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile."
+            },
             "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
             "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences, including other creature-attached active effects, area effects, other object effects, and additional spell-specific dispel exceptions or immunities such as force barriers"
           },
@@ -24562,7 +24613,7 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, additional spell-specific dispel exceptions or immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, tracked Spiritual Weapon active-effect occurrences with stable sourceEffectId identity and source spell level, active Antimagic Field aura target identity by stable area identity and source combatant identity, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, final-Concentration-effect cleanup, generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity, and the typed Antimagic Field aura no-effect exception that leaves the aura and Concentration active. Other creature-attached active spell effects, area effects, object effects, and additional spell-specific dispel exceptions or immunities are not represented in the real battle reducer path and remain assigned to the broader ongoing Spell Effect occurrence model; automatic geometry and table selection of magical-effect identity remain outside this subset boundary.",
           "taskRefs": [
             "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
             "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
@@ -25668,17 +25719,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of effect, object inventory discovery, and grid geometry derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "SRDINV66 table/spatial owner",
+          "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -25692,7 +25737,7 @@
           "slot-scaled Fire damage dice",
           "caller-supplied unattended flammable-object ignition facts emit starts-burning outcomes"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

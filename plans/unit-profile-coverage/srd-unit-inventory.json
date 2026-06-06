@@ -254,14 +254,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 29,
-      "percent": "22.7%",
+      "numerator": 37,
+      "percent": "28.9%",
       "rowsByStatus": {
         "battle-runtime-required": 58,
         "accepted-no-battle-effect": 13,
-        "partial-battle-runtime": 8,
-        "owner-evidence-required": 33,
-        "accepted": 16
+        "accepted": 24,
+        "owner-evidence-required": 33
       }
     },
     "levelOneClassContainers": 12,
@@ -7651,6 +7650,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7664,7 +7669,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_fear",
@@ -10124,7 +10129,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
       },
       "ownerEvidence": [
         {
@@ -10913,6 +10918,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -10926,7 +10937,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
@@ -13666,7 +13677,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
       },
       "ownerEvidence": [
         {
@@ -14556,6 +14567,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14569,7 +14586,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_meld_into_stone",
@@ -18822,6 +18839,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18835,7 +18858,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
@@ -21164,6 +21187,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -21177,7 +21206,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
@@ -26203,6 +26232,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -26216,7 +26251,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fear",
@@ -26275,13 +26310,13 @@
         "state": "installed",
         "unitId": "fireball"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
         "owner": "SRDINV66 table/spatial owner",
-        "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
+        "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
       },
       "ownerEvidence": [
         {
@@ -28924,6 +28959,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -28937,7 +28978,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fear",
@@ -32274,7 +32315,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+        "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
       },
       "ownerEvidence": [
         {
@@ -33765,6 +33806,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+        "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -33778,7 +33825,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fear",
@@ -33837,13 +33884,13 @@
         "state": "installed",
         "unitId": "fireball"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
         "owner": "SRDINV66 table/spatial owner",
-        "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
+        "reason": "Automatic Fireball area membership, line of effect, object inventory discovery, flammable/unworn object discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Fireball runtime profile."
       },
       "ownerEvidence": [
         {

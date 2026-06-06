@@ -129,6 +129,34 @@ current accounting is sufficient for the Level 3 Dispel Magic rows.
 This audit did not introduce companion control, autonomous behavior, authored
 identity dispatch, duplicate state, or reducer behavior changes.
 
+## Task 2 Boundary Update
+
+Task `L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY` rechecked the broader
+ongoing Spell Effect boundary against the real battle reducer path. The RAW and
+vocabulary basis remains the Dispel Magic passage above plus
+`UBIQUITOUS_LANGUAGE.md` Spell Invocation and Spell Effect ownership terms:
+Dispel Magic acts on ongoing spells on a selected creature, object, or magical
+effect, while battle/execution-owned Spell Effects are the runtime artifacts
+that can be ended.
+
+The real runtime path in
+`packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts`
+does not carry a generic ongoing Spell Effect occurrence collection. Its
+dispellable occurrence enumeration is limited to tracked spell-light emitters,
+tracked `spellObjectContactDamage` active-effect occurrences, and tracked
+Spiritual Weapon active-effect occurrences. Those are real reducer-owned
+occurrences because they carry stable occurrence identity, source spell level,
+target association, and cleanup semantics. Other creature-attached active
+effects, area effects, object effects, and spell-specific dispel exceptions or
+immunities do not yet have the same represented occurrence owner.
+
+Decision: do not add a table-only Dispel Magic profile for broader ongoing
+effects. The missing owner is the broader ongoing Spell Effect occurrence
+model. `dispel_magic` remains `profile-subset-supported`; its deferred broader
+mechanic now records an `outside-battle-runtime` closure naming that owner, and
+`L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY` is recorded as an accepted runtime
+closure rather than runtime parity.
+
 ## Reviewer-Loop Convergence
 
 - Round 1: checked RAW and ubiquitous language against the existing Surface,

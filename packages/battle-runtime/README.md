@@ -10,6 +10,13 @@ Units, and Stat Blocks. It may retain resolved Surface records
 or Unit refs as battle origin data, but it does not create a second executable
 content language.
 
+Spell component text and component cost/consumption flags are authored Spell
+Definition facts. This package may spend a Spell Slot and apply the admitted
+battle-visible Spell Effect, but component availability, Component Pouch or
+Spellcasting Focus substitution, hand/access legality, and consumed Material
+component inventory mutation belong to a character equipment/component legality
+owner outside battle.
+
 ## Mental Model
 
 `@dnd/surface` is the authored-content schema. Units are Surface-authored
