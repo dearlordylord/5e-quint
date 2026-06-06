@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Heightened Grease area repeat-save carry-through"
     },
     {
