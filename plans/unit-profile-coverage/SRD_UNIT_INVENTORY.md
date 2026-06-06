@@ -32,27 +32,27 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for character-level-1 plus character-level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes character-level-2 class-feature rows. It deliberately excludes spell-level-2 pressure.
 
-- Accepted: 397/400 (99.3%)
+- Accepted: 398/400 (99.5%)
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 293
+- accepted: 294
 - accepted-no-battle-effect: 104
-- owner-evidence-required: 2
+- owner-evidence-required: 1
 - partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-3 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 600/607 (98.8%)
+- Accepted: 601/607 (99%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 435
+- accepted: 436
 - accepted-no-battle-effect: 165
 - battle-runtime-required: 1
-- owner-evidence-required: 5
+- owner-evidence-required: 4
 - partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
@@ -88,8 +88,7 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 ### Level-2 Rows by Disposition
 
 - catalog-installed-needs-owner-evidence: 1
-- catalog-installed-owner-evidence-present: 19
-- catalog-installed-owner-evidence-required: 1
+- catalog-installed-owner-evidence-present: 20
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Disposition
@@ -391,7 +390,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Barbarian Reckless Attack|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:94|
 |Barbarian level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:36|
 |Bard Expertise|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:93|
-|Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence required|character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.|.references/srd-5.2.1/Classes/Bard.md:99|
+|Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:99|
 |Bard level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:37|
 |Cleric Channel Divinity|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:88|
 |Cleric level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:36|

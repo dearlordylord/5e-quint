@@ -193,8 +193,7 @@
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
       ],
       "issues": [
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellbookRitualAccessFeatureForBuild: packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
-        "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades runtimeProjection evidence reference points to missing symbol characterBuildOwnsJackOfAllTradesFeature: packages/character-sheet-runtime/src/index.ts:characterBuildOwnsJackOfAllTradesFeature"
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellbookRitualAccessFeatureForBuild: packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild"
       ]
     },
     "sharedAlgebraOwnerEvidence": {
@@ -222,23 +221,23 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 400,
-      "numerator": 397,
-      "percent": "99.3%",
+      "numerator": 398,
+      "percent": "99.5%",
       "rowsByStatus": {
-        "accepted": 293,
+        "accepted": 294,
         "accepted-no-battle-effect": 104,
-        "owner-evidence-required": 2,
-        "partial-battle-runtime": 1
+        "partial-battle-runtime": 1,
+        "owner-evidence-required": 1
       }
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 600,
-      "percent": "98.8%",
+      "numerator": 601,
+      "percent": "99%",
       "rowsByStatus": {
-        "accepted": 435,
+        "accepted": 436,
         "accepted-no-battle-effect": 165,
-        "owner-evidence-required": 5,
+        "owner-evidence-required": 4,
         "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
@@ -270,9 +269,8 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 19,
+      "catalog-installed-owner-evidence-present": 20,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 1,
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
@@ -288,12 +286,12 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 469,
+      "catalog-installed-owner-evidence-present": 470,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 4,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
+      "catalog-installed-owner-evidence-required": 3,
       "catalog-installed-needs-owner-evidence": 1,
       "catalog-authored-executable-follow-up": 1
     },
@@ -4969,7 +4967,7 @@
         "unitId": "bard_jack_of_all_trades"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4978,12 +4976,12 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-CLASS-BARD-JACK-OF-ALL-TRADES Character Sheet Ability Check Proficiency Bonus runtime; Bard Jack of All Trades is read from the installed Surface class-feature record and projected by the Character Sheet runtime only for unproficient skill Ability Checks when no other Proficiency Bonus applies. The runtime derives ordinary skill proficiency and Expertise from existing CharacterBuild proficiency facts, derives Jack ownership from the Bard level 2 class feature grant, and stores no parallel skill state.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:level-2:class-table-summary:bard_level_2_feature_table_row",
