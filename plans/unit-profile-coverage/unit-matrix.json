@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 174,
-      "numerator": 167,
-      "percent": "96%"
+      "numerator": 170,
+      "percent": "97.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
@@ -11960,61 +11960,8 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 3,
-    "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-damage-resistance",
-            "unit-feature.passive-saving-throw-roll-mode"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "dwarf_dwarven_resilience"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-damage-resistance"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "species_dragonborn_damage_resistance"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-ability-check-roll-mode"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "species_goliath_powerful_build"
-      }
-    ]
+    "rowCount": 0,
+    "rows": []
   },
   "taskClaims": [
     {
@@ -22920,6 +22867,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
       "executableMechanics": true,
@@ -23031,6 +22983,11 @@
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
       "executableMechanics": true,
@@ -23145,6 +23102,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
       "executableMechanics": true,

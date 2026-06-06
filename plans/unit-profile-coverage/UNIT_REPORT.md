@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 148/148 | 100% |
 | Supported Unit rules-kernel chain coverage | 167/167 | 100% |
 | Deterministic admission/projection coverage | 170/174 | 97.7% |
-| Selected identity replay coverage | 167/174 | 96% |
+| Selected identity replay coverage | 170/174 | 97.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -1113,6 +1113,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | L1H-ORC-ADRENALINE-RUSH | `packages/battle-runtime/src/adrenaline-rush.mbt.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `species_dragonborn_breath_weapon` | `unit-feature.attack-action-area-save-damage-replacement` | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | `packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts` |
+| `species_dragonborn_damage_resistance` | `unit-feature.passive-damage-resistance` | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | `packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts` |
+| `dwarf_dwarven_resilience` | `unit-feature.passive-damage-resistance`, `unit-feature.passive-saving-throw-roll-mode` | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | `packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts` |
+| `species_goliath_powerful_build` | `unit-feature.passive-ability-check-roll-mode` | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | `packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `aid` | `spell.scalar-buff` | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts` |
 | `alter_self` | `spell.invocation-self-transformation-mode` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
@@ -1214,9 +1217,7 @@ Deferred-portion non-applicable rows are not replay gaps; they are listed in the
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `dwarf_dwarven_resilience` | supported-profile | missing-witness | installed | srd-5.2.1 | species_trait | `unit-feature.passive-damage-resistance`, `unit-feature.passive-saving-throw-roll-mode` | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
-| `species_dragonborn_damage_resistance` | supported-profile | missing-witness | installed | srd-5.2.1 | species_trait | `unit-feature.passive-damage-resistance` | `packages/surface/content/species_dragonborn_damage_resistance.json` |
-| `species_goliath_powerful_build` | supported-profile | missing-witness | installed | srd-5.2.1 | species_trait | `unit-feature.passive-ability-check-roll-mode` | `packages/surface/content/species_goliath_powerful_build.json` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Selected Identity Deferred Non-Applicable
 

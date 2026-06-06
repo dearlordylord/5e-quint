@@ -67,13 +67,13 @@
     {
       "number": 11,
       "id": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit selected-identity replay for promoted species traits"
     },
     {
       "number": 12,
       "id": "L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate species and feature candidate evidence"
     }
   ]
@@ -122,8 +122,8 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | done | none | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`. |
 | 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | done | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Closed without implementation: Task 8 found no missing runtime slice, and existing attack-damage rider owners already cover Frenzy. |
 | 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | done | none | Closure recorded in `plans/unit-profile-coverage/L3MSPEC_10_SPECIES_DARKVISION_CLOSURE.md`: no concrete shared sense-source projection owner exists to extend, and current light/obscurement projection consumes caller-supplied typed observer facts. |
-| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | ready-for-research | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
-| 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | blocked | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
+| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | done | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_11_SPECIES_SELECTED_IDENTITY_AUDIT.md`; promoted species trait selected-identity gaps are covered. |
+| 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | ready-for-implementation | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
 
 ## Task Details
 
@@ -208,6 +208,9 @@ Task output is recorded in
 ### Task 11 - L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT
 
 Audit selected-identity replay for any promoted species traits.
+
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_11_SPECIES_SELECTED_IDENTITY_AUDIT.md`.
 
 ### Task 12 - L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION
 
