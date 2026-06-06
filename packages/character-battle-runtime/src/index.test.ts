@@ -7,13 +7,14 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-damage-resistance
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
 import type {
   BattleFill,
   BattleCreatureState,
@@ -26,6 +27,7 @@ import type {
 import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+  PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
@@ -700,7 +702,7 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("projects Dwarven Resilience Poison Resistance support into battle Unit refs", () => {
+  test("projects Dwarven Resilience Poison Resistance and Poisoned save Advantage support into battle Unit refs", () => {
     const refs = expectRight(
       characterUnitRefsWithBattleSupportProfiles(
         dwarfFighterBuild(),
@@ -715,6 +717,16 @@ describe("Character Sheet battle handoff", () => {
         expect.objectContaining({
           unitId: "dwarf_dwarven_resilience",
           supportProfiles: [
+            {
+              kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+              savingThrow: {
+                mode: "advantage",
+                scope: {
+                  kind: "condition",
+                  condition: "poisoned",
+                },
+              },
+            },
             {
               kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
               resistance: {

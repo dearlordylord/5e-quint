@@ -38,7 +38,10 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
-import type { SupportedUnitFeatureProfile } from "../unit-feature-support.ts";
+import type {
+  PassiveSavingThrowRollModeProfile,
+  SupportedUnitFeatureProfile,
+} from "../unit-feature-support.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
   spellBurstDamageExpression,
@@ -1111,6 +1114,7 @@ export function savingThrowRollModeProjections(
   const passiveRollModeProjections = passiveSavingThrowRollModeProjections(
     state,
     ability,
+    rollModeContext?.condition,
   );
   const baseProjections = [
     ...dodgeProjections,
@@ -1262,12 +1266,14 @@ export function savingThrowFlatBonusProjections(
 function passiveSavingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
+  condition: Condition | undefined,
 ): readonly BattleSavingThrowRollModeProjection[] {
   return [...state.combatants].flatMap(([targetId, target]) => {
     const projection = passiveSavingThrowRollModeProjection(
       targetId,
       target,
       ability,
+      condition,
     );
     return projection === null ? [] : [projection];
   });
@@ -1277,19 +1283,21 @@ function passiveSavingThrowRollModeProjection(
   targetId: CombatantId,
   target: BattleCreatureState,
   ability: Ability,
+  condition: Condition | undefined,
 ): BattleSavingThrowRollModeProjection | null {
-  if (
-    target.origin.kind !== "character" ||
-    isIncapacitated(target.conditions)
-  ) {
+  if (target.origin.kind !== "character") {
     return null;
   }
   const profile = [
     ...target.origin.passiveSavingThrowRollModeProfiles.values(),
   ].find(
     (candidate) =>
-      candidate.savingThrow.ability === ability &&
-      candidate.savingThrow.suppressedByCondition === "incapacitated",
+      passiveSavingThrowRollModeScopeMatches(
+        candidate.savingThrow,
+        ability,
+        condition,
+        isIncapacitated(target.conditions),
+      ),
   );
   return profile === undefined
     ? null
@@ -1297,6 +1305,22 @@ function passiveSavingThrowRollModeProjection(
         targetId,
         rollMode: profile.savingThrow.mode,
       };
+}
+
+function passiveSavingThrowRollModeScopeMatches(
+  profile: PassiveSavingThrowRollModeProfile,
+  ability: Ability,
+  condition: Condition | undefined,
+  targetIncapacitated: boolean,
+): boolean {
+  if (profile.scope.kind === "savingThrowAbility") {
+    return (
+      profile.scope.ability === ability &&
+      profile.scope.suppressedByCondition === "incapacitated" &&
+      !targetIncapacitated
+    );
+  }
+  return profile.scope.condition === condition;
 }
 
 function uniqueSavingThrowRollModeProjections(

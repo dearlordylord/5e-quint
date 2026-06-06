@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 172,
-      "numerator": 168,
+      "denominator": 174,
+      "numerator": 170,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 109,
-      "numerator": 106,
-      "percent": "97.2%"
+      "denominator": 110,
+      "numerator": 107,
+      "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 165,
-      "numerator": 165,
+      "denominator": 167,
+      "numerator": 167,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 172,
-      "numerator": 167,
-      "percent": "97.1%"
+      "denominator": 174,
+      "numerator": 170,
+      "percent": "97.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 172,
-      "percent": "75.4%"
+      "numerator": 174,
+      "percent": "76.3%"
     }
   },
   "metricSemantics": [
@@ -740,9 +740,10 @@
       ],
       "taskRefs": [
         "QCORE9",
-        "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+        "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+        "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
       ],
-      "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+      "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -755,6 +756,41 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-ability-check-roll-mode",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+      ],
+      "sourceBoundary": "Surface passive Ability Check roll-mode facts are admitted by typed roll target and condition-ending scope. Battle runtime consumes the selected Unit support profile to project Advantage on the existing Escape Grapple outcome hole when the Ability Check is made to end Grappled; carrying capacity remains outside this battle profile.",
+      "taskRefs": [
+        "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+      ],
+      "title": "Unit feature passively grants Ability Check roll mode for a condition-ending check",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         }
       ]
     },
@@ -4750,13 +4786,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       }
     },
@@ -5067,6 +5103,22 @@
           }
         ],
         "profileId": "unit-feature.passive-saving-throw-roll-mode",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.passive-ability-check-roll-mode",
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
@@ -7285,8 +7337,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 165,
-          "numerator": 165,
+          "denominator": 167,
+          "numerator": 167,
           "percent": "100%"
         }
       },
@@ -8442,6 +8494,45 @@
             }
           ],
           "unitId": "druid_primal_order"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+                }
+              ],
+              "profileId": "unit-feature.passive-damage-resistance",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
+              ]
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-saving-throw-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "dwarf_dwarven_resilience"
         },
         {
           "joinStatus": "covered",
@@ -11446,6 +11537,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-ability-check-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_goliath_powerful_build"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11847,43 +11960,8 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 2,
-    "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-damage-resistance"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "dwarf_dwarven_resilience"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-damage-resistance"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "species_dragonborn_damage_resistance"
-      }
-    ]
+    "rowCount": 0,
+    "rows": []
   },
   "taskClaims": [
     {
@@ -15012,6 +15090,36 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle tests cover Dwarven Resilience condition-scoped Advantage on Saving Throws to avoid or end Poisoned from its passive modify_roll_advantage Surface fact, identity-independent shape admission, character handoff projection, and Saving Throw roll-mode projection only when the active save context is the Poisoned condition.",
+      "profileIds": [
+        "unit-feature.passive-saving-throw-roll-mode"
+      ],
+      "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared rule-core and battle-runtime bridge QNT facts model a passive Ability Check roll-mode profile whose Advantage applies only when the Ability Check is made to end Grappled, leaving unrelated Ability Checks normal.",
+      "profileIds": [
+        "unit-feature.passive-ability-check-roll-mode"
+      ],
+      "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and runtime tests cover Goliath Powerful Build admission from its passive ability_check Grappled condition-ending Surface fact, identity-independent support profile projection, selected Unit ref gating, and Escape Grapple outcome-hole Advantage projection. Carrying capacity remains outside the battle profile.",
+      "profileIds": [
+        "unit-feature.passive-ability-check-roll-mode"
+      ],
+      "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed SRD species Darkvision, the Darkvision spell, current Surface grant_sense records, and promoted light/obscurement projection. Species and spell Darkvision remain authored sense source facts rather than standalone Unit procedures: battle projection already consumes typed Darkvision observer range and distance facts supplied at the caller/table boundary, while Character Sheet species sense derivation, active spell-granted sense projection, item senses, automatic sight-line derivation, map geometry, and color-only darkness presentation require a future shared creature perception projection owner.",
+      "profileIds": [],
+      "taskId": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet Long Rest tests cover Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally relies on runtime-test evidence plus the shared semantic core, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [
         "character-sheet.weapon-mastery-class-level-reselection"
@@ -16597,9 +16705,10 @@
           ],
           "taskRefs": [
             "QCORE9",
-            "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
           ],
-          "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+          "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -16612,6 +16721,14 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
         }
@@ -22762,6 +22879,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
       "executableMechanics": true,
@@ -22853,36 +22975,31 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
-            "mechanic": "Advantage on saving throws to avoid or end the Poisoned condition."
-          }
-        ],
         "profileIds": [
-          "unit-feature.passive-damage-resistance"
+          "unit-feature.passive-damage-resistance",
+          "unit-feature.passive-saving-throw-roll-mode"
         ],
         "rawRequirementIds": [
           "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "The Dwarven Resilience Surface record owns separate grants for Poison damage Resistance and Advantage on saving throws to avoid or end the Poisoned condition; this subset claim admits only the target-side Poison Resistance fact.",
-          "Battle Unit admission derives the fixed Poison damage type from the passive grant_resistance Surface mechanics without dispatching on Dwarf or Dwarven Resilience authored identity.",
-          "Battle damage adjustment consumes the admitted passive damage Resistance support profile from characterUnitRefs and halves only matching target-side Poison damage through the existing Resistance math without storing duplicate resistance state."
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+          "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
         },
         {
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+          "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
       "executableMechanics": true,
@@ -22916,6 +23033,46 @@
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
+        },
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
@@ -22928,19 +23085,73 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
-          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
-        },
-        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "character-sheet carrying-capacity or inventory projection owner",
+              "reason": "Carrying Capacity is durable character/equipment math rather than battle execution; the battle profile admits only the Grappled escape Ability Check roll-mode fact."
+            },
+            "mechanic": "count as one size larger when determining carrying capacity"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.passive-ability-check-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the passive Ability Check Advantage fact from the Surface modify_roll_advantage shape with ability_check target and Grappled condition-ending scope, without dispatching on Goliath or Powerful Build identity.",
+          "Battle runtime projects Advantage on the existing Escape Grapple outcome hole only for characters retaining the selected Powerful Build Unit support profile.",
+          "The carrying-capacity sentence is not copied into battle state and remains Character Sheet or inventory projection work outside this battle profile."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-ability-check-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+          ],
+          "sourceBoundary": "Surface passive Ability Check roll-mode facts are admitted by typed roll target and condition-ending scope. Battle runtime consumes the selected Unit support profile to project Advantage on the existing Escape Grapple outcome hole when the Ability Check is made to end Grappled; carrying capacity remains outside this battle profile.",
+          "taskRefs": [
+            "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+          ],
+          "title": "Unit feature passively grants Ability Check roll mode for a condition-ending check",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
       "unitId": "species_goliath_powerful_build"
     },

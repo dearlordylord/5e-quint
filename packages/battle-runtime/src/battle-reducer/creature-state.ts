@@ -73,6 +73,7 @@ import {
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
+  PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   POTENT_CANTRIP_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -260,6 +261,13 @@ export function battleCreatureStateFromInit(
         ),
         passiveSavingThrowRollModeProfiles:
           characterPassiveSavingThrowRollModeProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+        passiveAbilityCheckRollModeProfiles:
+          characterPassiveAbilityCheckRollModeProfiles(
             creatureInit.resources ?? [],
             creatureInit.unitFeatures ?? [],
             creatureInit.characterUnitRefs,
@@ -1224,6 +1232,37 @@ export function characterPassiveSavingThrowRollModeProfiles(
           unitRefs,
           unit.id,
           PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterPassiveAbilityCheckRollModeProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "passiveAbilityCheckRollMode" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "passiveAbilityCheckRollMode" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

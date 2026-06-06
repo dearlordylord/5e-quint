@@ -38,8 +38,11 @@ const dangerSenseSupportProfile = {
   kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   savingThrow: {
     mode: "advantage",
-    ability: "dex",
-    suppressedByCondition: "incapacitated",
+    scope: {
+      kind: "savingThrowAbility",
+      ability: "dex",
+      suppressedByCondition: "incapacitated",
+    },
   },
 } as const;
 

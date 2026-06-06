@@ -20,6 +20,7 @@
 {"profileId":"unit-feature.passive-ranged-attack-roll-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.initiative-proficiency-and-swap","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-saving-throw-roll-mode","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.passive-ability-check-roll-mode","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-damage-resistance","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"unit-feature.passive-speed-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-speed-kind-grants","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

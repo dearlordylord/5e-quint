@@ -1687,6 +1687,9 @@ export const BattleHoleSchema = Schema.Union(
     targetId: CombatantId,
     dc: DifficultyClass,
     mode: Schema.Literal("grappleSave", "escapeCheck"),
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,

@@ -513,7 +513,7 @@ export function discoverBattleActs(
         subject: { tag: "action", actorId, action: "escapeGrapple" },
         label: "Escape Grapple",
         summary: "Use an action to attempt to end the Grappled condition.",
-        initialHoles: [escapeGrappleOutcomeHole(grapple, actorId)],
+        initialHoles: [escapeGrappleOutcomeHole(state, grapple, actorId)],
       });
     }
   }

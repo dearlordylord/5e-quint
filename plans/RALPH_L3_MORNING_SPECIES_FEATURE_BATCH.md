@@ -37,43 +37,43 @@
     {
       "number": 6,
       "id": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Dwarven Resilience poison save roll mode"
     },
     {
       "number": 7,
       "id": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Goliath Powerful Build grapple escape fact"
     },
     {
       "number": 8,
       "id": "L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit Barbarian Frenzy attack-damage rider"
     },
     {
       "number": 9,
       "id": "L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME",
-      "status": "blocked",
-      "title": "Promote Barbarian Frenzy runtime parity"
+      "status": "done",
+      "title": "Close Barbarian Frenzy runtime parity as already owned"
     },
     {
       "number": 10,
       "id": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close or plan species Darkvision sense projection"
     },
     {
       "number": 11,
       "id": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
-      "status": "blocked",
+      "status": "done",
       "title": "Audit selected-identity replay for promoted species traits"
     },
     {
       "number": 12,
       "id": "L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Consolidate species and feature candidate evidence"
     }
   ]
@@ -117,13 +117,13 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 3 | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | done | L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE | Runtime/QNT/MBT vertical slice for breath weapon. |
 | 4 | L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Passive Resistance profile that shares or defines the same typed Draconic Ancestry damage-type source fact expected by Breath Weapon. |
 | 5 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | done | L3MSPEC-01-CANDIDATE-TRIAGE | Poison damage Resistance slice only; keep Poisoned saving-throw Advantage in Task 6. |
-| 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | ready-for-implementation-after-light-research | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
+| 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | done | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
 | 7 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Promote only the battle-relevant Advantage on ability checks to end Grappled; leave carrying capacity to Character Sheet or inventory projection. |
-| 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | ready-for-implementation-after-light-research | none | Audit whether existing `unit-feature.attack-damage-rider` owners already cover Frenzy. |
-| 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | blocked | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Implement only if the audit finds a real missing runtime slice. |
-| 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | ready-for-research | none | Close species Darkvision as table-owned sight projection, or create concrete shared sense-source projection follow-up work if repository evidence shows that owner already exists. |
-| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | blocked | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
-| 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | blocked | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
+| 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | done | none | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`. |
+| 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | done | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Closed without implementation: Task 8 found no missing runtime slice, and existing attack-damage rider owners already cover Frenzy. |
+| 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | done | none | Closure recorded in `plans/unit-profile-coverage/L3MSPEC_10_SPECIES_DARKVISION_CLOSURE.md`: no concrete shared sense-source projection owner exists to extend, and current light/obscurement projection consumes caller-supplied typed observer facts. |
+| 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | done | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_11_SPECIES_SELECTED_IDENTITY_AUDIT.md`; promoted species trait selected-identity gaps are covered. |
+| 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | ready-for-implementation | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
 
 ## Task Details
 
@@ -185,9 +185,14 @@ into battle state.
 
 Audit whether current attack-damage rider owners already cover Frenzy.
 
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`.
+
 ### Task 9 - L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME
 
-Implement Frenzy runtime parity only if Task 8 finds a real missing slice.
+Task 8 found no real missing slice. Existing attack-damage rider owners already
+cover Barbarian Frenzy, so this task is closed without runtime, QNT, schema, or
+MBT changes.
 
 ### Task 10 - L3MSPEC-10-SPECIES-DARKVISION-CLOSURE
 
@@ -197,9 +202,15 @@ Task 1 classified species Darkvision as a source fact for sight/illumination
 projection, not a standalone battle Unit procedure. Prefer closure/report work
 unless a concrete shared sight projection owner is already available to extend.
 
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_10_SPECIES_DARKVISION_CLOSURE.md`.
+
 ### Task 11 - L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT
 
 Audit selected-identity replay for any promoted species traits.
+
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_11_SPECIES_SELECTED_IDENTITY_AUDIT.md`.
 
 ### Task 12 - L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION
 

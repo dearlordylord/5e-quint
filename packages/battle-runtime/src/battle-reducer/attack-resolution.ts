@@ -1513,7 +1513,7 @@ export function resolveEscapeGrapple(
   }
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      escapeGrappleOutcomeHole(grapple, input.subject.actorId),
+      escapeGrappleOutcomeHole(input.state, grapple, input.subject.actorId),
     ]);
   }
   if (fillSet.outcome.holeId !== ESCAPE_GRAPPLE_OUTCOME_HOLE_ID) {

@@ -9,10 +9,16 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 import { Match } from "effect";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  type Condition,
+  type DifficultyClass,
+} from "@dnd/shared/types";
 import type { Ability, Skill, UnitRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import type {
@@ -253,6 +259,31 @@ export function requiredAbilityCheckRollMode(
   return hasAdvantage ? "advantage" : "disadvantage";
 }
 
+export function requiredConditionEndAbilityCheckRollMode(
+  state: BattleState,
+  actorId: CombatantId,
+  condition: Condition,
+): AttackRollMode | undefined {
+  const hasDisadvantage =
+    activeAnyAbilityCheckRollModeEffectMatches(
+      state,
+      actorId,
+      "disadvantage",
+    ) || poisonedAbilityCheckDisadvantageMatches(state, actorId);
+  const hasAdvantage =
+    activeAnyAbilityCheckRollModeEffectMatches(state, actorId, "advantage") ||
+    passiveConditionEndAbilityCheckRollModeMatches(
+      state,
+      actorId,
+      condition,
+      "advantage",
+    );
+  if (hasAdvantage === hasDisadvantage) {
+    return undefined;
+  }
+  return hasAdvantage ? "advantage" : "disadvantage";
+}
+
 export function passivePerceptionModifierDelta(
   state: BattleState,
   actorId: CombatantId,
@@ -303,19 +334,68 @@ function activeAbilityCheckRollModeEffectMatches(
       sizeChange !== null &&
       creatureSizeChangeStrengthRollMode(sizeChange) === mode) ||
     (actor?.activeEffects.some(
-        (effect) =>
-          ((effect.kind === "abilityCheckRollMode" &&
+      (effect) =>
+        ((effect.kind === "abilityCheckRollMode" &&
+          effect.ability === ability) ||
+          (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             effect.ability === ability) ||
-            (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
-              effect.ability === ability) ||
-            (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-              !ongoingSpellEffectSuppressedByAntimagicField(state, {
-                kind: "spellActiveEffect",
-                activeEffectKind: "spellObjectContactDamage",
-                sourceEffectId: effect.sourceEffectId,
-              }))) &&
-          effect.mode === mode,
-      ) ?? false)
+          (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+              kind: "spellActiveEffect",
+              activeEffectKind: "spellObjectContactDamage",
+              sourceEffectId: effect.sourceEffectId,
+            }))) &&
+        effect.mode === mode,
+    ) ??
+      false)
+  );
+}
+
+function activeAnyAbilityCheckRollModeEffectMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  mode: AttackRollMode,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+        !ongoingSpellEffectSuppressedByAntimagicField(state, {
+          kind: "spellActiveEffect",
+          activeEffectKind: "spellObjectContactDamage",
+          sourceEffectId: effect.sourceEffectId,
+        }) &&
+        effect.mode === mode,
+    ) ?? false
+  );
+}
+
+function poisonedAbilityCheckDisadvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return actor === undefined
+    ? false
+    : hasCondition(actor.conditions, "poisoned");
+}
+
+function passiveConditionEndAbilityCheckRollModeMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  condition: Condition,
+  mode: AttackRollMode,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return false;
+  }
+  return [...actor.origin.passiveAbilityCheckRollModeProfiles.values()].some(
+    (profile) =>
+      profile.abilityCheck.mode === mode &&
+      profile.abilityCheck.scope.kind === "endingCondition" &&
+      profile.abilityCheck.scope.condition === condition,
   );
 }
 
@@ -515,9 +595,15 @@ export function shoveOutcomeHole(input: {
 }
 
 export function escapeGrappleOutcomeHole(
+  state: BattleState,
   link: BattleGrappleLink,
   actorId: CombatantId,
 ): BattleGrappleOutcomeHole {
+  const rollMode = requiredConditionEndAbilityCheckRollMode(
+    state,
+    actorId,
+    "grappled",
+  );
   return {
     kind: "grappleOutcome",
     holeId: ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
@@ -527,6 +613,7 @@ export function escapeGrappleOutcomeHole(
     targetId: link.grapplerId,
     dc: link.escapeDc,
     mode: "escapeCheck",
+    ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
 
