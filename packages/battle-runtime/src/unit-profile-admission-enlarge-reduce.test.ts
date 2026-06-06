@@ -1,8 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME enlarge_reduce
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-duration-and-concentration
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
-import { proficiencyBonus } from "@dnd/shared/types";
+import { proficiencyBonus, resourceCount } from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
@@ -37,8 +39,16 @@ import {
   type ActionSpellAct,
   spellCasterId,
   spellTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  characterBattleResourceIsPointPool,
+  type CharacterBattleMetamagicOptionFact,
+  type CharacterBattlePointPoolResourceState,
+} from "./character-battle-resources.ts";
+import { EXTENDED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
+import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -74,6 +84,46 @@ function creatureSizeActInState(
     throw new Error(`Expected ${procedure} spell act.`);
   }
   return act;
+}
+
+function extendedCreatureSizeAct(
+  procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
+): {
+  readonly state: ReturnType<typeof spellBattle>;
+  readonly act: ActionSpellAct;
+} {
+  const spell = spellRecord(enlargeReduceUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: 2 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(2),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [extendedMetamagicOption()],
+    },
+  });
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === enlargeReduceUnitId &&
+      candidate.subject.invocation.procedure === procedure &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected Extended ${procedure} spell act.`);
+  }
+  return { state, act };
 }
 
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
@@ -730,6 +780,56 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       ]),
     );
   });
+
+  test("Extended Spell doubles creature size-change duration and projects Concentration save Advantage", () => {
+    const { state, act } = extendedCreatureSizeAct("creatureSizeIncrease");
+    const target = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Extended Enlarge self cast to resolve.");
+    }
+    expect(sorceryPointsRemaining(resolved.state)).toBe(1);
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.concentration).toMatchObject({
+      sourceSpellId: enlargeReduceUnitId,
+      effectKind: "spellEffect",
+      maintenanceSavingThrowRollMode: "advantage",
+    });
+    expect(sizeChangeEffects(resolved.state, spellCasterId)).toEqual([
+      expect.objectContaining({
+        kind: "spellCreatureSizeChange",
+        direction: "increase",
+        expiresAt: expect.objectContaining({
+          kind: "concentration",
+          durationTicks: elapsedTimeTicks(20),
+        }),
+      }),
+    ]);
+    expect(concentrationSavingThrowHole(caster, 4)?.rollMode).toBe("advantage");
+
+    const nearlyExpired = withSizeChangeDurationTicks(
+      resolved.state,
+      spellCasterId,
+      1,
+    );
+    const expired = advanceToNextCasterTurn(nearlyExpired);
+    expect(requireCombatant(expired, spellCasterId).concentration).toBeNull();
+    expect(sizeChangeEffects(expired, spellCasterId)).toEqual([]);
+  });
 });
 
 function resolveAttackHitHp(
@@ -883,6 +983,53 @@ function withCombatantSize(
       size,
     }),
   };
+}
+
+function withSizeChangeDurationTicks(
+  state: BattleState,
+  combatantId: typeof spellCasterId | typeof spellTargetId,
+  durationTicks: number,
+): BattleState {
+  const combatant = requireCombatant(state, combatantId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...combatant,
+      activeEffects: combatant.activeEffects.map((effect) =>
+        effect.kind === "spellCreatureSizeChange" &&
+        effect.expiresAt.kind === "concentration"
+          ? {
+              ...effect,
+              expiresAt: {
+                ...effect.expiresAt,
+                durationTicks: elapsedTimeTicks(durationTicks),
+              },
+            }
+          : effect,
+      ),
+    }),
+  };
+}
+
+function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function sorceryPointsRemaining(state: BattleState): number {
+  const caster = requireCombatant(state, spellCasterId);
+  const resource =
+    caster.origin.kind === "character"
+      ? caster.origin.resources.find(
+          (candidate): candidate is CharacterBattlePointPoolResourceState =>
+            candidate.unit.id === "sorcerer_font_of_magic" &&
+            characterBattleResourceIsPointPool(candidate),
+        )
+      : undefined;
+  return resource === undefined ? 0 : Number(resource.pointsRemaining);
 }
 
 function attackActSubject(

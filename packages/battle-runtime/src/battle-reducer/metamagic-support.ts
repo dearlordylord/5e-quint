@@ -3,9 +3,18 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 
+import {
+  elapsedTimeTicks,
+  elapsedTimeTicksFromTimeSpanDuration,
+  ELAPSED_TIME_TICKS_PER_DAY,
+  ELAPSED_TIME_TICKS_PER_MINUTE,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   movementFeet,
   resourceCount,
@@ -14,6 +23,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { Attachment, TargetSelection } from "@dnd/surface/surface/types";
+import { Either } from "effect";
 import {
   isTargetListSpellInvocation,
   type BattleCreatureState,
@@ -61,6 +71,9 @@ export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
 export const TWINNED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: TWINNED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
+export const EXTENDED_SPELL_METAMAGIC_SELECTION = [
+  { effectKind: EXTENDED_METAMAGIC_EFFECT_KIND },
+] as const satisfies readonly [SpellMetamagicSelection];
 
 export { TRANSMUTED_METAMAGIC_EFFECT_KIND } from "./metamagic-transmuted-facts.ts";
 export type { TransmutedSpellDamageType } from "./metamagic-transmuted-facts.ts";
@@ -91,16 +104,43 @@ export type DistantSpellApplicationFact = Omit<
   readonly rangeModifier: DistantSpellRangeModifierFact;
 };
 
+export type ExtendedConcentrationSavingThrowRollMode = Extract<
+  AttackRollMode,
+  "advantage"
+>;
+
+export type ExtendedSpellDurationModifierFact =
+  | {
+      readonly kind: "timedDurationDoubledToCap";
+      readonly durationTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly kind: "concentrationDurationDoubledToCap";
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly concentrationMaintenanceSavingThrowRollMode: ExtendedConcentrationSavingThrowRollMode;
+    };
+
+export type ExtendedSpellApplicationFact = Omit<
+  CharacterBattleMetamagicOptionFact,
+  "effectKind"
+> & {
+  readonly effectKind: typeof EXTENDED_METAMAGIC_EFFECT_KIND;
+  readonly durationModifier: ExtendedSpellDurationModifierFact;
+};
+
 export type SpellMetamagicApplicationFactWithoutSelectionPayload =
   CharacterBattleMetamagicOptionFact & {
     readonly effectKind: Exclude<
       CharacterBattleMetamagicEffectKind,
-      typeof TRANSMUTED_METAMAGIC_EFFECT_KIND | typeof DISTANT_METAMAGIC_EFFECT_KIND
+      | typeof TRANSMUTED_METAMAGIC_EFFECT_KIND
+      | typeof DISTANT_METAMAGIC_EFFECT_KIND
+      | typeof EXTENDED_METAMAGIC_EFFECT_KIND
     >;
   };
 
 export type SpellMetamagicApplicationFact =
   | DistantSpellApplicationFact
+  | ExtendedSpellApplicationFact
   | SpellMetamagicApplicationFactWithoutSelectionPayload
   | TransmutedSpellApplicationFact;
 
@@ -223,6 +263,35 @@ export function discoverDistantSpellMetamagicSelections(input: {
   return [[{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }]];
 }
 
+export function discoverExtendedSpellMetamagicSelections(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+}): readonly (readonly [SpellMetamagicSelection])[] {
+  if (
+    input.actor?.origin.kind !== "character" ||
+    input.actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const extended = input.actor.origin.metamagic.knownOptions.find(
+    (application) => application.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
+  );
+  if (extended === undefined) {
+    return [];
+  }
+  if (
+    !extendedSpellProcedureSupportsDurationProjection(input.invocation) ||
+    extendedSpellDurationModifierFact(input.invocation) === null ||
+    metamagicSorceryPointSpendIssue({
+      actor: input.actor,
+      applications: [extended],
+    }) !== null
+  ) {
+    return [];
+  }
+  return [EXTENDED_SPELL_METAMAGIC_SELECTION];
+}
+
 export function metamagicActionCostOverride(
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): "bonusAction" | undefined {
@@ -302,7 +371,9 @@ export function spellMetamagicLabel(
         ? "Twinned Spell"
         : metamagic[0]?.effectKind === DISTANT_METAMAGIC_EFFECT_KIND
           ? "Distant Spell"
-          : "Quickened Spell";
+          : metamagic[0]?.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND
+            ? "Extended Spell"
+            : "Quickened Spell";
 }
 
 export function transmutedSpellMetamagicLabel(
@@ -530,6 +601,84 @@ function distantSpellProcedureSupportsRangeProjection(
   return invocation.procedure === "objectLight";
 }
 
+export function extendedSpellDurationProjectionIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): string | null {
+  if (
+    !input.applications.every(
+      (application) =>
+        application.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return "Selected Metamagic option effect is not supported for this spell procedure.";
+  }
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.mode.tag !== "cast"
+  ) {
+    return "Extended Spell is supported only for action-time spell casts.";
+  }
+  if (!extendedSpellProcedureSupportsDurationProjection(input.invocation)) {
+    return "Extended Spell is supported only for promoted duration-bearing spell procedures that consume a cast-local duration fact.";
+  }
+  return extendedSpellDurationModifierFact(input.invocation) === null
+    ? "Extended Spell is supported only for spells with a timed or Concentration duration of at least 1 minute."
+    : null;
+}
+
+export function extendedSpellDurationModifierFact(
+  invocation: SupportedSpellInvocation,
+): ExtendedSpellDurationModifierFact | null {
+  const duration = invocation.spell.mechanics.duration;
+  const baseDuration =
+    duration.kind === "timed"
+      ? elapsedTimeTicksFromTimeSpanDuration(duration.value)
+      : duration.kind === "concentration"
+        ? elapsedTimeTicksFromTimeSpanDuration(duration.upTo)
+        : null;
+  if (baseDuration === null || Either.isLeft(baseDuration)) {
+    return null;
+  }
+  if (Number(baseDuration.right) < ELAPSED_TIME_TICKS_PER_MINUTE) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicks(
+    Math.min(Number(baseDuration.right) * 2, ELAPSED_TIME_TICKS_PER_DAY),
+  );
+  return duration.kind === "concentration"
+    ? {
+        kind: "concentrationDurationDoubledToCap",
+        durationTicks,
+        concentrationMaintenanceSavingThrowRollMode: "advantage",
+      }
+    : {
+        kind: "timedDurationDoubledToCap",
+        durationTicks,
+      };
+}
+
+export function extendedSpellDurationModifierForApplications(
+  applications: readonly SpellMetamagicApplicationFact[] | undefined,
+): ExtendedSpellDurationModifierFact | null {
+  return (
+    applications?.find(
+      (application): application is ExtendedSpellApplicationFact =>
+        application.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
+    )?.durationModifier ?? null
+  );
+}
+
+function extendedSpellProcedureSupportsDurationProjection(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure === "creatureSizeIncrease" ||
+    invocation.procedure === "creatureSizeDecrease"
+  );
+}
+
 export function twinnedSpellTargetCountProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: SupportedSpellInvocation;
@@ -663,7 +812,8 @@ export function isSpellMetamagicApplicationFactWithoutSelectionPayload(
 ): application is SpellMetamagicApplicationFactWithoutSelectionPayload {
   return (
     application.effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND &&
-    application.effectKind !== DISTANT_METAMAGIC_EFFECT_KIND
+    application.effectKind !== DISTANT_METAMAGIC_EFFECT_KIND &&
+    application.effectKind !== EXTENDED_METAMAGIC_EFFECT_KIND
   );
 }
 

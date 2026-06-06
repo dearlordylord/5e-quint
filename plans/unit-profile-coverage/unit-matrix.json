@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 111,
+      "numerator": 111,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 110,
-      "numerator": 107,
+      "denominator": 111,
+      "numerator": 108,
       "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 148,
-      "numerator": 148,
+      "denominator": 149,
+      "numerator": 149,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 148,
-      "numerator": 148,
+      "denominator": 149,
+      "numerator": 149,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 111,
+      "numerator": 111,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 111,
+      "numerator": 111,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3919,6 +3919,40 @@
       ]
     },
     {
+      "id": "unit-feature.metamagic-cast-duration-and-concentration",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Extended Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, the canonical Surface duration shape, and a promoted spell procedure owner that consumes a cast-local duration fact. The first promoted owner is Enlarge/Reduce creature size change, which derives a doubled Concentration duration from the Surface 1-minute duration, caps eligible durations at 24 hours in QNT, spends 1 Sorcery Point from the shared Font of Magic point pool, stores the doubled duration on the spell effect's executable cleanup timer, stores same-occurrence Concentration maintenance Saving Throw Advantage on the caster's Concentration state, and rejects unsupported procedures, Instantaneous or sub-1-minute durations, and non-cast subjects before resource spending. Timed-duration projection and additional duration-bearing owners remain runtime-promoted only when their procedure owners consume the cast-local duration fact.",
+      "taskRefs": [
+        "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
+      ],
+      "title": "Unit feature applies Extended Spell cast-local duration extension and Concentration save Advantage to promoted duration witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -4783,13 +4817,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 148,
-        "numerator": 148,
+        "denominator": 149,
+        "numerator": 149,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 148,
-        "numerator": 148,
+        "denominator": 149,
+        "numerator": 149,
         "percent": "100%"
       }
     },
@@ -7023,6 +7057,22 @@
           }
         ],
         "profileId": "unit-feature.metamagic-cast-range-increase",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Extended Spell Metamagic admits known selected duration modifications, enforces Sorcery Point affordability, derives a cast-local doubled duration fact, and applies Concentration maintenance Saving Throw Advantage only to affected Concentration spell occurrences"
+          }
+        ],
+        "profileId": "unit-feature.metamagic-cast-duration-and-concentration",
         "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
@@ -15038,6 +15088,22 @@
       "taskId": "L3MMETA-15-DISTANT-CAST-RANGE-SLICE"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Extended Spell admission for promoted duration-bearing spell procedures, known-option and Sorcery Point gates, timed and Concentration durations of at least 1 minute, duration doubling to the 24-hour cap, Concentration-maintenance Saving Throw Advantage only for Concentration durations, and rejection of Instantaneous, sub-1-minute, unaffordable, and unsupported procedure shapes before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-duration-and-concentration"
+      ],
+      "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Extended Spell discovery and resolution for the Enlarge/Reduce creature-size owner, deriving a cast-local doubled duration from the Surface 1-minute Concentration duration, spending 1 Sorcery Point through the shared Font of Magic pool, storing 20 executable duration ticks on the active effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and cleaning up the effect and Concentration when the doubled timer expires.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-duration-and-concentration"
+      ],
+      "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
+    },
+    {
       "claimKind": "admission-projection",
       "note": "Focused Surface, character-creation, character-battle, and battle-runtime admission tests cover the Dragonborn Breath Weapon support-profile projection from the exact Draconic Ancestry source table through a selected CharacterBuild ancestry fact with battle-derived damage type, order-independent Cone/Line shape facts, Constitution innate DC, character-level damage tiers, Proficiency Bonus use pool, and Long Rest reset. Reducer execution, QNT, MBT, and selected-identity runtime parity remain deferred to L3MSPEC-03.",
       "profileIds": [
@@ -15156,7 +15222,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 112,
+        "profileFactDenominator": 113,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -19793,9 +19859,9 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "generic spell cast-property witness owner plus future procedure-specific range consumers",
-              "reason": "Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell needs generic duration and Concentration-saving-throw roll-mode ownership; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic."
+              "reason": "Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic."
             },
-            "mechanic": "Distant Spell for additional range-bearing spell target or origin owners beyond the promoted object-light Touch-range slice; Extended and Subtle Spell cast-property modifiers: double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
+            "mechanic": "Distant Spell for additional range-bearing spell target or origin owners beyond the promoted object-light Touch-range slice; Extended Spell for additional duration-bearing owners beyond the promoted Enlarge/Reduce creature-size slice; and Subtle Spell cast-property modifiers that suppress eligible spell components while preserving consumed or priced Material components."
           },
           {
             "battleReadinessClosure": {
@@ -19832,7 +19898,8 @@
           "unit-feature.metamagic-heightened-save-disadvantage",
           "unit-feature.metamagic-damage-type-substitution",
           "unit-feature.metamagic-effective-level-extra-target",
-          "unit-feature.metamagic-cast-range-increase"
+          "unit-feature.metamagic-cast-range-increase",
+          "unit-feature.metamagic-cast-duration-and-concentration"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -19845,7 +19912,8 @@
           "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through the combatant-owned Hideous Laughter repeat-save lifecycle without duplicating spell occurrence state.",
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending."
+          "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Extended Spell for promoted duration-bearing spell owners, currently Enlarge/Reduce creature size change, by deriving a cast-local doubled duration fact from the selected Extended Spell and the canonical Surface duration shape, spending 1 Sorcery Point from the shared Font of Magic point pool, storing the doubled duration on the effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and rejecting unsupported procedures, Instantaneous durations, and sub-1-minute durations before resource spending."
         ],
         "tag": "profile-subset-supported"
       },
@@ -19905,6 +19973,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3MMETA-15-DISTANT-OBJECT-LIGHT"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
         }
       ],
       "executableMechanics": true,
@@ -20202,6 +20275,40 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-cast-duration-and-concentration",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Extended Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, the canonical Surface duration shape, and a promoted spell procedure owner that consumes a cast-local duration fact. The first promoted owner is Enlarge/Reduce creature size change, which derives a doubled Concentration duration from the Surface 1-minute duration, caps eligible durations at 24 hours in QNT, spends 1 Sorcery Point from the shared Font of Magic point pool, stores the doubled duration on the spell effect's executable cleanup timer, stores same-occurrence Concentration maintenance Saving Throw Advantage on the caster's Concentration state, and rejects unsupported procedures, Instantaneous or sub-1-minute durations, and non-cast subjects before resource spending. Timed-duration projection and additional duration-bearing owners remain runtime-promoted only when their procedure owners consume the cast-local duration fact.",
+          "taskRefs": [
+            "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
+          ],
+          "title": "Unit feature applies Extended Spell cast-local duration extension and Concentration save Advantage to promoted duration witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"
             }
           ]
         }

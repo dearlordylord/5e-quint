@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -422,6 +423,78 @@ module battleRuntimeMetamagicTests {
         SpellRangeTouch,
         known,
         Set(distantSpellMetamagicFact),
+        0,
+      ))),
+    }
+  }
+
+  run test_extended_spell_duration_projection_admits_timed_and_concentration_shapes = {
+    val known = Set(extendedSpellMetamagicFact)
+    val timedResult = resolveExtendedSpellDurationProjection(
+      ExtendedDurationBearingProcedure,
+      SpellTimedDurationTicks({ durationTicks: 600 }),
+      known,
+      Set(extendedSpellMetamagicFact),
+      2,
+    )
+    val concentrationResult = resolveExtendedSpellDurationProjection(
+      ExtendedDurationBearingProcedure,
+      SpellConcentrationDurationTicks({ durationTicks: 10 }),
+      known,
+      Set(extendedSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(timedResult == {
+        durationTicks: 1200,
+        concentrationSavingThrowMode: NormalSavingThrow,
+        sorceryPointsRemaining: 1,
+      }),
+      assert(concentrationResult == {
+        durationTicks: 20,
+        concentrationSavingThrowMode: AdvantageSavingThrow,
+        sorceryPointsRemaining: 1,
+      }),
+    }
+  }
+
+  run test_extended_spell_duration_projection_caps_and_rejects_ineligible_shapes = {
+    val known = Set(extendedSpellMetamagicFact)
+    val capped = resolveExtendedSpellDurationProjection(
+      ExtendedDurationBearingProcedure,
+      SpellTimedDurationTicks({ durationTicks: 10000 }),
+      known,
+      Set(extendedSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(capped.durationTicks == 14400),
+      assert(not(extendedSpellCanModifyDurationSpell(
+        ExtendedDurationBearingProcedure,
+        SpellTimedDurationTicks({ durationTicks: 9 }),
+        known,
+        Set(extendedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(extendedSpellCanModifyDurationSpell(
+        ExtendedDurationBearingProcedure,
+        SpellInstantaneousDuration,
+        known,
+        Set(extendedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(extendedSpellCanModifyDurationSpell(
+        NonExtendedDurationProcedure,
+        SpellConcentrationDurationTicks({ durationTicks: 10 }),
+        known,
+        Set(extendedSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(extendedSpellCanModifyDurationSpell(
+        ExtendedDurationBearingProcedure,
+        SpellConcentrationDurationTicks({ durationTicks: 10 }),
+        known,
+        Set(extendedSpellMetamagicFact),
         0,
       ))),
     }

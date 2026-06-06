@@ -3,8 +3,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 
 import * as Either from "effect/Either";
 import type {
@@ -32,6 +33,8 @@ import {
   distantSpellRangeProjectionIssue,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
+  extendedSpellDurationModifierFact,
+  extendedSpellDurationProjectionIssue,
   isSpellMetamagicApplicationFactWithoutSelectionPayload,
   metamagicApplicationsIncludeQuickened,
   metamagicSorceryPointCost,
@@ -50,13 +53,16 @@ import {
 export {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverDistantSpellMetamagicSelections,
+  discoverExtendedSpellMetamagicSelections,
   discoverSpellMetamagicSelections,
   discoverTransmutedSpellMetamagicSelections,
   discoverTwinnedSpellMetamagicSelections,
   DISTANT_METAMAGIC_EFFECT_KIND,
   distantSpellRangeModifierForApplications,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
+  extendedSpellDurationModifierForApplications,
   EXTENDED_METAMAGIC_EFFECT_KIND,
+  EXTENDED_SPELL_METAMAGIC_SELECTION,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   metamagicActionCostOverride,
   metamagicApplicationsIncludeQuickened,
@@ -77,7 +83,7 @@ export {
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Distant Spell is supported only for promoted spell target witnesses that carry cast-local range facts without trusting authored spell identity.";
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
-  "Extended Spell is not supported until spell duration and Concentration-saving-throw roll mode are owned by a generic cast-property boundary.";
+  "Extended Spell is supported only for promoted duration-bearing spell witnesses that carry cast-local duration facts and same-occurrence Concentration save Advantage.";
 export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Subtle Spell is not supported until spell-cast component witnesses can suppress Verbal and Somatic components while preserving consumed or priced Material components.";
 export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -465,7 +471,7 @@ function castPropertyMetamagicSupportIssue(
     return distantSpellRangeProjectionIssue(input);
   }
   if (effectKinds.has(EXTENDED_METAMAGIC_EFFECT_KIND)) {
-    return EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE;
+    return extendedSpellDurationProjectionIssue(input);
   }
   return effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
     ? SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE
@@ -504,7 +510,22 @@ function metamagicApplicationForSelection(input: {
           rangeModifier,
         };
   }
-  if (isSpellMetamagicApplicationFactWithoutSelectionPayload(input.application)) {
+  if (input.application.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND) {
+    const durationModifier = extendedSpellDurationModifierFact(
+      input.invocation,
+    );
+    return durationModifier === null
+      ? "Extended Spell is supported only for spells with a timed or Concentration duration of at least 1 minute."
+      : {
+          effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
+          stackingMode: input.application.stackingMode,
+          sorceryPointCost: input.application.sorceryPointCost,
+          durationModifier,
+        };
+  }
+  if (
+    isSpellMetamagicApplicationFactWithoutSelectionPayload(input.application)
+  ) {
     return input.application;
   }
   const targetDamageType = transmutedSpellSelectionTargetDamageType([

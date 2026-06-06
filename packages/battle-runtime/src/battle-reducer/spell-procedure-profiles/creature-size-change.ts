@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 //
 // The creatureSizeIncrease / creatureSizeDecrease Spell Procedure Profile:
 // a prepared Magic Action spell that enlarges or reduces one creature,
@@ -53,6 +55,12 @@ import {
   spellRequiresConcentration,
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
+import {
+  discoverExtendedSpellMetamagicSelections,
+  extendedSpellDurationModifierForApplications,
+  spellMetamagicLabel,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
 import {
   spellTargetHole,
   spellTargetIsKnownWilling,
@@ -284,23 +292,39 @@ function discoverCreatureSizeChangeCastAct(
   invocation: CreatureSizeChangeInvocation,
 ): readonly AvailableBattleAct[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: creatureSizeChangeInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)})`,
-            summary: creatureSizeChangeCastSummary(invocation),
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  if (targetHole.choices.length === 0) {
+    return [];
+  }
+  const castAct = {
+    subject: {
+      tag: "actionSpell" as const,
+      actorId,
+      invocation: creatureSizeChangeInvocationRef(invocation),
+      mode: { tag: "cast" as const },
+    },
+    label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)})`,
+    summary: creatureSizeChangeCastSummary(invocation),
+    initialHoles: [targetHole],
+  };
+  const metamagicCastActs = discoverExtendedSpellMetamagicSelections({
+    actor: state.combatants.get(actorId),
+    invocation,
+  }).map((metamagic) => {
+    const label = spellMetamagicLabel(metamagic);
+    return {
+      subject: {
+        tag: "actionSpell" as const,
+        actorId,
+        invocation: creatureSizeChangeInvocationRef(invocation),
+        mode: { tag: "cast" as const },
+        metamagic,
+      },
+      label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)}, ${label})`,
+      summary: `${creatureSizeChangeCastSummary(invocation)} ${label}.`,
+      initialHoles: [targetHole],
+    };
+  });
+  return [castAct, ...metamagicCastActs];
 }
 
 function creatureSizeChangeInvocationRef(
@@ -332,7 +356,9 @@ function resolveCreatureSizeChange(
   input: SpellProcedureProfileResolveInput<
     CreatureSizeChangeInvocation,
     ActionSpellBattleResolutionInput
-  >,
+  > & {
+    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  },
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -459,6 +485,9 @@ function resolveCreatureSizeChange(
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: false,
+        ...(input.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: input.metamagicApplications }),
       });
       return resourced.tag === "invalid"
         ? resourced
@@ -478,20 +507,30 @@ function resolveCreatureSizeChange(
     input.actorId,
     [target.combatantId],
     input.invocation,
+    input.metamagicApplications,
   );
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const state = creatureSizeChangeConcentrationWithMetamagic(
+    resourced.state,
+    input.actorId,
+    input.metamagicApplications,
+  );
+  return {
+    tag: "resolved",
+    state,
+    snapshot: snapshotBattle(state),
+  };
 }
 
 function applyCreatureSizeChangeEffect(
@@ -499,14 +538,21 @@ function applyCreatureSizeChangeEffect(
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
   invocation: CreatureSizeChangeInvocation,
+  metamagicApplications:
+    | readonly SpellMetamagicApplicationFact[]
+    | undefined = undefined,
 ): BattleState {
+  const activeEffect = creatureSizeChangeEffectWithMetamagic(
+    invocation.activeEffect,
+    metamagicApplications,
+  );
   return targetIds.reduce<BattleState>((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
     }
     const nextEffect = {
-      ...invocation.activeEffect,
+      ...activeEffect,
       sourceCombatantId: actorId,
     };
     const replacement = activeEffectsWithCreatureSizeChangeReplaced(
@@ -535,6 +581,65 @@ function applyCreatureSizeChangeEffect(
     );
     return { ...withReplacement, combatants };
   }, state);
+}
+
+function creatureSizeChangeEffectWithMetamagic(
+  activeEffect: CreatureSizeChangeInvocation["activeEffect"],
+  metamagicApplications: readonly SpellMetamagicApplicationFact[] | undefined,
+): CreatureSizeChangeInvocation["activeEffect"] {
+  const durationModifier = extendedSpellDurationModifierForApplications(
+    metamagicApplications,
+  );
+  if (durationModifier === null) {
+    return activeEffect;
+  }
+  return durationModifier.kind === "concentrationDurationDoubledToCap"
+    ? {
+        ...activeEffect,
+        expiresAt: {
+          ...activeEffect.expiresAt,
+          durationTicks: durationModifier.durationTicks,
+        },
+      }
+    : {
+        ...activeEffect,
+        expiresAt: {
+          ...activeEffect.expiresAt,
+          durationTicks: durationModifier.durationTicks,
+        },
+      };
+}
+
+function creatureSizeChangeConcentrationWithMetamagic(
+  state: BattleState,
+  actorId: CombatantId,
+  metamagicApplications: readonly SpellMetamagicApplicationFact[] | undefined,
+): BattleState {
+  const durationModifier = extendedSpellDurationModifierForApplications(
+    metamagicApplications,
+  );
+  if (durationModifier?.kind !== "concentrationDurationDoubledToCap") {
+    return state;
+  }
+  const actor = state.combatants.get(actorId);
+  if (
+    actor === undefined ||
+    actor.concentration === null ||
+    actor.concentration.effectKind !== "spellEffect"
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      concentration: {
+        ...actor.concentration,
+        maintenanceSavingThrowRollMode:
+          durationModifier.concentrationMaintenanceSavingThrowRollMode,
+      },
+    }),
+  };
 }
 
 const CreatureSizeIncreaseInvocationSchema = spellProcedureInvocationSchema<

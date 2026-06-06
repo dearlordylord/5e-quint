@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 
 module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
   // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
   // - Classes/Sorcerer.md: Careful Spell, Distant Spell, Empowered Spell,
+  //   Extended Spell,
   //   Heightened Spell, Quickened Spell, Transmuted Spell, and Twinned Spell
   //   Sorcery Point costs.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
@@ -12,6 +13,7 @@ module unitFeatureMetamagicOptionFactCore {
   type BattleRuntimeMetamagicEffectKind =
     | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
     | SpellRangeIncrease
+    | DurationExtensionAndConcentrationSaveAdvantage
     | DamageDiceRerollStackingException
     | SavingThrowProtection
     | SavingThrowDisadvantage
@@ -25,6 +27,7 @@ module unitFeatureMetamagicOptionFactCore {
   type BattleRuntimeMetamagicOptionFact =
     | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact
     | SpellRangeIncreaseOptionFact
+    | DurationExtensionAndConcentrationSaveAdvantageOptionFact
     | DamageDiceRerollStackingExceptionOptionFact
     | SavingThrowProtectionOptionFact
     | SavingThrowDisadvantageOptionFact
@@ -36,6 +39,9 @@ module unitFeatureMetamagicOptionFactCore {
 
   pure def distantSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     SpellRangeIncreaseOptionFact
+
+  pure def extendedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
+    DurationExtensionAndConcentrationSaveAdvantageOptionFact
 
   pure def empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     DamageDiceRerollStackingExceptionOptionFact
@@ -59,6 +65,8 @@ module unitFeatureMetamagicOptionFactCore {
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact =>
         QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
       | SpellRangeIncreaseOptionFact => SpellRangeIncrease
+      | DurationExtensionAndConcentrationSaveAdvantageOptionFact =>
+        DurationExtensionAndConcentrationSaveAdvantage
       | DamageDiceRerollStackingExceptionOptionFact =>
         DamageDiceRerollStackingException
       | SavingThrowProtectionOptionFact => SavingThrowProtection
@@ -76,6 +84,7 @@ module unitFeatureMetamagicOptionFactCore {
         CanCombineWithDifferentMetamagic
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => OnePerSpell
       | SpellRangeIncreaseOptionFact => OnePerSpell
+      | DurationExtensionAndConcentrationSaveAdvantageOptionFact => OnePerSpell
       | SavingThrowProtectionOptionFact => OnePerSpell
       | SavingThrowDisadvantageOptionFact => OnePerSpell
       | DamageTypeSubstitutionOptionFact => OnePerSpell
@@ -88,6 +97,7 @@ module unitFeatureMetamagicOptionFactCore {
     match option {
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => 2
       | SpellRangeIncreaseOptionFact => 1
+      | DurationExtensionAndConcentrationSaveAdvantageOptionFact => 1
       | DamageDiceRerollStackingExceptionOptionFact => 1
       | SavingThrowProtectionOptionFact => 1
       | SavingThrowDisadvantageOptionFact => 2
@@ -99,6 +109,7 @@ module unitFeatureMetamagicOptionFactCore {
     Set(
       QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit,
       SpellRangeIncrease,
+      DurationExtensionAndConcentrationSaveAdvantage,
       DamageDiceRerollStackingException,
       SavingThrowProtection,
       SavingThrowDisadvantage,

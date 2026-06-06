@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Extended Spell duration and Concentration slice"
     },
     {
