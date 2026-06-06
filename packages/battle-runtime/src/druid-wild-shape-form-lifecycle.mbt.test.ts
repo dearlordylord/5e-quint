@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.druid-wild-shape-known-form
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape
+// UNIT-IDENTITY-MBT-REPLAY: L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape doAssumeRidingHorse doReuseAsCat doDismissForm doIncapacitatedReversion doDeathReversion
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape:
@@ -49,6 +51,7 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
 type ActiveForm = (typeof ACTIVE_FORMS)[number];
@@ -93,6 +96,7 @@ const ratId = "stat_block_rat";
 const ridingHorseId = "stat_block_riding_horse";
 const lizardId = "stat_block_lizard";
 const catId = "stat_block_cat";
+const selectedIdentityTaskId = "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT";
 
 const driverSchema = {
   init: {},
@@ -236,6 +240,150 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
     });
   }, 120_000);
 });
+
+defineSelectedIdentityWitness({
+  describeLabel: "Druid Wild Shape selected identity MBT",
+  taskId: selectedIdentityTaskId,
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+  ),
+  projectionSchema: {
+    activeForm: "str",
+    bonusActionAvailable: "bool",
+    usesRemaining: "int",
+    tempHp: "int",
+    armorClass: "int",
+    creatureSize: "str",
+    speedFeet: "int",
+    shoveDc: "int",
+    spellAvailable: "bool",
+    activeFormEffectCount: "int",
+    mergedEquipmentCount: "int",
+    druidAlive: "bool",
+    lastResult: "str",
+  },
+  normalizeQuintState: normalizeDruidWildShapeFormQuintState,
+  initialProjection: expectedDruidWildShapeFormProjection(),
+  units: [
+    {
+      unitId: "druid_wild_shape",
+      procedures: [
+        {
+          actionName: "doAssumeRidingHorse",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            activeForm: "ridingHorse",
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            armorClass: 11,
+            creatureSize: "large",
+            speedFeet: 60,
+            shoveDc: 13,
+            spellAvailable: false,
+            activeFormEffectCount: 1,
+            mergedEquipmentCount: 2,
+            lastResult: "assumedRidingHorse",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              assumeRidingHorse(initialRuntimeState()),
+            ),
+        },
+        {
+          actionName: "doReuseAsCat",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            activeForm: "cat",
+            bonusActionAvailable: false,
+            usesRemaining: 0,
+            tempHp: 2,
+            armorClass: 12,
+            creatureSize: "tiny",
+            speedFeet: 40,
+            shoveDc: 6,
+            spellAvailable: false,
+            activeFormEffectCount: 1,
+            mergedEquipmentCount: 2,
+            lastResult: "reusedCat",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              reuseAsCat(
+                beginNextTurn(assumeRidingHorse(initialRuntimeState())),
+              ),
+            ),
+        },
+        {
+          actionName: "doDismissForm",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            lastResult: "dismissed",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              dismissForm(
+                beginNextTurn(assumeRidingHorse(initialRuntimeState())),
+              ),
+            ),
+        },
+        {
+          actionName: "doIncapacitatedReversion",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            spellAvailable: false,
+            lastResult: "incapacitated",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              applyIncapacitatedReversion(
+                assumeRidingHorse(initialRuntimeState()),
+              ),
+            ),
+        },
+        {
+          actionName: "doDeathReversion",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            spellAvailable: false,
+            druidAlive: false,
+            lastResult: "dead",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              applyDeathReversion(assumeRidingHorse(initialRuntimeState())),
+            ),
+        },
+      ],
+    },
+  ],
+});
+
+function expectedDruidWildShapeFormProjection(
+  overrides: Partial<DruidWildShapeFormLifecycleProjection> = {},
+): DruidWildShapeFormLifecycleProjection {
+  return {
+    activeForm: "trueForm",
+    bonusActionAvailable: true,
+    usesRemaining: 2,
+    tempHp: 0,
+    armorClass: 16,
+    creatureSize: "medium",
+    speedFeet: 30,
+    shoveDc: 13,
+    spellAvailable: true,
+    activeFormEffectCount: 0,
+    mergedEquipmentCount: 0,
+    druidAlive: true,
+    lastResult: "init",
+    ...overrides,
+  };
+}
 
 function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
   return {

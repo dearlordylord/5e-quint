@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit Wild Shape selected-identity replay after split owners"
     },
     {
@@ -125,7 +125,7 @@ repair branch state by rebasing against `master`.
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | done                                          | none                                                                                                                                                                                                                           | Replaced stale dependency text with an explicit owner-decision blocker.                                                               |
 |     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Recorded Acid Arrow as blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                        |
 |     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | done                                          | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerated and verified residual ledgers; generated artifacts were already current.                                                  |
-|    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Ensure no selected-identity replay is orphaned after the split.                                                                       |
+|    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | done                                          | none                                                                                                                                                                                                                           | Wild Shape selected-identity replay is covered by the focused form-lifecycle MBT witness.                                             |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | ready-for-research                            | none                                                                                                                                                                                                                           | Audit whether Wild Companion still has only explicit companion-control closure.                                                       |
 |    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | ready-for-research                            | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promote concrete Wild Shape object/Utilize consumers from the stored form-limb witness without deriving anatomy from authored identity. |
 |    13 | L3MWILD-13-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION | Final lane report and cleanup.                                                                                                        |
@@ -253,6 +253,14 @@ Landed scope:
 ### Task 10 - L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT
 
 Audit selected-identity replay after the Wild Shape split owners.
+
+Landed scope:
+
+- `druid_wild_shape` now has selected-identity MBT evidence in the focused Wild
+  Shape form-lifecycle witness, covering assume form, reuse, dismissal,
+  Incapacitated reversion, and death reversion replay.
+- Unit-profile coverage evidence and the generated matrix now count the Wild
+  Shape selected-identity witness.
 
 ### Task 11 - L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT
 

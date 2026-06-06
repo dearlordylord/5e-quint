@@ -17802,6 +17802,11 @@
           "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
         },
         {
+          "ownerPath": "packages/battle-runtime/src/druid-wild-shape-form-lifecycle.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
