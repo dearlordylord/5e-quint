@@ -1279,11 +1279,14 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.state.currentTurnResources.actionResources).toEqual([]);
     expect(dismissed.droppedObjects).toEqual([
       {
-        kind: "heldObjectDropped",
+        kind: "objectDropped",
         actorId: familiarId,
         objectId: droppedObjectId,
-        sourceCombatantId: casterId,
-        sourceSpellId: "find_familiar",
+        source: {
+          kind: "spell",
+          sourceCombatantId: casterId,
+          sourceSpellId: "find_familiar",
+        },
       },
     ]);
 

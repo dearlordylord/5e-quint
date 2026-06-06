@@ -37,6 +37,17 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_fallen_equipment_projects_object_boundary = {
+    val result = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, fallenShieldEquipmentDisposition)
+    all {
+      assert(result.droppedEquipmentCount == 1),
+      assert(result.projection.equipmentDisposition == allMergedEquipmentDisposition),
+      assert(projectedArmorClass(result.projection) == 11),
+      assert(projectedSize(result.projection) == "large"),
+      assert(canCastSpells(result.projection) == false),
+    }
+  }
+
   run test_druid_wild_shape_projects_d20_statistics = {
     val state = assumeForm(initialProjection, mediumSwiftFormFacts)
     all {

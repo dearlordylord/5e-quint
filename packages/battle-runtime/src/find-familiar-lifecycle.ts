@@ -999,11 +999,14 @@ function droppedObjectsForFamiliarDisappearance(input: {
 }): readonly BattleDroppedObjectOutcome[] {
   const objectIds = input.heldObjectIds ?? [];
   return objectIds.map((objectId) => ({
-    kind: "heldObjectDropped",
+    kind: "objectDropped",
     actorId: input.familiarId,
     objectId,
-    sourceCombatantId: input.casterId,
-    sourceSpellId: FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID,
+    source: {
+      kind: "spell",
+      sourceCombatantId: input.casterId,
+      sourceSpellId: FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID,
+    },
   }));
 }
 

@@ -4381,12 +4381,22 @@ export type BattleShatterNonmagicalUnattendedObjectDamageFact = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleObjectDamageDisposition;
 };
+export type BattleDroppedObjectSource =
+  | {
+      readonly kind: "spell";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellId;
+    }
+  | {
+      readonly kind: "druidWildShape";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+    };
 export type BattleDroppedObjectOutcome = {
-  readonly kind: "heldObjectDropped";
+  readonly kind: "objectDropped";
   readonly actorId: CombatantId;
   readonly objectId: BattleObjectId;
-  readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: SpellId;
+  readonly source: BattleDroppedObjectSource;
 };
 export type BattleSpellDamageTypeChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;

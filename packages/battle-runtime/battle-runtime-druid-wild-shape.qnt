@@ -22,12 +22,23 @@ module battleRuntimeDruidWildShape {
 
   type DruidWildShapeFormFacts = ShapeShiftedReplacementFormFacts
   type DruidWildShapeFormState = DruidWildShapeRuntimeState
-  // This owner admits only the battle-visible effective-loadout projection for
-  // armor and Shield. Weapon and held-object function remains an object/form-limb
+  // This owner admits the battle-visible effective-loadout projection for armor
+  // and Shield plus the explicit object/table outcome boundary for equipment
+  // that falls. Weapon and held-object function remains an object/form-limb
   // follow-up.
+  type DruidWildShapeWearableEquipmentResolution =
+    EquipmentMerged | EquipmentWorn | EquipmentFell
+  type DruidWildShapeHeldEquipmentResolution =
+    HeldEquipmentMerged | HeldEquipmentFell
   type DruidWildShapeEquipmentDisposition = {
     wornArmor: bool,
     wornShield: bool,
+  }
+  type DruidWildShapeEquipmentResolution = {
+    armor: DruidWildShapeWearableEquipmentResolution,
+    shield: DruidWildShapeWearableEquipmentResolution,
+    mainWeapon: DruidWildShapeHeldEquipmentResolution,
+    offHandWeapon: DruidWildShapeHeldEquipmentResolution,
   }
   type DruidWildShapeProjection = {
     bonusActionAvailable: bool,
@@ -36,20 +47,42 @@ module battleRuntimeDruidWildShape {
     tempHp: int,
     equipmentDisposition: DruidWildShapeEquipmentDisposition,
   }
+  type DruidWildShapeAssumeFormResult = {
+    projection: DruidWildShapeProjection,
+    droppedEquipmentCount: int,
+  }
 
   pure def allMergedEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
     wornArmor: false,
     wornShield: false,
   }
 
-  pure def wornShieldEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
-    wornArmor: false,
-    wornShield: true,
+  pure def allMergedEquipmentResolution: DruidWildShapeEquipmentResolution = {
+    armor: EquipmentMerged,
+    shield: EquipmentMerged,
+    mainWeapon: HeldEquipmentMerged,
+    offHandWeapon: HeldEquipmentMerged,
   }
 
-  pure def wornArmorEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
-    wornArmor: true,
-    wornShield: false,
+  pure def wornShieldEquipmentDisposition: DruidWildShapeEquipmentResolution = {
+    armor: EquipmentMerged,
+    shield: EquipmentWorn,
+    mainWeapon: HeldEquipmentMerged,
+    offHandWeapon: HeldEquipmentMerged,
+  }
+
+  pure def wornArmorEquipmentDisposition: DruidWildShapeEquipmentResolution = {
+    armor: EquipmentWorn,
+    shield: EquipmentMerged,
+    mainWeapon: HeldEquipmentMerged,
+    offHandWeapon: HeldEquipmentMerged,
+  }
+
+  pure def fallenShieldEquipmentDisposition: DruidWildShapeEquipmentResolution = {
+    armor: EquipmentMerged,
+    shield: EquipmentFell,
+    mainWeapon: HeldEquipmentMerged,
+    offHandWeapon: HeldEquipmentMerged,
   }
 
   pure def initialProjection: DruidWildShapeProjection = {
@@ -121,6 +154,47 @@ module battleRuntimeDruidWildShape {
             data.replacementForm.armorClass
         ) + (if (state.equipmentDisposition.wornShield) shieldArmorClassBonus else 0)
     }
+
+  pure def resolvedWearableEquipmentIsWorn(
+    disposition: DruidWildShapeWearableEquipmentResolution,
+  ): bool =
+    match disposition {
+      | EquipmentMerged => false
+      | EquipmentWorn => true
+      | EquipmentFell => false
+    }
+
+  pure def wearableEquipmentFell(
+    disposition: DruidWildShapeWearableEquipmentResolution,
+  ): int =
+    match disposition {
+      | EquipmentMerged => 0
+      | EquipmentWorn => 0
+      | EquipmentFell => 1
+    }
+
+  pure def heldEquipmentFell(
+    disposition: DruidWildShapeHeldEquipmentResolution,
+  ): int =
+    match disposition {
+      | HeldEquipmentMerged => 0
+      | HeldEquipmentFell => 1
+    }
+
+  pure def droppedEquipmentOutcomeCount(
+    disposition: DruidWildShapeEquipmentResolution,
+  ): int =
+    wearableEquipmentFell(disposition.armor)
+      + wearableEquipmentFell(disposition.shield)
+      + heldEquipmentFell(disposition.mainWeapon)
+      + heldEquipmentFell(disposition.offHandWeapon)
+
+  pure def activeEquipmentDisposition(
+    resolution: DruidWildShapeEquipmentResolution,
+  ): DruidWildShapeEquipmentDisposition = {
+    wornArmor: resolvedWearableEquipmentIsWorn(resolution.armor),
+    wornShield: resolvedWearableEquipmentIsWorn(resolution.shield),
+  }
 
   pure def projectedSize(state: DruidWildShapeProjection): str =
     match state.activeForm {
@@ -225,12 +299,12 @@ module battleRuntimeDruidWildShape {
     state: DruidWildShapeProjection,
     form: DruidWildShapeFormFacts,
   ): DruidWildShapeProjection =
-    assumeFormWithEquipment(state, form, allMergedEquipmentDisposition)
+    assumeFormWithEquipment(state, form, allMergedEquipmentResolution)
 
   pure def assumeFormWithEquipment(
     state: DruidWildShapeProjection,
     form: DruidWildShapeFormFacts,
-    equipmentDisposition: DruidWildShapeEquipmentDisposition,
+    equipmentDisposition: DruidWildShapeEquipmentResolution,
   ): DruidWildShapeProjection =
     if (canAssumeForm(state)) {
       bonusActionAvailable: false,
@@ -240,8 +314,21 @@ module battleRuntimeDruidWildShape {
         replacementForm: form,
       }),
       tempHp: if (state.tempHp > 2) state.tempHp else 2,
-      equipmentDisposition: equipmentDisposition,
+      equipmentDisposition: activeEquipmentDisposition(equipmentDisposition),
     } else state
+
+  pure def assumeFormWithEquipmentResult(
+    state: DruidWildShapeProjection,
+    form: DruidWildShapeFormFacts,
+    equipmentDisposition: DruidWildShapeEquipmentResolution,
+  ): DruidWildShapeAssumeFormResult =
+    if (canAssumeForm(state)) {
+      projection: assumeFormWithEquipment(state, form, equipmentDisposition),
+      droppedEquipmentCount: droppedEquipmentOutcomeCount(equipmentDisposition),
+    } else {
+      projection: state,
+      droppedEquipmentCount: 0,
+    }
 
   pure def dismissForm(state: DruidWildShapeProjection): DruidWildShapeProjection =
     if (canDismissForm(state)) {

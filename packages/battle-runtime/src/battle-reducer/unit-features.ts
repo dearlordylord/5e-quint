@@ -133,7 +133,9 @@ import { scoreModifier } from "./domain-helpers.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
+  type ResolvedWildShapeEquipmentDisposition,
   validateWildShapeEquipmentDispositionFill,
+  wildShapeActiveEquipmentDispositions,
   wildShapeAllMergedEquipmentDisposition,
   wildShapeLoadoutObjectRefs,
 } from "./wild-shape-equipment.ts";
@@ -148,6 +150,7 @@ import type {
   BardicInspirationFailedD20TestResolutionInput,
   BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleWildShapeEquipmentDispositionHole,
   BattleHitPointHealingPoolDistributionHole,
@@ -1460,7 +1463,9 @@ export function resolveDruidWildShapeUnitFeature(
     actor: nextActor,
     unitId: subject.unitId,
     form,
-    equipmentDisposition: equipmentDisposition.dispositions,
+    equipmentDisposition: wildShapeActiveEquipmentDispositions(
+      equipmentDisposition.dispositions,
+    ),
     formResources: statBlockResourceState(form.statBlock),
     profile: unitFeature,
   });
@@ -1468,7 +1473,48 @@ export function resolveDruidWildShapeUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+    ...wildShapeDroppedObjectsResultField({
+      actorId: actor.combatantId,
+      sourceUnitId: subject.unitId,
+      formStatBlockId: form.id,
+      dispositions: equipmentDisposition.dispositions,
+    }),
   };
+}
+
+function wildShapeDroppedObjectsResultField(input: {
+  readonly actorId: BattleDroppedObjectOutcome["actorId"];
+  readonly sourceUnitId: Extract<
+    BattleDroppedObjectOutcome["source"],
+    { readonly kind: "druidWildShape" }
+  >["sourceUnitId"];
+  readonly formStatBlockId: Extract<
+    BattleDroppedObjectOutcome["source"],
+    { readonly kind: "druidWildShape" }
+  >["formStatBlockId"];
+  readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
+}): Pick<
+  Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+  "droppedObjects"
+> {
+  const droppedObjects = input.dispositions.flatMap(
+    (disposition): readonly BattleDroppedObjectOutcome[] =>
+      disposition.disposition === "falls"
+        ? [
+            {
+              kind: "objectDropped",
+              actorId: input.actorId,
+              objectId: disposition.item.objectId,
+              source: {
+                kind: "druidWildShape",
+                sourceUnitId: input.sourceUnitId,
+                formStatBlockId: input.formStatBlockId,
+              },
+            },
+          ]
+        : [],
+  );
+  return droppedObjects.length === 0 ? {} : { droppedObjects };
 }
 
 export function resolveBardicInspirationGrantUnitFeature(

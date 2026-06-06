@@ -840,11 +840,21 @@ export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
 // Effect Schema encodes branded ids as plain strings at the JSON boundary; the
 // decoder restores the domain brands before the value reaches runtime code.
 export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
-  kind: Schema.Literal("heldObjectDropped"),
+  kind: Schema.Literal("objectDropped"),
   actorId: CombatantId,
   objectId: BattleObjectId,
-  sourceCombatantId: CombatantId,
-  sourceSpellId: SpellId,
+  source: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("spell"),
+      sourceCombatantId: CombatantId,
+      sourceSpellId: SpellId,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("druidWildShape"),
+      sourceUnitId: Schema.String,
+      formStatBlockId: Schema.String,
+    }),
+  ),
 }) as unknown as Schema.Schema<BattleDroppedObjectOutcome>;
 
 // Effect Schema encodes branded ids as plain strings at the JSON boundary; the

@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Wild Shape fallen-equipment object boundary"
     },
     {
@@ -113,7 +113,7 @@ repair branch state by rebasing against `master`.
 |     1 | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Implement the projection described by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`.                                           |
 |     2 | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER         | done                                          | none                                                                                                                                                                                                                           | Implemented merge-only disposition owner, selected-loadout object refs, active-effect storage, and all-merged no-effect preservation. |
 |     3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT    | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted practical worn armor/Shield effective-loadout projection.                                                                    |
-|     4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY    | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Keep fallen equipment at an explicit object/table boundary before accepting `falls` disposition.                                      |
+|     4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY    | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Fallen equipment now emits explicit dropped-object outcomes without adding table placement state.                                     |
 |     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | ready-for-research                            | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Audit remaining merged-equipment parity/coverage after Task 2's merge-only active storage and no-effect behavior.                     |
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Close or promote object/Utilize consumers that need form-limb witnesses.                                                              |
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | ready-for-research                            | none                                                                                                                                                                                                                           | Replace stale dependency text with an explicit owner-decision blocker.                                                                |
@@ -178,6 +178,16 @@ Landed scope:
 ### Task 4 - L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY
 
 Promote fallen-equipment outcomes only at the explicit object/table boundary.
+
+Landed scope:
+
+- Production Wild Shape resolution accepts `falls` equipment choices and
+  not-practical-to-wear fallbacks, emits transient `droppedObjects` outcomes
+  sourced to Wild Shape, and keeps fallen equipment out of active worn/merged
+  effect disposition.
+- Downstream table placement/use, form-limb object handling, worn weapons,
+  held objects, and non-resizing/non-reshaping behavior remain Task 6/follow-up
+  object work.
 
 ### Task 5 - L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY
 

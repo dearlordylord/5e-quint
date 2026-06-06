@@ -473,7 +473,7 @@ test("projects practical worn Wild Shape armor into the effective loadout", () =
   );
 });
 
-test("rejects fallen Wild Shape equipment until fallen-object boundary support exists", () => {
+test("returns Wild Shape fallen equipment at the explicit object boundary", () => {
   const initial = druidWildShapeBattle({
     selectedLoadout: {
       shield: {
@@ -498,7 +498,7 @@ test("rejects fallen Wild Shape equipment until fallen-object boundary support e
     throw new Error("Expected shield disposition candidate.");
   }
 
-  expect(
+  const resolved = requireResolved(
     resolveDruidWildShape(initial, subject, [
       wildShapeDispositionFill(dispositionHole, [
         {
@@ -507,15 +507,28 @@ test("rejects fallen Wild Shape equipment until fallen-object boundary support e
         },
       ]),
     ]),
-  ).toMatchObject({
-    tag: "invalid",
-    reason: "invalidFill",
-    message:
-      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
-  });
+  );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  const effect = activeDruidWildShapeEffect(activeDruid);
+  expect(effect?.equipmentDisposition).toEqual([]);
+  expect(resolved.droppedObjects).toEqual([
+    {
+      kind: "objectDropped",
+      actorId: druidId,
+      objectId: shield.objectId,
+      source: {
+        kind: "druidWildShape",
+        sourceUnitId: subject.unitId,
+        formStatBlockId: ridingHorseId,
+      },
+    },
+  ]);
+  expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
+    11,
+  );
 });
 
-test("rejects invalid Wild Shape equipment disposition choices and converts impossible worn choices to merge fallback", () => {
+test("rejects invalid Wild Shape equipment disposition choices and converts impossible worn choices to RAW fallback", () => {
   const candidates = wildShapeLoadoutObjectRefs({
     armor: {
       itemId: "armor:equipment_leather",
@@ -595,9 +608,11 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
       },
     }),
   ).toEqual({
-    tag: "invalid",
-    message:
-      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
+    tag: "valid",
+    dispositions: [
+      { item: armor, disposition: "merges" },
+      { item: shield, disposition: "falls" },
+    ],
   });
 
   expect(

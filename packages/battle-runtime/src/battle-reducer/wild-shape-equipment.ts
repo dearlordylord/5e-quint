@@ -81,6 +81,12 @@ export type ActiveWildShapeEquipmentDisposition =
       readonly item: WildShapeWornLoadoutObjectRef;
       readonly disposition: "worn";
     };
+export type ResolvedWildShapeEquipmentDisposition =
+  | ActiveWildShapeEquipmentDisposition
+  | {
+      readonly item: WildShapeLoadoutObjectRef;
+      readonly disposition: "falls";
+    };
 
 export type WildShapeEquipmentDispositionFillValue = {
   readonly choices: readonly WildShapeEquipmentDispositionChoice[];
@@ -138,7 +144,7 @@ export function wildShapeAllMergedEquipmentDisposition(
 export type WildShapeEquipmentDispositionValidation =
   | {
       readonly tag: "valid";
-      readonly dispositions: readonly ActiveWildShapeEquipmentDisposition[];
+      readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -179,7 +185,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
     };
   }
 
-  const dispositions: ActiveWildShapeEquipmentDisposition[] = [];
+  const dispositions: ResolvedWildShapeEquipmentDisposition[] = [];
   for (const candidate of input.candidates) {
     const choice = choicesByKey.get(wildShapeLoadoutObjectKey(candidate));
     if (choice === undefined) {
@@ -189,7 +195,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
           "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
       };
     }
-    const disposition = activeDispositionForChoice(choice);
+    const disposition = resolvedDispositionForChoice(choice);
     if (disposition.tag === "invalid") {
       return disposition;
     }
@@ -202,18 +208,24 @@ export function validateWildShapeEquipmentDispositionFill(input: {
   };
 }
 
-function activeDispositionForChoice(
+function resolvedDispositionForChoice(
   choice: WildShapeEquipmentDispositionChoice,
 ):
   | {
       readonly tag: "valid";
-      readonly value: ActiveWildShapeEquipmentDisposition;
+      readonly value: ResolvedWildShapeEquipmentDisposition;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
       if (choice.practicality.fallback === "falls") {
-        return unsupportedFallenEquipmentDisposition();
+        return {
+          tag: "valid",
+          value: {
+            item: choice.item,
+            disposition: "falls",
+          },
+        };
       }
       return {
         tag: "valid",
@@ -235,7 +247,13 @@ function activeDispositionForChoice(
     };
   }
   if (choice.disposition === "falls") {
-    return unsupportedFallenEquipmentDisposition();
+    return {
+      tag: "valid",
+      value: {
+        item: choice.item,
+        disposition: "falls",
+      },
+    };
   }
   return {
     tag: "valid",
@@ -243,17 +261,6 @@ function activeDispositionForChoice(
       item: choice.item,
       disposition: "merges",
     },
-  };
-}
-
-function unsupportedFallenEquipmentDisposition(): {
-  readonly tag: "invalid";
-  readonly message: string;
-} {
-  return {
-    tag: "invalid",
-    message:
-      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
   };
 }
 
@@ -266,6 +273,15 @@ function unsupportedWornEquipmentDisposition(): {
     message:
       "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require form-limb object support.",
   };
+}
+
+export function wildShapeActiveEquipmentDispositions(
+  dispositions: readonly ResolvedWildShapeEquipmentDisposition[],
+): readonly ActiveWildShapeEquipmentDisposition[] {
+  return dispositions.flatMap(
+    (disposition): readonly ActiveWildShapeEquipmentDisposition[] =>
+      disposition.disposition === "falls" ? [] : [disposition],
+  );
 }
 
 export function wildShapeEquipmentDispositionWearsKind(
