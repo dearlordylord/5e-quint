@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-missed-spell-attack-reroll unit-feature.metamagic-damage-dice-reroll
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
 import {
   canSpendAction,
@@ -8,12 +8,21 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { resourceCount } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  DieRollResult,
+  resourceCount,
+} from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
+  SupportedSpellInvocation,
+} from "./battle-reducer.ts";
+import {
+  EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
 } from "./battle-reducer.ts";
 import {
   type AvailableBattleAct,
@@ -29,20 +38,20 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  admitSpellMetamagicApplications,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
-  DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
-  EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
+  subtleSpellComponentProjectionForApplications,
   SUBTLE_METAMAGIC_EFFECT_KIND,
-  SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+  spellMetamagicApplications,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
@@ -54,8 +63,10 @@ import {
   combatantId,
   attackRollFill,
   damageRollFillWithGroups,
+  fighterVsGoblinBattle,
   fighterId,
   findHole,
+  goblinId,
   partySide,
   requireResolved,
   resolveBattleSubject,
@@ -64,10 +75,12 @@ import {
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
+  testCharacterD20Statistics,
   unitLibrary,
   wizardId,
   wizardSpellcasting,
   spellRecord,
+  testDaggerAttack,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
@@ -1093,27 +1106,21 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
   });
 
-  test("explicitly closes cast-property Metamagic options before Sorcery Point spending", () => {
+  test("explicitly closes unpromoted cast-property Metamagic options before Sorcery Point spending", () => {
     const state = metamagicBattle({
-      knownOptions: [
-        distantMetamagicOption(),
-        extendedMetamagicOption(),
-        subtleMetamagicOption(),
-      ],
+      knownOptions: [distantMetamagicOption(), extendedMetamagicOption()],
     });
 
     for (const closure of [
       {
         effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
-        message: DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
+        message:
+          "Distant Spell is supported only for spell target procedures that consume a cast-local range fact.",
       },
       {
         effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
-        message: EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
-      },
-      {
-        effectKind: SUBTLE_METAMAGIC_EFFECT_KIND,
-        message: SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+        message:
+          "Extended Spell is supported only for spells with a timed or Concentration duration of at least 1 minute.",
       },
     ] as const) {
       expect(
@@ -1131,6 +1138,150 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       });
     }
 
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("projects selected Subtle Spell components at the Spell Invocation boundary", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: [
+        "cure_wounds",
+        "false_life",
+        "chromatic_orb",
+        "protection_from_evil_and_good",
+      ],
+    });
+
+    const cureWounds = supportedInvocationFor(
+      state,
+      "cure_wounds",
+      "directHitPointRestoration",
+    );
+    expect(
+      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [],
+    });
+
+    const falseLife = supportedInvocationFor(state, "false_life", "scalarBuff");
+    const falseLifeComponents = falseLife.spell.mechanics.components;
+    expect(admittedSubtleProjection(state, falseLife, "scalarBuff")).toEqual({
+      suppressedComponents: [
+        { kind: "verbal" },
+        { kind: "somatic" },
+        { kind: "material" },
+      ],
+      preservedComponents: [],
+    });
+    expect(falseLife.spell.mechanics.components).toEqual(falseLifeComponents);
+
+    const chromaticOrb = supportedInvocationFor(
+      state,
+      "chromatic_orb",
+      "chainedSpellAttackDamage",
+    );
+    expect(
+      admittedSubtleProjection(state, chromaticOrb, "chainedSpellAttackDamage"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [
+        {
+          kind: "material",
+          material: {
+            kind: "genericMaterial",
+            material: "a diamond worth 50+ GP",
+            preservation: { kind: "priced", costGp: 50 },
+          },
+        },
+      ],
+    });
+
+    const protectionFromEvilAndGood = supportedInvocationFor(
+      state,
+      "protection_from_evil_and_good",
+      "creatureTypeProtection",
+    );
+    expect(
+      admittedSubtleProjection(
+        state,
+        protectionFromEvilAndGood,
+        "creatureTypeProtection",
+      ),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [
+        {
+          kind: "material",
+          material: {
+            kind: "genericMaterial",
+            material: "a flask of Holy Water",
+            preservation: { kind: "consumed", costGp: 25 },
+          },
+        },
+      ],
+    });
+  });
+
+  test("keeps selected Subtle Spell out of payloadless Metamagic applications", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["cure_wounds"],
+    });
+    const actor = requireBattleCreature(state, wizardId);
+    const cureWounds = supportedInvocationFor(
+      state,
+      "cure_wounds",
+      "directHitPointRestoration",
+    );
+
+    expect(
+      spellMetamagicApplications(actor, [
+        { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+      ]),
+    ).toEqual([]);
+    expect(
+      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [],
+    });
+  });
+
+  test("rejects Subtle Spell outside action-time spell casts before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["healing_word"],
+    });
+    const healingWord = supportedInvocationFor(
+      state,
+      "healing_word",
+      "directHitPointRestoration",
+    );
+    const actor = requireBattleCreature(state, wizardId);
+
+    expect(
+      admitSpellMetamagicApplications({
+        state,
+        actor,
+        actorId: wizardId,
+        invocation: healingWord,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "healing_word",
+            1,
+            "directHitPointRestoration",
+          ),
+          mode: { tag: "cast" },
+          metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+        },
+      }),
+    ).toEqual({
+      tag: "spellMetamagicAdmissionIssue",
+      message: "Subtle Spell is supported only for action-time spell casts.",
+    });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
@@ -1536,6 +1687,877 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     }
 
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Empowered Spell opens on Ray of Frost spell damage and spends only when replacement dice are used", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      spellDamageRerolls: [
+        {
+          effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+          label: "Empowered Spell",
+          sorceryPointCost: resourceCount(1),
+          maximumSelectedDice: 3,
+        },
+      ],
+    });
+
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [target, attackRoll, damageRollFillWithGroups(damage, [[4, 3]])],
+      }),
+    ).state;
+    expect(sorceryPointsRemaining(declined)).toBe(resourceCount(4));
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[8, 8]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(1);
+  });
+
+  test("Empowered Spell stays closed for spell attack damage carrying marked riders", () => {
+    const state = withActiveEffect(
+      saveMetamagicBattle({
+        knownOptions: [empoweredMetamagicOption()],
+      }),
+      wizardId,
+      {
+        kind: "spellMarkedDamageRider",
+        sourceSpellId: spellRecord("hunters_mark").id,
+        sourceCombatantId: wizardId,
+        targetCombatantId: skeletonId,
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "sameTurn",
+        },
+        abilityCheckBehavior: { kind: "none" },
+        damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+        },
+      },
+    );
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      spellMarkedDamageRiders: [
+        expect.objectContaining({
+          kind: "spellMarkedDamageRider",
+          targetCombatantId: skeletonId,
+        }),
+      ],
+    });
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+  });
+
+  test("Empowered Spell damage reroll limit uses Charisma rather than the spellcasting modifier", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+      d20Statistics: testCharacterD20Statistics({ cha: 12 }),
+      spellcastingAbilityModifier: 3,
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      spellDamageRerolls: [
+        {
+          effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+          maximumSelectedDice: 1,
+        },
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[4, 3]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(4),
+                replacement: DieRollResult(8),
+              },
+              {
+                groupIndex: 0,
+                resultIndex: 1,
+                original: DieRollResult(3),
+                replacement: DieRollResult(8),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Empowered Spell can reroll damage after a different Metamagic option modified the spell", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[8, 8]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 1,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(1));
+  });
+
+  test("Empowered Spell damage reroll fill rejects unknown, unaffordable, mismatched, and over-limit selections before spending", () => {
+    const cases = [
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [quickenedMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+          sorceryPoints: 0,
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(0),
+        message:
+          "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(3),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell selected original dice must match the pending spell damage roll.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+        }),
+        attack: { total: 20, naturalD20: 20 },
+        roll: [[1, 2, 3, 4]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(1),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 1,
+            original: DieRollResult(2),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 2,
+            original: DieRollResult(3),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 3,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.",
+      },
+    ] as const;
+
+    for (const entry of cases) {
+      const act = actionRayOfFrostAct(entry.state);
+      const target = targetFill(
+        findHole(act.initialHoles, "targetChoice"),
+        skeletonId,
+      );
+      const attack = nextSpellHole(
+        entry.state,
+        act.subject,
+        [target],
+        "attackRoll",
+      );
+      const attackRoll = attackRollFill(attack, entry.attack);
+      const damage = nextSpellHole(
+        entry.state,
+        act.subject,
+        [target, attackRoll],
+        "rolledDice",
+      );
+
+      expect(
+        resolveBattleSubject({
+          state: entry.state,
+          subject: act.subject,
+          fills: [
+            target,
+            attackRoll,
+            empoweredDamageRollFill(damage, entry.roll, {
+              kind: "reroll",
+              effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+              dice: entry.rerolledDice,
+            }),
+          ],
+        }),
+      ).toMatchObject({ tag: "invalid", message: entry.message });
+      expect(sorceryPointsRemaining(entry.state)).toBe(
+        entry.expectedSorceryPoints,
+      );
+    }
+  });
+
+  test("Empowered Spell stays closed for Scorching Ray attack sequences until invocation-local one-use accounting exists", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = actionScorchingRayAct(state);
+    const fills: BattleFill[] = [];
+    for (const target of targetChoiceHoles(act.initialHoles)) {
+      fills.push(
+        spellAttackSequenceTargetFill(target, skeletonId, "scorching_ray"),
+      );
+    }
+    const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [...fills, attackRoll],
+      "rolledDice",
+    );
+
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          ...fills,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[4, 3]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(4),
+                replacement: DieRollResult(8),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Seeking Spell opens after a missed Ray of Frost spell attack and spends only when the forced replacement roll is used", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [seekingMetamagicOption()],
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const missedAttack = attackRollFill(attack, { total: 5, naturalD20: 2 });
+
+    const awaitingSeeking = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, missedAttack],
+    });
+    expect(awaitingSeeking.tag).toBe("needsHoles");
+    const seekingHole = findHole(
+      awaitingSeeking.tag === "needsHoles" ? awaitingSeeking.holes : [],
+      "attackRoll",
+    );
+    expect(seekingHole).toMatchObject({
+      spellAttackRerolls: [
+        {
+          effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+          label: "Seeking Spell",
+          sorceryPointCost: resourceCount(1),
+        },
+      ],
+    });
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRollFill(seekingHole, {
+            total: 5,
+            naturalD20: 2,
+            spellAttackReroll: {
+              kind: "decline",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+            },
+          }),
+        ],
+      }),
+    ).state;
+    expect(sorceryPointsRemaining(declined)).toBe(resourceCount(4));
+
+    const rerolledAttack = attackRollFill(seekingHole, {
+      total: 5,
+      naturalD20: 2,
+      spellAttackReroll: {
+        kind: "reroll",
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        replacement: { total: 15, naturalD20: DieRollResult(10) },
+      },
+    });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, rerolledAttack],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          rerolledAttack,
+          damageRollFillWithGroups(damage, [[4, 3]]),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
+  });
+
+  test("Seeking Spell can reroll a miss after a different Metamagic option modified the spell", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption(), seekingMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const missedAttack = attackRollFill(attack, { total: 5, naturalD20: 2 });
+    const seeking = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, missedAttack],
+    });
+    const seekingHole = findHole(
+      seeking.tag === "needsHoles" ? seeking.holes : [],
+      "attackRoll",
+    );
+    const rerolledAttack = attackRollFill(seekingHole, {
+      total: 5,
+      naturalD20: 2,
+      spellAttackReroll: {
+        kind: "reroll",
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        replacement: { total: 15, naturalD20: DieRollResult(10) },
+      },
+    });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, rerolledAttack],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          rerolledAttack,
+          damageRollFillWithGroups(damage, [[4, 3]]),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(1));
+  });
+
+  test("Seeking Spell does not open when a different Metamagic makes the combined Sorcery Point cost unaffordable", () => {
+    const state = saveMetamagicBattle({
+      sorceryPoints: 2,
+      knownOptions: [quickenedMetamagicOption(), seekingMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const missedAttack = attackRollFill(attack, { total: 5, naturalD20: 2 });
+
+    const resolvedMiss = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [target, missedAttack],
+      }),
+    ).state;
+    expect(sorceryPointsRemaining(resolvedMiss)).toBe(resourceCount(0));
+
+    const maliciousSeekingFill = attackRollFill(attack, {
+      total: 5,
+      naturalD20: 2,
+      spellAttackReroll: {
+        kind: "reroll",
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        replacement: { total: 15, naturalD20: DieRollResult(10) },
+      },
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [target, maliciousSeekingFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Seeking Spell requires enough unexpended Sorcery Points for all Metamagic options used on this spell.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(2));
+  });
+
+  test("Seeking Spell replacement miss and natural 1 replacement miss are final after spending", () => {
+    for (const replacement of [
+      { total: 5, naturalD20: DieRollResult(2) },
+      { total: 30, naturalD20: DieRollResult(1) },
+    ] as const) {
+      const state = saveMetamagicBattle({
+        knownOptions: [seekingMetamagicOption()],
+      });
+      const act = actionRayOfFrostAct(state);
+      const target = targetFill(
+        findHole(act.initialHoles, "targetChoice"),
+        skeletonId,
+      );
+      const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+      const missedAttack = attackRollFill(attack, {
+        total: 5,
+        naturalD20: 2,
+      });
+      const seeking = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [target, missedAttack],
+      });
+      const seekingHole = findHole(
+        seeking.tag === "needsHoles" ? seeking.holes : [],
+        "attackRoll",
+      );
+      const rerolledAttack = attackRollFill(seekingHole, {
+        total: 5,
+        naturalD20: 2,
+        spellAttackReroll: {
+          kind: "reroll",
+          effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+          replacement,
+        },
+      });
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [target, rerolledAttack],
+        }),
+      ).state;
+
+      expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
+    }
+  });
+
+  test("Seeking Spell replacement critical opens a critical spell damage hole", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [seekingMetamagicOption()],
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const missedAttack = attackRollFill(attack, { total: 5, naturalD20: 2 });
+    const seeking = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, missedAttack],
+    });
+    const seekingHole = findHole(
+      seeking.tag === "needsHoles" ? seeking.holes : [],
+      "attackRoll",
+    );
+    const rerolledAttack = attackRollFill(seekingHole, {
+      total: 5,
+      naturalD20: 2,
+      spellAttackReroll: {
+        kind: "reroll",
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        replacement: { total: 20, naturalD20: DieRollResult(20) },
+      },
+    });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, rerolledAttack],
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({ kind: "rolledDice", critical: true });
+  });
+
+  test("Seeking Spell reroll fill rejects unknown, unaffordable, and non-missed spell attacks before spending", () => {
+    const cases = [
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [quickenedMetamagicOption()],
+        }),
+        attack: { total: 5, naturalD20: 2 },
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [seekingMetamagicOption()],
+          sorceryPoints: 0,
+        }),
+        attack: { total: 5, naturalD20: 2 },
+        expectedSorceryPoints: resourceCount(0),
+        message:
+          "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [seekingMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        expectedSorceryPoints: resourceCount(4),
+        message: "Seeking Spell can reroll only a missed spell attack roll.",
+      },
+    ] as const;
+
+    for (const entry of cases) {
+      const act = actionRayOfFrostAct(entry.state);
+      const target = targetFill(
+        findHole(act.initialHoles, "targetChoice"),
+        skeletonId,
+      );
+      const attack = nextSpellHole(
+        entry.state,
+        act.subject,
+        [target],
+        "attackRoll",
+      );
+      const rerolledAttack = attackRollFill(attack, {
+        total: entry.attack.total,
+        naturalD20: entry.attack.naturalD20,
+        spellAttackReroll: {
+          kind: "reroll",
+          effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+          replacement: { total: 15, naturalD20: DieRollResult(10) },
+        },
+      });
+
+      expect(
+        resolveBattleSubject({
+          state: entry.state,
+          subject: act.subject,
+          fills: [target, rerolledAttack],
+        }),
+      ).toMatchObject({ tag: "invalid", message: entry.message });
+      expect(sorceryPointsRemaining(entry.state)).toBe(
+        entry.expectedSorceryPoints,
+      );
+    }
+  });
+
+  test("Seeking Spell does not open for Scorching Ray attack sequences until invocation-local one-use accounting exists", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [seekingMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = actionScorchingRayAct(state);
+    const fills: BattleFill[] = [];
+    for (const target of targetChoiceHoles(act.initialHoles)) {
+      fills.push(
+        spellAttackSequenceTargetFill(target, skeletonId, "scorching_ray"),
+      );
+    }
+    const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
+
+    expect(attack).not.toHaveProperty("spellAttackRerolls");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          ...fills,
+          attackRollFill(attack, {
+            total: 5,
+            naturalD20: 2,
+            spellAttackReroll: {
+              kind: "decline",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
+    });
+  });
+
+  test("weapon attack rolls reject inert Seeking Spell reroll fills", () => {
+    const state = fighterVsGoblinBattle({ attack: testDaggerAttack() });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Attack action act.");
+    }
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      goblinId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRollFill(attack, {
+            total: 5,
+            naturalD20: 2,
+            spellAttackReroll: {
+              kind: "decline",
+              effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
+    });
+  });
+
+  test("weapon attack damage rejects inert Empowered Spell reroll fills", () => {
+    const state = fighterVsGoblinBattle({ attack: testDaggerAttack() });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Attack action act.");
+    }
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      goblinId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[3]]);
+    if (damageFill.kind !== "rolledDice") {
+      throw new Error("Expected weapon damage roll fill.");
+    }
+
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          {
+            ...damageFill,
+            spellDamageReroll: {
+              kind: "reroll",
+              effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+              dice: [
+                {
+                  groupIndex: 0,
+                  resultIndex: 0,
+                  original: DieRollResult(3),
+                  replacement: DieRollResult(1),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+    });
   });
 
   test("blocks Quickened spells after this turn has already cast a level 1+ spell", () => {
@@ -2338,6 +3360,74 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function requireBattleCreature(
+  state: BattleState,
+  id: Parameters<BattleState["combatants"]["get"]>[0],
+) {
+  const actor = state.combatants.get(id);
+  if (actor === undefined) {
+    throw new Error(`Expected combatant ${id}.`);
+  }
+  return actor;
+}
+
+type SpellSlotInvocationRefProcedure = Parameters<
+  typeof spellSlotInvocationRef
+>[2];
+
+function supportedInvocationFor(
+  state: BattleState,
+  targetSpellId: Parameters<typeof spellRecord>[0],
+  procedure: SpellSlotInvocationRefProcedure,
+): SupportedSpellInvocation {
+  const actor = requireBattleCreature(state, wizardId);
+  const invocation = supportedSpellActs(actor, state).find(
+    (candidate) =>
+      candidate.spell.id === targetSpellId && candidate.procedure === procedure,
+  );
+  if (invocation === undefined) {
+    throw new Error(`Expected ${targetSpellId} ${procedure} invocation.`);
+  }
+  return invocation;
+}
+
+function admittedSubtleProjection(
+  state: BattleState,
+  invocation: SupportedSpellInvocation,
+  procedure: SpellSlotInvocationRefProcedure,
+) {
+  if (invocation.resource.tag !== "spellSlot") {
+    throw new Error("Expected Spell Slot invocation.");
+  }
+  const admission = admitSpellMetamagicApplications({
+    state,
+    actor: requireBattleCreature(state, wizardId),
+    actorId: wizardId,
+    invocation,
+    subject: {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        invocation.spell.id,
+        Number(invocation.resource.slotLevel),
+        procedure,
+      ),
+      mode: { tag: "cast" },
+      metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+    },
+  });
+  if (admission.tag !== "ok") {
+    throw new Error(`Expected admitted Subtle Spell: ${admission.message}`);
+  }
+  const projection = subtleSpellComponentProjectionForApplications(
+    admission.applications,
+  );
+  if (projection === null) {
+    throw new Error("Expected Subtle Spell component projection.");
+  }
+  return projection;
+}
+
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
@@ -2445,13 +3535,7 @@ function mirrorImageDuplicatesRemaining(
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
-  readonly preparedSpells?: readonly (
-    | "cure_wounds"
-    | "false_life"
-    | "healing_word"
-    | "hellish_rebuke"
-    | "magic_missile"
-  )[];
+  readonly preparedSpells?: readonly Parameters<typeof spellRecord>[0][];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-quickened"),
@@ -2508,6 +3592,8 @@ function saveMetamagicBattle(input: {
     readonly spellLevel: 1 | 2;
     readonly count: number;
   }[];
+  readonly d20Statistics?: ReturnType<typeof testCharacterD20Statistics>;
+  readonly spellcastingAbilityModifier?: number;
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-save"),
@@ -2519,6 +3605,8 @@ function saveMetamagicBattle(input: {
         side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
+        d20Statistics:
+          input.d20Statistics ?? testCharacterD20Statistics({ cha: 16 }),
         currentHp: 18,
         maxHp: 18,
         resources: [
@@ -2540,6 +3628,13 @@ function saveMetamagicBattle(input: {
             ),
             spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
           }),
+          ...(input.spellcastingAbilityModifier === undefined
+            ? {}
+            : {
+                spellcastingAbilityModifier: abilityModifier(
+                  input.spellcastingAbilityModifier,
+                ),
+              }),
           sourceClassName: "sorcerer",
         },
       }),
@@ -2966,6 +4061,56 @@ function transmutedScorchingRayToPoisonAct(
   return act;
 }
 
+function actionRayOfFrostAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        AvailableBattleAct["subject"],
+        { readonly tag: "actionSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "ray_of_frost" &&
+      candidate.subject.invocation.procedure === "spellAttackDamage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ray of Frost action spell act.");
+  }
+  return act;
+}
+
+function actionScorchingRayAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        AvailableBattleAct["subject"],
+        { readonly tag: "actionSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "scorching_ray" &&
+      candidate.subject.invocation.procedure === "spellAttackSequence",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Scorching Ray action spell act.");
+  }
+  return act;
+}
+
 function targetChoiceHoles(
   holes: readonly BattleHole[],
 ): Extract<BattleHole, { readonly kind: "targetChoice" }>[] {
@@ -2987,6 +4132,23 @@ function nextSpellHole(
     throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
   }
   return findHole(result.holes, kind);
+}
+
+function empoweredDamageRollFill(
+  hole: BattleHole,
+  groups: readonly (readonly number[])[],
+  spellDamageReroll: NonNullable<
+    Extract<BattleFill, { readonly kind: "rolledDice" }>["spellDamageReroll"]
+  >,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const damageRoll = damageRollFillWithGroups(hole, groups);
+  if (damageRoll.kind !== "rolledDice") {
+    throw new Error("Expected rolledDice fill.");
+  }
+  return {
+    ...damageRoll,
+    spellDamageReroll,
+  };
 }
 
 function assertTransmutedDamageHole(damageHole: BattleHole): void {
@@ -3156,6 +4318,7 @@ function isQuickenedRayOfFrostAct(
   return (
     candidate.subject.tag === "bonusActionSpell" &&
     candidate.subject.invocation.spellId === "ray_of_frost" &&
+    candidate.subject.metamagic?.length === 1 &&
     candidate.subject.metamagic?.some(
       (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
     ) === true

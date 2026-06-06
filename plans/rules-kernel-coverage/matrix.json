@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 108,
-    "covered": 102,
+    "total": 113,
+    "covered": 107,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 78,
+      "battle": 83,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 102,
+      "covered": 107,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -979,6 +979,126 @@
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
       ],
       "title": "Battle Twinned Spell Metamagic admits known selected target-count spell modifications, enforces Sorcery Point affordability, preserves actual Spell Slot level, increases effective spell level by 1, and projects one additional creature target"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-cast-range-increase"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Range",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Light",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Vision and Light"
+      ],
+      "title": "Battle Distant Spell Metamagic admits known selected range modifications, enforces Sorcery Point affordability, derives a cast-local range fact, and applies it only through promoted range-bearing target witnesses"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-cast-duration-and-concentration"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Extended Spell",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Duration",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce",
+        "UBIQUITOUS_LANGUAGE.md#Duration",
+        "UBIQUITOUS_LANGUAGE.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
+      ],
+      "title": "Battle Extended Spell Metamagic admits known selected duration modifications, enforces Sorcery Point affordability, derives a cast-local doubled duration fact, and applies Concentration maintenance Saving Throw Advantage only to affected Concentration spell occurrences"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-cast-component-suppression"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Components",
+        ".references/srd-5.2.1/Rules-Glossary.md#Spellcasting Focus",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Subtle Spell Metamagic admits known selected component suppression, enforces Sorcery Point affordability, derives a cast-local component projection, suppresses Verbal, Somatic, and focus-replaceable Material components, and preserves priced or consumed Material requirements"
     },
     {
       "id": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
@@ -3600,6 +3720,90 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Pilot slice - minimal creature-vs-creature attack interleaving with bounded HP state, per-action nondet damage and hit, and HP damage application via the SHARED.HIT_POINTS.POSITIVE_DAMAGE atomic"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-missed-spell-attack-reroll"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Seeking Spell",
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
+        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Attack Roll"
+      ],
+      "title": "Battle Seeking Spell Metamagic admits missed single spell attack rerolls, enforces known-option, Sorcery Point affordability, and different-Metamagic stacking gates, and resolves the forced replacement roll before damage"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-damage-dice-reroll"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell",
+        ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll",
+        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Damage Roll",
+        "UBIQUITOUS_LANGUAGE.md#Sorcery Points"
+      ],
+      "title": "Battle Empowered Spell Metamagic admits selected single spell damage dice rerolls, enforces known-option, Sorcery Point affordability, Charisma-modifier selected-die limits, and different-Metamagic stacking gates, and resolves forced replacement dice before damage"
     }
   ],
   "battleHoleFrontier": [
@@ -5850,6 +6054,24 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE"
+      ],
+      "profileId": "unit-feature.metamagic-cast-range-increase"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION"
+      ],
+      "profileId": "unit-feature.metamagic-cast-duration-and-concentration"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION"
+      ],
+      "profileId": "unit-feature.metamagic-cast-component-suppression"
+    },
+    {
+      "obligationIds": [
         "SHEET.SPELL_REST_BENEFIT.APPLICATION"
       ],
       "profileId": "character-sheet.spell-rest-benefit-application"
@@ -5890,6 +6112,18 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"
+      ],
+      "profileId": "unit-feature.metamagic-missed-spell-attack-reroll"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"
+      ],
+      "profileId": "unit-feature.metamagic-damage-dice-reroll"
     }
   ],
   "qntOwnerRoles": [
@@ -6201,8 +6435,13 @@
       "evidence": "packages/battle-runtime/battle-runtime-metamagic.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -6213,8 +6452,13 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt is the covered obligation QNT owner carrying typed Metamagic option effect-kind, stacking-mode, and Sorcery Point cost projection semantics without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -6225,8 +6469,13 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt is the covered obligation QNT owner carrying non-empty known-option, Sorcery Point affordability, and one-option-per-spell admission semantics without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -8818,7 +9067,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "proofOnly": [
@@ -8858,7 +9108,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
       "proofOnly": [
@@ -8896,7 +9147,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
       "proofOnly": [
@@ -8934,7 +9186,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
       "proofOnly": [
@@ -8972,9 +9225,127 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "set-operators"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "set-operators"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "set-operators"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
@@ -10701,6 +11072,80 @@
         "packages/battle-runtime/creature-attack.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "set-operators",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "record-update"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "set-operators",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "record-update"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -10970,10 +11415,15 @@
     "unit-feature.magic-action-healing-pool",
     "unit-feature.martial-arts-attack-projection",
     "unit-feature.metamagic-careful-save-protection",
+    "unit-feature.metamagic-cast-component-suppression",
+    "unit-feature.metamagic-cast-duration-and-concentration",
     "unit-feature.metamagic-cast-governor-quickened",
+    "unit-feature.metamagic-cast-range-increase",
+    "unit-feature.metamagic-damage-dice-reroll",
     "unit-feature.metamagic-damage-type-substitution",
     "unit-feature.metamagic-effective-level-extra-target",
     "unit-feature.metamagic-heightened-save-disadvantage",
+    "unit-feature.metamagic-missed-spell-attack-reroll",
     "unit-feature.monk-focus-battle-options",
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",

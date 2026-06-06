@@ -564,6 +564,10 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     area,
     failedTargetIds: failedTargets,
     invocation: input.invocation,
+    heightenedSpellTargetId:
+      metamagicSelections.heightenedSpellTargetId === undefined
+        ? null
+        : metamagicSelections.heightenedSpellTargetId,
   });
   return {
     tag: "resolved",
@@ -811,6 +815,7 @@ export function resolveHideousLaughterSpellAct(input: {
     input.actorId,
     failedTargets,
     input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,

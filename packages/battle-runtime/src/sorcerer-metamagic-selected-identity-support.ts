@@ -1,10 +1,12 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { resourceCount } from "@dnd/shared/types";
+import { DieRollResult, resourceCount } from "@dnd/shared/types";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
+  SEEKING_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
@@ -14,15 +16,18 @@ import {
   type BattleHole,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
+  battleLineDirectionId,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
   resolveBattleSubject,
 } from "./index.ts";
 import {
   attackRollFill,
+  battleAreaId,
   battleId,
   characterSeed,
   damageRollFillWithGroups,
+  endTurn,
   fighterId,
   findHole,
   partySide,
@@ -49,12 +54,17 @@ export type SorcererMetamagicProjection = {
     | "carefulSaveGatedDamage"
     | "carefulSaveGatedNoEffect"
     | "heightenedSaveGatedDamage"
+    | "empoweredSpellDamageReroll"
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack"
     | "quickenedSpellAttackSequence"
+    | "seekingSpellAttackReroll"
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
-    | "twinnedTargetCount";
+    | "twinnedTargetCount"
+    | "heightenedHideousLaughter"
+    | "heightenedGreaseEntrySave"
+    | "heightenedGustOfWindEndTurnSave";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -115,6 +125,120 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
         target,
         attackRoll,
         damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  ).state;
+}
+
+export function resolveSeekingRayOfFrost(state: BattleState): BattleState {
+  const act = actionRayOfFrostAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const missedAttackRoll = attackRollFill(attackRollHole, {
+    total: 5,
+    naturalD20: 2,
+  });
+  const awaitingSeeking = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, missedAttackRoll],
+  });
+  const seekingHole = findHole(
+    awaitingSeeking.tag === "needsHoles" ? awaitingSeeking.holes : [],
+    "attackRoll",
+  );
+  const rerolledAttack = attackRollFill(seekingHole, {
+    total: 5,
+    naturalD20: 2,
+    spellAttackReroll: {
+      kind: "reroll",
+      effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+      replacement: { total: 15, naturalD20: DieRollResult(10) },
+    },
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, rerolledAttack],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        rerolledAttack,
+        damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  ).state;
+}
+
+export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
+  const act = actionRayOfFrostAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const attackRoll = attackRollFill(attackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, attackRoll],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  const damageRoll = damageRollFillWithGroups(damageHole, [[8, 8]]);
+  if (damageRoll.kind !== "rolledDice") {
+    throw new Error("Expected Ray of Frost damage roll fill.");
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        attackRoll,
+        {
+          ...damageRoll,
+          spellDamageReroll: {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          },
+        },
       ],
     }),
   ).state;
@@ -270,6 +394,228 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
   ).state;
 }
 
+export function resolveHeightenedHideousLaughter(
+  state: BattleState,
+): BattleState {
+  const act = heightenedHideousLaughterAct(state);
+  const target = targetListFill(
+    act.initialHoles,
+    "Hideous Laughter targets",
+    "hideous_laughter",
+  );
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Hideous Laughter to request a save hole.",
+    );
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            outcomes: [{ targetId: skeletonId, succeeded: false }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
+export function resolveHeightenedGreaseEntrySave(state: BattleState): BattleState {
+  const act = heightenedGreaseAct(state);
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Grease to request a save hole.");
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            area: {
+              kind: "greaseGroundArea",
+              areaId: battleAreaId("heightened-grease-ground-area"),
+              originAnchorId: wizardId,
+              affectedTargetIds: [skeletonId],
+            },
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+  const targetTurn = requireResolved(
+    endTurn({ state: cast, actorId: wizardId }),
+  ).state;
+  const entryAct = discoverBattleActs(targetTurn).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.trigger === "entersArea",
+  );
+  if (entryAct === undefined) {
+    throw new Error("Expected Heightened Grease entry save act.");
+  }
+  const entryTargetId = entryAct.subject.actorId;
+  const entrySave = findHole(entryAct.initialHoles, "savingThrowOutcome");
+  if (entrySave.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Heightened Grease entry save hole.");
+  }
+  if (
+    !entrySave.targetRollModes.some(
+      (projection) =>
+        projection.targetId === entryTargetId &&
+        projection.rollMode === "disadvantage",
+    )
+  ) {
+    throw new Error(
+      "Expected Heightened Grease entry save to project Disadvantage for the selected target.",
+    );
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: entryAct.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: entrySave.holeId,
+          value: {
+            outcomes: [{ targetId: entryTargetId, succeeded: false }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
+export function resolveHeightenedGustOfWindEndTurnSave(
+  state: BattleState,
+): BattleState {
+  const act = heightenedGustOfWindAct(state);
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Gust of Wind to request a save hole.");
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const areaId = battleAreaId("heightened-gust-of-wind-line-area");
+  const directionId = battleLineDirectionId(
+    "heightened-gust-of-wind-line-north",
+  );
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            area: {
+              kind: "gustOfWindLineArea",
+              areaId,
+              directionId,
+              originAnchorId: wizardId,
+              affectedTargetIds: [skeletonId],
+              creaturePushes: [],
+            },
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+  const targetTurn = requireResolved(endTurn({ state: cast, actorId: wizardId }))
+    .state;
+  const endTurnAct = discoverBattleActs(targetTurn).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (endTurnAct === undefined) {
+    throw new Error("Expected Heightened Gust of Wind end-turn save act.");
+  }
+  const endTurnSave = findHole(endTurnAct.initialHoles, "savingThrowOutcome");
+  if (endTurnSave.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Heightened Gust of Wind end-turn save hole.");
+  }
+  if (
+    !endTurnSave.targetRollModes.some(
+      (projection) =>
+        projection.targetId === endTurnAct.subject.actorId &&
+        projection.rollMode === "disadvantage",
+    )
+  ) {
+    throw new Error(
+      "Expected Heightened Gust of Wind end-turn save to project Disadvantage for the selected target.",
+    );
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: endTurnAct.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: endTurnSave.holeId,
+          value: {
+            area: {
+              kind: "gustOfWindLineArea",
+              areaId,
+              directionId,
+              originAnchorId: wizardId,
+              affectedTargetIds: [endTurnAct.subject.actorId],
+              creaturePushes: [],
+            },
+            outcomes: [{ targetId: endTurnAct.subject.actorId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
 export function resolveTransmutedBurningHandsToPoison(
   state: BattleState,
 ): BattleState {
@@ -396,6 +742,14 @@ export function twinnedSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([twinnedMetamagicOption()]);
 }
 
+export function seekingSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([seekingMetamagicOption()]);
+}
+
+export function empoweredSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([empoweredMetamagicOption()]);
+}
+
 function sorcererMetamagicBattleWithOptions(
   knownOptions: readonly CharacterBattleMetamagicOptionFact[],
 ): BattleState {
@@ -430,8 +784,14 @@ function sorcererMetamagicBattleWithOptions(
               spellRecord("bless"),
               spellRecord("burning_hands"),
               spellRecord("command"),
+              spellRecord("grease"),
+              spellRecord("gust_of_wind"),
+              spellRecord("hideous_laughter"),
             ],
-            spellSlots: [{ spellLevel: 1, count: 3 }],
+            spellSlots: [
+              { spellLevel: 1, count: 3 },
+              { spellLevel: 2, count: 1 },
+            ],
           }),
           sourceClassName: "sorcerer",
         },
@@ -494,6 +854,22 @@ function twinnedMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
     effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
     stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function seekingMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+    stackingMode: "can_combine_with_different_metamagic",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function empoweredMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "can_combine_with_different_metamagic",
     sorceryPointCost: resourceCount(1),
   };
 }
@@ -597,6 +973,18 @@ type ActionSpellAct = AvailableBattleAct & {
   >;
 };
 
+function actionRayOfFrostAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "spellAttackDamage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ray of Frost action spell act.");
+  }
+  return act;
+}
+
 function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
@@ -639,6 +1027,54 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Heightened Burning Hands act.");
+  }
+  return act;
+}
+
+function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "hideousLaughter" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Hideous Laughter act.");
+  }
+  return act;
+}
+
+function heightenedGreaseAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "greaseGroundHazard" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Grease act.");
+  }
+  return act;
+}
+
+function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "gustOfWindLine" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Gust of Wind act.");
   }
   return act;
 }
@@ -734,7 +1170,7 @@ function protectedTargetsFill(
 function targetListFill(
   holes: readonly BattleHole[],
   label: string,
-  spellId: "bless" | "burning_hands" | "command",
+  spellId: "bless" | "burning_hands" | "command" | "hideous_laughter",
   targetIds: readonly (typeof wizardId)[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(

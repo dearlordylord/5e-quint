@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -1608,6 +1609,7 @@ export function applyHideousLaughterEffects(
     SupportedSpellInvocation,
     { readonly procedure: "hideousLaughter" }
   >,
+  heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -1631,6 +1633,10 @@ export function applyHideousLaughterEffects(
           conditionHadNonSpellSourceBeforeSpellEffect(target, "prone"),
         conditionHadNonSpellIncapacitatedSource:
           conditionHadNonSpellSourceBeforeSpellEffect(target, "incapacitated"),
+        repeatSaveRollMode: hideousLaughterRepeatSaveRollMode(
+          targetId,
+          heightenedSpellTargetId,
+        ),
         save: {
           ability: invocation.ability,
           dc: invocation.dc,
@@ -1661,6 +1667,16 @@ export function applyHideousLaughterEffects(
   );
 }
 
+function hideousLaughterRepeatSaveRollMode(
+  targetId: CombatantId,
+  heightenedSpellTargetId: CombatantId | undefined,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
+>["repeatSaveRollMode"] {
+  return targetId === heightenedSpellTargetId ? "disadvantage" : null;
+}
+
 export function applyGreaseGroundHazardCastEffects(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -1673,6 +1689,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
     SupportedSpellInvocation,
     { readonly procedure: "greaseGroundHazard" }
   >;
+  readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
   const caster = combatants.get(input.actorId);
@@ -1691,6 +1708,13 @@ export function applyGreaseGroundHazardCastEffects(input: {
         sourceSpellId: input.invocation.spell.id,
         sourceCombatantId: input.actorId,
         areaId: input.area.areaId,
+        heightenedSpellTargetDisadvantage:
+          input.heightenedSpellTargetId === null
+            ? null
+            : {
+                kind: "heightenedSpellTargetDisadvantage" as const,
+                targetId: input.heightenedSpellTargetId,
+              },
         save: {
           ability: input.invocation.ability,
           dc: input.invocation.dc,
@@ -2103,6 +2127,7 @@ export function applyGustOfWindLineCastEffect(input: {
     SupportedSpellInvocation,
     { readonly procedure: "gustOfWindLine" }
   >;
+  readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
   const caster = combatants.get(input.actorId);
@@ -2124,6 +2149,13 @@ export function applyGustOfWindLineCastEffect(input: {
       sourceCombatantId: input.actorId,
       areaId: input.area.areaId,
       directionId: input.area.directionId,
+      heightenedSpellTargetDisadvantage:
+        input.heightenedSpellTargetId === null
+          ? null
+          : {
+              kind: "heightenedSpellTargetDisadvantage" as const,
+              targetId: input.heightenedSpellTargetId,
+            },
       castTurn: {
         actorId: input.actorId,
         round: input.state.initiative.round,

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 //
 // The greaseGroundHazard Spell Procedure Profile: action-time Spell Slot
 // casting that creates a one-minute ground-area Difficult Terrain hazard and

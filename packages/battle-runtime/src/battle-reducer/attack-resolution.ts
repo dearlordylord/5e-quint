@@ -216,6 +216,7 @@ import {
   isStatBlockBattleCreatureState,
   isStatBlockMultiattackActionResource,
   spendTurnAction,
+  spellDamageRerollUnsupportedIssue,
   supportedStatBlockBonusActionOptions,
   supportedStatBlockBonusActionStandardAction,
   supportedStatBlockMultiattacks,
@@ -2001,6 +2002,10 @@ export function validateAttackDamageFill(
     return critical
       ? "Critical hit damage must use the critical damage hole."
       : "Attack damage must use the normal hit damage hole.";
+  }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+  if (spellDamageRerollIssue !== null) {
+    return spellDamageRerollIssue;
   }
 
   const weaponDamageDiceRollChoice = selectedWeaponDamageDiceRollChoice(

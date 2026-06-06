@@ -67,56 +67,74 @@
     {
       "number": 11,
       "id": "L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit metamagic selected-identity replay completeness"
     },
     {
       "number": 12,
       "id": "L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION",
-      "status": "blocked",
+      "status": "done",
       "title": "Consolidate metamagic and kernel evidence"
     },
     {
       "number": 13,
       "id": "L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Heightened Hideous Laughter repeat-save carry-through"
     },
     {
       "number": 14,
       "id": "L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY",
-      "status": "blocked",
+      "status": "done",
       "title": "Resolve area and multi-target Heightened repeat-save carry-through"
     },
     {
       "number": 15,
       "id": "L3MMETA-15-DISTANT-CAST-RANGE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Distant Spell cast-local range slice"
     },
     {
       "number": 16,
       "id": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Extended Spell duration and Concentration slice"
     },
     {
       "number": 17,
       "id": "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Subtle Spell component projection slice"
     },
     {
       "number": 18,
       "id": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Seeking Spell missed-attack reroll fill"
     },
     {
       "number": 19,
       "id": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Empowered Spell damage-dice reroll fill"
+    },
+    {
+      "number": 20,
+      "id": "L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE",
+      "status": "done",
+      "title": "Promote Heightened Grease area repeat-save carry-through"
+    },
+    {
+      "number": 21,
+      "id": "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE",
+      "status": "done",
+      "title": "Promote Heightened Gust of Wind Line repeat-save carry-through"
+    },
+    {
+      "number": 22,
+      "id": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote Heightened multi-target repeating save-gated conditions"
     }
   ]
 }
@@ -161,14 +179,17 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 9 | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | done | none | Boundary artifact splits Distant/Extended/Subtle into distinct cast-local range, duration/Concentration, and component slices. |
 | 10 | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | done | none | Boundary artifact splits Empowered/Seeking into distinct post-roll spell damage dice and missed spell attack reroll fill slices. |
 | 11 | L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify every promoted Metamagic profile has selected-identity replay or documented non-applicability. |
-| 12 | L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION | blocked | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL, L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED, L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED, L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED, L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT, L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | Regenerate and confirm metrics. |
+| 12 | L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION | done | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL, L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED, L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED, L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED, L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT, L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | Regenerated and confirmed metrics. |
 | 13 | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | Promote combatant-owned Heightened repeat-save carry-through for Hideous Laughter. |
-| 14 | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | blocked | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | Resolve area and multi-target selected-target carry-through after the combatant-owned slice establishes the occurrence-local pattern. |
+| 14 | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | done | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | Boundary artifact splits remaining Heightened repeat-save carry-through into Grease area, Gust of Wind Line area, and repeating save-gated condition slices. |
 | 15 | L3MMETA-15-DISTANT-CAST-RANGE-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local range modifier plus one range-bearing Spell Invocation witness. |
 | 16 | L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local duration modifier plus same-occurrence Concentration-maintenance roll-mode rider. |
 | 17 | L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local component projection with priced or consumed Material preservation. |
 | 18 | L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE | ready-for-implementation-after-light-research | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | Promote typed missed spell attack reroll fill plus one Ray of Frost `spellAttackDamage` witness. |
 | 19 | L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE | ready-for-implementation-after-light-research | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | Promote typed spell damage dice reroll fill plus one single-damage-hole `spellAttackDamage` witness. |
+| 20 | L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | Promote the first area Heightened repeat-save rider on the Grease ground-hazard occurrence. |
+| 21 | L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE | Promote the Line area Heightened repeat-save rider and preserve it through direction replacement. |
+| 22 | L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | Promote the combatant-owned presence rider for repeating multi-target `saveGatedCondition` effects. |
 
 ## Task Details
 
@@ -270,6 +291,9 @@ Audit selected-identity replay for promoted Metamagic profiles.
 
 Regenerate and verify Metamagic/kernel ledgers after dependencies close.
 
+Consolidation decision: rules-kernel and unit-profile ledgers regenerate without
+artifact drift after the dependency set closed.
+
 ### Task 13 - L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE
 
 Promote Heightened repeat-save carry-through for the combatant-owned
@@ -307,6 +331,20 @@ Scope after Task 13:
   the target from the owner.
 - Leave support gates closed until focused runtime, QNT, and selected-identity
   evidence exist for each promoted profile family.
+
+Boundary decision: area repeat-save effects need an occurrence-local
+`heightenedSpellTargetDisadvantage` rider that stores the selected target id
+beside the persisted area occurrence. Repeating combatant-owned
+`saveGatedCondition` effects should not duplicate the target id and should
+carry only a presence rider on the failed target's active effect. The boundary
+artifact is
+`plans/unit-profile-coverage/L3MMETA-14_HEIGHTENED_AREA_MULTITARGET_REPEAT_SAVE_BOUNDARY.md`.
+
+Follow-up slices:
+
+- `L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE`
+- `L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE`
+- `L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE`
 
 ### Task 15 - L3MMETA-15-DISTANT-CAST-RANGE-SLICE
 
@@ -406,6 +444,62 @@ Recommended scope:
   after runtime and QNT witnesses exist, and ledger updates only for the
   promoted owner.
 
+### Task 20 - L3MMETA-20-HEIGHTENED-GREASE-AREA-REPEAT-SAVE-SLICE
+
+Promote Heightened repeat-save carry-through for the Grease ground-hazard area
+occurrence.
+
+Recommended scope:
+
+- Add an occurrence-local selected-target rider to the `greaseGroundHazard`
+  active effect beside `areaId`, `save`, and `expiresAt`.
+- Populate the rider only from the cast-selected `heightenedSpellTargetId`;
+  do not infer from authored spell id, spell name, or provenance.
+- Project Disadvantage only when a later entry or end-turn Grease save is for
+  the selected target; preserve ordinary Prone application, movement facts, and
+  non-selected target outcomes.
+- Update the focused QNT owner before opening runtime support.
+- Add focused runtime tests, selected-identity MBT evidence after runtime and
+  QNT witnesses exist, and ledger updates only for the promoted Grease owner.
+
+### Task 21 - L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE
+
+Promote Heightened repeat-save carry-through for the Gust of Wind Line area
+occurrence.
+
+Recommended scope:
+
+- Add the same area selected-target rider shape to the `gustOfWindLine` active
+  effect beside `areaId`, `directionId`, `save`, `pushDistanceFeet`, movement
+  cost, and expiration.
+- Preserve the rider through Bonus Action direction replacement because the
+  replacement changes Line direction, not the selected Heightened target.
+- Project Disadvantage only when the later end-turn Line save target matches
+  the rider, while validating push and movement facts against the current Line
+  occurrence.
+- Update the focused QNT owner before opening runtime support.
+- Add focused runtime tests, selected-identity MBT evidence after runtime and
+  QNT witnesses exist, and ledger updates only for the promoted Gust owner.
+
+### Task 22 - L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE
+
+Promote Heightened repeat-save carry-through for repeating multi-target
+`saveGatedCondition` effects.
+
+Recommended scope:
+
+- Add a presence-only roll-mode rider to `spellConditionEndTurnSave` active
+  effects; do not store a duplicate target id because the active-effect owner
+  is already the later save target.
+- Populate the rider only on failed targets whose combatant id matched the
+  cast-selected `heightenedSpellTargetId`.
+- Project Disadvantage only from the rider on later end-turn saves, preserving
+  existing condition application and success cleanup behavior for all targets.
+- Update the focused QNT owner before opening runtime support.
+- Add focused runtime tests, selected-identity MBT evidence after runtime and
+  QNT witnesses exist, and ledger updates only for the promoted repeating
+  `saveGatedCondition` owner.
+
 ## Task Rules
 
 - Do not make bookkeeping tasks claim runtime behavior they do not execute.
@@ -422,6 +516,10 @@ Recommended scope:
   runtime behavior only through their named post-roll reroll fill owners and
   only after focused runtime, QNT, selected-identity MBT, and ledger evidence
   exist.
+- Tasks 20-22 are Task 14 follow-up implementation slices. They may promote
+  Heightened repeat-save behavior only through their named occurrence owners
+  and only after focused runtime, QNT, selected-identity MBT, and ledger
+  evidence exist.
 
 ## Verification
 

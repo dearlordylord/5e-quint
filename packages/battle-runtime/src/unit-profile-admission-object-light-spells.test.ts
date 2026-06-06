@@ -1,17 +1,37 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-CONTINUAL-FLAME continual_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-range-increase
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// RAW trace:
+// - .references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell: a Touch spell's
+//   range becomes 30 feet for a 1 Sorcery Point Metamagic spend.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Light: Light has Range
+//   Touch, targets one Large-or-smaller object not worn or carried by someone
+//   else, and emits Bright Light 20 feet plus Dim Light for 20 more feet.
+// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Range: range limits
+//   where the spell effect originates, not movable effects unless stated.
+// - UBIQUITOUS_LANGUAGE.md: Illumination and Obscurement.
+import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import {
+  characterBattleResourceIsPointPool,
+  type CharacterBattleMetamagicOptionFact,
+  type CharacterBattlePointPoolResourceState,
+} from "./character-battle-resources.ts";
+import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   continualFlameUnitId,
   lightUnitId,
   spellCasterId,
   spellTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
+  spellDistantObjectLightTargetFill,
   spellObjectLightTargetFill,
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
@@ -24,12 +44,51 @@ import {
   battleSightObscurement,
   canSpendAction,
   cantripSpellInvocationRef,
+  discoverBattleActs,
   elapsedTimeTicks,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
+
+function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function actWithDistantSpellMetamagic(state: BattleState) {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === lightUnitId &&
+      candidate.subject.invocation.procedure === "objectLight" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined || act.subject.tag !== "actionSpell") {
+    throw new Error("Expected Distant Light spell act.");
+  }
+  return act;
+}
+
+function sorceryPointsRemaining(state: BattleState): unknown {
+  const actor = state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") {
+    return undefined;
+  }
+  const resource = actor.origin.resources.find(
+    (candidate): candidate is CharacterBattlePointPoolResourceState =>
+      candidate.unit.id === "sorcerer_font_of_magic" &&
+      characterBattleResourceIsPointPool(candidate),
+  );
+  return resource?.pointsRemaining;
+}
 
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
   test("light is admitted as a Magic action cantrip object emitter", () => {
@@ -441,6 +500,127 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       throw new Error("Expected Light recast to resolve.");
     }
     expect(resolved.state.lightEmitters).toHaveLength(1);
+  });
+
+  test("distant light admits a 30-foot object target without changing light radii", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "sorcerer", level: 2 }],
+      casterResources: [
+        {
+          unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+          pointsRemaining: resourceCount(2),
+        },
+      ],
+      casterMetamagic: {
+        sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+        spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+        knownOptions: [distantMetamagicOption()],
+      },
+    });
+    const act = spellAct({ state, spellId: lightUnitId });
+    const distantAct = actWithDistantSpellMetamagic(state);
+    const targetHole = requireHole(
+      distantAct.initialHoles,
+      "objectTargetChoice",
+    );
+    const objectId = battleObjectId("unit-profile-distant-light-object");
+
+    expect(distantAct).toEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({
+          tag: "actionSpell",
+          actorId: spellCasterId,
+          invocation: cantripSpellInvocationRef(lightUnitId, "objectLight"),
+          metamagic: [{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }],
+        }),
+        label: "Light (Distant Spell)",
+      }),
+    );
+    expect(act.subject).not.toHaveProperty("metamagic");
+
+    const fill = spellDistantObjectLightTargetFill({
+      hole: targetHole,
+      objectId,
+      spellId: lightUnitId,
+      casterId: spellCasterId,
+      rangeFeet: movementFeet(30),
+      size: "large",
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: distantAct.subject,
+      fills: [fill],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          {
+            sourceSpellId: lightUnitId,
+            sourceCombatantId: spellCasterId,
+            attachment: { kind: "object", objectId },
+            emission: {
+              kind: "brightAndDim",
+              brightRadiusFeet: movementFeet(20),
+              dimAdditionalFeet: movementFeet(20),
+            },
+          },
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Distant Light to resolve.");
+    }
+    expect(sorceryPointsRemaining(resolved.state)).toEqual(resourceCount(1));
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+  });
+
+  test("distant light rejects a non-range-bearing object-light target fact before spending", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "sorcerer", level: 2 }],
+      casterResources: [
+        {
+          unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+          pointsRemaining: resourceCount(1),
+        },
+      ],
+      casterMetamagic: {
+        sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+        spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+        knownOptions: [distantMetamagicOption()],
+      },
+    });
+    const distantAct = actWithDistantSpellMetamagic(state);
+    const targetHole = requireHole(
+      distantAct.initialHoles,
+      "objectTargetChoice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: distantAct.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: targetHole,
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          size: "large",
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(sorceryPointsRemaining(state)).toEqual(resourceCount(1));
   });
 
   test("continual flame does not replace the caster's prior continual flame emitter", () => {

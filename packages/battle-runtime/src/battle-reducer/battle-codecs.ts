@@ -5,6 +5,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -14,6 +17,7 @@ import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   ArmorClass as SharedArmorClass,
+  ResourceCount,
   type Hp,
 } from "@dnd/shared/types";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
@@ -629,10 +633,40 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     ),
   }),
   Schema.Struct({
+    kind: Schema.Literal("spellDistantObjectLightTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+    size: Schema.Literal(
+      "tiny",
+      "small",
+      "medium",
+      "large",
+      "huge",
+      "gargantuan",
+    ),
+    wornOrCarried: Schema.Union(
+      Schema.Struct({ kind: Schema.Literal("nobody") }),
+      Schema.Struct({ kind: Schema.Literal("caster") }),
+      Schema.Struct({
+        kind: Schema.Literal("someoneElse"),
+        relation: Schema.Literal("worn", "carried"),
+      }),
+    ),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("spellTouchedObjectTarget"),
     casterId: CombatantId,
     objectId: BattleObjectId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellDistantTouchedObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellManufacturedMetalObjectTarget"),
@@ -1170,6 +1204,16 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+    spellAttackRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("missed_spell_attack_reroll"),
+          label: Schema.String,
+          sorceryPointCost: ResourceCount,
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1212,6 +1256,17 @@ export const BattleHoleSchema = Schema.Union(
     critical: Schema.Boolean,
     spellMarkedDamageRiders: Schema.optionalWith(
       Schema.Array(BattleRuntimeObjectSchema),
+      { exact: true },
+    ),
+    spellDamageRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("damage_dice_reroll"),
+          label: Schema.String,
+          sorceryPointCost: ResourceCount,
+          maximumSelectedDice: Schema.Number.pipe(Schema.int()),
+        }),
+      ),
       { exact: true },
     ),
   }),
@@ -1788,6 +1843,26 @@ const BattleAttackRollResultSchema = Schema.Struct({
   missToHitReplacementUnitId: Schema.optionalWith(Schema.String, {
     exact: true,
   }),
+  spellAttackReroll: Schema.optionalWith(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("decline"),
+        effectKind: Schema.Literal("missed_spell_attack_reroll"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("reroll"),
+        effectKind: Schema.Literal("missed_spell_attack_reroll"),
+        replacement: Schema.Struct({
+          total: Schema.Number.pipe(Schema.int()),
+          naturalD20: BattleD20DieRollResultSchema,
+          rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+            exact: true,
+          }),
+        }),
+      }),
+    ),
+    { exact: true },
+  ),
 });
 
 const BattleRolledDiceGroupSchema = Schema.Struct({
@@ -2003,10 +2078,38 @@ type BattleFillEncoded =
                 };
           }
         | {
+            readonly kind: "spellDistantObjectLightTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+            readonly size:
+              | "tiny"
+              | "small"
+              | "medium"
+              | "large"
+              | "huge"
+              | "gargantuan";
+            readonly wornOrCarried:
+              | { readonly kind: "nobody" }
+              | { readonly kind: "caster" }
+              | {
+                  readonly kind: "someoneElse";
+                  readonly relation: "worn" | "carried";
+                };
+          }
+        | {
             readonly kind: "spellTouchedObjectTarget";
             readonly casterId: string;
             readonly objectId: string;
             readonly spellId: string;
+          }
+        | {
+            readonly kind: "spellDistantTouchedObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
           }
         | {
             readonly kind: "spellManufacturedMetalObjectTarget";
@@ -2840,10 +2943,40 @@ export const BattleFillSchema: Schema.Schema<
             ),
           }),
           Schema.Struct({
+            kind: Schema.Literal("spellDistantObjectLightTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
+            size: Schema.Literal(
+              "tiny",
+              "small",
+              "medium",
+              "large",
+              "huge",
+              "gargantuan",
+            ),
+            wornOrCarried: Schema.Union(
+              Schema.Struct({ kind: Schema.Literal("nobody") }),
+              Schema.Struct({ kind: Schema.Literal("caster") }),
+              Schema.Struct({
+                kind: Schema.Literal("someoneElse"),
+                relation: Schema.Literal("worn", "carried"),
+              }),
+            ),
+          }),
+          Schema.Struct({
             kind: Schema.Literal("spellTouchedObjectTarget"),
             casterId: CombatantId,
             objectId: BattleObjectId,
             spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellDistantTouchedObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
           }),
           Schema.Struct({
             kind: Schema.Literal("spellManufacturedMetalObjectTarget"),
@@ -3242,6 +3375,21 @@ export const BattleFillSchema: Schema.Schema<
           candidates: Schema.Tuple(
             BattleRolledDiceGroupSchema,
             BattleRolledDiceGroupSchema,
+          ),
+        }),
+        { exact: true },
+      ),
+      spellDamageReroll: Schema.optionalWith(
+        Schema.Struct({
+          kind: Schema.Literal("reroll"),
+          effectKind: Schema.Literal("damage_dice_reroll"),
+          dice: Schema.NonEmptyArray(
+            Schema.Struct({
+              groupIndex: Schema.Number.pipe(Schema.int()),
+              resultIndex: Schema.Number.pipe(Schema.int()),
+              original: BattleDieRollResultSchema,
+              replacement: BattleDieRollResultSchema,
+            }),
           ),
         }),
         { exact: true },

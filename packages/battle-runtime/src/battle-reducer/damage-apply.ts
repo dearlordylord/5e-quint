@@ -1,6 +1,7 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
@@ -15,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 
 import {
   applyCondition,
@@ -1547,7 +1549,8 @@ export function concentrationSavingThrowHole(
     damageAmount: toDamageAmount(effectiveDamage),
     targetFlatBonuses:
       wardingBondSavingThrowFlatBonusProjectionsForTarget(combatant),
-    ...(combatantHasEldritchMind(combatant)
+    ...(combatantHasEldritchMind(combatant) ||
+    combatant.concentration.maintenanceSavingThrowRollMode === "advantage"
       ? { rollMode: "advantage" as const }
       : {}),
   };

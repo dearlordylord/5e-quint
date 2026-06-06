@@ -1175,6 +1175,7 @@ module battleRuntimeSaveSpellTests {
         target: Goblin,
         hadProne: false,
         hadIncapacitated: false,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: hideousLaughterDurationTicks,
       }))),
       assert(hideousLaughterMaxTargets(1) == 1),
@@ -1196,6 +1197,7 @@ module battleRuntimeSaveSpellTests {
           target: Goblin,
           hadProne: false,
           hadIncapacitated: false,
+          heightenedRepeatSaveDisadvantage: false,
           durationTicks: 1,
         })),
       },
@@ -1226,10 +1228,19 @@ module battleRuntimeSaveSpellTests {
     }
   }
 
+  run test_heightened_hideous_laughter_repeat_save_roll_modes = {
+    val target = hideousLaughterTarget(initialState.goblin, Goblin, false, Fighter, Goblin)
+    all {
+      assert(hideousLaughterEndTurnRepeatSaveRollMode(target) == DisadvantageSavingThrow),
+      assert(hideousLaughterDamageRepeatSaveRollMode(target) == AdvantageSavingThrow),
+      assert(hideousLaughterDamageRepeatSaveRollModeWithHeightened(target) == NormalSavingThrow),
+    }
+  }
+
   run test_hideous_laughter_suppresses_standing_from_prone = {
     val laughedAtFighter = {
       ...initialState,
-      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin),
+      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin, Fighter),
     }
     val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
     assert(stood == laughedAtFighter)
@@ -1382,6 +1393,7 @@ module battleRuntimeSaveSpellTests {
             target: Goblin,
             hadProne: false,
             hadIncapacitated: false,
+            heightenedRepeatSaveDisadvantage: false,
             durationTicks: 1,
           }),
         ),

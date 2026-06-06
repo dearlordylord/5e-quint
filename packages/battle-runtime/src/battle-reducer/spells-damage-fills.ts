@@ -8,8 +8,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -67,9 +68,11 @@ import { hasDodgeBenefit } from "./attack-roll.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
 import { combatantsAreEnemies } from "./creature-state-leaves.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
+  spellDamageRerollUnsupportedIssue,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
@@ -101,6 +104,7 @@ import {
   type SpellFailedSaveConditionChoiceEffect,
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
@@ -1323,47 +1327,18 @@ function passiveSavingThrowRollModeScopeMatches(
   return profile.scope.condition === condition;
 }
 
-function uniqueSavingThrowRollModeProjections(
-  projections: readonly BattleSavingThrowRollModeProjection[],
-): readonly BattleSavingThrowRollModeProjection[] {
-  const targetOrder: CombatantId[] = [];
-  const rollModeSources = new Map<
-    CombatantId,
-    { readonly advantage: boolean; readonly disadvantage: boolean }
-  >();
-  for (const projection of projections) {
-    const existing = rollModeSources.get(projection.targetId);
-    if (existing === undefined) {
-      targetOrder.push(projection.targetId);
-    }
-    rollModeSources.set(projection.targetId, {
-      advantage:
-        existing?.advantage === true || projection.rollMode === "advantage",
-      disadvantage:
-        existing?.disadvantage === true ||
-        projection.rollMode === "disadvantage",
-    });
-  }
-  return targetOrder.flatMap((targetId) => {
-    const sources = rollModeSources.get(targetId);
-    if (sources === undefined || sources.advantage === sources.disadvantage) {
-      return [];
-    }
-    return [
-      {
-        targetId,
-        rollMode: sources.advantage ? "advantage" : "disadvantage",
-      },
-    ] satisfies readonly BattleSavingThrowRollModeProjection[];
-  });
-}
-
 export function validateSpellDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: SupportedDamageSpellInvocation,
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  if (invocation.procedure !== "spellAttackDamage") {
+    const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+    if (spellDamageRerollIssue !== null) {
+      return spellDamageRerollIssue;
+    }
+  }
   if (
     fill.holeId !==
     spellDamageHole(invocation, critical, spellMarkedDamageRiders).holeId
@@ -1373,6 +1348,10 @@ export function validateSpellDamageFill(
       : "Spell damage must use the selected action-time spell act damage hole.";
   }
   if (spellMarkedDamageRiders.length > 0) {
+    const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+    if (spellDamageRerollIssue !== null) {
+      return spellDamageRerollIssue;
+    }
     const components = spellDamageComponents(
       invocation,
       critical,
@@ -1514,6 +1493,10 @@ export function validateSpellAttackSequencePartDamageFill(
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+  if (spellDamageRerollIssue !== null) {
+    return spellDamageRerollIssue;
+  }
   if (
     fill.holeId !==
     spellAttackSequencePartDamageHole(
@@ -1565,11 +1548,10 @@ export function validateSpellHealingFill(
   if (fill.holeId !== spellHealingRollHole(invocation).holeId) {
     return "Spell healing must use the selected spell act healing hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
+  return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.healing.expr.dice,
     dieSize: invocation.healing.expr.dieSize,
   });
-  return validation?.reason ?? null;
 }
 
 export function validateScalarBuffTemporaryHitPointsFill(
@@ -1585,11 +1567,10 @@ export function validateScalarBuffTemporaryHitPointsFill(
   if (fill.holeId !== spellScalarBuffRollHole(invocation).holeId) {
     return "Temporary Hit Points must use the selected scalar buff spell hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
+  return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.effect.amount.expr.dice,
     dieSize: invocation.effect.amount.expr.dieSize,
   });
-  return validation?.reason ?? null;
 }
 
 export function validateSpellBurstDamageFill(
@@ -1602,17 +1583,20 @@ export function validateSpellBurstDamageFill(
   if (fill.holeId !== spellBurstDamageHole(invocation).holeId) {
     return "Ice Knife burst damage must use the burst damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
+  return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.burst.damage.expr.dice,
     dieSize: invocation.burst.damage.expr.dieSize,
   });
-  return validation?.reason ?? null;
 }
 
 export function validatePreparedSlotSpellDamageGroups(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   allocations: readonly BattleSpellTargetAllocation[],
 ): string | null {
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+  if (spellDamageRerollIssue !== null) {
+    return spellDamageRerollIssue;
+  }
   if (fill.value.length !== allocations.length) {
     return "Repeated spell damage dice groups must match the target allocation entries.";
   }

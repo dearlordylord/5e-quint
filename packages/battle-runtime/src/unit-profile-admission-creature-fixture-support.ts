@@ -83,6 +83,10 @@ export function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly metamagic?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["metamagic"];
   readonly conditions?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -144,6 +148,7 @@ export function characterCreature(input: {
         ? {}
         : { unitFeatures: input.unitFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.metamagic === undefined ? {} : { metamagic: input.metamagic }),
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),

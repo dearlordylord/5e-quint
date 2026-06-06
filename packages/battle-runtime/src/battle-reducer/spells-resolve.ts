@@ -2,8 +2,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -11,6 +14,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -50,7 +57,10 @@ import {
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
   snapshotBattle,
+  spellAttackRerollUnsupportedIssue,
+  spellDamageRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
+  type BattleAttackRollResult,
   type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
@@ -153,7 +163,15 @@ import {
 
 import {
   admitSpellMetamagicApplications,
+  effectiveEmpoweredSpellDamageRoll,
+  empoweredSpellDamageRerollOption,
+  empoweredSpellDamageRerollValidationIssue,
+  empoweredSpellRerollApplicationForDamageRoll,
   metamagicActionCostOverride,
+  seekingSpellAttackRerollOption,
+  seekingSpellCombinedUseIssue,
+  seekingSpellMetamagicApplication,
+  seekingSpellRerollApplicationForAttackRoll,
   spellInvocationHasMagicActionCastingTime,
   transmutedSpellDamageInvocation,
   twinnedSpellTargetCountInvocation,
@@ -308,6 +326,9 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "directCondition",
   "rollModifier",
   "scalarBuff",
+  "objectLight",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
   "spellAttackDamage",
   "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
@@ -466,6 +487,134 @@ function spellAttackPostMirrorImageFillsArePresent(
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovement !== undefined
   );
+}
+
+function effectiveSpellAttackRoll(
+  attackRoll: BattleAttackRollResult,
+): BattleAttackRollResult {
+  return attackRoll.spellAttackReroll?.kind === "reroll"
+    ? {
+        ...attackRoll.spellAttackReroll.replacement,
+        ...(attackRoll.activatedOngoingFeatureUnitId === undefined
+          ? {}
+          : {
+              activatedOngoingFeatureUnitId:
+                attackRoll.activatedOngoingFeatureUnitId,
+            }),
+        ...(attackRoll.missToHitReplacementUnitId === undefined
+          ? {}
+          : {
+              missToHitReplacementUnitId: attackRoll.missToHitReplacementUnitId,
+            }),
+      }
+    : attackRoll;
+}
+
+function spellAttackRerollValidationIssue(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+  readonly originalAttackRoll: BattleAttackRollResult;
+  readonly originalHit: boolean;
+  readonly requiredRollMode: ReturnType<typeof requiredSpellAttackRollMode>;
+  readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
+}): string | null {
+  const decision = input.originalAttackRoll.spellAttackReroll;
+  if (decision === undefined) {
+    return null;
+  }
+  if (input.invocation.procedure !== "spellAttackDamage") {
+    return "Seeking Spell is supported only for the promoted single spell attack damage procedure.";
+  }
+  if (input.originalAttackRoll.missToHitReplacementUnitId !== undefined) {
+    return "A spell attack reroll cannot be combined with an attack-roll miss-to-hit replacement.";
+  }
+  if (input.originalHit) {
+    return "Seeking Spell can reroll only a missed spell attack roll.";
+  }
+  const application = seekingSpellRerollApplicationForAttackRoll({
+    actor: input.actor,
+    attackRoll: input.originalAttackRoll,
+    castApplications: input.castMetamagicApplications,
+  });
+  if (typeof application === "string") {
+    return application;
+  }
+  if (decision.kind === "decline") {
+    return null;
+  }
+  if (!attackRollResultIsValid(decision.replacement)) {
+    return "Seeking Spell replacement roll is outside the d20 attack-roll protocol.";
+  }
+  return attackRollModeMatches(decision.replacement, input.requiredRollMode)
+    ? null
+    : "Seeking Spell replacement roll mode does not match the current attack-roll rule.";
+}
+
+function spellAttackNeedsSeekingRerollDecision(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly originalHit: boolean;
+  readonly castMetamagicApplications: readonly SpellMetamagicApplicationFact[];
+}): boolean {
+  const seekingApplication = seekingSpellMetamagicApplication(input.actor);
+  return (
+    input.invocation.procedure === "spellAttackDamage" &&
+    !input.originalHit &&
+    input.attackRoll.spellAttackReroll === undefined &&
+    seekingApplication !== null &&
+    seekingSpellCombinedUseIssue({
+      actor: input.actor,
+      castApplications: input.castMetamagicApplications,
+      seekingApplication: seekingApplication,
+    }) === null
+  );
+}
+
+function spellAttackRollHoleWithSeekingOption(
+  state: BattleState,
+  attackerId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "heldLightHurl"
+        | "spellCreatedHeldObjectAttack"
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack"
+        | "spellAttackDamage";
+    }
+  >,
+  rollMode: ReturnType<typeof requiredSpellAttackRollMode>,
+): ReturnType<typeof spellAttackRollHole> {
+  const actor = state.combatants.get(attackerId);
+  const seeking = seekingSpellAttackRerollOption({ actor });
+  const hole = spellAttackRollHole(state, attackerId, invocation, rollMode);
+  return seeking === null ? hole : { ...hole, spellAttackRerolls: [seeking] };
+}
+
+function spellDamageHoleWithEmpoweredOption(
+  state: BattleState,
+  attackerId: CombatantId,
+  invocation: SupportedDamageSpellInvocation,
+  critical: boolean,
+  castApplications: readonly SpellMetamagicApplicationFact[],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+): ReturnType<typeof spellDamageHole> {
+  const hole = spellDamageHole(invocation, critical, spellMarkedDamageRiders);
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    spellMarkedDamageRiders.length > 0
+  ) {
+    return hole;
+  }
+  const actor = state.combatants.get(attackerId);
+  const empowered = empoweredSpellDamageRerollOption({
+    actor,
+    castApplications,
+  });
+  return empowered === null ? hole : { ...hole, spellDamageRerolls: [empowered] };
 }
 
 export function resolveSpellAct(
@@ -1068,6 +1217,8 @@ function resolveSpellActInternal(
 
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   let spellResolutionStateAfterCriticalMovement: BattleState | null = null;
+  let metamagicApplicationsForDamageAndSpend =
+    metamagicApplicationsForResolution;
   if (
     invocationForResolution.procedure === "spellAttackDamage" ||
     invocationForResolution.procedure === "heldLightHurl" ||
@@ -1106,8 +1257,57 @@ function resolveSpellActInternal(
         "Spell attack roll mode does not match the current attack-roll rule.",
       );
     }
-    const ordinaryHit = attackRollHits(
+    const actorBeforeSpellAttack = castingState.combatants.get(subject.actorId);
+    const originalHit = attackRollHits(
       fillSet.attackRoll,
+      currentArmorClass(activeEffectArmorClass(target)),
+    );
+    const spellAttackRerollIssue = spellAttackRerollValidationIssue({
+      actor: actorBeforeSpellAttack,
+      invocation: invocationForResolution,
+      originalAttackRoll: fillSet.attackRoll,
+      originalHit,
+      requiredRollMode,
+      castMetamagicApplications: metamagicApplicationsForResolution ?? [],
+    });
+    if (spellAttackRerollIssue !== null) {
+      return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
+    }
+    if (
+      spellAttackNeedsSeekingRerollDecision({
+        actor: actorBeforeSpellAttack,
+        invocation: invocationForResolution,
+        attackRoll: fillSet.attackRoll,
+        originalHit,
+        castMetamagicApplications: metamagicApplicationsForResolution ?? [],
+      })
+    ) {
+      return needsHolesResult(castingState, input.subject, [
+        spellAttackRollHoleWithSeekingOption(
+          castingState,
+          subject.actorId,
+          invocationForResolution,
+          requiredRollMode,
+        ),
+      ]);
+    }
+    const seekingApplication =
+      fillSet.attackRoll.spellAttackReroll?.kind === "reroll"
+        ? seekingSpellRerollApplicationForAttackRoll({
+            actor: actorBeforeSpellAttack,
+            attackRoll: fillSet.attackRoll,
+            castApplications: metamagicApplicationsForResolution ?? [],
+          })
+        : null;
+    if (seekingApplication !== null && typeof seekingApplication !== "string") {
+      metamagicApplicationsForDamageAndSpend = [
+        ...(metamagicApplicationsForDamageAndSpend ?? []),
+        seekingApplication,
+      ];
+    }
+    const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
+    const ordinaryHit = attackRollHits(
+      effectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -1115,7 +1315,7 @@ function resolveSpellActInternal(
       subject: input.subject,
       attackerId: subject.actorId,
       targetId: target.combatantId,
-      attackRoll: fillSet.attackRoll,
+      attackRoll: effectiveAttackRoll,
       ordinaryHit,
     });
     if (
@@ -1138,7 +1338,7 @@ function resolveSpellActInternal(
         invocation: invocationForResolution,
         target,
       });
-    const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+    const critical = attackRollIsCriticalHit(effectiveAttackRoll);
     const attackRollState = stateAfterSpellAttackRollMadeForInvocation(
       castingState,
       subject.actorId,
@@ -1160,7 +1360,7 @@ function resolveSpellActInternal(
       {
         subject: input.subject,
         targetId: target.combatantId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
       },
     );
     const attackRolledStateAfterHurl = stateAfterResolvedHeldLightHurl(
@@ -1177,9 +1377,11 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(metamagicApplicationsForResolution === undefined
+          ...(metamagicApplicationsForDamageAndSpend === undefined
             ? {}
-            : { metamagicApplications: metamagicApplicationsForResolution }),
+            : {
+                metamagicApplications: metamagicApplicationsForDamageAndSpend,
+              }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1261,9 +1463,11 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(metamagicApplicationsForResolution === undefined
+          ...(metamagicApplicationsForDamageAndSpend === undefined
             ? {}
-            : { metamagicApplications: metamagicApplicationsForResolution }),
+            : {
+                metamagicApplications: metamagicApplicationsForDamageAndSpend,
+              }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -1285,7 +1489,7 @@ function resolveSpellActInternal(
         ? spellDamageTypes(
             transmutedSpellDamageInvocation(
               invocationForResolution,
-              metamagicApplicationsForResolution,
+              metamagicApplicationsForDamageAndSpend,
             ),
           )
         : spellDamageTypes(invocationForResolution);
@@ -1295,7 +1499,7 @@ function resolveSpellActInternal(
           trigger: "attackHit",
           attackerId: subject.actorId,
           targetId: target.combatantId,
-          attackRoll: fillSet.attackRoll,
+          attackRoll: effectiveAttackRoll,
           attackKind: spellAttackKindForRedirect(
             invocationForResolution.attackKind,
           ),
@@ -1342,15 +1546,18 @@ function resolveSpellActInternal(
       }
       const requestedDamageInvocation = transmutedSpellDamageInvocation(
         invocationForResolution,
-        metamagicApplicationsForResolution,
+        metamagicApplicationsForDamageAndSpend,
       );
       return needsHolesResult(
         spellResolutionStateAfterCriticalMovement,
         input.subject,
         [
-          spellDamageHole(
+          spellDamageHoleWithEmpoweredOption(
+            spellResolutionStateAfterCriticalMovement,
+            subject.actorId,
             requestedDamageInvocation,
             hit && critical,
+            metamagicApplicationsForDamageAndSpend ?? [],
             spellMarkedDamageRiders,
           ),
         ],
@@ -1378,9 +1585,9 @@ function resolveSpellActInternal(
         ...(options.actionCostOverride === undefined
           ? {}
           : { actionCostOverride: options.actionCostOverride }),
-        ...(metamagicApplicationsForResolution === undefined
+        ...(metamagicApplicationsForDamageAndSpend === undefined
           ? {}
-          : { metamagicApplications: metamagicApplicationsForResolution }),
+          : { metamagicApplications: metamagicApplicationsForDamageAndSpend }),
         ...(spiritualWeaponForcePosition === undefined
           ? {}
           : { spiritualWeaponForcePosition }),
@@ -1403,7 +1610,7 @@ function resolveSpellActInternal(
   }
   const damageInvocation = transmutedSpellDamageInvocation(
     invocationForResolution,
-    metamagicApplicationsForResolution,
+    metamagicApplicationsForDamageAndSpend,
   );
   if (fillSet.damageRoll == null) {
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
@@ -1414,7 +1621,13 @@ function resolveSpellActInternal(
       );
     }
     return needsHolesResult(castingState, input.subject, [
-      spellDamageHole(damageInvocation),
+      spellDamageHoleWithEmpoweredOption(
+        castingState,
+        subject.actorId,
+        damageInvocation,
+        false,
+        metamagicApplicationsForDamageAndSpend ?? [],
+      ),
     ]);
   }
   const spellAttackMissToHitReplacement =
@@ -1429,9 +1642,9 @@ function resolveSpellActInternal(
           subject: input.subject,
           attackerId: subject.actorId,
           targetId: target.combatantId,
-          attackRoll: fillSet.attackRoll,
+          attackRoll: effectiveSpellAttackRoll(fillSet.attackRoll),
           ordinaryHit: attackRollHits(
-            fillSet.attackRoll,
+            effectiveSpellAttackRoll(fillSet.attackRoll),
             currentArmorClass(activeEffectArmorClass(target)),
           ),
         })
@@ -1464,7 +1677,7 @@ function resolveSpellActInternal(
           {
             subject: input.subject,
             targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
+            attackRoll: effectiveSpellAttackRoll(fillSet.attackRoll),
           },
         ))
       : castingState;
@@ -1491,7 +1704,7 @@ function resolveSpellActInternal(
       invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null &&
-    attackRollIsCriticalHit(fillSet.attackRoll);
+    attackRollIsCriticalHit(effectiveSpellAttackRoll(fillSet.attackRoll));
   const spellAttackHit =
     (invocationForResolution.procedure === "spellAttackDamage" ||
       invocationForResolution.procedure === "heldLightHurl" ||
@@ -1500,7 +1713,7 @@ function resolveSpellActInternal(
       invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null &&
     (attackRollHits(
-      fillSet.attackRoll,
+      effectiveSpellAttackRoll(fillSet.attackRoll),
       currentArmorClass(activeEffectArmorClass(target)),
     ) ||
       spellAttackMissToHitReplacement !== null);
@@ -1513,14 +1726,55 @@ function resolveSpellActInternal(
     })
       ? "half"
       : "full";
-  const damageValidation = validateSpellDamageFill(
+  const originalDamageValidation = validateSpellDamageFill(
     fillSet.damageRoll,
     damageInvocation,
     spellAttackHit && critical,
     spellMarkedDamageRiders,
   );
-  if (damageValidation !== null) {
-    return invalidResult(input.state, "invalidFill", damageValidation);
+  if (originalDamageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", originalDamageValidation);
+  }
+  const empoweredRerollIssue = empoweredSpellDamageRerollValidationIssue({
+    actor: spellDamageBaseState.combatants.get(subject.actorId),
+    invocation: damageInvocation,
+    damageRoll: fillSet.damageRoll,
+    castApplications: metamagicApplicationsForDamageAndSpend ?? [],
+  });
+  if (empoweredRerollIssue !== null) {
+    return invalidResult(input.state, "invalidFill", empoweredRerollIssue);
+  }
+  const empoweredApplication =
+    fillSet.damageRoll.spellDamageReroll?.kind === "reroll"
+      ? empoweredSpellRerollApplicationForDamageRoll({
+          actor: spellDamageBaseState.combatants.get(subject.actorId),
+          damageRoll: fillSet.damageRoll,
+          castApplications: metamagicApplicationsForDamageAndSpend ?? [],
+        })
+      : null;
+  if (
+    empoweredApplication !== null &&
+    typeof empoweredApplication !== "string"
+  ) {
+    metamagicApplicationsForDamageAndSpend = [
+      ...(metamagicApplicationsForDamageAndSpend ?? []),
+      empoweredApplication,
+    ];
+  }
+  const effectiveDamageRoll = effectiveEmpoweredSpellDamageRoll(
+    fillSet.damageRoll,
+  );
+  const effectiveDamageValidation =
+    effectiveDamageRoll === fillSet.damageRoll
+      ? null
+      : validateSpellDamageFill(
+          effectiveDamageRoll,
+          damageInvocation,
+          spellAttackHit && critical,
+          spellMarkedDamageRiders,
+        );
+  if (effectiveDamageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", effectiveDamageValidation);
   }
   const spellReductionRoll = spellDamageReductionRollForTarget(
     fillSet.spellDamageReductionRolls,
@@ -1529,7 +1783,7 @@ function resolveSpellActInternal(
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     damageInvocation,
-    fillSet.damageRoll,
+    effectiveDamageRoll,
     spellDamageResult,
     spellMarkedDamageRiders,
     spellAttackHit && critical,
@@ -1539,7 +1793,7 @@ function resolveSpellActInternal(
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       damageSource,
       spellDamageByType,
-      fillSet.damageRoll.holeId,
+      effectiveDamageRoll.holeId,
     );
   if (
     unexpectedSourceDamageRollPenaltyRoll(
@@ -1557,12 +1811,12 @@ function resolveSpellActInternal(
     fillSet.sourceDamageRollPenaltyRolls,
     damageSource,
     spellDamageByType,
-    fillSet.damageRoll.holeId,
+    effectiveDamageRoll.holeId,
   );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     spellDamageByType,
-    fillSet.damageRoll.holeId,
+    effectiveDamageRoll.holeId,
     sourceDamageRollPenaltyRoll,
   );
   if (sourcePenalty.tag === "invalid") {
@@ -1678,7 +1932,7 @@ function resolveSpellActInternal(
     spellDamageBaseState,
     target.combatantId,
     damageInvocation,
-    fillSet.damageRoll,
+    effectiveDamageRoll,
     spellAttackHit && critical,
     {
       concentrationSavingThrow: concentrationFill,
@@ -1738,9 +1992,11 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(metamagicApplicationsForResolution === undefined
+          ...(metamagicApplicationsForDamageAndSpend === undefined
             ? {}
-            : { metamagicApplications: metamagicApplicationsForResolution }),
+            : {
+                metamagicApplications: metamagicApplicationsForDamageAndSpend,
+              }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
             : { spiritualWeaponForcePosition }),
@@ -2258,6 +2514,16 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Spell attack roll result is outside the d20 attack-roll protocol.",
     );
   }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.fillSet.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      spellAttackRerollIssue,
+    );
+  }
   if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.input.state,
@@ -2352,6 +2618,16 @@ function resolveSpellAttackDamageObjectTarget(input: {
   );
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
+  }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
+    input.fillSet.damageRoll,
+  );
+  if (spellDamageRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      spellDamageRerollIssue,
+    );
   }
   if (
     input.fillSet.concentrationSavingThrows.length > 0 ||

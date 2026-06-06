@@ -4,6 +4,7 @@
 // and its runtime live in battle-reducer.ts / battle-reducer/ and depend on these
 // types one-directionally. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -98,6 +99,12 @@ export type TurnAnchoredBattleActiveEffectExpiration = Extract<
   BattleActiveEffectExpiration,
   { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
 >;
+export type AreaSpellEffectHeightenedRepeatSaveRider =
+  | null
+  | {
+      readonly kind: "heightenedSpellTargetDisadvantage";
+      readonly targetId: CombatantId;
+    };
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
@@ -477,6 +484,10 @@ export type BattleActiveEffect =
       readonly kind: "hideousLaughter";
       readonly conditionHadNonSpellProneSource: boolean;
       readonly conditionHadNonSpellIncapacitatedSource: boolean;
+      readonly repeatSaveRollMode: Extract<
+        AttackRollMode,
+        "disadvantage"
+      > | null;
       readonly save: {
         readonly ability: Extract<Ability, "wis">;
         readonly dc: DcSource;
@@ -498,6 +509,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";
       readonly areaId: BattleAreaId;
+      readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
@@ -575,6 +587,7 @@ export type BattleActiveEffect =
       readonly kind: "gustOfWindLine";
       readonly areaId: BattleAreaId;
       readonly directionId: BattleLineDirectionId;
+      readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
       readonly castTurn: BattleTurnAnchor;
       readonly line: {
         readonly lengthFeet: MovementFeet;

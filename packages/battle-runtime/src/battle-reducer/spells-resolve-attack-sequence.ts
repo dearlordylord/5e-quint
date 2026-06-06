@@ -16,6 +16,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
+  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleConcentrationSavingThrowHole,
@@ -1136,6 +1137,10 @@ function validateSpellAttackSequencePartAttackRoll(
 ): string | null {
   if (!attackRollResultIsValid(attackRoll)) {
     return "Spell attack roll result is outside the d20 attack-roll protocol.";
+  }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(attackRoll);
+  if (spellAttackRerollIssue !== null) {
+    return spellAttackRerollIssue;
   }
   if (!attackRollModeMatches(attackRoll, requiredRollMode)) {
     return "Spell attack roll mode does not match the current attack-roll rule.";

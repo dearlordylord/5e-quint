@@ -55,7 +55,7 @@ module battleRuntimeGroundCommandTests {
   run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
     val resolved = resolveGrease(initialState, true, false)
     all {
-      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(resolved.fighter.activeEffects.contains(greaseGroundHazard(greaseAreaId, noHeightenedSpellTarget))),
       assert(resolved.goblin.prone),
       assert(not(resolved.actionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
@@ -65,7 +65,7 @@ module battleRuntimeGroundCommandTests {
   run test_grease_empty_area_records_hazard_without_target_membership_state = {
     val resolved = resolveGrease(initialState, false, true)
     all {
-      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(resolved.fighter.activeEffects.contains(greaseGroundHazard(greaseAreaId, noHeightenedSpellTarget))),
       assert(not(resolved.goblin.prone)),
     }
   }
@@ -76,6 +76,14 @@ module battleRuntimeGroundCommandTests {
     all {
       assert(entryFailed.goblin.prone),
       assert(currentActor(entryFailed) == Fighter),
+    }
+  }
+
+  run test_heightened_grease_ground_hazard_entry_save_roll_mode_is_selected_target_only = {
+    val resolved = resolveGreaseWithHeightenedTarget(initialState, false, true, HeightenedSpellTarget({ target: Goblin }))
+    all {
+      assert(greaseGroundHazardSaveRollMode(resolved, Goblin, greaseAreaId) == DisadvantageSavingThrow),
+      assert(greaseGroundHazardSaveRollMode(resolved, Fighter, greaseAreaId) == NormalSavingThrow),
     }
   }
 
@@ -163,6 +171,15 @@ module battleRuntimeGroundCommandTests {
     all {
       assert(endTurnFailed.goblin.prone),
       assert(currentActor(endTurnFailed) == Fighter),
+    }
+  }
+
+  run test_heightened_grease_ground_hazard_end_turn_save_roll_mode_is_selected_target_only = {
+    val resolved = resolveGreaseWithHeightenedTarget(initialState, false, true, HeightenedSpellTarget({ target: Goblin }))
+    val goblinTurn = endTurn(resolved)
+    all {
+      assert(greaseGroundHazardSaveRollMode(goblinTurn, Goblin, greaseAreaId) == DisadvantageSavingThrow),
+      assert(greaseGroundHazardSaveRollMode(goblinTurn, Fighter, greaseAreaId) == NormalSavingThrow),
     }
   }
 

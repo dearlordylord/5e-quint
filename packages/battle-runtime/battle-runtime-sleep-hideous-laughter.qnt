@@ -10,6 +10,7 @@ module battleRuntimeSleepHideousLaughter {
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
 
   pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
     actor != currentActor(state) and initiativeStillToActCount(state.initiative) > 1
@@ -194,12 +195,13 @@ module battleRuntimeSleepHideousLaughter {
       | _ => true
     })
 
-  pure def hideousLaughterEffect(source: Actor, targetActor: Actor, target: Combatant): ActiveEffect =
+  pure def hideousLaughterEffect(source: Actor, targetActor: Actor, target: Combatant, heightenedRepeatSaveDisadvantage: bool): ActiveEffect =
     HideousLaughterEffect({
       source: source,
       target: targetActor,
       hadProne: target.prone,
       hadIncapacitated: target.incapacitated,
+      heightenedRepeatSaveDisadvantage: heightenedRepeatSaveDisadvantage,
       durationTicks: hideousLaughterDurationTicks,
     })
 
@@ -229,6 +231,7 @@ module battleRuntimeSleepHideousLaughter {
     targetActor: Actor,
     savingThrowSucceeded: bool,
     source: Actor,
+    heightenedTarget: Actor,
   ): Combatant =
     if (savingThrowSucceeded)
       target
@@ -238,7 +241,7 @@ module battleRuntimeSleepHideousLaughter {
         ...withoutPrior,
         prone: true,
         incapacitated: true,
-        activeEffects: withoutPrior.activeEffects.union(Set(hideousLaughterEffect(source, targetActor, withoutPrior))),
+        activeEffects: withoutPrior.activeEffects.union(Set(hideousLaughterEffect(source, targetActor, withoutPrior, targetActor == heightenedTarget))),
       }
       breakConcentrationFromSleepAppliedIncapacitated(laughed, targetActor)
     }
@@ -255,7 +258,7 @@ module battleRuntimeSleepHideousLaughter {
       commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: hideousLaughterTarget(withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
+        goblin: hideousLaughterTarget(withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter, Fighter),
         actionAvailable: false,
       }, Fighter)
     }
@@ -277,6 +280,24 @@ module battleRuntimeSleepHideousLaughter {
       AdvantageSavingThrow
     else
       NormalSavingThrow
+
+  pure def hideousLaughterEndTurnRepeatSaveRollMode(target: Combatant): SavingThrowRollMode =
+    if (target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.heightenedRepeatSaveDisadvantage
+      | _ => false
+    }))
+      DisadvantageSavingThrow
+    else
+      NormalSavingThrow
+
+  pure def hideousLaughterDamageRepeatSaveRollModeWithHeightened(target: Combatant): SavingThrowRollMode =
+    if (target.activeEffects.exists(effect => match effect {
+      | HideousLaughterEffect(data) => data.heightenedRepeatSaveDisadvantage
+      | _ => false
+    }))
+      combineSavingThrowRollModes(hideousLaughterDamageRepeatSaveRollMode(target), DisadvantageSavingThrow)
+    else
+      hideousLaughterDamageRepeatSaveRollMode(target)
 
   pure def combatantAfterHideousLaughterDamageRepeatSave(target: Combatant, source: Actor, targetActor: Actor, damage: int, savingThrowSucceeded: bool): Combatant =
     if (damage > 0 and savingThrowSucceeded)

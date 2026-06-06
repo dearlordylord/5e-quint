@@ -8,16 +8,14 @@ import {
   attackRollHits,
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
+  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleAttackDamageDisposition,
@@ -32,6 +30,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
   snapshotBattle,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
@@ -407,6 +406,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         input.input.state,
         "invalidFill",
         "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+      step.attackRoll.value,
+    );
+    if (spellAttackRerollIssue !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        spellAttackRerollIssue,
       );
     }
     if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {
@@ -1240,11 +1249,10 @@ export function validateChainedSpellDamageFill(
       ? "Critical hit chained spell damage must use the critical step damage hole."
       : "Chained spell damage must use the selected step damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
+  return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.damage.expr.dice * (step.critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
   });
-  return validation?.reason ?? null;
 }
 
 export function chainedSpellDamageAmountForTarget(

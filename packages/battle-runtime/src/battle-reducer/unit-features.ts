@@ -24,10 +24,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 
@@ -172,6 +169,10 @@ import type {
   UnitFeatureBattleResolutionInput,
   UnitFeatureHeldWeaponActivationBattleResolutionInput,
   UnitFeatureRolledDiceFill,
+} from "../battle-reducer.ts";
+import {
+  spellAttackRerollUnsupportedIssue,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 
 const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
@@ -1780,6 +1781,15 @@ function bardicInspirationD20TestOutcome(
         message: "Attack roll result is outside the d20 attack-roll protocol.",
       };
     }
+    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+      input.d20Test.attackRoll,
+    );
+    if (spellAttackRerollIssue !== null) {
+      return {
+        tag: "invalid",
+        message: spellAttackRerollIssue,
+      };
+    }
     const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
     const boostedRoll = {
       ...input.d20Test.attackRoll,
@@ -2435,12 +2445,12 @@ function attackActionAreaSaveDamageReplacementFills(
           message: `${unitFeature.unit.name} damage roll was filled twice.`,
         };
       }
-      const validation = validateRolledDiceForDiceExpr(
-        fill.value,
+      const validation = validateRolledDiceFillForDiceExpr(
+        fill,
         attackActionAreaSaveDamageReplacementDamageDiceExpr(actor, unitFeature),
       );
       if (validation !== null) {
-        return { tag: "invalid", message: validation.reason };
+        return { tag: "invalid", message: validation };
       }
       damageRoll = fill;
       continue;
@@ -2769,12 +2779,12 @@ function magicActionAreaSaveDamageHealingFills(
           message: `${unitFeature.unit.name} damage roll was filled twice.`,
         };
       }
-      const validation = validateRolledDiceForDiceExpr(
-        fill.value,
+      const validation = validateRolledDiceFillForDiceExpr(
+        fill,
         unitFeature.damageHealing.damage.amount.expr,
       );
       if (validation !== null) {
-        return { tag: "invalid", message: validation.reason };
+        return { tag: "invalid", message: validation };
       }
       damageRoll = fill;
       continue;
@@ -2790,12 +2800,12 @@ function magicActionAreaSaveDamageHealingFills(
           message: `${unitFeature.unit.name} healing roll was filled twice.`,
         };
       }
-      const validation = validateRolledDiceForDiceExpr(
-        fill.value,
+      const validation = validateRolledDiceFillForDiceExpr(
+        fill,
         unitFeature.damageHealing.healing.amount.expr,
       );
       if (validation !== null) {
-        return { tag: "invalid", message: validation.reason };
+        return { tag: "invalid", message: validation };
       }
       healingRoll = fill;
       continue;
@@ -3690,13 +3700,13 @@ export function selfBonusActionHealingRollFill(
     return { tag: "ok", value: undefined };
   }
 
-  const validation = validateRolledDiceForDiceExpr(healingRoll.value, {
+  const validation = validateRolledDiceFillForDiceExpr(healingRoll, {
     dice: unitFeature.dice,
     dieSize: unitFeature.dieSize,
   });
   return validation == null
     ? { tag: "ok", value: healingRoll }
-    : { tag: "invalid", message: validation.reason };
+    : { tag: "invalid", message: validation };
 }
 
 export function selfBonusActionHealingRollHole(

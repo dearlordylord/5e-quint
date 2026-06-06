@@ -17,6 +17,7 @@ import {
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
   snapshotBattle,
+  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleResolutionInputForSubject,
@@ -703,6 +704,12 @@ export function resolveSpellRelease(
         "Spell attack roll result is outside the d20 attack-roll protocol.",
       );
     }
+    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+      fillSet.attackRoll,
+    );
+    if (spellAttackRerollIssue !== null) {
+      return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
+    }
     if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
       return invalidResult(
         input.state,
@@ -992,35 +999,35 @@ export function resolveSpellRelease(
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? (releaseResolutionStateAfterCriticalMovement ??
-          recordAttackRollMissToHitReplacementUsed(
-            consumeHelpAttackForAttackRoll(
-              recordAttackRollOngoingFeatures(
-                input.state,
-                input.subject.actorId,
-                target.combatantId,
-                null,
-              ),
+        recordAttackRollMissToHitReplacementUsed(
+          consumeHelpAttackForAttackRoll(
+            recordAttackRollOngoingFeatures(
+              input.state,
               input.subject.actorId,
               target.combatantId,
+              null,
             ),
             input.subject.actorId,
-            selectedAttackRollMissToHitReplacement({
-              state: input.state,
-              subject: input.subject,
-              attackerId: input.subject.actorId,
-              targetId: target.combatantId,
-              attackRoll: fillSet.attackRoll,
-              ordinaryHit: attackRollHits(
-                fillSet.attackRoll,
-                currentArmorClass(activeEffectArmorClass(target)),
-              ),
-            }),
-            {
-              subject: input.subject,
-              targetId: target.combatantId,
-              attackRoll: fillSet.attackRoll,
-            },
-          ))
+            target.combatantId,
+          ),
+          input.subject.actorId,
+          selectedAttackRollMissToHitReplacement({
+            state: input.state,
+            subject: input.subject,
+            attackerId: input.subject.actorId,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+            ordinaryHit: attackRollHits(
+              fillSet.attackRoll,
+              currentArmorClass(activeEffectArmorClass(target)),
+            ),
+          }),
+          {
+            subject: input.subject,
+            targetId: target.combatantId,
+            attackRoll: fillSet.attackRoll,
+          },
+        ))
       : input.state;
   const damaged = applySpellDamage(
     releaseResolutionState,

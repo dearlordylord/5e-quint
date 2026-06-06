@@ -1,15 +1,25 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-effective-level-extra-target
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-dice-reroll
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -39,6 +49,45 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeDistantRangeResult = {
+    rangeFeet: int,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeExtendedDurationResult = {
+    durationTicks: int,
+    concentrationSavingThrowMode: SavingThrowRollMode,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeSubtleComponentProjectionResult = {
+    verbalSuppressed: bool,
+    somaticSuppressed: bool,
+    materialSuppressed: bool,
+    materialPreserved: bool,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeSeekingSpellAttackRerollResult = {
+    finalTotal: int,
+    finalNaturalD20: int,
+    hit: bool,
+    critical: bool,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeEmpoweredSpellDamageRerollResult = {
+    finalDamageTotal: int,
+    selectedDice: int,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeEmpoweredSpellDamageDieReroll = {
+    selectedDieOrdinal: int,
+    original: int,
+    replacement: int,
+  }
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -51,9 +100,50 @@ module battleRuntimeMetamagic {
     | TransmutedSpellAttackSequenceProcedure
     | NonTransmutedDamageProcedure
 
+  type BattleRuntimeSeekingSpellAttackRerollProcedure =
+    | SeekingSpellAttackDamageProcedure
+    | SeekingSpellAttackSequenceProcedure
+    | NonSeekingSpellAttackProcedure
+
+  type BattleRuntimeEmpoweredSpellDamageRerollProcedure =
+    | EmpoweredSpellAttackDamageProcedure
+    | EmpoweredSpellAttackSequenceProcedure
+    | NonEmpoweredSpellDamageProcedure
+
   type BattleRuntimeTwinnedTargetCountProcedure =
     | TwinnedOneAdditionalCreatureTargetProcedure
     | NonTwinnedTargetCountProcedure
+
+  type BattleRuntimeDistantRangeProcedure =
+    | DistantRangeBearingTargetProcedure
+    | NonDistantRangeProcedure
+
+  type BattleRuntimeExtendedDurationProcedure =
+    | ExtendedDurationBearingProcedure
+    | NonExtendedDurationProcedure
+
+  type BattleRuntimeSpellRangeShape =
+    | SpellRangeFeet({ feet: int })
+    | SpellRangeTouch
+    | SpellRangeSelf
+
+  type BattleRuntimeSpellDurationShape =
+    | SpellTimedDurationTicks({ durationTicks: int })
+    | SpellConcentrationDurationTicks({ durationTicks: int })
+    | SpellInstantaneousDuration
+
+  type BattleRuntimeMaterialComponentRequirement =
+    | NoMaterialComponent
+    | FocusReplaceableMaterialComponent
+    | PricedMaterialComponent
+    | ConsumedMaterialComponent
+    | ConsumedPricedMaterialComponent
+
+  type BattleRuntimeSpellComponentRequirements = {
+    verbal: bool,
+    somatic: bool,
+    material: BattleRuntimeMaterialComponentRequirement,
+  }
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -146,6 +236,191 @@ module battleRuntimeMetamagic {
     else
       sourceDamageType
 
+  pure def seekingSpellProcedureSupportsMissedSpellAttackReroll(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+  ): bool =
+    match procedure {
+      | SeekingSpellAttackDamageProcedure => true
+      | SeekingSpellAttackSequenceProcedure => false
+      | NonSeekingSpellAttackProcedure => false
+    }
+
+  pure def seekingSpellAttackRollHits(
+    total: int,
+    naturalD20: int,
+    armorClass: int,
+  ): bool =
+    if (naturalD20 == 1)
+      false
+    else if (naturalD20 == 20)
+      true
+    else
+      total >= armorClass
+
+  pure def seekingSpellAttackRollIsCritical(naturalD20: int): bool =
+    naturalD20 == 20
+
+  pure def seekingSpellSelectedMetamagicOptions(
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+  ): Set[BattleRuntimeMetamagicOptionFact] =
+    castOptions.union(Set(seekingSpellMetamagicFact))
+
+  pure def seekingSpellCanRerollMissedSpellAttack(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+    originalTotal: int,
+    originalNaturalD20: int,
+    armorClass: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    knownOptions.contains(seekingSpellMetamagicFact) and
+    not(castOptions.contains(seekingSpellMetamagicFact)) and
+    selectedMetamagicOptionsCanStack(seekingSpellSelectedMetamagicOptions(castOptions)) and
+    selectedMetamagicOptionsAffordable(seekingSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
+    seekingSpellProcedureSupportsMissedSpellAttackReroll(procedure) and
+    not(seekingSpellAttackRollHits(originalTotal, originalNaturalD20, armorClass))
+
+  pure def resolveSeekingSpellAttackReroll(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+    originalTotal: int,
+    originalNaturalD20: int,
+    replacementTotal: int,
+    replacementNaturalD20: int,
+    armorClass: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeSeekingSpellAttackRerollResult = {
+    val admitted = seekingSpellCanRerollMissedSpellAttack(
+      procedure,
+      originalTotal,
+      originalNaturalD20,
+      armorClass,
+      knownOptions,
+      castOptions,
+      sorceryPointsRemaining,
+    )
+    val finalTotal = if (admitted) replacementTotal else originalTotal
+    val finalNaturalD20 =
+      if (admitted) replacementNaturalD20 else originalNaturalD20
+    {
+      finalTotal: finalTotal,
+      finalNaturalD20: finalNaturalD20,
+      hit: seekingSpellAttackRollHits(finalTotal, finalNaturalD20, armorClass),
+      critical: seekingSpellAttackRollIsCritical(finalNaturalD20),
+      sorceryPointsRemaining:
+        if (admitted)
+          sorceryPointsRemaining - selectedMetamagicSorceryPointCost(seekingSpellSelectedMetamagicOptions(castOptions))
+        else
+          sorceryPointsRemaining,
+    }
+  }
+
+  pure def empoweredSpellProcedureSupportsDamageDiceReroll(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+  ): bool =
+    match procedure {
+      | EmpoweredSpellAttackDamageProcedure => true
+      | EmpoweredSpellAttackSequenceProcedure => false
+      | NonEmpoweredSpellDamageProcedure => false
+    }
+
+  pure def empoweredSpellSelectedMetamagicOptions(
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+  ): Set[BattleRuntimeMetamagicOptionFact] =
+    castOptions.union(Set(empoweredSpellMetamagicFact))
+
+  pure def empoweredSpellMaximumSelectedDice(charismaModifier: int): int =
+    if (charismaModifier < 1) 1 else charismaModifier
+
+  pure def empoweredSpellSelectedDamageDiceCount(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.size()
+
+  pure def empoweredSpellSelectedOriginalTotal(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.map(reroll => reroll.original).fold(0, (total, original) => total + original)
+
+  pure def empoweredSpellReplacementTotal(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.map(reroll => reroll.replacement).fold(0, (total, replacement) => total + replacement)
+
+  pure def empoweredSpellSelectedDamageRerollsValid(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    damageDieSize: int,
+  ): bool =
+    selectedRerolls.size() > 0 and
+    selectedRerolls.forall(reroll =>
+      reroll.selectedDieOrdinal >= 0 and
+      reroll.original >= 1 and
+      reroll.original <= damageDieSize and
+      reroll.replacement >= 1 and
+      reroll.replacement <= damageDieSize
+    ) and
+    selectedRerolls.forall(left =>
+      selectedRerolls.forall(right =>
+        left.selectedDieOrdinal != right.selectedDieOrdinal or left == right
+      )
+    )
+
+  pure def empoweredSpellCanRerollDamageDice(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    damageDieSize: int,
+    charismaModifier: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool = {
+    val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
+    knownOptions.contains(empoweredSpellMetamagicFact) and
+    not(castOptions.contains(empoweredSpellMetamagicFact)) and
+    empoweredSpellSelectedDamageRerollsValid(selectedRerolls, damageDieSize) and
+    selectedDice <= empoweredSpellMaximumSelectedDice(charismaModifier) and
+    selectedMetamagicOptionsCanStack(empoweredSpellSelectedMetamagicOptions(castOptions)) and
+    selectedMetamagicOptionsAffordable(empoweredSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
+    empoweredSpellProcedureSupportsDamageDiceReroll(procedure)
+  }
+
+  pure def resolveEmpoweredSpellDamageReroll(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+    originalDamageTotal: int,
+    damageDieSize: int,
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    charismaModifier: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeEmpoweredSpellDamageRerollResult = {
+    val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
+    val admitted = empoweredSpellCanRerollDamageDice(
+      procedure,
+      selectedRerolls,
+      damageDieSize,
+      charismaModifier,
+      knownOptions,
+      castOptions,
+      sorceryPointsRemaining,
+    )
+    {
+      finalDamageTotal:
+        if (admitted)
+          originalDamageTotal - empoweredSpellSelectedOriginalTotal(selectedRerolls) + empoweredSpellReplacementTotal(selectedRerolls)
+        else
+          originalDamageTotal,
+      selectedDice: if (admitted) selectedDice else 0,
+      sorceryPointsRemaining:
+        if (admitted)
+          sorceryPointsRemaining - selectedMetamagicSorceryPointCost(empoweredSpellSelectedMetamagicOptions(castOptions))
+        else
+          sorceryPointsRemaining,
+    }
+  }
+
   pure def twinnedSpellProcedureSupportsTargetCountProjection(
     procedure: BattleRuntimeTwinnedTargetCountProcedure,
   ): bool =
@@ -153,6 +428,243 @@ module battleRuntimeMetamagic {
       | TwinnedOneAdditionalCreatureTargetProcedure => true
       | NonTwinnedTargetCountProcedure => false
     }
+
+  pure def distantSpellProcedureSupportsRangeProjection(
+    procedure: BattleRuntimeDistantRangeProcedure,
+  ): bool =
+    match procedure {
+      | DistantRangeBearingTargetProcedure => true
+      | NonDistantRangeProcedure => false
+    }
+
+  pure def distantSpellRangeShapeAdmitted(spellRange: BattleRuntimeSpellRangeShape): bool =
+    match spellRange {
+      | SpellRangeTouch => true
+      | SpellRangeFeet(data) => data.feet >= 5
+      | SpellRangeSelf => false
+    }
+
+  pure def distantSpellEffectiveRangeFeet(spellRange: BattleRuntimeSpellRangeShape): int =
+    match spellRange {
+      | SpellRangeTouch => 30
+      | SpellRangeFeet(data) => data.feet * 2
+      | SpellRangeSelf => 0
+    }
+
+  pure def extendedSpellProcedureSupportsDurationProjection(
+    procedure: BattleRuntimeExtendedDurationProcedure,
+  ): bool =
+    match procedure {
+      | ExtendedDurationBearingProcedure => true
+      | NonExtendedDurationProcedure => false
+    }
+
+  pure def extendedSpellMaximumDurationTicks = 14400
+  pure def extendedSpellMinimumEligibleDurationTicks = 10
+
+  pure def extendedSpellDurationShapeAdmitted(duration: BattleRuntimeSpellDurationShape): bool =
+    match duration {
+      | SpellTimedDurationTicks(data) =>
+        data.durationTicks >= extendedSpellMinimumEligibleDurationTicks
+      | SpellConcentrationDurationTicks(data) =>
+        data.durationTicks >= extendedSpellMinimumEligibleDurationTicks
+      | SpellInstantaneousDuration => false
+    }
+
+  pure def extendedSpellBaseDurationTicks(duration: BattleRuntimeSpellDurationShape): int =
+    match duration {
+      | SpellTimedDurationTicks(data) => data.durationTicks
+      | SpellConcentrationDurationTicks(data) => data.durationTicks
+      | SpellInstantaneousDuration => 0
+    }
+
+  pure def extendedSpellEffectiveDurationTicks(duration: BattleRuntimeSpellDurationShape): int = {
+    val doubled = extendedSpellBaseDurationTicks(duration) * 2
+    if (doubled > extendedSpellMaximumDurationTicks)
+      extendedSpellMaximumDurationTicks
+    else
+      doubled
+  }
+
+  pure def extendedSpellConcentrationMaintenanceSavingThrowMode(
+    duration: BattleRuntimeSpellDurationShape,
+  ): SavingThrowRollMode =
+    match duration {
+      | SpellConcentrationDurationTicks(_) => AdvantageSavingThrow
+      | SpellTimedDurationTicks(_) => NormalSavingThrow
+      | SpellInstantaneousDuration => NormalSavingThrow
+    }
+
+  pure def subtleSpellMaterialComponentSuppressed(
+    material: BattleRuntimeMaterialComponentRequirement,
+  ): bool =
+    match material {
+      | FocusReplaceableMaterialComponent => true
+      | NoMaterialComponent => false
+      | PricedMaterialComponent => false
+      | ConsumedMaterialComponent => false
+      | ConsumedPricedMaterialComponent => false
+    }
+
+  pure def subtleSpellMaterialComponentPreserved(
+    material: BattleRuntimeMaterialComponentRequirement,
+  ): bool =
+    match material {
+      | PricedMaterialComponent => true
+      | ConsumedMaterialComponent => true
+      | ConsumedPricedMaterialComponent => true
+      | NoMaterialComponent => false
+      | FocusReplaceableMaterialComponent => false
+    }
+
+  pure def subtleSpellComponentRequirementsAdmitted(
+    components: BattleRuntimeSpellComponentRequirements,
+  ): bool =
+    components.verbal or
+    components.somatic or
+    components.material != NoMaterialComponent
+
+  pure def subtleSpellCanModifyComponentSpell(
+    components: BattleRuntimeSpellComponentRequirements,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(subtleSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    subtleSpellComponentRequirementsAdmitted(components)
+
+  pure def resolveSubtleSpellComponentProjection(
+    components: BattleRuntimeSpellComponentRequirements,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeSubtleComponentProjectionResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    if (
+      subtleSpellCanModifyComponentSpell(
+        components,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    ) {
+      {
+        verbalSuppressed: components.verbal,
+        somaticSuppressed: components.somatic,
+        materialSuppressed:
+          subtleSpellMaterialComponentSuppressed(components.material),
+        materialPreserved:
+          subtleSpellMaterialComponentPreserved(components.material),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        verbalSuppressed: false,
+        somaticSuppressed: false,
+        materialSuppressed: false,
+        materialPreserved: false,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
+
+  pure def extendedSpellCanModifyDurationSpell(
+    procedure: BattleRuntimeExtendedDurationProcedure,
+    duration: BattleRuntimeSpellDurationShape,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(extendedSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    extendedSpellProcedureSupportsDurationProjection(procedure) and
+    extendedSpellDurationShapeAdmitted(duration)
+
+  pure def resolveExtendedSpellDurationProjection(
+    procedure: BattleRuntimeExtendedDurationProcedure,
+    duration: BattleRuntimeSpellDurationShape,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeExtendedDurationResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    if (
+      extendedSpellCanModifyDurationSpell(
+        procedure,
+        duration,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    ) {
+      {
+        durationTicks: extendedSpellEffectiveDurationTicks(duration),
+        concentrationSavingThrowMode:
+          extendedSpellConcentrationMaintenanceSavingThrowMode(duration),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        durationTicks: 0,
+        concentrationSavingThrowMode: NormalSavingThrow,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
+
+  pure def distantSpellCanModifyRangeSpell(
+    procedure: BattleRuntimeDistantRangeProcedure,
+    spellRange: BattleRuntimeSpellRangeShape,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(distantSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    distantSpellProcedureSupportsRangeProjection(procedure) and
+    distantSpellRangeShapeAdmitted(spellRange)
+
+  pure def resolveDistantSpellRangeProjection(
+    procedure: BattleRuntimeDistantRangeProcedure,
+    spellRange: BattleRuntimeSpellRangeShape,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeDistantRangeResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    if (
+      distantSpellCanModifyRangeSpell(
+        procedure,
+        spellRange,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    ) {
+      {
+        rangeFeet: distantSpellEffectiveRangeFeet(spellRange),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        rangeFeet: 0,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
 
   pure def twinnedSpellCanModifyTargetCountSpell(
     procedure: BattleRuntimeTwinnedTargetCountProcedure,

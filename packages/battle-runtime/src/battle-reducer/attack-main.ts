@@ -133,6 +133,8 @@ import {
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
+  spellAttackRerollUnsupportedIssue,
+  spellDamageRerollUnsupportedIssue,
 } from "../battle-reducer.ts";
 import type {
   AttackBattleResolutionInput,
@@ -371,6 +373,12 @@ export function resolveSelectedAttackProcedure(
       "invalidFill",
       "Attack roll result is outside the d20 attack-roll protocol.",
     );
+  }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    fillSet.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) {
+    return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
   }
   const activatedOngoingFeatureProfile =
     attackRollOngoingFeatureActivationProfile(
@@ -1634,6 +1642,19 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  const cleaveSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+  );
+  if (cleaveSpellAttackRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveSpellAttackRerollIssue,
+      ),
+    };
+  }
   if (
     !attackRollModeMatches(
       input.fillSet.weaponMasteryCleaveAttackRoll.value,
@@ -1796,6 +1817,15 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
           input.fillSet.weaponMasteryCleaveAttackRoll.value,
         ),
       ]),
+    };
+  }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+  );
+  if (spellDamageRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
     };
   }
   const damageValidation = validateRolledDiceForWeaponAttack(
@@ -2140,8 +2170,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
   }
   if (
-    input.fillSet.huntersPreyHordeBreakerDecision.holeId !==
-    decisionHole.holeId
+    input.fillSet.huntersPreyHordeBreakerDecision.holeId !== decisionHole.holeId
   ) {
     return {
       tag: "result",
@@ -2241,6 +2270,19 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         input.state,
         "invalidFill",
         "Hunter's Prey Horde Breaker attack roll must be a valid attack roll.",
+      ),
+    };
+  }
+  const hordeBreakerSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+  );
+  if (hordeBreakerSpellAttackRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        hordeBreakerSpellAttackRerollIssue,
       ),
     };
   }
@@ -2399,6 +2441,15 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         "invalidFill",
         "Selected attack damage rider is not eligible for this attack.",
       ),
+    };
+  }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+  );
+  if (spellDamageRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
     };
   }
   const damageValidation = validateRolledDiceForWeaponAttack(

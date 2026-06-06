@@ -17,6 +17,7 @@ module battleRuntimeGustOfWind {
         source: Actor,
         areaId: int,
         directionId: int,
+        heightenedTarget: AreaSpellEffectHeightenedTarget,
         castRound: int,
         durationTicks: int,
       })
@@ -33,6 +34,8 @@ module battleRuntimeGustOfWind {
   pure def gustOfWindLineDurationTicks(): int = 10
 
   pure def gustOfWindLinePushFeet(): int = 15
+
+  pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
 
   pure def gustOfWindLineMovementCost(totalDistanceFeet: int, closerDistanceFeet: int): int =
     totalDistanceFeet + closerDistanceFeet
@@ -84,12 +87,26 @@ module battleRuntimeGustOfWind {
       | NoGustOfWindLine => false
     }
 
+  pure def gustOfWindLineHeightenedDisadvantageApplies(
+    effect: GustOfWindLineEffect,
+    target: Actor,
+  ): bool =
+    match effect {
+      | ActiveGustOfWindLine(active) =>
+          match active.heightenedTarget {
+            | HeightenedSpellTarget(data) => data.target == target
+            | NoHeightenedSpellTarget => false
+          }
+      | NoGustOfWindLine => false
+    }
+
   pure def resolveGustOfWindLineCast(
     state: GustOfWindLineRuntimeState,
     actor: Actor,
     slotLevel: int,
     areaId: int,
     directionId: int,
+    heightenedTarget: AreaSpellEffectHeightenedTarget,
     initialSaveFactsValid: bool,
   ): GustOfWindLineRuntimeState =
     if (
@@ -114,6 +131,7 @@ module battleRuntimeGustOfWind {
           source: actor,
           areaId: areaId,
           directionId: directionId,
+          heightenedTarget: heightenedTarget,
           castRound: state.battle.initiative.round,
           durationTicks: gustOfWindLineDurationTicks,
         }),

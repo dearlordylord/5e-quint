@@ -10,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -32,10 +33,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import {
   holeId,
@@ -257,6 +255,7 @@ import type {
   BattleTurnResources,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowFlatBonusProjection,
+  BattleSavingThrowRollModeProjection,
   SpellTurnStartDamage,
 } from "../battle-reducer.ts";
 import {
@@ -264,6 +263,7 @@ import {
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 export function resolveEndTurn(
   state: BattleState,
@@ -1798,11 +1798,22 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
     targetRollModes: savingThrowRollModeProjections(
       state,
       effect.save.ability,
+      undefined,
+      greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
     targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
       (projection) => projection.targetId === targetId,
     ),
   };
+}
+
+function greaseGroundHazardHeightenedRollModeProjection(
+  effect: GreaseGroundHazardEffect,
+  targetId: CombatantId,
+): BattleSavingThrowRollModeProjection | undefined {
+  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
+    ? { targetId, rollMode: "disadvantage" }
+    : undefined;
 }
 
 function greaseGroundHazardSavingThrowOutcomeFor(
@@ -2374,11 +2385,22 @@ export function gustOfWindLineSavingThrowOutcomeHole(
     targetRollModes: savingThrowRollModeProjections(
       state,
       effect.save.ability,
+      undefined,
+      gustOfWindLineHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
     targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
       (projection) => projection.targetId === targetId,
     ),
   };
+}
+
+function gustOfWindLineHeightenedRollModeProjection(
+  effect: GustOfWindLineEffect,
+  targetId: CombatantId,
+): BattleSavingThrowRollModeProjection | undefined {
+  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
+    ? { targetId, rollMode: "disadvantage" }
+    : undefined;
 }
 
 export function gustOfWindLineDirectionChoiceHole(
@@ -2813,11 +2835,7 @@ function validateFlamingSphereDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
-    hole.movableZone.damage.expr,
-  );
-  return validation === null ? null : validation.reason;
+  return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
 function validateFlamingSphereRamMovement(
@@ -3580,11 +3598,7 @@ function validateMoonbeamDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone save damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
-    hole.movableZone.damage.expr,
-  );
-  return validation === null ? null : validation.reason;
+  return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
 function validateMoonbeamRepositionMovement(
@@ -5344,12 +5358,12 @@ export function resolveEndTurnCommand(
   }
   for (const request of startTurnDamageRollRequests) {
     const damage = spellTurnStartDamageForEffect(request.effect);
-    const validation = validateRolledDiceForDiceExpr(
-      request.roll.value,
+    const validation = validateRolledDiceFillForDiceExpr(
+      request.roll,
       damage.expr,
     );
     if (validation !== null) {
-      return invalidResult(input.state, "invalidFill", validation.reason);
+      return invalidResult(input.state, "invalidFill", validation);
     }
   }
   const startTurnConcentrationHoles = startTurnDamageRollRequests.flatMap(
@@ -6201,11 +6215,10 @@ function validateSpikeGrowthMovementDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Spike Growth movement damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
+  return validateRolledDiceFillForDiceExpr(
+    fill,
     hole.spikeGrowthMovement.damage.expr,
   );
-  return validation === null ? null : validation.reason;
 }
 
 function spikeGrowthMovementDamageAmount(

@@ -22,7 +22,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-see-invisible-observer-sight spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
@@ -42,6 +44,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -61,6 +65,7 @@ import type {
   HoleId,
   HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   type AttackRollMode,
   type AttackRollResult,
@@ -82,6 +87,7 @@ import {
   type Condition,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
+  type ResourceCount,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
@@ -619,6 +625,10 @@ export type {
 export type BattleConcentration = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly effectKind: "spellEffect" | "readiedSpell";
+  readonly maintenanceSavingThrowRollMode?: Extract<
+    AttackRollMode,
+    "advantage"
+  >;
 };
 export type BattleObjectOutline = BattleSpellEffectBase & {
   readonly kind: "faerieFireObjectOutline";
@@ -1189,9 +1199,10 @@ type BattleInterruptCheckpointBase = {
   readonly choices: readonly BattleInterruptProcedureChoice[];
   readonly activeInterrupt?: BattleActiveInterruptProcedure;
 };
-type BattleInterruptCheckpointWithContinuationBase = BattleInterruptCheckpointBase & {
-  readonly continuation: BattleInterruptedProcedure;
-};
+type BattleInterruptCheckpointWithContinuationBase =
+  BattleInterruptCheckpointBase & {
+    readonly continuation: BattleInterruptedProcedure;
+  };
 export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "attackHit";
@@ -1249,7 +1260,10 @@ export type BattleFlySpeedGrantEndFallCleanupFrame = {
   readonly endedEffect: EndedFlySpeedGrant;
 };
 export type BattleInterruptFrame =
-  | { readonly kind: "interruptCheckpoint"; readonly frame: BattleInterruptCheckpoint }
+  | {
+      readonly kind: "interruptCheckpoint";
+      readonly frame: BattleInterruptCheckpoint;
+    }
   | BattleFlySpeedGrantEndFallCleanupFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame;
@@ -1283,14 +1297,18 @@ export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly handledInterruptTrigger: BattleInterruptTrigger;
 };
-export type BattleInterruptCheckpointInput = BattleInterruptCheckpoint extends infer T
-  ? T extends BattleInterruptCheckpoint
-    ? Omit<
-        T,
-        "eligibleResponders" | "offeredResponders" | "choices" | "activeInterrupt"
-      >
-    : never
-  : never;
+export type BattleInterruptCheckpointInput =
+  BattleInterruptCheckpoint extends infer T
+    ? T extends BattleInterruptCheckpoint
+      ? Omit<
+          T,
+          | "eligibleResponders"
+          | "offeredResponders"
+          | "choices"
+          | "activeInterrupt"
+        >
+      : never
+    : never;
 export type BattleInterruptDecision =
   | {
       readonly kind: "decline";
@@ -1550,10 +1568,32 @@ export type BattleTargetSpatialFact =
           };
     }
   | {
+      readonly kind: "spellDistantObjectLightTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+      readonly size: Size;
+      readonly wornOrCarried:
+        | { readonly kind: "nobody" }
+        | { readonly kind: "caster" }
+        | {
+            readonly kind: "someoneElse";
+            readonly relation: "worn" | "carried";
+          };
+    }
+  | {
       readonly kind: "spellTouchedObjectTarget";
       readonly casterId: CombatantId;
       readonly objectId: BattleObjectId;
       readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "spellDistantTouchedObjectTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "spellManufacturedMetalObjectTarget";
@@ -4522,6 +4562,41 @@ export type AttackRollMissToHitReplacement = {
   readonly unitId: UnitRecord["id"];
   readonly label: UnitRecord["name"];
 };
+export type BattleSpellAttackRerollOption = {
+  readonly effectKind: "missed_spell_attack_reroll";
+  readonly label: string;
+  readonly sorceryPointCost: ResourceCount;
+};
+export type BattleSpellAttackRerollDecision =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: "missed_spell_attack_reroll";
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: "missed_spell_attack_reroll";
+      readonly replacement: AttackRollResult;
+    };
+export type BattleSpellDamageRerollOption = {
+  readonly effectKind: "damage_dice_reroll";
+  readonly label: string;
+  readonly sorceryPointCost: ResourceCount;
+  readonly maximumSelectedDice: number;
+};
+export type BattleSpellDamageDieReroll = {
+  readonly groupIndex: number;
+  readonly resultIndex: number;
+  readonly original: DieRollResult;
+  readonly replacement: DieRollResult;
+};
+export type BattleSpellDamageRerollDecision = {
+  readonly kind: "reroll";
+  readonly effectKind: "damage_dice_reroll";
+  readonly dice: readonly [
+    BattleSpellDamageDieReroll,
+    ...BattleSpellDamageDieReroll[],
+  ];
+};
 export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
@@ -4530,6 +4605,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
+  readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
 };
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
@@ -4566,6 +4642,7 @@ export type BattleSpellDamageRollHole = Extract<
   >;
   readonly critical: boolean;
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
+  readonly spellDamageRerolls?: readonly BattleSpellDamageRerollOption[];
 };
 export type BattleDragonsBreathDamageRollHole = Extract<
   RuntimeHole,
@@ -5563,14 +5640,45 @@ export type BattleHole =
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
+  readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
 };
+export const SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE =
+  "Seeking Spell rerolls are not available for this attack-roll owner.";
+export function spellAttackRerollUnsupportedIssue(
+  attackRoll: BattleAttackRollResult,
+): string | null {
+  return attackRoll.spellAttackReroll === undefined
+    ? null
+    : SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE;
+}
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";
   readonly holeId: BattleHoleId;
   readonly value: readonly [RolledDiceGroup, ...RolledDiceGroup[]];
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
+  readonly spellDamageReroll?: BattleSpellDamageRerollDecision;
 };
+export const EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
+  "Empowered Spell damage rerolls are not available for this damage-roll owner.";
+export function spellDamageRerollUnsupportedIssue(
+  damageRoll: BattleRolledDiceFill,
+): string | null {
+  return damageRoll.spellDamageReroll === undefined
+    ? null
+    : EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
+}
+export function validateRolledDiceFillForDiceExpr(
+  fill: BattleRolledDiceFill,
+  expr: DiceExpr,
+): string | null {
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
+  if (spellDamageRerollIssue !== null) {
+    return spellDamageRerollIssue;
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, expr);
+  return validation === null ? null : validation.reason;
+}
 export type SpellDamageReductionFill = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
@@ -5718,7 +5826,9 @@ export type BattleFill =
         {
           readonly kind:
             | "spellObjectLightTarget"
+            | "spellDistantObjectLightTarget"
             | "spellTouchedObjectTarget"
+            | "spellDistantTouchedObjectTarget"
             | "spellObjectIgnition"
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"

@@ -136,9 +136,11 @@ describe("Chromatic Orb chained spell attack", () => {
     ).not.toContainEqual(
       expect.objectContaining({ kind: "action", source: "turn" }),
     );
-    expect(result.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
-      true,
-    );
+    expect(
+      result.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(true);
     const caster = result.state.combatants.get(spellCasterId);
     expect(
       caster?.origin.kind === "character"
@@ -182,9 +184,11 @@ describe("Chromatic Orb chained spell attack", () => {
 
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(3);
     expect(resolved.state.combatants.get(secondTargetId)?.hp).toBe(9);
-    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
-      true,
-    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(true);
   });
 
   test("duplicate d8 faces open a leap target hole until the slot leap budget is exhausted", () => {
@@ -374,11 +378,10 @@ describe("Chromatic Orb chained spell attack", () => {
       concentrationHole,
       true,
     );
-    const awaitingHideousLaughter = resolveNeedsHoles(
-      state,
-      damage.subject,
-      [...damage.fills, concentrationFill],
-    );
+    const awaitingHideousLaughter = resolveNeedsHoles(state, damage.subject, [
+      ...damage.fills,
+      concentrationFill,
+    ]);
     const hideousLaughterHole = requireHideousLaughterRepeatSaveHole(
       requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
     );
@@ -739,16 +742,14 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
     sourceCombatantId: secondTargetId,
     conditionHadNonSpellProneSource: false,
     conditionHadNonSpellIncapacitatedSource: false,
+    repeatSaveRollMode: null,
     save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: {
       kind: "concentration",
       combatantId: secondTargetId,
       durationTicks: elapsedTimeTicks(600),
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "hideousLaughter" }
-  >;
+  } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
   return {
     ...state,
     combatants: new Map(state.combatants)

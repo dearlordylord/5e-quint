@@ -18,10 +18,7 @@ import {
   holeInstanceKey,
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { CombatantId } from "../identity.ts";
@@ -48,6 +45,7 @@ import {
   type SpellAttackDamageComponent,
   type SpellWeaponDamageRider,
   type SourceDamageRollPenaltyRoll,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
@@ -466,7 +464,7 @@ export function applyAvailableSpellDamageReduction(
   ) {
     return { tag: "invalid" };
   }
-  const validation = validateRolledDiceForDiceExpr(roll.value, {
+  const validation = validateRolledDiceFillForDiceExpr(roll, {
     dice: reduction.amount.dice,
     dieSize: reduction.amount.dieSize,
   });
@@ -518,7 +516,7 @@ export function applyAvailableSourceDamageRollPenalty(
   ) {
     return { tag: "invalid" };
   }
-  const validation = validateRolledDiceForDiceExpr(roll.value, {
+  const validation = validateRolledDiceFillForDiceExpr(roll, {
     dice: penalty.amount.dice,
     dieSize: penalty.amount.dieSize,
   });
