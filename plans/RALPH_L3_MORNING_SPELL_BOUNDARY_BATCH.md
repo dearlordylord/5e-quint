@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Consolidate spell boundary evidence"
     }
   ]
@@ -121,7 +121,7 @@ repair branch state by rebasing against `master`.
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | done | none | Fly cleanup already uses the promoted scalar-buff/end-fall witness boundary; automatic elevation, landing, and can-stop-fall derivation remain table/spatial facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | done | none | Moonbeam shape-shift support is resolved through the shared class-feature and spell-effect shape-shift owners; stat-block Shape-Shift specials remain outside this profile until a generic Stat Block special-action active-form owner exists. |
 | 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | done | none | Promoted spell profiles already replay selected identity through production reducer or package-public runtime paths; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_11_SPELL_SELECTED_IDENTITY_AUDIT.md`. |
-| 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | blocked | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
+| 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | ready-for-research | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
 
 ## Task Details
 
