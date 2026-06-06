@@ -6,7 +6,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -1224,6 +1225,17 @@ export const BattleHoleSchema = Schema.Union(
     critical: Schema.Boolean,
     spellMarkedDamageRiders: Schema.optionalWith(
       Schema.Array(BattleRuntimeObjectSchema),
+      { exact: true },
+    ),
+    spellDamageRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("damage_dice_reroll"),
+          label: Schema.String,
+          sorceryPointCost: ResourceCount,
+          maximumSelectedDice: Schema.Number.pipe(Schema.int()),
+        }),
+      ),
       { exact: true },
     ),
   }),
@@ -3325,6 +3337,21 @@ export const BattleFillSchema: Schema.Schema<
           candidates: Schema.Tuple(
             BattleRolledDiceGroupSchema,
             BattleRolledDiceGroupSchema,
+          ),
+        }),
+        { exact: true },
+      ),
+      spellDamageReroll: Schema.optionalWith(
+        Schema.Struct({
+          kind: Schema.Literal("reroll"),
+          effectKind: Schema.Literal("damage_dice_reroll"),
+          dice: Schema.NonEmptyArray(
+            Schema.Struct({
+              groupIndex: Schema.Number.pipe(Schema.int()),
+              resultIndex: Schema.Number.pipe(Schema.int()),
+              original: BattleDieRollResultSchema,
+              replacement: BattleDieRollResultSchema,
+            }),
           ),
         }),
         { exact: true },

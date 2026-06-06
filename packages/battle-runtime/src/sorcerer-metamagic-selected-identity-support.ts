@@ -3,6 +3,7 @@ import { DieRollResult, resourceCount } from "@dnd/shared/types";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_EFFECT_KIND,
@@ -50,6 +51,7 @@ export type SorcererMetamagicProjection = {
     | "carefulSaveGatedDamage"
     | "carefulSaveGatedNoEffect"
     | "heightenedSaveGatedDamage"
+    | "empoweredSpellDamageReroll"
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack"
     | "quickenedSpellAttackSequence"
@@ -175,6 +177,63 @@ export function resolveSeekingRayOfFrost(state: BattleState): BattleState {
         target,
         rerolledAttack,
         damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  ).state;
+}
+
+export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
+  const act = actionRayOfFrostAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const attackRoll = attackRollFill(attackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, attackRoll],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  const damageRoll = damageRollFillWithGroups(damageHole, [[8, 8]]);
+  if (damageRoll.kind !== "rolledDice") {
+    throw new Error("Expected Ray of Frost damage roll fill.");
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        attackRoll,
+        {
+          ...damageRoll,
+          spellDamageReroll: {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          },
+        },
       ],
     }),
   ).state;
@@ -503,6 +562,10 @@ export function seekingSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([seekingMetamagicOption()]);
 }
 
+export function empoweredSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([empoweredMetamagicOption()]);
+}
+
 function sorcererMetamagicBattleWithOptions(
   knownOptions: readonly CharacterBattleMetamagicOptionFact[],
 ): BattleState {
@@ -609,6 +672,14 @@ function twinnedMetamagicOption(): CharacterBattleMetamagicOptionFact {
 function seekingMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
     effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+    stackingMode: "can_combine_with_different_metamagic",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function empoweredMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
     stackingMode: "can_combine_with_different_metamagic",
     sorceryPointCost: resourceCount(1),
   };

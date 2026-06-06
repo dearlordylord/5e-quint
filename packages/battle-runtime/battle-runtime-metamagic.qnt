@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -10,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
@@ -18,6 +19,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-dice-reroll
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -74,6 +76,18 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeEmpoweredSpellDamageRerollResult = {
+    finalDamageTotal: int,
+    selectedDice: int,
+    sorceryPointsRemaining: int,
+  }
+
+  type BattleRuntimeEmpoweredSpellDamageDieReroll = {
+    selectedDieOrdinal: int,
+    original: int,
+    replacement: int,
+  }
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -90,6 +104,11 @@ module battleRuntimeMetamagic {
     | SeekingSpellAttackDamageProcedure
     | SeekingSpellAttackSequenceProcedure
     | NonSeekingSpellAttackProcedure
+
+  type BattleRuntimeEmpoweredSpellDamageRerollProcedure =
+    | EmpoweredSpellAttackDamageProcedure
+    | EmpoweredSpellAttackSequenceProcedure
+    | NonEmpoweredSpellDamageProcedure
 
   type BattleRuntimeTwinnedTargetCountProcedure =
     | TwinnedOneAdditionalCreatureTargetProcedure
@@ -293,6 +312,110 @@ module battleRuntimeMetamagic {
       sorceryPointsRemaining:
         if (admitted)
           sorceryPointsRemaining - selectedMetamagicSorceryPointCost(seekingSpellSelectedMetamagicOptions(castOptions))
+        else
+          sorceryPointsRemaining,
+    }
+  }
+
+  pure def empoweredSpellProcedureSupportsDamageDiceReroll(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+  ): bool =
+    match procedure {
+      | EmpoweredSpellAttackDamageProcedure => true
+      | EmpoweredSpellAttackSequenceProcedure => false
+      | NonEmpoweredSpellDamageProcedure => false
+    }
+
+  pure def empoweredSpellSelectedMetamagicOptions(
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+  ): Set[BattleRuntimeMetamagicOptionFact] =
+    castOptions.union(Set(empoweredSpellMetamagicFact))
+
+  pure def empoweredSpellMaximumSelectedDice(charismaModifier: int): int =
+    if (charismaModifier < 1) 1 else charismaModifier
+
+  pure def empoweredSpellSelectedDamageDiceCount(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.size()
+
+  pure def empoweredSpellSelectedOriginalTotal(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.map(reroll => reroll.original).fold(0, (total, original) => total + original)
+
+  pure def empoweredSpellReplacementTotal(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+  ): int =
+    selectedRerolls.map(reroll => reroll.replacement).fold(0, (total, replacement) => total + replacement)
+
+  pure def empoweredSpellSelectedDamageRerollsValid(
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    damageDieSize: int,
+  ): bool =
+    selectedRerolls.size() > 0 and
+    selectedRerolls.forall(reroll =>
+      reroll.selectedDieOrdinal >= 0 and
+      reroll.original >= 1 and
+      reroll.original <= damageDieSize and
+      reroll.replacement >= 1 and
+      reroll.replacement <= damageDieSize
+    ) and
+    selectedRerolls.forall(left =>
+      selectedRerolls.forall(right =>
+        left.selectedDieOrdinal != right.selectedDieOrdinal or left == right
+      )
+    )
+
+  pure def empoweredSpellCanRerollDamageDice(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    damageDieSize: int,
+    charismaModifier: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool = {
+    val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
+    knownOptions.contains(empoweredSpellMetamagicFact) and
+    not(castOptions.contains(empoweredSpellMetamagicFact)) and
+    empoweredSpellSelectedDamageRerollsValid(selectedRerolls, damageDieSize) and
+    selectedDice <= empoweredSpellMaximumSelectedDice(charismaModifier) and
+    selectedMetamagicOptionsCanStack(empoweredSpellSelectedMetamagicOptions(castOptions)) and
+    selectedMetamagicOptionsAffordable(empoweredSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
+    empoweredSpellProcedureSupportsDamageDiceReroll(procedure)
+  }
+
+  pure def resolveEmpoweredSpellDamageReroll(
+    procedure: BattleRuntimeEmpoweredSpellDamageRerollProcedure,
+    originalDamageTotal: int,
+    damageDieSize: int,
+    selectedRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll],
+    charismaModifier: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeEmpoweredSpellDamageRerollResult = {
+    val selectedDice = empoweredSpellSelectedDamageDiceCount(selectedRerolls)
+    val admitted = empoweredSpellCanRerollDamageDice(
+      procedure,
+      selectedRerolls,
+      damageDieSize,
+      charismaModifier,
+      knownOptions,
+      castOptions,
+      sorceryPointsRemaining,
+    )
+    {
+      finalDamageTotal:
+        if (admitted)
+          originalDamageTotal - empoweredSpellSelectedOriginalTotal(selectedRerolls) + empoweredSpellReplacementTotal(selectedRerolls)
+        else
+          originalDamageTotal,
+      selectedDice: if (admitted) selectedDice else 0,
+      sorceryPointsRemaining:
+        if (admitted)
+          sorceryPointsRemaining - selectedMetamagicSorceryPointCost(empoweredSpellSelectedMetamagicOptions(castOptions))
         else
           sorceryPointsRemaining,
     }

@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-missed-spell-attack-reroll
-// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-missed-spell-attack-reroll unit-feature.metamagic-damage-dice-reroll
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
 import {
   canSpendAction,
@@ -8,7 +8,11 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { DieRollResult, resourceCount } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  DieRollResult,
+  resourceCount,
+} from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 import type {
@@ -16,7 +20,10 @@ import type {
   BattleSpellTargetListHole,
   SupportedSpellInvocation,
 } from "./battle-reducer.ts";
-import { SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE } from "./battle-reducer.ts";
+import {
+  EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+  SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
+} from "./battle-reducer.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -68,6 +75,7 @@ import {
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
+  testCharacterD20Statistics,
   unitLibrary,
   wizardId,
   wizardSpellcasting,
@@ -1681,6 +1689,412 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
+  test("Empowered Spell opens on Ray of Frost spell damage and spends only when replacement dice are used", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      spellDamageRerolls: [
+        {
+          effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+          label: "Empowered Spell",
+          sorceryPointCost: resourceCount(1),
+          maximumSelectedDice: 3,
+        },
+      ],
+    });
+
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [target, attackRoll, damageRollFillWithGroups(damage, [[4, 3]])],
+      }),
+    ).state;
+    expect(sorceryPointsRemaining(declined)).toBe(resourceCount(4));
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[8, 8]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(1);
+  });
+
+  test("Empowered Spell stays closed for spell attack damage carrying marked riders", () => {
+    const state = withActiveEffect(
+      saveMetamagicBattle({
+        knownOptions: [empoweredMetamagicOption()],
+      }),
+      wizardId,
+      {
+        kind: "spellMarkedDamageRider",
+        sourceSpellId: spellRecord("hunters_mark").id,
+        sourceCombatantId: wizardId,
+        targetCombatantId: skeletonId,
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "sameTurn",
+        },
+        abilityCheckBehavior: { kind: "none" },
+        damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+        },
+      },
+    );
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      spellMarkedDamageRiders: [
+        expect.objectContaining({
+          kind: "spellMarkedDamageRider",
+          targetCombatantId: skeletonId,
+        }),
+      ],
+    });
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+  });
+
+  test("Empowered Spell damage reroll limit uses Charisma rather than the spellcasting modifier", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+      d20Statistics: testCharacterD20Statistics({ cha: 12 }),
+      spellcastingAbilityModifier: 3,
+    });
+    const act = actionRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      spellDamageRerolls: [
+        {
+          effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+          maximumSelectedDice: 1,
+        },
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[4, 3]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(4),
+                replacement: DieRollResult(8),
+              },
+              {
+                groupIndex: 0,
+                resultIndex: 1,
+                original: DieRollResult(3),
+                replacement: DieRollResult(8),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("Empowered Spell can reroll damage after a different Metamagic option modified the spell", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
+    });
+    const act = quickenedRayOfFrostAct(state);
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      skeletonId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[8, 8]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 1,
+                original: DieRollResult(8),
+                replacement: DieRollResult(1),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(1));
+  });
+
+  test("Empowered Spell damage reroll fill rejects unknown, unaffordable, mismatched, and over-limit selections before spending", () => {
+    const cases = [
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [quickenedMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+          sorceryPoints: 0,
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(0),
+        message:
+          "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(3),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell selected original dice must match the pending spell damage roll.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+        }),
+        attack: { total: 20, naturalD20: 20 },
+        roll: [[1, 2, 3, 4]],
+        rerolledDice: [
+          {
+            groupIndex: 0,
+            resultIndex: 0,
+            original: DieRollResult(1),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 1,
+            original: DieRollResult(2),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 2,
+            original: DieRollResult(3),
+            replacement: DieRollResult(8),
+          },
+          {
+            groupIndex: 0,
+            resultIndex: 3,
+            original: DieRollResult(4),
+            replacement: DieRollResult(8),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.",
+      },
+    ] as const;
+
+    for (const entry of cases) {
+      const act = actionRayOfFrostAct(entry.state);
+      const target = targetFill(
+        findHole(act.initialHoles, "targetChoice"),
+        skeletonId,
+      );
+      const attack = nextSpellHole(
+        entry.state,
+        act.subject,
+        [target],
+        "attackRoll",
+      );
+      const attackRoll = attackRollFill(attack, entry.attack);
+      const damage = nextSpellHole(
+        entry.state,
+        act.subject,
+        [target, attackRoll],
+        "rolledDice",
+      );
+
+      expect(
+        resolveBattleSubject({
+          state: entry.state,
+          subject: act.subject,
+          fills: [
+            target,
+            attackRoll,
+            empoweredDamageRollFill(damage, entry.roll, {
+              kind: "reroll",
+              effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+              dice: entry.rerolledDice,
+            }),
+          ],
+        }),
+      ).toMatchObject({ tag: "invalid", message: entry.message });
+      expect(sorceryPointsRemaining(entry.state)).toBe(
+        entry.expectedSorceryPoints,
+      );
+    }
+  });
+
+  test("Empowered Spell stays closed for Scorching Ray attack sequences until invocation-local one-use accounting exists", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = actionScorchingRayAct(state);
+    const fills: BattleFill[] = [];
+    for (const target of targetChoiceHoles(act.initialHoles)) {
+      fills.push(
+        spellAttackSequenceTargetFill(target, skeletonId, "scorching_ray"),
+      );
+    }
+    const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [...fills, attackRoll],
+      "rolledDice",
+    );
+
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          ...fills,
+          attackRoll,
+          empoweredDamageRollFill(damage, [[4, 3]], {
+            kind: "reroll",
+            effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+            dice: [
+              {
+                groupIndex: 0,
+                resultIndex: 0,
+                original: DieRollResult(4),
+                replacement: DieRollResult(8),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
   test("Seeking Spell opens after a missed Ray of Frost spell attack and spends only when the forced replacement roll is used", () => {
     const state = saveMetamagicBattle({
       knownOptions: [seekingMetamagicOption()],
@@ -2082,6 +2496,67 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).toMatchObject({
       tag: "invalid",
       message: SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
+    });
+  });
+
+  test("weapon attack damage rejects inert Empowered Spell reroll fills", () => {
+    const state = fighterVsGoblinBattle({ attack: testDaggerAttack() });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Attack action act.");
+    }
+    const target = targetFill(
+      findHole(act.initialHoles, "targetChoice"),
+      goblinId,
+    );
+    const attack = nextSpellHole(state, act.subject, [target], "attackRoll");
+    const attackRoll = attackRollFill(attack, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const damage = nextSpellHole(
+      state,
+      act.subject,
+      [target, attackRoll],
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[3]]);
+    if (damageFill.kind !== "rolledDice") {
+      throw new Error("Expected weapon damage roll fill.");
+    }
+
+    expect(damage).not.toHaveProperty("spellDamageRerolls");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          {
+            ...damageFill,
+            spellDamageReroll: {
+              kind: "reroll",
+              effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+              dice: [
+                {
+                  groupIndex: 0,
+                  resultIndex: 0,
+                  original: DieRollResult(3),
+                  replacement: DieRollResult(1),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
     });
   });
 
@@ -3117,6 +3592,8 @@ function saveMetamagicBattle(input: {
     readonly spellLevel: 1 | 2;
     readonly count: number;
   }[];
+  readonly d20Statistics?: ReturnType<typeof testCharacterD20Statistics>;
+  readonly spellcastingAbilityModifier?: number;
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-save"),
@@ -3128,6 +3605,8 @@ function saveMetamagicBattle(input: {
         side: partySide,
         attack: null,
         classLevels: [{ className: "sorcerer", level: 5 }],
+        d20Statistics:
+          input.d20Statistics ?? testCharacterD20Statistics({ cha: 16 }),
         currentHp: 18,
         maxHp: 18,
         resources: [
@@ -3149,6 +3628,13 @@ function saveMetamagicBattle(input: {
             ),
             spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
           }),
+          ...(input.spellcastingAbilityModifier === undefined
+            ? {}
+            : {
+                spellcastingAbilityModifier: abilityModifier(
+                  input.spellcastingAbilityModifier,
+                ),
+              }),
           sourceClassName: "sorcerer",
         },
       }),
@@ -3646,6 +4132,23 @@ function nextSpellHole(
     throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
   }
   return findHole(result.holes, kind);
+}
+
+function empoweredDamageRollFill(
+  hole: BattleHole,
+  groups: readonly (readonly number[])[],
+  spellDamageReroll: NonNullable<
+    Extract<BattleFill, { readonly kind: "rolledDice" }>["spellDamageReroll"]
+  >,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const damageRoll = damageRollFillWithGroups(hole, groups);
+  if (damageRoll.kind !== "rolledDice") {
+    throw new Error("Expected rolledDice fill.");
+  }
+  return {
+    ...damageRoll,
+    spellDamageReroll,
+  };
 }
 
 function assertTransmutedDamageHole(damageHole: BattleHole): void {

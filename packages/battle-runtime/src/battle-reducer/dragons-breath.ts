@@ -1,19 +1,20 @@
 // Dragon's Breath target-granted Magic action.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-import { canSpendAction, spendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  canSpendAction,
+  spendAction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import * as Either from "effect/Either";
 import { spellId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
 import { snapshotBattle } from "../battle-reducer.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-reducer.ts";
 import type {
   AvailableBattleAct,
   BattleCreatureState,
@@ -62,7 +63,10 @@ type DragonsBreathExhaleSubject = Extract<
   BattleResolutionInputForSubject<
     Extract<
       import("../battle-subjects.ts").BattleSubject,
-      { readonly tag: "runtimeCommand"; readonly command: "dragonsBreathExhale" }
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "dragonsBreathExhale";
+      }
     >
   >["subject"],
   { readonly command: "dragonsBreathExhale" }
@@ -101,8 +105,7 @@ export function dragonsBreathExhaleActs(
     return {
       subject,
       label: "Dragon's Breath",
-      summary:
-        "Spend a Magic action to exhale a table-supplied 15-foot Cone.",
+      summary: "Spend a Magic action to exhale a table-supplied 15-foot Cone.",
       initialHoles: [dragonsBreathSavingThrowOutcomeHole(state, effect)],
     };
   });
@@ -207,12 +210,12 @@ export function resolveDragonsBreathExhaleCommand(
     }
     return needsHolesResult(input.state, input.subject, [damageHole]);
   }
-  const damageValidation = validateRolledDiceForDiceExpr(
-    damageFill.value,
+  const damageValidation = validateRolledDiceFillForDiceExpr(
+    damageFill,
     damageHole.dragonsBreath.expr,
   );
   if (damageValidation !== null) {
-    return invalidResult(input.state, "invalidFill", damageValidation.reason);
+    return invalidResult(input.state, "invalidFill", damageValidation);
   }
 
   const spellDamageReductionRolls = input.fills.filter(
@@ -290,15 +293,18 @@ export function resolveDragonsBreathExhaleCommand(
         });
   });
   const concentrationFills = input.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }> =>
-      fill.kind === "concentrationSavingThrow",
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
   );
   const concentrationHoleIds = new Set(
     concentrationHoles.map((hole) => hole.holeId),
   );
   const missingConcentrationHoles = concentrationHoles.filter(
-    (hole) =>
-      !concentrationFills.some((fill) => fill.holeId === hole.holeId),
+    (hole) => !concentrationFills.some((fill) => fill.holeId === hole.holeId),
   );
   if (missingConcentrationHoles.length > 0) {
     return needsHolesResult(
@@ -307,7 +313,9 @@ export function resolveDragonsBreathExhaleCommand(
       missingConcentrationHoles,
     );
   }
-  if (concentrationFills.some((fill) => !concentrationHoleIds.has(fill.holeId))) {
+  if (
+    concentrationFills.some((fill) => !concentrationHoleIds.has(fill.holeId))
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -326,8 +334,12 @@ export function resolveDragonsBreathExhaleCommand(
     return hole === null ? [] : [hole];
   });
   const damageDispositions = input.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> =>
-      fill.kind === "attackDamageDisposition",
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "attackDamageDisposition" }
+    > => fill.kind === "attackDamageDisposition",
   );
   const dispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
@@ -340,7 +352,11 @@ export function resolveDragonsBreathExhaleCommand(
     (hole) => damageDispositionFillFor(damageDispositions, hole) === undefined,
   );
   if (missingDispositionHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, missingDispositionHoles);
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingDispositionHoles,
+    );
   }
   const fillsValidation = validateExpectedDragonBreathFills(input.fills, [
     { kind: "savingThrowOutcome", holeId: saveHole.holeId },
@@ -469,7 +485,10 @@ function dragonsBreathDamageRollHole(
   effect: DragonsBreathEffect,
 ): BattleDragonsBreathDamageRollHole {
   const expr = dragonsBreathDamageExpr(effect);
-  const key = dragonsBreathHoleKey(effect, `damage-result:${expr.dice}d${expr.dieSize}`);
+  const key = dragonsBreathHoleKey(
+    effect,
+    `damage-result:${expr.dice}d${expr.dieSize}`,
+  );
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -628,7 +647,9 @@ function savingThrowFillFor(
   expectedHoleId: BattleHoleId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome" && fill.holeId === expectedHoleId,
   );
 }

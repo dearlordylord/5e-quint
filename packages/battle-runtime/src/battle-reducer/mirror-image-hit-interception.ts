@@ -3,7 +3,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
   holeInstanceKey,
@@ -18,6 +17,7 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-reducer.ts";
 import {
   MIRROR_IMAGE_DUPLICATE_COUNTS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
@@ -127,9 +127,7 @@ export function resolveMirrorImageHitInterception(
   }
   return {
     remainingDuplicates:
-      mirrorImageHitInterceptionDuplicateCountAfterDestroy(
-        remainingDuplicates,
-      ),
+      mirrorImageHitInterceptionDuplicateCountAfterDestroy(remainingDuplicates),
     normalDamageContinues: false,
   };
 }
@@ -284,11 +282,11 @@ function validateMirrorImageDuplicateRoll(
   ) {
     return "Mirror Image duplicate roll cannot select attack damage riders or weapon damage dice choices.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
+  const validation = validateRolledDiceFillForDiceExpr(fill, {
     dice: hole.mirrorImageDuplicateRoll.remainingDuplicates,
     dieSize: hole.mirrorImageDuplicateRoll.dieSize,
   });
-  return validation?.reason ?? null;
+  return validation;
 }
 
 function stateAfterMirrorImageDuplicateDestroyed(
@@ -301,9 +299,8 @@ function stateAfterMirrorImageDuplicateDestroyed(
   if (target === undefined) {
     return state;
   }
-  const nextDuplicateCount = activeMirrorImageHitInterceptionDuplicates(
-    remainingDuplicates,
-  );
+  const nextDuplicateCount =
+    activeMirrorImageHitInterceptionDuplicates(remainingDuplicates);
   const activeEffects =
     nextDuplicateCount === null
       ? target.activeEffects.filter((candidate) => candidate !== effect)

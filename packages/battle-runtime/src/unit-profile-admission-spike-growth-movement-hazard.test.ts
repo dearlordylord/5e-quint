@@ -22,6 +22,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   breakBattleConcentration,
+  DieRollResult,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -41,6 +42,7 @@ import {
   webAreaId,
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
+import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer.ts";
 
 const spikeGrowthDurationTicks = elapsedTimeTicks(100);
 
@@ -455,6 +457,54 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       tag: "invalid",
       message:
         "Move received a fill that does not match a pending Spike Growth movement damage hole.",
+    });
+    const movementThroughHazardFill = movementFill(movement, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: {
+        kind: "areaDifficultTerrain",
+        sources: [
+          {
+            kind: "spikeGrowthHazard",
+            sourceCombatantId: spellCasterId,
+            sourceSpellId: spell.id,
+            areaId: spikeGrowthAreaId,
+            damageDistanceFeet: movementFeet(5),
+          },
+        ],
+        totalDistanceFeet: movementFeet(10),
+        difficultTerrainDistanceFeet: movementFeet(5),
+      },
+    });
+    const spikeGrowthDamageFill = damageRollFillWithGroups(damageHole, [
+      [1, 1],
+    ]);
+    expect(
+      resolveBattleSubject({
+        state: movementState,
+        subject: moveSubject,
+        fills: [
+          movementThroughHazardFill,
+          {
+            ...spikeGrowthDamageFill,
+            spellDamageReroll: {
+              kind: "reroll",
+              effectKind: "damage_dice_reroll",
+              dice: [
+                {
+                  groupIndex: 0,
+                  resultIndex: 0,
+                  original: DieRollResult(1),
+                  replacement: DieRollResult(2),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
     });
     const resolved = resolveBattleSubject({
       state: movementState,

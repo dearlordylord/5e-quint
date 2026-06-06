@@ -43,6 +43,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleId,
   breakBattleConcentration,
+  DieRollResult,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -63,6 +64,7 @@ import {
   statBlockCatalog,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {
@@ -138,9 +140,8 @@ describe("L12G deterministic Moonbeam admission", () => {
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
-    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(
-      encodedHole,
-    );
+    const decodedHole =
+      Schema.decodeUnknownEither(BattleHoleSchema)(encodedHole);
     if (Either.isLeft(decodedHole)) {
       throw new Error(String(decodedHole.left));
     }
@@ -269,6 +270,71 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected Moonbeam end-turn damage to resolve.");
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(17));
+  });
+
+  test("end-turn damage rejects inert Empowered Spell reroll fills", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const area = requireHole(act.initialHoles, "spellAreaChoice");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+
+    const endTurnSave = moonbeamEndTurnSaveAct(targetTurn.state);
+    const save = requireHole(endTurnSave.initialHoles, "savingThrowOutcome");
+    const failedSave = singleTargetSavingThrowOutcomeFill(
+      save,
+      spellTargetId,
+      false,
+    );
+    const needsDamage = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: endTurnSave.subject,
+      fills: [failedSave],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damage, [[5, 8]]);
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: endTurnSave.subject,
+        fills: [
+          failedSave,
+          {
+            ...damageFill,
+            spellDamageReroll: {
+              kind: "reroll",
+              effectKind: "damage_dice_reroll",
+              dice: [
+                {
+                  groupIndex: 0,
+                  resultIndex: 0,
+                  original: DieRollResult(5),
+                  replacement: DieRollResult(1),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
+    });
   });
 
   test("end-turn save applies half radiant damage on success", () => {
@@ -714,9 +780,7 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellCasterId,
   sourceSpellId: "synthetic_shape_spell",
-  sourceEffectId: battleSpellEffectOccurrenceId(
-    "synthetic-shape-spell-effect",
-  ),
+  sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",
     creatureSize: "large",

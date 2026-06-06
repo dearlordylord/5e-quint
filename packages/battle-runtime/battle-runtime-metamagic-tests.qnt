@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-missed-spell-attack-reroll
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-dice-reroll
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -1016,6 +1017,211 @@ module battleRuntimeMetamagicTests {
       assert(twoCastMetamagics.finalTotal == 5),
       assert(twoCastMetamagics.sorceryPointsRemaining == 4),
       assert(quickenedCastCombinedUnaffordable.finalTotal == 5),
+      assert(quickenedCastCombinedUnaffordable.sorceryPointsRemaining == 2),
+    }
+  }
+
+  pure val empoweredDamageDieSize = 8
+
+  pure val empoweredSingleDamageReroll: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
+    Set({
+      selectedDieOrdinal: 0,
+      original: 8,
+      replacement: 1,
+    })
+
+  pure val empoweredOverLimitDamageRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
+    Set(
+      {
+        selectedDieOrdinal: 0,
+        original: 4,
+        replacement: 1,
+      },
+      {
+        selectedDieOrdinal: 1,
+        original: 3,
+        replacement: 1,
+      },
+      {
+        selectedDieOrdinal: 2,
+        original: 2,
+        replacement: 1,
+      },
+      {
+        selectedDieOrdinal: 3,
+        original: 1,
+        replacement: 1,
+      },
+    )
+
+  pure val empoweredInvalidReplacementDamageReroll: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] =
+    Set({
+      selectedDieOrdinal: 0,
+      original: 8,
+      replacement: -1,
+    })
+
+  pure val empoweredEmptyDamageRerolls: Set[BattleRuntimeEmpoweredSpellDamageDieReroll] = Set()
+
+  run test_empowered_spell_rerolls_damage_dice_and_spends_one_point = {
+    val result = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(result.finalDamageTotal == 9),
+      assert(result.selectedDice == 1),
+      assert(result.sorceryPointsRemaining == 3),
+    }
+  }
+
+  run test_empowered_spell_rejects_unknown_unaffordable_unsupported_and_over_limit = {
+    val unknown = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(quickenedSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val unaffordable = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      0,
+    )
+    val repeatedAttackSequence = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackSequenceProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val nonDamageOwner = resolveEmpoweredSpellDamageReroll(
+      NonEmpoweredSpellDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val overLimit = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredOverLimitDamageRerolls,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val zeroSelected = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredEmptyDamageRerolls,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val invalidReplacement = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredInvalidReplacementDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(unknown.finalDamageTotal == 16),
+      assert(unknown.sorceryPointsRemaining == 4),
+      assert(unaffordable.finalDamageTotal == 16),
+      assert(unaffordable.sorceryPointsRemaining == 0),
+      assert(repeatedAttackSequence.finalDamageTotal == 16),
+      assert(repeatedAttackSequence.sorceryPointsRemaining == 4),
+      assert(nonDamageOwner.finalDamageTotal == 16),
+      assert(nonDamageOwner.sorceryPointsRemaining == 4),
+      assert(overLimit.finalDamageTotal == 16),
+      assert(overLimit.selectedDice == 0),
+      assert(overLimit.sorceryPointsRemaining == 4),
+      assert(zeroSelected.finalDamageTotal == 16),
+      assert(zeroSelected.selectedDice == 0),
+      assert(zeroSelected.sorceryPointsRemaining == 4),
+      assert(invalidReplacement.finalDamageTotal == 16),
+      assert(invalidReplacement.selectedDice == 0),
+      assert(invalidReplacement.sorceryPointsRemaining == 4),
+    }
+  }
+
+  run test_empowered_spell_stacking_exception_allows_one_different_metamagic_only = {
+    val quickenedCast = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact, quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    val empoweredAlreadyCast = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact),
+      Set(empoweredSpellMetamagicFact),
+      4,
+    )
+    val twoCastMetamagics = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact, quickenedSpellMetamagicFact, seekingSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact, seekingSpellMetamagicFact),
+      4,
+    )
+    val quickenedCastCombinedUnaffordable = resolveEmpoweredSpellDamageReroll(
+      EmpoweredSpellAttackDamageProcedure,
+      16,
+      empoweredDamageDieSize,
+      empoweredSingleDamageReroll,
+      3,
+      Set(empoweredSpellMetamagicFact, quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(quickenedCast.finalDamageTotal == 9),
+      assert(quickenedCast.sorceryPointsRemaining == 1),
+      assert(empoweredAlreadyCast.finalDamageTotal == 16),
+      assert(empoweredAlreadyCast.sorceryPointsRemaining == 4),
+      assert(twoCastMetamagics.finalDamageTotal == 16),
+      assert(twoCastMetamagics.sorceryPointsRemaining == 4),
+      assert(quickenedCastCombinedUnaffordable.finalDamageTotal == 16),
       assert(quickenedCastCombinedUnaffordable.sorceryPointsRemaining == 2),
     }
   }

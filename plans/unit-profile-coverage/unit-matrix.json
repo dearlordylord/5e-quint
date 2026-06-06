@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 113,
-      "numerator": 110,
-      "percent": "97.3%"
+      "denominator": 114,
+      "numerator": 111,
+      "percent": "97.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 151,
-      "numerator": 151,
+      "denominator": 152,
+      "numerator": 152,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 151,
-      "numerator": 151,
+      "denominator": 152,
+      "numerator": 152,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -4869,19 +4869,52 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.metamagic-damage-dice-reroll",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Empowered Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and the pending single spell-attack-damage rolledDice fill. A promoted Ray of Frost level-5 damage roll can carry a typed Empowered Spell reroll option; a reroll fill carries selected original damage dice and forced replacement dice, spends 1 Sorcery Point only when replacement dice are used, applies the replacement dice before damage totals, enforces the Charisma-modifier minimum-one selected-die limit, and may combine with at most one different Metamagic option used for the same spell. Unknown options, unaffordable spends, mismatched original dice, duplicate or non-existing dice positions, out-of-range replacement dice, over-limit selections, Scorching Ray repeated attack sequences, Magic Missile allocation, Saving Throw area damage, ongoing damage, object damage, and other non-promoted damage owners are rejected before Sorcery Point spending without storing durable reroll opportunity state.",
+      "taskRefs": [
+        "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
+      ],
+      "title": "Unit feature applies Empowered Spell damage dice reroll",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 151,
-        "numerator": 151,
+        "denominator": 152,
+        "numerator": 152,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 151,
-        "numerator": 151,
+        "denominator": 152,
+        "numerator": 152,
         "percent": "100%"
       }
     },
@@ -7460,6 +7493,22 @@
           }
         ],
         "profileId": "unit-feature.metamagic-missed-spell-attack-reroll",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Empowered Spell Metamagic admits selected single spell damage dice rerolls, enforces known-option, Sorcery Point affordability, Charisma-modifier selected-die limits, and different-Metamagic stacking gates, and resolves forced replacement dice before damage"
+          }
+        ],
+        "profileId": "unit-feature.metamagic-damage-dice-reroll",
         "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
@@ -15272,6 +15321,22 @@
         "unit-feature.metamagic-missed-spell-attack-reroll"
       ],
       "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Empowered Spell admission for a selected single spell damage dice reroll, known-option and Sorcery Point gates, Charisma-modifier selected-die limits, the different-Metamagic stacking exception, forced replacement damage totals, and repeated spell attack sequence/non-damage owner closure before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-damage-dice-reroll"
+      ],
+      "taskId": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Empowered Spell discovery and resolution for Ray of Frost level-5 damage, typed damage dice reroll fills, declining without spending, rerolling selected original dice with forced replacements, spending 1 Sorcery Point from the shared Font of Magic pool, combining with one different Metamagic option, and rejecting unknown, unaffordable, mismatched, over-limit, and Scorching Ray repeated attack sequence cases before spending.",
+      "profileIds": [
+        "unit-feature.metamagic-damage-dice-reroll"
+      ],
+      "taskId": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15344,7 +15409,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 115,
+        "profileFactDenominator": 116,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -19988,10 +20053,10 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "typed post-roll spell damage reroll fill boundary owner",
-              "reason": "Empowered Spell needs spell damage roll fills that can carry the original damage dice selected for reroll, the Charisma-modifier dice limit, and the forced replacement rolls. Seeking Spell now has a promoted missed single spell-attack reroll slice; Empowered remains rejected before Sorcery Point spending instead of storing reroll opportunity state or overloading final roll fills."
+              "owner": "future procedure-specific spell damage reroll owners",
+              "reason": "The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state."
             },
-            "mechanic": "Empowered Spell reroll modifier: reroll damage dice up to Charisma modifier minimum one, using the new rolls and preserving the option's different-Metamagic stacking exception."
+            "mechanic": "Empowered Spell for repeated spell attack sequences, Magic Missile allocation, Saving Throw area damage, ongoing damage, object damage, and other non-promoted spell damage owners remains deferred until each owner consumes a typed damage-reroll fill without duplicating damage roll state or violating one-use-per-spell accounting."
           },
           {
             "battleReadinessClosure": {
@@ -20031,7 +20096,8 @@
           "unit-feature.metamagic-cast-range-increase",
           "unit-feature.metamagic-cast-duration-and-concentration",
           "unit-feature.metamagic-cast-component-suppression",
-          "unit-feature.metamagic-missed-spell-attack-reroll"
+          "unit-feature.metamagic-missed-spell-attack-reroll",
+          "unit-feature.metamagic-damage-dice-reroll"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -20047,7 +20113,8 @@
           "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Extended Spell for promoted duration-bearing spell owners, currently Enlarge/Reduce creature size change, by deriving a cast-local doubled duration fact from the selected Extended Spell and the canonical Surface duration shape, spending 1 Sorcery Point from the shared Font of Magic point pool, storing the doubled duration on the effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and rejecting unsupported procedures, Instantaneous durations, and sub-1-minute durations before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Subtle Spell for action-time spell casts with component requirements by deriving a cast-local component projection from the canonical Surface component shape, spending 1 Sorcery Point from the shared Font of Magic point pool, suppressing Verbal and Somatic components, suppressing focus-replaceable Material components, preserving priced or consumed Material requirements, and rejecting non-action-time or no-component casts before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Seeking Spell for missed single spell-attack-damage procedures by reopening the pending Attack Roll fill with a typed Seeking Spell reroll option, enforcing known-option, shared Sorcery Point affordability, spell-attack-only, missed-original-roll, and different-Metamagic stacking gates before spending, applying the forced replacement d20 to hit, miss, natural-1 miss, and natural-20 critical resolution, spending 1 Sorcery Point only when the replacement roll is used, and preserving Ray of Frost's normal damage/effect flow without storing durable reroll opportunity state."
+          "The Metamagic Spell Invocation boundary promotes Seeking Spell for missed single spell-attack-damage procedures by reopening the pending Attack Roll fill with a typed Seeking Spell reroll option, enforcing known-option, shared Sorcery Point affordability, spell-attack-only, missed-original-roll, and different-Metamagic stacking gates before spending, applying the forced replacement d20 to hit, miss, natural-1 miss, and natural-20 critical resolution, spending 1 Sorcery Point only when the replacement roll is used, and preserving Ray of Frost's normal damage/effect flow without storing durable reroll opportunity state.",
+          "The Metamagic Spell Invocation boundary promotes Empowered Spell for pending single spell-attack-damage rolledDice fills, currently Ray of Frost at level 5, by reopening the damage roll with a typed damage dice reroll option, enforcing known-option, shared Sorcery Point affordability, original-die matching, Charisma-modifier minimum-one selected-die limits, and different-Metamagic stacking gates before spending, applying forced replacement dice before damage totals, spending 1 Sorcery Point only when replacement dice are used, and preserving the base spell damage/effect flow without storing durable reroll opportunity state."
         ],
         "tag": "profile-subset-supported"
       },
@@ -20117,6 +20184,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
         }
       ],
       "executableMechanics": true,
@@ -20506,6 +20578,39 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-damage-dice-reroll",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Empowered Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and the pending single spell-attack-damage rolledDice fill. A promoted Ray of Frost level-5 damage roll can carry a typed Empowered Spell reroll option; a reroll fill carries selected original damage dice and forced replacement dice, spends 1 Sorcery Point only when replacement dice are used, applies the replacement dice before damage totals, enforces the Charisma-modifier minimum-one selected-die limit, and may combine with at most one different Metamagic option used for the same spell. Unknown options, unaffordable spends, mismatched original dice, duplicate or non-existing dice positions, out-of-range replacement dice, over-limit selections, Scorching Ray repeated attack sequences, Magic Missile allocation, Saving Throw area damage, ongoing damage, object damage, and other non-promoted damage owners are rejected before Sorcery Point spending without storing durable reroll opportunity state.",
+          "taskRefs": [
+            "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
+          ],
+          "title": "Unit feature applies Empowered Spell damage dice reroll",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"
             }
           ]
         }

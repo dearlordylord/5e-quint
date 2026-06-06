@@ -2045,7 +2045,10 @@ export function resolveBattleInterrupt(input: {
 
   const updatedFrame = {
     ...frame,
-    offeredResponders: [...frame.offeredResponders, input.fill.value.responderId],
+    offeredResponders: [
+      ...frame.offeredResponders,
+      input.fill.value.responderId,
+    ],
   };
   const remainingResponders = unofferedEligibleResponders(updatedFrame);
   const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
@@ -2064,7 +2067,10 @@ export function resolveBattleInterrupt(input: {
         };
   const nextState =
     remainingResponders.length === 0
-      ? recordHandledInterruptTriggerForActiveInterrupt(closedState, frame.trigger)
+      ? recordHandledInterruptTriggerForActiveInterrupt(
+          closedState,
+          frame.trigger,
+        )
       : closedState;
 
   return remainingResponders.length === 0
@@ -2218,7 +2224,10 @@ export function resolveReactionRollOrDamageReduction(input: {
   );
   const completedFrame: BattleInterruptCheckpoint = {
     ...updatedFrame,
-    offeredResponders: [...updatedFrame.offeredResponders, input.choice.reactorId],
+    offeredResponders: [
+      ...updatedFrame.offeredResponders,
+      input.choice.reactorId,
+    ],
   };
   const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = spent.interruptStack.slice(0, -1);
@@ -3381,7 +3390,10 @@ export function completeActiveInterruptProcedure(
   const { activeInterrupt: _completedInterrupt, ...inactiveFrame } = frame;
   const completedFrame: BattleInterruptCheckpoint = {
     ...inactiveFrame,
-    offeredResponders: [...frame.offeredResponders, activeInterrupt.responderId],
+    offeredResponders: [
+      ...frame.offeredResponders,
+      activeInterrupt.responderId,
+    ],
   };
   const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = state.interruptStack.slice(0, -1);
@@ -3397,7 +3409,10 @@ export function completeActiveInterruptProcedure(
         };
   const nextState =
     remainingResponders.length === 0
-      ? recordHandledInterruptTriggerForActiveInterrupt(closedState, frame.trigger)
+      ? recordHandledInterruptTriggerForActiveInterrupt(
+          closedState,
+          frame.trigger,
+        )
       : closedState;
 
   return remainingResponders.length === 0
@@ -3739,7 +3754,9 @@ export function resolveReplayContinuationFromState(
   ) {
     return result;
   }
-  const activeInterrupt = currentInterruptCheckpoint(result.state)?.activeInterrupt;
+  const activeInterrupt = currentInterruptCheckpoint(
+    result.state,
+  )?.activeInterrupt;
   if (
     activeInterrupt !== undefined &&
     sameBattleSubject(activeInterrupt.subject, continuation.subject)
@@ -4005,7 +4022,8 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
       attackDamageRiderSelectionsEqual(
         a.selectedAttackDamageRiderUnitIds,
         b.selectedAttackDamageRiderUnitIds,
-      )
+      ) &&
+      spellDamageRerollDecisionsEqual(a.spellDamageReroll, b.spellDamageReroll)
     );
   }
   if (
@@ -4046,6 +4064,31 @@ export function attackDamageRiderSelectionsEqual(
   return (
     (a ?? []).length === (b ?? []).length &&
     (a ?? []).every((unitId, index) => unitId === (b ?? [])[index])
+  );
+}
+
+function spellDamageRerollDecisionsEqual(
+  a: BattleRolledDiceFill["spellDamageReroll"],
+  b: BattleRolledDiceFill["spellDamageReroll"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return (
+    a.dice.length === b.dice.length &&
+    a.dice.every((die, index) => {
+      const other = b.dice[index];
+      return (
+        other !== undefined &&
+        die.groupIndex === other.groupIndex &&
+        die.resultIndex === other.resultIndex &&
+        die.original === other.original &&
+        die.replacement === other.replacement
+      );
+    })
   );
 }
 
@@ -4210,7 +4253,9 @@ export function unofferedEligibleResponders(
   frame: BattleInterruptCheckpoint,
 ): readonly CombatantId[] {
   const offered = new Set(frame.offeredResponders);
-  return frame.eligibleResponders.filter((reactorId) => !offered.has(reactorId));
+  return frame.eligibleResponders.filter(
+    (reactorId) => !offered.has(reactorId),
+  );
 }
 
 export function maybeOpenInterruptWindow(

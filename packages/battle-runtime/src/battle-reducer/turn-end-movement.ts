@@ -32,10 +32,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import {
   holeId,
@@ -264,6 +261,7 @@ import {
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 export function resolveEndTurn(
   state: BattleState,
@@ -2810,11 +2808,7 @@ function validateFlamingSphereDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
-    hole.movableZone.damage.expr,
-  );
-  return validation === null ? null : validation.reason;
+  return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
 function validateFlamingSphereRamMovement(
@@ -3577,11 +3571,7 @@ function validateMoonbeamDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone save damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
-    hole.movableZone.damage.expr,
-  );
-  return validation === null ? null : validation.reason;
+  return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
 function validateMoonbeamRepositionMovement(
@@ -5341,12 +5331,12 @@ export function resolveEndTurnCommand(
   }
   for (const request of startTurnDamageRollRequests) {
     const damage = spellTurnStartDamageForEffect(request.effect);
-    const validation = validateRolledDiceForDiceExpr(
-      request.roll.value,
+    const validation = validateRolledDiceFillForDiceExpr(
+      request.roll,
       damage.expr,
     );
     if (validation !== null) {
-      return invalidResult(input.state, "invalidFill", validation.reason);
+      return invalidResult(input.state, "invalidFill", validation);
     }
   }
   const startTurnConcentrationHoles = startTurnDamageRollRequests.flatMap(
@@ -6198,11 +6188,10 @@ function validateSpikeGrowthMovementDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Spike Growth movement damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(
-    fill.value,
+  return validateRolledDiceFillForDiceExpr(
+    fill,
     hole.spikeGrowthMovement.damage.expr,
   );
-  return validation === null ? null : validation.reason;
 }
 
 function spikeGrowthMovementDamageAmount(

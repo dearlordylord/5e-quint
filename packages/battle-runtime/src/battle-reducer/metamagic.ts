@@ -4,15 +4,19 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
 import * as Either from "effect/Either";
+import { abilityScoreToMod } from "@dnd/shared/types";
 import type {
   BattleAttackRollResult,
   BattleCreatureState,
+  BattleRolledDiceFill,
+  BattleSpellDamageDieReroll,
+  BattleSpellDamageRerollOption,
   BattleSpellAttackRerollOption,
   BattleState,
   SupportedSpellInvocation,
@@ -107,6 +111,10 @@ export const QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE =
 
 type SeekingSpellApplicationFact = CharacterBattleMetamagicOptionFact & {
   readonly effectKind: typeof SEEKING_METAMAGIC_EFFECT_KIND;
+};
+
+type EmpoweredSpellApplicationFact = CharacterBattleMetamagicOptionFact & {
+  readonly effectKind: typeof EMPOWERED_METAMAGIC_EFFECT_KIND;
 };
 
 type QuickenedActionRewriteProcedureDisposition =
@@ -299,6 +307,170 @@ export function seekingSpellAttackRerollOption(input: {
       };
 }
 
+export function empoweredSpellDamageRerollOption(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+}): BattleSpellDamageRerollOption | null {
+  const application = empoweredSpellMetamagicApplication(input.actor);
+  if (application === null) {
+    return null;
+  }
+  if (
+    empoweredSpellCombinedUseIssue({
+      actor: input.actor,
+      castApplications: input.castApplications,
+      empoweredApplication: application,
+    }) !== null
+  ) {
+    return null;
+  }
+  return {
+    effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+    label: "Empowered Spell",
+    sorceryPointCost: application.sorceryPointCost,
+    maximumSelectedDice: empoweredSpellMaximumSelectedDice(input.actor),
+  };
+}
+
+export function effectiveEmpoweredSpellDamageRoll(
+  damageRoll: BattleRolledDiceFill,
+): BattleRolledDiceFill {
+  if (damageRoll.spellDamageReroll === undefined) {
+    return damageRoll;
+  }
+  const replacements = damageRoll.spellDamageReroll.dice;
+  const [firstGroup, ...remainingGroups] = damageRoll.value;
+  const value: BattleRolledDiceFill["value"] = [
+    effectiveEmpoweredSpellDiceGroup(firstGroup, 0, replacements),
+    ...remainingGroups.map((group, index) =>
+      effectiveEmpoweredSpellDiceGroup(group, index + 1, replacements),
+    ),
+  ];
+  return {
+    ...damageRoll,
+    value,
+  };
+}
+
+function effectiveEmpoweredSpellDiceGroup(
+  group: BattleRolledDiceFill["value"][number],
+  groupIndex: number,
+  replacements: readonly BattleSpellDamageDieReroll[],
+): BattleRolledDiceFill["value"][number] {
+  const [firstResult, ...remainingResults] = group.results;
+  return {
+    results: [
+      effectiveEmpoweredSpellDieResult(
+        firstResult,
+        groupIndex,
+        0,
+        replacements,
+      ),
+      ...remainingResults.map((result, index) =>
+        effectiveEmpoweredSpellDieResult(
+          result,
+          groupIndex,
+          index + 1,
+          replacements,
+        ),
+      ),
+    ],
+  };
+}
+
+function effectiveEmpoweredSpellDieResult(
+  result: BattleRolledDiceFill["value"][number]["results"][number],
+  groupIndex: number,
+  resultIndex: number,
+  replacements: readonly BattleSpellDamageDieReroll[],
+): BattleRolledDiceFill["value"][number]["results"][number] {
+  const replacement = replacements.find(
+    (candidate) =>
+      candidate.groupIndex === groupIndex &&
+      candidate.resultIndex === resultIndex,
+  );
+  return replacement?.replacement ?? result;
+}
+
+export function empoweredSpellRerollApplicationForDamageRoll(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly damageRoll: BattleRolledDiceFill;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+}): EmpoweredSpellApplicationFact | string | null {
+  if (input.damageRoll.spellDamageReroll === undefined) {
+    return null;
+  }
+  const application = empoweredSpellMetamagicApplication(input.actor);
+  if (application === null) {
+    return "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.";
+  }
+  const combinedUseIssue = empoweredSpellCombinedUseIssue({
+    actor: input.actor,
+    castApplications: input.castApplications,
+    empoweredApplication: application,
+  });
+  if (combinedUseIssue !== null) {
+    return combinedUseIssue;
+  }
+  return application;
+}
+
+export function empoweredSpellDamageRerollValidationIssue(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+  readonly damageRoll: BattleRolledDiceFill;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+}): string | null {
+  const decision = input.damageRoll.spellDamageReroll;
+  if (decision === undefined) {
+    return null;
+  }
+  if (input.invocation.procedure !== "spellAttackDamage") {
+    return "Empowered Spell is supported only for the promoted single spell attack damage procedure.";
+  }
+  const application = empoweredSpellRerollApplicationForDamageRoll({
+    actor: input.actor,
+    damageRoll: input.damageRoll,
+    castApplications: input.castApplications,
+  });
+  if (typeof application === "string") {
+    return application;
+  }
+  const selectedDice = decision.dice;
+  if (selectedDice.length > empoweredSpellMaximumSelectedDice(input.actor)) {
+    return "Empowered Spell selected damage dice exceed the caster's Charisma modifier minimum-one limit.";
+  }
+  const seenPositions = new Set<string>();
+  for (const selectedDie of selectedDice) {
+    if (
+      !Number.isInteger(selectedDie.groupIndex) ||
+      !Number.isInteger(selectedDie.resultIndex) ||
+      selectedDie.groupIndex < 0 ||
+      selectedDie.resultIndex < 0
+    ) {
+      return "Empowered Spell selected damage dice must identify existing original dice.";
+    }
+    const positionKey = `${selectedDie.groupIndex}:${selectedDie.resultIndex}`;
+    if (seenPositions.has(positionKey)) {
+      return "Empowered Spell cannot select the same damage die more than once.";
+    }
+    seenPositions.add(positionKey);
+    const originalGroup = input.damageRoll.value[selectedDie.groupIndex];
+    const originalDie = originalGroup?.results[selectedDie.resultIndex];
+    if (originalDie === undefined || originalDie !== selectedDie.original) {
+      return "Empowered Spell selected original dice must match the pending spell damage roll.";
+    }
+    if (
+      !Number.isInteger(Number(selectedDie.replacement)) ||
+      Number(selectedDie.replacement) < 1 ||
+      Number(selectedDie.replacement) > input.invocation.damage.expr.dieSize
+    ) {
+      return "Empowered Spell replacement rolls must fit the spell damage die size.";
+    }
+  }
+  return null;
+}
+
 export function seekingSpellRerollApplicationForAttackRoll(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly attackRoll: BattleAttackRollResult;
@@ -338,6 +510,85 @@ export function seekingSpellStackingIssue(input: {
     ...input.castApplications,
     input.seekingApplication,
   ]);
+}
+
+export function empoweredSpellStackingIssue(input: {
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly empoweredApplication: CharacterBattleMetamagicOptionFact;
+}): string | null {
+  if (
+    input.castApplications.some(
+      (application) =>
+        application.effectKind === input.empoweredApplication.effectKind,
+    )
+  ) {
+    return "Empowered Spell can combine only with a different Metamagic option.";
+  }
+  return metamagicStackingIssue([
+    ...input.castApplications,
+    input.empoweredApplication,
+  ]);
+}
+
+export function empoweredSpellCombinedUseIssue(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly empoweredApplication: CharacterBattleMetamagicOptionFact;
+}): string | null {
+  const stackingIssue = empoweredSpellStackingIssue({
+    castApplications: input.castApplications,
+    empoweredApplication: input.empoweredApplication,
+  });
+  if (stackingIssue !== null) {
+    return stackingIssue;
+  }
+  if (input.actor === undefined) {
+    return "Empowered Spell requires a character that knows Empowered Spell and has enough Sorcery Points.";
+  }
+  return metamagicSorceryPointSpendIssue({
+    actor: input.actor,
+    applications: [...input.castApplications, input.empoweredApplication],
+  }) === null
+    ? null
+    : "Empowered Spell requires enough unexpended Sorcery Points for all Metamagic options used on this spell.";
+}
+
+export function empoweredSpellMetamagicApplication(
+  actor: BattleCreatureState | undefined,
+): EmpoweredSpellApplicationFact | null {
+  if (actor?.origin.kind !== "character") {
+    return null;
+  }
+  const empowered = actor.origin.metamagic?.knownOptions.find(
+    (option) => option.effectKind === EMPOWERED_METAMAGIC_EFFECT_KIND,
+  );
+  if (empowered === undefined) {
+    return null;
+  }
+  if (
+    metamagicSorceryPointSpendIssue({
+      actor,
+      applications: [empowered],
+    }) !== null
+  ) {
+    return null;
+  }
+  return {
+    effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+    stackingMode: empowered.stackingMode,
+    sorceryPointCost: empowered.sorceryPointCost,
+  };
+}
+
+function empoweredSpellMaximumSelectedDice(
+  actor: BattleCreatureState | undefined,
+): number {
+  return Math.max(
+    1,
+    actor?.origin.kind === "character"
+      ? abilityScoreToMod(actor.origin.d20Statistics.abilityScores.cha)
+      : 0,
+  );
 }
 
 export function seekingSpellCombinedUseIssue(input: {

@@ -134,6 +134,7 @@ import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
   spellAttackRerollUnsupportedIssue,
+  spellDamageRerollUnsupportedIssue,
 } from "../battle-reducer.ts";
 import type {
   AttackBattleResolutionInput,
@@ -1818,6 +1819,15 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ]),
     };
   }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+  );
+  if (spellDamageRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
+    };
+  }
   const damageValidation = validateRolledDiceForWeaponAttack(
     input.fillSet.weaponMasteryCleaveDamageRoll.value,
     cleaveAttack,
@@ -2431,6 +2441,15 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         "invalidFill",
         "Selected attack damage rider is not eligible for this attack.",
       ),
+    };
+  }
+  const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+  );
+  if (spellDamageRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
     };
   }
   const damageValidation = validateRolledDiceForWeaponAttack(

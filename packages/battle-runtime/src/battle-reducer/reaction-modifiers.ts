@@ -11,10 +11,7 @@ import {
   type DamageDieSize,
 } from "@dnd/shared/types";
 
-import {
-  rolledDiceTotal,
-  validateRolledDiceForDiceExpr,
-} from "@dnd/shared-algebras/runtime-dice-algebra";
+import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import type { DamageType, UnitRecord } from "@dnd/surface/surface/types";
 
@@ -55,6 +52,7 @@ import type {
 import {
   REACTION_MODIFIER_ROLL_HOLE_ID,
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
+  validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 export function spendReactionModifierResource(
   state: BattleState,
@@ -98,7 +96,7 @@ export function rolledDiceFillTotal(
   fill: BattleRolledDiceFill,
   expr: { readonly dice: number; readonly dieSize: DamageDieSize },
 ): number | null {
-  const validation = validateRolledDiceForDiceExpr(fill.value, expr);
+  const validation = validateRolledDiceFillForDiceExpr(fill, expr);
   if (validation !== null) {
     return null;
   }

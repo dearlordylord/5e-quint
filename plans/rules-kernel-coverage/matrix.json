@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 112,
-    "covered": 106,
+    "total": 113,
+    "covered": 107,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 82,
+      "battle": 83,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 106,
+      "covered": 107,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -3761,6 +3761,49 @@
         "UBIQUITOUS_LANGUAGE.md#Attack Roll"
       ],
       "title": "Battle Seeking Spell Metamagic admits missed single spell attack rerolls, enforces known-option, Sorcery Point affordability, and different-Metamagic stacking gates, and resolves the forced replacement roll before damage"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-damage-dice-reroll"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell",
+        ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll",
+        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Damage Roll",
+        "UBIQUITOUS_LANGUAGE.md#Sorcery Points"
+      ],
+      "title": "Battle Empowered Spell Metamagic admits selected single spell damage dice rerolls, enforces known-option, Sorcery Point affordability, Charisma-modifier selected-die limits, and different-Metamagic stacking gates, and resolves forced replacement dice before damage"
     }
   ],
   "battleHoleFrontier": [
@@ -6073,6 +6116,12 @@
         "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"
       ],
       "profileId": "unit-feature.metamagic-missed-spell-attack-reroll"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"
+      ],
+      "profileId": "unit-feature.metamagic-damage-dice-reroll"
     }
   ],
   "qntOwnerRoles": [
@@ -6385,6 +6434,7 @@
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
@@ -6401,6 +6451,7 @@
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
@@ -6417,6 +6468,7 @@
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
         "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
@@ -11037,6 +11089,43 @@
         "packages/battle-runtime/battle-runtime-metamagic.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "set-operators",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "record-update"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -11310,6 +11399,7 @@
     "unit-feature.metamagic-cast-duration-and-concentration",
     "unit-feature.metamagic-cast-governor-quickened",
     "unit-feature.metamagic-cast-range-increase",
+    "unit-feature.metamagic-damage-dice-reroll",
     "unit-feature.metamagic-damage-type-substitution",
     "unit-feature.metamagic-effective-level-extra-target",
     "unit-feature.metamagic-heightened-save-disadvantage",
