@@ -811,6 +811,7 @@ export function resolveHideousLaughterSpellAct(input: {
     input.actorId,
     failedTargets,
     input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,

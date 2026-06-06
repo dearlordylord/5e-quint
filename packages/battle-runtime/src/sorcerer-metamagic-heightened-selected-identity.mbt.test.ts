@@ -1,5 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage
+// UNIT-IDENTITY-MBT-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
 // RAW trace:
@@ -11,6 +11,9 @@
 // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
 //   Burning Hands is an action-cast Dexterity Saving Throw spell with half
 //   damage on a successful save.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter:
+//   Hideous Laughter applies failed-save conditions and repeats Wisdom Saving
+//   Throws against the spell.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Disadvantage, Sorcery Points as a Pool, and Spend.
 import * as path from "node:path";
@@ -20,6 +23,7 @@ import {
   heightenedSorcererMetamagicBattle,
   projectBattleState,
   resolveHeightenedBurningHands,
+  resolveHeightenedHideousLaughter,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
 defineSelectedIdentityWitness({
@@ -65,6 +69,24 @@ defineSelectedIdentityWitness({
                 heightenedSorcererMetamagicBattle(),
               ),
               "heightenedSaveGatedDamage",
+            ),
+        },
+        {
+          actionName: "doResolveHeightenedHideousLaughter",
+          projectionAfter: {
+            magicActionAvailable: false,
+            bonusActionAvailable: true,
+            sorceryPointsRemaining: 2,
+            targetHp: 10,
+            targetActiveEffectCount: 1,
+            lastResult: "heightenedHideousLaughter",
+          },
+          discover: () =>
+            projectBattleState(
+              resolveHeightenedHideousLaughter(
+                heightenedSorcererMetamagicBattle(),
+              ),
+              "heightenedHideousLaughter",
             ),
         },
       ],

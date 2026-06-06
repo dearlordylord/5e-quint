@@ -62,7 +62,10 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
     if (levelTwo === undefined) {
       throw new Error("Expected level 2 Misty Step act.");
     }
-    const destination = requireHole(levelTwo.initialHoles, "teleportDestination");
+    const destination = requireHole(
+      levelTwo.initialHoles,
+      "teleportDestination",
+    );
     expect(destination).toMatchObject({
       actorId: spellCasterId,
       maxDistanceFeet: movementFeet(30),
@@ -219,6 +222,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
         sourceCombatantId: spellCasterId,
         conditionHadNonSpellProneSource: false,
         conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
           kind: "concentration",

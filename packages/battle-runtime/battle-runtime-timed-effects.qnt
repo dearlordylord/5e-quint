@@ -331,6 +331,7 @@ module battleRuntimeTimedEffects {
             target: data.target,
             hadProne: data.hadProne,
             hadIncapacitated: data.hadIncapacitated,
+            heightenedRepeatSaveDisadvantage: data.heightenedRepeatSaveDisadvantage,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HypnoticPatternEffect(data) => HypnoticPatternEffect({

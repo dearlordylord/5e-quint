@@ -88,6 +88,14 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
+  readonly casterResources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
+  readonly casterMetamagic?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["metamagic"];
   readonly casterProficiencyBonus?: ProficiencyBonus;
   readonly casterWeaponProficiencies?: readonly WeaponProficiency[];
   readonly statBlockTargets?: readonly {
@@ -131,6 +139,12 @@ export function spellBattle(input: {
         ...(input.casterUnitFeatures === undefined
           ? {}
           : { unitFeatures: input.casterUnitFeatures }),
+        ...(input.casterResources === undefined
+          ? {}
+          : { resources: input.casterResources }),
+        ...(input.casterMetamagic === undefined
+          ? {}
+          : { metamagic: input.casterMetamagic }),
       }),
       characterCreature({
         combatantId: spellTargetId,

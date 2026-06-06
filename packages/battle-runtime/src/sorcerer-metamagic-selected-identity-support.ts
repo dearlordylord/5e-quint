@@ -54,7 +54,8 @@ export type SorcererMetamagicProjection = {
     | "quickenedSpellAttackSequence"
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
-    | "twinnedTargetCount";
+    | "twinnedTargetCount"
+    | "heightenedHideousLaughter";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -270,6 +271,49 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
   ).state;
 }
 
+export function resolveHeightenedHideousLaughter(
+  state: BattleState,
+): BattleState {
+  const act = heightenedHideousLaughterAct(state);
+  const target = targetListFill(
+    act.initialHoles,
+    "Hideous Laughter targets",
+    "hideous_laughter",
+  );
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Hideous Laughter to request a save hole.",
+    );
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            outcomes: [{ targetId: skeletonId, succeeded: false }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
 export function resolveTransmutedBurningHandsToPoison(
   state: BattleState,
 ): BattleState {
@@ -430,6 +474,7 @@ function sorcererMetamagicBattleWithOptions(
               spellRecord("bless"),
               spellRecord("burning_hands"),
               spellRecord("command"),
+              spellRecord("hideous_laughter"),
             ],
             spellSlots: [{ spellLevel: 1, count: 3 }],
           }),
@@ -643,6 +688,22 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "hideousLaughter" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Hideous Laughter act.");
+  }
+  return act;
+}
+
 function transmutedBurningHandsToPoisonAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
@@ -734,7 +795,7 @@ function protectedTargetsFill(
 function targetListFill(
   holes: readonly BattleHole[],
   label: string,
-  spellId: "bless" | "burning_hands" | "command",
+  spellId: "bless" | "burning_hands" | "command" | "hideous_laughter",
   targetIds: readonly (typeof wizardId)[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(

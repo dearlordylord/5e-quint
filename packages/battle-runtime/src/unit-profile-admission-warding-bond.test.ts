@@ -1114,6 +1114,7 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
           sourceCombatantId: spellTargetId,
           conditionHadNonSpellProneSource: false,
           conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
           save: {
             ability: "wis" as const,
             dc: { kind: "caster_spell_save_dc" as const },

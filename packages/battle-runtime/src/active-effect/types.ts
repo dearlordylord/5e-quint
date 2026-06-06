@@ -473,6 +473,10 @@ export type BattleActiveEffect =
       readonly kind: "hideousLaughter";
       readonly conditionHadNonSpellProneSource: boolean;
       readonly conditionHadNonSpellIncapacitatedSource: boolean;
+      readonly repeatSaveRollMode: Extract<
+        AttackRollMode,
+        "disadvantage"
+      > | null;
       readonly save: {
         readonly ability: Extract<Ability, "wis">;
         readonly dc: DcSource;

@@ -111,6 +111,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
             sourceCombatantId: spellCasterId,
             conditionHadNonSpellProneSource: false,
             conditionHadNonSpellIncapacitatedSource: false,
+            repeatSaveRollMode: null,
             save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
             expiresAt: {
               kind: "concentration",
@@ -189,6 +190,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",
@@ -365,6 +367,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",
@@ -549,6 +552,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",

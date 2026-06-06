@@ -7,10 +7,12 @@ import type {
   BattleFill,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleSavingThrowFlatBonusProjection,
+  BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
+import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
@@ -58,10 +60,28 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes:
-      trigger === "damage" ? [{ targetId, rollMode: "advantage" }] : [],
+    targetRollModes: hideousLaughterRepeatSavingThrowRollModeProjections(
+      targetId,
+      effect,
+      trigger,
+    ),
     targetFlatBonuses,
   };
+}
+
+function hideousLaughterRepeatSavingThrowRollModeProjections(
+  targetId: CombatantId,
+  effect: HideousLaughterEffect,
+  trigger: "endTurn" | "damage",
+): readonly BattleSavingThrowRollModeProjection[] {
+  const damageRepeatSaveRollModeProjections: readonly BattleSavingThrowRollModeProjection[] =
+    trigger === "damage" ? [{ targetId, rollMode: "advantage" }] : [];
+  return uniqueSavingThrowRollModeProjections([
+    ...damageRepeatSaveRollModeProjections,
+    ...(effect.repeatSaveRollMode === null
+      ? []
+      : [{ targetId, rollMode: effect.repeatSaveRollMode }]),
+  ]);
 }
 
 export function hideousLaughterDamageRepeatSaveHoles(
@@ -132,10 +152,7 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
   | { readonly tag: "invalid"; readonly message: string } {
   const holes =
     input.damageAmount > 0
-      ? hideousLaughterDamageRepeatSaveHoles(
-          input.target,
-          input.damageEventKey,
-        )
+      ? hideousLaughterDamageRepeatSaveHoles(input.target, input.damageEventKey)
       : [];
   const missingHoles = holes.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),

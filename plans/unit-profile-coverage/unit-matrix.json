@@ -19722,7 +19722,7 @@
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Heightened Spell repeat-save lifecycle targeting beyond first action-time Saving Throw holes remains deferred until selected target identity can be carried through later save commands without duplicating spell occurrence state."
+            "mechanic": "Heightened Spell repeat-save lifecycle targeting for remaining area and multi-target ongoing spell procedures remains deferred until selected target identity can be carried through later save commands without duplicating spell occurrence state."
           },
           {
             "battleReadinessClosure": {
@@ -19751,9 +19751,9 @@
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Carry a selected Heightened Spell target through later repeat-save commands for supported ongoing spell procedures without duplicating spell occurrence state.",
+            "mechanic": "Hideous Laughter's combatant-owned repeat-save carry-through is promoted; carry a selected Heightened Spell target through remaining later repeat-save commands for area and multi-target ongoing spell procedures without duplicating spell occurrence state.",
             "owner": "battle-runtime later-save command owners plus Metamagic selected-target threading",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed later-save target threading, focused runtime tests, and promoted Quint/runtime parity for repeat-save lifecycle Heightened behavior without option identity dispatch.",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed later-save target threading, focused runtime tests, and promoted Quint/runtime parity for remaining repeat-save lifecycle Heightened behavior without option identity dispatch.",
             "title": "Sorcerer Metamagic Repeat Save Lifecycles"
           }
         ],
@@ -19776,7 +19776,7 @@
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
           "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
           "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures.",
-          "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, and rejecting non-affected selected targets before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through the combatant-owned Hideous Laughter repeat-save lifecycle without duplicating spell occurrence state.",
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending."
         ],

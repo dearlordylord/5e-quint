@@ -1608,6 +1608,7 @@ export function applyHideousLaughterEffects(
     SupportedSpellInvocation,
     { readonly procedure: "hideousLaughter" }
   >,
+  heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -1631,6 +1632,10 @@ export function applyHideousLaughterEffects(
           conditionHadNonSpellSourceBeforeSpellEffect(target, "prone"),
         conditionHadNonSpellIncapacitatedSource:
           conditionHadNonSpellSourceBeforeSpellEffect(target, "incapacitated"),
+        repeatSaveRollMode: hideousLaughterRepeatSaveRollMode(
+          targetId,
+          heightenedSpellTargetId,
+        ),
         save: {
           ability: invocation.ability,
           dc: invocation.dc,
@@ -1659,6 +1664,16 @@ export function applyHideousLaughterEffects(
     (nextState, targetId) => breakBattleConcentration(nextState, targetId),
     effected,
   );
+}
+
+function hideousLaughterRepeatSaveRollMode(
+  targetId: CombatantId,
+  heightenedSpellTargetId: CombatantId | undefined,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "hideousLaughter" }
+>["repeatSaveRollMode"] {
+  return targetId === heightenedSpellTargetId ? "disadvantage" : null;
 }
 
 export function applyGreaseGroundHazardCastEffects(input: {

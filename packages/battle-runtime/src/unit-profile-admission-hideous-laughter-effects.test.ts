@@ -1,5 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
+import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   fireBoltUnitId,
   heroismUnitId,
@@ -7,6 +9,7 @@ import {
   hideousLaughterUnitId,
   spellCasterId,
   spellTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   attackRollFill,
@@ -37,8 +40,93 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleActiveEffect,
+  BattleFill,
+  BattleHole,
   BattleState,
 } from "./unit-profile-admission-test-support.ts";
+
+function castHeightenedHideousLaughter() {
+  const spell = spellRecord(hideousLaughterUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: 1, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: 5 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(4),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [
+        {
+          effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+          stackingMode: "one_per_spell",
+          sorceryPointCost: resourceCount(2),
+        },
+      ],
+    },
+  });
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "hideousLaughter" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined || act.subject.tag !== "actionSpell") {
+    throw new Error("Expected Heightened Hideous Laughter act.");
+  }
+  const targetHole = requireHole(act.initialHoles, "spellTargetList");
+  const heightenedHole = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetListFill(
+    targetHole,
+    spellCasterId,
+    hideousLaughterUnitId,
+    [spellTargetId],
+  );
+  const heightenedFill = targetChoiceFill(heightenedHole, spellTargetId);
+  const needsSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, heightenedFill],
+  });
+  const initialSave = requireResultHole(needsSave, "savingThrowOutcome");
+  expect(initialSave.targetRollModes).toEqual([
+    { targetId: spellTargetId, rollMode: "disadvantage" },
+  ]);
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      heightenedFill,
+      savingThrowOutcomeFill(initialSave, [
+        { targetId: spellTargetId, succeeded: false },
+      ]),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Heightened Hideous Laughter cast to resolve.");
+  }
+  return resolved;
+}
+
+function targetChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: typeof spellTargetId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [],
+  };
+}
 
 describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   test("Hideous Laughter applies Prone and Incapacitated until a repeat save succeeds", () => {
@@ -419,6 +507,75 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
+
+  test("Heightened Hideous Laughter carries Disadvantage from failed initial save to end-turn repeat save", () => {
+    const resolved = castHeightenedHideousLaughter();
+    const laughed = requireCombatant(resolved.state, spellTargetId);
+    const effect = laughed.activeEffects.find(
+      (
+        candidate,
+      ): candidate is Extract<
+        BattleActiveEffect,
+        { readonly kind: "hideousLaughter" }
+      > => candidate.kind === "hideousLaughter",
+    );
+    if (effect === undefined) {
+      throw new Error("Expected Heightened Hideous Laughter active effect.");
+    }
+    expect(effect.repeatSaveRollMode).toBe("disadvantage");
+
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const needsRepeatSave = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    const repeatSave = requireResultHole(needsRepeatSave, "savingThrowOutcome");
+    expect(repeatSave).toEqual(
+      expect.objectContaining({
+        hideousLaughterRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "endTurn",
+        }),
+        targetRollModes: [
+          { targetId: spellTargetId, rollMode: "disadvantage" },
+        ],
+      }),
+    );
+  });
+
+  test("Heightened Hideous Laughter damage repeat save cancels damage Advantage to normal", () => {
+    const resolved = castHeightenedHideousLaughter();
+    const laughed = requireCombatant(resolved.state, spellTargetId);
+    const effect = laughed.activeEffects.find(
+      (
+        candidate,
+      ): candidate is Extract<
+        BattleActiveEffect,
+        { readonly kind: "hideousLaughter" }
+      > => candidate.kind === "hideousLaughter",
+    );
+    if (effect === undefined) {
+      throw new Error("Expected Heightened Hideous Laughter active effect.");
+    }
+
+    const damageSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      spellTargetId,
+      effect,
+      "damage",
+    );
+    expect(damageSaveHole.targetRollModes).toEqual([]);
+  });
   test("Hideous Laughter does not leave Concentration after all initial saves succeed", () => {
     const spell = spellRecord(hideousLaughterUnitId);
     const state = spellBattle({
@@ -564,6 +721,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",

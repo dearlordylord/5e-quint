@@ -64,6 +64,7 @@ import { hasDodgeBenefit } from "./attack-roll.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
 import { combatantsAreEnemies } from "./creature-state-leaves.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -1297,41 +1298,6 @@ function passiveSavingThrowRollModeProjection(
         targetId,
         rollMode: profile.savingThrow.mode,
       };
-}
-
-function uniqueSavingThrowRollModeProjections(
-  projections: readonly BattleSavingThrowRollModeProjection[],
-): readonly BattleSavingThrowRollModeProjection[] {
-  const targetOrder: CombatantId[] = [];
-  const rollModeSources = new Map<
-    CombatantId,
-    { readonly advantage: boolean; readonly disadvantage: boolean }
-  >();
-  for (const projection of projections) {
-    const existing = rollModeSources.get(projection.targetId);
-    if (existing === undefined) {
-      targetOrder.push(projection.targetId);
-    }
-    rollModeSources.set(projection.targetId, {
-      advantage:
-        existing?.advantage === true || projection.rollMode === "advantage",
-      disadvantage:
-        existing?.disadvantage === true ||
-        projection.rollMode === "disadvantage",
-    });
-  }
-  return targetOrder.flatMap((targetId) => {
-    const sources = rollModeSources.get(targetId);
-    if (sources === undefined || sources.advantage === sources.disadvantage) {
-      return [];
-    }
-    return [
-      {
-        targetId,
-        rollMode: sources.advantage ? "advantage" : "disadvantage",
-      },
-    ] satisfies readonly BattleSavingThrowRollModeProjection[];
-  });
 }
 
 export function validateSpellDamageFill(
