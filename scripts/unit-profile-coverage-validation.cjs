@@ -180,10 +180,10 @@ function battleReadinessClosureIssues(unitId, closure, context) {
   if (closure.kind === "later-level-only") {
     if (
       !Number.isInteger(closure.firstTriggerCharacterLevel) ||
-      closure.firstTriggerCharacterLevel <= 3
+      closure.firstTriggerCharacterLevel <= 0
     ) {
       issues.push(
-        `${context} for ${unitId} later-level-only closures require firstTriggerCharacterLevel > 3.`,
+        `${context} for ${unitId} later-level-only closures require positive integer firstTriggerCharacterLevel.`,
       );
     }
   }

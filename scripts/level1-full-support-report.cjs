@@ -652,13 +652,26 @@ function allClosuresMatch(claim) {
   });
 }
 
-function hasOnlyLaterLevelResiduals(claim) {
+function isLaterLevelClosureBeyondScope(closure, scope) {
+  return (
+    closure?.kind === laterLevelOnlyClosureKind &&
+    Number.isInteger(closure.firstTriggerCharacterLevel) &&
+    closure.firstTriggerCharacterLevel > scope.maxCharacterLevel
+  );
+}
+
+function hasOnlyLaterLevelResiduals(claim, scope) {
+  if (claim?.tag === "unsupported-profile") {
+    return isLaterLevelClosureBeyondScope(
+      claim.battleReadinessClosure,
+      scope,
+    );
+  }
   return (
     claim?.tag === "profile-subset-supported" &&
     claim.deferredMechanics.length > 0 &&
-    claim.deferredMechanics.every(
-      (entry) =>
-        entry.battleReadinessClosure?.kind === laterLevelOnlyClosureKind,
+    claim.deferredMechanics.every((entry) =>
+      isLaterLevelClosureBeyondScope(entry.battleReadinessClosure, scope),
     )
   );
 }
@@ -744,7 +757,7 @@ function strictStatusDescription(status, scope) {
   return description;
 }
 
-function strictStatusForUnit(unit) {
+function strictStatusForUnit(unit, scope) {
   const claim = unit.claim;
   if (claim?.tag === "supported-profile") {
     return {
@@ -758,12 +771,12 @@ function strictStatusForUnit(unit) {
       reason: closureReasonForClaim(claim),
     };
   }
-  if (hasOnlyLaterLevelResiduals(claim)) {
+  if (hasOnlyLaterLevelResiduals(claim, scope)) {
     return {
       status: "closed-later-level-only",
       reason:
         closureReasonForClaim(claim) ||
-        "The remaining profile subset residuals occur only after level 1.",
+        `The remaining residuals first trigger after character level ${scope.maxCharacterLevel}.`,
     };
   }
   if (hasOnlyCompanionControlBoundaryResiduals(claim)) {
@@ -832,8 +845,8 @@ function strictStatusForUnit(unit) {
   };
 }
 
-function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin) {
-  const status = strictStatusForUnit(unit);
+function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin, scope) {
+  const status = strictStatusForUnit(unit, scope);
   return stable({
     unitId: unit.unitId,
     status: status.status,
@@ -1064,7 +1077,12 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
     }
 
     strictRows.push(
-      rowForStrictUnit(matrixUnit, sourceRows, matrix.rulesKernelProfileJoin),
+      rowForStrictUnit(
+        matrixUnit,
+        sourceRows,
+        matrix.rulesKernelProfileJoin,
+        scope,
+      ),
     );
   }
 
@@ -1553,6 +1571,11 @@ module.exports = {
   buildLevel13FullSupport,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
+  strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
+    strictStatusForUnit(unit, {
+      title: `Character Levels 1-${maxCharacterLevel}`,
+      maxCharacterLevel,
+    }),
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,

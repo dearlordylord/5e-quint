@@ -20,6 +20,7 @@ const {
   buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
+  strictStatusForUnitForTest,
 } = require("./level1-full-support-report.cjs");
 const {
   buildRulesKernelProfileJoin,
@@ -122,6 +123,38 @@ function mcpScenarioEvidenceFixture(kind) {
       },
     ],
   };
+}
+
+function assertLaterLevelOnlyScopeAccounting() {
+  const unit = {
+    unitId: "fixture_later_level_unit",
+    claim: {
+      tag: "profile-subset-supported",
+      deferredMechanics: [
+        {
+          mechanic: "fixture level 5 scaling",
+          battleReadinessClosure: {
+            kind: battleReadinessClosureKind.laterLevelOnly,
+            owner: "fixture owner",
+            firstTriggerCharacterLevel: 5,
+            reason: "Fixture scaling first triggers at level 5.",
+          },
+        },
+      ],
+    },
+  };
+  const level4Status = strictStatusForUnitForTest(unit, 4);
+  if (level4Status.status !== "closed-later-level-only") {
+    fail(
+      `Self-test failed: expected level-4 scope to close level-5 residual, got ${JSON.stringify(level4Status)}`,
+    );
+  }
+  const level5Status = strictStatusForUnitForTest(unit, 5);
+  if (level5Status.status === "closed-later-level-only") {
+    fail(
+      `Self-test failed: expected level-5 scope not to close level-5 residual as later-level-only, got ${JSON.stringify(level5Status)}`,
+    );
+  }
 }
 
 function groupFixtureRowsByUnitId(rows) {
@@ -411,6 +444,7 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 3 bands to include spell-level-2 and exclude spell-level-3, got ${JSON.stringify(levelThreeBands)}`,
     );
   }
+  assertLaterLevelOnlyScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
 
   const tempDir = fs.mkdtempSync(
