@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Record Acid Arrow RAW owner-decision blocker"
     },
     {
       "number": 9,
       "id": "L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Consolidate residual Wild Shape and Acid Arrow ledgers"
     },
     {
@@ -123,8 +123,8 @@ repair branch state by rebasing against `master`.
 |     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Merged-equipment no-effect parity is covered in the Wild Shape lifecycle MBT witness; generated coverage text no longer treats it as unsupported residue. |
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted explicit form-limb object-handling witness storage on the active Wild Shape effect.                                          |
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | done                                          | none                                                                                                                                                                                                                           | Replaced stale dependency text with an explicit owner-decision blocker.                                                               |
-|     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | ready-for-research                            | none                                                                                                                                                                                                                           | Keep Acid Arrow blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                                |
-|     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | blocked                                       | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerate reports after blockers/owners are real rows.                                                                               |
+|     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Recorded Acid Arrow as blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                        |
+|     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | ready-for-implementation-after-light-research | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerate reports after blockers/owners are real rows.                                                                               |
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Ensure no selected-identity replay is orphaned after the split.                                                                       |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | ready-for-research                            | none                                                                                                                                                                                                                           | Audit whether Wild Companion still has only explicit companion-control closure.                                                       |
 |    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | ready-for-research                            | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promote concrete Wild Shape object/Utilize consumers from the stored form-limb witness without deriving anatomy from authored identity. |

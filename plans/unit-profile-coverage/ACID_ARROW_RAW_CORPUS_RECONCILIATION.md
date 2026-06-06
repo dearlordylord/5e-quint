@@ -2,7 +2,7 @@
 
 Date: 2026-05-22
 
-Ralph L3 residual Task 4 update: 2026-06-05
+Ralph L3 morning Task 8 update: 2026-06-06
 
 ## Decision
 
@@ -12,9 +12,10 @@ shape, and do not promote delayed runtime support until the owner approves a
 local SRD corpus correction or an `ASSUMPTIONS.md` entry for the damage
 relationship.
 
-Ralph Task 4 (`L3RES-04-ACID-ARROW-RAW-RECONCILIATION`) closes by recording
-this unresolved disposition. Ralph Tasks 5 and 6 remain blocked; there is no
-owner-approved executable RAW decision to feed Surface authoring or runtime.
+Ralph Task 8 (`L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER`) closes by
+recording this unresolved disposition as an explicit owner-decision blocker.
+The follow-up split remains blocked; there is no owner-approved executable RAW
+decision to feed Surface authoring or runtime.
 
 This task does not add a modeling assumption itself. `ASSUMPTIONS.md` is an
 owner-curated boundary, and the local SRD 5.2.1 passage is insufficient to
@@ -85,6 +86,18 @@ these questions:
 Until those facts are approved, deriving immediate hit damage or scaled miss
 damage from the contradictory prose would be an unapproved interpretation.
 
+## Ralph Blocker Row
+
+- Blocker Type: owner-decision
+- Blocker Detail: The owner must approve either a local SRD 5.2.1 corpus
+  correction or an `ASSUMPTIONS.md` entry that answers the initial hit damage,
+  later hit damage, miss damage derivation, and higher-slot scaling questions
+  listed above.
+- Blocking Follow-ups:
+  `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION`,
+  `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE`, and
+  `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT`.
+
 ## Owner-Ready Patch Shape
 
 If the owner chooses an `ASSUMPTIONS.md` entry rather than editing the local RAW
@@ -103,29 +116,35 @@ miss and higher-level clauses, but the hit branch omits an explicit initial
 damage amount and does not separately define the later damage amount. This entry
 is the owner-approved corpus reconciliation for that local contradiction.
 
-**Changes:** Ralph Task 5 may repair
+**Changes:** A future Surface repair task may repair
 `packages/surface/content/acid_arrow.dhall` and generated JSON to encode the
-approved initial, miss, later, and higher-level damage facts. Ralph Task 6 may
-then promote delayed runtime support against the repaired Surface shape.
+approved initial, miss, later, and higher-level damage facts. A future runtime
+task may then promote delayed runtime support against the repaired Surface
+shape.
 ```
 
 ## Plan Impact
 
-- Task 4 can be marked `done`: it rechecked the local SRD 5.2.1 spell text,
-  local conversion notes, archived local SRD corpus, `ASSUMPTIONS.md`, and
-  ubiquitous-language terms, and found no owner-approved executable decision.
-- Task 5 remains `blocked`: Surface authoring cannot honestly encode immediate,
-  miss, delayed, or slot-scaled damage facts without the owner decision.
-- Task 6 remains `blocked`: runtime support must project from the repaired
-  Surface shape rather than dispatch on Acid Arrow identity.
+- `L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER` can be marked `done`: it
+  rechecked the local SRD 5.2.1 spell text, local conversion notes, archived
+  local SRD corpus, `ASSUMPTIONS.md`, and ubiquitous-language terms, and found
+  no owner-approved executable decision.
+- `L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION` can be unblocked after the decider
+  records Task 8 as done, because Acid Arrow now has a non-stale blocker row
+  rather than a stale dependency label.
+- The Acid Arrow RAW reconciliation, Surface damage shape, and delayed runtime
+  support follow-ups remain blocked on the owner decision above.
 
 ## Verification
 
+- `pnpm unit-profile-coverage:check --write` passed and regenerated the
+  task-claim report/matrix row. Unit profile coverage reported 275 Units and
+  159 profiles.
+- `pnpm unit-profile-coverage:check` passed.
 - `git diff --check` passed.
-- `pnpm quality` passed, including authored-identity dispatch,
-  QA-generated-identity self-test, MBT driver closure, rules-kernel coverage,
-  unit-profile coverage, lint, circular dependency checks, and typecheck. Unit
-  profile coverage reported 274 Units and 148 profiles.
+- `pnpm quality` was run and failed in `@dnd/app` typecheck on existing app demo
+  reaction/known-language API mismatches outside this task's touched files. No
+  Acid Arrow, Unit profile coverage, or generated ledger check failed.
 - MBT was not run because this reconciliation changes no runtime, Quint, or MBT
   bridge behavior.
 
@@ -137,5 +156,6 @@ then promote delayed runtime support against the repaired Surface shape.
 - Architecture and connascence: no new state, duplicated data, runtime adapter,
   or authored-identity dispatch was added; the remaining `only` wording is the
   Acid Arrow miss-branch text and the exact owner question derived from it.
-- Code-review pass: documentation-only change, no assertions, no throws, no
-  tests that merely restate compile-time facts, and no generated artifact churn.
+- Code-review pass: documentation/ledger-only change plus generated
+  Unit-profile report and matrix refresh, no assertions, no throws, no tests
+  that merely restate compile-time facts, and no runtime behavior changes.

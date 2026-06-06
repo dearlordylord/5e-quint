@@ -1767,6 +1767,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME | completed-runtime-parity | `unit-feature.attack-action-area-save-damage-replacement` |
 | L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE | completed-runtime-parity | `unit-feature.passive-damage-resistance` |
 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | completed-runtime-parity | `unit-feature.passive-damage-resistance` |
+| L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | accepted-owner-decision-blocker | _none_ |
 | L3MCHAR-01 | completed-runtime-parity | `character-sheet.weapon-mastery-class-level-reselection` |
 | L3MCHAR-04 | completed-runtime-parity | `character-creation.fighting-style-cantrip-advancement-replacement` |
 

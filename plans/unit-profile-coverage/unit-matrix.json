@@ -15005,6 +15005,12 @@
       "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
     },
     {
+      "claimKind": "accepted-owner-decision-blocker",
+      "note": "Task 8 records Acid Arrow RAW reconciliation as an explicit owner-decision blocker: the active local SRD 5.2.1 passage gives delayed hit damage but refers to initial damage in miss and higher-slot clauses. Do not admit acid_arrow, repair its Surface damage shape, or promote delayed runtime support until the owner approves a local corpus correction or ASSUMPTIONS.md entry answering the initial hit damage, later hit damage, miss damage derivation, and higher-slot scaling questions.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet Long Rest tests cover Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally relies on runtime-test evidence plus the shared semantic core, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [
