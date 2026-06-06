@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Monk focus jump witness closure"
     },
     {
