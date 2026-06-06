@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 602/607 (99.2%)
+- Accepted: 603/607 (99.3%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 437
+- accepted: 438
 - accepted-no-battle-effect: 165
 - battle-runtime-required: 1
-- owner-evidence-required: 3
+- owner-evidence-required: 2
 - partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 49/51 (96.1%)
+- Accepted: 50/51 (98%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 35
+- accepted: 36
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 2
+- owner-evidence-required: 1
 
 ### Spell-Level-3 Battle Readiness
 
@@ -93,8 +93,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 35
-- catalog-installed-owner-evidence-required: 2
+- catalog-installed-owner-evidence-present: 36
+- catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -442,7 +442,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Druid Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:130|
 |Druid Circle of the Land Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|character-fact-and-runtime-detached-split: character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:366|
 |Fighter Improved Critical|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:136|
-|Fighter Remarkable Athlete|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; battle-runtime initiative, Athletics, and critical-hit movement owner: owner evidence required|Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.|.references/srd-5.2.1/Classes/Fighter.md:140|
+|Fighter Remarkable Athlete|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:140|
 |Fighter level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:33|
 |Fighter Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:86|
 |Monk Deflect Attacks|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:102|

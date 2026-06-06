@@ -232,24 +232,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 602,
-      "percent": "99.2%",
+      "numerator": 603,
+      "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 437,
+        "accepted": 438,
         "accepted-no-battle-effect": 165,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 3,
+        "owner-evidence-required": 2,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 49,
-      "percent": "96.1%",
+      "numerator": 50,
+      "percent": "98%",
       "rowsByStatus": {
-        "accepted": 35,
+        "accepted": 36,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 2
+        "owner-evidence-required": 1
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -274,10 +274,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 35,
+      "catalog-installed-owner-evidence-present": 36,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 2
+      "catalog-installed-owner-evidence-required": 1
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -286,12 +286,12 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 471,
+      "catalog-installed-owner-evidence-present": 472,
       "non-runtime": 36,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-installed-owner-evidence-required": 2,
+      "catalog-installed-owner-evidence-required": 1,
       "catalog-installed-needs-owner-evidence": 1,
       "catalog-authored-executable-follow-up": 1
     },
@@ -15661,7 +15661,7 @@
         "unitId": "fighter_remarkable_athlete"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15669,13 +15669,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime initiative, Athletics, and critical-hit movement owner",
-          "evidence": "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts; L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-3:class-table-summary:fighter_level_3_feature_table_row",

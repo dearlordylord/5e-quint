@@ -2,7 +2,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   battleReadinessClosureKinds,
+  deterministicAdmissionProjectionEvidenceTag,
   isUnitFeatureProfileId,
+  selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 
 const classDir = ".references/srd-5.2.1/Classes";
@@ -50,8 +52,6 @@ const classContainerOwnedCreationRowKinds = new Set([
   "multiclass-entry",
 ]);
 
-const deterministicAdmissionProjectionEvidenceTag =
-  "deterministic-admission-projection";
 const characterCreationProfileIdPrefix = "character-creation.";
 const characterSheetProfileIdPrefix = "character-sheet.";
 const unitFeatureProfileIdPrefix = "unit-feature.";
@@ -74,6 +74,22 @@ const catalogAuthoredReviewRequiredDisposition =
   "catalog-authored-review-required";
 const levelThreeFollowUpRequiredDisposition = "level-3-follow-up-required";
 const subclassSelectionLevel = 3;
+
+const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
+  [
+    "fighter_remarkable_athlete",
+    [
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES",
+      },
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
+      },
+    ],
+  ],
+]);
 
 const ownerEvidenceRequired = new Map([
   [
@@ -146,14 +162,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
         "character-creation-runtime skill-choice owner plus battle/character-sheet Rage skill ability-substitution owner",
       requirement:
         "Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.",
-    },
-  ],
-  [
-    "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-    {
-      owner: "battle-runtime initiative, Athletics, and critical-hit movement owner",
-      requirement:
-        "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
     },
   ],
   [
@@ -279,6 +287,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "druid_wild_companion",
   "druid_wild_shape",
   "fighter_fighting_style",
+  "fighter_remarkable_athlete",
   "fighter_weapon_mastery",
   "monk_martial_arts",
   "monk_monks_focus",
@@ -1705,23 +1714,38 @@ function buildOwnerEvidenceSources({
       .filter((row) => row.collectionId === "srd-5.2.1")
       .map((row) => [row.unitId, row]),
   );
-  const deterministicEvidenceByUnitId = new Map();
+  const unitEvidenceByUnitId = unitEvidence.reduce((rowsByUnitId, row) => {
+    if (row?.unitId === undefined || row.evidence === undefined) {
+      return rowsByUnitId;
+    }
+    const rows = rowsByUnitId.get(row.unitId) ?? [];
+    rows.push(row);
+    rowsByUnitId.set(row.unitId, rows);
+    return rowsByUnitId;
+  }, new Map());
+  const battleRuntimeEvidenceByUnitId = new Map();
   for (const row of unitEvidence) {
     if (row.evidence?.tag !== deterministicAdmissionProjectionEvidenceTag) {
       continue;
     }
     if (!admissionEvidenceEligibleSrdUnitIds.has(row.unitId)) continue;
-    deterministicEvidenceByUnitId.set(
+    const executableEvidence = requiredBattleRuntimeExecutableEvidence(
+      row.unitId,
+      unitEvidenceByUnitId,
+    );
+    if (executableEvidence === undefined) continue;
+    battleRuntimeEvidenceByUnitId.set(
       row.unitId,
       [
         "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported",
         `plans/unit-profile-coverage/unit-evidence.jsonl records ${deterministicAdmissionProjectionEvidenceTag} evidence`,
         `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
+        ...executableEvidence,
       ].join("; "),
     );
   }
   return {
-    battleRuntime: deterministicEvidenceByUnitId,
+    battleRuntime: battleRuntimeEvidenceByUnitId,
     unitClaims: unitClaimsByUnitId,
     characterCreation: buildCharacterCreationEvidenceSources(
       root,
@@ -1736,6 +1760,31 @@ function buildOwnerEvidenceSources({
       sharedAlgebraOwnerEvidence,
     ),
   };
+}
+
+function requiredBattleRuntimeExecutableEvidence(unitId, unitEvidenceByUnitId) {
+  const requirements =
+    battleRuntimeExecutableEvidenceRequirementsByUnitId.get(unitId);
+  if (requirements === undefined) {
+    return [];
+  }
+  const unitEvidence = unitEvidenceByUnitId.get(unitId) ?? [];
+  const matchedRows = requirements.map((requirement) =>
+    unitEvidence.find(
+      (row) =>
+        row.evidence?.tag === requirement.tag &&
+        row.evidence.taskId === requirement.taskId,
+    ),
+  );
+  if (matchedRows.some((row) => row === undefined)) {
+    return undefined;
+  }
+  return [
+    `plans/unit-profile-coverage/unit-evidence.jsonl records required ${selectedIdentityMbtEvidenceTag} executable evidence`,
+    ...matchedRows.map(
+      (row) => `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
+    ),
+  ];
 }
 
 function buildCharacterCreationEvidenceSources(root, manifest) {

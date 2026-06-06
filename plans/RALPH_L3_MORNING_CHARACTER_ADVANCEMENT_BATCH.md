@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Remarkable Athlete inventory row evidence"
     },
     {
@@ -148,7 +148,7 @@ repair branch state by rebasing against `master`.
 | 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | done | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Reported the next row-evidence reconciliation split for Bard Jack of All Trades, Cleric Disciple of Life, Fighter Remarkable Athlete, and Rogue Steady Aim. |
 | 13 | L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected the existing Character Sheet Jack of All Trades owner evidence to the generated inventory readiness path. |
 | 14 | L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Disciple of Life battle-runtime and QNT evidence to the generated inventory readiness path. |
-| 15 | L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Remarkable Athlete roll-mode and critical-hit movement owner evidence. |
+| 15 | L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Remarkable Athlete deterministic admission and selected-identity MBT evidence to the generated inventory readiness path. |
 | 16 | L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Steady Aim Bonus Action, movement, next-attack Advantage, and Speed owner evidence. |
 
 ## Task Details
