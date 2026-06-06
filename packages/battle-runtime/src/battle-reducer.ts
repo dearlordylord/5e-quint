@@ -1550,10 +1550,32 @@ export type BattleTargetSpatialFact =
           };
     }
   | {
+      readonly kind: "spellDistantObjectLightTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+      readonly size: Size;
+      readonly wornOrCarried:
+        | { readonly kind: "nobody" }
+        | { readonly kind: "caster" }
+        | {
+            readonly kind: "someoneElse";
+            readonly relation: "worn" | "carried";
+          };
+    }
+  | {
       readonly kind: "spellTouchedObjectTarget";
       readonly casterId: CombatantId;
       readonly objectId: BattleObjectId;
       readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "spellDistantTouchedObjectTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "spellManufacturedMetalObjectTarget";
@@ -5700,7 +5722,9 @@ export type BattleFill =
         {
           readonly kind:
             | "spellObjectLightTarget"
+            | "spellDistantObjectLightTarget"
             | "spellTouchedObjectTarget"
+            | "spellDistantTouchedObjectTarget"
             | "spellObjectIgnition"
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"

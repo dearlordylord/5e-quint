@@ -3,10 +3,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
-// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
@@ -121,7 +122,9 @@ type SpellObjectTargetFact = Extract<
   {
     readonly kind:
       | "spellObjectLightTarget"
+      | "spellDistantObjectLightTarget"
       | "spellTouchedObjectTarget"
+      | "spellDistantTouchedObjectTarget"
       | "spellObjectIgnition"
       | "spellManufacturedMetalObjectTarget"
       | "spellObjectTarget"
@@ -137,18 +140,7 @@ export type SpellFillSet =
       readonly objectTarget:
         | {
             readonly objectId: BattleObjectId;
-            readonly spatialFacts: readonly Extract<
-              BattleTargetSpatialFact,
-              {
-                readonly kind:
-                  | "spellObjectLightTarget"
-                  | "spellTouchedObjectTarget"
-                  | "spellObjectIgnition"
-                  | "spellManufacturedMetalObjectTarget"
-                  | "spellObjectTarget"
-                  | "spellObjectTargetSight";
-              }
-            >[];
+            readonly spatialFacts: readonly SpellObjectTargetFact[];
           }
         | undefined;
       readonly objectContactTargets:
@@ -285,18 +277,7 @@ export function spellFillSet(
   let objectTarget:
     | {
         readonly objectId: BattleObjectId;
-        readonly spatialFacts: readonly Extract<
-          BattleTargetSpatialFact,
-          {
-            readonly kind:
-              | "spellObjectLightTarget"
-              | "spellTouchedObjectTarget"
-              | "spellObjectIgnition"
-              | "spellManufacturedMetalObjectTarget"
-              | "spellObjectTarget"
-              | "spellObjectTargetSight";
-          }
-        >[];
+        readonly spatialFacts: readonly SpellObjectTargetFact[];
       }
     | undefined;
   let objectContactTargets:
@@ -688,7 +669,9 @@ export function spellFillSet(
         spatialFacts: fill.spatialFacts.filter(
           (fact): fact is SpellObjectTargetFact =>
             fact.kind === "spellObjectLightTarget" ||
+            fact.kind === "spellDistantObjectLightTarget" ||
             fact.kind === "spellTouchedObjectTarget" ||
+            fact.kind === "spellDistantTouchedObjectTarget" ||
             fact.kind === "spellObjectIgnition" ||
             fact.kind === "spellManufacturedMetalObjectTarget" ||
             fact.kind === "spellObjectTarget" ||

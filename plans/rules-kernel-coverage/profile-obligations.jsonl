@@ -138,6 +138,7 @@
 {"profileId":"unit-feature.metamagic-heightened-save-disadvantage","obligationIds":["BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE"]}
 {"profileId":"unit-feature.metamagic-damage-type-substitution","obligationIds":["BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION"]}
 {"profileId":"unit-feature.metamagic-effective-level-extra-target","obligationIds":["BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"]}
+{"profileId":"unit-feature.metamagic-cast-range-increase","obligationIds":["BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
 {"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
 {"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}

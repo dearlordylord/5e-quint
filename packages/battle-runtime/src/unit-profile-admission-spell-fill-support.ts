@@ -573,6 +573,40 @@ export function spellObjectLightTargetFill(input: {
   };
 }
 
+export function spellDistantObjectLightTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantObjectLightTarget" }
+  >["rangeFeet"];
+  readonly size?: Size;
+  readonly wornOrCarried?: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantObjectLightTarget" }
+  >["wornOrCarried"];
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("distant-light-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellDistantObjectLightTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+        rangeFeet: input.rangeFeet,
+        size: input.size ?? "medium",
+        wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
+      },
+    ],
+  };
+}
+
 export function spellTouchedObjectTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
   readonly objectId?: ObjectTargetChoiceFill["value"];
@@ -590,6 +624,34 @@ export function spellTouchedObjectTargetFill(input: {
         casterId: input.casterId,
         objectId,
         spellId: input.spellId,
+      },
+    ],
+  };
+}
+
+export function spellDistantTouchedObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantTouchedObjectTarget" }
+  >["rangeFeet"];
+}): ObjectTargetChoiceFill {
+  const objectId =
+    input.objectId ?? battleObjectId("distant-touched-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellDistantTouchedObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+        rangeFeet: input.rangeFeet,
       },
     ],
   };

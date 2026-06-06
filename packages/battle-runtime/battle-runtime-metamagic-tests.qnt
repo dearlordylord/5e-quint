@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -368,6 +369,62 @@ module battleRuntimeMetamagicTests {
       2,
     )
     assert(result == { state: priorSpell, sorceryPointsRemaining: 2 })
+  }
+
+  run test_distant_spell_range_projection_admits_touch_and_distance_shapes = {
+    val known = Set(distantSpellMetamagicFact)
+    val touchResult = resolveDistantSpellRangeProjection(
+      DistantRangeBearingTargetProcedure,
+      SpellRangeTouch,
+      known,
+      Set(distantSpellMetamagicFact),
+      2,
+    )
+    val distanceResult = resolveDistantSpellRangeProjection(
+      DistantRangeBearingTargetProcedure,
+      SpellRangeFeet({ feet: 60 }),
+      known,
+      Set(distantSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(touchResult == { rangeFeet: 30, sorceryPointsRemaining: 1 }),
+      assert(distanceResult == { rangeFeet: 120, sorceryPointsRemaining: 1 }),
+    }
+  }
+
+  run test_distant_spell_range_projection_rejects_self_short_and_unsupported_shapes = {
+    val known = Set(distantSpellMetamagicFact)
+    all {
+      assert(not(distantSpellCanModifyRangeSpell(
+        DistantRangeBearingTargetProcedure,
+        SpellRangeSelf,
+        known,
+        Set(distantSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(distantSpellCanModifyRangeSpell(
+        DistantRangeBearingTargetProcedure,
+        SpellRangeFeet({ feet: 4 }),
+        known,
+        Set(distantSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(distantSpellCanModifyRangeSpell(
+        NonDistantRangeProcedure,
+        SpellRangeTouch,
+        known,
+        Set(distantSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(distantSpellCanModifyRangeSpell(
+        DistantRangeBearingTargetProcedure,
+        SpellRangeTouch,
+        known,
+        Set(distantSpellMetamagicFact),
+        0,
+      ))),
+    }
   }
 
   run test_quickened_unsupported_action_spell_procedure_classes_are_closed = {

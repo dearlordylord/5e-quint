@@ -3,7 +3,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
 import {
   holeId,
@@ -38,6 +39,10 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import {
+  distantSpellRangeModifierForApplications,
+  type SpellMetamagicApplicationFact,
+} from "./metamagic-support.ts";
 import {
   legalRepeatedDamageAllocationInvocationFacts,
   repeatedDamageAllocationAdmissionFactsForInvocation,
@@ -107,17 +112,23 @@ type SingleObjectSpellInvocation =
 type SpellTargetLegalityOptions = {
   readonly spiritualWeaponForcePositionId?: BattleTablePositionId;
 };
-type ObjectLightTargetFact = Extract<
+export type ObjectLightTargetFact = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "spellObjectLightTarget" | "spellTouchedObjectTarget" }
+  {
+    readonly kind:
+      | "spellObjectLightTarget"
+      | "spellDistantObjectLightTarget"
+      | "spellTouchedObjectTarget"
+      | "spellDistantTouchedObjectTarget";
+  }
 >;
 type LightCantripObjectTargetFact = Extract<
   ObjectLightTargetFact,
-  { readonly kind: "spellObjectLightTarget" }
+  { readonly kind: "spellObjectLightTarget" | "spellDistantObjectLightTarget" }
 >;
 type TouchedObjectTargetFact = Extract<
   ObjectLightTargetFact,
-  { readonly kind: "spellTouchedObjectTarget" }
+  { readonly kind: "spellTouchedObjectTarget" | "spellDistantTouchedObjectTarget" }
 >;
 type ObjectTargetSightFact = Extract<
   BattleTargetSpatialFact,
@@ -820,30 +831,40 @@ export function spellObjectLightTargetFact(
     SupportedSpellInvocation,
     { readonly procedure: "objectLight" }
   >,
+  applications?: readonly SpellMetamagicApplicationFact[],
 ): ObjectLightTargetFact | null {
+  const distantRange = distantSpellRangeModifierForApplications(applications);
   if (invocation.targeting.object.kind === "touchedObject") {
     return (
       facts.find(
         (fact): fact is TouchedObjectTargetFact =>
-          fact.kind === "spellTouchedObjectTarget" &&
           fact.casterId === actorId &&
           fact.objectId === objectId &&
-          fact.spellId === invocation.spell.id,
+          fact.spellId === invocation.spell.id &&
+          (distantRange === null
+            ? fact.kind === "spellTouchedObjectTarget"
+            : fact.kind === "spellDistantTouchedObjectTarget" &&
+              fact.rangeFeet === distantRange.rangeFeet),
       ) ?? null
     );
   }
   const objectTargeting = invocation.targeting.object;
-  return (
+  const fact =
     facts.find(
-      (fact): fact is LightCantripObjectTargetFact =>
-        fact.kind === "spellObjectLightTarget" &&
-        fact.casterId === actorId &&
-        fact.objectId === objectId &&
-        fact.spellId === invocation.spell.id &&
-        objectSizeIsAtMost(fact.size, objectTargeting.maxSize) &&
-        fact.wornOrCarried.kind !== "someoneElse",
-    ) ?? null
-  );
+      (candidate): candidate is LightCantripObjectTargetFact =>
+        candidate.casterId === actorId &&
+        candidate.objectId === objectId &&
+        candidate.spellId === invocation.spell.id &&
+        (distantRange === null
+          ? candidate.kind === "spellObjectLightTarget"
+          : candidate.kind === "spellDistantObjectLightTarget" &&
+            candidate.rangeFeet === distantRange.rangeFeet),
+    ) ?? null;
+  return fact !== null &&
+    objectSizeIsAtMost(fact.size, objectTargeting.maxSize) &&
+    fact.wornOrCarried.kind !== "someoneElse"
+    ? fact
+    : null;
 }
 
 function objectSizeIsAtMost(

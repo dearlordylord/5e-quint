@@ -2,12 +2,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
 import {
+  movementFeet,
   resourceCount,
   spellSlotLevel,
+  type MovementFeet,
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { Attachment, TargetSelection } from "@dnd/surface/surface/types";
@@ -70,16 +73,35 @@ export type TransmutedSpellApplicationFact = Omit<
   readonly targetDamageType: TransmutedSpellDamageType;
 };
 
-export type NonTransmutedSpellMetamagicApplicationFact =
+export type DistantSpellRangeModifierFact =
+  | {
+      readonly kind: "doubleDistanceRange";
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "touchToDistanceRange";
+      readonly rangeFeet: MovementFeet;
+    };
+
+export type DistantSpellApplicationFact = Omit<
+  CharacterBattleMetamagicOptionFact,
+  "effectKind"
+> & {
+  readonly effectKind: typeof DISTANT_METAMAGIC_EFFECT_KIND;
+  readonly rangeModifier: DistantSpellRangeModifierFact;
+};
+
+export type SpellMetamagicApplicationFactWithoutSelectionPayload =
   CharacterBattleMetamagicOptionFact & {
     readonly effectKind: Exclude<
       CharacterBattleMetamagicEffectKind,
-      typeof TRANSMUTED_METAMAGIC_EFFECT_KIND
+      typeof TRANSMUTED_METAMAGIC_EFFECT_KIND | typeof DISTANT_METAMAGIC_EFFECT_KIND
     >;
   };
 
 export type SpellMetamagicApplicationFact =
-  | NonTransmutedSpellMetamagicApplicationFact
+  | DistantSpellApplicationFact
+  | SpellMetamagicApplicationFactWithoutSelectionPayload
   | TransmutedSpellApplicationFact;
 
 type SpellMetamagicSubject = Extract<
@@ -172,6 +194,35 @@ export function discoverTwinnedSpellMetamagicSelections(input: {
     : [TWINNED_SPELL_METAMAGIC_SELECTION];
 }
 
+export function discoverDistantSpellMetamagicSelections(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+}): readonly (readonly [SpellMetamagicSelection])[] {
+  if (
+    input.actor?.origin.kind !== "character" ||
+    input.actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const distant = input.actor.origin.metamagic.knownOptions.find(
+    (application) => application.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+  );
+  if (distant === undefined) {
+    return [];
+  }
+  if (
+    !distantSpellProcedureSupportsRangeProjection(input.invocation) ||
+    distantSpellRangeModifierFact(input.invocation) === null ||
+    metamagicSorceryPointSpendIssue({
+      actor: input.actor,
+      applications: [distant],
+    }) !== null
+  ) {
+    return [];
+  }
+  return [[{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }]];
+}
+
 export function metamagicActionCostOverride(
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): "bonusAction" | undefined {
@@ -221,7 +272,7 @@ export function discoverSpellMetamagicSelections(input: {
 export function spellMetamagicApplications(
   actor: BattleCreatureState,
   metamagic: readonly Pick<SpellMetamagicSelection, "effectKind">[],
-): readonly NonTransmutedSpellMetamagicApplicationFact[] {
+): readonly SpellMetamagicApplicationFactWithoutSelectionPayload[] {
   if (
     actor.origin.kind !== "character" ||
     actor.origin.metamagic === undefined
@@ -231,9 +282,11 @@ export function spellMetamagicApplications(
   const knownOptions = actor.origin.metamagic.knownOptions;
   return metamagic.flatMap((selection) =>
     knownOptions.filter(
-      (option): option is NonTransmutedSpellMetamagicApplicationFact =>
+      (
+        option,
+      ): option is SpellMetamagicApplicationFactWithoutSelectionPayload =>
         option.effectKind === selection.effectKind &&
-        isNonTransmutedSpellMetamagicApplicationFact(option),
+        isSpellMetamagicApplicationFactWithoutSelectionPayload(option),
     ),
   );
 }
@@ -247,7 +300,9 @@ export function spellMetamagicLabel(
       ? "Heightened Spell"
       : metamagic[0]?.effectKind === TWINNED_METAMAGIC_EFFECT_KIND
         ? "Twinned Spell"
-        : "Quickened Spell";
+        : metamagic[0]?.effectKind === DISTANT_METAMAGIC_EFFECT_KIND
+          ? "Distant Spell"
+          : "Quickened Spell";
 }
 
 export function transmutedSpellMetamagicLabel(
@@ -409,6 +464,72 @@ export function transmutedSpellDamageTypeSubstitutionIssue(input: {
     : null;
 }
 
+export function distantSpellRangeProjectionIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): string | null {
+  if (
+    !input.applications.every(
+      (application) => application.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return "Selected Metamagic option effect is not supported for this spell procedure.";
+  }
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.mode.tag !== "cast"
+  ) {
+    return "Distant Spell is supported only for action-time spell casts.";
+  }
+  if (!distantSpellProcedureSupportsRangeProjection(input.invocation)) {
+    return "Distant Spell is supported only for spell target procedures that consume a cast-local range fact.";
+  }
+  return distantSpellRangeModifierFact(input.invocation) === null
+    ? "Distant Spell is supported only for spell procedures with a Touch range or a distance range of at least 5 feet."
+    : null;
+}
+
+export function distantSpellRangeModifierFact(
+  invocation: SupportedSpellInvocation,
+): DistantSpellRangeModifierFact | null {
+  const range = invocation.spell.mechanics.range;
+  if (range.kind === "touch") {
+    return {
+      kind: "touchToDistanceRange",
+      rangeFeet: movementFeet(30),
+    };
+  }
+  if (
+    range.kind !== "point" ||
+    typeof range.feet !== "number" ||
+    range.feet < 5
+  ) {
+    return null;
+  }
+  return {
+    kind: "doubleDistanceRange",
+    rangeFeet: movementFeet(range.feet * 2),
+  };
+}
+
+export function distantSpellRangeModifierForApplications(
+  applications: readonly SpellMetamagicApplicationFact[] | undefined,
+): DistantSpellRangeModifierFact | null {
+  return (
+    applications?.find(
+      (application): application is DistantSpellApplicationFact =>
+        application.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+    )?.rangeModifier ?? null
+  );
+}
+
+function distantSpellProcedureSupportsRangeProjection(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return invocation.procedure === "objectLight";
+}
+
 export function twinnedSpellTargetCountProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: SupportedSpellInvocation;
@@ -537,10 +658,13 @@ function transmutedSpellApplicationTargetDamageType(
   return application?.targetDamageType;
 }
 
-export function isNonTransmutedSpellMetamagicApplicationFact(
+export function isSpellMetamagicApplicationFactWithoutSelectionPayload(
   application: CharacterBattleMetamagicOptionFact,
-): application is NonTransmutedSpellMetamagicApplicationFact {
-  return application.effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND;
+): application is SpellMetamagicApplicationFactWithoutSelectionPayload {
+  return (
+    application.effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND &&
+    application.effectKind !== DISTANT_METAMAGIC_EFFECT_KIND
+  );
 }
 
 function isTransmutedSpellDamageType(

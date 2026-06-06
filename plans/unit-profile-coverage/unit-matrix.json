@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 109,
-      "numerator": 106,
-      "percent": "97.2%"
+      "denominator": 110,
+      "numerator": 107,
+      "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3886,6 +3886,39 @@
       ]
     },
     {
+      "id": "unit-feature.metamagic-cast-range-increase",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Distant Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, the canonical Surface spell range shape, and a promoted spell target owner that consumes a cast-local range fact. The first promoted owner is object-light targeting for Touch-range Light, which derives a 30-foot Distant range fact for the selected cast, spends 1 Sorcery Point from the shared Font of Magic point pool, preserves the Light spell's Bright and Dim light radii, and rejects unsupported procedures, Self range, sub-5-foot distance ranges, missing Distant range facts, and non-range-bearing target facts before resource spending. Distance-range doubling is modeled in QNT and remains runtime-promoted only when a procedure owner consumes the resulting cast-local range fact.",
+      "taskRefs": [
+        "L3MMETA-15-DISTANT-CAST-RANGE-SLICE"
+      ],
+      "title": "Unit feature applies Distant Spell cast-local range increase to promoted target witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -4750,13 +4783,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       }
     },
@@ -6974,6 +7007,22 @@
           }
         ],
         "profileId": "unit-feature.metamagic-effective-level-extra-target",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Distant Spell Metamagic admits known selected range modifications, enforces Sorcery Point affordability, derives a cast-local range fact, and applies it only through promoted range-bearing target witnesses"
+          }
+        ],
+        "profileId": "unit-feature.metamagic-cast-range-increase",
         "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
@@ -14973,6 +15022,22 @@
       "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Distant Spell admission for promoted range-bearing target procedures, known-option and Sorcery Point gates, Touch-to-30-foot projection, distance-range doubling for numeric ranges of at least 5 feet, and rejection of Self, sub-5-foot, and unsupported procedure shapes before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-range-increase"
+      ],
+      "taskId": "L3MMETA-15-DISTANT-CAST-RANGE-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Distant Spell discovery and resolution for the Light object-light owner, deriving the cast-local 30-foot range fact from the selected Distant Spell and the Surface Touch range, consuming a range-bearing object target witness, spending 1 Sorcery Point through the shared Font of Magic pool, preserving Light's 20-foot Bright Light and additional 20-foot Dim Light radii, and rejecting non-range-bearing object-light target facts before resource spending.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-range-increase"
+      ],
+      "taskId": "L3MMETA-15-DISTANT-CAST-RANGE-SLICE"
+    },
+    {
       "claimKind": "admission-projection",
       "note": "Focused Surface, character-creation, character-battle, and battle-runtime admission tests cover the Dragonborn Breath Weapon support-profile projection from the exact Draconic Ancestry source table through a selected CharacterBuild ancestry fact with battle-derived damage type, order-independent Cone/Line shape facts, Constitution innate DC, character-level damage tiers, Proficiency Bonus use pool, and Long Rest reset. Reducer execution, QNT, MBT, and selected-identity runtime parity remain deferred to L3MSPEC-03.",
       "profileIds": [
@@ -15091,7 +15156,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 111,
+        "profileFactDenominator": 112,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -19727,10 +19792,10 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "generic spell cast-property witness owner",
-              "reason": "Distant Spell needs range-bearing spell target witnesses before range can be rewritten without trusting authored spell identity; Extended Spell needs generic duration and Concentration-saving-throw roll-mode ownership; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. The promoted battle-runtime Metamagic boundary rejects these cast-property options before Sorcery Point spending rather than charging inert Metamagic."
+              "owner": "generic spell cast-property witness owner plus future procedure-specific range consumers",
+              "reason": "Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell needs generic duration and Concentration-saving-throw roll-mode ownership; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic."
             },
-            "mechanic": "Distant, Extended, and Subtle Spell cast-property modifiers: double range only for spells with a range of at least 5 feet or make Touch range 30 feet, double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
+            "mechanic": "Distant Spell for additional range-bearing spell target or origin owners beyond the promoted object-light Touch-range slice; Extended and Subtle Spell cast-property modifiers: double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
           },
           {
             "battleReadinessClosure": {
@@ -19766,7 +19831,8 @@
           "unit-feature.metamagic-careful-save-protection",
           "unit-feature.metamagic-heightened-save-disadvantage",
           "unit-feature.metamagic-damage-type-substitution",
-          "unit-feature.metamagic-effective-level-extra-target"
+          "unit-feature.metamagic-effective-level-extra-target",
+          "unit-feature.metamagic-cast-range-increase"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -19778,7 +19844,8 @@
           "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures.",
           "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through the combatant-owned Hideous Laughter repeat-save lifecycle without duplicating spell occurrence state.",
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending."
+          "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending."
         ],
         "tag": "profile-subset-supported"
       },
@@ -19833,6 +19900,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-15-DISTANT-OBJECT-LIGHT"
         }
       ],
       "executableMechanics": true,
@@ -20097,6 +20169,39 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-cast-range-increase",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Distant Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, the canonical Surface spell range shape, and a promoted spell target owner that consumes a cast-local range fact. The first promoted owner is object-light targeting for Touch-range Light, which derives a 30-foot Distant range fact for the selected cast, spends 1 Sorcery Point from the shared Font of Magic point pool, preserves the Light spell's Bright and Dim light radii, and rejects unsupported procedures, Self range, sub-5-foot distance ranges, missing Distant range facts, and non-range-bearing target facts before resource spending. Distance-range doubling is modeled in QNT and remains runtime-promoted only when a procedure owner consumes the resulting cast-local range fact.",
+          "taskRefs": [
+            "L3MMETA-15-DISTANT-CAST-RANGE-SLICE"
+          ],
+          "title": "Unit feature applies Distant Spell cast-local range increase to promoted target witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"
             }
           ]
         }

@@ -2,8 +2,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
 import * as Either from "effect/Either";
 import type {
@@ -27,9 +28,11 @@ import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resource
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
+  distantSpellRangeModifierFact,
+  distantSpellRangeProjectionIssue,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
-  isNonTransmutedSpellMetamagicApplicationFact,
+  isSpellMetamagicApplicationFactWithoutSelectionPayload,
   metamagicApplicationsIncludeQuickened,
   metamagicSorceryPointCost,
   metamagicSorceryPointSpendIssue,
@@ -46,10 +49,12 @@ import {
 } from "./metamagic-support.ts";
 export {
   CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverDistantSpellMetamagicSelections,
   discoverSpellMetamagicSelections,
   discoverTransmutedSpellMetamagicSelections,
   discoverTwinnedSpellMetamagicSelections,
   DISTANT_METAMAGIC_EFFECT_KIND,
+  distantSpellRangeModifierForApplications,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -70,7 +75,7 @@ export {
 } from "./metamagic-support.ts";
 
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
-  "Distant Spell is not supported until spell target witnesses carry range facts that can be rewritten without trusting authored spell identity.";
+  "Distant Spell is supported only for promoted spell target witnesses that carry cast-local range facts without trusting authored spell identity.";
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Extended Spell is not supported until spell duration and Concentration-saving-throw roll mode are owned by a generic cast-property boundary.";
 export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -179,10 +184,11 @@ export function admitSpellMetamagicApplications(input: {
         "Metamagic selection must be one of the actor's known Metamagic options.",
       );
     }
-    const admittedApplication = metamagicApplicationForSelection(
+    const admittedApplication = metamagicApplicationForSelection({
       application,
       selection,
-    );
+      invocation: input.invocation,
+    });
     if (typeof admittedApplication === "string") {
       return metamagicIssue(admittedApplication);
     }
@@ -391,8 +397,18 @@ function spellMetamagicSupportIssue(input: {
     }
     return null;
   }
-  const castPropertyIssue = castPropertyMetamagicSupportIssue(effectKinds);
-  if (castPropertyIssue !== null) {
+  if (
+    effectKinds.has(DISTANT_METAMAGIC_EFFECT_KIND) ||
+    effectKinds.has(EXTENDED_METAMAGIC_EFFECT_KIND) ||
+    effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
+  ) {
+    const castPropertyIssue = castPropertyMetamagicSupportIssue(
+      effectKinds,
+      input,
+    );
+    if (castPropertyIssue === null) {
+      return null;
+    }
     return castPropertyIssue;
   }
   const damageShapeIssue = damageShapeMetamagicSupportIssue(effectKinds, input);
@@ -439,9 +455,14 @@ function quickenedActionRewriteSupportIssue(
 
 function castPropertyMetamagicSupportIssue(
   effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
+  input: {
+    readonly applications: readonly SpellMetamagicApplicationFact[];
+    readonly invocation: SupportedSpellInvocation;
+    readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+  },
 ): string | null {
   if (effectKinds.has(DISTANT_METAMAGIC_EFFECT_KIND)) {
-    return DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE;
+    return distantSpellRangeProjectionIssue(input);
   }
   if (effectKinds.has(EXTENDED_METAMAGIC_EFFECT_KIND)) {
     return EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE;
@@ -467,19 +488,36 @@ function damageShapeMetamagicSupportIssue(
     : null;
 }
 
-function metamagicApplicationForSelection(
-  application: CharacterBattleMetamagicOptionFact,
-  selection: SpellMetamagicSelection,
-): SpellMetamagicApplicationFact | string {
-  if (isNonTransmutedSpellMetamagicApplicationFact(application)) {
-    return application;
+function metamagicApplicationForSelection(input: {
+  readonly application: CharacterBattleMetamagicOptionFact;
+  readonly selection: SpellMetamagicSelection;
+  readonly invocation: SupportedSpellInvocation;
+}): SpellMetamagicApplicationFact | string {
+  if (input.application.effectKind === DISTANT_METAMAGIC_EFFECT_KIND) {
+    const rangeModifier = distantSpellRangeModifierFact(input.invocation);
+    return rangeModifier === null
+      ? "Distant Spell is supported only for spell procedures with a Touch range or a distance range of at least 5 feet."
+      : {
+          effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
+          stackingMode: input.application.stackingMode,
+          sorceryPointCost: input.application.sorceryPointCost,
+          rangeModifier,
+        };
+  }
+  if (isSpellMetamagicApplicationFactWithoutSelectionPayload(input.application)) {
+    return input.application;
   }
   const targetDamageType = transmutedSpellSelectionTargetDamageType([
-    selection,
+    input.selection,
   ]);
   return targetDamageType === undefined
     ? "Transmuted Spell requires one selected replacement damage type."
-    : { ...application, targetDamageType };
+    : {
+        effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+        stackingMode: input.application.stackingMode,
+        sorceryPointCost: input.application.sorceryPointCost,
+        targetDamageType,
+      };
 }
 
 function rerollMetamagicSupportIssue(

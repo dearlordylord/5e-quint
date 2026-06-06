@@ -608,10 +608,40 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     ),
   }),
   Schema.Struct({
+    kind: Schema.Literal("spellDistantObjectLightTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+    size: Schema.Literal(
+      "tiny",
+      "small",
+      "medium",
+      "large",
+      "huge",
+      "gargantuan",
+    ),
+    wornOrCarried: Schema.Union(
+      Schema.Struct({ kind: Schema.Literal("nobody") }),
+      Schema.Struct({ kind: Schema.Literal("caster") }),
+      Schema.Struct({
+        kind: Schema.Literal("someoneElse"),
+        relation: Schema.Literal("worn", "carried"),
+      }),
+    ),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("spellTouchedObjectTarget"),
     casterId: CombatantId,
     objectId: BattleObjectId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellDistantTouchedObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellManufacturedMetalObjectTarget"),
@@ -1969,10 +1999,38 @@ type BattleFillEncoded =
                 };
           }
         | {
+            readonly kind: "spellDistantObjectLightTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+            readonly size:
+              | "tiny"
+              | "small"
+              | "medium"
+              | "large"
+              | "huge"
+              | "gargantuan";
+            readonly wornOrCarried:
+              | { readonly kind: "nobody" }
+              | { readonly kind: "caster" }
+              | {
+                  readonly kind: "someoneElse";
+                  readonly relation: "worn" | "carried";
+                };
+          }
+        | {
             readonly kind: "spellTouchedObjectTarget";
             readonly casterId: string;
             readonly objectId: string;
             readonly spellId: string;
+          }
+        | {
+            readonly kind: "spellDistantTouchedObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
           }
         | {
             readonly kind: "spellManufacturedMetalObjectTarget";
@@ -2803,10 +2861,40 @@ export const BattleFillSchema: Schema.Schema<
             ),
           }),
           Schema.Struct({
+            kind: Schema.Literal("spellDistantObjectLightTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
+            size: Schema.Literal(
+              "tiny",
+              "small",
+              "medium",
+              "large",
+              "huge",
+              "gargantuan",
+            ),
+            wornOrCarried: Schema.Union(
+              Schema.Struct({ kind: Schema.Literal("nobody") }),
+              Schema.Struct({ kind: Schema.Literal("caster") }),
+              Schema.Struct({
+                kind: Schema.Literal("someoneElse"),
+                relation: Schema.Literal("worn", "carried"),
+              }),
+            ),
+          }),
+          Schema.Struct({
             kind: Schema.Literal("spellTouchedObjectTarget"),
             casterId: CombatantId,
             objectId: BattleObjectId,
             spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellDistantTouchedObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
           }),
           Schema.Struct({
             kind: Schema.Literal("spellManufacturedMetalObjectTarget"),

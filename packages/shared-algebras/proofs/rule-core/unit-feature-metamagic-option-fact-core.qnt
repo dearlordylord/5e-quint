@@ -1,15 +1,17 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
 module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
   // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
-  // - Classes/Sorcerer.md: Careful Spell, Empowered Spell, Heightened Spell,
-  //   Quickened Spell, Transmuted Spell, and Twinned Spell Sorcery Point costs.
+  // - Classes/Sorcerer.md: Careful Spell, Distant Spell, Empowered Spell,
+  //   Heightened Spell, Quickened Spell, Transmuted Spell, and Twinned Spell
+  //   Sorcery Point costs.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
 
   type BattleRuntimeMetamagicEffectKind =
     | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
+    | SpellRangeIncrease
     | DamageDiceRerollStackingException
     | SavingThrowProtection
     | SavingThrowDisadvantage
@@ -22,6 +24,7 @@ module unitFeatureMetamagicOptionFactCore {
 
   type BattleRuntimeMetamagicOptionFact =
     | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact
+    | SpellRangeIncreaseOptionFact
     | DamageDiceRerollStackingExceptionOptionFact
     | SavingThrowProtectionOptionFact
     | SavingThrowDisadvantageOptionFact
@@ -30,6 +33,9 @@ module unitFeatureMetamagicOptionFactCore {
 
   pure def quickenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact
+
+  pure def distantSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
+    SpellRangeIncreaseOptionFact
 
   pure def empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     DamageDiceRerollStackingExceptionOptionFact
@@ -52,6 +58,7 @@ module unitFeatureMetamagicOptionFactCore {
     match option {
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact =>
         QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
+      | SpellRangeIncreaseOptionFact => SpellRangeIncrease
       | DamageDiceRerollStackingExceptionOptionFact =>
         DamageDiceRerollStackingException
       | SavingThrowProtectionOptionFact => SavingThrowProtection
@@ -68,6 +75,7 @@ module unitFeatureMetamagicOptionFactCore {
       | DamageDiceRerollStackingExceptionOptionFact =>
         CanCombineWithDifferentMetamagic
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => OnePerSpell
+      | SpellRangeIncreaseOptionFact => OnePerSpell
       | SavingThrowProtectionOptionFact => OnePerSpell
       | SavingThrowDisadvantageOptionFact => OnePerSpell
       | DamageTypeSubstitutionOptionFact => OnePerSpell
@@ -79,6 +87,7 @@ module unitFeatureMetamagicOptionFactCore {
   ): int =
     match option {
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => 2
+      | SpellRangeIncreaseOptionFact => 1
       | DamageDiceRerollStackingExceptionOptionFact => 1
       | SavingThrowProtectionOptionFact => 1
       | SavingThrowDisadvantageOptionFact => 2
@@ -89,6 +98,7 @@ module unitFeatureMetamagicOptionFactCore {
   pure def supportedBattleRuntimeMetamagicEffectKinds: Set[BattleRuntimeMetamagicEffectKind] =
     Set(
       QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit,
+      SpellRangeIncrease,
       DamageDiceRerollStackingException,
       SavingThrowProtection,
       SavingThrowDisadvantage,

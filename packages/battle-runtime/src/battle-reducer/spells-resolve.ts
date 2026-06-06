@@ -11,6 +11,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -308,6 +309,7 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "directCondition",
   "rollModifier",
   "scalarBuff",
+  "objectLight",
   "spellAttackDamage",
   "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;

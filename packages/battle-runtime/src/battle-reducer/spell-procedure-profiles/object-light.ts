@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 //
 // The objectLight Spell Procedure Profile: an action spell that attaches a
 // Bright Light and Dim Light emitter to a touched object.
@@ -48,8 +50,14 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
+  discoverDistantSpellMetamagicSelections,
+  spellMetamagicLabel,
+  type SpellMetamagicApplicationFact,
+} from "../metamagic-support.ts";
+import {
   spellObjectLightTargetFact,
   spellObjectTargetHole,
+  type ObjectLightTargetFact,
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
@@ -311,23 +319,40 @@ function admitObjectLight(
 }
 
 function discoverObjectLightCastAct(
-  _state: BattleState,
+  state: BattleState,
   actorId: CombatantId,
   invocation: ObjectLightInvocation,
 ): readonly AvailableBattleAct[] {
-  return [
-    {
+  const baseCastAct = {
+    subject: {
+      tag: "actionSpell" as const,
+      actorId,
+      invocation: objectLightInvocationRef(invocation),
+      mode: { tag: "cast" as const },
+    },
+    label: invocation.spell.name,
+    summary: objectLightCastSummary(invocation),
+    initialHoles: [spellObjectTargetHole(invocation)],
+  };
+  const metamagicCastActs = discoverDistantSpellMetamagicSelections({
+    actor: state.combatants.get(actorId),
+    invocation,
+  }).map((metamagic) => {
+    const label = spellMetamagicLabel(metamagic);
+    return {
       subject: {
-        tag: "actionSpell",
+        tag: "actionSpell" as const,
         actorId,
         invocation: objectLightInvocationRef(invocation),
-        mode: { tag: "cast" },
+        mode: { tag: "cast" as const },
+        metamagic,
       },
-      label: invocation.spell.name,
-      summary: objectLightCastSummary(invocation),
+      label: `${invocation.spell.name} (${label})`,
+      summary: `${objectLightCastSummary(invocation)} ${label}.`,
       initialHoles: [spellObjectTargetHole(invocation)],
-    },
-  ];
+    };
+  });
+  return [baseCastAct, ...metamagicCastActs];
 }
 
 function objectLightInvocationRef(
@@ -421,7 +446,9 @@ function objectLightSpellEffectOccurrenceId(
 }
 
 function resolveObjectLight(
-  input: SpellProcedureProfileResolveInput<ObjectLightInvocation>,
+  input: SpellProcedureProfileResolveInput<ObjectLightInvocation> & {
+    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  },
 ): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -456,15 +483,19 @@ function resolveObjectLight(
       ): fact is Extract<
         (typeof objectTarget.spatialFacts)[number],
         {
-          readonly kind: "spellObjectLightTarget" | "spellTouchedObjectTarget";
+          readonly kind:
+            | "spellObjectLightTarget"
+            | "spellDistantObjectLightTarget"
+            | "spellTouchedObjectTarget"
+            | "spellDistantTouchedObjectTarget";
         }
       > =>
-        fact.kind === "spellObjectLightTarget" ||
-        fact.kind === "spellTouchedObjectTarget",
+        objectLightTargetFactKinds.has(fact.kind),
     ),
     input.actorId,
     objectTarget.objectId,
     input.invocation,
+    input.metamagicApplications,
   );
   if (lightFact === null) {
     return invalidResult(
@@ -505,6 +536,9 @@ function resolveObjectLight(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   return resourced.tag === "invalid"
     ? resourced
@@ -576,3 +610,13 @@ export const objectLightProfile: SpellProcedureProfile<
   invocationRef: objectLightInvocationRef,
   resolve: resolveObjectLight,
 };
+
+const OBJECT_LIGHT_TARGET_FACT_KINDS = [
+  "spellObjectLightTarget",
+  "spellDistantObjectLightTarget",
+  "spellTouchedObjectTarget",
+  "spellDistantTouchedObjectTarget",
+] as const satisfies ReadonlyArray<ObjectLightTargetFact["kind"]>;
+const objectLightTargetFactKinds: ReadonlySet<string> = new Set(
+  OBJECT_LIGHT_TARGET_FACT_KINDS,
+);
