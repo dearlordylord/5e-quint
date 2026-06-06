@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-07-TWINNED-SPELL-UPCAST-TARGETING sorcerer_metamagic
 // UNIT-IDENTITY-MBT-REPLAY: L3META-07-TWINNED-SPELL-UPCAST-TARGETING sorcerer_metamagic doResolveTwinnedTargetCount
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-effective-level-extra-target
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md, "Twinned Spell":
 //   Twinned Spell costs 1 Sorcery Point and increases a spell's effective

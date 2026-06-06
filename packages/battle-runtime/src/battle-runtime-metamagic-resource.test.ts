@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 
 import {
   canSpendAction,
@@ -664,6 +664,89 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(3);
   });
 
+  test("resolves Quickened Eldritch Blast attack sequences after the Magic action is already spent", () => {
+    const state = magicActionSpent(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+        cantrips: ["eldritch_blast"],
+      }),
+    );
+    const act = quickenedEldritchBlastAct(state);
+
+    expect(canSpendAction(state.currentTurnResources, "magic")).toBe(false);
+    expect(act.subject).toEqual(quickenedEldritchBlastSubject());
+
+    const resolved = resolveQuickenedEldritchBlast(state);
+
+    expect(resolved.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(canSpendAction(resolved.currentTurnResources, "magic")).toBe(false);
+    expect(
+      resolved.currentTurnResources.quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(2));
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(6);
+  });
+
+  test("blocks later level 1+ spells after Quickened Eldritch Blast attack sequences", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+      cantrips: ["eldritch_blast"],
+    });
+
+    const resolved = resolveQuickenedEldritchBlast(state);
+
+    expect(
+      resolved.currentTurnResources.quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(
+      discoverBattleActs(resolved).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "burning_hands",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: resolved,
+        subject: burningHandsActionSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "This turn has already expended a Spell Slot.",
+    });
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(2));
+  });
+
+  test("spends spell slots for Quickened Scorching Ray attack sequences", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = quickenedScorchingRayAct(state);
+    const resolved = resolveQuickenedScorchingRay(state, act);
+    const caster = resolved.combatants.get(wizardId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected Sorcerer character combatant.");
+    }
+
+    expect(act.subject).toEqual(quickenedScorchingRaySubject());
+    expect(resolved.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(canSpendAction(resolved.currentTurnResources, "magic")).toBe(true);
+    expect(
+      resolved.currentTurnResources.levelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(
+      resolved.currentTurnResources.quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(2));
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(4);
+  });
+
   test("preserves Quickened spell attack resources through Sanctuary retarget", () => {
     const state = withSanctuaryWard(
       saveMetamagicBattle({
@@ -732,6 +815,70 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(5);
+  });
+
+  test("preserves Quickened spell attack sequence resources through Sanctuary retarget", () => {
+    const state = withSanctuaryWard(
+      saveMetamagicBattle({
+        knownOptions: [quickenedMetamagicOption()],
+        cantrips: ["eldritch_blast"],
+      }),
+      skeletonId,
+    );
+    const act = quickenedEldritchBlastAct(state);
+    const targetHoles = targetChoiceHoles(act.initialHoles);
+    const originalTarget = spellAttackSequenceTargetFill(
+      targetHoles[0]!,
+      skeletonId,
+      "eldritch_blast",
+    );
+    const secondTarget = spellAttackSequenceTargetFill(
+      targetHoles[1]!,
+      fighterId,
+      "eldritch_blast",
+    );
+    const needsSanctuary = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [originalTarget, secondTarget],
+    });
+    const sanctuaryHole = findHole(
+      needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
+      "sanctuaryInterdictionOutcome",
+    );
+    const sanctuaryRetarget = sanctuaryRetargetFill(
+      sanctuaryHole,
+      fighterId,
+      "eldritch_blast",
+    );
+    const fills: BattleFill[] = [
+      originalTarget,
+      secondTarget,
+      sanctuaryRetarget,
+    ];
+
+    const firstAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(firstAttack, { total: 15, naturalD20: 10 }));
+    const firstDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+    fills.push(damageRollFillWithGroups(firstDamage, [[4]]));
+    const secondAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(secondAttack, { total: 1, naturalD20: 1 }));
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills,
+      }),
+    ).state;
+
+    expect(resolved.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(canSpendAction(resolved.currentTurnResources, "magic")).toBe(true);
+    expect(
+      resolved.currentTurnResources.quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(2));
+    expect(resolved.combatants.get(skeletonId)?.hp).toBe(10);
+    expect(resolved.combatants.get(fighterId)?.hp).toBe(8);
   });
 
   test("preserves Quickened spell attack resources when Mirror Image duplicate is hit", () => {
@@ -1439,6 +1586,35 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
     });
     expect(sorceryPointsRemaining(spellAttackAfterPriorFreeSpell)).toBe(
+      resourceCount(4),
+    );
+
+    const attackSequenceState = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+      cantrips: ["eldritch_blast"],
+    });
+    const attackSequenceAfterPriorFreeSpell: BattleState = {
+      ...attackSequenceState,
+      currentTurnResources: {
+        ...attackSequenceState.currentTurnResources,
+        levelOnePlusSpellCastsThisTurn: [wizardId],
+      },
+    };
+    expect(
+      hasQuickenedEldritchBlastAct(attackSequenceAfterPriorFreeSpell),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: attackSequenceAfterPriorFreeSpell,
+        subject: quickenedEldritchBlastSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.",
+    });
+    expect(sorceryPointsRemaining(attackSequenceAfterPriorFreeSpell)).toBe(
       resourceCount(4),
     );
   });
@@ -2229,7 +2405,7 @@ function withActiveEffect(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-  spellId: "ray_of_frost",
+  spellId: "eldritch_blast" | "ray_of_frost",
 ): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
   if (hole.kind !== "sanctuaryInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
@@ -2326,6 +2502,7 @@ function metamagicBattle(input?: {
 function saveMetamagicBattle(input: {
   readonly sorceryPoints?: number;
   readonly knownOptions: readonly MetamagicOptionFixture[];
+  readonly cantrips?: readonly ("eldritch_blast" | "ray_of_frost")[];
   readonly preparedSpells?: readonly ("burning_hands" | "scorching_ray")[];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2;
@@ -2357,6 +2534,7 @@ function saveMetamagicBattle(input: {
         },
         spellcasting: {
           ...wizardSpellcasting({
+            cantrips: (input.cantrips ?? ["ray_of_frost"]).map(spellRecord),
             preparedSpells: (input.preparedSpells ?? ["burning_hands"]).map(
               spellRecord,
             ),
@@ -2857,6 +3035,33 @@ function quickenedRayOfFrostSubject(): QuickenedBonusActionSpellAct["subject"] {
   };
 }
 
+function quickenedEldritchBlastSubject(): QuickenedBonusActionSpellAct["subject"] {
+  return {
+    tag: "bonusActionSpell",
+    actorId: wizardId,
+    invocation: cantripSpellInvocationRef(
+      "eldritch_blast",
+      "spellAttackSequence",
+    ),
+    mode: { tag: "cast" },
+    metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+  };
+}
+
+function quickenedScorchingRaySubject(): QuickenedBonusActionSpellAct["subject"] {
+  return {
+    tag: "bonusActionSpell",
+    actorId: wizardId,
+    invocation: spellSlotInvocationRef(
+      "scorching_ray",
+      2,
+      "spellAttackSequence",
+    ),
+    mode: { tag: "cast" },
+    metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+  };
+}
+
 function hasQuickenedCureWoundsAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(isQuickenedCureWoundsAct);
 }
@@ -2867,6 +3072,14 @@ function hasQuickenedBurningHandsAct(state: BattleState): boolean {
 
 function hasQuickenedRayOfFrostAct(state: BattleState): boolean {
   return discoverBattleActs(state).some(isQuickenedRayOfFrostAct);
+}
+
+function hasQuickenedEldritchBlastAct(state: BattleState): boolean {
+  return discoverBattleActs(state).some(
+    (candidate) =>
+      isQuickenedSpellAttackSequenceAct(candidate) &&
+      candidate.subject.invocation.spellId === "eldritch_blast",
+  );
 }
 
 type QuickenedBonusActionSpellAct = AvailableBattleAct & {
@@ -2957,6 +3170,116 @@ function quickenedRayOfFrostAct(
     throw new Error("Expected Quickened Ray of Frost act.");
   }
   return act;
+}
+
+function isQuickenedSpellAttackSequenceAct(
+  candidate: AvailableBattleAct,
+): candidate is QuickenedBonusActionSpellAct {
+  return (
+    candidate.subject.tag === "bonusActionSpell" &&
+    candidate.subject.invocation.procedure === "spellAttackSequence" &&
+    candidate.subject.metamagic?.some(
+      (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function quickenedEldritchBlastAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      isQuickenedSpellAttackSequenceAct(candidate) &&
+      candidate.subject.invocation.spellId === "eldritch_blast",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Quickened Eldritch Blast act.");
+  }
+  return act;
+}
+
+function quickenedScorchingRayAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      isQuickenedSpellAttackSequenceAct(candidate) &&
+      candidate.subject.invocation.spellId === "scorching_ray",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Quickened Scorching Ray act.");
+  }
+  return act;
+}
+
+function resolveQuickenedEldritchBlast(state: BattleState): BattleState {
+  const act = quickenedEldritchBlastAct(state);
+  const targets = targetChoiceHoles(act.initialHoles);
+  const firstTarget = spellAttackSequenceTargetFill(
+    targets[0]!,
+    skeletonId,
+    "eldritch_blast",
+  );
+  const secondTarget = spellAttackSequenceTargetFill(
+    targets[1]!,
+    skeletonId,
+    "eldritch_blast",
+  );
+  const fills: BattleFill[] = [firstTarget, secondTarget];
+
+  const firstAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+  fills.push(attackRollFill(firstAttack, { total: 15, naturalD20: 10 }));
+  const firstDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+  fills.push(damageRollFillWithGroups(firstDamage, [[4]]));
+  const secondAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+  fills.push(attackRollFill(secondAttack, { total: 1, naturalD20: 1 }));
+
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills,
+    }),
+  ).state;
+}
+
+function resolveQuickenedScorchingRay(
+  state: BattleState,
+  act: QuickenedBonusActionSpellAct = quickenedScorchingRayAct(state),
+): BattleState {
+  const fills: BattleFill[] = targetChoiceHoles(act.initialHoles).map((hole) =>
+    spellAttackSequenceTargetFill(hole, skeletonId, "scorching_ray"),
+  );
+
+  for (let rayIndex = 0; rayIndex < 3; rayIndex += 1) {
+    const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
+    fills.push(attackRollFill(attack, { total: 15, naturalD20: 10 }));
+    const damage = nextSpellHole(state, act.subject, fills, "rolledDice");
+    fills.push(damageRollFillWithGroups(damage, [[1, 1]]));
+  }
+
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills,
+    }),
+  ).state;
+}
+
+function spellAttackSequenceTargetFill(
+  hole: BattleHole,
+  targetId: ReturnType<typeof combatantId>,
+  spellId: "eldritch_blast" | "scorching_ray",
+): BattleFill {
+  return targetFill(hole, targetId, [
+    {
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId,
+      spellId,
+    },
+  ]);
 }
 
 function quickenedSpellAct(

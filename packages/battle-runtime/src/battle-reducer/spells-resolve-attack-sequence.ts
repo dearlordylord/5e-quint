@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -203,6 +204,9 @@ export function resolveSpellAttackSequenceAct(input: {
       fillSet: input.fillSet,
       partFill,
       partIndex,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
       ...(input.metamagicApplications === undefined
         ? {}
         : { metamagicApplications: input.metamagicApplications }),
@@ -441,6 +445,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       fillSet,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (input.partFill.attackRoll === undefined) {

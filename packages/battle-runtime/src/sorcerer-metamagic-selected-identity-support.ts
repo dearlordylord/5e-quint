@@ -51,6 +51,7 @@ export type SorcererMetamagicProjection = {
     | "heightenedSaveGatedDamage"
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack"
+    | "quickenedSpellAttackSequence"
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
     | "twinnedTargetCount";
@@ -115,6 +116,29 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
         attackRoll,
         damageRollFillWithGroups(damageHole, [[4, 3]]),
       ],
+    }),
+  ).state;
+}
+
+export function resolveQuickenedEldritchBlast(state: BattleState): BattleState {
+  const act = quickenedEldritchBlastAct(state);
+  const targetHoles = targetChoiceHoles(act.initialHoles);
+  const firstTarget = eldritchBlastTargetFill(targetHoles[0]!);
+  const secondTarget = eldritchBlastTargetFill(targetHoles[1]!);
+  const fills: BattleFill[] = [firstTarget, secondTarget];
+
+  const firstAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+  fills.push(attackRollFill(firstAttack, { total: 15, naturalD20: 10 }));
+  const firstDamage = nextSpellHole(state, act.subject, fills, "rolledDice");
+  fills.push(damageRollFillWithGroups(firstDamage, [[4]]));
+  const secondAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
+  fills.push(attackRollFill(secondAttack, { total: 1, naturalD20: 1 }));
+
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills,
     }),
   ).state;
 }
@@ -326,12 +350,12 @@ export function resolveTwinnedBless(state: BattleState): BattleState {
       state,
       subject: act.subject,
       fills: [
-        targetListFill(
-          act.initialHoles,
-          "Bless targets",
-          "bless",
-          [wizardId, fighterId, skeletonId, secondSkeletonId],
-        ),
+        targetListFill(act.initialHoles, "Bless targets", "bless", [
+          wizardId,
+          fighterId,
+          skeletonId,
+          secondSkeletonId,
+        ]),
       ],
     }),
   ).state;
@@ -398,7 +422,10 @@ function sorcererMetamagicBattleWithOptions(
         },
         spellcasting: {
           ...wizardSpellcasting({
-            cantrips: [spellRecord("ray_of_frost")],
+            cantrips: [
+              spellRecord("ray_of_frost"),
+              spellRecord("eldritch_blast"),
+            ],
             preparedSpells: [
               spellRecord("bless"),
               spellRecord("burning_hands"),
@@ -510,6 +537,57 @@ function quickenedRayOfFrostAct(
     throw new Error("Expected Quickened Ray of Frost act.");
   }
   return act;
+}
+
+function quickenedEldritchBlastAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.procedure === "spellAttackSequence" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Quickened Eldritch Blast act.");
+  }
+  return act;
+}
+
+function targetChoiceHoles(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "targetChoice" }>[] {
+  return holes.filter(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+}
+
+function nextSpellHole(
+  state: BattleState,
+  subject: QuickenedBonusActionSpellAct["subject"],
+  fills: readonly BattleFill[],
+  kind: BattleHole["kind"],
+): BattleHole {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    const detail = "message" in result ? `: ${result.message}` : "";
+    throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
+  }
+  return findHole(result.holes, kind);
+}
+
+function eldritchBlastTargetFill(hole: BattleHole): BattleFill {
+  return targetFill(hole, skeletonId, [
+    {
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId: skeletonId,
+      spellId: "eldritch_blast",
+    },
+  ]);
 }
 
 type ActionSpellAct = AvailableBattleAct & {
@@ -657,7 +735,7 @@ function targetListFill(
   holes: readonly BattleHole[],
   label: string,
   spellId: "bless" | "burning_hands" | "command",
-  targetIds: readonly typeof wizardId[] = [skeletonId],
+  targetIds: readonly (typeof wizardId)[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(
     (candidate) =>
@@ -671,11 +749,11 @@ function targetListFill(
     holeId: hole.holeId,
     value: { targetIds },
     spatialFacts: targetIds.map((targetId) => ({
-        kind: "spellTarget",
-        casterId: wizardId,
-        targetId,
-        spellId,
-      })),
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId,
+      spellId,
+    })),
   };
 }
 

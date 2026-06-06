@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE sorcerer_metamagic
 // UNIT-IDENTITY-MBT-REPLAY: L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE sorcerer_metamagic doResolveTransmutedSaveGatedDamage doResolveTransmutedSpellAttack
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-damage-type-substitution
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.

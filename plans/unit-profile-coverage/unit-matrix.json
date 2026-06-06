@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 144,
-      "numerator": 140,
-      "percent": "97.2%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 144,
-      "numerator": 140,
-      "percent": "97.2%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 154,
@@ -4625,13 +4625,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 144,
-        "numerator": 140,
-        "percent": "97.2%"
+        "numerator": 144,
+        "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 144,
-        "numerator": 140,
-        "percent": "97.2%"
+        "numerator": 144,
+        "percent": "100%"
       }
     },
     "profileKinds": [
@@ -6741,8 +6741,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Careful Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and protected-target limits, forces protected Saving Throw success, and suppresses successful-save half damage"
+          }
+        ],
         "profileId": "unit-feature.metamagic-careful-save-protection",
         "profileKind": "resource",
         "qntOwners": [
@@ -6750,8 +6757,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Heightened Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and one affected target choice, and projects target-specific Saving Throw Disadvantage with Advantage/Disadvantage cancellation"
+          }
+        ],
         "profileId": "unit-feature.metamagic-heightened-save-disadvantage",
         "profileKind": "resource",
         "qntOwners": [
@@ -6759,8 +6773,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Transmuted Spell Metamagic admits known selected spell damage substitutions, enforces Sorcery Point affordability, requires a listed replacement Damage Type distinct from the source, and projects the replacement without mutating source damage facts"
+          }
+        ],
         "profileId": "unit-feature.metamagic-damage-type-substitution",
         "profileKind": "resource",
         "qntOwners": [
@@ -6768,8 +6789,15 @@
         ]
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Twinned Spell Metamagic admits known selected target-count spell modifications, enforces Sorcery Point affordability, preserves actual Spell Slot level, increases effective spell level by 1, and projects one additional creature target"
+          }
+        ],
         "profileId": "unit-feature.metamagic-effective-level-extra-target",
         "profileKind": "resource",
         "qntOwners": [
@@ -19130,6 +19158,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",

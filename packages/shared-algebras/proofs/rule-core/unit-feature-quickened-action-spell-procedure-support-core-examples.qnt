@@ -16,6 +16,9 @@ module unitFeatureQuickenedActionSpellProcedureSupportCoreExamples {
         QuickenedSpellAttackProcedure,
       )),
       assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
+        QuickenedSpellAttackSequenceProcedure,
+      )),
+      assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
         QuickenedSaveGatedConditionProcedure,
       )),
       assert(quickenedActionSpellProcedureSupportsBonusActionRewrite(
@@ -37,6 +40,10 @@ module unitFeatureQuickenedActionSpellProcedureSupportCoreExamples {
       )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
         QuickenedSpellAttackProcedure,
+        Set(quickenedSpellMetamagicFact),
+      )),
+      assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedSpellAttackSequenceProcedure,
         Set(quickenedSpellMetamagicFact),
       )),
       assert(selectedMetamagicOptionsSupportedByQuickenedActionSpell(

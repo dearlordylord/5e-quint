@@ -205,7 +205,7 @@ export const spellAttackSequenceProfile: SpellProcedureProfile<
 > = {
   procedure: "spellAttackSequence",
   invocationSchema: SpellAttackSequenceInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  metamagicCompatibility: "bonusActionRewrite",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
   knownWillingTargetSpellIds: [],
