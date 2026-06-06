@@ -471,6 +471,7 @@ function reactionCastingTimeCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: input.className, level: 7 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",

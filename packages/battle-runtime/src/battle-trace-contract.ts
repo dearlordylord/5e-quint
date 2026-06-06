@@ -28,6 +28,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "conditionChoice",
   "commandOptionChoice",
   "selfTransformationModeChoice",
+  "wildShapeEquipmentDisposition",
   "thaumaturgyActiveOneMinuteEffectCount",
   "dancingLightsPlacement",
   "spellAreaChoice",

@@ -56,7 +56,9 @@ import {
   proficiencyBonusForCharacterLevel,
   resourceCount,
   type Condition,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
+import type { Language } from "@dnd/shared/game-facts";
 import type {
   SpeciesRecord,
   StatBlockRecord,
@@ -391,6 +393,7 @@ export function battleCreatureInitFromCharacterBuild(
       characterId: input.characterId,
       characterUnitRefs: characterUnitRefs.right,
       classLevels: classLevels.right,
+      knownLanguages: characterBattleKnownLanguages(input.build),
       d20Statistics: {
         abilityScores: input.build.abilityScores,
         savingThrowProficiencies: proficiencies.right.savingThrows,
@@ -440,6 +443,22 @@ export function battleCreatureInitFromCharacterBuild(
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
     },
   });
+}
+
+function characterBattleKnownLanguages(
+  build: Pick<CharacterBuild, "originLanguages" | "classFeatureLanguages">,
+): ReadonlyNonEmptyArray<Language> {
+  const [firstLanguage, ...originLanguages] = build.originLanguages;
+  const knownLanguages: [Language, ...Language[]] = [
+    firstLanguage,
+    ...originLanguages,
+  ];
+  for (const languageFact of build.classFeatureLanguages) {
+    if (!knownLanguages.includes(languageFact.language)) {
+      knownLanguages.push(languageFact.language);
+    }
+  }
+  return knownLanguages;
 }
 
 type SupportedDruidWildShapeProfile = Extract<

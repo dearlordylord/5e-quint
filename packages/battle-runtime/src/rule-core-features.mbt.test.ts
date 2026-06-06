@@ -2000,6 +2000,7 @@ function featureActor(input: {
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass:
         attack === null

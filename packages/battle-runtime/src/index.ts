@@ -142,6 +142,14 @@ export {
 } from "./find-familiar-telepathy.ts";
 export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 export {
+  combatantPerceptionCommunicationProjection,
+  type BattleCharacterSpeechProjection,
+  type BattleCreatureCommunicationProjection,
+  type BattleCreaturePerceptionCommunicationProjection,
+  type BattleCreatureSpecialSense,
+  type BattleStatBlockCommunicationText,
+} from "./creature-perception-communication.ts";
+export {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
   type BattleInterruptTrigger,
@@ -264,7 +272,10 @@ export {
   spellSaveDcForCaster,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeLoadoutObjectRefs,
   type ActiveOngoingFeatureOccurrence,
+  type ActiveWildShapeEquipmentDisposition,
   type ActiveOngoingFeatureOccurrenceSnapshot,
   type ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   type BattleAttackDamageDisposition,
@@ -370,6 +381,7 @@ export {
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
+  type BattleWildShapeEquipmentDispositionHole,
   type EndedFlySpeedGrant,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
@@ -390,6 +402,9 @@ export {
   type ThaumaturgyBoomingVoiceSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
+  type WildShapeEquipmentDispositionChoice,
+  type WildShapeEquipmentDispositionFillValue,
+  type WildShapeLoadoutObjectRef,
 } from "./battle-reducer.ts";
 export {
   resolveBattlePossessionAttempt,

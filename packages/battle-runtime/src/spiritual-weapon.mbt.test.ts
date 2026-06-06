@@ -318,6 +318,7 @@ function spiritualWeaponCasterCreatureInit(input: {
       characterId: characterId("spiritual-weapon-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 3 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",

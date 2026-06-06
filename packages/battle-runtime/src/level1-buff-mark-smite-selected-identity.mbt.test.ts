@@ -1788,6 +1788,7 @@ function level1BuffMarkSmiteCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className, level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       ...(input.weaponProficiencies === undefined
         ? {}

@@ -21,14 +21,21 @@ import {
   parseSupportedUnitFeatureProfile,
   revertShapeShiftedCombatantToTrueForm,
   startBattle,
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeLoadoutObjectRefs,
+  type BattleFill,
   type BattleCreatureState,
+  type BattleHole,
   type BattleState,
   type BattleSubject,
   type CharacterBattleD20Statistics,
   type CharacterBattleCreatureState,
+  type WildShapeEquipmentDispositionChoice,
+  type WildShapeLoadoutObjectRef,
 } from "./index.ts";
 import {
   battleId,
+  battleObjectId,
   characterSeed,
   combatantId,
   discoverBattleActs,
@@ -130,6 +137,351 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const dismissedSnapshot = snapshotCreature(dismissed.snapshot, druidId);
   expect(dismissedSnapshot.size).toBe("medium");
   expect(Number(dismissedSnapshot.movement.speedFeet)).toBe(30);
+});
+
+test("derives Wild Shape equipment disposition candidates from selected loadout object refs", () => {
+  const selectedLoadout = wildShapeSelectedLoadout();
+  expect(wildShapeLoadoutObjectRefs(selectedLoadout)).toEqual([
+    {
+      kind: "armor",
+      objectId: "armor:equipment_leather",
+      unitId: "equipment_leather",
+    },
+    {
+      kind: "shield",
+      objectId: "shield:equipment_shield",
+      unitId: "equipment_shield",
+    },
+    {
+      kind: "mainWeapon",
+      objectId: "main:weapon_quarterstaff",
+      unitId: "weapon_quarterstaff",
+    },
+    {
+      kind: "offHandWeapon",
+      objectId: "offhand:weapon_dagger",
+      unitId: "weapon_dagger",
+    },
+  ]);
+  expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
+});
+
+test("requires and validates Wild Shape equipment disposition fills for selected loadout equipment", () => {
+  const initial = druidWildShapeBattle({
+    selectedLoadout: wildShapeBattleSelectedLoadout(),
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  expect(dispositionHole.candidates.map((candidate) => candidate.kind)).toEqual(
+    ["armor", "shield", "mainWeapon"],
+  );
+  expect(druidWildShapeUsesRemaining(requireCharacter(initial, druidId))).toBe(
+    2,
+  );
+
+  const resolved = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(
+        dispositionHole,
+        dispositionHole.candidates.map((item) => ({
+          item,
+          disposition: "merges" as const,
+        })),
+      ),
+    ]),
+  );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  const effect = activeDruidWildShapeEffect(activeDruid);
+  expect(effect?.equipmentDisposition).toEqual(
+    dispositionHole.candidates.map((item) => ({ item, disposition: "merges" })),
+  );
+  expect(druidWildShapeUsesRemaining(activeDruid)).toBe(1);
+
+  const activeActs = discoverBattleActs(resolved.state);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Quarterstaff",
+    ),
+  ).toBe(false);
+});
+
+test("rejects Wild Shape equipment disposition fills from a different form hole", () => {
+  const initial = druidWildShapeBattle({
+    selectedLoadout: wildShapeBattleSelectedLoadout(),
+  });
+  const ridingHorseSubject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const catSubject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: catId,
+  });
+
+  const ridingHorseNeedsDisposition = resolveDruidWildShape(
+    initial,
+    ridingHorseSubject,
+  );
+  const catNeedsDisposition = resolveDruidWildShape(initial, catSubject);
+  if (
+    ridingHorseNeedsDisposition.tag !== "needsHoles" ||
+    catNeedsDisposition.tag !== "needsHoles"
+  ) {
+    throw new Error("Expected Wild Shape equipment disposition holes.");
+  }
+  const ridingHorseHole = requireWildShapeEquipmentDispositionHole(
+    ridingHorseNeedsDisposition.holes,
+  );
+  const catHole = requireWildShapeEquipmentDispositionHole(
+    catNeedsDisposition.holes,
+  );
+
+  expect(catHole.holeId).not.toBe(ridingHorseHole.holeId);
+  expect(
+    resolveDruidWildShape(initial, catSubject, [
+      wildShapeDispositionFill(
+        ridingHorseHole,
+        ridingHorseHole.candidates.map((item) => ({
+          item,
+          disposition: "merges" as const,
+        })),
+      ),
+    ]),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message:
+      "Druid Wild Shape equipment disposition fill must match the equipment disposition hole.",
+  });
+});
+
+test("rejects practical worn Wild Shape equipment until effective-loadout support exists", () => {
+  const initial = druidWildShapeBattle({
+    selectedLoadout: {
+      shield: {
+        itemId: "shield:equipment_shield",
+        unitId: "equipment_shield",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const shield = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "shield",
+  );
+  if (shield === undefined) {
+    throw new Error("Expected shield disposition candidate.");
+  }
+
+  expect(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: shield,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message:
+      "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+  });
+});
+
+test("rejects fallen Wild Shape equipment until fallen-object boundary support exists", () => {
+  const initial = druidWildShapeBattle({
+    selectedLoadout: {
+      shield: {
+        itemId: "shield:equipment_shield",
+        unitId: "equipment_shield",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const shield = dispositionHole.candidates[0];
+  if (shield === undefined) {
+    throw new Error("Expected shield disposition candidate.");
+  }
+
+  expect(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: shield,
+          disposition: "falls",
+        },
+      ]),
+    ]),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message:
+      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
+  });
+});
+
+test("rejects invalid Wild Shape equipment disposition choices and converts impossible worn choices to merge fallback", () => {
+  const candidates = wildShapeLoadoutObjectRefs({
+    armor: {
+      itemId: "armor:equipment_leather",
+      unitId: "equipment_leather",
+    },
+    shield: {
+      itemId: "shield:equipment_shield",
+      unitId: "equipment_shield",
+    },
+  });
+  const [armor, shield] = candidates;
+  if (armor === undefined || shield === undefined) {
+    throw new Error("Expected armor and shield candidates.");
+  }
+
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates,
+      value: {
+        choices: [{ item: armor, disposition: "merges" }],
+      },
+    }),
+  ).toMatchObject({ tag: "invalid" });
+
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates,
+      value: {
+        choices: [
+          { item: armor, disposition: "falls" },
+          { item: armor, disposition: "merges" },
+        ],
+      },
+    }),
+  ).toMatchObject({ tag: "invalid" });
+
+  const unknown = {
+    kind: "mainWeapon",
+    objectId: battleObjectId("main:weapon_synthetic"),
+    unitId: "weapon_synthetic",
+  } as const satisfies WildShapeLoadoutObjectRef;
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates,
+      value: {
+        choices: [
+          { item: armor, disposition: "merges" },
+          { item: unknown, disposition: "falls" },
+        ],
+      },
+    }),
+  ).toMatchObject({ tag: "invalid" });
+
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates,
+      value: {
+        choices: [
+          {
+            item: armor,
+            disposition: "worn",
+            practicality: {
+              kind: "notPracticalToWear",
+              fallback: "merges",
+            },
+          },
+          {
+            item: shield,
+            disposition: "worn",
+            practicality: {
+              kind: "notPracticalToWear",
+              fallback: "falls",
+            },
+          },
+        ],
+      },
+    }),
+  ).toEqual({
+    tag: "invalid",
+    message:
+      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
+  });
+
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates,
+      value: {
+        choices: [
+          {
+            item: armor,
+            disposition: "worn",
+            practicality: {
+              kind: "notPracticalToWear",
+              fallback: "merges",
+            },
+          },
+          { item: shield, disposition: "merges" },
+        ],
+      },
+    }),
+  ).toEqual({
+    tag: "valid",
+    dispositions: [
+      { item: armor, disposition: "merges" },
+      { item: shield, disposition: "merges" },
+    ],
+  });
+
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates: [shield],
+      value: {
+        choices: [
+          {
+            item: shield,
+            disposition: "worn",
+            practicality: { kind: "practicalToWear" },
+          },
+        ],
+      },
+    }),
+  ).toEqual({
+    tag: "invalid",
+    message:
+      "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+  });
 });
 
 test("uses Beast Strength for Shove while in Wild Shape", () => {
@@ -530,6 +882,7 @@ function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
+  readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-druid-wild-shape"),
@@ -544,6 +897,7 @@ function druidWildShapeCreatureInit(input?: {
   readonly druidLevel?: number;
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
+  readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
 }) {
   return characterSeed({
     combatantId: druidId,
@@ -556,6 +910,7 @@ function druidWildShapeCreatureInit(input?: {
       : { d20Statistics: input.d20Statistics }),
     druidWildShapeKnownForms:
       input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
+    selectedLoadout: input?.selectedLoadout ?? {},
     spellcasting: {
       ...wizardSpellcasting({
         cantrips: [spellRecord("produce_flame")],
@@ -615,8 +970,79 @@ function wildShapeSubject(
 function resolveDruidWildShape(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+  fills: readonly BattleFill[] = [],
 ) {
-  return resolveBattleSubject({ state, subject, fills: [] });
+  return resolveBattleSubject({ state, subject, fills });
+}
+
+function wildShapeSelectedLoadout(): CharacterBattleCreatureState["origin"]["selectedLoadout"] {
+  return {
+    armor: {
+      itemId: "armor:equipment_leather",
+      unitId: "equipment_leather",
+    },
+    shield: {
+      itemId: "shield:equipment_shield",
+      unitId: "equipment_shield",
+    },
+    weapon: {
+      itemId: "main:weapon_quarterstaff",
+      unitId: "weapon_quarterstaff",
+      grip: "two_handed",
+    },
+    offHandWeapon: {
+      itemId: "offhand:weapon_dagger",
+      unitId: "weapon_dagger",
+    },
+  };
+}
+
+function wildShapeBattleSelectedLoadout(): CharacterBattleCreatureState["origin"]["selectedLoadout"] {
+  return {
+    armor: {
+      itemId: "armor:equipment_leather",
+      unitId: "equipment_leather",
+    },
+    shield: {
+      itemId: "shield:equipment_shield",
+      unitId: "equipment_shield",
+    },
+    weapon: {
+      itemId: "main:weapon_quarterstaff",
+      unitId: "weapon_quarterstaff",
+      grip: "one_handed",
+    },
+  };
+}
+
+function requireWildShapeEquipmentDispositionHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }> {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleHole,
+      { readonly kind: "wildShapeEquipmentDisposition" }
+    > => candidate.kind === "wildShapeEquipmentDisposition",
+  );
+  if (hole === undefined) {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  return hole;
+}
+
+function wildShapeDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }>,
+  choices: readonly WildShapeEquipmentDispositionChoice[],
+): Extract<BattleFill, { readonly kind: "wildShapeEquipmentDisposition" }> {
+  return {
+    kind: "wildShapeEquipmentDisposition",
+    holeId: hole.holeId,
+    value: {
+      choices,
+    },
+  };
 }
 
 function requireCharacter(

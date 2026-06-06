@@ -6,6 +6,7 @@ import type {
   MovementFeet,
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
+import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
   CreatureSpeed,
@@ -64,8 +65,14 @@ export type CharacterBattleInvocationFeature = {
 };
 
 export type CharacterBattleLoadoutRef = {
-  readonly armor?: UnitRecord["id"];
-  readonly shield?: UnitRecord["id"];
+  readonly armor?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
+  };
+  readonly shield?: {
+    readonly itemId: string;
+    readonly unitId: UnitRecord["id"];
+  };
   readonly weapon?: {
     readonly itemId: string;
     readonly unitId: UnitRecord["id"];
@@ -304,6 +311,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
   readonly d20Statistics: CharacterBattleD20Statistics;
   readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
   readonly weaponProficiencies?: readonly WeaponProficiency[];

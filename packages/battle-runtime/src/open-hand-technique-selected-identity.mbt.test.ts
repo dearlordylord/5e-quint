@@ -378,6 +378,7 @@ function openHandTechniqueBattle(): BattleState {
         displayName: "Open Hand Monk",
         initiative: 20,
         classLevels: [{ className: "monk", level: 3 }],
+        knownLanguages: ["Common"],
         d20Statistics: testCharacterD20Statistics({ str: 16, wis: 16 }),
         resources: [monksFocusResource({ usesRemaining: 2 })],
         characterUnitRefs: [openHandTechniqueUnitRef],

@@ -333,6 +333,7 @@ function characterCombatant(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: input.classLevels,
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",

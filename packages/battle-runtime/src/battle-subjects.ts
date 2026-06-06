@@ -601,7 +601,6 @@ export const BattleSubjectSchema = Schema.Union(
     unitId: BattleSubjectTextSchema,
     action: Schema.Literal("assumeForm"),
     formStatBlockId: BattleSubjectTextSchema,
-    equipmentDisposition: Schema.Literal("merged"),
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),
@@ -1025,7 +1024,6 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.unitId,
       subject.action,
       "formStatBlockId" in subject ? subject.formStatBlockId : null,
-      "equipmentDisposition" in subject ? subject.equipmentDisposition : null,
     ]);
   }
   if (subject.tag === "unitFeatureHeldWeaponActivation") {

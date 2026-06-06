@@ -1090,6 +1090,7 @@ function character(
           level: 1,
         },
       ],
+      knownLanguages: ["Common"],
       d20Statistics: {
         abilityScores: {
           str: 16,

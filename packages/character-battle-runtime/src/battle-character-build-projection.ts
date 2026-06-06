@@ -181,6 +181,12 @@ export function characterOffHandAttackActionOption(
 export function characterBattleLoadoutFromBuild(
   build: CharacterBuild,
 ): CharacterBattleLoadoutRef {
+  const armorUnitId = characterBuildEquipmentItemUnitId(
+    build.equipment.loadout.armor,
+  );
+  const shieldUnitId = characterBuildEquipmentItemUnitId(
+    build.equipment.loadout.shield,
+  );
   const weaponUnitId = characterBuildEquipmentItemUnitId(
     build.equipment.loadout.weapon?.itemId,
   );
@@ -190,8 +196,12 @@ export function characterBattleLoadoutFromBuild(
   const loadout = build.equipment.loadout;
 
   return {
-    ...(loadout.armor == null ? {} : { armor: loadout.armor }),
-    ...(loadout.shield == null ? {} : { shield: loadout.shield }),
+    ...(loadout.armor == null || armorUnitId == null
+      ? {}
+      : { armor: { itemId: loadout.armor, unitId: armorUnitId } }),
+    ...(loadout.shield == null || shieldUnitId == null
+      ? {}
+      : { shield: { itemId: loadout.shield, unitId: shieldUnitId } }),
     ...(loadout.weapon == null || weaponUnitId == null
       ? {}
       : {
@@ -214,6 +224,8 @@ export function characterBattleLoadoutFromBuild(
 
 function characterBuildEquipmentItemUnitId(
   itemId:
+    | NonNullable<CharacterBuild["equipment"]["loadout"]["armor"]>
+    | NonNullable<CharacterBuild["equipment"]["loadout"]["shield"]>
     | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
     | NonNullable<
         CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
@@ -663,7 +675,9 @@ function spellcastingAllowedByArmorTraining(
       ? undefined
       : getRequiredUnit(
           unitLibrary,
-          characterEquipmentItemSourceFromId(build.equipment.loadout.armor)
+          characterEquipmentItemSourceFromId(
+            build.equipment.loadout.armor,
+          )
             .unitId,
         );
   if (armor !== undefined && Either.isLeft(armor)) {

@@ -731,7 +731,7 @@ const syntheticDruidWildShapeEffect: Extract<
   sourceCombatantId: spellTargetId,
   sourceUnitId: "synthetic_wild_shape_feature",
   formStatBlockId: "synthetic_beast_form",
-  equipmentDisposition: "merged",
+  equipmentDisposition: [],
   resources: {
     legendaryActionUsesRemaining: resourceCount(0),
     dailyUses: [],

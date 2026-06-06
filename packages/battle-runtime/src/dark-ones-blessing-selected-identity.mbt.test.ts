@@ -279,6 +279,7 @@ function darkOnesBlessingBattle(input: {
           },
         ],
         unitFeatures: [{ unit }],
+        knownLanguages: ["Common"],
         d20Statistics: testCharacterD20Statistics({ cha: input.warlockCha }),
         tempHp: input.warlockTempHp ?? 0,
       }),

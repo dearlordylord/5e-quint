@@ -98,7 +98,7 @@ export function combatantWearingArmorCategory(
   combatant: BattleCreatureState,
   category: ArmorCategory,
 ): boolean {
-  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
     return false;
   }
   return (
@@ -108,7 +108,7 @@ export function combatantWearingArmorCategory(
 }
 
 export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
-  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
     return false;
   }
   return combatant.armorClass.base.kind === "armor";
@@ -117,7 +117,7 @@ export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
 export function combatantWieldingShield(
   combatant: BattleCreatureState,
 ): boolean {
-  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
     return false;
   }
   return (
@@ -137,12 +137,12 @@ export function combatantHandUses(
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): { readonly left: HandUse; readonly right: HandUse } {
-  const leftHandUse = combatantMergedDruidWildShapeEquipmentSuppressed(
+  const leftHandUse = combatantDruidWildShapeEquipmentSuppressesLoadout(
     combatant,
   )
     ? "free"
     : combatant.armorClass.leftHandUse;
-  const rightHandUse = combatantMergedDruidWildShapeEquipmentSuppressed(
+  const rightHandUse = combatantDruidWildShapeEquipmentSuppressesLoadout(
     combatant,
   )
     ? "free"
@@ -167,7 +167,7 @@ export function combatantHandUses(
   };
 }
 
-function combatantMergedDruidWildShapeEquipmentSuppressed(
+function combatantDruidWildShapeEquipmentSuppressesLoadout(
   combatant: BattleCreatureState,
 ): boolean {
   if (
@@ -180,7 +180,7 @@ function combatantMergedDruidWildShapeEquipmentSuppressed(
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "druidWildShapeForm" &&
-      effect.equipmentDisposition === "merged" &&
+      effect.equipmentDisposition.length > 0 &&
       origin.druidWildShapeKnownForms?.some(
         (form) => form.id === effect.formStatBlockId,
       ) === true,

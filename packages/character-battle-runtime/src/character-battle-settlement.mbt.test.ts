@@ -473,7 +473,7 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
           sourceUnitId: "druid_wild_shape",
           sourceCombatantId: combatant.combatantId,
           formStatBlockId: "stat_block_cat",
-          equipmentDisposition: "merged",
+          equipmentDisposition: [],
           resources: {
             legendaryActionUsesRemaining: resourceCount(0),
             dailyUses: [],

@@ -239,6 +239,7 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeKnownForms: druidWildShapeKnownForms(),
+          selectedLoadout: {},
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [spellRecord("produce_flame")],

@@ -345,6 +345,7 @@ function openHandTechniqueBattle(
         displayName: "Open Hand Monk",
         initiative: 20,
         classLevels: [{ className: "monk", level: 3 }],
+        knownLanguages: ["Common"],
         d20Statistics: testCharacterD20Statistics({ str: 16, wis: 16 }),
         ...(input.unarmedStrike === undefined
           ? {}

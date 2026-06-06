@@ -1571,6 +1571,7 @@ function rogueCreatureInit(input: {
         },
       ],
       classLevels: [{ className: "rogue", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
@@ -1624,6 +1625,7 @@ function rogueSteadyAimCreatureInit(input: {
       characterId: characterId("steady-aim-rogue-character"),
       characterUnitRefs: [rogueSteadyAimUnitRef(steadyAim)],
       classLevels: [{ className: "rogue", level: 3 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
@@ -1671,6 +1673,7 @@ function extraAttackCreatureInit(input: {
           level: extraAttackMbtClassLevel(input.unitId),
         },
       ],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
@@ -1709,6 +1712,7 @@ function adrenalineRushCreatureInit(input: {
       characterId: characterId("adrenaline-rush-character"),
       characterUnitRefs: [adrenalineRushUnitRef(unit)],
       classLevels: [{ className: "fighter", level: 5 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
@@ -1742,6 +1746,7 @@ function scalarBuffCasterCreatureInit(input: {
       characterId: characterId("scalar-buff-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
@@ -2230,6 +2235,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "hitPointHealingDistribution") {
     throw new Error(
       "Battle runtime MBT does not model Hit Point healing distribution holes.",
+    );
+  }
+  if (hole.kind === "wildShapeEquipmentDisposition") {
+    throw new Error(
+      "Battle runtime MBT does not model Wild Shape equipment disposition holes.",
     );
   }
   return [

@@ -1152,6 +1152,7 @@ function characterCreature(
       characterId: characterId(`${combatantIdValue}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "cleric", level: classLevel }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",

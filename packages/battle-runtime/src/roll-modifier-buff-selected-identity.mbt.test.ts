@@ -523,6 +523,7 @@ function rollModifierBuffCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "cleric", level: 1 }],
+      knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
