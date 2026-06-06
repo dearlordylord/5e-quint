@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -8,12 +8,14 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -54,6 +56,14 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeSubtleComponentProjectionResult = {
+    verbalSuppressed: bool,
+    somaticSuppressed: bool,
+    materialSuppressed: bool,
+    materialPreserved: bool,
+    sorceryPointsRemaining: int,
+  }
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -87,6 +97,19 @@ module battleRuntimeMetamagic {
     | SpellTimedDurationTicks({ durationTicks: int })
     | SpellConcentrationDurationTicks({ durationTicks: int })
     | SpellInstantaneousDuration
+
+  type BattleRuntimeMaterialComponentRequirement =
+    | NoMaterialComponent
+    | FocusReplaceableMaterialComponent
+    | PricedMaterialComponent
+    | ConsumedMaterialComponent
+    | ConsumedPricedMaterialComponent
+
+  type BattleRuntimeSpellComponentRequirements = {
+    verbal: bool,
+    somatic: bool,
+    material: BattleRuntimeMaterialComponentRequirement,
+  }
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -252,6 +275,84 @@ module battleRuntimeMetamagic {
       | SpellTimedDurationTicks(_) => NormalSavingThrow
       | SpellInstantaneousDuration => NormalSavingThrow
     }
+
+  pure def subtleSpellMaterialComponentSuppressed(
+    material: BattleRuntimeMaterialComponentRequirement,
+  ): bool =
+    match material {
+      | FocusReplaceableMaterialComponent => true
+      | NoMaterialComponent => false
+      | PricedMaterialComponent => false
+      | ConsumedMaterialComponent => false
+      | ConsumedPricedMaterialComponent => false
+    }
+
+  pure def subtleSpellMaterialComponentPreserved(
+    material: BattleRuntimeMaterialComponentRequirement,
+  ): bool =
+    match material {
+      | PricedMaterialComponent => true
+      | ConsumedMaterialComponent => true
+      | ConsumedPricedMaterialComponent => true
+      | NoMaterialComponent => false
+      | FocusReplaceableMaterialComponent => false
+    }
+
+  pure def subtleSpellComponentRequirementsAdmitted(
+    components: BattleRuntimeSpellComponentRequirements,
+  ): bool =
+    components.verbal or
+    components.somatic or
+    components.material != NoMaterialComponent
+
+  pure def subtleSpellCanModifyComponentSpell(
+    components: BattleRuntimeSpellComponentRequirements,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions == Set(subtleSpellMetamagicFact) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    subtleSpellComponentRequirementsAdmitted(components)
+
+  pure def resolveSubtleSpellComponentProjection(
+    components: BattleRuntimeSpellComponentRequirements,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeSubtleComponentProjectionResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    if (
+      subtleSpellCanModifyComponentSpell(
+        components,
+        knownOptions,
+        selectedOptions,
+        sorceryPointsRemaining,
+      )
+    ) {
+      {
+        verbalSuppressed: components.verbal,
+        somaticSuppressed: components.somatic,
+        materialSuppressed:
+          subtleSpellMaterialComponentSuppressed(components.material),
+        materialPreserved:
+          subtleSpellMaterialComponentPreserved(components.material),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        verbalSuppressed: false,
+        somaticSuppressed: false,
+        materialSuppressed: false,
+        materialPreserved: false,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
 
   pure def extendedSpellCanModifyDurationSpell(
     procedure: BattleRuntimeExtendedDurationProcedure,

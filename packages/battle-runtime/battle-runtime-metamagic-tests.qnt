@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -496,6 +497,121 @@ module battleRuntimeMetamagicTests {
         known,
         Set(extendedSpellMetamagicFact),
         0,
+      ))),
+    }
+  }
+
+  run test_subtle_spell_component_projection_suppresses_verbal_somatic_and_focus_replaceable_material = {
+    val known = Set(subtleSpellMetamagicFact)
+    val verbalSomatic = resolveSubtleSpellComponentProjection(
+      { verbal: true, somatic: true, material: NoMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    val focusReplaceableMaterial = resolveSubtleSpellComponentProjection(
+      { verbal: true, somatic: true, material: FocusReplaceableMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(verbalSomatic == {
+        verbalSuppressed: true,
+        somaticSuppressed: true,
+        materialSuppressed: false,
+        materialPreserved: false,
+        sorceryPointsRemaining: 1,
+      }),
+      assert(focusReplaceableMaterial == {
+        verbalSuppressed: true,
+        somaticSuppressed: true,
+        materialSuppressed: true,
+        materialPreserved: false,
+        sorceryPointsRemaining: 1,
+      }),
+    }
+  }
+
+  run test_subtle_spell_component_projection_preserves_priced_or_consumed_material = {
+    val known = Set(subtleSpellMetamagicFact)
+    val priced = resolveSubtleSpellComponentProjection(
+      { verbal: true, somatic: true, material: PricedMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    val consumed = resolveSubtleSpellComponentProjection(
+      { verbal: true, somatic: true, material: ConsumedMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    val consumedPriced = resolveSubtleSpellComponentProjection(
+      { verbal: false, somatic: false, material: ConsumedPricedMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(priced == {
+        verbalSuppressed: true,
+        somaticSuppressed: true,
+        materialSuppressed: false,
+        materialPreserved: true,
+        sorceryPointsRemaining: 1,
+      }),
+      assert(consumed == {
+        verbalSuppressed: true,
+        somaticSuppressed: true,
+        materialSuppressed: false,
+        materialPreserved: true,
+        sorceryPointsRemaining: 1,
+      }),
+      assert(consumedPriced == {
+        verbalSuppressed: false,
+        somaticSuppressed: false,
+        materialSuppressed: false,
+        materialPreserved: true,
+        sorceryPointsRemaining: 1,
+      }),
+    }
+  }
+
+  run test_subtle_spell_component_projection_rejects_missing_unknown_unaffordable_or_stacked_selection = {
+    val known = Set(subtleSpellMetamagicFact)
+    val components = { verbal: true, somatic: false, material: NoMaterialComponent }
+    val rejected = resolveSubtleSpellComponentProjection(
+      { verbal: false, somatic: false, material: NoMaterialComponent },
+      known,
+      Set(subtleSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(rejected == {
+        verbalSuppressed: false,
+        somaticSuppressed: false,
+        materialSuppressed: false,
+        materialPreserved: false,
+        sorceryPointsRemaining: 2,
+      }),
+      assert(not(subtleSpellCanModifyComponentSpell(
+        components,
+        Set(),
+        Set(subtleSpellMetamagicFact),
+        1,
+      ))),
+      assert(not(subtleSpellCanModifyComponentSpell(
+        components,
+        known,
+        Set(subtleSpellMetamagicFact),
+        0,
+      ))),
+      assert(not(subtleSpellCanModifyComponentSpell(
+        components,
+        Set(subtleSpellMetamagicFact, empoweredSpellMetamagicFact),
+        Set(subtleSpellMetamagicFact, empoweredSpellMetamagicFact),
+        2,
       ))),
     }
   }

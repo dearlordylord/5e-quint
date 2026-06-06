@@ -8,6 +8,7 @@
     },
     "components": {
       "m": "a diamond worth 50+ GP",
+      "materialCostGp": 50,
       "s": true,
       "v": true
     },

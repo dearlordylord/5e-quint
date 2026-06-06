@@ -1,12 +1,12 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 
 module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
   // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
   // - Classes/Sorcerer.md: Careful Spell, Distant Spell, Empowered Spell,
   //   Extended Spell,
-  //   Heightened Spell, Quickened Spell, Transmuted Spell, and Twinned Spell
+  //   Heightened Spell, Quickened Spell, Subtle Spell, Transmuted Spell, and Twinned Spell
   //   Sorcery Point costs.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
 
@@ -17,6 +17,7 @@ module unitFeatureMetamagicOptionFactCore {
     | DamageDiceRerollStackingException
     | SavingThrowProtection
     | SavingThrowDisadvantage
+    | ComponentSuppression
     | DamageTypeSubstitution
     | EffectiveSpellLevelIncreaseForExtraTarget
 
@@ -31,6 +32,7 @@ module unitFeatureMetamagicOptionFactCore {
     | DamageDiceRerollStackingExceptionOptionFact
     | SavingThrowProtectionOptionFact
     | SavingThrowDisadvantageOptionFact
+    | ComponentSuppressionOptionFact
     | DamageTypeSubstitutionOptionFact
     | EffectiveSpellLevelIncreaseForExtraTargetOptionFact
 
@@ -52,6 +54,9 @@ module unitFeatureMetamagicOptionFactCore {
   pure def heightenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     SavingThrowDisadvantageOptionFact
 
+  pure def subtleSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
+    ComponentSuppressionOptionFact
+
   pure def transmutedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     DamageTypeSubstitutionOptionFact
 
@@ -71,6 +76,7 @@ module unitFeatureMetamagicOptionFactCore {
         DamageDiceRerollStackingException
       | SavingThrowProtectionOptionFact => SavingThrowProtection
       | SavingThrowDisadvantageOptionFact => SavingThrowDisadvantage
+      | ComponentSuppressionOptionFact => ComponentSuppression
       | DamageTypeSubstitutionOptionFact => DamageTypeSubstitution
       | EffectiveSpellLevelIncreaseForExtraTargetOptionFact =>
         EffectiveSpellLevelIncreaseForExtraTarget
@@ -87,6 +93,7 @@ module unitFeatureMetamagicOptionFactCore {
       | DurationExtensionAndConcentrationSaveAdvantageOptionFact => OnePerSpell
       | SavingThrowProtectionOptionFact => OnePerSpell
       | SavingThrowDisadvantageOptionFact => OnePerSpell
+      | ComponentSuppressionOptionFact => OnePerSpell
       | DamageTypeSubstitutionOptionFact => OnePerSpell
       | EffectiveSpellLevelIncreaseForExtraTargetOptionFact => OnePerSpell
     }
@@ -101,6 +108,7 @@ module unitFeatureMetamagicOptionFactCore {
       | DamageDiceRerollStackingExceptionOptionFact => 1
       | SavingThrowProtectionOptionFact => 1
       | SavingThrowDisadvantageOptionFact => 2
+      | ComponentSuppressionOptionFact => 1
       | DamageTypeSubstitutionOptionFact => 1
       | EffectiveSpellLevelIncreaseForExtraTargetOptionFact => 1
     }
@@ -113,6 +121,7 @@ module unitFeatureMetamagicOptionFactCore {
       DamageDiceRerollStackingException,
       SavingThrowProtection,
       SavingThrowDisadvantage,
+      ComponentSuppression,
       DamageTypeSubstitution,
       EffectiveSpellLevelIncreaseForExtraTarget,
     )

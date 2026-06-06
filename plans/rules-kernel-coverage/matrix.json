@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 110,
-    "covered": 104,
+    "total": 111,
+    "covered": 105,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 80,
+      "battle": 81,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 104,
+      "covered": 105,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -1067,6 +1067,38 @@
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
       ],
       "title": "Battle Extended Spell Metamagic admits known selected duration modifications, enforces Sorcery Point affordability, derives a cast-local doubled duration fact, and applies Concentration maintenance Saving Throw Advantage only to affected Concentration spell occurrences"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-cast-component-suppression"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Components",
+        ".references/srd-5.2.1/Rules-Glossary.md#Spellcasting Focus",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Subtle Spell Metamagic admits known selected component suppression, enforces Sorcery Point affordability, derives a cast-local component projection, suppresses Verbal, Somatic, and focus-replaceable Material components, and preserves priced or consumed Material requirements"
     },
     {
       "id": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
@@ -5948,6 +5980,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION"
+      ],
+      "profileId": "unit-feature.metamagic-cast-component-suppression"
+    },
+    {
+      "obligationIds": [
         "SHEET.SPELL_REST_BENEFIT.APPLICATION"
       ],
       "profileId": "character-sheet.spell-rest-benefit-application"
@@ -6303,6 +6341,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -6317,6 +6356,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -6331,6 +6371,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
       ],
@@ -9162,6 +9203,44 @@
         "bool",
         "if-expression",
         "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
         "comparison",
         "boolean-connective",
         "pattern-match",
@@ -11132,6 +11211,7 @@
     "unit-feature.magic-action-healing-pool",
     "unit-feature.martial-arts-attack-projection",
     "unit-feature.metamagic-careful-save-protection",
+    "unit-feature.metamagic-cast-component-suppression",
     "unit-feature.metamagic-cast-duration-and-concentration",
     "unit-feature.metamagic-cast-governor-quickened",
     "unit-feature.metamagic-cast-range-increase",

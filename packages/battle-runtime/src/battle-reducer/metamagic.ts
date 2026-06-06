@@ -4,8 +4,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 
 import * as Either from "effect/Either";
 import type {
@@ -42,6 +43,8 @@ import {
   QUICKENED_METAMAGIC_EFFECT_KIND,
   saveMetamagicSupportIssue,
   SEEKING_METAMAGIC_EFFECT_KIND,
+  subtleSpellComponentProjectionFact,
+  subtleSpellComponentProjectionIssue,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   transmutedSpellDamageTypeSubstitutionIssue,
@@ -71,6 +74,7 @@ export {
   SEEKING_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
   spellMetamagicLabel,
+  subtleSpellComponentProjectionForApplications,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   transmutedSpellDamageInvocation,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
@@ -85,7 +89,7 @@ export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Extended Spell is supported only for promoted duration-bearing spell witnesses that carry cast-local duration facts and same-occurrence Concentration save Advantage.";
 export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
-  "Subtle Spell is not supported until spell-cast component witnesses can suppress Verbal and Somatic components while preserving consumed or priced Material components.";
+  "Subtle Spell is supported only for action-time spell casts with Verbal, Somatic, or Material component requirements.";
 export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Twinned Spell is not supported until upcast target-count projection can increase effective spell level by 1 only for procedures whose higher-slot shape targets one additional creature without duplicating spell slot state.";
 export const EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -474,7 +478,7 @@ function castPropertyMetamagicSupportIssue(
     return extendedSpellDurationProjectionIssue(input);
   }
   return effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
-    ? SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE
+    ? subtleSpellComponentProjectionIssue(input)
     : null;
 }
 
@@ -521,6 +525,19 @@ function metamagicApplicationForSelection(input: {
           stackingMode: input.application.stackingMode,
           sorceryPointCost: input.application.sorceryPointCost,
           durationModifier,
+        };
+  }
+  if (input.application.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND) {
+    const componentProjection = subtleSpellComponentProjectionFact(
+      input.invocation,
+    );
+    return componentProjection === null
+      ? "Subtle Spell requires at least one Verbal, Somatic, or Material component to project."
+      : {
+          effectKind: SUBTLE_METAMAGIC_EFFECT_KIND,
+          stackingMode: input.application.stackingMode,
+          sorceryPointCost: input.application.sorceryPointCost,
+          componentProjection,
         };
   }
   if (

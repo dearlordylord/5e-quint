@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 
 import {
   canSpendAction,
@@ -14,6 +14,7 @@ import { describe, expect, test } from "vitest";
 import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
+  SupportedSpellInvocation,
 } from "./battle-reducer.ts";
 import {
   type AvailableBattleAct,
@@ -29,20 +30,20 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  admitSpellMetamagicApplications,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
-  DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
-  EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
+  subtleSpellComponentProjectionForApplications,
   SUBTLE_METAMAGIC_EFFECT_KIND,
-  SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+  spellMetamagicApplications,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
@@ -1093,27 +1094,21 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
   });
 
-  test("explicitly closes cast-property Metamagic options before Sorcery Point spending", () => {
+  test("explicitly closes unpromoted cast-property Metamagic options before Sorcery Point spending", () => {
     const state = metamagicBattle({
-      knownOptions: [
-        distantMetamagicOption(),
-        extendedMetamagicOption(),
-        subtleMetamagicOption(),
-      ],
+      knownOptions: [distantMetamagicOption(), extendedMetamagicOption()],
     });
 
     for (const closure of [
       {
         effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
-        message: DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
+        message:
+          "Distant Spell is supported only for spell target procedures that consume a cast-local range fact.",
       },
       {
         effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
-        message: EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
-      },
-      {
-        effectKind: SUBTLE_METAMAGIC_EFFECT_KIND,
-        message: SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+        message:
+          "Extended Spell is supported only for spells with a timed or Concentration duration of at least 1 minute.",
       },
     ] as const) {
       expect(
@@ -1131,6 +1126,150 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       });
     }
 
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("projects selected Subtle Spell components at the Spell Invocation boundary", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: [
+        "cure_wounds",
+        "false_life",
+        "chromatic_orb",
+        "protection_from_evil_and_good",
+      ],
+    });
+
+    const cureWounds = supportedInvocationFor(
+      state,
+      "cure_wounds",
+      "directHitPointRestoration",
+    );
+    expect(
+      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [],
+    });
+
+    const falseLife = supportedInvocationFor(state, "false_life", "scalarBuff");
+    const falseLifeComponents = falseLife.spell.mechanics.components;
+    expect(admittedSubtleProjection(state, falseLife, "scalarBuff")).toEqual({
+      suppressedComponents: [
+        { kind: "verbal" },
+        { kind: "somatic" },
+        { kind: "material" },
+      ],
+      preservedComponents: [],
+    });
+    expect(falseLife.spell.mechanics.components).toEqual(falseLifeComponents);
+
+    const chromaticOrb = supportedInvocationFor(
+      state,
+      "chromatic_orb",
+      "chainedSpellAttackDamage",
+    );
+    expect(
+      admittedSubtleProjection(state, chromaticOrb, "chainedSpellAttackDamage"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [
+        {
+          kind: "material",
+          material: {
+            kind: "genericMaterial",
+            material: "a diamond worth 50+ GP",
+            preservation: { kind: "priced", costGp: 50 },
+          },
+        },
+      ],
+    });
+
+    const protectionFromEvilAndGood = supportedInvocationFor(
+      state,
+      "protection_from_evil_and_good",
+      "creatureTypeProtection",
+    );
+    expect(
+      admittedSubtleProjection(
+        state,
+        protectionFromEvilAndGood,
+        "creatureTypeProtection",
+      ),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [
+        {
+          kind: "material",
+          material: {
+            kind: "genericMaterial",
+            material: "a flask of Holy Water",
+            preservation: { kind: "consumed", costGp: 25 },
+          },
+        },
+      ],
+    });
+  });
+
+  test("keeps selected Subtle Spell out of payloadless Metamagic applications", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["cure_wounds"],
+    });
+    const actor = requireBattleCreature(state, wizardId);
+    const cureWounds = supportedInvocationFor(
+      state,
+      "cure_wounds",
+      "directHitPointRestoration",
+    );
+
+    expect(
+      spellMetamagicApplications(actor, [
+        { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+      ]),
+    ).toEqual([]);
+    expect(
+      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
+    ).toEqual({
+      suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
+      preservedComponents: [],
+    });
+  });
+
+  test("rejects Subtle Spell outside action-time spell casts before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["healing_word"],
+    });
+    const healingWord = supportedInvocationFor(
+      state,
+      "healing_word",
+      "directHitPointRestoration",
+    );
+    const actor = requireBattleCreature(state, wizardId);
+
+    expect(
+      admitSpellMetamagicApplications({
+        state,
+        actor,
+        actorId: wizardId,
+        invocation: healingWord,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "healing_word",
+            1,
+            "directHitPointRestoration",
+          ),
+          mode: { tag: "cast" },
+          metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+        },
+      }),
+    ).toEqual({
+      tag: "spellMetamagicAdmissionIssue",
+      message: "Subtle Spell is supported only for action-time spell casts.",
+    });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
@@ -2338,6 +2477,74 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function requireBattleCreature(
+  state: BattleState,
+  id: Parameters<BattleState["combatants"]["get"]>[0],
+) {
+  const actor = state.combatants.get(id);
+  if (actor === undefined) {
+    throw new Error(`Expected combatant ${id}.`);
+  }
+  return actor;
+}
+
+type SpellSlotInvocationRefProcedure = Parameters<
+  typeof spellSlotInvocationRef
+>[2];
+
+function supportedInvocationFor(
+  state: BattleState,
+  targetSpellId: Parameters<typeof spellRecord>[0],
+  procedure: SpellSlotInvocationRefProcedure,
+): SupportedSpellInvocation {
+  const actor = requireBattleCreature(state, wizardId);
+  const invocation = supportedSpellActs(actor, state).find(
+    (candidate) =>
+      candidate.spell.id === targetSpellId && candidate.procedure === procedure,
+  );
+  if (invocation === undefined) {
+    throw new Error(`Expected ${targetSpellId} ${procedure} invocation.`);
+  }
+  return invocation;
+}
+
+function admittedSubtleProjection(
+  state: BattleState,
+  invocation: SupportedSpellInvocation,
+  procedure: SpellSlotInvocationRefProcedure,
+) {
+  if (invocation.resource.tag !== "spellSlot") {
+    throw new Error("Expected Spell Slot invocation.");
+  }
+  const admission = admitSpellMetamagicApplications({
+    state,
+    actor: requireBattleCreature(state, wizardId),
+    actorId: wizardId,
+    invocation,
+    subject: {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        invocation.spell.id,
+        Number(invocation.resource.slotLevel),
+        procedure,
+      ),
+      mode: { tag: "cast" },
+      metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+    },
+  });
+  if (admission.tag !== "ok") {
+    throw new Error(`Expected admitted Subtle Spell: ${admission.message}`);
+  }
+  const projection = subtleSpellComponentProjectionForApplications(
+    admission.applications,
+  );
+  if (projection === null) {
+    throw new Error("Expected Subtle Spell component projection.");
+  }
+  return projection;
+}
+
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
@@ -2445,13 +2652,7 @@ function mirrorImageDuplicatesRemaining(
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
-  readonly preparedSpells?: readonly (
-    | "cure_wounds"
-    | "false_life"
-    | "healing_word"
-    | "hellish_rebuke"
-    | "magic_missile"
-  )[];
+  readonly preparedSpells?: readonly Parameters<typeof spellRecord>[0][];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-quickened"),

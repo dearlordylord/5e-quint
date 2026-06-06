@@ -48,6 +48,7 @@ let chromaticOrb =
               { v = True
               , s = True
               , m = Some "a diamond worth 50+ GP"
+              , materialCostGp = 50
               }
           , duration = { kind = "instantaneous" }
           , phases =

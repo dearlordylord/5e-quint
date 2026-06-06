@@ -140,6 +140,7 @@
 {"profileId":"unit-feature.metamagic-effective-level-extra-target","obligationIds":["BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"]}
 {"profileId":"unit-feature.metamagic-cast-range-increase","obligationIds":["BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE"]}
 {"profileId":"unit-feature.metamagic-cast-duration-and-concentration","obligationIds":["BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION"]}
+{"profileId":"unit-feature.metamagic-cast-component-suppression","obligationIds":["BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}
 {"profileId":"spell.invocation-antimagic-field-ongoing-spell-suppression","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"]}
 {"profileId":"spell.invocation-antimagic-field-action-interdiction","obligationIds":["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"]}

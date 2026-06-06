@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 111,
-      "numerator": 111,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 111,
-      "numerator": 108,
+      "denominator": 112,
+      "numerator": 109,
       "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 111,
-      "numerator": 111,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 111,
-      "numerator": 111,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3953,6 +3953,32 @@
       ]
     },
     {
+      "id": "unit-feature.metamagic-cast-component-suppression",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic-support.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Subtle Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and canonical Surface spell component requirements. It derives a cast-local component projection for action-time spell casts, suppresses Verbal and Somatic components, suppresses only focus-replaceable Material components, preserves consumed or priced Material component requirements, rejects non-action-time spell casts and spells with no component requirements before resource spending, and leaves stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and future procedure-specific component consumers outside this profile subset.",
+      "taskRefs": [
+        "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE"
+      ],
+      "title": "Unit feature applies Subtle Spell cast-local component suppression projection",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -4817,13 +4843,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 149,
-        "numerator": 149,
+        "denominator": 150,
+        "numerator": 150,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 149,
-        "numerator": 149,
+        "denominator": 150,
+        "numerator": 150,
         "percent": "100%"
       }
     },
@@ -7073,6 +7099,22 @@
           }
         ],
         "profileId": "unit-feature.metamagic-cast-duration-and-concentration",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Subtle Spell Metamagic admits known selected component suppression, enforces Sorcery Point affordability, derives a cast-local component projection, suppresses Verbal, Somatic, and focus-replaceable Material components, and preserves priced or consumed Material requirements"
+          }
+        ],
+        "profileId": "unit-feature.metamagic-cast-component-suppression",
         "profileKind": "resource",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-metamagic.qnt"
@@ -15104,6 +15146,22 @@
       "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Subtle Spell admission for component-bearing spell casts, known-option and Sorcery Point gates, Verbal and Somatic suppression, focus-replaceable Material suppression, priced or consumed Material preservation, and rejection of no-component casts, unknown selections, unaffordable selections, and repeated selections before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-component-suppression"
+      ],
+      "taskId": "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover selected Subtle Spell component projection for action-time spell casts, suppressing Verbal and Somatic components, suppressing focus-replaceable Material components without mutating authored spell components, preserving priced and consumed Material requirements from structured Surface component facts, and rejecting non-action-time spell casts before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-component-suppression"
+      ],
+      "taskId": "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE"
+    },
+    {
       "claimKind": "admission-projection",
       "note": "Focused Surface, character-creation, character-battle, and battle-runtime admission tests cover the Dragonborn Breath Weapon support-profile projection from the exact Draconic Ancestry source table through a selected CharacterBuild ancestry fact with battle-derived damage type, order-independent Cone/Line shape facts, Constitution innate DC, character-level damage tiers, Proficiency Bonus use pool, and Long Rest reset. Reducer execution, QNT, MBT, and selected-identity runtime parity remain deferred to L3MSPEC-03.",
       "profileIds": [
@@ -15222,7 +15280,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 113,
+        "profileFactDenominator": 114,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -19858,10 +19916,10 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "generic spell cast-property witness owner plus future procedure-specific range consumers",
-              "reason": "Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic."
+              "owner": "future procedure-specific range and duration consumers",
+              "reason": "Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic."
             },
-            "mechanic": "Distant Spell for additional range-bearing spell target or origin owners beyond the promoted object-light Touch-range slice; Extended Spell for additional duration-bearing owners beyond the promoted Enlarge/Reduce creature-size slice; and Subtle Spell cast-property modifiers that suppress eligible spell components while preserving consumed or priced Material components."
+            "mechanic": "Distant Spell for additional range-bearing spell target or origin owners beyond the promoted object-light Touch-range slice, and Extended Spell for additional duration-bearing owners beyond the promoted Enlarge/Reduce creature-size slice."
           },
           {
             "battleReadinessClosure": {
@@ -19899,7 +19957,8 @@
           "unit-feature.metamagic-damage-type-substitution",
           "unit-feature.metamagic-effective-level-extra-target",
           "unit-feature.metamagic-cast-range-increase",
-          "unit-feature.metamagic-cast-duration-and-concentration"
+          "unit-feature.metamagic-cast-duration-and-concentration",
+          "unit-feature.metamagic-cast-component-suppression"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -19913,7 +19972,8 @@
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Extended Spell for promoted duration-bearing spell owners, currently Enlarge/Reduce creature size change, by deriving a cast-local doubled duration fact from the selected Extended Spell and the canonical Surface duration shape, spending 1 Sorcery Point from the shared Font of Magic point pool, storing the doubled duration on the effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and rejecting unsupported procedures, Instantaneous durations, and sub-1-minute durations before resource spending."
+          "The Metamagic Spell Invocation boundary promotes Extended Spell for promoted duration-bearing spell owners, currently Enlarge/Reduce creature size change, by deriving a cast-local doubled duration fact from the selected Extended Spell and the canonical Surface duration shape, spending 1 Sorcery Point from the shared Font of Magic point pool, storing the doubled duration on the effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and rejecting unsupported procedures, Instantaneous durations, and sub-1-minute durations before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Subtle Spell for action-time spell casts with component requirements by deriving a cast-local component projection from the canonical Surface component shape, spending 1 Sorcery Point from the shared Font of Magic point pool, suppressing Verbal and Somatic components, suppressing focus-replaceable Material components, preserving priced or consumed Material requirements, and rejecting non-action-time or no-component casts before resource spending."
         ],
         "tag": "profile-subset-supported"
       },
@@ -20309,6 +20369,32 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-cast-component-suppression",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic-support.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Subtle Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and canonical Surface spell component requirements. It derives a cast-local component projection for action-time spell casts, suppresses Verbal and Somatic components, suppresses only focus-replaceable Material components, preserves consumed or priced Material component requirements, rejects non-action-time spell casts and spells with no component requirements before resource spending, and leaves stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and future procedure-specific component consumers outside this profile subset.",
+          "taskRefs": [
+            "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE"
+          ],
+          "title": "Unit feature applies Subtle Spell cast-local component suppression projection",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             }
           ]
         }

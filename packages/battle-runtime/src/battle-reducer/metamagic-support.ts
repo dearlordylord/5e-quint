@@ -4,8 +4,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 
 import {
   elapsedTimeTicks,
@@ -22,7 +23,11 @@ import {
   type MovementFeet,
   type ResourceCount,
 } from "@dnd/shared/types";
-import type { Attachment, TargetSelection } from "@dnd/surface/surface/types";
+import type {
+  Attachment,
+  SpellRecord,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   isTargetListSpellInvocation,
@@ -128,6 +133,60 @@ export type ExtendedSpellApplicationFact = Omit<
   readonly durationModifier: ExtendedSpellDurationModifierFact;
 };
 
+type SpellComponents = SpellRecord["mechanics"]["components"];
+type StructuredMaterialComponent = Exclude<
+  SpellComponents["m"],
+  boolean | string
+>;
+type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
+
+export type SubtleSpellSuppressedComponentFact =
+  | { readonly kind: "verbal" }
+  | { readonly kind: "somatic" }
+  | { readonly kind: "material" };
+
+export type SubtleSpellPreservedMaterialComponentFact =
+  | {
+      readonly kind: "genericMaterial";
+      readonly material: string;
+      readonly preservation:
+        | {
+            readonly kind: "consumed";
+            readonly costGp: number | null;
+          }
+        | {
+            readonly kind: "priced";
+            readonly costGp: number;
+          };
+    }
+  | {
+      readonly kind: "structuredMaterial";
+      readonly material: StructuredMaterialComponent;
+    };
+
+export type SubtleSpellPreservedComponentFact = {
+  readonly kind: "material";
+  readonly material: SubtleSpellPreservedMaterialComponentFact;
+};
+
+export type SubtleSpellComponentProjectionFact =
+  | {
+      readonly suppressedComponents: ReadonlyNonEmptyArray<SubtleSpellSuppressedComponentFact>;
+      readonly preservedComponents: readonly SubtleSpellPreservedComponentFact[];
+    }
+  | {
+      readonly suppressedComponents: readonly [];
+      readonly preservedComponents: ReadonlyNonEmptyArray<SubtleSpellPreservedComponentFact>;
+    };
+
+export type SubtleSpellApplicationFact = Omit<
+  CharacterBattleMetamagicOptionFact,
+  "effectKind"
+> & {
+  readonly effectKind: typeof SUBTLE_METAMAGIC_EFFECT_KIND;
+  readonly componentProjection: SubtleSpellComponentProjectionFact;
+};
+
 export type SpellMetamagicApplicationFactWithoutSelectionPayload =
   CharacterBattleMetamagicOptionFact & {
     readonly effectKind: Exclude<
@@ -135,6 +194,7 @@ export type SpellMetamagicApplicationFactWithoutSelectionPayload =
       | typeof TRANSMUTED_METAMAGIC_EFFECT_KIND
       | typeof DISTANT_METAMAGIC_EFFECT_KIND
       | typeof EXTENDED_METAMAGIC_EFFECT_KIND
+      | typeof SUBTLE_METAMAGIC_EFFECT_KIND
     >;
   };
 
@@ -142,6 +202,7 @@ export type SpellMetamagicApplicationFact =
   | DistantSpellApplicationFact
   | ExtendedSpellApplicationFact
   | SpellMetamagicApplicationFactWithoutSelectionPayload
+  | SubtleSpellApplicationFact
   | TransmutedSpellApplicationFact;
 
 type SpellMetamagicSubject = Extract<
@@ -670,6 +731,118 @@ export function extendedSpellDurationModifierForApplications(
   );
 }
 
+export function subtleSpellComponentProjectionIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): string | null {
+  if (
+    !input.applications.every(
+      (application) => application.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return "Selected Metamagic option effect is not supported for this spell procedure.";
+  }
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.mode.tag !== "cast"
+  ) {
+    return "Subtle Spell is supported only for action-time spell casts.";
+  }
+  return subtleSpellComponentProjectionFact(input.invocation) === null
+    ? "Subtle Spell requires at least one Verbal, Somatic, or Material component to project."
+    : null;
+}
+
+export function subtleSpellComponentProjectionFact(
+  invocation: SupportedSpellInvocation,
+): SubtleSpellComponentProjectionFact | null {
+  const components = invocation.spell.mechanics.components;
+  const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
+    ...(components.v ? ([{ kind: "verbal" }] as const) : []),
+    ...(components.s ? ([{ kind: "somatic" }] as const) : []),
+  ];
+  const preservedMaterial =
+    subtleSpellPreservedMaterialComponentFact(components);
+  if (components.m !== false && preservedMaterial === null) {
+    suppressedComponents.push({ kind: "material" });
+  }
+  const preservedComponents =
+    preservedMaterial === null
+      ? []
+      : ([{ kind: "material", material: preservedMaterial }] as const);
+  const nonEmptySuppressed = readonlyNonEmptyArray(suppressedComponents);
+  if (nonEmptySuppressed !== null) {
+    return {
+      suppressedComponents: nonEmptySuppressed,
+      preservedComponents,
+    };
+  }
+  const nonEmptyPreserved = readonlyNonEmptyArray(preservedComponents);
+  return nonEmptyPreserved === null
+    ? null
+    : {
+        suppressedComponents: [],
+        preservedComponents: nonEmptyPreserved,
+      };
+}
+
+export function subtleSpellComponentProjectionForApplications(
+  applications: readonly SpellMetamagicApplicationFact[] | undefined,
+): SubtleSpellComponentProjectionFact | null {
+  return (
+    applications?.find(
+      (application): application is SubtleSpellApplicationFact =>
+        application.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+    )?.componentProjection ?? null
+  );
+}
+
+function subtleSpellPreservedMaterialComponentFact(
+  components: SpellComponents,
+): SubtleSpellPreservedMaterialComponentFact | null {
+  if (components.m === false) {
+    return null;
+  }
+  if (typeof components.m !== "string") {
+    return {
+      kind: "structuredMaterial",
+      material: components.m,
+    };
+  }
+  const costGp =
+    "materialCostGp" in components ? (components.materialCostGp ?? null) : null;
+  const materialConsumed =
+    "materialConsumed" in components && components.materialConsumed === true;
+  if (materialConsumed) {
+    return {
+      kind: "genericMaterial",
+      material: components.m,
+      preservation: {
+        kind: "consumed",
+        costGp,
+      },
+    };
+  }
+  return costGp === null
+    ? null
+    : {
+        kind: "genericMaterial",
+        material: components.m,
+        preservation: {
+          kind: "priced",
+          costGp,
+        },
+      };
+}
+
+function readonlyNonEmptyArray<T>(
+  values: readonly T[],
+): ReadonlyNonEmptyArray<T> | null {
+  const [first, ...rest] = values;
+  return first === undefined ? null : [first, ...rest];
+}
+
 function extendedSpellProcedureSupportsDurationProjection(
   invocation: SupportedSpellInvocation,
 ): boolean {
@@ -813,7 +986,8 @@ export function isSpellMetamagicApplicationFactWithoutSelectionPayload(
   return (
     application.effectKind !== TRANSMUTED_METAMAGIC_EFFECT_KIND &&
     application.effectKind !== DISTANT_METAMAGIC_EFFECT_KIND &&
-    application.effectKind !== EXTENDED_METAMAGIC_EFFECT_KIND
+    application.effectKind !== EXTENDED_METAMAGIC_EFFECT_KIND &&
+    application.effectKind !== SUBTLE_METAMAGIC_EFFECT_KIND
   );
 }
 
