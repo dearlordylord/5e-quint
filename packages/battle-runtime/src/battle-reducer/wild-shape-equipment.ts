@@ -48,6 +48,8 @@ export type WildShapeFormLimbObjectHandlingWitness = {
 export const WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS = [
   "armor",
   "shield",
+  "mainWeapon",
+  "offHandWeapon",
 ] as const satisfies ReadonlyArray<WildShapeLoadoutObjectRef["kind"]>;
 export type WildShapeEffectiveLoadoutWornKind =
   (typeof WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS)[number];
@@ -55,6 +57,13 @@ export type WildShapeWornLoadoutObjectRef = Extract<
   WildShapeLoadoutObjectRef,
   { readonly kind: WildShapeEffectiveLoadoutWornKind }
 >;
+
+export const WILD_SHAPE_ARMOR_CLASS_WORN_KINDS = [
+  "armor",
+  "shield",
+] as const satisfies ReadonlyArray<WildShapeEffectiveLoadoutWornKind>;
+export type WildShapeArmorClassWornKind =
+  (typeof WILD_SHAPE_ARMOR_CLASS_WORN_KINDS)[number];
 
 export type WildShapeWearPracticalityWitness =
   | { readonly kind: "practicalToWear" }
@@ -274,7 +283,7 @@ function unsupportedWornEquipmentDisposition(): {
   return {
     tag: "invalid",
     message:
-      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require concrete object/Utilize support.",
+      "Druid Wild Shape practical worn equipment support requires a selected loadout object with promoted worn-object behavior.",
   };
 }
 
@@ -295,6 +304,53 @@ export function wildShapeEquipmentDispositionWearsKind(
     (disposition) =>
       disposition.disposition === "worn" && disposition.item.kind === kind,
   );
+}
+
+export function wildShapeEquipmentDispositionWearsObject(
+  dispositions: readonly ActiveWildShapeEquipmentDisposition[],
+  item: WildShapeLoadoutObjectRef,
+): boolean {
+  return dispositions.some(
+    (disposition) =>
+      disposition.disposition === "worn" &&
+      sameLoadoutObject(disposition.item, item),
+  );
+}
+
+export function wildShapeCanUseWornLoadoutObject(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+  readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  readonly objectKind: WildShapeEffectiveLoadoutWornKind;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): boolean {
+  return wildShapeWornLoadoutObjectForUse(input) !== undefined;
+}
+
+export function wildShapeWornLoadoutObjectForUse(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+  readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  readonly objectKind: WildShapeEffectiveLoadoutWornKind;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): WildShapeWornLoadoutObjectRef | undefined {
+  if (!wildShapeFormLimbsCanHandleObjects(input.formLimbs)) {
+    return undefined;
+  }
+  const item = wildShapeLoadoutObjectRefs(input.loadout).find(
+    (candidate): candidate is WildShapeWornLoadoutObjectRef =>
+      candidate.kind === input.objectKind && candidate.unitId === input.unitId,
+  );
+  return item !== undefined &&
+    wildShapeEquipmentDispositionWearsObject(input.equipmentDisposition, item)
+    ? item
+    : undefined;
+}
+
+export function wildShapeFormLimbsCanHandleObjects(
+  witness: WildShapeFormLimbObjectHandlingWitness,
+): boolean {
+  return witness.kind === "canHandleObjects";
 }
 
 function wildShapeLoadoutObjectSupportsEffectiveWornProjection(

@@ -136,7 +136,9 @@ import {
   type ResolvedWildShapeEquipmentDisposition,
   validateWildShapeEquipmentDispositionFill,
   wildShapeActiveEquipmentDispositions,
+  wildShapeCanUseWornLoadoutObject,
   wildShapeLoadoutObjectRefs,
+  type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -497,10 +499,17 @@ function sacredWeaponHeldMeleeWeapons(
 ): readonly SacredWeaponHeldMeleeWeapon[] {
   const weapons: SacredWeaponHeldMeleeWeapon[] = [];
   const main = actor.origin.selectedLoadout.weapon;
+  const activeWildShape = activeDruidWildShapeEffect(actor);
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
     actor.origin.attack.weapon.id === main.unitId &&
+    wildShapeCanUseLoadoutWeaponObject({
+      loadout: actor.origin.selectedLoadout,
+      activeWildShape,
+      objectKind: "mainWeapon",
+      unitId: main.unitId,
+    }) &&
     actor.origin.attack.weapon.usage === "melee"
   ) {
     weapons.push({
@@ -513,6 +522,12 @@ function sacredWeaponHeldMeleeWeapons(
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
     actor.origin.offHandAttack.weapon.id === offHand.unitId &&
+    wildShapeCanUseLoadoutWeaponObject({
+      loadout: actor.origin.selectedLoadout,
+      activeWildShape,
+      objectKind: "offHandWeapon",
+      unitId: offHand.unitId,
+    }) &&
     actor.origin.offHandAttack.weapon.usage === "melee"
   ) {
     weapons.push({
@@ -521,6 +536,25 @@ function sacredWeaponHeldMeleeWeapons(
     });
   }
   return weapons;
+}
+
+function wildShapeCanUseLoadoutWeaponObject(input: {
+  readonly loadout: CharacterBattleCreatureState["origin"]["selectedLoadout"];
+  readonly activeWildShape: ReturnType<typeof activeDruidWildShapeEffect>;
+  readonly objectKind: Extract<
+    WildShapeLoadoutObjectRef["kind"],
+    "mainWeapon" | "offHandWeapon"
+  >;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): boolean {
+  if (input.activeWildShape === null) return true;
+  return wildShapeCanUseWornLoadoutObject({
+    loadout: input.loadout,
+    formLimbs: input.activeWildShape.formLimbs,
+    equipmentDisposition: input.activeWildShape.equipmentDisposition,
+    objectKind: input.objectKind,
+    unitId: input.unitId,
+  });
 }
 
 function rogueSteadyAimActs(

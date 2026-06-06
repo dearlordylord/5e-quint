@@ -314,6 +314,19 @@ defineSelectedIdentityWitness({
             ),
         },
         {
+          actionName: "doBeginNextTurn",
+          projectionAfter: expectedDruidWildShapeFormProjection(),
+          project: (projection) =>
+            projection.bonusActionAvailable
+              ? projection
+              : {
+                  ...projection,
+                  bonusActionAvailable: true,
+                  lastResult: "nextTurn",
+                },
+          discover: () => undefined,
+        },
+        {
           actionName: "doDismissForm",
           projectionAfter: expectedDruidWildShapeFormProjection({
             bonusActionAvailable: false,
@@ -358,6 +371,12 @@ defineSelectedIdentityWitness({
             druidWildShapeFormProjection(
               applyDeathReversion(assumeRidingHorse(initialRuntimeState())),
             ),
+        },
+        {
+          actionName: "doStutter",
+          projectionAfter: expectedDruidWildShapeFormProjection(),
+          preservesProjection: true,
+          discover: () => undefined,
         },
       ],
     },

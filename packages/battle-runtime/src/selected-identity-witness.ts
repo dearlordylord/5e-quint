@@ -25,6 +25,8 @@ export type SelectedIdentityProcedure<P extends ProjectionRecord> = {
   readonly actionName: `do${string}`;
   readonly projectionAfter: P;
   readonly discover: () => P | void | Promise<P | void>;
+  readonly project?: (projection: P) => P;
+  readonly preservesProjection?: true;
 };
 
 export type SelectedIdentityUnit<P extends ProjectionRecord> = {
@@ -72,7 +74,12 @@ export function defineSelectedIdentityWitness<
 export function defineSelectedIdentityWitness<
   S extends ProjectionSchema,
   P extends ProjectionRecord,
->(witness: SelectedIdentityWitness<S, P>): void {
+>(
+  witness: SelectedIdentityWitnessBase<P> & {
+    readonly projectionSchema: S;
+    readonly normalizeQuintState?: ((raw: unknown) => P) | undefined;
+  },
+): void {
   const runtimeSchema =
     witness.normalizeQuintState === undefined
       ? projectionRuntimeSchema(witness)
@@ -84,7 +91,10 @@ export function defineSelectedIdentityWitness<
     let projection: WitnessProjection = witness.initialProjection;
     const actions: Record<
       string,
-      { readonly picks: Record<string, never>; readonly handler: () => void | Promise<void> }
+      {
+        readonly picks: Record<string, never>;
+        readonly handler: () => void | Promise<void>;
+      }
     > = {
       init: {
         picks: {},
@@ -99,9 +109,18 @@ export function defineSelectedIdentityWitness<
         actions[procedure.actionName] = {
           picks: {},
           handler: async () => {
+            if (procedure.project !== undefined) {
+              projection = procedure.project(projection);
+              return;
+            }
             const computed = await procedure.discover();
-            projection =
-              computed === undefined ? procedure.projectionAfter : computed;
+            if (computed !== undefined) {
+              projection = computed;
+              return;
+            }
+            if (procedure.preservesProjection !== true) {
+              projection = procedure.projectionAfter;
+            }
           },
         };
       }
@@ -186,9 +205,12 @@ type RuntimeProjectionField = {
 };
 type RuntimeProjectionSchema = Readonly<Record<string, RuntimeProjectionField>>;
 
-function projectionRuntimeSchema<S extends ProjectionSchema>(
+function projectionRuntimeSchema<
+  S extends ProjectionSchema,
+  P extends ProjectionRecord,
+>(
   witness: Pick<
-    SelectedIdentityWitness<S, ProjectionRecord>,
+    SelectedIdentityWitnessBase<P> & { readonly projectionSchema: S },
     "projectionSchema" | "initialProjection" | "units"
   >,
 ): RuntimeProjectionSchema {
@@ -264,13 +286,17 @@ function parseQuintField(
 
 function parseBool(value: unknown, qKey: string): boolean {
   if (typeof value === "boolean") return value;
-  throw new Error(`Expected boolean Quint field ${qKey}, got ${String(value)}.`);
+  throw new Error(
+    `Expected boolean Quint field ${qKey}, got ${String(value)}.`,
+  );
 }
 
 function parseInt(value: unknown, qKey: string): number {
   if (typeof value === "number") return value;
   if (typeof value === "bigint") return Number(value);
-  throw new Error(`Expected integer Quint field ${qKey}, got ${String(value)}.`);
+  throw new Error(
+    `Expected integer Quint field ${qKey}, got ${String(value)}.`,
+  );
 }
 
 function parseStr(
@@ -279,7 +305,9 @@ function parseStr(
   qKey: string,
 ): string {
   if (typeof value !== "string") {
-    throw new Error(`Expected string Quint field ${qKey}, got ${String(value)}.`);
+    throw new Error(
+      `Expected string Quint field ${qKey}, got ${String(value)}.`,
+    );
   }
   if (!allowedValues.has(value)) {
     throw new Error(

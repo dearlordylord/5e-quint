@@ -37,6 +37,27 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_worn_weapon_requires_form_object_handling = {
+    val canHandle = assumeFormWithEquipmentAndObjectHandling(
+      initialProjection,
+      largeFastFormFacts,
+      wornMainWeaponEquipmentDisposition,
+      true,
+    )
+    val cannotHandle = assumeFormWithEquipmentAndObjectHandling(
+      initialProjection,
+      largeFastFormFacts,
+      wornMainWeaponEquipmentDisposition,
+      false,
+    )
+    all {
+      assert(canUseWornMainWeapon(canHandle) == true),
+      assert(canUseWornMainWeapon(cannotHandle) == false),
+      assert(canHandle.equipmentDisposition.wornMainWeapon == true),
+      assert(cannotHandle.equipmentDisposition.wornMainWeapon == true),
+    }
+  }
+
   run test_druid_wild_shape_fallen_equipment_projects_object_boundary = {
     val result = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, fallenShieldEquipmentDisposition)
     all {

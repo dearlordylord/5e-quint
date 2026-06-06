@@ -11,8 +11,9 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
-  type WildShapeEffectiveLoadoutWornKind,
+  type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,
+  wildShapeFormLimbsCanHandleObjects,
 } from "./wild-shape-equipment.ts";
 import {
   type BattleSeeInvisibleEtherealWitness,
@@ -183,14 +184,38 @@ function combatantWildShapeEffectiveHandUse(
   handUse: HandUse,
 ): HandUse {
   if (!combatantHasUnendedDruidWildShapeEffect(combatant)) return handUse;
+  const wildShapeEffect =
+    combatant.origin.kind === "character"
+      ? combatant.activeEffects.find(
+          (effect) => effect.kind === "druidWildShapeForm",
+        )
+      : undefined;
   return Match.value(handUse).pipe(
     Match.when("shield", () =>
       combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
         ? handUse
         : "free",
     ),
-    Match.when("mainWeapon", () => "free" as const),
-    Match.when("offWeapon", () => "free" as const),
+    Match.when("mainWeapon", () =>
+      wildShapeEffect !== undefined &&
+      wildShapeFormLimbsCanHandleObjects(wildShapeEffect.formLimbs) &&
+      wildShapeEquipmentDispositionWearsKind(
+        wildShapeEffect.equipmentDisposition,
+        "mainWeapon",
+      )
+        ? handUse
+        : "free",
+    ),
+    Match.when("offWeapon", () =>
+      wildShapeEffect !== undefined &&
+      wildShapeFormLimbsCanHandleObjects(wildShapeEffect.formLimbs) &&
+      wildShapeEquipmentDispositionWearsKind(
+        wildShapeEffect.equipmentDisposition,
+        "offHandWeapon",
+      )
+        ? handUse
+        : "free",
+    ),
     Match.when("free", () => handUse),
     Match.when("grapple", () => handUse),
     Match.when("spellCreatedHeldObject", () => handUse),
@@ -200,7 +225,7 @@ function combatantWildShapeEffectiveHandUse(
 
 function combatantDruidWildShapeEquipmentWearsKind(
   combatant: BattleCreatureState,
-  kind: WildShapeEffectiveLoadoutWornKind,
+  kind: WildShapeArmorClassWornKind,
 ): boolean {
   if (
     !combatantHasUnendedDruidWildShapeEffect(combatant) ||

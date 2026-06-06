@@ -33,11 +33,13 @@ import {
 } from "../../battle-reducer.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
+import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
 } from "../spells-profile-shared.ts";
+import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -165,8 +167,18 @@ function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
   readonly attack: CharacterWeaponAttackActionOption;
 }[] {
   const origin = ctx.actor.origin;
+  const activeWildShape = activeDruidWildShapeEffect(ctx.actor);
   return [
-    ...(origin.attack === null
+    ...(origin.attack === null ||
+    (activeWildShape !== null &&
+      (origin.selectedLoadout.weapon === undefined ||
+        !wildShapeCanUseWornLoadoutObject({
+          loadout: origin.selectedLoadout,
+          formLimbs: activeWildShape.formLimbs,
+          equipmentDisposition: activeWildShape.equipmentDisposition,
+          objectKind: "mainWeapon",
+          unitId: origin.selectedLoadout.weapon.unitId,
+        })))
       ? []
       : [
           {
@@ -175,7 +187,16 @@ function spellHostedWeaponAttacks(ctx: SpellAdmissionContext): readonly {
             attack: origin.attack,
           },
         ]),
-    ...(origin.offHandAttack === undefined
+    ...(origin.offHandAttack === undefined ||
+    (activeWildShape !== null &&
+      (origin.selectedLoadout.offHandWeapon === undefined ||
+        !wildShapeCanUseWornLoadoutObject({
+          loadout: origin.selectedLoadout,
+          formLimbs: activeWildShape.formLimbs,
+          equipmentDisposition: activeWildShape.equipmentDisposition,
+          objectKind: "offHandWeapon",
+          unitId: origin.selectedLoadout.offHandWeapon.unitId,
+        })))
       ? []
       : [
           {

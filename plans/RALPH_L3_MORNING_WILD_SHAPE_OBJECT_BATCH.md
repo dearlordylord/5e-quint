@@ -73,12 +73,18 @@
     {
       "number": 12,
       "id": "L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote concrete Wild Shape object and Utilize consumers"
     },
     {
       "number": 13,
-      "id": "L3MWILD-13-MORNING-WILD-SHAPE-CONSOLIDATION",
+      "id": "L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER",
+      "status": "ready-for-research",
+      "title": "Research remaining Wild Shape generic object and Utilize consumers"
+    },
+    {
+      "number": 14,
+      "id": "L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION",
       "status": "blocked",
       "title": "Final Wild Shape morning lane consolidation"
     }
@@ -127,8 +133,9 @@ repair branch state by rebasing against `master`.
 |     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | done                                          | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerated and verified residual ledgers; generated artifacts were already current.                                                  |
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | done                                          | none                                                                                                                                                                                                                           | Wild Shape selected-identity replay is covered by the focused form-lifecycle MBT witness.                                             |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | done                                          | none                                                                                                                                                                                                                           | Wild Companion now closes only the explicit SRDINV86 companion-control residue and delegates familiar lifecycle to the promoted Find Familiar Unit. |
-|    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | ready-for-research                            | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promote concrete Wild Shape object/Utilize consumers from the stored form-limb witness without deriving anatomy from authored identity. |
-|    13 | L3MWILD-13-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION | Final lane report and cleanup.                                                                                                        |
+|    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | done                                          | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promoted practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers from the stored form-limb witness. |
+|    13 | L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER    | ready-for-research                            | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION                                                                                                                                                                                   | Narrow and implement or explicitly close remaining generic non-weapon object/Utilize, dropped-object table-use, and non-resizing/non-reshaping object lifecycle work. |
+|    14 | L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION, L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER | Final lane report and cleanup.                                                                                                        |
 
 ## Task Details
 
@@ -166,8 +173,9 @@ Landed scope:
   selected-loadout object refs on the active Wild Shape effect.
 - `falls` choices remain rejected until Task 4 owns their executable
   consequences.
-- Practical worn armor/Shield is promoted by Task 3; worn weapons, held
-  objects, and concrete object handling remain Task 12.
+- Practical worn armor/Shield is promoted by Task 3; practical worn weapons
+  and held-weapon consumers are promoted by Task 12; generic non-weapon held
+  objects and generic object handling remain Task 13.
 
 ### Task 3 - L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT
 
@@ -179,8 +187,9 @@ Landed scope:
 - Production resolution accepts practical `worn` choices for selected-loadout
   armor and Shields and projects their Armor Class, armor/shield predicates, and
   shield hand use while shaped.
-- Worn weapons and held objects remain rejected until Task 12 owns the concrete
-  object/Utilize consumer boundary; fallen equipment remains Task 4.
+- Practical worn weapons and held-weapon consumers are promoted by Task 12;
+  generic non-weapon held objects remain Task 13; fallen equipment remains
+  Task 4.
 
 ### Task 4 - L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY
 
@@ -192,8 +201,9 @@ Landed scope:
   not-practical-to-wear fallbacks, emits transient `droppedObjects` outcomes
   sourced to Wild Shape, and keeps fallen equipment out of active worn/merged
   effect disposition.
-- Downstream table placement/use, worn weapons, held objects, and
-  non-resizing/non-reshaping behavior remain Task 12 object work.
+- Practical worn weapons and held-weapon consumers are promoted by Task 12.
+  Downstream table placement/use, generic non-weapon held objects, and
+  non-resizing/non-reshaping object lifecycle remain Task 13 object work.
 
 ### Task 5 - L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY
 
@@ -225,9 +235,10 @@ Landed scope:
 - The reducer stores that witness on the active Wild Shape effect for later
   object/Utilize consumers. It does not derive object-handling anatomy from the
   Beast form's authored identity.
-- Concrete worn weapon and held-object execution, non-resizing/non-reshaping
-  object behavior, downstream table placement/use of dropped objects, and
-  concrete object/Utilize consumers remain Task 12.
+- Practical worn weapon execution and held-weapon spell/feature consumers are
+  promoted by Task 12. Generic non-weapon held objects,
+  non-resizing/non-reshaping object lifecycle, downstream table placement/use
+  of dropped objects, and generic object/Utilize consumers remain Task 13.
 
 ### Task 7 - L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER
 
@@ -298,7 +309,45 @@ Outputs:
   where those consumers are promoted.
 - No parallel Wild Shape inventory, equipment, or table-placement state.
 
-### Task 13 - L3MWILD-13-MORNING-WILD-SHAPE-CONSOLIDATION
+Landed scope:
+
+- Practical worn selected-loadout weapon attacks are available while shaped
+  only when the active Wild Shape effect stores a form-limb witness that can
+  handle objects and the exact selected-loadout weapon was resolved as worn.
+- Held-weapon spell and feature consumers use the same witness and exact
+  selected-loadout object gate rather than deriving anatomy from form identity.
+- Generic non-weapon held objects, broad object interaction/Utilize procedures,
+  downstream table placement/use of dropped Wild Shape objects, and
+  non-resizing/non-reshaping object lifecycle beyond preserving selected
+  loadout object refs remain outside this landed scope.
+
+### Task 13 - L3MWILD-13-GENERIC-OBJECT-UTILIZE-REMAINDER
+
+Narrow and implement or explicitly close the remaining Wild Shape Objects work
+that Task 12 did not promote.
+
+Inputs:
+
+- Task 12's centralized worn-object gate and active-effect `formLimbs` witness.
+- Existing `droppedObjects`, table-position, object-target, object-contact, and
+  Command Drop held-object boundary facts.
+- `plans/WILD_SHAPE_OBJECT_ANATOMY_EQUIPMENT_PLAN.md`.
+- `.references/srd-5.2.1/Classes/Druid.md` Wild Shape Objects text and
+  `.references/srd-5.2.1/Playing-the-Game.md` object interaction / Utilize
+  text.
+
+Outputs:
+
+- A research-backed implementation split that either promotes concrete generic
+  non-weapon object/Utilize consumers or records why they have no current
+  battle-runtime owner independent of table/object procedure state.
+- If promoted, typed workflows and focused tests for generic non-weapon held
+  objects, downstream use of Wild Shape dropped objects, and
+  non-resizing/non-reshaping object lifecycle, deriving from existing loadout,
+  active-form, form-limb witness, dropped-object, and table-position facts.
+- No parallel Wild Shape inventory, equipment, or table-placement state.
+
+### Task 14 - L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION
 
 Final lane consolidation after dependent implementation tasks close.
 

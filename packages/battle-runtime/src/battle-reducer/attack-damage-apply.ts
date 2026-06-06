@@ -40,6 +40,7 @@ import {
   type BattleFill,
   type BattleHoleId,
   type BattleState,
+  type CharacterBattleCreatureState,
   type MagicWeaponEnhancementBonus,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
@@ -66,7 +67,13 @@ import {
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
+  combatantD20AbilityModifier,
 } from "./druid-wild-shape.ts";
+import {
+  wildShapeWornLoadoutObjectForUse,
+  type WildShapeLoadoutObjectRef,
+  type WildShapeWornLoadoutObjectRef,
+} from "./wild-shape-equipment.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -348,16 +355,19 @@ export function attackActionOptionsForActor(
     return [];
   }
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind === "character") {
+  if (isCharacterBattleCreatureState(actor)) {
     const wildShape = activeDruidWildShape(actor);
     if (wildShape !== null) {
-      return statBlockAttackActionOptions(wildShape.form).filter((option) =>
-        statBlockAttackResourceAvailable(
-          wildShape.form.statBlock,
-          wildShape.effect.resources,
-          option,
+      return [
+        ...statBlockAttackActionOptions(wildShape.form).filter((option) =>
+          statBlockAttackResourceAvailable(
+            wildShape.form.statBlock,
+            wildShape.effect.resources,
+            option,
+          ),
         ),
-      );
+        ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
+      ];
     }
     const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
       actor,
@@ -415,11 +425,28 @@ export function offHandAttackActionOptionsForActor(
   actorId: CombatantId,
 ): readonly CharacterWeaponAttackActionOption[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return [];
-  if (activeDruidWildShapeEffect(actor) !== null) return [];
+  if (!isCharacterBattleCreatureState(actor)) return [];
+  const activeWildShapeEffect = activeDruidWildShapeEffect(actor);
   const main = actor.origin.attack;
   const offHand = actor.origin.offHandAttack;
   if (main === null || offHand === undefined) return [];
+  if (
+    activeWildShapeEffect !== null &&
+    (wildShapeWornLoadoutWeaponObjectForAttack(
+      actor,
+      activeWildShapeEffect,
+      "mainWeapon",
+      main,
+    ) === undefined ||
+      wildShapeWornLoadoutWeaponObjectForAttack(
+        actor,
+        activeWildShapeEffect,
+        "offHandWeapon",
+        offHand,
+      ) === undefined)
+  ) {
+    return [];
+  }
   if (
     main.kind !== "weapon" ||
     !isLightMeleeWeapon(main.weapon) ||
@@ -427,10 +454,14 @@ export function offHandAttackActionOptionsForActor(
   ) {
     return [];
   }
+  const offHandAttack =
+    activeWildShapeEffect === null
+      ? offHand
+      : wildShapeWornWeaponAttackWithFormStatistics(actor, offHand);
   const projectedOffHand = weaponAttackWithActiveSpellEffects(
     state,
     actor,
-    offHand,
+    offHandAttack,
     offHandWeaponItemIdForAttack(actor, offHand),
   );
   const lightPropertyOffHand = {
@@ -451,6 +482,168 @@ export function offHandAttackActionOptionsForActor(
     (attack): attack is CharacterWeaponAttackActionOption =>
       attack.kind === "weapon",
   );
+}
+
+function wildShapeWornWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  effect: NonNullable<ReturnType<typeof activeDruidWildShapeEffect>>,
+): readonly CharacterWeaponAttackActionOption[] {
+  return [
+    ...(actor.origin.attack === null
+      ? []
+      : wildShapeWornWeaponAttackOption({
+          state,
+          actor,
+          effect,
+          objectKind: "mainWeapon",
+          attack: actor.origin.attack,
+        })),
+  ];
+}
+
+function wildShapeWornWeaponAttackOption(input: {
+  readonly state: BattleState;
+  readonly actor: CharacterBattleCreatureState;
+  readonly effect: NonNullable<ReturnType<typeof activeDruidWildShapeEffect>>;
+  readonly objectKind: Extract<
+    WildShapeLoadoutObjectRef["kind"],
+    "mainWeapon" | "offHandWeapon"
+  >;
+  readonly attack: CharacterWeaponAttackActionOption;
+}): readonly CharacterWeaponAttackActionOption[] {
+  const item = wildShapeWornLoadoutWeaponObjectForAttack(
+    input.actor,
+    input.effect,
+    input.objectKind,
+    input.attack,
+  );
+  return item === undefined
+    ? []
+    : [
+        ...attackActionVariantOptions(
+          weaponAttackWithActiveSpellEffects(
+            input.state,
+            input.actor,
+            wildShapeWornWeaponAttackWithFormStatistics(
+              input.actor,
+              input.attack,
+            ),
+            item.objectId,
+          ),
+        ).filter(
+          (attack): attack is CharacterWeaponAttackActionOption =>
+            attack.kind === "weapon",
+        ),
+      ];
+}
+
+function wildShapeWornLoadoutWeaponObjectForAttack(
+  actor: CharacterBattleCreatureState,
+  effect: NonNullable<ReturnType<typeof activeDruidWildShapeEffect>>,
+  objectKind: Extract<
+    WildShapeLoadoutObjectRef["kind"],
+    "mainWeapon" | "offHandWeapon"
+  >,
+  attack: CharacterWeaponAttackActionOption,
+): WildShapeWornLoadoutObjectRef | undefined {
+  return wildShapeWornLoadoutObjectForUse({
+    loadout: actor.origin.selectedLoadout,
+    formLimbs: effect.formLimbs,
+    equipmentDisposition: effect.equipmentDisposition,
+    objectKind,
+    unitId: attack.weapon.id,
+  });
+}
+
+function wildShapeWornWeaponAttackWithFormStatistics(
+  actor: CharacterBattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+): CharacterWeaponAttackActionOption {
+  const projectedAbilityModifier = wildShapeWornWeaponAbilityModifier(
+    actor,
+    attack.ability,
+  );
+  return {
+    ...attack,
+    abilityModifier: projectedAbilityModifier,
+    ...(attack.attackBonus === undefined
+      ? {}
+      : {
+          attackBonus: wildShapeWornWeaponAttackBonus({
+            originalAttackBonus: attack.attackBonus,
+            originalAbilityModifier: attack.abilityModifier,
+            projectedAbilityModifier,
+          }),
+        }),
+    ...(attack.damageAbilityModifier === undefined
+      ? {}
+      : { damageAbilityModifier: projectedAbilityModifier }),
+    ...(attack.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: wildShapeWornWeaponAlternateAbilityChoices(
+            actor,
+            attack.alternateAbilityChoices,
+          ),
+        }),
+  };
+}
+
+function wildShapeWornWeaponAlternateAbilityChoices(
+  actor: CharacterBattleCreatureState,
+  choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
+  const [first, ...rest] = choices;
+  return [
+    wildShapeWornWeaponAbilityChoice(actor, first),
+    ...rest.map((choice) => wildShapeWornWeaponAbilityChoice(actor, choice)),
+  ];
+}
+
+function wildShapeWornWeaponAbilityChoice(
+  actor: CharacterBattleCreatureState,
+  choice: CharacterWeaponAttackAbilityChoice,
+): CharacterWeaponAttackAbilityChoice {
+  const projectedAbilityModifier = wildShapeWornWeaponAbilityModifier(
+    actor,
+    choice.ability,
+  );
+  return {
+    ...choice,
+    abilityModifier: projectedAbilityModifier,
+    attackBonus: wildShapeWornWeaponAttackBonus({
+      originalAttackBonus: choice.attackBonus,
+      originalAbilityModifier: choice.abilityModifier,
+      projectedAbilityModifier,
+    }),
+    damageAbilityModifier: projectedAbilityModifier,
+  };
+}
+
+function wildShapeWornWeaponAbilityModifier(
+  actor: CharacterBattleCreatureState,
+  ability: CharacterWeaponAttackActionOption["ability"],
+): CharacterWeaponAttackActionOption["abilityModifier"] {
+  return abilityModifier(combatantD20AbilityModifier(actor, ability));
+}
+
+function wildShapeWornWeaponAttackBonus(input: {
+  readonly originalAttackBonus: CharacterWeaponAttackAbilityChoice["attackBonus"];
+  readonly originalAbilityModifier: CharacterWeaponAttackAbilityChoice["abilityModifier"];
+  readonly projectedAbilityModifier: CharacterWeaponAttackAbilityChoice["abilityModifier"];
+}): CharacterWeaponAttackAbilityChoice["attackBonus"] {
+  return attackBonus(
+    Number(input.originalAttackBonus) -
+      Number(input.originalAbilityModifier) +
+      Number(input.projectedAbilityModifier),
+  );
+}
+
+function isCharacterBattleCreatureState(
+  actor: BattleCreatureState | undefined,
+): actor is CharacterBattleCreatureState {
+  return actor?.origin.kind === "character";
 }
 
 function weaponAttackWithActiveSpellEffects(

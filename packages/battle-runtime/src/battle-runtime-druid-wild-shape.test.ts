@@ -7,7 +7,7 @@ import {
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { ClassLevel } from "@dnd/shared/types";
+import { abilityModifier, attackBonus, ClassLevel } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -46,7 +46,11 @@ import {
   characterSeed,
   combatantId,
   discoverBattleActs,
+  damageRollFill,
   goblinId,
+  attackRollFill,
+  attackTargetFill,
+  findHole,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -175,7 +179,7 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
 });
 
-test("decodes Wild Shape worn equipment disposition fills only for armor and Shields", () => {
+test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {
   const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
   expect(
     Either.isRight(
@@ -223,7 +227,7 @@ test("decodes Wild Shape worn equipment disposition fills only for armor and Shi
 
   for (const wornWeaponKind of ["mainWeapon", "offHandWeapon"] as const) {
     expect(
-      Either.isLeft(
+      Either.isRight(
         decodeFill({
           kind: "wildShapeEquipmentDisposition",
           holeId: "wild-shape-equipment-hole",
@@ -426,6 +430,376 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
         act.subject.attackName === "Quarterstaff",
+    ),
+  ).toBe(false);
+});
+
+test("uses a practical worn Wild Shape weapon when form limbs can handle objects", () => {
+  const initial = druidWildShapeBattle({
+    attack: weakTrueFormLongswordAttack(),
+    selectedLoadout: {
+      weapon: {
+        itemId: "main:weapon_longsword",
+        unitId: "weapon_longsword",
+        grip: "one_handed",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  if (mainWeapon === undefined) {
+    throw new Error("Expected main weapon disposition candidate.");
+  }
+
+  const resolved = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: mainWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  expect(activeDruidWildShapeEffect(activeDruid)?.equipmentDisposition).toEqual(
+    [{ item: mainWeapon, disposition: "worn" }],
+  );
+
+  const activeActs = discoverBattleActs(resolved.state);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Hooves",
+    ),
+  ).toBe(true);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Longsword",
+    ),
+  ).toBe(true);
+
+  const longswordAct = activeActs.find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.attackName === "Longsword",
+  );
+  if (longswordAct?.subject.tag !== "action") {
+    throw new Error("Expected Longsword attack act.");
+  }
+  const target = findHole(longswordAct.initialHoles, "targetChoice");
+  const targetChoice = attackTargetFill(target, druidId, goblinId, "Longsword");
+  const needsAttackRoll = resolveBattleSubject({
+    state: resolved.state,
+    subject: longswordAct.subject,
+    fills: [targetChoice],
+  });
+  if (needsAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected Longsword attack roll hole.");
+  }
+  const attackRoll = findHole(needsAttackRoll.holes, "attackRoll");
+  if (attackRoll.kind !== "attackRoll") {
+    throw new Error("Expected Longsword attack roll hole.");
+  }
+  if (!("attack" in attackRoll)) {
+    throw new Error("Expected weapon attack roll hole.");
+  }
+  expect(Number(attackRoll.attackBonus)).toBe(5);
+  expect(attackRoll.attack).toMatchObject({
+    kind: "weapon",
+    ability: "str",
+    abilityModifier: 3,
+    attackBonus: 5,
+    damageAbilityModifier: 3,
+  });
+
+  const needsDamage = resolveBattleSubject({
+    state: resolved.state,
+    subject: longswordAct.subject,
+    fills: [
+      targetChoice,
+      attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  if (needsDamage.tag !== "needsHoles") {
+    throw new Error("Expected Longsword damage hole.");
+  }
+  const damage = findHole(needsDamage.holes, "rolledDice");
+  if (damage.kind !== "rolledDice") {
+    throw new Error("Expected Longsword damage hole.");
+  }
+  expect(damage.label).toBe("Longsword damage (1d8+3-slashing)");
+});
+
+test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action lane with form statistics", () => {
+  const initial = druidWildShapeBattle({
+    attack: weakTrueFormShortswordAttack(),
+    offHandAttack: weakTrueFormDaggerAttack(),
+    selectedLoadout: {
+      weapon: {
+        itemId: "main:weapon_shortsword",
+        unitId: "weapon_shortsword",
+        grip: "one_handed",
+      },
+      offHandWeapon: {
+        itemId: "offhand:weapon_dagger",
+        unitId: "weapon_dagger",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  const offHandWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "offHandWeapon",
+  );
+  if (mainWeapon === undefined || offHandWeapon === undefined) {
+    throw new Error(
+      "Expected main and off-hand weapon disposition candidates.",
+    );
+  }
+
+  const resolved = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: mainWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+        {
+          item: offHandWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  );
+  const battleReadyState = restoreBonusAction(resolved.state);
+
+  const activeActs = discoverBattleActs(battleReadyState);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Shortsword",
+    ),
+  ).toBe(true);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Dagger",
+    ),
+  ).toBe(false);
+  expect(
+    activeActs.some(
+      (act) =>
+        act.subject.tag === "bonusAction" &&
+        act.subject.action === "offHandAttack" &&
+        act.subject.attackName === "Dagger",
+    ),
+  ).toBe(false);
+
+  const shortswordAct = activeActs.find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.attackName === "Shortsword",
+  );
+  if (shortswordAct?.subject.tag !== "action") {
+    throw new Error("Expected Shortsword attack act.");
+  }
+  const shortswordTarget = findHole(shortswordAct.initialHoles, "targetChoice");
+  const shortswordTargetChoice = attackTargetFill(
+    shortswordTarget,
+    druidId,
+    goblinId,
+    "Shortsword",
+  );
+  const needsShortswordAttackRoll = resolveBattleSubject({
+    state: battleReadyState,
+    subject: shortswordAct.subject,
+    fills: [shortswordTargetChoice],
+  });
+  if (needsShortswordAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected Shortsword attack roll hole.");
+  }
+  const shortswordAttackRoll = findHole(
+    needsShortswordAttackRoll.holes,
+    "attackRoll",
+  );
+  const afterQualifyingAttack = requireResolved(
+    resolveBattleSubject({
+      state: battleReadyState,
+      subject: shortswordAct.subject,
+      fills: [
+        shortswordTargetChoice,
+        attackRollFill(shortswordAttackRoll, { total: 1, naturalD20: 1 }),
+      ],
+    }),
+  ).state;
+
+  const afterLightActs = discoverBattleActs(afterQualifyingAttack);
+  expect(
+    afterLightActs.some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Dagger",
+    ),
+  ).toBe(false);
+  const daggerAct = afterLightActs.find(
+    (act) =>
+      act.subject.tag === "bonusAction" &&
+      act.subject.action === "offHandAttack" &&
+      act.subject.attackName === "Dagger",
+  );
+  if (daggerAct?.subject.tag !== "bonusAction") {
+    throw new Error("Expected Dagger off-hand Bonus Action act.");
+  }
+  const daggerTarget = findHole(daggerAct.initialHoles, "targetChoice");
+  const daggerTargetChoice = attackTargetFill(
+    daggerTarget,
+    druidId,
+    goblinId,
+    "Dagger",
+  );
+  const needsDaggerAttackRoll = resolveBattleSubject({
+    state: afterQualifyingAttack,
+    subject: daggerAct.subject,
+    fills: [daggerTargetChoice],
+  });
+  if (needsDaggerAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected Dagger attack roll hole.");
+  }
+  const daggerAttackRoll = findHole(needsDaggerAttackRoll.holes, "attackRoll");
+  if (daggerAttackRoll.kind !== "attackRoll") {
+    throw new Error("Expected Dagger attack roll hole.");
+  }
+  if (!("attack" in daggerAttackRoll)) {
+    throw new Error("Expected weapon attack roll hole.");
+  }
+  expect(Number(daggerAttackRoll.attackBonus)).toBe(5);
+  expect(daggerAttackRoll.attack).toMatchObject({
+    kind: "weapon",
+    ability: "str",
+    abilityModifier: 3,
+    attackBonus: 5,
+    damageAbilityModifier: 0,
+  });
+
+  const needsDamage = resolveBattleSubject({
+    state: afterQualifyingAttack,
+    subject: daggerAct.subject,
+    fills: [
+      daggerTargetChoice,
+      attackRollFill(daggerAttackRoll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  if (needsDamage.tag !== "needsHoles") {
+    throw new Error("Expected Dagger damage hole.");
+  }
+  const damage = findHole(needsDamage.holes, "rolledDice");
+  if (damage.kind !== "rolledDice") {
+    throw new Error("Expected Dagger damage hole.");
+  }
+  expect(damage.label).toBe("Dagger damage (1d4-piercing)");
+  expect(
+    resolveBattleSubject({
+      state: afterQualifyingAttack,
+      subject: daggerAct.subject,
+      fills: [
+        daggerTargetChoice,
+        attackRollFill(daggerAttackRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    }),
+  ).toMatchObject({ tag: "resolved" });
+});
+
+test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", () => {
+  const initial = druidWildShapeBattle({
+    selectedLoadout: {
+      weapon: {
+        itemId: "main:weapon_longsword",
+        unitId: "weapon_longsword",
+        grip: "one_handed",
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  if (mainWeapon === undefined) {
+    throw new Error("Expected main weapon disposition candidate.");
+  }
+
+  const resolved = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(
+        dispositionHole,
+        [
+          {
+            item: mainWeapon,
+            disposition: "worn",
+            practicality: { kind: "practicalToWear" },
+          },
+        ],
+        { kind: "cannotHandleObjects" },
+      ),
+    ]),
+  );
+
+  expect(
+    discoverBattleActs(resolved.state).some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Longsword",
     ),
   ).toBe(false);
 });
@@ -694,9 +1068,8 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
       },
     }),
   ).toEqual({
-    tag: "invalid",
-    message:
-      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require concrete object/Utilize support.",
+    tag: "valid",
+    dispositions: [{ item: mainWeapon, disposition: "worn" }],
   });
 });
 
@@ -1097,6 +1470,8 @@ test("rounds odd-level duration down through the general division rule", () => {
 function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
+  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
+  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
@@ -1113,6 +1488,8 @@ function druidWildShapeBattle(input?: {
 function druidWildShapeCreatureInit(input?: {
   readonly druidLevel?: number;
   readonly armorClass?: ArmorClassState;
+  readonly attack?: CharacterBattleCreatureState["origin"]["attack"];
+  readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
@@ -1129,6 +1506,10 @@ function druidWildShapeCreatureInit(input?: {
     ...(input?.armorClass === undefined
       ? {}
       : { armorClass: input.armorClass }),
+    ...(input?.attack === undefined ? {} : { attack: input.attack }),
+    ...(input?.offHandAttack === undefined
+      ? {}
+      : { offHandAttack: input.offHandAttack }),
     druidWildShapeKnownForms:
       input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
     selectedLoadout: input?.selectedLoadout ?? {},
@@ -1140,6 +1521,41 @@ function druidWildShapeCreatureInit(input?: {
       sourceClassName: "druid",
     },
   });
+}
+
+function weakTrueFormLongswordAttack(): NonNullable<
+  CharacterBattleCreatureState["origin"]["attack"]
+> {
+  return weakTrueFormWeaponAttack("weapon_longsword");
+}
+
+function weakTrueFormShortswordAttack(): NonNullable<
+  CharacterBattleCreatureState["origin"]["attack"]
+> {
+  return weakTrueFormWeaponAttack("weapon_shortsword");
+}
+
+function weakTrueFormDaggerAttack(): NonNullable<
+  CharacterBattleCreatureState["origin"]["offHandAttack"]
+> {
+  return weakTrueFormWeaponAttack("weapon_dagger");
+}
+
+function weakTrueFormWeaponAttack(
+  unitId: "weapon_longsword" | "weapon_shortsword" | "weapon_dagger",
+): NonNullable<CharacterBattleCreatureState["origin"]["attack"]> {
+  const weapon = unitLibrary.requireUnit(unitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected weapon Unit.");
+  }
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: abilityModifier(-1),
+    attackBonus: attackBonus(1),
+    damageAbilityModifier: abilityModifier(-1),
+  };
 }
 
 function druidWildShapeKnownFormsWith(
@@ -1314,12 +1730,16 @@ function requireWildShapeEquipmentDispositionHole(
 function wildShapeDispositionFill(
   hole: Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }>,
   choices: readonly WildShapeEquipmentDispositionChoice[],
+  formLimbs: Extract<
+    BattleFill,
+    { readonly kind: "wildShapeEquipmentDisposition" }
+  >["value"]["formLimbs"] = { kind: "canHandleObjects" },
 ): Extract<BattleFill, { readonly kind: "wildShapeEquipmentDisposition" }> {
   return {
     kind: "wildShapeEquipmentDisposition",
     holeId: hole.holeId,
     value: {
-      formLimbs: { kind: "canHandleObjects" },
+      formLimbs,
       choices,
     },
   };

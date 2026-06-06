@@ -267,6 +267,8 @@ const WildShapeWornLoadoutObjectRefSchema: Schema.Schema<WildShapeWornLoadoutObj
   Schema.Union(
     WildShapeArmorLoadoutObjectRefSchema,
     WildShapeShieldLoadoutObjectRefSchema,
+    WildShapeMainWeaponLoadoutObjectRefSchema,
+    WildShapeOffHandWeaponLoadoutObjectRefSchema,
   ) as unknown as Schema.Schema<WildShapeWornLoadoutObjectRef>;
 
 const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> =
@@ -278,10 +280,9 @@ const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> 
   ) as unknown as Schema.Schema<WildShapeLoadoutObjectRef>;
 
 const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmentDispositionChoice> =
-  // The union schema below mirrors the discriminated choice type. The worn
-  // branch uses the armor/Shield-only loadout-ref schema, and the cast is only
-  // needed because Effect Schema cannot infer the nested branded refs through
-  // this union precisely.
+  // The union schema below mirrors the discriminated choice type. The cast is
+  // only needed because Effect Schema cannot infer the nested branded refs
+  // through this union precisely.
   Schema.Union(
     Schema.Struct({
       item: WildShapeLoadoutObjectRefSchema,
