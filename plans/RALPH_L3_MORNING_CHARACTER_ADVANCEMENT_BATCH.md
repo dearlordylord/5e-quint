@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit selected identity for character advancement profiles"
     },
     {

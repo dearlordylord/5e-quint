@@ -125,6 +125,17 @@ const classFeatureSelectedIdentityDriverSchema = {
   doProjectWarlockFiendSpells: {},
   step: {},
 } as const;
+const qntStepByDriverAction = {
+  doProjectBardJackOfAllTrades: "stepProjectBardJackOfAllTrades",
+  doProjectClericLifeDomainSpells: "stepProjectClericLifeDomainSpells",
+  doProjectDruidCircleLandSpells: "stepProjectDruidCircleLandSpells",
+  doProjectPaladinOathDevotionSpells:
+    "stepProjectPaladinOathDevotionSpells",
+  doProjectPaladinsSmite: "stepProjectPaladinsSmite",
+  doProjectRangerFavoredEnemy: "stepProjectRangerFavoredEnemy",
+  doProjectSorcererDraconicSpells: "stepProjectSorcererDraconicSpells",
+  doProjectWarlockFiendSpells: "stepProjectWarlockFiendSpells",
+} as const satisfies Record<ClassFeatureSelectedIdentityDriverAction, string>;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -234,6 +245,9 @@ const selectedUnitIdentityReplays = [
     ],
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
+  (replay) => replay.actions,
+);
 
 const classFeatureSelectedIdentityStateCheck = stateCheck(
   normalizeClassFeatureSelectedIdentityQuintState,
@@ -289,6 +303,24 @@ describe("Character Sheet class-feature selected identity MBT", () => {
       maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
       stateCheck: classFeatureSelectedIdentityStateCheck,
     });
+  }, 120_000);
+
+  it("replays every advertised Character Sheet class-feature branch", async () => {
+    for (const actionName of advertisedReplayActions) {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../character-sheet-class-feature-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: qntStepByDriverAction[actionName],
+        driver: createClassFeatureSelectedIdentityDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 1,
+        stateCheck: classFeatureSelectedIdentityStateCheck,
+      });
+    }
   }, 120_000);
 });
 

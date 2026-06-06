@@ -181,6 +181,20 @@ const classFeatureSelectedIdentityDriverSchema = {
   doSelectWizardEvocationSavant: {},
   step: {},
 } as const;
+const qntStepByDriverAction = {
+  doSelectBardExpertise: "stepSelectBardExpertise",
+  doProjectClericChannelDivinity: "stepProjectClericChannelDivinity",
+  doProjectDruidWildShape: "stepProjectDruidWildShape",
+  doProjectDruidWildCompanion: "stepProjectDruidWildCompanion",
+  doProjectMonksFocus: "stepProjectMonksFocus",
+  doProjectMonkUncannyMetabolism: "stepProjectMonkUncannyMetabolism",
+  doSelectPaladinFightingStyle: "stepSelectPaladinFightingStyle",
+  doSelectRangerDeftExplorer: "stepSelectRangerDeftExplorer",
+  doSelectRangerFightingStyle: "stepSelectRangerFightingStyle",
+  doProjectWarlockPactMagic: "stepProjectWarlockPactMagic",
+  doSelectWizardScholar: "stepSelectWizardScholar",
+  doSelectWizardEvocationSavant: "stepSelectWizardEvocationSavant",
+} as const satisfies Record<ClassFeatureSelectedIdentityDriverAction, string>;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -338,6 +352,9 @@ const selectedUnitIdentityReplays = [
     ],
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
+  (replay) => replay.actions,
+);
 
 const classFeatureSelectedIdentityStateCheck = stateCheck(
   normalizeClassFeatureSelectedIdentityQuintState,
@@ -393,6 +410,24 @@ describe("Character Creation class-feature selected identity MBT", () => {
       maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
       stateCheck: classFeatureSelectedIdentityStateCheck,
     });
+  }, 120_000);
+
+  it("replays every advertised Character Creation class-feature branch", async () => {
+    for (const actionName of advertisedReplayActions) {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../character-creation-class-feature-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: qntStepByDriverAction[actionName],
+        driver: createClassFeatureSelectedIdentityDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 1,
+        stateCheck: classFeatureSelectedIdentityStateCheck,
+      });
+    }
   }, 120_000);
 });
 
