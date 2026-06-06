@@ -136,7 +136,6 @@ import {
   type ResolvedWildShapeEquipmentDisposition,
   validateWildShapeEquipmentDispositionFill,
   wildShapeActiveEquipmentDispositions,
-  wildShapeAllMergedEquipmentDisposition,
   wildShapeLoadoutObjectRefs,
 } from "./wild-shape-equipment.ts";
 
@@ -596,15 +595,13 @@ function wildShapeInitialEquipmentDispositionHoles(
   form: BattleDruidWildShapeKnownForm,
 ): readonly BattleWildShapeEquipmentDispositionHole[] {
   const candidates = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
-  return candidates.length === 0
-    ? []
-    : [
-        wildShapeEquipmentDispositionHole({
-          actorId: actor.combatantId,
-          formStatBlockId: form.id,
-          candidates,
-        }),
-      ];
+  return [
+    wildShapeEquipmentDispositionHole({
+      actorId: actor.combatantId,
+      formStatBlockId: form.id,
+      candidates,
+    }),
+  ];
 }
 
 function wildShapeEquipmentDispositionHole(input: {
@@ -617,7 +614,7 @@ function wildShapeEquipmentDispositionHole(input: {
     holeInstanceKey: holeInstanceKey(protocolId),
     holeId: holeId(protocolId),
     kind: "wildShapeEquipmentDisposition",
-    label: "Druid Wild Shape equipment disposition",
+    label: "Druid Wild Shape object handling and equipment disposition",
     actorId: input.actorId,
     formStatBlockId: input.formStatBlockId,
     candidates: input.candidates,
@@ -1365,19 +1362,6 @@ export function resolveDruidWildShapeUnitFeature(
     candidates: equipmentCandidates,
   });
   const equipmentDisposition = (() => {
-    if (equipmentCandidates.length === 0) {
-      return input.fills.length === 0
-        ? {
-            tag: "valid" as const,
-            dispositions:
-              wildShapeAllMergedEquipmentDisposition(equipmentCandidates),
-          }
-        : {
-            tag: "invalid" as const,
-            message:
-              "Druid Wild Shape equipment disposition is not required without selected loadout equipment.",
-          };
-    }
     if (input.fills.length === 0) {
       return {
         tag: "needsHoles" as const,
@@ -1408,6 +1392,7 @@ export function resolveDruidWildShapeUnitFeature(
     return validation.tag === "valid"
       ? {
           tag: "valid" as const,
+          formLimbs: fill.value.formLimbs,
           dispositions: validation.dispositions,
         }
       : validation;
@@ -1463,6 +1448,7 @@ export function resolveDruidWildShapeUnitFeature(
     actor: nextActor,
     unitId: subject.unitId,
     form,
+    formLimbs: equipmentDisposition.formLimbs,
     equipmentDisposition: wildShapeActiveEquipmentDispositions(
       equipmentDisposition.dispositions,
     ),

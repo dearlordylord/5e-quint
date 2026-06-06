@@ -2,7 +2,9 @@ import { expect, test } from "vitest";
 
 import {
   combatantPerceptionCommunicationProjection,
+  type BattleFill,
   type BattleCreatureState,
+  type BattleHole,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
@@ -125,11 +127,7 @@ test("projects Wild Shape form senses while retaining character communication", 
     ],
   });
   const assumed = requireResolved(
-    resolveBattleSubject({
-      state: initial,
-      subject: wildShapeAssumeFormSubject(initial, form.id),
-      fills: [],
-    }),
+    resolveWildShapeAssumeFormWithMergedEquipment(initial, form.id),
   );
   const combatant = requireCombatant(assumed.state, characterCombatantId);
 
@@ -236,6 +234,60 @@ function wildShapeAssumeFormSubject(
     throw new Error("Expected Druid Wild Shape assume-form subject.");
   }
   return subject;
+}
+
+function resolveWildShapeAssumeFormWithMergedEquipment(
+  state: BattleState,
+  formStatBlockId: string,
+) {
+  const subject = wildShapeAssumeFormSubject(state, formStatBlockId);
+  const needsDisposition = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape object handling hole.");
+  }
+  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [wildShapeDispositionFill(hole)],
+  });
+}
+
+function requireWildShapeEquipmentDispositionHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }> {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleHole,
+      { readonly kind: "wildShapeEquipmentDisposition" }
+    > => candidate.kind === "wildShapeEquipmentDisposition",
+  );
+  if (hole === undefined) {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  return hole;
+}
+
+function wildShapeDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }>,
+): Extract<BattleFill, { readonly kind: "wildShapeEquipmentDisposition" }> {
+  return {
+    kind: "wildShapeEquipmentDisposition",
+    holeId: hole.holeId,
+    value: {
+      formLimbs: { kind: "canHandleObjects" },
+      choices: hole.candidates.map((item) => ({
+        item,
+        disposition: "merges" as const,
+      })),
+    },
+  };
 }
 
 function requireCombatant(

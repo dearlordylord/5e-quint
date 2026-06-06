@@ -24,8 +24,9 @@ module battleRuntimeDruidWildShape {
   type DruidWildShapeFormState = DruidWildShapeRuntimeState
   // This owner admits the battle-visible effective-loadout projection for armor
   // and Shield plus the explicit object/table outcome boundary for equipment
-  // that falls. Weapon and held-object function remains an object/form-limb
-  // follow-up.
+  // that falls. TypeScript stores the current-form limb witness for later
+  // object/Utilize consumers; concrete weapon and held-object function remains
+  // an object/table follow-up.
   type DruidWildShapeWearableEquipmentResolution =
     EquipmentMerged | EquipmentWorn | EquipmentFell
   type DruidWildShapeHeldEquipmentResolution =

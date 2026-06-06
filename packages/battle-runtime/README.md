@@ -576,6 +576,13 @@ total succeeds.
   drop; it remains a transient outcome boundary and does not mutate character
   loadout, create table placement state, or maintain a duplicate inventory
   model.
+- Wild Shape equipment-disposition fills also carry the current form's
+  limb/object-handling witness. The reducer stores that witness on the active
+  Wild Shape effect for later object/Utilize consumers; those consumers still
+  own their concrete object state and table facts. The hole is required even
+  when the selected loadout has no equipment candidates, with an empty
+  disposition list, because object-handling anatomy is not derivable from the
+  form's authored identity.
 - `interruptStack` - durable Reaction-window state. The top frame carries the
   trigger, eligible reactors, admitted reaction choices, and the interrupted
   continuation to resume after all reactors decline or the chosen Reaction

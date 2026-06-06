@@ -37,6 +37,14 @@ export type WildShapeLoadoutObjectRef =
       >["unitId"];
     };
 
+export const WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES = [
+  "canHandleObjects",
+  "cannotHandleObjects",
+] as const;
+export type WildShapeFormLimbObjectHandlingWitness = {
+  readonly kind: (typeof WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES)[number];
+};
+
 export const WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS = [
   "armor",
   "shield",
@@ -89,6 +97,7 @@ export type ResolvedWildShapeEquipmentDisposition =
     };
 
 export type WildShapeEquipmentDispositionFillValue = {
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly choices: readonly WildShapeEquipmentDispositionChoice[];
 };
 
@@ -133,12 +142,6 @@ export function wildShapeLoadoutObjectRefs(
           },
         ]),
   ];
-}
-
-export function wildShapeAllMergedEquipmentDisposition(
-  candidates: readonly WildShapeLoadoutObjectRef[],
-): readonly ActiveWildShapeEquipmentDisposition[] {
-  return candidates.map((item) => ({ item, disposition: "merges" }));
 }
 
 export type WildShapeEquipmentDispositionValidation =
@@ -271,7 +274,7 @@ function unsupportedWornEquipmentDisposition(): {
   return {
     tag: "invalid",
     message:
-      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require form-limb object support.",
+      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require concrete object/Utilize support.",
   };
 }
 

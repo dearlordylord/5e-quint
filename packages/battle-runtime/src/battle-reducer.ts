@@ -215,7 +215,6 @@ export type {
 export {
   WILD_SHAPE_EQUIPMENT_DISPOSITIONS,
   validateWildShapeEquipmentDispositionFill,
-  wildShapeAllMergedEquipmentDisposition,
   wildShapeLoadoutObjectRefs,
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {

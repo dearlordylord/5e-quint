@@ -31,6 +31,7 @@ const syntheticDruidWildShapeEffect: Extract<
   sourceCombatantId: combatantId("synthetic-shape-druid"),
   sourceUnitId: "synthetic_wild_shape_feature",
   formStatBlockId: "synthetic_beast_form",
+  formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
   resources: {
     legendaryActionUsesRemaining: resourceCount(0),
@@ -44,9 +45,7 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellShapeCasterId,
   sourceSpellId: "synthetic_shape_spell",
-  sourceEffectId: battleSpellEffectOccurrenceId(
-    "synthetic-shape-spell-effect",
-  ),
+  sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",
     creatureSize: "large",

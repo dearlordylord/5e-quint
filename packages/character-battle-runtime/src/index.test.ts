@@ -783,11 +783,7 @@ describe("Character Sheet battle handoff", () => {
     if (Either.isLeft(sheet)) return;
     const state = startDruidWildShapeSheetBattle(sheet.right);
     const assume = requireResolvedBattleSubject(
-      resolveBattleSubject({
-        state,
-        subject: druidWildShapeAct(state, "assumeForm"),
-        fills: [],
-      }),
+      resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(state),
     );
     const activeHandoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
@@ -3302,6 +3298,36 @@ function druidWildShapeAct(
     throw new Error(`Expected Druid Wild Shape ${action} act.`);
   }
   return subject;
+}
+
+function resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(
+  state: BattleState,
+) {
+  const subject = druidWildShapeAct(state, "assumeForm");
+  const needsDisposition = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape object handling hole.");
+  }
+  const hole = requireHole(needsDisposition, "wildShapeEquipmentDisposition");
+  expect(hole.candidates).toEqual([]);
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      {
+        kind: "wildShapeEquipmentDisposition",
+        holeId: hole.holeId,
+        value: {
+          formLimbs: { kind: "canHandleObjects" },
+          choices: [],
+        },
+      },
+    ],
+  });
 }
 
 function restoreBonusAction(state: BattleState): BattleState {

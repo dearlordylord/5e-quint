@@ -76,7 +76,7 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   });
 
   const assumed = requireResolved(
-    resolveDruidWildShape(initial, assumeRidingHorse),
+    resolveDruidWildShapeWithoutLoadoutEquipment(initial, assumeRidingHorse),
   );
   const activeDruid = requireCharacter(assumed.state, druidId);
   const activeForm = activeDruidWildShapeForm(activeDruid);
@@ -114,7 +114,9 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
     action: "assumeForm",
     formStatBlockId: catId,
   });
-  const reused = requireResolved(resolveDruidWildShape(nextTurn, assumeCat));
+  const reused = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(nextTurn, assumeCat),
+  );
   const reusedDruid = requireCharacter(reused.state, druidId);
   expect(activeDruidWildShapeForm(reusedDruid)?.id).toBe(catId);
   expect(
@@ -181,6 +183,7 @@ test("decodes Wild Shape worn equipment disposition fills only for armor and Shi
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
         value: {
+          formLimbs: { kind: "canHandleObjects" },
           choices: [
             {
               item: {
@@ -202,6 +205,7 @@ test("decodes Wild Shape worn equipment disposition fills only for armor and Shi
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
         value: {
+          formLimbs: { kind: "cannotHandleObjects" },
           choices: [
             {
               item: {
@@ -224,6 +228,7 @@ test("decodes Wild Shape worn equipment disposition fills only for armor and Shi
           kind: "wildShapeEquipmentDisposition",
           holeId: "wild-shape-equipment-hole",
           value: {
+            formLimbs: { kind: "canHandleObjects" },
             choices: [
               {
                 item: {
@@ -288,6 +293,7 @@ test("requires and validates Wild Shape equipment disposition fills for selected
   expect(effect?.equipmentDisposition).toEqual(
     dispositionHole.candidates.map((item) => ({ item, disposition: "merges" })),
   );
+  expect(effect?.formLimbs).toEqual({ kind: "canHandleObjects" });
   expect(druidWildShapeUsesRemaining(activeDruid)).toBe(1);
   expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
     11,
@@ -549,6 +555,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates,
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [{ item: armor, disposition: "merges" }],
       },
     }),
@@ -558,6 +565,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates,
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [
           { item: armor, disposition: "falls" },
           { item: armor, disposition: "merges" },
@@ -575,6 +583,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates,
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [
           { item: armor, disposition: "merges" },
           { item: unknown, disposition: "falls" },
@@ -587,6 +596,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates,
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [
           {
             item: armor,
@@ -619,6 +629,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates,
       value: {
+        formLimbs: { kind: "cannotHandleObjects" },
         choices: [
           {
             item: armor,
@@ -644,6 +655,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates: [shield],
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [
           {
             item: shield,
@@ -677,20 +689,21 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
     validateWildShapeEquipmentDispositionFill({
       candidates: [mainWeapon],
       value: {
+        formLimbs: { kind: "canHandleObjects" },
         choices: [practicalWornMainWeapon],
       },
     }),
   ).toEqual({
     tag: "invalid",
     message:
-      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require form-limb object support.",
+      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require concrete object/Utilize support.",
   });
 });
 
 test("uses Beast Strength for Shove while in Wild Shape", () => {
   const initial = druidWildShapeBattle();
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -747,7 +760,7 @@ test("projects Beast physical and retained character mental Ability Scores", () 
     },
   });
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -795,7 +808,7 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
     },
   });
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -842,7 +855,7 @@ test("projects retained and higher Beast Saving Throw modifiers while in Wild Sh
     },
   });
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -963,7 +976,7 @@ test("rejects known Beast forms with unsupported stat block action riders", () =
 test("projects automatic reversion when Wild Shape ends from Incapacitated", () => {
   const initial = druidWildShapeBattle();
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -994,7 +1007,7 @@ test("projects automatic reversion when Wild Shape ends from Incapacitated", () 
 test("shared shape-shift owner projects and reverts active Wild Shape", () => {
   const initial = druidWildShapeBattle();
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -1067,7 +1080,7 @@ test("rejects level 18 Wild Shape until Beast Spells is modeled", () => {
 test("rounds odd-level duration down through the general division rule", () => {
   const initial = druidWildShapeBattle({ druidLevel: 3 });
   const assumed = requireResolved(
-    resolveDruidWildShape(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
       wildShapeSubject(initial, {
         action: "assumeForm",
@@ -1183,6 +1196,21 @@ function resolveDruidWildShape(
   return resolveBattleSubject({ state, subject, fills });
 }
 
+function resolveDruidWildShapeWithoutLoadoutEquipment(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+) {
+  const needsDisposition = resolveDruidWildShape(state, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape object handling hole.");
+  }
+  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  expect(hole.candidates).toEqual([]);
+  return resolveDruidWildShape(state, subject, [
+    wildShapeDispositionFill(hole, []),
+  ]);
+}
+
 function wildShapeSelectedLoadout(): CharacterBattleCreatureState["origin"]["selectedLoadout"] {
   return {
     armor: {
@@ -1291,6 +1319,7 @@ function wildShapeDispositionFill(
     kind: "wildShapeEquipmentDisposition",
     holeId: hole.holeId,
     value: {
+      formLimbs: { kind: "canHandleObjects" },
       choices,
     },
   };

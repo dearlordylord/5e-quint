@@ -32,7 +32,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { StatBlockMutableResourceState } from "../battle-action-options.ts";
 import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
-import type { ActiveWildShapeEquipmentDisposition } from "../battle-reducer/wild-shape-equipment.ts";
+import type {
+  ActiveWildShapeEquipmentDisposition,
+  WildShapeFormLimbObjectHandlingWitness,
+} from "../battle-reducer/wild-shape-equipment.ts";
 // Transitional back-imports: these types belong to other domains (speed kinds,
 // d20 modifiers, Command, marked riders, dancing lights, condition repeat-save,
 // spell attack kind) and are still defined in battle-reducer.ts. They form a
@@ -309,6 +312,7 @@ export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "druidWildShapeForm";
       readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
       readonly resources: StatBlockMutableResourceState;
       readonly expiresAt: Extract<

@@ -391,6 +391,7 @@ function resolveDruidWildShape(
     kind: "wildShapeEquipmentDisposition",
     holeId: equipmentDispositionHole.holeId,
     value: {
+      formLimbs: { kind: "canHandleObjects" },
       choices: equipmentDispositionHole.candidates.map((item) => ({
         item,
         disposition: "merges" as const,

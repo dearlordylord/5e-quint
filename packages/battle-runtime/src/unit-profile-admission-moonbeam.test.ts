@@ -138,9 +138,8 @@ describe("L12G deterministic Moonbeam admission", () => {
     const area = requireHole(act.initialHoles, "spellAreaChoice");
 
     const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
-    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(
-      encodedHole,
-    );
+    const decodedHole =
+      Schema.decodeUnknownEither(BattleHoleSchema)(encodedHole);
     if (Either.isLeft(decodedHole)) {
       throw new Error(String(decodedHole.left));
     }
@@ -714,9 +713,7 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellCasterId,
   sourceSpellId: "synthetic_shape_spell",
-  sourceEffectId: battleSpellEffectOccurrenceId(
-    "synthetic-shape-spell-effect",
-  ),
+  sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
   replacementForm: {
     kind: "runtimeCreatureForm",
     creatureSize: "large",
@@ -731,6 +728,7 @@ const syntheticDruidWildShapeEffect: Extract<
   sourceCombatantId: spellTargetId,
   sourceUnitId: "synthetic_wild_shape_feature",
   formStatBlockId: "synthetic_beast_form",
+  formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
   resources: {
     legendaryActionUsesRemaining: resourceCount(0),
@@ -787,11 +785,37 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
   if (wildShape?.tag !== "druidWildShape") {
     throw new Error("Expected Druid Wild Shape assume-form act.");
   }
-  const assumed = resolveBattleSubject({
+  const initialAssume = resolveBattleSubject({
     state: initial,
     subject: wildShape,
     fills: [],
   });
+  const equipmentDispositionHole =
+    initialAssume.tag === "needsHoles"
+      ? initialAssume.holes.find(
+          (hole) => hole.kind === "wildShapeEquipmentDisposition",
+        )
+      : undefined;
+  const assumed =
+    equipmentDispositionHole === undefined
+      ? initialAssume
+      : resolveBattleSubject({
+          state: initial,
+          subject: wildShape,
+          fills: [
+            {
+              kind: "wildShapeEquipmentDisposition",
+              holeId: equipmentDispositionHole.holeId,
+              value: {
+                formLimbs: { kind: "canHandleObjects" },
+                choices: equipmentDispositionHole.candidates.map((item) => ({
+                  item,
+                  disposition: "merges" as const,
+                })),
+              },
+            },
+          ],
+        });
   if (assumed.tag !== "resolved") {
     throw new Error("Expected Druid Wild Shape assume-form to resolve.");
   }

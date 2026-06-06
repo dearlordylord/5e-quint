@@ -125,9 +125,8 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
-const wizardBattleFixtureMaximumHp = characterBuildMaximumHp(
-  wizardWarlockBuild(),
-);
+const wizardBattleFixtureMaximumHp =
+  characterBuildMaximumHp(wizardWarlockBuild());
 const settlementStateCheck = stateCheck(
   normalizeSettlementQuintState,
   compareSettlementState,
@@ -473,6 +472,7 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
           sourceUnitId: "druid_wild_shape",
           sourceCombatantId: combatant.combatantId,
           formStatBlockId: "stat_block_cat",
+          formLimbs: { kind: "cannotHandleObjects" },
           equipmentDisposition: [],
           resources: {
             legendaryActionUsesRemaining: resourceCount(0),
@@ -547,9 +547,7 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     },
   });
   if (Either.isRight(result)) {
-    throw new Error(
-      "Expected in-progress Stable recovery handoff rejection.",
-    );
+    throw new Error("Expected in-progress Stable recovery handoff rejection.");
   }
   return projectFromParts({
     lastResult: "stable-recovery-progress-rejected",
@@ -714,10 +712,7 @@ function zeroHpProjection(
   sheet: CharacterSheet,
 ): Pick<
   BattleSettlementProjection,
-  | "zeroHpState"
-  | "zeroHpSuccesses"
-  | "zeroHpFailures"
-  | "stableRecoveryElapsed"
+  "zeroHpState" | "zeroHpSuccesses" | "zeroHpFailures" | "stableRecoveryElapsed"
 > {
   if (sheet.hitPoints.tag !== "zero") {
     return {

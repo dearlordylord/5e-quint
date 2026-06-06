@@ -35,7 +35,10 @@ import type {
   WildShapeEquipmentDispositionChoice,
   WildShapeLoadoutObjectRef,
 } from "../battle-reducer.ts";
-import type { WildShapeWornLoadoutObjectRef } from "./wild-shape-equipment.ts";
+import {
+  WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
+  type WildShapeWornLoadoutObjectRef,
+} from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
@@ -298,6 +301,10 @@ const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmen
       ),
     }),
   ) as unknown as Schema.Schema<WildShapeEquipmentDispositionChoice>;
+
+const WildShapeFormLimbObjectHandlingWitnessSchema = Schema.Struct({
+  kind: Schema.Literal(...WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES),
+});
 
 const BattleDancingLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
@@ -2011,6 +2018,9 @@ type BattleFillEncoded =
       readonly kind: "wildShapeEquipmentDisposition";
       readonly holeId: string;
       readonly value: {
+        readonly formLimbs: {
+          readonly kind: "canHandleObjects" | "cannotHandleObjects";
+        };
         readonly choices: readonly WildShapeEquipmentDispositionChoice[];
       };
     }
@@ -2846,6 +2856,7 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("wildShapeEquipmentDisposition"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
+        formLimbs: WildShapeFormLimbObjectHandlingWitnessSchema,
         choices: Schema.Array(WildShapeEquipmentDispositionChoiceSchema),
       }),
     }),
