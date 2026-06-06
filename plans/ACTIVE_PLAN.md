@@ -1,17 +1,16 @@
 # Active Plan
 
-Status: closed for the default empty task index; the next QNT deepening lane is
-ready for explicit launch. The level-1 battle-runtime frontier queue completed
-at SRDINV91D (product readiness 367/367, deterministic admission 85/85, QNT
-proof 62/62, selected-identity MBT 17/85). Per-task history lives in git.
+Status: closed for the default empty task index. The level-1 battle-runtime
+frontier queue completed at SRDINV91D (product readiness 367/367,
+deterministic admission 85/85, QNT proof 62/62, selected-identity MBT 17/85).
+The L3 morning spell-boundary lane is also closed; its final consolidation is
+`plans/unit-profile-coverage/L3MSPELL_12_SPELL_BOUNDARY_CONSOLIDATION.md`.
+Per-task history lives in git.
 
 ## Active Ralph Queues
 
-The next runnable promoted Unit lane is:
-
-- `plans/RALPH_L3_PROMOTED_UNIT_TRACER_BULLETS.md` — level-3 promoted Unit
-  tracer bullets that convert already-admitted follow-up splits into battle
-  reducer, QNT/MBT, Unit evidence, and production-path coverage.
+No default runnable Ralph queue is active from this file. Launch future work
+with an explicit `--plan plans/<lane>.md`.
 
 The next optional QNT deepening lane is:
 
@@ -25,6 +24,8 @@ The current durable planning entrypoints are:
   generator readiness tasks from drained lanes.
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` — character levels 1–2 full-support
   closure backlog.
+- `plans/RALPH_L3_MORNING_SPELL_BOUNDARY_BATCH.md` — closed spell-boundary lane;
+  use its Task 12 consolidation note for remaining spell-level-3 pressure.
 
 `scripts/ralph-run.sh` still defaults to this file. Pointing it at one of the
 future lane plans is the Ralph entrypoint; this file is intentionally kept so
