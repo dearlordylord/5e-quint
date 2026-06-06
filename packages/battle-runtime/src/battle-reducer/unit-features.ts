@@ -133,9 +133,12 @@ import { scoreModifier } from "./domain-helpers.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
+  type ResolvedWildShapeEquipmentDisposition,
   validateWildShapeEquipmentDispositionFill,
-  wildShapeAllMergedEquipmentDisposition,
+  wildShapeActiveEquipmentDispositions,
+  wildShapeCanUseWornLoadoutObject,
   wildShapeLoadoutObjectRefs,
+  type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -148,6 +151,7 @@ import type {
   BardicInspirationFailedD20TestResolutionInput,
   BardicInspirationFailedD20TestResolutionResult,
   BattleCreatureState,
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleWildShapeEquipmentDispositionHole,
   BattleHitPointHealingPoolDistributionHole,
@@ -495,10 +499,17 @@ function sacredWeaponHeldMeleeWeapons(
 ): readonly SacredWeaponHeldMeleeWeapon[] {
   const weapons: SacredWeaponHeldMeleeWeapon[] = [];
   const main = actor.origin.selectedLoadout.weapon;
+  const activeWildShape = activeDruidWildShapeEffect(actor);
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
     actor.origin.attack.weapon.id === main.unitId &&
+    wildShapeCanUseLoadoutWeaponObject({
+      loadout: actor.origin.selectedLoadout,
+      activeWildShape,
+      objectKind: "mainWeapon",
+      unitId: main.unitId,
+    }) &&
     actor.origin.attack.weapon.usage === "melee"
   ) {
     weapons.push({
@@ -511,6 +522,12 @@ function sacredWeaponHeldMeleeWeapons(
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
     actor.origin.offHandAttack.weapon.id === offHand.unitId &&
+    wildShapeCanUseLoadoutWeaponObject({
+      loadout: actor.origin.selectedLoadout,
+      activeWildShape,
+      objectKind: "offHandWeapon",
+      unitId: offHand.unitId,
+    }) &&
     actor.origin.offHandAttack.weapon.usage === "melee"
   ) {
     weapons.push({
@@ -519,6 +536,25 @@ function sacredWeaponHeldMeleeWeapons(
     });
   }
   return weapons;
+}
+
+function wildShapeCanUseLoadoutWeaponObject(input: {
+  readonly loadout: CharacterBattleCreatureState["origin"]["selectedLoadout"];
+  readonly activeWildShape: ReturnType<typeof activeDruidWildShapeEffect>;
+  readonly objectKind: Extract<
+    WildShapeLoadoutObjectRef["kind"],
+    "mainWeapon" | "offHandWeapon"
+  >;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): boolean {
+  if (input.activeWildShape === null) return true;
+  return wildShapeCanUseWornLoadoutObject({
+    loadout: input.loadout,
+    formLimbs: input.activeWildShape.formLimbs,
+    equipmentDisposition: input.activeWildShape.equipmentDisposition,
+    objectKind: input.objectKind,
+    unitId: input.unitId,
+  });
 }
 
 function rogueSteadyAimActs(
@@ -593,15 +629,13 @@ function wildShapeInitialEquipmentDispositionHoles(
   form: BattleDruidWildShapeKnownForm,
 ): readonly BattleWildShapeEquipmentDispositionHole[] {
   const candidates = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
-  return candidates.length === 0
-    ? []
-    : [
-        wildShapeEquipmentDispositionHole({
-          actorId: actor.combatantId,
-          formStatBlockId: form.id,
-          candidates,
-        }),
-      ];
+  return [
+    wildShapeEquipmentDispositionHole({
+      actorId: actor.combatantId,
+      formStatBlockId: form.id,
+      candidates,
+    }),
+  ];
 }
 
 function wildShapeEquipmentDispositionHole(input: {
@@ -614,7 +648,7 @@ function wildShapeEquipmentDispositionHole(input: {
     holeInstanceKey: holeInstanceKey(protocolId),
     holeId: holeId(protocolId),
     kind: "wildShapeEquipmentDisposition",
-    label: "Druid Wild Shape equipment disposition",
+    label: "Druid Wild Shape object handling and equipment disposition",
     actorId: input.actorId,
     formStatBlockId: input.formStatBlockId,
     candidates: input.candidates,
@@ -1362,19 +1396,6 @@ export function resolveDruidWildShapeUnitFeature(
     candidates: equipmentCandidates,
   });
   const equipmentDisposition = (() => {
-    if (equipmentCandidates.length === 0) {
-      return input.fills.length === 0
-        ? {
-            tag: "valid" as const,
-            dispositions:
-              wildShapeAllMergedEquipmentDisposition(equipmentCandidates),
-          }
-        : {
-            tag: "invalid" as const,
-            message:
-              "Druid Wild Shape equipment disposition is not required without selected loadout equipment.",
-          };
-    }
     if (input.fills.length === 0) {
       return {
         tag: "needsHoles" as const,
@@ -1405,6 +1426,7 @@ export function resolveDruidWildShapeUnitFeature(
     return validation.tag === "valid"
       ? {
           tag: "valid" as const,
+          formLimbs: fill.value.formLimbs,
           dispositions: validation.dispositions,
         }
       : validation;
@@ -1460,7 +1482,10 @@ export function resolveDruidWildShapeUnitFeature(
     actor: nextActor,
     unitId: subject.unitId,
     form,
-    equipmentDisposition: equipmentDisposition.dispositions,
+    formLimbs: equipmentDisposition.formLimbs,
+    equipmentDisposition: wildShapeActiveEquipmentDispositions(
+      equipmentDisposition.dispositions,
+    ),
     formResources: statBlockResourceState(form.statBlock),
     profile: unitFeature,
   });
@@ -1468,7 +1493,48 @@ export function resolveDruidWildShapeUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+    ...wildShapeDroppedObjectsResultField({
+      actorId: actor.combatantId,
+      sourceUnitId: subject.unitId,
+      formStatBlockId: form.id,
+      dispositions: equipmentDisposition.dispositions,
+    }),
   };
+}
+
+function wildShapeDroppedObjectsResultField(input: {
+  readonly actorId: BattleDroppedObjectOutcome["actorId"];
+  readonly sourceUnitId: Extract<
+    BattleDroppedObjectOutcome["source"],
+    { readonly kind: "druidWildShape" }
+  >["sourceUnitId"];
+  readonly formStatBlockId: Extract<
+    BattleDroppedObjectOutcome["source"],
+    { readonly kind: "druidWildShape" }
+  >["formStatBlockId"];
+  readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
+}): Pick<
+  Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+  "droppedObjects"
+> {
+  const droppedObjects = input.dispositions.flatMap(
+    (disposition): readonly BattleDroppedObjectOutcome[] =>
+      disposition.disposition === "falls"
+        ? [
+            {
+              kind: "objectDropped",
+              actorId: input.actorId,
+              objectId: disposition.item.objectId,
+              source: {
+                kind: "druidWildShape",
+                sourceUnitId: input.sourceUnitId,
+                formStatBlockId: input.formStatBlockId,
+              },
+            },
+          ]
+        : [],
+  );
+  return droppedObjects.length === 0 ? {} : { droppedObjects };
 }
 
 export function resolveBardicInspirationGrantUnitFeature(

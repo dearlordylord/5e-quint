@@ -36,9 +36,11 @@ import {
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import { spellId, type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import type {
   OkSpellFillSet,
   SpellAdmissionActor,
@@ -167,8 +169,18 @@ function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
   readonly attack: CharacterWeaponAttackActionOption;
 }[] {
   const origin = actor.origin;
+  const activeWildShape = activeDruidWildShapeEffect(actor);
   return [
-    ...(origin.attack === null || origin.selectedLoadout.weapon === undefined
+    ...(origin.attack === null ||
+    origin.selectedLoadout.weapon === undefined ||
+    (activeWildShape !== null &&
+      !wildShapeCanUseWornLoadoutObject({
+        loadout: origin.selectedLoadout,
+        formLimbs: activeWildShape.formLimbs,
+        equipmentDisposition: activeWildShape.equipmentDisposition,
+        objectKind: "mainWeapon",
+        unitId: origin.selectedLoadout.weapon.unitId,
+      }))
       ? []
       : [
           {
@@ -178,7 +190,15 @@ function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
           },
         ]),
     ...(origin.offHandAttack === undefined ||
-    origin.selectedLoadout.offHandWeapon === undefined
+    origin.selectedLoadout.offHandWeapon === undefined ||
+    (activeWildShape !== null &&
+      !wildShapeCanUseWornLoadoutObject({
+        loadout: origin.selectedLoadout,
+        formLimbs: activeWildShape.formLimbs,
+        equipmentDisposition: activeWildShape.equipmentDisposition,
+        objectKind: "offHandWeapon",
+        unitId: origin.selectedLoadout.offHandWeapon.unitId,
+      }))
       ? []
       : [
           {

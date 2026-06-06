@@ -977,11 +977,14 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       tag: "resolved",
       droppedObjects: [
         {
-          kind: "heldObjectDropped",
+          kind: "objectDropped",
           actorId: spellTargetId,
           objectId,
-          sourceCombatantId: spellCasterId,
-          sourceSpellId: heatMetalUnitId,
+          source: {
+            kind: "spell",
+            sourceCombatantId: spellCasterId,
+            sourceSpellId: heatMetalUnitId,
+          },
         },
       ],
     });

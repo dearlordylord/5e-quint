@@ -36,6 +36,10 @@ import type {
   WildShapeLoadoutObjectRef,
 } from "../battle-reducer.ts";
 import {
+  WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
+  type WildShapeWornLoadoutObjectRef,
+} from "./wild-shape-equipment.ts";
+import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
   BattleSubjectTextSchema,
@@ -235,44 +239,57 @@ const BattleHoleBaseSchema = {
   label: Schema.optionalWith(Schema.String, { exact: true }),
 } as const;
 
-const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> =
-  // Effect Schema infers branded ids as their encoded string representation;
-  // this local schema brands objectId before runtime use and leaves unitId as
-  // the UnitRecord id string used by loadout references.
+// Effect Schema infers branded ids as their encoded string representation;
+// these local schemas brand objectId before runtime use and leave unitId as
+// the UnitRecord id string used by loadout references.
+const WildShapeArmorLoadoutObjectRefSchema = Schema.Struct({
+  kind: Schema.Literal("armor"),
+  objectId: BattleObjectId,
+  unitId: Schema.String,
+});
+const WildShapeShieldLoadoutObjectRefSchema = Schema.Struct({
+  kind: Schema.Literal("shield"),
+  objectId: BattleObjectId,
+  unitId: Schema.String,
+});
+const WildShapeMainWeaponLoadoutObjectRefSchema = Schema.Struct({
+  kind: Schema.Literal("mainWeapon"),
+  objectId: BattleObjectId,
+  unitId: Schema.String,
+});
+const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
+  kind: Schema.Literal("offHandWeapon"),
+  objectId: BattleObjectId,
+  unitId: Schema.String,
+});
+
+const WildShapeWornLoadoutObjectRefSchema: Schema.Schema<WildShapeWornLoadoutObjectRef> =
   Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("armor"),
-      objectId: BattleObjectId,
-      unitId: Schema.String,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("shield"),
-      objectId: BattleObjectId,
-      unitId: Schema.String,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("mainWeapon"),
-      objectId: BattleObjectId,
-      unitId: Schema.String,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("offHandWeapon"),
-      objectId: BattleObjectId,
-      unitId: Schema.String,
-    }),
+    WildShapeArmorLoadoutObjectRefSchema,
+    WildShapeShieldLoadoutObjectRefSchema,
+    WildShapeMainWeaponLoadoutObjectRefSchema,
+    WildShapeOffHandWeaponLoadoutObjectRefSchema,
+  ) as unknown as Schema.Schema<WildShapeWornLoadoutObjectRef>;
+
+const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> =
+  Schema.Union(
+    WildShapeArmorLoadoutObjectRefSchema,
+    WildShapeShieldLoadoutObjectRefSchema,
+    WildShapeMainWeaponLoadoutObjectRefSchema,
+    WildShapeOffHandWeaponLoadoutObjectRefSchema,
   ) as unknown as Schema.Schema<WildShapeLoadoutObjectRef>;
 
 const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmentDispositionChoice> =
-  // The union schema below exactly mirrors the discriminated choice type; the
-  // cast is only needed because Effect Schema cannot infer the nested branded
-  // WildShapeLoadoutObjectRefSchema through this union precisely.
+  // The union schema below mirrors the discriminated choice type. The cast is
+  // only needed because Effect Schema cannot infer the nested branded refs
+  // through this union precisely.
   Schema.Union(
     Schema.Struct({
       item: WildShapeLoadoutObjectRefSchema,
       disposition: Schema.Literal("falls", "merges"),
     }),
     Schema.Struct({
-      item: WildShapeLoadoutObjectRefSchema,
+      item: WildShapeWornLoadoutObjectRefSchema,
       disposition: Schema.Literal("worn"),
       practicality: Schema.Union(
         Schema.Struct({
@@ -285,6 +302,10 @@ const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmen
       ),
     }),
   ) as unknown as Schema.Schema<WildShapeEquipmentDispositionChoice>;
+
+const WildShapeFormLimbObjectHandlingWitnessSchema = Schema.Struct({
+  kind: Schema.Literal(...WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES),
+});
 
 const BattleDancingLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
@@ -827,11 +848,21 @@ export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
 // Effect Schema encodes branded ids as plain strings at the JSON boundary; the
 // decoder restores the domain brands before the value reaches runtime code.
 export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
-  kind: Schema.Literal("heldObjectDropped"),
+  kind: Schema.Literal("objectDropped"),
   actorId: CombatantId,
   objectId: BattleObjectId,
-  sourceCombatantId: CombatantId,
-  sourceSpellId: SpellId,
+  source: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("spell"),
+      sourceCombatantId: CombatantId,
+      sourceSpellId: SpellId,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("druidWildShape"),
+      sourceUnitId: Schema.String,
+      formStatBlockId: Schema.String,
+    }),
+  ),
 }) as unknown as Schema.Schema<BattleDroppedObjectOutcome>;
 
 // Effect Schema encodes branded ids as plain strings at the JSON boundary; the
@@ -1991,6 +2022,9 @@ type BattleFillEncoded =
       readonly kind: "wildShapeEquipmentDisposition";
       readonly holeId: string;
       readonly value: {
+        readonly formLimbs: {
+          readonly kind: "canHandleObjects" | "cannotHandleObjects";
+        };
         readonly choices: readonly WildShapeEquipmentDispositionChoice[];
       };
     }
@@ -2826,6 +2860,7 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("wildShapeEquipmentDisposition"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
+        formLimbs: WildShapeFormLimbObjectHandlingWitnessSchema,
         choices: Schema.Array(WildShapeEquipmentDispositionChoiceSchema),
       }),
     }),

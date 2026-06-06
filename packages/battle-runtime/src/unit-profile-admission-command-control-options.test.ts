@@ -471,11 +471,14 @@ describe("QMBT14 deterministic Command control option admission", () => {
       tag: "resolved",
       droppedObjects: [
         {
-          kind: "heldObjectDropped",
+          kind: "objectDropped",
           actorId: spellTargetId,
           objectId: battleObjectId("main:weapon_longsword"),
-          sourceCombatantId: spellCasterId,
-          sourceSpellId: spellId(commandUnitId),
+          source: {
+            kind: "spell",
+            sourceCombatantId: spellCasterId,
+            sourceSpellId: spellId(commandUnitId),
+          },
         },
       ],
       snapshot: { currentActorId: spellCasterId },

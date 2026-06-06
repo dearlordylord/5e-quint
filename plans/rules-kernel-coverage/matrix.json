@@ -4958,12 +4958,10 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "wildShapeEquipmentDisposition",
       "id": "BattleWildShapeEquipmentDispositionHole",
-      "reason": "Wild Shape equipment disposition holes expose the selected-loadout equipment candidates and bind the fill protocol to the actor plus Beast form. Task 2 reducer ownership is limited to fill completeness, duplicate/unknown item rejection, and completed active-effect merge disposition storage for the all-merged no-effect path. Falls, practical worn effective-loadout projection, worn fallback-to-falls, durable fallen-object consumers, and form-limb object handling remain mapped to Ralph follow-ups L3MWILD-03, L3MWILD-04, and L3MWILD-06.",
+      "reason": "Wild Shape equipment disposition holes expose the possibly empty selected-loadout equipment candidates and bind the fill protocol to the actor plus Beast form. Current reducer, QNT, and parity evidence cover fill completeness, duplicate/unknown item rejection, all-merged no-effect active-effect storage, practical worn armor/Shield effective-loadout projection, practical worn selected-loadout weapon and held-weapon consumers gated by the active form-limb witness, fallen-equipment droppedObjects at the shared object/table boundary, not-practical-to-wear fallback to fall or merge, and storage of the caller/GM form-limb object-handling witness on the active Wild Shape effect. Remaining generic non-weapon object/Utilize consumers, downstream dropped-object table placement/use, and durable non-resizing/non-reshaping loose-object lifecycle are closed to a future generic object/Utilize/table-placement owner rather than a Wild Shape-specific rules-kernel follow-up.",
       "subject": "battle-hole-family"
     },
     {
@@ -4973,11 +4971,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "wildShapeEquipmentDisposition",
-      "followUpTaskIds": [
-        "RKBC-WILD-SHAPE-EQUIPMENT-FOLLOWUP"
-      ],
+      "followUpTaskIds": [],
       "id": "wildShapeEquipmentDisposition",
-      "reason": "Wild Shape equipment disposition fills carry selected-loadout disposition choices at an actor plus Beast-form-specific hole boundary. The reducer validates exact selected-loadout coverage, rejects practical worn choices until effective-loadout projection exists, rejects fallen choices until the fallen-object boundary exists, converts only not-practical worn choices with merge fallback to active merge dispositions, and stores completed merge dispositions on the active Wild Shape effect; remaining work maps to Ralph follow-ups L3MWILD-03, L3MWILD-04, and L3MWILD-06.",
+      "reason": "Wild Shape equipment disposition fills carry possibly empty selected-loadout disposition choices plus the current-form limb object-handling witness at an actor plus Beast-form-specific hole boundary. The reducer validates exact selected-loadout coverage, stores the limb witness on the active Wild Shape effect, stores merge choices as no-effect active Wild Shape equipment dispositions, stores practical worn armor/Shield and selected-loadout weapons as effective-loadout dispositions, emits droppedObjects for falls choices, and converts not-practical worn choices to the selected fall-or-merge fallback. Generic object/Utilize consumers must use the stored limb witness through a future generic object owner rather than derive form anatomy from authored identity or add Wild Shape-local object state.",
       "subject": "battle-fill-kind"
     }
   ],

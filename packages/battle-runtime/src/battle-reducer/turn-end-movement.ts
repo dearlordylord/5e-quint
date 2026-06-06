@@ -1348,11 +1348,14 @@ export function resolveCommandDropCommand(
   });
   const droppedObjects: readonly BattleDroppedObjectOutcome[] = objectIds.map(
     (objectId) => ({
-      kind: "heldObjectDropped",
+      kind: "objectDropped",
       actorId: input.subject.actorId,
       objectId,
-      sourceCombatantId: input.subject.sourceCombatantId,
-      sourceSpellId: input.subject.sourceSpellId,
+      source: {
+        kind: "spell",
+        sourceCombatantId: input.subject.sourceCombatantId,
+        sourceSpellId: input.subject.sourceSpellId,
+      },
     }),
   );
   if (endTurnResult.tag === "needsHoles") {

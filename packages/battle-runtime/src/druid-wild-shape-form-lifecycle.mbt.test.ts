@@ -1,11 +1,14 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.druid-wild-shape-known-form
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape
+// UNIT-IDENTITY-MBT-REPLAY: L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape doAssumeRidingHorse doReuseAsCat doDismissForm doIncapacitatedReversion doDeathReversion
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape:
 //   Bonus Action known Beast form assumption, use spending, Temporary Hit
 //   Points equal to Druid level, Beast stat-block projection, no spellcasting,
 //   reuse replacement, Bonus Action dismissal, and ending on Incapacitated or
-//   death.
+//   death. The Objects bullet says merged equipment has no effect while in that
+//   form.
 // - .references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting:
 //   shape-shifting effects specify their own form rules and revert on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
@@ -20,6 +23,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
   combatantD20AbilityModifier,
   combatantD20ProficiencyBonus,
@@ -28,6 +32,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   type BattleCreatureState,
+  type BattleFill,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -37,6 +42,7 @@ import {
   battleId,
   characterSeed,
   combatantId,
+  heavyArmorClassState,
   requireResolved,
   spellRecord,
   startBattleRight,
@@ -45,6 +51,7 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
 type ActiveForm = (typeof ACTIVE_FORMS)[number];
@@ -74,6 +81,7 @@ type DruidWildShapeFormLifecycleProjection = {
   readonly shoveDc: number;
   readonly spellAvailable: boolean;
   readonly activeFormEffectCount: number;
+  readonly mergedEquipmentCount: number;
   readonly druidAlive: boolean;
   readonly lastResult: LastResult;
 };
@@ -88,6 +96,7 @@ const ratId = "stat_block_rat";
 const ridingHorseId = "stat_block_riding_horse";
 const lizardId = "stat_block_lizard";
 const catId = "stat_block_cat";
+const selectedIdentityTaskId = "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT";
 
 const driverSchema = {
   init: {},
@@ -153,6 +162,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       shoveDc: 13,
       spellAvailable: false,
       activeFormEffectCount: 1,
+      mergedEquipmentCount: 2,
       druidAlive: true,
       lastResult: "assumedRidingHorse",
     });
@@ -174,6 +184,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       shoveDc: 6,
       spellAvailable: false,
       activeFormEffectCount: 1,
+      mergedEquipmentCount: 2,
       lastResult: "reusedCat",
     });
   });
@@ -191,6 +202,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       tempHp: 2,
       spellAvailable: true,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: true,
       lastResult: "dismissed",
     });
@@ -198,6 +210,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       activeForm: "trueForm",
       spellAvailable: false,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: true,
       lastResult: "incapacitated",
     });
@@ -205,6 +218,7 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
       activeForm: "trueForm",
       spellAvailable: false,
       activeFormEffectCount: 0,
+      mergedEquipmentCount: 0,
       druidAlive: false,
       lastResult: "dead",
     });
@@ -227,6 +241,169 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
   }, 120_000);
 });
 
+defineSelectedIdentityWitness({
+  describeLabel: "Druid Wild Shape selected identity MBT",
+  taskId: selectedIdentityTaskId,
+  specFile: path.resolve(
+    import.meta.dirname,
+    "../battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+  ),
+  projectionSchema: {
+    activeForm: "str",
+    bonusActionAvailable: "bool",
+    usesRemaining: "int",
+    tempHp: "int",
+    armorClass: "int",
+    creatureSize: "str",
+    speedFeet: "int",
+    shoveDc: "int",
+    spellAvailable: "bool",
+    activeFormEffectCount: "int",
+    mergedEquipmentCount: "int",
+    druidAlive: "bool",
+    lastResult: "str",
+  },
+  normalizeQuintState: normalizeDruidWildShapeFormQuintState,
+  initialProjection: expectedDruidWildShapeFormProjection(),
+  units: [
+    {
+      unitId: "druid_wild_shape",
+      procedures: [
+        {
+          actionName: "doAssumeRidingHorse",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            activeForm: "ridingHorse",
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            armorClass: 11,
+            creatureSize: "large",
+            speedFeet: 60,
+            shoveDc: 13,
+            spellAvailable: false,
+            activeFormEffectCount: 1,
+            mergedEquipmentCount: 2,
+            lastResult: "assumedRidingHorse",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              assumeRidingHorse(initialRuntimeState()),
+            ),
+        },
+        {
+          actionName: "doReuseAsCat",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            activeForm: "cat",
+            bonusActionAvailable: false,
+            usesRemaining: 0,
+            tempHp: 2,
+            armorClass: 12,
+            creatureSize: "tiny",
+            speedFeet: 40,
+            shoveDc: 6,
+            spellAvailable: false,
+            activeFormEffectCount: 1,
+            mergedEquipmentCount: 2,
+            lastResult: "reusedCat",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              reuseAsCat(
+                beginNextTurn(assumeRidingHorse(initialRuntimeState())),
+              ),
+            ),
+        },
+        {
+          actionName: "doBeginNextTurn",
+          projectionAfter: expectedDruidWildShapeFormProjection(),
+          project: (projection) =>
+            projection.bonusActionAvailable
+              ? projection
+              : {
+                  ...projection,
+                  bonusActionAvailable: true,
+                  lastResult: "nextTurn",
+                },
+          discover: () => undefined,
+        },
+        {
+          actionName: "doDismissForm",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            lastResult: "dismissed",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              dismissForm(
+                beginNextTurn(assumeRidingHorse(initialRuntimeState())),
+              ),
+            ),
+        },
+        {
+          actionName: "doIncapacitatedReversion",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            spellAvailable: false,
+            lastResult: "incapacitated",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              applyIncapacitatedReversion(
+                assumeRidingHorse(initialRuntimeState()),
+              ),
+            ),
+        },
+        {
+          actionName: "doDeathReversion",
+          projectionAfter: expectedDruidWildShapeFormProjection({
+            bonusActionAvailable: false,
+            usesRemaining: 1,
+            tempHp: 2,
+            spellAvailable: false,
+            druidAlive: false,
+            lastResult: "dead",
+          }),
+          discover: () =>
+            druidWildShapeFormProjection(
+              applyDeathReversion(assumeRidingHorse(initialRuntimeState())),
+            ),
+        },
+        {
+          actionName: "doStutter",
+          projectionAfter: expectedDruidWildShapeFormProjection(),
+          preservesProjection: true,
+          discover: () => undefined,
+        },
+      ],
+    },
+  ],
+});
+
+function expectedDruidWildShapeFormProjection(
+  overrides: Partial<DruidWildShapeFormLifecycleProjection> = {},
+): DruidWildShapeFormLifecycleProjection {
+  return {
+    activeForm: "trueForm",
+    bonusActionAvailable: true,
+    usesRemaining: 2,
+    tempHp: 0,
+    armorClass: 16,
+    creatureSize: "medium",
+    speedFeet: 30,
+    shoveDc: 13,
+    spellAvailable: true,
+    activeFormEffectCount: 0,
+    mergedEquipmentCount: 0,
+    druidAlive: true,
+    lastResult: "init",
+    ...overrides,
+  };
+}
+
 function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
   return {
     battle: startBattleRight({
@@ -239,7 +416,18 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeKnownForms: druidWildShapeKnownForms(),
-          selectedLoadout: {},
+          armorClass: heavyArmorClassState(),
+          selectedLoadout: {
+            armor: {
+              itemId: "armor:armor_chain_mail",
+              unitId: "armor_chain_mail",
+            },
+            weapon: {
+              itemId: "main:weapon_quarterstaff",
+              unitId: "weapon_quarterstaff",
+              grip: "one_handed",
+            },
+          },
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [spellRecord("produce_flame")],
@@ -360,7 +548,24 @@ function resolveDruidWildShape(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
 ): BattleResolutionResult {
-  return resolveBattleSubject({ state, subject, fills: [] });
+  const initial = resolveBattleSubject({ state, subject, fills: [] });
+  if (initial.tag !== "needsHoles") return initial;
+  const equipmentDispositionHole = initial.holes.find(
+    (hole) => hole.kind === "wildShapeEquipmentDisposition",
+  );
+  if (equipmentDispositionHole === undefined) return initial;
+  const allMergedFill: BattleFill = {
+    kind: "wildShapeEquipmentDisposition",
+    holeId: equipmentDispositionHole.holeId,
+    value: {
+      formLimbs: { kind: "canHandleObjects" },
+      choices: equipmentDispositionHole.candidates.map((item) => ({
+        item,
+        disposition: "merges" as const,
+      })),
+    },
+  };
+  return resolveBattleSubject({ state, subject, fills: [allMergedFill] });
 }
 
 function druidWildShapeFormProjection(
@@ -369,16 +574,23 @@ function druidWildShapeFormProjection(
   const druid = requireCharacter(state.battle, druidId);
   const snapshot = snapshotCreature(snapshotBattle(state.battle), druidId);
   const form = activeDruidWildShapeForm(druid);
+  const mergedEquipmentCount =
+    activeDruidWildShapeEffect(druid)?.equipmentDisposition.filter(
+      (disposition) => disposition.disposition === "merges",
+    ).length ?? 0;
   const activeFormEffectCount = combatantHasActiveDruidWildShape(druid)
-    ? druid.activeEffects.filter((effect) => effect.kind === "druidWildShapeForm")
-        .length
+    ? druid.activeEffects.filter(
+        (effect) => effect.kind === "druidWildShapeForm",
+      ).length
     : 0;
   const spellAvailable = discoverBattleActs(state.battle).some(
     (act) => act.subject.tag === "actionSpell",
   );
   const projection = {
     activeForm: activeFormFromStatBlock(form),
-    bonusActionAvailable: canSpendBonusAction(state.battle.currentTurnResources),
+    bonusActionAvailable: canSpendBonusAction(
+      state.battle.currentTurnResources,
+    ),
     usesRemaining: druidWildShapeUsesRemaining(druid),
     tempHp: Number(druid.tempHp),
     armorClass: Number(snapshot.armorClass),
@@ -390,6 +602,7 @@ function druidWildShapeFormProjection(
       Number(combatantD20ProficiencyBonus(druid)),
     spellAvailable,
     activeFormEffectCount,
+    mergedEquipmentCount,
     druidAlive: druidIsAlive(druid),
     lastResult: state.lastResult,
   } satisfies DruidWildShapeFormLifecycleProjection;
@@ -508,6 +721,10 @@ function normalizeDruidWildShapeFormQuintState(
     activeFormEffectCount: numberFromQuintInt(
       state["qActiveFormEffectCount"],
       "qActiveFormEffectCount",
+    ),
+    mergedEquipmentCount: numberFromQuintInt(
+      state["qMergedEquipmentCount"],
+      "qMergedEquipmentCount",
     ),
     druidAlive: druidStatusIsAlive(
       literalField(state["qDruidStatus"], DRUID_STATUSES),

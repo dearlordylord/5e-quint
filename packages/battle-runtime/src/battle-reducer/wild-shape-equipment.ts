@@ -37,6 +37,34 @@ export type WildShapeLoadoutObjectRef =
       >["unitId"];
     };
 
+export const WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES = [
+  "canHandleObjects",
+  "cannotHandleObjects",
+] as const;
+export type WildShapeFormLimbObjectHandlingWitness = {
+  readonly kind: (typeof WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES)[number];
+};
+
+export const WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS = [
+  "armor",
+  "shield",
+  "mainWeapon",
+  "offHandWeapon",
+] as const satisfies ReadonlyArray<WildShapeLoadoutObjectRef["kind"]>;
+export type WildShapeEffectiveLoadoutWornKind =
+  (typeof WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS)[number];
+export type WildShapeWornLoadoutObjectRef = Extract<
+  WildShapeLoadoutObjectRef,
+  { readonly kind: WildShapeEffectiveLoadoutWornKind }
+>;
+
+export const WILD_SHAPE_ARMOR_CLASS_WORN_KINDS = [
+  "armor",
+  "shield",
+] as const satisfies ReadonlyArray<WildShapeEffectiveLoadoutWornKind>;
+export type WildShapeArmorClassWornKind =
+  (typeof WILD_SHAPE_ARMOR_CLASS_WORN_KINDS)[number];
+
 export type WildShapeWearPracticalityWitness =
   | { readonly kind: "practicalToWear" }
   | {
@@ -56,17 +84,29 @@ export type WildShapeEquipmentDispositionChoice =
       >;
     }
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeWornLoadoutObjectRef;
       readonly disposition: "worn";
       readonly practicality: WildShapeWearPracticalityWitness;
     };
 
-export type ActiveWildShapeEquipmentDisposition = {
-  readonly item: WildShapeLoadoutObjectRef;
-  readonly disposition: "merges";
-};
+export type ActiveWildShapeEquipmentDisposition =
+  | {
+      readonly item: WildShapeLoadoutObjectRef;
+      readonly disposition: "merges";
+    }
+  | {
+      readonly item: WildShapeWornLoadoutObjectRef;
+      readonly disposition: "worn";
+    };
+export type ResolvedWildShapeEquipmentDisposition =
+  | ActiveWildShapeEquipmentDisposition
+  | {
+      readonly item: WildShapeLoadoutObjectRef;
+      readonly disposition: "falls";
+    };
 
 export type WildShapeEquipmentDispositionFillValue = {
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly choices: readonly WildShapeEquipmentDispositionChoice[];
 };
 
@@ -113,16 +153,10 @@ export function wildShapeLoadoutObjectRefs(
   ];
 }
 
-export function wildShapeAllMergedEquipmentDisposition(
-  candidates: readonly WildShapeLoadoutObjectRef[],
-): readonly ActiveWildShapeEquipmentDisposition[] {
-  return candidates.map((item) => ({ item, disposition: "merges" }));
-}
-
 export type WildShapeEquipmentDispositionValidation =
   | {
       readonly tag: "valid";
-      readonly dispositions: readonly ActiveWildShapeEquipmentDisposition[];
+      readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -163,7 +197,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
     };
   }
 
-  const dispositions: ActiveWildShapeEquipmentDisposition[] = [];
+  const dispositions: ResolvedWildShapeEquipmentDisposition[] = [];
   for (const candidate of input.candidates) {
     const choice = choicesByKey.get(wildShapeLoadoutObjectKey(candidate));
     if (choice === undefined) {
@@ -173,7 +207,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
           "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
       };
     }
-    const disposition = activeDispositionForChoice(choice);
+    const disposition = resolvedDispositionForChoice(choice);
     if (disposition.tag === "invalid") {
       return disposition;
     }
@@ -186,18 +220,24 @@ export function validateWildShapeEquipmentDispositionFill(input: {
   };
 }
 
-function activeDispositionForChoice(
+function resolvedDispositionForChoice(
   choice: WildShapeEquipmentDispositionChoice,
 ):
   | {
       readonly tag: "valid";
-      readonly value: ActiveWildShapeEquipmentDisposition;
+      readonly value: ResolvedWildShapeEquipmentDisposition;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
       if (choice.practicality.fallback === "falls") {
-        return unsupportedFallenEquipmentDisposition();
+        return {
+          tag: "valid",
+          value: {
+            item: choice.item,
+            disposition: "falls",
+          },
+        };
       }
       return {
         tag: "valid",
@@ -207,14 +247,25 @@ function activeDispositionForChoice(
         },
       };
     }
+    if (!wildShapeLoadoutObjectSupportsEffectiveWornProjection(choice.item)) {
+      return unsupportedWornEquipmentDisposition();
+    }
     return {
-      tag: "invalid",
-      message:
-        "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+      tag: "valid",
+      value: {
+        item: choice.item,
+        disposition: "worn",
+      },
     };
   }
   if (choice.disposition === "falls") {
-    return unsupportedFallenEquipmentDisposition();
+    return {
+      tag: "valid",
+      value: {
+        item: choice.item,
+        disposition: "falls",
+      },
+    };
   }
   return {
     tag: "valid",
@@ -225,16 +276,91 @@ function activeDispositionForChoice(
   };
 }
 
-function unsupportedFallenEquipmentDisposition(): {
+function unsupportedWornEquipmentDisposition(): {
   readonly tag: "invalid";
   readonly message: string;
 } {
   return {
     tag: "invalid",
     message:
-      "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
+      "Druid Wild Shape practical worn equipment support requires a selected loadout object with promoted worn-object behavior.",
   };
 }
+
+export function wildShapeActiveEquipmentDispositions(
+  dispositions: readonly ResolvedWildShapeEquipmentDisposition[],
+): readonly ActiveWildShapeEquipmentDisposition[] {
+  return dispositions.flatMap(
+    (disposition): readonly ActiveWildShapeEquipmentDisposition[] =>
+      disposition.disposition === "falls" ? [] : [disposition],
+  );
+}
+
+export function wildShapeEquipmentDispositionWearsKind(
+  dispositions: readonly ActiveWildShapeEquipmentDisposition[],
+  kind: WildShapeEffectiveLoadoutWornKind,
+): boolean {
+  return dispositions.some(
+    (disposition) =>
+      disposition.disposition === "worn" && disposition.item.kind === kind,
+  );
+}
+
+export function wildShapeEquipmentDispositionWearsObject(
+  dispositions: readonly ActiveWildShapeEquipmentDisposition[],
+  item: WildShapeLoadoutObjectRef,
+): boolean {
+  return dispositions.some(
+    (disposition) =>
+      disposition.disposition === "worn" &&
+      sameLoadoutObject(disposition.item, item),
+  );
+}
+
+export function wildShapeCanUseWornLoadoutObject(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+  readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  readonly objectKind: WildShapeEffectiveLoadoutWornKind;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): boolean {
+  return wildShapeWornLoadoutObjectForUse(input) !== undefined;
+}
+
+export function wildShapeWornLoadoutObjectForUse(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+  readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  readonly objectKind: WildShapeEffectiveLoadoutWornKind;
+  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+}): WildShapeWornLoadoutObjectRef | undefined {
+  if (!wildShapeFormLimbsCanHandleObjects(input.formLimbs)) {
+    return undefined;
+  }
+  const item = wildShapeLoadoutObjectRefs(input.loadout).find(
+    (candidate): candidate is WildShapeWornLoadoutObjectRef =>
+      candidate.kind === input.objectKind && candidate.unitId === input.unitId,
+  );
+  return item !== undefined &&
+    wildShapeEquipmentDispositionWearsObject(input.equipmentDisposition, item)
+    ? item
+    : undefined;
+}
+
+export function wildShapeFormLimbsCanHandleObjects(
+  witness: WildShapeFormLimbObjectHandlingWitness,
+): boolean {
+  return witness.kind === "canHandleObjects";
+}
+
+function wildShapeLoadoutObjectSupportsEffectiveWornProjection(
+  item: WildShapeLoadoutObjectRef,
+): item is WildShapeWornLoadoutObjectRef {
+  return WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.includes(
+    item.kind as WildShapeEffectiveLoadoutWornKind,
+  );
+}
+
 function sameLoadoutObject(
   left: WildShapeLoadoutObjectRef,
   right: WildShapeLoadoutObjectRef,

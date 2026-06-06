@@ -323,6 +323,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             sourceUnitId: "druid_wild_shape",
             sourceCombatantId: druidId,
             formStatBlockId: "stat_block_cat",
+            formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
             resources: {
               legendaryActionUsesRemaining: resourceCount(0),
@@ -431,6 +432,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             sourceUnitId: "druid_wild_shape",
             sourceCombatantId: druidId,
             formStatBlockId: "missing_wild_shape_form",
+            formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
             resources: {
               legendaryActionUsesRemaining: resourceCount(0),

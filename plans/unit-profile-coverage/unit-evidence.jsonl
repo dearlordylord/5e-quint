@@ -341,6 +341,7 @@
 {"unitId":"moonbeam","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"}}
 {"unitId":"hold_person","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION","ownerPath":"packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"}}
+{"unitId":"druid_wild_shape","evidence":{"tag":"selected-identity-mbt","taskId":"L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT","ownerPath":"packages/battle-runtime/src/druid-wild-shape-form-lifecycle.mbt.test.ts"}}
 {"unitId":"mind_spike","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-MIND-SPIKE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}
 {"unitId":"mind_spike","evidence":{"tag":"selected-identity-mbt","taskId":"L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY","ownerPath":"packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts"}}
 {"unitId":"heat_metal","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"}}

@@ -19,6 +19,56 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_worn_equipment_projects_effective_loadout = {
+    val state = assumeFormWithEquipment(initialProjection, largeFastFormFacts, wornShieldEquipmentDisposition)
+    all {
+      assert(projectedArmorClass(state) == 13),
+      assert(projectedSize(state) == "large"),
+      assert(canCastSpells(state) == false),
+    }
+  }
+
+  run test_druid_wild_shape_worn_armor_projects_effective_loadout = {
+    val state = assumeFormWithEquipment(initialProjection, largeFastFormFacts, wornArmorEquipmentDisposition)
+    all {
+      assert(projectedArmorClass(state) == 16),
+      assert(projectedSize(state) == "large"),
+      assert(canCastSpells(state) == false),
+    }
+  }
+
+  run test_druid_wild_shape_worn_weapon_requires_form_object_handling = {
+    val canHandle = assumeFormWithEquipmentAndObjectHandling(
+      initialProjection,
+      largeFastFormFacts,
+      wornMainWeaponEquipmentDisposition,
+      true,
+    )
+    val cannotHandle = assumeFormWithEquipmentAndObjectHandling(
+      initialProjection,
+      largeFastFormFacts,
+      wornMainWeaponEquipmentDisposition,
+      false,
+    )
+    all {
+      assert(canUseWornMainWeapon(canHandle) == true),
+      assert(canUseWornMainWeapon(cannotHandle) == false),
+      assert(canHandle.equipmentDisposition.wornMainWeapon == true),
+      assert(cannotHandle.equipmentDisposition.wornMainWeapon == true),
+    }
+  }
+
+  run test_druid_wild_shape_fallen_equipment_projects_object_boundary = {
+    val result = assumeFormWithEquipmentResult(initialProjection, largeFastFormFacts, fallenShieldEquipmentDisposition)
+    all {
+      assert(result.droppedEquipmentCount == 1),
+      assert(result.projection.equipmentDisposition == allMergedEquipmentDisposition),
+      assert(projectedArmorClass(result.projection) == 11),
+      assert(projectedSize(result.projection) == "large"),
+      assert(canCastSpells(result.projection) == false),
+    }
+  }
+
   run test_druid_wild_shape_projects_d20_statistics = {
     val state = assumeForm(initialProjection, mediumSwiftFormFacts)
     all {
@@ -65,9 +115,11 @@ module battleRuntimeDruidWildShapeTests {
       assert(dismissed.usesRemaining == 1),
       assert(projectedSize(dismissed) == "medium"),
       assert(projectedSpeedFeet(dismissed) == 30),
+      assert(dismissed.equipmentDisposition == allMergedEquipmentDisposition),
       assert(reverted.activeForm == DruidWildShapeTrueForm),
       assert(projectedSize(reverted) == "medium"),
       assert(projectedSpeedFeet(reverted) == 30),
+      assert(reverted.equipmentDisposition == allMergedEquipmentDisposition),
     }
   }
 

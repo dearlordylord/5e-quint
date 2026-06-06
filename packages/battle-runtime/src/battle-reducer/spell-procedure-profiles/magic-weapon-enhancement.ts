@@ -31,8 +31,10 @@ import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type { CombatantId } from "../../identity.ts";
 import { spellId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
+import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -353,6 +355,31 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
   const holder = state.combatants.get(targetItem.holderCombatantId);
   if (holder?.origin.kind !== "character") {
     return false;
+  }
+  const activeWildShape = activeDruidWildShapeEffect(holder);
+  if (activeWildShape !== null) {
+    const main = holder.origin.selectedLoadout.weapon;
+    const offHand = holder.origin.selectedLoadout.offHandWeapon;
+    return (
+      (main !== undefined &&
+        main.itemId === targetItem.itemId &&
+        wildShapeCanUseWornLoadoutObject({
+          loadout: holder.origin.selectedLoadout,
+          formLimbs: activeWildShape.formLimbs,
+          equipmentDisposition: activeWildShape.equipmentDisposition,
+          objectKind: "mainWeapon",
+          unitId: main.unitId,
+        })) ||
+      (offHand !== undefined &&
+        offHand.itemId === targetItem.itemId &&
+        wildShapeCanUseWornLoadoutObject({
+          loadout: holder.origin.selectedLoadout,
+          formLimbs: activeWildShape.formLimbs,
+          equipmentDisposition: activeWildShape.equipmentDisposition,
+          objectKind: "offHandWeapon",
+          unitId: offHand.unitId,
+        }))
+    );
   }
   return (
     holder.origin.selectedLoadout.weapon?.itemId === targetItem.itemId ||

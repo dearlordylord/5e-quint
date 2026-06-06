@@ -6,7 +6,8 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   //   Bonus Action known Beast form assumption, use spending, Temporary Hit
   //   Points equal to Druid level, Beast stat-block projection, no
   //   spellcasting, reuse replacement, Bonus Action dismissal, and ending on
-  //   Incapacitated or death.
+  //   Incapacitated or death. The Objects bullet says merged equipment has no
+  //   effect while in that form.
   // - .references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting:
   //   shape-shifting effects specify their own form rules and revert on death.
   // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
@@ -21,6 +22,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   var qShoveDc: int
   var qSpellAvailable: bool
   var qActiveFormEffectCount: int
+  var qMergedEquipmentCount: int
   var qDruidStatus: str
   var qLastResult: str
 
@@ -35,7 +37,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   pure val largeSize: str = "large"
   pure val initialUsesRemaining: int = 2
   pure val druidLevel: int = 2
-  pure val baseFormArmorClass: int = 10
+  pure val baseFormArmorClass: int = 16
   pure val baseFormSpeedFeet: int = 30
   pure val baseFormShoveDc: int = 13
   pure val ridingHorseArmorClass: int = 11
@@ -44,6 +46,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   pure val catArmorClass: int = 12
   pure val catSpeedFeet: int = 40
   pure val catShoveDc: int = 6
+  pure val selectedLoadoutMergedEquipmentCount: int = 2
 
   action recordWildShapeState(
     activeForm: str,
@@ -56,6 +59,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     shoveDc: int,
     spellAvailable: bool,
     activeFormEffectCount: int,
+    mergedEquipmentCount: int,
     druidStatus: str,
     lastResult: str,
   ): bool = all {
@@ -69,6 +73,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     qShoveDc' = shoveDc,
     qSpellAvailable' = spellAvailable,
     qActiveFormEffectCount' = activeFormEffectCount,
+    qMergedEquipmentCount' = mergedEquipmentCount,
     qDruidStatus' = druidStatus,
     qLastResult' = lastResult,
   }
@@ -83,6 +88,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     baseFormSpeedFeet,
     baseFormShoveDc,
     true,
+    0,
     0,
     ableDruidStatus,
     "init",
@@ -103,6 +109,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       ridingHorseShoveDc,
       false,
       1,
+      selectedLoadoutMergedEquipmentCount,
       ableDruidStatus,
       "assumedRidingHorse",
     ),
@@ -122,6 +129,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qShoveDc,
       qSpellAvailable,
       qActiveFormEffectCount,
+      qMergedEquipmentCount,
       qDruidStatus,
       "nextTurn",
     ),
@@ -143,6 +151,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       catShoveDc,
       false,
       1,
+      selectedLoadoutMergedEquipmentCount,
       ableDruidStatus,
       "reusedCat",
     ),
@@ -163,6 +172,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       baseFormShoveDc,
       true,
       0,
+      0,
       ableDruidStatus,
       "dismissed",
     ),
@@ -181,6 +191,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       baseFormSpeedFeet,
       baseFormShoveDc,
       false,
+      0,
       0,
       incapacitatedDruidStatus,
       "incapacitated",
@@ -201,6 +212,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       baseFormShoveDc,
       false,
       0,
+      0,
       deadDruidStatus,
       "dead",
     ),
@@ -219,6 +231,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qShoveDc,
       qSpellAvailable,
       qActiveFormEffectCount,
+      qMergedEquipmentCount,
       qDruidStatus,
       qLastResult,
     ),

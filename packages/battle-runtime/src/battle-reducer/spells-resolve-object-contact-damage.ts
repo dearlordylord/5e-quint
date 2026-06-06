@@ -935,11 +935,14 @@ function resolveObjectContactDamage(input: {
         outcome.result.kind === "dropped"
           ? [
               {
-                kind: "heldObjectDropped",
+                kind: "objectDropped",
                 actorId: outcome.targetId,
                 objectId: input.objectId,
-                sourceCombatantId: input.actorId,
-                sourceSpellId: spellId(input.invocation.spell.id),
+                source: {
+                  kind: "spell",
+                  sourceCombatantId: input.actorId,
+                  sourceSpellId: spellId(input.invocation.spell.id),
+                },
               },
             ]
           : [],

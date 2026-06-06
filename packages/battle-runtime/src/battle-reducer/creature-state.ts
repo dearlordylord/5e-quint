@@ -128,11 +128,13 @@ import {
   statBlockResourceState,
 } from "./statblock.ts";
 import {
+  activeDruidWildShapeEffect,
   combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
   druidWildShapeKnownFormsIssueForProfile,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
+import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
 
 export function ongoingFeatureSourceKey(
   source: OngoingFeatureSource,
@@ -566,19 +568,46 @@ export function normalizeEarlyEndedOngoingFeatures(
 function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
   combatant: BattleCreatureState,
 ): BattleCreatureState["activeEffects"] {
-  if (combatant.origin.kind !== "character") {
+  if (!isCharacterBattleCreatureState(combatant)) {
     return removeEndedDruidWildShapeEffects(combatant);
   }
-  const heldWeaponItemIds = new Set([
-    combatant.origin.selectedLoadout.weapon?.itemId,
-    combatant.origin.selectedLoadout.offHandWeapon?.itemId,
-  ]);
   return removeEndedDruidWildShapeEffects(combatant).filter((effect) => {
     const boundWeaponItemId = activeEffectBoundHeldWeaponItemId(effect);
     return (
-      boundWeaponItemId === null || heldWeaponItemIds.has(boundWeaponItemId)
+      boundWeaponItemId === null ||
+      combatantCanStillHoldBoundWeaponItem(combatant, boundWeaponItemId)
     );
   });
+}
+
+function combatantCanStillHoldBoundWeaponItem(
+  combatant: CharacterBattleCreatureState,
+  itemId: string,
+): boolean {
+  const activeWildShape = activeDruidWildShapeEffect(combatant);
+  const main = combatant.origin.selectedLoadout.weapon;
+  const offHand = combatant.origin.selectedLoadout.offHandWeapon;
+  if (activeWildShape === null) {
+    return main?.itemId === itemId || offHand?.itemId === itemId;
+  }
+  return (
+    (main?.itemId === itemId &&
+      wildShapeCanUseWornLoadoutObject({
+        loadout: combatant.origin.selectedLoadout,
+        formLimbs: activeWildShape.formLimbs,
+        equipmentDisposition: activeWildShape.equipmentDisposition,
+        objectKind: "mainWeapon",
+        unitId: main.unitId,
+      })) ||
+    (offHand?.itemId === itemId &&
+      wildShapeCanUseWornLoadoutObject({
+        loadout: combatant.origin.selectedLoadout,
+        formLimbs: activeWildShape.formLimbs,
+        equipmentDisposition: activeWildShape.equipmentDisposition,
+        objectKind: "offHandWeapon",
+        unitId: offHand.unitId,
+      }))
+  );
 }
 
 function activeEffectBoundHeldWeaponItemId(
