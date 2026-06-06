@@ -140,6 +140,7 @@ export function traceEffectAtom(
     case "grant_language_choice":
     case "grant_spell_access":
     case "grant_spell_access_choice":
+    case "grant_class_level_prepared_spell_access":
     case "grant_land_choice_prepared_spell_access":
     case "grant_spell_free_casts":
     case "grant_die_token":

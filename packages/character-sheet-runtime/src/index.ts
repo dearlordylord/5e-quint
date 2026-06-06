@@ -3,7 +3,7 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
-// KERNEL-COVERAGE: runtime-owner SHEET.WEAPON_MASTERY.RESELECTION
+// KERNEL-COVERAGE: runtime-owner SHEET.WEAPON_MASTERY.RESELECTION SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.ABILITY_CHECK.PROFICIENCY_BONUS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
@@ -135,6 +135,7 @@ import type {
 import type {
   ChargePoolResource,
   ClassFeatureComponentMechanics,
+  ClassLevelPreparedSpellAccessGrant,
   DruidCircleLandChoice,
   EquipmentPredicate,
   LandChoicePreparedSpellAccessGrant,
@@ -170,7 +171,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -1151,7 +1152,10 @@ export function characterSheetJumpDistanceAbility(
 export function characterSheetLinkedSpeedGrants(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterSheetLinkedSpeedGrant[], CharacterSheetIssue> {
+): Either.Either<
+  readonly CharacterSheetLinkedSpeedGrant[],
+  CharacterSheetIssue
+> {
   const grants: CharacterSheetLinkedSpeedGrant[] = [];
   for (const feature of characterSheetClassFeatureComponents(
     build,
@@ -1420,10 +1424,7 @@ function druidWildShapeKnownFormsFromInput(
 }
 
 function druidCircleLandFromInput(
-  input: Pick<
-    CharacterSheetInput,
-    "build" | "unitLibrary" | "druidCircleLand"
-  >,
+  input: Pick<CharacterSheetInput, "build" | "unitLibrary" | "druidCircleLand">,
 ): Either.Either<
   CharacterSheetDruidCircleLand | undefined,
   CharacterSheetIssue
@@ -1446,9 +1447,7 @@ function druidCircleLandFromInput(
     );
   }
   if (!isDruidCircleLandChoice(input.druidCircleLand.land)) {
-    return characterSheetIssue(
-      "Circle of the Land selected land is invalid.",
-    );
+    return characterSheetIssue("Circle of the Land selected land is invalid.");
   }
   const druidSourceUnitId = druidCircleLandSpellcastingSourceUnitId({
     build: input.build,
@@ -2557,11 +2556,10 @@ export function completeLongRest(
     if (Either.isLeft(druidWildShapeKnownForms)) {
       return Either.left(druidWildShapeKnownForms.left);
     }
-    const druidCircleLand =
-      druidCircleLandAfterLongRest({
-        input,
-        build: build.right,
-      });
+    const druidCircleLand = druidCircleLandAfterLongRest({
+      input,
+      build: build.right,
+    });
     if (Either.isLeft(druidCircleLand)) {
       return Either.left(druidCircleLand.left);
     }
@@ -2937,6 +2935,20 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
       "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
     );
   }
+  const classLevel = classLevelForUnit(
+    input.build.progression,
+    profile.classRecord.id,
+  );
+  const levelProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: input.reselection.featureUnitId,
+    unitLibrary: input.unitLibrary,
+    classLevel,
+  });
+  if (levelProfile === undefined) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
+    );
+  }
   if (profile.longRestChangeCount < 1) {
     return characterSheetIssue(
       "Weapon Mastery class-feature Unit does not support Long Rest reselection.",
@@ -2948,7 +2960,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
     input.reselection.featureUnitId,
   );
   if (
-    currentWeaponUnitIds.length !== profile.choiceCount ||
+    currentWeaponUnitIds.length !== levelProfile.choiceCount ||
     new Set(currentWeaponUnitIds).size !== currentWeaponUnitIds.length
   ) {
     return characterSheetIssue(
@@ -2957,7 +2969,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
   }
 
   const selectedWeaponUnitIds = input.reselection.selectedWeaponUnitIds;
-  if (selectedWeaponUnitIds.length !== profile.choiceCount) {
+  if (selectedWeaponUnitIds.length !== levelProfile.choiceCount) {
     return characterSheetIssue(
       "Weapon Mastery Long Rest reselection must match the feature choice count.",
     );
@@ -2969,7 +2981,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
   }
 
   const eligibleWeaponUnitIds = new Set(
-    profile.eligibleWeapons.map((weapon) => weapon.id),
+    levelProfile.eligibleWeapons.map((weapon) => weapon.id),
   );
   if (
     selectedWeaponUnitIds.some((unitId) => !eligibleWeaponUnitIds.has(unitId))
@@ -3595,8 +3607,9 @@ function characterSheetSpellbookRitualAccessForSpell(
       "Ritual spell invocation requires a ritual-tagged Spell Definition.",
     );
   }
-  const spellbookSources = input.build.spellcasting.sources.filter((candidate) =>
-    candidate.spellbook.some((spellId) => spellId === input.spellId),
+  const spellbookSources = input.build.spellcasting.sources.filter(
+    (candidate) =>
+      candidate.spellbook.some((spellId) => spellId === input.spellId),
   );
   if (spellbookSources.length === 0) {
     return characterSheetIssue(messages.missingSpellbookMessage);
@@ -6718,16 +6731,61 @@ export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
     ) {
       continue;
     }
+    const classLevel = classLevelForClassFeatureUnit({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      featureUnit: unit.value,
+    });
     const spellIds = unit.value.mechanics.grants.flatMap((grant) =>
-      grant.kind === "grant_spell_access" && grant.mode === "prepared"
-        ? [grant.spellId]
-        : [],
+      preparedSpellIdsForClassFeatureGrant(grant, classLevel),
     );
     if (spellIds.length > 0) {
       accesses.push({ sourceUnitId: unit.value.id, spellIds });
     }
   }
   return accesses;
+}
+
+function classLevelForClassFeatureUnit(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
+}): number {
+  for (const progressionClassUnitId of progressionClassUnitIds(
+    input.build.progression,
+  )) {
+    const classUnit = input.unitLibrary.getUnit(progressionClassUnitId);
+    if (
+      Option.isSome(classUnit) &&
+      classUnit.value.kind === "class" &&
+      classUnit.value.className === input.featureUnit.className
+    ) {
+      return classLevelForUnit(input.build.progression, progressionClassUnitId);
+    }
+  }
+  return 0;
+}
+
+function preparedSpellIdsForClassFeatureGrant(
+  grant: PassiveMechanics["grants"][number],
+  classLevel: number,
+): readonly UnitRecord["id"][] {
+  if (grant.kind === "grant_spell_access" && grant.mode === "prepared") {
+    return [grant.spellId];
+  }
+  if (grant.kind === "grant_class_level_prepared_spell_access") {
+    return classLevelPreparedSpellAccessSpellIds(grant, classLevel);
+  }
+  return [];
+}
+
+function classLevelPreparedSpellAccessSpellIds(
+  grant: ClassLevelPreparedSpellAccessGrant,
+  classLevel: number,
+): readonly UnitRecord["id"][] {
+  return grant.tiers
+    .filter((tier) => tier.minimumClassLevel <= classLevel)
+    .flatMap((tier) => tier.spellIds);
 }
 
 function featurePreparedSpellIdsForBuild(

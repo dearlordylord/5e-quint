@@ -11,6 +11,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
 import type {

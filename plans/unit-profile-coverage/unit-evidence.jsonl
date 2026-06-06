@@ -288,6 +288,7 @@
 {"unitId":"thaumaturgy","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-THAUMATURGY-BOOMING-VOICE","ownerPath":"packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts"}}
 {"unitId":"barbarian_danger_sense","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARBARIAN-DANGER-SENSE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"}}
 {"unitId":"bard_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-BARD-EXPERTISE","ownerPath":"packages/character-creation-runtime/src/bard-expertise.test.ts"}}
+{"unitId":"bard_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE","ownerPath":"packages/character-creation-runtime/src/bard-expertise.test.ts"}}
 {"unitId":"bard_jack_of_all_trades","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARD-JACK-OF-ALL-TRADES","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_scholar","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-WIZARD-SCHOLAR","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}
 {"unitId":"cleric_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
@@ -310,6 +311,7 @@
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts"}}

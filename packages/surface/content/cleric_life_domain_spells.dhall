@@ -6,11 +6,14 @@
 --    Life Domain Spells table, you thereafter always have the listed
 --    spells prepared."
 --
--- This record covers the level-3 row. Later table rows are separate
--- class-level Spell Access progression work.
+-- This record keeps the whole subclass Spell Access table in one
+-- class-level-gated prepared Spell Access owner.
 
-let GrantSpellAccess =
-      { kind : Text, spellId : Text, mode : Text }
+let ClassLevelPreparedSpellAccessTier =
+      { minimumClassLevel : Natural, spellIds : List Text }
+
+let GrantClassLevelPreparedSpellAccess =
+      { kind : Text, tiers : List ClassLevelPreparedSpellAccessTier }
 
 let lifeDomainSpells =
       { kind = "class_feature"
@@ -23,27 +26,28 @@ let lifeDomainSpells =
           , section = "Classes/Cleric#Life Domain Spells"
           }
       , description =
-          "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric level 3, you thereafter always have Aid, Bless, Cure Wounds, and Lesser Restoration prepared."
+          "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric levels 3, 5, 7, and 9, you thereafter always have the listed Life Domain spells prepared."
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "grant_spell_access"
-                , spellId = "aid"
-                , mode = "prepared"
+              [ { kind = "grant_class_level_prepared_spell_access"
+                , tiers =
+                  [ { minimumClassLevel = 3
+                    , spellIds =
+                      [ "aid", "bless", "cure_wounds", "lesser_restoration" ]
+                    }
+                  , { minimumClassLevel = 5
+                    , spellIds = [ "mass_healing_word", "revivify" ]
+                    }
+                  , { minimumClassLevel = 7
+                    , spellIds = [ "aura_of_life", "death_ward" ]
+                    }
+                  , { minimumClassLevel = 9
+                    , spellIds = [ "greater_restoration", "mass_cure_wounds" ]
+                    }
+                  ]
                 }
-              , { kind = "grant_spell_access"
-                , spellId = "bless"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "cure_wounds"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "lesser_restoration"
-                , mode = "prepared"
-                }
-              ] : List GrantSpellAccess
+              ] : List GrantClassLevelPreparedSpellAccess
           }
       }
 

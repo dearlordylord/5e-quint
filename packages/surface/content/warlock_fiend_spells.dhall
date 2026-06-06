@@ -10,8 +10,14 @@
 --    Level 7: Fire Shield, Wall of Fire
 --    Level 9: Geas, Insect Plague"
 --
--- This record covers the level-3 row. Later table rows are separate
--- class-level Spell Access progression work.
+-- This record keeps the whole subclass Spell Access table in one
+-- class-level-gated prepared Spell Access owner.
+
+let ClassLevelPreparedSpellAccessTier =
+      { minimumClassLevel : Natural, spellIds : List Text }
+
+let GrantClassLevelPreparedSpellAccess =
+      { kind : Text, tiers : List ClassLevelPreparedSpellAccessTier }
 
 let fiendSpells =
       { kind = "class_feature"
@@ -24,27 +30,32 @@ let fiendSpells =
           , section = "Classes/Warlock#Fiend Spells"
           }
       , description =
-          "The magic of your patron ensures you always have certain spells ready. When you reach Warlock level 3, you thereafter always have Burning Hands, Command, Scorching Ray, and Suggestion prepared."
+          "The magic of your patron ensures you always have certain spells ready. When you reach Warlock levels 3, 5, 7, and 9, you thereafter always have the listed Fiend spells prepared."
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "grant_spell_access"
-                , spellId = "burning_hands"
-                , mode = "prepared"
+              [ { kind = "grant_class_level_prepared_spell_access"
+                , tiers =
+                  [ { minimumClassLevel = 3
+                    , spellIds =
+                      [ "burning_hands"
+                      , "command"
+                      , "scorching_ray"
+                      , "suggestion"
+                      ]
+                    }
+                  , { minimumClassLevel = 5
+                    , spellIds = [ "fireball", "stinking_cloud" ]
+                    }
+                  , { minimumClassLevel = 7
+                    , spellIds = [ "fire_shield", "wall_of_fire" ]
+                    }
+                  , { minimumClassLevel = 9
+                    , spellIds = [ "geas", "insect_plague" ]
+                    }
+                  ]
                 }
-              , { kind = "grant_spell_access"
-                , spellId = "command"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "scorching_ray"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "suggestion"
-                , mode = "prepared"
-                }
-              ]
+              ] : List GrantClassLevelPreparedSpellAccess
           }
       }
 

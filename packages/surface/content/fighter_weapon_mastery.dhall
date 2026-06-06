@@ -7,7 +7,15 @@ let weaponMastery =
       , kind = "class_feature"
       , mechanics =
         { changeOn = { count = 1, kind = "long_rest" }
-        , choose = 3
+        , choose =
+          { kind = "class_level_total_choices"
+          , levels =
+            [ { atLevel = 1, total = 3 }
+            , { atLevel = 4, total = 4 }
+            , { atLevel = 10, total = 5 }
+            , { atLevel = 16, total = 6 }
+            ]
+          }
         , eligibleWeapons = { kind = "class_proficient_weapons" }
         , family = "weapon_mastery_choice"
         }

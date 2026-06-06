@@ -280,39 +280,6 @@
       "unitId": "augury"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Barbarian Weapon Mastery",
-          "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 89,
-            "lineStart": 84,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "barbarian_weapon_mastery"
-    },
-    {
       "catalogDisposition": {
         "category": "unsupported-widening-pressure",
         "planningLane": "QMBT18",
@@ -349,39 +316,6 @@
       "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "bard_bonus_proficiencies"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/bard_expertise.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Expertise",
-          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 98,
-            "lineStart": 93,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "bard_expertise"
     },
     {
       "catalogStatus": "installed",
@@ -508,39 +442,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "charm_person"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/cleric_life_domain_spells.json",
-      "sourceRows": [
-        {
-          "category": "spell access/list pressure",
-          "concept": "Cleric Life Domain Spells",
-          "id": "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells",
-          "levelBand": "level-3",
-          "rowKind": "subclass-spell-access",
-          "source": {
-            "lineEnd": 329,
-            "lineStart": 317,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "cleric_life_domain_spells"
     },
     {
       "catalogDisposition": {
@@ -1302,39 +1203,6 @@
       "unitId": "enthrall"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Fighter Weapon Mastery",
-          "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 75,
-            "lineStart": 70,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "fighter_weapon_mastery"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2030,7 +1898,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
+      "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2086,72 +1954,6 @@
       "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "moonbeam"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Paladin Fighting Style",
-          "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 95,
-            "lineStart": 90,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "paladin_fighting_style"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
-      "sourceRows": [
-        {
-          "category": "spell access/list pressure",
-          "concept": "Paladin Oath of Devotion Spells",
-          "id": "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells",
-          "levelBand": "level-3",
-          "rowKind": "subclass-spell-access",
-          "source": {
-            "lineEnd": 262,
-            "lineStart": 249,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "paladin_oath_of_devotion_spells"
     },
     {
       "catalogStatus": "installed",
@@ -2280,45 +2082,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Ranger Fighting Style",
-          "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 101,
-            "lineStart": 96,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "ranger_fighting_style"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.; Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.",
+      "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.",
       "selectedIdentity": {
         "owner": "battle-runtime deterministic admission/projection owner",
         "reason": "Tasks L13UG-A17 and L3CF-05 admit Surface shape and support-profile projection only. L3CF-05 found no independent battle-owned Bonus Action shell to promote because the current runtime has no concrete lock, trap, pocket, generic Utilize, or magic-item activation subject for this profile to wrap.",
@@ -2527,39 +2296,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "silent_image"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/sorcerer_draconic_spells.json",
-      "sourceRows": [
-        {
-          "category": "spell access/list pressure",
-          "concept": "Sorcerer Draconic Spells",
-          "id": "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells",
-          "levelBand": "level-3",
-          "rowKind": "subclass-spell-access",
-          "source": {
-            "lineEnd": 431,
-            "lineStart": 419,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "sorcerer_draconic_spells"
     },
     {
       "catalogStatus": "installed",
@@ -2857,39 +2593,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
-      "sourceRows": [
-        {
-          "category": "spell access/list pressure",
-          "concept": "Warlock Fiend Spells",
-          "id": "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells",
-          "levelBand": "level-3",
-          "rowKind": "subclass-spell-access",
-          "source": {
-            "lineEnd": 476,
-            "lineStart": 464,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "warlock_fiend_spells"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
       "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
@@ -2975,7 +2678,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 136,
+      "count": 145,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2990,8 +2693,10 @@
         "barbarian_rage",
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
+        "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
         "bard_cutting_words",
+        "bard_expertise",
         "bard_jack_of_all_trades",
         "barkskin",
         "bless",
@@ -3003,6 +2708,7 @@
         "cleric_channel_divinity",
         "cleric_disciple_of_life",
         "cleric_divine_order",
+        "cleric_life_domain_spells",
         "cleric_preserve_life",
         "color_spray",
         "command",
@@ -3029,6 +2735,7 @@
         "fighter_remarkable_athlete",
         "fighter_second_wind",
         "fighter_tactical_mind",
+        "fighter_weapon_mastery",
         "fire_bolt",
         "flame_blade",
         "flaming_sphere",
@@ -3063,7 +2770,9 @@
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
         "paladin_channel_divinity",
+        "paladin_fighting_style",
         "paladin_lay_on_hands",
+        "paladin_oath_of_devotion_spells",
         "paladin_paladins_smite",
         "paladin_sacred_weapon",
         "paladin_weapon_mastery",
@@ -3072,6 +2781,7 @@
         "protection_from_evil_and_good",
         "protection_from_poison",
         "ranger_deft_explorer",
+        "ranger_fighting_style",
         "ranger_hunters_prey",
         "ranger_weapon_mastery",
         "ray_of_enfeeblement",
@@ -3097,6 +2807,7 @@
         "shocking_grasp",
         "sleep",
         "sorcerer_draconic_resilience",
+        "sorcerer_draconic_spells",
         "sorcerer_innate_sorcery",
         "sorcerous_burst",
         "spare_the_dying",
@@ -3109,6 +2820,7 @@
         "warding_bond",
         "warlock_dark_ones_blessing",
         "warlock_eldritch_invocations",
+        "warlock_fiend_spells",
         "warlock_magical_cunning",
         "web",
         "wizard_arcane_recovery",
@@ -3160,24 +2872,6 @@
       ]
     },
     {
-      "count": 11,
-      "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
-      "status": "closed-later-level-only",
-      "unitIds": [
-        "barbarian_weapon_mastery",
-        "bard_expertise",
-        "cleric_life_domain_spells",
-        "fighter_weapon_mastery",
-        "paladin_fighting_style",
-        "paladin_oath_of_devotion_spells",
-        "ranger_favored_enemy",
-        "ranger_fighting_style",
-        "sorcerer_draconic_spells",
-        "warlock_fiend_spells",
-        "wizard_evocation_savant"
-      ]
-    },
-    {
       "count": 7,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
@@ -3219,40 +2913,49 @@
         "druid_wild_companion",
         "find_steed"
       ]
+    },
+    {
+      "count": 2,
+      "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "ranger_favored_enemy",
+        "wizard_evocation_savant"
+      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 599,
-      "percent": "98.7%",
+      "numerator": 600,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 438,
-        "accepted-no-battle-effect": 161,
+        "accepted": 435,
+        "accepted-no-battle-effect": 165,
         "battle-runtime-required": 1,
-        "owner-evidence-required": 6,
+        "owner-evidence-required": 5,
         "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 99,
-      "numerator": 99,
+      "denominator": 102,
+      "numerator": 102,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 139,
+      "numerator": 139,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 197,
-      "numerator": 136,
-      "percent": "69%"
+      "numerator": 145,
+      "percent": "73.6%"
     },
     "strictTargetClosure": {
       "denominator": 197,
@@ -5968,8 +5671,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 130,
-        "numerator": 130,
+        "denominator": 139,
+        "numerator": 139,
         "percent": "100%"
       }
     },
@@ -6249,6 +5952,58 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-level-gain",
+            "profileKind": "character-creation",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+              }
+            ],
+            "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+            "profileKind": "character-sheet",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          }
+        ],
+        "unitId": "barbarian_weapon_mastery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -6308,6 +6063,26 @@
           }
         ],
         "unitId": "bard_cutting_words"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
+            "profileId": "character-creation.skill-expertise-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "bard_expertise"
       },
       {
         "joinStatus": "covered",
@@ -6625,6 +6400,26 @@
           }
         ],
         "unitId": "cleric_divine_order"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+              }
+            ],
+            "profileId": "character-sheet.class-feature-prepared-spell-access",
+            "profileKind": "character-sheet",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "cleric_life_domain_spells"
       },
       {
         "joinStatus": "covered",
@@ -7272,6 +7067,58 @@
           }
         ],
         "unitId": "fighter_tactical_mind"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-level-gain",
+            "profileKind": "character-creation",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+              }
+            ],
+            "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+            "profileKind": "character-sheet",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+            ]
+          }
+        ],
+        "unitId": "fighter_weapon_mastery"
       },
       {
         "joinStatus": "covered",
@@ -8254,6 +8101,40 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+              }
+            ],
+            "profileId": "character-creation.class-feature-feat-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
+            "profileId": "character-creation.class-feature-option-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "paladin_fighting_style"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -8271,6 +8152,26 @@
           }
         ],
         "unitId": "paladin_lay_on_hands"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+              }
+            ],
+            "profileId": "character-sheet.class-feature-prepared-spell-access",
+            "profileKind": "character-sheet",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "paladin_oath_of_devotion_spells"
       },
       {
         "joinStatus": "covered",
@@ -8511,6 +8412,40 @@
           }
         ],
         "unitId": "ranger_deft_explorer"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+              }
+            ],
+            "profileId": "character-creation.class-feature-feat-choice",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
+            "profileId": "character-creation.class-feature-option-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "ranger_fighting_style"
       },
       {
         "joinStatus": "covered",
@@ -9224,6 +9159,26 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+              }
+            ],
+            "profileId": "character-sheet.class-feature-prepared-spell-access",
+            "profileKind": "character-sheet",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "sorcerer_draconic_spells"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -9539,6 +9494,26 @@
           }
         ],
         "unitId": "warlock_eldritch_invocations"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+              }
+            ],
+            "profileId": "character-sheet.class-feature-prepared-spell-access",
+            "profileKind": "character-sheet",
+            "qntOwners": []
+          }
+        ],
+        "unitId": "warlock_fiend_spells"
       },
       {
         "joinStatus": "covered",
@@ -10585,20 +10560,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 224,
     "groupsByClaimTag": {
-      "profile-subset-supported": 31,
-      "supported-profile": 136,
+      "profile-subset-supported": 22,
+      "supported-profile": 145,
       "unsupported-profile": 30
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 3,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
-      "closed-later-level-only": 11,
+      "closed-later-level-only": 2,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "supported-profile": 136
+      "supported-profile": 145
     },
-    "nonSupportedFrontier": 61,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 197
   }
 }

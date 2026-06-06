@@ -4,11 +4,14 @@
 --   "When you reach a Sorcerer level specified in the Draconic Spells
 --    table, you thereafter always have the listed spells prepared."
 --
--- This record covers the level-3 row. Later table rows are separate
--- class-level Spell Access progression work.
+-- This record keeps the whole subclass Spell Access table in one
+-- class-level-gated prepared Spell Access owner.
 
-let GrantSpellAccess =
-      { kind : Text, spellId : Text, mode : Text }
+let ClassLevelPreparedSpellAccessTier =
+      { minimumClassLevel : Natural, spellIds : List Text }
+
+let GrantClassLevelPreparedSpellAccess =
+      { kind : Text, tiers : List ClassLevelPreparedSpellAccessTier }
 
 let draconicSpells =
       { kind = "class_feature"
@@ -21,27 +24,32 @@ let draconicSpells =
           , section = "Classes/Sorcerer#Draconic Spells"
           }
       , description =
-          "When you reach Sorcerer level 3, you thereafter always have Alter Self, Chromatic Orb, Command, and Dragon's Breath prepared."
+          "When you reach Sorcerer levels 3, 5, 7, and 9, you thereafter always have the listed Draconic spells prepared."
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "grant_spell_access"
-                , spellId = "alter_self"
-                , mode = "prepared"
+              [ { kind = "grant_class_level_prepared_spell_access"
+                , tiers =
+                  [ { minimumClassLevel = 3
+                    , spellIds =
+                      [ "alter_self"
+                      , "chromatic_orb"
+                      , "command"
+                      , "dragons_breath"
+                      ]
+                    }
+                  , { minimumClassLevel = 5
+                    , spellIds = [ "fear", "fly" ]
+                    }
+                  , { minimumClassLevel = 7
+                    , spellIds = [ "arcane_eye", "charm_monster" ]
+                    }
+                  , { minimumClassLevel = 9
+                    , spellIds = [ "legend_lore", "summon_dragon" ]
+                    }
+                  ]
                 }
-              , { kind = "grant_spell_access"
-                , spellId = "chromatic_orb"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "command"
-                , mode = "prepared"
-                }
-              , { kind = "grant_spell_access"
-                , spellId = "dragons_breath"
-                , mode = "prepared"
-                }
-              ] : List GrantSpellAccess
+              ] : List GrantClassLevelPreparedSpellAccess
           }
       }
 

@@ -2,33 +2,33 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "obligationJoinRows": {
-      "denominator": 163,
-      "numerator": 163,
+      "denominator": 174,
+      "numerator": 174,
       "percent": "100%"
     },
     "rulesKernelProfiles": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "supportedUnits": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "uniqueCoveredObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "uniqueParityWitnessedObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     },
     "uniqueQntOwnedObligations": {
-      "denominator": 47,
-      "numerator": 47,
+      "denominator": 49,
+      "numerator": 49,
       "percent": "100%"
     }
   },
@@ -588,6 +588,80 @@
     {
       "gaps": [],
       "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-level-gain",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-sheet",
+      "tag": "obligation-evidence",
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
       "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
       "obligationStatus": "covered",
       "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
@@ -708,6 +782,32 @@
       "runtime": "battle",
       "tag": "obligation-evidence",
       "unitId": "bard_bardic_inspiration"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.skill-expertise-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "bard_expertise"
     },
     {
       "gaps": [],
@@ -2586,6 +2686,80 @@
       "runtime": "battle",
       "tag": "obligation-evidence",
       "unitId": "fighter_tactical_mind"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-creation.weapon-mastery-level-gain",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ],
+      "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "runtime": "character-sheet",
+      "tag": "obligation-evidence",
+      "unitId": "fighter_weapon_mastery"
     },
     {
       "gaps": [],
@@ -4822,6 +4996,58 @@
     {
       "gaps": [],
       "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
       "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
       "obligationStatus": "covered",
       "obligationTitle": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions",
@@ -5448,6 +5674,58 @@
       "runtime": "character-creation",
       "tag": "obligation-evidence",
       "unitId": "ranger_deft_explorer"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "ranger_fighting_style"
+    },
+    {
+      "gaps": [],
+      "joinStatus": "covered",
+      "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+      "obligationStatus": "covered",
+      "obligationTitle": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profileId": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "role": "selected-identity-trace"
+        }
+      ],
+      "runtime": "character-creation",
+      "tag": "obligation-evidence",
+      "unitId": "ranger_fighting_style"
     },
     {
       "gaps": [],

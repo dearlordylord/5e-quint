@@ -24,15 +24,15 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | deterministic-qnt-replay | Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage. |
 | focused-mbt | Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings. |
 | mcp-scenario | Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows. |
-| runtime-test | Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership. |
+| runtime-test | Focused runtime test evidence for a profile-scoped reducer or projection path that already has profile-level QNT proof ownership or declared semantic-core QNT ownership. |
 
 ## Scope Summary
 
 | Scope | Status | Complete layers | Scoped obligations |
 | --- | --- | ---: | ---: |
-| level-1 | pass | 4/4 | 44 |
-| level-1-2 | pass | 4/4 | 47 |
-| level-1-3 | pass | 4/4 | 67 |
+| level-1 | pass | 4/4 | 46 |
+| level-1-2 | pass | 4/4 | 49 |
+| level-1-3 | pass | 4/4 | 69 |
 
 ## Layer Results
 
@@ -86,9 +86,9 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 
 | Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |
 | --- | ---: | ---: | ---: |
-| level-1 | 81 | 81/81 | 0 |
-| level-1-2 | 94 | 94/94 | 0 |
-| level-1-3 | 137 | 137/137 | 0 |
+| level-1 | 83 | 83/83 | 0 |
+| level-1-2 | 99 | 99/99 | 0 |
+| level-1-3 | 146 | 146/146 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

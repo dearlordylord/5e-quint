@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 106,
-    "covered": 100,
+    "total": 108,
+    "covered": 102,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 78,
-      "character-creation": 13,
-      "character-sheet": 11,
+      "character-creation": 14,
+      "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 100,
+      "covered": 102,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -2792,6 +2792,35 @@
       "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
     {
+      "id": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profiles": [
+        "character-creation.weapon-mastery-level-gain"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "reason": "The semantic core owns opaque selected-ref count, distinctness, eligibility, preservation, and table-delta gain constraints. Focused Character Creation runtime tests cover deriving the current and next choice counts from Fighter and Barbarian Surface class-level tables, requiring typed level-gain selections, preserving existing selected refs, enforcing class feature ownership, and composing with Fighter Fighting Style replacement without adding parallel draft state.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+      ],
+      "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+    },
+    {
       "id": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -3386,6 +3415,35 @@
         ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
       ],
       "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+    },
+    {
+      "id": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ],
+      "profiles": [
+        "character-sheet.weapon-mastery-class-level-reselection"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "reason": "Fighter and Barbarian Weapon Mastery use class-level choice count tables rather than the fixed two-choice selected-identity replay fixture. The reusable semantic core owns opaque-ref reselection semantics, while focused Character Sheet runtime tests cover deriving the active count from the current class level and applying the one-choice Long Rest replacement limit without adding sheet-local Weapon Mastery state.",
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+      ],
+      "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
     },
     {
       "id": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
@@ -5580,6 +5638,12 @@
     },
     {
       "obligationIds": [
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION"
+      ],
+      "profileId": "character-sheet.weapon-mastery-class-level-reselection"
+    },
+    {
+      "obligationIds": [
         "SHEET.FEATURE_RESOURCES.TRANSITIONS"
       ],
       "profileId": "character-sheet.healing-resource-action"
@@ -5655,6 +5719,12 @@
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.weapon-mastery-choice"
+    },
+    {
+      "obligationIds": [
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT"
+      ],
+      "profileId": "character-creation.weapon-mastery-level-gain"
     },
     {
       "obligationIds": [
@@ -6807,8 +6877,10 @@
       "role": "selected-identity-trace"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt carries executable Character Sheet Weapon Mastery Long Rest reselection semantics over opaque current, requested, and eligible weapon refs: it derives duplicate, eligibility, and changed-choice facts and returns accepted selected refs or rejection without importing authored Weapon or class-feature identity.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt carries executable Weapon Mastery selected-ref semantics over opaque current, requested, and eligible weapon refs: it derives duplicate, eligibility, changed-choice, preservation, and table-delta facts for Character Sheet Long Rest reselection and Character Creation class-level gain without importing authored Weapon or class-feature identity.",
       "obligationIds": [
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
@@ -10403,6 +10475,66 @@
         "variant",
         "record",
         "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "arithmetic",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "list",
+        "set",
+        "fold",
+        "set-operators",
+        "membership",
+        "size"
+      ],
+      "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "arithmetic",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "list",
+        "set",
+        "fold",
+        "set-operators",
+        "membership",
+        "size"
+      ],
+      "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
         "constant-val",
         "int",
         "bool",
@@ -10692,10 +10824,12 @@
     "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
     "character-creation.fighter-fighting-style-advancement-replacement",
+    "character-creation.fighting-style-cantrip-advancement-replacement",
     "character-creation.hit-point-maximum-projection",
     "character-creation.skill-expertise-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",
+    "character-creation.weapon-mastery-level-gain",
     "character-creation.wizard-spellbook-learning-choice",
     "character-sheet.ability-check-ability-substitution",
     "character-sheet.ability-check-proficiency-bonus",
@@ -10716,6 +10850,7 @@
     "character-sheet.short-rest-spell-slot-recovery",
     "character-sheet.spell-rest-benefit-application",
     "character-sheet.spellbook-ritual-invocation",
+    "character-sheet.weapon-mastery-class-level-reselection",
     "character-sheet.weapon-mastery-reselection",
     "spell.creature-type-protection-and-charm",
     "spell.find-familiar-lifecycle",

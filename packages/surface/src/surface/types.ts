@@ -990,6 +990,10 @@ export type PreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
 >;
+export type ClassLevelPreparedSpellAccessGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_class_level_prepared_spell_access" }
+>;
 export type LandChoicePreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_land_choice_prepared_spell_access" }

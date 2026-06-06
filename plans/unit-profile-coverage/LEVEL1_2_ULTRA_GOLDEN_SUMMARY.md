@@ -13,8 +13,8 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
 | Support completeness | pass | strict target closure 115/115 (100%); selected identity 104/104 (100%); SRD authored product readiness 76/76 (100%) | _none_ |
-| QNT/generator readiness | pass | QNT-covered obligations 47/47; generator-ready semantic-core obligations 38/38 | _none_ |
-| MBT/parity evidence | pass | parity-witnessed obligations 47/47; witness kinds deterministic-qnt-replay: 9, focused-mbt: 43, runtime-test: 14 | _none_ |
+| QNT/generator readiness | pass | QNT-covered obligations 49/49; generator-ready semantic-core obligations 40/40 | _none_ |
+| MBT/parity evidence | pass | parity-witnessed obligations 49/49; witness kinds deterministic-qnt-replay: 9, focused-mbt: 43, runtime-test: 16 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
 ## Support Claim
@@ -31,8 +31,8 @@ Diagnostic product readiness remains a separate lower-layer accounting view, not
 
 | Diagnostic product-readiness status | Rows |
 | --- | ---: |
-| accepted | 297 |
-| accepted-no-battle-effect | 100 |
+| accepted | 293 |
+| accepted-no-battle-effect | 104 |
 | owner-evidence-required | 2 |
 | partial-battle-runtime | 1 |
 
@@ -42,12 +42,12 @@ Level 1-2 QNT/MBT join open gaps: **0**.
 
 | Join metric | Result |
 | --- | ---: |
-| Supported Units in join | 91/91 (100%) |
-| Rules-kernel profiles in join | 70/70 (100%) |
-| Obligation join rows without open gaps | 163/163 (100%) |
-| Unique covered obligations | 47/47 (100%) |
-| Unique QNT-owned obligations | 47/47 (100%) |
-| Unique parity-witnessed obligations | 47/47 (100%) |
+| Supported Units in join | 96/96 (100%) |
+| Rules-kernel profiles in join | 72/72 (100%) |
+| Obligation join rows without open gaps | 174/174 (100%) |
+| Unique covered obligations | 49/49 (100%) |
+| Unique QNT-owned obligations | 49/49 (100%) |
+| Unique parity-witnessed obligations | 49/49 (100%) |
 
 Generator readiness passes when every scoped semantic-core obligation is generation-subset-clean and has no blocker or follow-up rows. It does not require a generator implementation or committed generated Rust.
 

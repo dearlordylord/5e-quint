@@ -4,18 +4,78 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE","status":"ready-for-research","title":"Resolve Weapon Mastery later-count closure"},
-    {"number":2,"id":"L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE","status":"ready-for-research","title":"Resolve Bard Expertise level 9 closure"},
-    {"number":3,"id":"L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION","status":"ready-for-research","title":"Resolve subclass spell access progression closure"},
-    {"number":4,"id":"L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT","status":"ready-for-research","title":"Resolve Fighting Style cantrip replacement closure"},
-    {"number":5,"id":"L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT","status":"ready-for-research","title":"Resolve Wizard Evocation Savant later-slot closure"},
-    {"number":6,"id":"L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS","status":"ready-for-research","title":"Resolve Prayer of Healing cast witness closure"},
-    {"number":7,"id":"L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE","status":"ready-for-research","title":"Resolve Font of Magic battle slot source closure"},
-    {"number":8,"id":"L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP","status":"ready-for-implementation-after-light-research","title":"Deduplicate Fast Hands delegated owner rows"},
-    {"number":9,"id":"L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE","status":"ready-for-research","title":"Resolve Monk focus jump witness closure"},
-    {"number":10,"id":"L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT","status":"ready-for-implementation-after-light-research","title":"Audit selected identity for character advancement profiles"},
-    {"number":11,"id":"L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION","status":"blocked","title":"Consolidate character advancement ledgers"},
-    {"number":12,"id":"L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT","status":"blocked","title":"Report next character advancement candidates"}
+    {
+      "number": 1,
+      "id": "L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE",
+      "status": "done",
+      "title": "Resolve Weapon Mastery later-count closure"
+    },
+    {
+      "number": 2,
+      "id": "L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE",
+      "status": "done",
+      "title": "Resolve Bard Expertise level 9 closure"
+    },
+    {
+      "number": 3,
+      "id": "L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION",
+      "status": "done",
+      "title": "Resolve subclass spell access progression closure"
+    },
+    {
+      "number": 4,
+      "id": "L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT",
+      "status": "done",
+      "title": "Resolve Fighting Style cantrip replacement closure"
+    },
+    {
+      "number": 5,
+      "id": "L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT",
+      "status": "done",
+      "title": "Resolve Wizard Evocation Savant later-slot closure"
+    },
+    {
+      "number": 6,
+      "id": "L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS",
+      "status": "done",
+      "title": "Resolve Prayer of Healing cast witness closure"
+    },
+    {
+      "number": 7,
+      "id": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE",
+      "status": "done",
+      "title": "Resolve Font of Magic battle slot source closure"
+    },
+    {
+      "number": 8,
+      "id": "L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP",
+      "status": "done",
+      "title": "Deduplicate Fast Hands delegated owner rows"
+    },
+    {
+      "number": 9,
+      "id": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE",
+      "status": "done",
+      "title": "Resolve Monk focus jump witness closure"
+    },
+    {
+      "number": 10,
+      "id": "L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT",
+      "status": "done",
+      "title": "Audit selected identity for character advancement profiles"
+    },
+    {
+      "number": 11,
+      "id": "L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION",
+      "status": "done",
+      "title": "Consolidate character advancement ledgers"
+    },
+    {
+      "number": 12,
+      "id": "L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT",
+      "status": "ready-for-research",
+      "title": "Report next character advancement candidates"
+    }
   ]
 }
 -->
@@ -51,17 +111,17 @@ repair branch state by rebasing against `master`.
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE | ready-for-research | none | Close Fighter/Barbarian later-count support as character-build facts unless battle reducer reachability exists. |
-| 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | ready-for-research | none | Close later Expertise progression without duplicating skill selection state. |
-| 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | ready-for-research | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
-| 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | ready-for-research | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
-| 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | ready-for-research | none | Decide if later slot support is build-time, spellcasting kernel, or out of L3. |
-| 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | ready-for-research | none | Classify cast witness and rest interaction against current runtime owners. |
-| 7 | L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE | ready-for-research | none | Decide whether sorcery-point slot creation is reachable in battle reducer flows. |
+| 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | done | none | Close later Expertise progression without duplicating skill selection state. |
+| 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | done | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
+| 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | done | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
+| 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | done | none | Later-slot support is closed to the future character-advancement Wizard spell slot level access owner; level-3 acquisition-time Evocation Savant spellbook evidence is present. |
+| 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | done | none | Cast witness and rest interaction close to the existing character-sheet spell-rest benefit owner, with casting progress, range maintenance, and interruption remaining caller/table facts. |
+| 7 | L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE | done | none | Sorcery-point slot creation remains Character Sheet-owned; Character Battle receives aggregate Spell Slot capacity, rejects source-ambiguous handoff, and exposes no Font of Magic battle Unit Bonus Action. |
 | 8 | L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP | ready-for-implementation-after-light-research | none | Remove duplicated delegated owner rows or make the single owner executable. |
 | 9 | L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | ready-for-research | none | Resolve jump-distance support without adding absent movement state. |
 | 10 | L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify character advancement selected identity is connected to production code. |
-| 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | blocked | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
-| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | blocked | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Report remaining high-value L3 candidates for future parallel lanes. |
+| 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | ready-for-research | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
+| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | ready-for-research | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Report remaining high-value L3 candidates for future parallel lanes. |
 
 ## Task Details
 
@@ -99,8 +159,13 @@ owner blocker, or a table-only closure.
 
 ### Task 7 - L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE
 
-Decide whether sorcery point to spell slot conversion is reachable by the real
-battle reducer. If it is promoted as battle behavior, add QNT and MBT evidence.
+Closed as Character Sheet-owned support. Font of Magic Creating Spell Slots is
+RAW Bonus Action resource conversion, but the supported Character Battle
+boundary receives only aggregate Spell Slot capacity, rejects
+ordinary-vs-created source-ambiguous handoff, and exposes no Font of Magic battle
+Unit Bonus Action. Do not add battle-local created-slot source state unless a
+future task promotes a source-aware Spell Slot spend owner with matching QNT and
+MBT evidence.
 
 ### Task 8 - L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP
 

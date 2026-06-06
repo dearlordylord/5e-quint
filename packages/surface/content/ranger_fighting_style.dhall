@@ -1,7 +1,7 @@
 -- Ranger Fighting Style — SRD 5.2.1, Level 2.
 
 let RangerFightingStyleGrant =
-      { kind : Text, category : Optional Text, count : Optional Natural, mode : Optional Text, spellLevel : Optional Natural, spellList : Optional Text }
+      { kind : Text, category : Optional Text, count : Optional Natural, mode : Optional Text, spellLevel : Optional Natural, spellList : Optional Text, replacement : Optional { trigger : Text, replacementCount : Natural } }
 
 let fightingStyleFeatGrant =
       { kind = "grant_feat"
@@ -10,6 +10,7 @@ let fightingStyleFeatGrant =
       , mode = None Text
       , spellLevel = None Natural
       , spellList = None Text
+      , replacement = None { trigger : Text, replacementCount : Natural }
       } : RangerFightingStyleGrant
 
 let druidicWarriorCantripGrant =
@@ -19,6 +20,8 @@ let druidicWarriorCantripGrant =
       , mode = Some "known"
       , spellLevel = Some 0
       , spellList = Some "druid"
+      , replacement =
+          Some { trigger = "class_level_gain", replacementCount = 1 }
       } : RangerFightingStyleGrant
 
 let rangerFightingStyleL2 =

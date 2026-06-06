@@ -103,6 +103,7 @@
 {"profileId":"character-sheet.class-feature-prepared-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
 {"profileId":"character-sheet.druid-circle-land-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
 {"profileId":"character-sheet.weapon-mastery-reselection","obligationIds":["SHEET.WEAPON_MASTERY.RESELECTION"]}
+{"profileId":"character-sheet.weapon-mastery-class-level-reselection","obligationIds":["SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION"]}
 {"profileId":"character-sheet.healing-resource-action","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-use-count-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-point-pool-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
@@ -116,6 +117,7 @@
 {"profileId":"character-creation.fighter-fighting-style-advancement-replacement","obligationIds":["CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"]}
 {"profileId":"character-creation.warlock-pact-magic-advancement","obligationIds":["CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"]}
 {"profileId":"character-creation.weapon-mastery-choice","obligationIds":["CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"]}
+{"profileId":"character-creation.weapon-mastery-level-gain","obligationIds":["CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT"]}
 {"profileId":"character-creation.eldritch-invocation-choice","obligationIds":["CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"]}
 {"profileId":"spell.invocation-dragons-breath-initial","obligationIds":["BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"]}
 {"profileId":"spell.invocation-dragons-breath-granted-action","obligationIds":["BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION"]}

@@ -6,12 +6,14 @@ import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import flameBladeInput from "../../content/flame_blade.json";
+import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
@@ -42,6 +44,42 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "class_armor_training",
           label: "class_armor_training\nlight, medium, heavy, shield",
+        }),
+      ]),
+    );
+  });
+
+  test("renders class-level Weapon Mastery choice counts without object coercion", () => {
+    const trace = traceUnit(decodeUnitRecordSync(fighterWeaponMasteryInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "class_weapon_mastery_choice",
+          label: [
+            "class_weapon_mastery_choice",
+            "choose by class level: L1: 3, L4: 4, L10: 5, L16: 6",
+            "class proficient weapons",
+            "change 1 on long_rest",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders fixed Weapon Mastery choice counts", () => {
+    const trace = traceUnit(decodeUnitRecordSync(paladinWeaponMasteryInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "class_weapon_mastery_choice",
+          label: [
+            "class_weapon_mastery_choice",
+            "choose 2",
+            "class proficient weapons",
+            "change 2 on long_rest",
+          ].join("\n"),
         }),
       ]),
     );

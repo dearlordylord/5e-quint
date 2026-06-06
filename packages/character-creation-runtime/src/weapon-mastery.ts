@@ -2,10 +2,12 @@ import { Match, Option } from "effect";
 import type {
   ClassFeatureRecord,
   ClassRecord,
+  ClassLevelChoiceCount,
   UnitRecord,
   WeaponProficiency,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import type { UnitCatalog } from "./types.ts";
 
 const byKind = Match.discriminator("kind");
@@ -30,6 +32,7 @@ export type WeaponMasteryChoiceProfile = {
 export function weaponMasteryChoiceProfileForFeature(input: {
   readonly featureUnitId: UnitRecord["id"];
   readonly unitLibrary: UnitCatalog;
+  readonly classLevel?: number;
 }): WeaponMasteryChoiceProfile | undefined {
   const featureUnit = input.unitLibrary.getUnit(input.featureUnitId);
   if (Option.isNone(featureUnit)) return undefined;
@@ -41,7 +44,10 @@ export function weaponMasteryChoiceProfileForFeature(input: {
   return {
     feature,
     classRecord,
-    choiceCount: feature.mechanics.choose,
+    choiceCount: weaponMasteryChoiceCountAtClassLevel(
+      feature.mechanics.choose,
+      input.classLevel ?? feature.acquiredAtLevel,
+    ),
     longRestChangeCount:
       feature.mechanics.changeOn.kind === "long_rest"
         ? feature.mechanics.changeOn.count
@@ -52,6 +58,15 @@ export function weaponMasteryChoiceProfileForFeature(input: {
       unitLibrary: input.unitLibrary,
     }),
   };
+}
+
+export function weaponMasteryChoiceCountAtClassLevel(
+  choiceCount: number | ClassLevelChoiceCount,
+  classLevel: number,
+): number {
+  return typeof choiceCount === "number"
+    ? choiceCount
+    : classLevelChoiceCountAtLevel(choiceCount, classLevel);
 }
 
 export function isWeaponMasteryChoiceFeature(
@@ -68,15 +83,17 @@ function eligibleWeaponMasteryWeapons(input: {
   readonly classRecord: ClassRecord;
   readonly unitLibrary: UnitCatalog;
 }): readonly WeaponRecord[] {
-  return input.unitLibrary.listUnits().filter(
-    (unit): unit is WeaponRecord =>
-      unit.kind === "weapon" &&
-      weaponMatchesMasteryEligibility(
-        unit,
-        input.feature.mechanics.eligibleWeapons,
-        input.classRecord,
-      ),
-  );
+  return input.unitLibrary
+    .listUnits()
+    .filter(
+      (unit): unit is WeaponRecord =>
+        unit.kind === "weapon" &&
+        weaponMatchesMasteryEligibility(
+          unit,
+          input.feature.mechanics.eligibleWeapons,
+          input.classRecord,
+        ),
+    );
 }
 
 function classRecordForFeature(

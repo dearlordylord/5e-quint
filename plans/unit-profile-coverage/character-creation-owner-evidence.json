@@ -2593,8 +2593,8 @@
     },
     "srd521:classes/bard:level-2:class-feature-grant:bard_expertise": {
       "taskId": "L12G-AUTHOR-BARD-EXPERTISE",
-      "profile": "level-2 Bard Expertise support profile",
-      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+      "profile": "Bard Expertise support profile",
+      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise at Bard level 2, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts. The same Surface grant-expertise choiceCount discovers Bard level 9 as one four-skill owned-proficiency choice source, excluding skills that already have Expertise instead of storing a second level-9 selection state.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
         "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
@@ -2613,7 +2613,8 @@
       ],
       "tests": [
         "packages/character-creation-runtime/src/bard-expertise.test.ts:finalizes two owned skills as Bard level-2 Expertise",
-        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies"
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies",
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:discovers Bard level-9 Expertise as one four-skill owned-proficiency choice"
       ]
     },
     "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
@@ -3191,6 +3192,31 @@
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature"
+      ]
+    },
+    "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant": {
+      "taskId": "L3MCHAR-05",
+      "profile": "Character Creation Wizard spellbook learning acquisition choice",
+      "summary": "Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The later grant on future new Wizard Spell Slot levels remains closed by the Unit claim as a future character-advancement owner rather than duplicated in level-3 character creation.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:wizardSpellbookLearningChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:wizardSpellbookLearningOptions"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:selectedPreparedSpellsAreInSelectedSpellbook",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedWizardSpellbookSelectionsAreDistinct"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:selectedWizardSpellbookUnitRefs",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:discovers and finalizes Evocation Savant spellbook choices",
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:rejects duplicate Evocation Savant spellbook selections",
+        "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts:selected-wizard-evocation-savant-finalizes-spellbook-grants"
       ]
     }
   }

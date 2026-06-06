@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner SHEET.WEAPON_MASTERY.RESELECTION
-// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.weapon-mastery-reselection
+// KERNEL-COVERAGE: qnt-owner SHEET.WEAPON_MASTERY.RESELECTION SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
+// UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection character-creation.weapon-mastery-level-gain
 
 module weaponMasteryReselection {
   type WeaponMasteryReselectionFacts = {
@@ -15,6 +15,18 @@ module weaponMasteryReselection {
   type WeaponMasteryReselectionResult =
     | WeaponMasteryReselectionAccepted({ selectedWeaponRefs: List[str] })
     | WeaponMasteryReselectionRejected
+
+  type WeaponMasteryLevelGainFacts = {
+    currentChoiceCount: int,
+    nextChoiceCount: int,
+    currentWeaponRefs: List[str],
+    requestedWeaponRefs: List[str],
+    eligibleWeaponRefs: Set[str],
+  }
+
+  type WeaponMasteryLevelGainResult =
+    | WeaponMasteryLevelGainAccepted({ selectedWeaponRefs: List[str] })
+    | WeaponMasteryLevelGainRejected
 
   pure def weaponMasteryWeaponRefSet(weaponRefs: List[str]): Set[str] =
     weaponRefs.foldl(Set(), (refs, weaponRef) => refs.union(Set(weaponRef)))
@@ -73,4 +85,49 @@ module weaponMasteryReselection {
       WeaponMasteryReselectionAccepted({ selectedWeaponRefs: facts.requestedWeaponRefs })
     else
       WeaponMasteryReselectionRejected
+
+  pure def legalWeaponMasteryLevelGainFacts(facts: WeaponMasteryLevelGainFacts): bool = all {
+    facts.currentChoiceCount > 0,
+    facts.nextChoiceCount >= facts.currentChoiceCount,
+    facts.eligibleWeaponRefs.size() >= facts.nextChoiceCount,
+  }
+
+  pure def currentWeaponMasteryLevelGainSelectionMatchesChoiceCount(facts: WeaponMasteryLevelGainFacts): bool = all {
+    facts.currentWeaponRefs.length() == facts.currentChoiceCount,
+    not(weaponMasteryWeaponRefsHaveDuplicates(facts.currentWeaponRefs)),
+  }
+
+  pure def requestedWeaponMasteryLevelGainSelectionMatchesChoiceCount(facts: WeaponMasteryLevelGainFacts): bool =
+    facts.requestedWeaponRefs.length() == facts.nextChoiceCount
+
+  pure def requestedWeaponMasteryLevelGainChoicesDistinct(facts: WeaponMasteryLevelGainFacts): bool =
+    not(weaponMasteryWeaponRefsHaveDuplicates(facts.requestedWeaponRefs))
+
+  pure def requestedWeaponMasteryLevelGainChoicesEligible(facts: WeaponMasteryLevelGainFacts): bool =
+    allWeaponMasteryWeaponRefsIn(facts.requestedWeaponRefs, facts.eligibleWeaponRefs)
+
+  pure def weaponMasteryLevelGainPreservesCurrentChoices(facts: WeaponMasteryLevelGainFacts): bool = {
+    val requestedWeaponRefSet = weaponMasteryWeaponRefSet(facts.requestedWeaponRefs)
+    facts.currentWeaponRefs.foldl(true, (preserved, weaponRef) =>
+      preserved and requestedWeaponRefSet.contains(weaponRef))
+  }
+
+  pure def weaponMasteryLevelGainAddsTableDelta(facts: WeaponMasteryLevelGainFacts): bool =
+    weaponMasteryChangedChoiceCount(facts.currentWeaponRefs, facts.requestedWeaponRefs) == facts.nextChoiceCount - facts.currentChoiceCount
+
+  pure def canApplyWeaponMasteryLevelGain(facts: WeaponMasteryLevelGainFacts): bool = all {
+    legalWeaponMasteryLevelGainFacts(facts),
+    currentWeaponMasteryLevelGainSelectionMatchesChoiceCount(facts),
+    requestedWeaponMasteryLevelGainSelectionMatchesChoiceCount(facts),
+    requestedWeaponMasteryLevelGainChoicesDistinct(facts),
+    requestedWeaponMasteryLevelGainChoicesEligible(facts),
+    weaponMasteryLevelGainPreservesCurrentChoices(facts),
+    weaponMasteryLevelGainAddsTableDelta(facts),
+  }
+
+  pure def applyWeaponMasteryLevelGain(facts: WeaponMasteryLevelGainFacts): WeaponMasteryLevelGainResult =
+    if (canApplyWeaponMasteryLevelGain(facts))
+      WeaponMasteryLevelGainAccepted({ selectedWeaponRefs: facts.requestedWeaponRefs })
+    else
+      WeaponMasteryLevelGainRejected
 }

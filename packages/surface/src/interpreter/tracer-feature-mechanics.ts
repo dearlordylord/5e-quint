@@ -58,7 +58,7 @@ export function traceClassFeatureMechanics(
         category: "hole",
         atomKind: "class_weapon_mastery_choice",
         label:
-          `class_weapon_mastery_choice\nchoose ${m.choose}\n` +
+          `class_weapon_mastery_choice\n${describeWeaponMasteryChoiceCount(m.choose)}\n` +
           `${describeWeaponMasteryEligibility(m.eligibleWeapons)}\n` +
           `change ${m.changeOn.count} on ${m.changeOn.kind}`,
       });
@@ -732,6 +732,17 @@ export function describeFeatureChoiceChange(
       return _exhaustive;
     }
   }
+}
+
+function describeWeaponMasteryChoiceCount(
+  choiceCount: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "weapon_mastery_choice" }
+  >["choose"],
+): string {
+  return typeof choiceCount === "number"
+    ? `choose ${choiceCount}`
+    : describeClassLevelChoiceCount(choiceCount);
 }
 
 export function traceAlternateActionCostMechanics(

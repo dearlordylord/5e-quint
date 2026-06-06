@@ -74,6 +74,38 @@ module characterSheetClassFeatureSelectedIdentityMbt {
     recordProjection("warlock-fiend-spells", "warlock_fiend_spells", "none", true, 4, 0, "none", true),
   }
 
+  action stepProjectBardJackOfAllTrades = any {
+    doProjectBardJackOfAllTrades,
+  }
+
+  action stepProjectClericLifeDomainSpells = any {
+    doProjectClericLifeDomainSpells,
+  }
+
+  action stepProjectDruidCircleLandSpells = any {
+    doProjectDruidCircleLandSpells,
+  }
+
+  action stepProjectPaladinOathDevotionSpells = any {
+    doProjectPaladinOathDevotionSpells,
+  }
+
+  action stepProjectPaladinsSmite = any {
+    doProjectPaladinsSmite,
+  }
+
+  action stepProjectRangerFavoredEnemy = any {
+    doProjectRangerFavoredEnemy,
+  }
+
+  action stepProjectSorcererDraconicSpells = any {
+    doProjectSorcererDraconicSpells,
+  }
+
+  action stepProjectWarlockFiendSpells = any {
+    doProjectWarlockFiendSpells,
+  }
+
   action step = any {
     doProjectBardJackOfAllTrades,
     doProjectClericLifeDomainSpells,

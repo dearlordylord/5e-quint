@@ -62,9 +62,9 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 163,
-      "numerator": 163,
-      "percent": "100%"
+      "denominator": 172,
+      "numerator": 168,
+      "percent": "97.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 275,
@@ -82,18 +82,18 @@
       "percent": "97.2%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 145,
-      "numerator": 145,
+      "denominator": 147,
+      "numerator": 147,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 145,
-      "numerator": 145,
+      "denominator": 147,
+      "numerator": 147,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 156,
-      "numerator": 156,
+      "denominator": 165,
+      "numerator": 165,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 163,
-      "numerator": 158,
-      "percent": "96.9%"
+      "denominator": 172,
+      "numerator": 167,
+      "percent": "97.1%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 163,
-      "percent": "71.5%"
+      "numerator": 172,
+      "percent": "75.4%"
     }
   },
   "metricSemantics": [
@@ -377,7 +377,8 @@
       "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
       "taskRefs": [
         "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+        "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
       ],
       "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
       "verificationOwners": [
@@ -1217,6 +1218,28 @@
       ]
     },
     {
+      "id": "character-sheet.weapon-mastery-class-level-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
+      "taskRefs": [
+        "AT-L1-04",
+        "L3MCHAR-01"
+      ],
+      "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.weapon-critical-range-19",
       "profileKind": "passive",
       "qntOwners": [
@@ -1915,7 +1938,8 @@
       "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
         "SRDINV53",
-        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+        "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
       ],
       "title": "Spell invocation grants once-per-target-turn jump movement replacement",
       "verificationOwners": [
@@ -2720,6 +2744,25 @@
       ]
     },
     {
+      "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+      "taskRefs": [
+        "L3MCHAR-04"
+      ],
+      "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-creation.warlock-pact-magic-advancement",
       "profileKind": "character-creation",
       "qntOwners": [],
@@ -2751,6 +2794,27 @@
         "AT-L1-04"
       ],
       "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.weapon-mastery-level-gain",
+      "profileKind": "character-creation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "CharacterBuild Fighter or Barbarian progression plus the retained Surface Weapon Mastery class-feature ref and class-level choice-count table; level gain accepts selected weapon refs only for the gaining class feature, preserves existing selected refs, adds exactly the new table-count delta, enforces eligible weapon refs, and does not own selected mastery-property execution.",
+      "taskRefs": [
+        "L3MCHAR-01"
+      ],
+      "title": "Character Creation advances Fighter and Barbarian Weapon Mastery selected weapon refs during class-level gains",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -4167,7 +4231,7 @@
         "packages/character-creation-runtime/src/finalization.ts",
         "packages/character-sheet-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+      "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
       "taskRefs": [
         "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
       ],
@@ -4686,13 +4750,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 145,
-        "numerator": 145,
+        "denominator": 147,
+        "numerator": 147,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 145,
-        "numerator": 145,
+        "denominator": 147,
+        "numerator": 147,
         "percent": "100%"
       }
     },
@@ -5273,6 +5337,22 @@
         "profileKind": "character-sheet",
         "qntOwners": [
           "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+          }
+        ],
+        "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+        "profileKind": "character-sheet",
+        "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
         ]
       },
@@ -6274,6 +6354,22 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+          }
+        ],
+        "profileId": "character-creation.weapon-mastery-level-gain",
+        "profileKind": "character-creation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
             "runtime": "character-creation",
             "status": "covered",
@@ -7189,8 +7285,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 156,
-          "numerator": 156,
+          "denominator": 165,
+          "numerator": 165,
           "percent": "100%"
         }
       },
@@ -7514,6 +7610,58 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-level-gain",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+              ]
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+                }
+              ],
+              "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+              "profileKind": "character-sheet",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+              ]
+            }
+          ],
+          "unitId": "barbarian_weapon_mastery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -7573,6 +7721,26 @@
             }
           ],
           "unitId": "bard_cutting_words"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
+              "profileId": "character-creation.skill-expertise-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "bard_expertise"
         },
         {
           "joinStatus": "covered",
@@ -7890,6 +8058,26 @@
             }
           ],
           "unitId": "cleric_divine_order"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "cleric_life_domain_spells"
         },
         {
           "joinStatus": "covered",
@@ -8676,6 +8864,58 @@
             }
           ],
           "unitId": "fighter_tactical_mind"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-level-gain",
+              "profileKind": "character-creation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+              ]
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
+                }
+              ],
+              "profileId": "character-sheet.weapon-mastery-class-level-reselection",
+              "profileKind": "character-sheet",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+              ]
+            }
+          ],
+          "unitId": "fighter_weapon_mastery"
         },
         {
           "joinStatus": "covered",
@@ -9937,6 +10177,40 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_fighting_style"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -9954,6 +10228,26 @@
             }
           ],
           "unitId": "paladin_lay_on_hands"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "paladin_oath_of_devotion_spells"
         },
         {
           "joinStatus": "covered",
@@ -10217,6 +10511,40 @@
             }
           ],
           "unitId": "ranger_extra_attack"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "ranger_fighting_style"
         },
         {
           "joinStatus": "covered",
@@ -11003,6 +11331,26 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "sorcerer_draconic_spells"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11341,6 +11689,26 @@
             }
           ],
           "unitId": "warlock_eldritch_invocations"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
+              "profileId": "character-sheet.class-feature-prepared-spell-access",
+              "profileKind": "character-sheet",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "warlock_fiend_spells"
         },
         {
           "joinStatus": "covered",
@@ -13118,10 +13486,11 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet Long Rest tests cover Weapon Mastery reselection for Fighter, Barbarian, Paladin, Ranger, and Rogue by replacing selected class-choice refs from Surface feature eligibility while leaving mastery-property execution to selected Mastery Property Unit profiles.",
+      "note": "Focused Character Sheet Long Rest tests cover Weapon Mastery reselection for Fighter, Barbarian, Paladin, Ranger, and Rogue by replacing selected class-choice refs from Surface feature eligibility while leaving mastery-property execution to selected Mastery Property Unit profiles. The class-level reselection profile separates Fighter and Barbarian runtime-test evidence from the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [
         "character-creation.weapon-mastery-choice",
-        "character-sheet.weapon-mastery-reselection"
+        "character-sheet.weapon-mastery-reselection",
+        "character-sheet.weapon-mastery-class-level-reselection"
       ],
       "taskId": "AT-L1-04"
     },
@@ -13251,6 +13620,14 @@
         "character-creation.eldritch-invocation-choice"
       ],
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Fighter and Barbarian Weapon Mastery class-level gains that derive the active count from the Surface class-level table, preserve existing selected Weapon Mastery weapon refs, require exactly the new table-count choices, reject ineligible or replacement selections, and compose Fighter-only Fighting Style replacement with Weapon Mastery gain in one typed advancement operation.",
+      "profileIds": [
+        "character-creation.weapon-mastery-level-gain"
+      ],
+      "taskId": "L3MCHAR-01"
     },
     {
       "claimKind": "qnt-proof",
@@ -13912,10 +14289,34 @@
       "taskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Task 9 resolves Monk Focus jump support against the existing movement model: promoted Quint facts retain the paid Step of the Wind turn-scoped jump-distance multiplier only where the reducer can consume it through Jump spell movement replacement witnesses, while ordinary Long Jump and High Jump route, obstacle, destination, and landing derivations remain table-owned movement adjudication.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover paid Step of the Wind recording the turn-scoped jump-distance multiplier, projecting the doubled Jump spell movement replacement maximum, accepting a 60-foot caller-supplied Jump witness, rejecting a 61-foot witness, and clearing the multiplier at turn handoff without adding ordinary jump route or landing state.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
+    },
+    {
       "claimKind": "accepted-runtime-closure",
       "note": "Focused Character Battle tests cover Font of Magic created Spell Slots entering battle only as aggregate Spell Slot capacity, absence of a battle Unit feature Bonus Action for Creating Spell Slots, and source-ambiguous ordinary-versus-created Spell Slot handoff rejection. The closure keeps Character Sheet as the canonical owner of created Spell Slot source state and avoids a duplicate battle-local Spell Slot source pool or source ledger.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task reachability review confirmed Font of Magic sorcery-point-to-Spell-Slot conversion is not promoted as a battle-runtime Unit Bonus Action. RAW makes Creating Spell Slots a Bonus Action resource conversion, but the supported runtime boundary keeps ordinary-vs-created Spell Slot source state on Character Sheet, projects only aggregate Spell Slot capacity into Character Battle, rejects source-ambiguous battle handoff, and avoids adding a duplicate battle-local Spell Slot source ledger. Existing Character Sheet conversion tests, Character Battle init/handoff tests, and character-sheet feature-resource QNT replay remain the evidence boundary.",
+      "profileIds": [],
+      "taskId": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE"
     },
     {
       "claimKind": "runtime-test",
@@ -14069,7 +14470,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation and Character Sheet changes retain selected level-3 subclass spell-access feature grants for Cleric Life Domain, Paladin Oath of Devotion, Sorcerer Draconic Sorcery, and Warlock Fiend Patron, then derive prepared spell access from installed Surface grant_spell_access facts without storing duplicate prepared-spell state. Druid Circle of the Land remains split to a selected-land follow-up.",
+      "note": "Focused Character Creation and Character Sheet changes retain selected subclass spell-access feature grants for Cleric Life Domain, Paladin Oath of Devotion, Sorcerer Draconic Sorcery, and Warlock Fiend Patron, then derive prepared spell access from installed Surface grant_class_level_prepared_spell_access tier facts and the existing build class level without storing duplicate prepared-spell state. Druid Circle of the Land remains owned by its selected-land profile.",
       "profileIds": [
         "character-sheet.class-feature-prepared-spell-access"
       ],
@@ -14602,6 +15003,22 @@
         "unit-feature.passive-damage-resistance"
       ],
       "taskId": "L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Long Rest tests cover Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally relies on runtime-test evidence plus the shared semantic core, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
+      "profileIds": [
+        "character-sheet.weapon-mastery-class-level-reselection"
+      ],
+      "taskId": "L3MCHAR-01"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Paladin Blessed Warrior and Ranger Druidic Warrior same-class level gains replacing one existing granted cantrip with a different cantrip from the Surface grant spell list, advancing the same class spellcasting source to the next list-prepared spell count and Spell Slot row, and rejecting wrong-list, duplicate, missing-current, and acquisition-only cantrip-grant replacements.",
+      "profileIds": [
+        "character-creation.fighting-style-cantrip-advancement-replacement"
+      ],
+      "taskId": "L3MCHAR-04"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -14674,13 +15091,13 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 107,
-        "profileSubsetSupportedUnits": 17,
+        "profileFactDenominator": 111,
+        "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 59,
+        "supportedProfileUnits": 68,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -15448,27 +15865,23 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
-              "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
-            },
-            "followUpTaskId": "SRDINV78",
-            "mechanic": "later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units",
+          "reason": "The class feature owns Weapon Mastery selected weapon count, advancement, and Long Rest reselection as CharacterBuild facts; selected Mastery Property Units own executable battle pressure."
+        },
         "profileIds": [
           "character-creation.weapon-mastery-choice",
-          "character-sheet.weapon-mastery-reselection"
+          "character-creation.weapon-mastery-level-gain",
+          "character-sheet.weapon-mastery-class-level-reselection"
         ],
         "supportedMechanics": [
-          "Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record",
-          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Fighter character creation discovers and finalizes selected Weapon Mastery weapon refs from the Surface class-feature record using the class-level Weapon Mastery count table",
+          "Fighter level gain requires typed Weapon Mastery selected-weapon refs when the class table increases the count, preserving existing selected refs and adding exactly the new table choices without parallel state",
+          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count, class-level count table, and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
           "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -15507,20 +15920,41 @@
           ]
         },
         {
-          "id": "character-sheet.weapon-mastery-reselection",
+          "id": "character-creation.weapon-mastery-level-gain",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Fighter or Barbarian progression plus the retained Surface Weapon Mastery class-feature ref and class-level choice-count table; level gain accepts selected weapon refs only for the gaining class feature, preserves existing selected refs, adds exactly the new table-count delta, enforces eligible weapon refs, and does not own selected mastery-property execution.",
+          "taskRefs": [
+            "L3MCHAR-01"
+          ],
+          "title": "Character Creation advances Fighter and Barbarian Weapon Mastery selected weapon refs during class-level gains",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-class-level-reselection",
           "profileKind": "character-sheet",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
-            "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
           ],
           "runtimeOwners": [
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
           "taskRefs": [
-            "AT-L1-04"
+            "AT-L1-04",
+            "L3MCHAR-01"
           ],
-          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -16329,27 +16763,23 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
-              "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
-            },
-            "followUpTaskId": "SRDINV78",
-            "mechanic": "later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units",
+          "reason": "The class feature owns Weapon Mastery selected weapon count, advancement, and Long Rest reselection as CharacterBuild facts; selected Mastery Property Units own executable battle pressure."
+        },
         "profileIds": [
           "character-creation.weapon-mastery-choice",
-          "character-sheet.weapon-mastery-reselection"
+          "character-creation.weapon-mastery-level-gain",
+          "character-sheet.weapon-mastery-class-level-reselection"
         ],
         "supportedMechanics": [
-          "Level 1 Barbarian character creation discovers and finalizes two selected melee Weapon Mastery weapon refs from the Surface class-feature record",
-          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Barbarian character creation discovers and finalizes selected melee Weapon Mastery weapon refs from the Surface class-feature record using the class-level Weapon Mastery count table",
+          "Barbarian level gain requires typed Weapon Mastery selected-weapon refs when the class table increases the count, preserving existing selected refs and adding exactly the new table choices without parallel state",
+          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count, class-level count table, and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
           "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16388,20 +16818,41 @@
           ]
         },
         {
-          "id": "character-sheet.weapon-mastery-reselection",
+          "id": "character-creation.weapon-mastery-level-gain",
+          "profileKind": "character-creation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Fighter or Barbarian progression plus the retained Surface Weapon Mastery class-feature ref and class-level choice-count table; level gain accepts selected weapon refs only for the gaining class feature, preserves existing selected refs, adds exactly the new table-count delta, enforces eligible weapon refs, and does not own selected mastery-property execution.",
+          "taskRefs": [
+            "L3MCHAR-01"
+          ],
+          "title": "Character Creation advances Fighter and Barbarian Weapon Mastery selected weapon refs during class-level gains",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-class-level-reselection",
           "profileKind": "character-sheet",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt",
-            "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
           ],
           "runtimeOwners": [
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
           "taskRefs": [
-            "AT-L1-04"
+            "AT-L1-04",
+            "L3MCHAR-01"
           ],
-          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -16601,27 +17052,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Bard level-9 character advancement owner",
-              "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane."
-            },
-            "mechanic": "Bard level 9 Expertise grants two more selected owned skill proficiencies"
-          }
-        ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
         ],
+        "rawRequirementIds": [],
         "supportedMechanics": [
           "Bard Expertise is installed as a level-2 Surface class-feature grant on class_bard",
           "Surface Bard spellcasting carries level-1 and level-2 table rows so admitting same-class Bard 2 projects five prepared spells and three level-1 Spell Slots",
           "Surface grant_expertise represents the level-2 acquisition choice as owned skill proficiencies without existing Expertise",
           "Character Creation admits supported Bard level-2 progression, discovers exactly two Bard Expertise choices from owned skill proficiencies without existing Expertise, and rejects skills that are not owned proficiencies",
-          "Character Creation finalizes the selected Bard Expertise skills as CharacterBuild Expertise without duplicating skill proficiency state"
+          "Character Creation finalizes the selected Bard Expertise skills as CharacterBuild Expertise without duplicating skill proficiency state",
+          "The same Surface grant_expertise choiceCount records Bard level 9 as four total selected owned skill proficiencies through one Bard Expertise choice source, excluding skills that already have Expertise rather than duplicating skill selection state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16629,6 +17072,11 @@
           "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-BARD-EXPERTISE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE"
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
@@ -16926,25 +17374,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Life Domain Spells table rows gained at Cleric levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Cleric Life Domain subclass ownership retains the level-3 Life Domain Spells class-feature Unit in CharacterBuild feature refs when the Cleric class level is 3 or higher",
-          "Character Sheet projects the level-3 Life Domain Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Cleric Life Domain subclass ownership retains the Life Domain Spells class-feature Unit in CharacterBuild feature refs when the Cleric class level is 3 or higher",
+          "The Surface class-feature record carries the Cleric level 3, 5, 7, and 9 Life Domain Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Life Domain Spells prepared spell access from installed Surface class-level tiers and the existing Cleric class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16965,7 +17404,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -17630,7 +18069,7 @@
             "battleReadinessClosure": {
               "kind": "outside-runtime-presentation-exploration",
               "owner": "table movement adjudication and any future ordinary jump movement witness owner",
-              "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
+              "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
             },
             "mechanic": "Ordinary Long Jump and High Jump movement witnesses are not promoted as standalone runtime commands; their distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this Monk Focus battle profile."
           }
@@ -17763,7 +18202,8 @@
           "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
           "taskRefs": [
             "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
           ],
           "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
           "verificationOwners": [
@@ -18324,28 +18764,25 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Ranger advancement cantrip replacement owner",
-              "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
-            },
-            "mechanic": "Druidic Warrior cantrip replacement when later gaining Ranger levels after acquiring the feature"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+          "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
+        },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-option-projection"
+          "character-creation.class-feature-option-projection",
+          "character-creation.fighting-style-cantrip-advancement-replacement"
         ],
         "supportedMechanics": [
           "Ranger Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Druidic Warrior branch",
           "Character Creation admits a supported Ranger level-2 same-class progression, discovers the Ranger Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
           "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId ranger_fighting_style",
           "Character Creation admits the Druidic Warrior branch, discovers exactly two Druid cantrip choices from the selected branch, and projects selected cantrips as Ranger spellcasting cantrips using the Ranger Wisdom spellcasting source",
-          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Ranger feature owns only the branch and grant selection container"
+          "When a Ranger level is gained after Druidic Warrior acquisition, Character Creation can replace one existing granted Druid cantrip with a different Druid cantrip by rewriting the Ranger spellcasting source cantrip list, advancing list-prepared spell choices and Spell Slots from the Surface Ranger progression row, and avoiding a duplicate branch marker",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Ranger feature owns branch selection, grant selection, and same-class cantrip replacement"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -18394,6 +18831,25 @@
             "AT-L1-03S"
           ],
           "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+          "taskRefs": [
+            "L3MCHAR-04"
+          ],
+          "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -18679,30 +19135,6 @@
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "table/tool-check owner",
-              "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile."
-            },
-            "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, and success/failure consequences."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "Utilize action owner",
-              "reason": "Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary."
-            },
-            "mechanic": "Execute the object interaction effects of the Utilize action."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "magic-item activation owner",
-              "reason": "Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile."
-            },
-            "mechanic": "Activate magic items that require a Magic action."
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "table/tool-check owner",
               "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper."
             },
             "mechanic": "Resolve lock picking, trap disarming, and pocket picking checks, including object, tool, target, DC, success/failure consequences, and the Fast Hands Bonus Action spend for that concrete procedure."
@@ -18737,8 +19169,6 @@
         },
         "supportedMechanics": [
           "Rogue Fast Hands is installed as a level-3 Surface class-feature grant on subclass_rogue_thief",
-          "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics with Bonus Action activation",
-          "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action owner, and a Magic action permission restricted to magic items that require a Magic action",
           "Battle Unit support admits the Surface bonus_action_delegated_standard_actions mechanics and preserves the declared Bonus Action cost as delegated permission metadata",
           "The projected support profile carries Dexterity (Sleight of Hand) lock, trap, and pocket operations delegated to the table tool-check owner, a delegated Utilize action permission, and a Magic action permission restricted to magic items that require a Magic action"
         ],
@@ -19134,6 +19564,11 @@
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE"
         }
       ],
       "executableMechanics": true,
@@ -19762,25 +20197,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Draconic Spells table rows gained at Sorcerer levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Sorcerer Draconic Sorcery subclass ownership retains the level-3 Draconic Spells class-feature Unit in CharacterBuild feature refs when the Sorcerer class level is 3 or higher",
-          "Character Sheet projects the level-3 Draconic Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Sorcerer Draconic Sorcery subclass ownership retains the Draconic Spells class-feature Unit in CharacterBuild feature refs when the Sorcerer class level is 3 or higher",
+          "The Surface class-feature record carries the Sorcerer level 3, 5, 7, and 9 Draconic Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Draconic Spells prepared spell access from installed Surface class-level tiers and the existing Sorcerer class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -19801,7 +20227,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -20115,25 +20541,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Fiend Spells table rows gained at Warlock levels 5, 7, and 9"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Warlock Fiend Patron subclass ownership retains the level-3 Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher",
-          "Character Sheet projects the level-3 Fiend Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Warlock Fiend Patron subclass ownership retains the Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher",
+          "The Surface class-feature record carries the Warlock level 3, 5, 7, and 9 Fiend Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Fiend Spells prepared spell access from installed Surface class-level tiers and the existing Warlock class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -20154,7 +20571,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -21005,28 +21422,25 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Paladin advancement cantrip replacement owner",
-              "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
-            },
-            "mechanic": "Blessed Warrior cantrip replacement when later gaining Paladin levels after acquiring the feature"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+          "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
+        },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-option-projection"
+          "character-creation.class-feature-option-projection",
+          "character-creation.fighting-style-cantrip-advancement-replacement"
         ],
         "supportedMechanics": [
           "Paladin Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Blessed Warrior branch",
           "Character Creation admits a supported Paladin level-2 same-class progression, discovers the Paladin Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
           "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId paladin_fighting_style",
           "Character Creation admits the Blessed Warrior branch, discovers exactly two Cleric cantrip choices from the selected branch, and projects selected cantrips as Paladin spellcasting cantrips using the Paladin Charisma spellcasting source",
-          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns only the branch and grant selection container"
+          "When a Paladin level is gained after Blessed Warrior acquisition, Character Creation can replace one existing granted Cleric cantrip with a different Cleric cantrip by rewriting the Paladin spellcasting source cantrip list, advancing list-prepared spell choices and Spell Slots from the Surface Paladin progression row, and avoiding a duplicate branch marker",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns branch selection, grant selection, and same-class cantrip replacement"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -21075,6 +21489,25 @@
             "AT-L1-03S"
           ],
           "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.fighting-style-cantrip-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild same-class progression plus Surface class-feature acquisition choices that grant known level-0 spell access with a class-level-gain replacement fact; replacement is accepted only as part of that class level gain, rewrites the existing class spellcasting source cantrip list, advances list-prepared spell choices and spell slots from the Surface class progression row, and does not retain duplicate branch or selected-cantrip state.",
+          "taskRefs": [
+            "L3MCHAR-04"
+          ],
+          "title": "Character Creation advances class levels with Fighting Style cantrip replacement",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -21163,25 +21596,16 @@
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future subclass Spell Access progression owner",
-              "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
-            },
-            "mechanic": "later Oath of Devotion Spells table rows gained at Paladin levels 5, 9, 13, and 17"
-          }
-        ],
         "profileIds": [
           "character-sheet.class-feature-prepared-spell-access"
         ],
         "supportedMechanics": [
-          "Selected Paladin Oath of Devotion subclass ownership retains the level-3 Oath of Devotion Spells class-feature Unit in CharacterBuild feature refs when the Paladin class level is 3 or higher",
-          "Character Sheet projects the level-3 Oath of Devotion Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Selected Paladin Oath of Devotion subclass ownership retains the Oath of Devotion Spells class-feature Unit in CharacterBuild feature refs when the Paladin class level is 3 or higher",
+          "The Surface class-feature record carries the Paladin level 3, 5, 9, 13, and 17 Oath of Devotion Spells table as class-level-gated prepared Spell Access source facts",
+          "Character Sheet projects Oath of Devotion Spells prepared spell access from installed Surface class-level tiers and the existing Paladin class level without storing duplicate prepared-spell state",
           "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -21202,7 +21626,7 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-sheet-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
             "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
           ],
@@ -27148,7 +27572,8 @@
           "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
             "SRDINV53",
-            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE"
           ],
           "title": "Spell invocation grants once-per-target-turn jump movement replacement",
           "verificationOwners": [

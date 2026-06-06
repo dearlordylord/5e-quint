@@ -7,7 +7,14 @@ let weaponMastery =
       , kind = "class_feature"
       , mechanics =
         { changeOn = { count = 1, kind = "long_rest" }
-        , choose = 2
+        , choose =
+          { kind = "class_level_total_choices"
+          , levels =
+            [ { atLevel = 1, total = 2 }
+            , { atLevel = 4, total = 3 }
+            , { atLevel = 10, total = 4 }
+            ]
+          }
         , eligibleWeapons =
           { kind = "class_proficient_weapons", usage = "melee" }
         , family = "weapon_mastery_choice"

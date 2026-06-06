@@ -156,6 +156,7 @@
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
         "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
         "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar",
+        "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
         "srd521:classes/wizard:level-3:subclass-selection:wizard_subclass"
       ],
       "issues": []
@@ -215,8 +216,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 279,
-        "accepted-no-battle-effect": 88
+        "accepted": 277,
+        "accepted-no-battle-effect": 90
       }
     },
     "levelOneTwoBattleReadiness": {
@@ -224,32 +225,32 @@
       "numerator": 397,
       "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 297,
-        "accepted-no-battle-effect": 100,
+        "accepted": 293,
+        "accepted-no-battle-effect": 104,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 1
       }
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 599,
-      "percent": "98.7%",
+      "numerator": 600,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 438,
-        "accepted-no-battle-effect": 161,
-        "owner-evidence-required": 6,
+        "accepted": 435,
+        "accepted-no-battle-effect": 165,
+        "owner-evidence-required": 5,
         "partial-battle-runtime": 1,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 47,
-      "percent": "92.2%",
+      "numerator": 48,
+      "percent": "94.1%",
       "rowsByStatus": {
-        "accepted": 33,
+        "accepted": 34,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 4
+        "owner-evidence-required": 3
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -275,10 +276,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 33,
+      "catalog-installed-owner-evidence-present": 34,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 4
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -287,9 +288,9 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 468,
+      "catalog-installed-owner-evidence-present": 469,
       "non-runtime": 36,
-      "catalog-installed-owner-evidence-required": 5,
+      "catalog-installed-owner-evidence-required": 4,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -3924,13 +3925,13 @@
         "state": "installed",
         "unitId": "barbarian_weapon_mastery"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
-        "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units",
+        "reason": "The class feature owns Weapon Mastery selected weapon count, advancement, and Long Rest reselection as CharacterBuild facts; selected Mastery Property Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -3945,7 +3946,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
@@ -4924,14 +4925,8 @@
         "state": "installed",
         "unitId": "bard_expertise"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Bard level-9 character advancement owner",
-        "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4940,7 +4935,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-BARD-EXPERTISE level-2 Bard Expertise support profile; Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-BARD-EXPERTISE Bard Expertise support profile; Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise at Bard level 2, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts. The same Surface grant-expertise choiceCount discovers Bard level 9 as one four-skill owned-proficiency choice source, excluding skills that already have Expertise instead of storing a second level-9 selection state.",
           "status": "owner evidence present"
         }
       ],
@@ -8962,13 +8957,13 @@
         "state": "installed",
         "unitId": "cleric_life_domain_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -8978,7 +8973,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -10452,8 +10447,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3MCHAR-06 Character Sheet spell-granted Short Rest benefit runtime; Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
           "status": "owner evidence present"
         }
       ],
@@ -15403,13 +15398,13 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
-        "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime and character-sheet-runtime selected Weapon Mastery refs plus selected Mastery Property Units",
+        "reason": "The class feature owns Weapon Mastery selected weapon count, advancement, and Long Rest reselection as CharacterBuild facts; selected Mastery Property Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -15424,7 +15419,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -16409,7 +16404,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "table movement adjudication and any future ordinary jump movement witness owner",
-        "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
+        "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
       },
       "ownerEvidence": [
         {
@@ -17369,13 +17364,13 @@
         "state": "installed",
         "unitId": "paladin_fighting_style"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Paladin advancement cantrip replacement owner",
-        "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+        "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
       },
       "ownerEvidence": [
         {
@@ -17390,7 +17385,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",
@@ -17670,13 +17665,13 @@
         "state": "installed",
         "unitId": "paladin_oath_of_devotion_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -17686,7 +17681,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -18551,8 +18546,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3MCHAR-06 Character Sheet spell-granted Short Rest benefit runtime; Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
           "status": "owner evidence present"
         }
       ],
@@ -19629,13 +19624,13 @@
         "state": "installed",
         "unitId": "ranger_fighting_style"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Ranger advancement cantrip replacement owner",
-        "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime selected cantrip refs plus selected spell Unit profiles",
+        "reason": "The class feature owns Fighting Style branch selection and same-class cantrip replacement as CharacterBuild spellcasting facts; selected cantrip Spell Units own executable spell invocation pressure."
       },
       "ownerEvidence": [
         {
@@ -19650,7 +19645,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",
@@ -22299,7 +22294,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "table/tool-check owner; Utilize action owner; magic-item activation owner",
-        "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.; Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner."
+        "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner."
       },
       "ownerEvidence": [
         {
@@ -22309,7 +22304,7 @@
         },
         {
           "owner": "battle-runtime admission plus closed delegated owners",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A17 at packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts; residual delegated owners closed by Unit claim: table/tool-check owner; Utilize action owner; magic-item activation owner (Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks; the checks themselves depend on table-owned object and target facts outside this Unit admission profile.; Fast Hands delegates action economy only; object use state and outcomes belong to the generic Utilize action boundary.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile.; Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.)",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A17 at packages/battle-runtime/src/unit-profile-admission-level3-resource-action-features.test.ts; residual delegated owners closed by Unit claim: table/tool-check owner; Utilize action owner; magic-item activation owner (Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.)",
           "status": "owner evidence present"
         }
       ],
@@ -23330,13 +23325,13 @@
         "state": "installed",
         "unitId": "sorcerer_draconic_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -23346,7 +23341,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -27624,13 +27619,13 @@
         "state": "installed",
         "unitId": "warlock_fiend_spells"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future subclass Spell Access progression owner",
-        "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
       },
       "ownerEvidence": [
         {
@@ -27640,7 +27635,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
           "status": "owner evidence present"
         }
       ],
@@ -30004,7 +29999,7 @@
         "unitId": "wizard_evocation_savant"
       },
       "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
@@ -30018,13 +30013,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime and character-sheet spellbook owner",
-          "evidence": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L3MCHAR-05 Character Creation Wizard spellbook learning acquisition choice; Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The later grant on future new Wizard Spell Slot levels remains closed by the Unit claim as a future character-advancement owner rather than duplicated in level-3 character creation.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",

@@ -28,7 +28,7 @@
       "deterministic-qnt-replay": "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
       "focused-mbt": "Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings.",
       "mcp-scenario": "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",
-      "runtime-test": "Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership."
+      "runtime-test": "Focused runtime test evidence for a profile-scoped reducer or projection path that already has profile-level QNT proof ownership or declared semantic-core QNT ownership."
     }
   },
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
@@ -72,12 +72,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 37,
-              "numerator": 37
+              "denominator": 39,
+              "numerator": 39
             },
             "qntCoveredObligations": {
-              "denominator": 44,
-              "numerator": 44
+              "denominator": 46,
+              "numerator": 46
             }
           },
           "generatorBlockingRows": [],
@@ -89,13 +89,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 44,
-              "numerator": 44
+              "denominator": 46,
+              "numerator": 46
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
               "focused-mbt": 43,
-              "runtime-test": 14
+              "runtime-test": 16
             }
           },
           "id": "mbt-parity-evidence",
@@ -284,10 +284,12 @@
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1",
@@ -333,12 +335,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 38,
-              "numerator": 38
+              "denominator": 40,
+              "numerator": 40
             },
             "qntCoveredObligations": {
-              "denominator": 47,
-              "numerator": 47
+              "denominator": 49,
+              "numerator": 49
             }
           },
           "generatorBlockingRows": [],
@@ -350,13 +352,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 47,
-              "numerator": 47
+              "denominator": 49,
+              "numerator": 49
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
               "focused-mbt": 43,
-              "runtime-test": 14
+              "runtime-test": 16
             }
           },
           "id": "mbt-parity-evidence",
@@ -547,11 +549,13 @@
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-2",
@@ -597,12 +601,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 56,
-              "numerator": 56
+              "denominator": 58,
+              "numerator": 58
             },
             "qntCoveredObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 69,
+              "numerator": 69
             }
           },
           "generatorBlockingRows": [],
@@ -614,13 +618,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 67,
-              "numerator": 67
+              "denominator": 69,
+              "numerator": 69
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
               "focused-mbt": 61,
-              "runtime-test": 21
+              "runtime-test": 23
             }
           },
           "id": "mbt-parity-evidence",
@@ -771,6 +775,7 @@
         "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
         "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
         "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
@@ -778,6 +783,7 @@
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-3",
@@ -796,15 +802,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 81,
-            "numerator": 81
+            "denominator": 83,
+            "numerator": 83
           },
           "joinedEvidenceRows": {
-            "denominator": 81,
-            "numerator": 81
+            "denominator": 83,
+            "numerator": 83
           },
           "missingJoinRows": {
-            "denominator": 81,
+            "denominator": 83,
             "numerator": 0
           }
         },
@@ -815,15 +821,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 94,
-            "numerator": 94
+            "denominator": 99,
+            "numerator": 99
           },
           "joinedEvidenceRows": {
-            "denominator": 94,
-            "numerator": 94
+            "denominator": 99,
+            "numerator": 99
           },
           "missingJoinRows": {
-            "denominator": 94,
+            "denominator": 99,
             "numerator": 0
           }
         },
@@ -834,15 +840,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 137,
-            "numerator": 137
+            "denominator": 146,
+            "numerator": 146
           },
           "joinedEvidenceRows": {
-            "denominator": 137,
-            "numerator": 137
+            "denominator": 146,
+            "numerator": 146
           },
           "missingJoinRows": {
-            "denominator": 137,
+            "denominator": 146,
             "numerator": 0
           }
         },

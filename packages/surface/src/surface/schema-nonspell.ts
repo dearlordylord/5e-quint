@@ -1325,7 +1325,7 @@ export const PotentCantripMechanicsSchema = strictStruct({
 
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
-  choose: PositiveIntegerSchema,
+  choose: Schema.Union(PositiveIntegerSchema, ClassLevelChoiceCountSchema),
   eligibleWeapons: Schema.Struct({
     kind: Schema.Literal("class_proficient_weapons"),
     usage: exactOptional(WeaponUsageSchema),

@@ -4611,7 +4611,15 @@ describe("SRD Unit catalog boundary", () => {
           classUnitId: "class_fighter",
           unitId: "fighter_weapon_mastery",
           className: "fighter",
-          choose: 3,
+          choose: {
+            kind: "class_level_total_choices",
+            levels: [
+              { atLevel: 1, total: 3 },
+              { atLevel: 4, total: 4 },
+              { atLevel: 10, total: 5 },
+              { atLevel: 16, total: 6 },
+            ],
+          },
           changeOn: { count: 1, kind: "long_rest" },
           eligibleWeapons: { kind: "class_proficient_weapons" },
         },
@@ -4619,7 +4627,14 @@ describe("SRD Unit catalog boundary", () => {
           classUnitId: "class_barbarian",
           unitId: "barbarian_weapon_mastery",
           className: "barbarian",
-          choose: 2,
+          choose: {
+            kind: "class_level_total_choices",
+            levels: [
+              { atLevel: 1, total: 2 },
+              { atLevel: 4, total: 3 },
+              { atLevel: 10, total: 4 },
+            ],
+          },
           changeOn: { count: 1, kind: "long_rest" },
           eligibleWeapons: {
             kind: "class_proficient_weapons",
@@ -5432,6 +5447,10 @@ describe("SRD Unit catalog boundary", () => {
                   count: 2,
                   kind: "grant_spell_access_choice",
                   mode: "known",
+                  replacement: {
+                    replacementCount: 1,
+                    trigger: "class_level_gain",
+                  },
                   spellLevel: 0,
                   spellList: "druid",
                 },

@@ -1,10 +1,13 @@
-// KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighter-fighting-style-advancement-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighting-style-cantrip-advancement-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-level-gain
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
+  CLASS_SPELL_LISTS,
   allCantripsFromClassSpellList,
   classSpellListPreparedSpellLevel,
 } from "@dnd/surface/surface/schema";
@@ -58,12 +61,25 @@ import {
   type EldritchInvocationRepeatableChoiceRule,
   type EldritchInvocationSelection,
 } from "./eldritch-invocations.ts";
+import {
+  availableSpellSlotLevels,
+  classSpellcastingCreationAtLevel,
+  isListPreparedSpellcastingCreation,
+  type ListPreparedReadableSpellcasting,
+} from "./class-spellcasting.ts";
+import {
+  isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForFeature,
+  type WeaponMasteryChoiceFeature,
+} from "./weapon-mastery.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
 const SORCERER_CLASS_NAME = "sorcerer" as const satisfies ClassName;
 const WARLOCK_CLASS_NAME = "warlock" as const satisfies ClassName;
 const FIGHTING_STYLE_FEAT_CATEGORY =
   "fighting_style" as const satisfies FeatRecord["category"];
+const FIGHTING_STYLE_CANTRIP_SPELL_LEVEL = 0 as const;
+const FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT = 1 as const;
 const EMPTY_WARLOCK_PACT_MAGIC_LEVEL_GAIN = {
   gainedCantrips: [],
   gainedPreparedSpells: [],
@@ -85,6 +101,18 @@ export type FightingStyleFeatUnitId = UnitRecord["id"] &
   Brand.Brand<"FightingStyleFeatUnitId">;
 const FightingStyleFeatUnitId = Brand.nominal<FightingStyleFeatUnitId>();
 
+export type FightingStyleCantripUnitId = UnitRecord["id"] &
+  Brand.Brand<"FightingStyleCantripUnitId">;
+const FightingStyleCantripUnitId = Brand.nominal<FightingStyleCantripUnitId>();
+
+export type WeaponMasteryFeatureUnitId = UnitRecord["id"] &
+  Brand.Brand<"WeaponMasteryFeatureUnitId">;
+const WeaponMasteryFeatureUnitId = Brand.nominal<WeaponMasteryFeatureUnitId>();
+
+export type WeaponMasteryWeaponUnitId = UnitRecord["id"] &
+  Brand.Brand<"WeaponMasteryWeaponUnitId">;
+const WeaponMasteryWeaponUnitId = Brand.nominal<WeaponMasteryWeaponUnitId>();
+
 export type CharacterBuildPlainClassLevelGain = {
   readonly tag: "classLevelGain";
   readonly classUnitId: ClassUnitId;
@@ -99,6 +127,53 @@ export type CharacterBuildFighterFightingStyleReplacementLevelGain = {
     readonly selectedFeatUnitId: FightingStyleFeatUnitId;
   };
 };
+
+export type CharacterBuildFightingStyleCantripReplacementLevelGain = {
+  readonly tag: "classLevelGainWithFightingStyleCantripReplacement";
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly replacement: {
+    readonly replaceCantripId: FightingStyleCantripUnitId;
+    readonly selectedCantripId: FightingStyleCantripUnitId;
+  };
+  readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
+};
+
+export type CharacterBuildListPreparedSpellcastingLevelGain = {
+  readonly gainedPreparedSpells: readonly UnitRecord["id"][];
+  readonly preparedSpellReplacement?: {
+    readonly replaceSpellId: UnitRecord["id"];
+    readonly selectedSpellId: UnitRecord["id"];
+  };
+};
+
+export type CharacterBuildWeaponMasteryOnlyLevelGain = {
+  readonly tag: "classLevelGainWithWeaponMasterySelection";
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly weaponMastery: {
+    readonly featureUnitId: WeaponMasteryFeatureUnitId;
+    readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
+  };
+};
+
+export type CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain =
+  {
+    readonly tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement";
+    readonly classUnitId: FighterClassUnitId;
+    readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+    readonly weaponMastery: {
+      readonly featureUnitId: WeaponMasteryFeatureUnitId;
+      readonly selectedWeaponUnitIds: readonly WeaponMasteryWeaponUnitId[];
+    };
+    readonly fightingStyleReplacement: {
+      readonly selectedFeatUnitId: FightingStyleFeatUnitId;
+    };
+  };
+
+export type CharacterBuildWeaponMasteryLevelGain =
+  | CharacterBuildWeaponMasteryOnlyLevelGain
+  | CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain;
 
 export type CharacterBuildWarlockPactMagicLevelGain = {
   readonly gainedCantrips: readonly UnitRecord["id"][];
@@ -154,6 +229,8 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
 export type CharacterBuildClassLevelGain =
   | CharacterBuildPlainClassLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
+  | CharacterBuildFightingStyleCantripReplacementLevelGain
+  | CharacterBuildWeaponMasteryLevelGain
   | CharacterBuildSorcererMetamagicLevelGain
   | CharacterBuildWarlockLevelGain;
 
@@ -229,6 +306,151 @@ export type CharacterBuildAdvancementIssue =
   | {
       readonly code: "sameFightingStyleReplacement";
       readonly selectedFeatUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingFightingStyleCantripFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "ambiguousFightingStyleCantripFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitIds: readonly UnitRecord["id"][];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingFightingStyleCantripSpellcastingSource";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidFightingStyleCantripSelectionCount";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidFightingStyleCantripReplacement";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingFightingStyleCantripReplacement";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "sameFightingStyleCantripReplacement";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateFightingStyleCantripSelection";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingListPreparedSpellcasting";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidListPreparedSpellSelectionCount";
+      readonly classLevel: number;
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidListPreparedSpellGainCount";
+      readonly classLevel: number;
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidListPreparedSpellChoice";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingListPreparedSpellReplacement";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "sameListPreparedSpellReplacement";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateListPreparedSpellSelection";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonWeaponMasteryFeature";
+      readonly unitId: UnitRecord["id"];
+      readonly unitKind?: UnitRecord["kind"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonWeaponMasteryWeapon";
+      readonly unitId: UnitRecord["id"];
+      readonly unitKind?: UnitRecord["kind"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingWeaponMasteryFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "ambiguousWeaponMasteryFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitIds: readonly UnitRecord["id"][];
+      readonly message: string;
+    }
+  | {
+      readonly code: "weaponMasteryFeatureClassMismatch";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasterySelectionCount";
+      readonly classLevel: number;
+      readonly featureUnitId: UnitRecord["id"];
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasteryGainCount";
+      readonly classLevel: number;
+      readonly featureUnitId: UnitRecord["id"];
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingExistingWeaponMasterySelection";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly weaponUnitId: UnitRecord["id"];
       readonly message: string;
     }
   | {
@@ -447,6 +669,22 @@ type FightingStyleGrantFeat = Extract<
   EffectAtom,
   { readonly kind: "grant_feat" }
 >;
+type FightingStyleCantripGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_spell_access_choice" }
+>;
+type FightingStyleCantripGrantSpellList = keyof typeof CLASS_SPELL_LISTS;
+type SupportedFightingStyleCantripGrant = FightingStyleCantripGrant & {
+  readonly spellList: FightingStyleCantripGrantSpellList;
+  readonly replacement: {
+    readonly trigger: "class_level_gain";
+    readonly replacementCount: typeof FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT;
+  };
+};
+type FightingStyleCantripFeatureChoice = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly grant: SupportedFightingStyleCantripGrant;
+};
 type EldritchInvocationReplacement = NonNullable<
   CharacterBuildWarlockLevelGain["eldritchInvocations"]["replacement"]
 >;
@@ -599,6 +837,148 @@ export function fightingStyleFeatUnitId(input: {
   return Either.right(FightingStyleFeatUnitId(input.unitId));
 }
 
+export function fightingStyleCantripUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly unitId: UnitRecord["id"];
+}): Either.Either<FightingStyleCantripUnitId, CharacterBuildAdvancementIssue> {
+  const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
+  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+
+  if (
+    !allCantripsFromClassSpellList(featureChoice.right.grant.spellList, [
+      input.unitId,
+    ])
+  ) {
+    return Either.left({
+      code: "invalidFightingStyleCantripReplacement",
+      cantripId: input.unitId,
+      message:
+        "Fighting Style cantrip replacement must choose a cantrip from the granted class spell list.",
+    });
+  }
+
+  return Either.right(FightingStyleCantripUnitId(input.unitId));
+}
+
+export function weaponMasteryFeatureUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly unitId: UnitRecord["id"];
+}): Either.Either<WeaponMasteryFeatureUnitId, CharacterBuildAdvancementIssue> {
+  const unit = input.unitLibrary.getUnit(input.unitId);
+  if (Option.isNone(unit)) {
+    return Either.left({
+      code: "unknownUnitId",
+      unitId: input.unitId,
+      message: `Unknown Unit id ${input.unitId}.`,
+    });
+  }
+
+  if (!isWeaponMasteryChoiceFeature(unit.value)) {
+    return Either.left({
+      code: "nonWeaponMasteryFeature",
+      unitId: input.unitId,
+      unitKind: unit.value.kind,
+      message: `${input.unitId} is not a Weapon Mastery class-feature Unit.`,
+    });
+  }
+
+  return Either.right(WeaponMasteryFeatureUnitId(input.unitId));
+}
+
+export function weaponMasteryWeaponUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly unitId: UnitRecord["id"];
+}): Either.Either<WeaponMasteryWeaponUnitId, CharacterBuildAdvancementIssue> {
+  const unit = input.unitLibrary.getUnit(input.unitId);
+  if (Option.isNone(unit)) {
+    return Either.left({
+      code: "unknownUnitId",
+      unitId: input.unitId,
+      message: `Unknown Unit id ${input.unitId}.`,
+    });
+  }
+
+  if (unit.value.kind !== "weapon") {
+    return Either.left({
+      code: "nonWeaponMasteryWeapon",
+      unitId: input.unitId,
+      unitKind: unit.value.kind,
+      message: `${input.unitId} is not a weapon Unit.`,
+    });
+  }
+
+  return Either.right(WeaponMasteryWeaponUnitId(input.unitId));
+}
+
+export function weaponMasteryLevelGain(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly featureUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly fightingStyleReplacement?: {
+    readonly selectedFeatUnitId: UnitRecord["id"];
+  };
+}): Either.Either<
+  CharacterBuildWeaponMasteryLevelGain,
+  CharacterBuildAdvancementIssue
+> {
+  const featureUnitId = weaponMasteryFeatureUnitId({
+    unitLibrary: input.unitLibrary,
+    unitId: input.featureUnitId,
+  });
+  if (Either.isLeft(featureUnitId)) return Either.left(featureUnitId.left);
+
+  const selectedWeaponUnitIds: WeaponMasteryWeaponUnitId[] = [];
+  for (const unitId of input.selectedWeaponUnitIds) {
+    const selectedWeaponUnitId = weaponMasteryWeaponUnitId({
+      unitLibrary: input.unitLibrary,
+      unitId,
+    });
+    if (Either.isLeft(selectedWeaponUnitId)) {
+      return Either.left(selectedWeaponUnitId.left);
+    }
+    selectedWeaponUnitIds.push(selectedWeaponUnitId.right);
+  }
+
+  if (input.fightingStyleReplacement !== undefined) {
+    const classUnitId = fighterClassUnitId(input);
+    if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+
+    const selectedFeatUnitId = fightingStyleFeatUnitId({
+      unitLibrary: input.unitLibrary,
+      unitId: input.fightingStyleReplacement.selectedFeatUnitId,
+    });
+    if (Either.isLeft(selectedFeatUnitId)) {
+      return Either.left(selectedFeatUnitId.left);
+    }
+
+    return Either.right({
+      tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+      classUnitId: classUnitId.right,
+      hitPointRule: input.hitPointRule,
+      weaponMastery: {
+        featureUnitId: featureUnitId.right,
+        selectedWeaponUnitIds,
+      },
+      fightingStyleReplacement: {
+        selectedFeatUnitId: selectedFeatUnitId.right,
+      },
+    });
+  }
+
+  return Either.right({
+    tag: "classLevelGainWithWeaponMasterySelection",
+    classUnitId: input.classUnitId,
+    hitPointRule: input.hitPointRule,
+    weaponMastery: {
+      featureUnitId: featureUnitId.right,
+      selectedWeaponUnitIds,
+    },
+  });
+}
+
 export function fighterLevelGainWithFightingStyleReplacement(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
@@ -626,6 +1006,49 @@ export function fighterLevelGainWithFightingStyleReplacement(input: {
     replacement: {
       selectedFeatUnitId: selectedFeatUnitId.right,
     },
+  });
+}
+
+export function classLevelGainWithFightingStyleCantripReplacement(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly replaceCantripId: UnitRecord["id"];
+  readonly selectedCantripId: UnitRecord["id"];
+  readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
+}): Either.Either<
+  CharacterBuildFightingStyleCantripReplacementLevelGain,
+  CharacterBuildAdvancementIssue
+> {
+  const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
+  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+
+  const replaceCantripId = fightingStyleCantripUnitId({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.classUnitId,
+    unitId: input.replaceCantripId,
+  });
+  if (Either.isLeft(replaceCantripId))
+    return Either.left(replaceCantripId.left);
+
+  const selectedCantripId = fightingStyleCantripUnitId({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.classUnitId,
+    unitId: input.selectedCantripId,
+  });
+  if (Either.isLeft(selectedCantripId)) {
+    return Either.left(selectedCantripId.left);
+  }
+
+  return Either.right({
+    tag: "classLevelGainWithFightingStyleCantripReplacement",
+    classUnitId: input.classUnitId,
+    hitPointRule: input.hitPointRule,
+    replacement: {
+      replaceCantripId: replaceCantripId.right,
+      selectedCantripId: selectedCantripId.right,
+    },
+    preparedSpellcasting: input.preparedSpellcasting,
   });
 }
 
@@ -750,6 +1173,39 @@ export function advanceCharacterBuildClassLevel(input: {
           levelGain,
         }),
     ),
+    Match.when(
+      { tag: "classLevelGainWithFightingStyleCantripReplacement" },
+      () =>
+        plainClassLevelGainFeatures({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain: {
+            tag: "classLevelGain",
+            classUnitId: input.levelGain.classUnitId,
+            hitPointRule: input.levelGain.hitPointRule,
+          },
+        }),
+    ),
+    Match.when(
+      { tag: "classLevelGainWithWeaponMasterySelection" },
+      (levelGain) =>
+        updateWeaponMasterySelectedFeatures({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain,
+        }),
+    ),
+    Match.when(
+      {
+        tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+      },
+      (levelGain) =>
+        updateWeaponMasterySelectedFeatures({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain,
+        }),
+    ),
     Match.when({ tag: "warlockLevelGain" }, (levelGain) =>
       updateWarlockEldritchInvocations({
         build: buildForFeatureUpdate,
@@ -808,6 +1264,16 @@ function updateSpellcastingForClassLevelGain(input: {
 > {
   if (input.levelGain.tag === "warlockLevelGain") {
     return updateWarlockPactMagic({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      levelGain: input.levelGain,
+    });
+  }
+
+  if (
+    input.levelGain.tag === "classLevelGainWithFightingStyleCantripReplacement"
+  ) {
+    return updateFightingStyleCantrips({
       build: input.build,
       unitLibrary: input.unitLibrary,
       levelGain: input.levelGain,
@@ -1140,7 +1606,12 @@ function plainClassLevelGainFeatures(input: {
   }
 
   if (facts.value.className !== WARLOCK_CLASS_NAME) {
-    return Either.right(input.build.features);
+    return weaponMasterySelectionsCanRemainUnchanged({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      classUnit: classUnit.right,
+      classUnitId: input.levelGain.classUnitId,
+    });
   }
 
   const featureChoice = eldritchInvocationFeatureForWarlockClass({
@@ -1172,6 +1643,341 @@ function plainClassLevelGainFeatures(input: {
       });
 }
 
+function weaponMasterySelectionsCanRemainUnchanged(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly classUnitId: ClassUnitId;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const feature = weaponMasteryFeatureForClass(input);
+  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (feature.right === undefined) return Either.right(input.build.features);
+
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
+  );
+  const currentProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel,
+  });
+  const nextProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel + 1,
+  });
+  if (currentProfile === undefined || nextProfile === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  const selectedCount = selectedWeaponMasteryFeaturesForFeature(
+    input.build.features,
+    feature.right.id,
+  ).length;
+  if (selectedCount !== currentProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel,
+      featureUnitId: feature.right.id,
+      expectedCount: currentProfile.choiceCount,
+      actualCount: selectedCount,
+      message:
+        "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
+    });
+  }
+
+  return currentProfile.choiceCount === nextProfile.choiceCount
+    ? Either.right(input.build.features)
+    : Either.left({
+        code: "invalidWeaponMasterySelectionCount",
+        classLevel: currentClassLevel + 1,
+        featureUnitId: feature.right.id,
+        expectedCount: nextProfile.choiceCount,
+        actualCount: selectedCount,
+        message:
+          "A plain class level gain would leave the build with the wrong number of Weapon Mastery choices.",
+      });
+}
+
+function updateWeaponMasterySelectedFeatures(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildWeaponMasteryLevelGain;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const feature = weaponMasteryFeatureForClass({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.right,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (feature.right === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.levelGain.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  if (feature.right.id !== input.levelGain.weaponMastery.featureUnitId) {
+    return Either.left({
+      code: "weaponMasteryFeatureClassMismatch",
+      classUnitId: input.levelGain.classUnitId,
+      featureUnitId: input.levelGain.weaponMastery.featureUnitId,
+      message:
+        "Weapon Mastery level gain must select weapons for the gaining class feature.",
+    });
+  }
+
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.levelGain.classUnitId,
+  );
+  const currentProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel,
+  });
+  const nextProfile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.right.id,
+    unitLibrary: input.unitLibrary,
+    classLevel: currentClassLevel + 1,
+  });
+  if (currentProfile === undefined || nextProfile === undefined) {
+    return Either.left({
+      code: "missingWeaponMasteryFeatureChoice",
+      classUnitId: input.levelGain.classUnitId,
+      message: "Cannot find the class Weapon Mastery choice feature.",
+    });
+  }
+
+  const currentWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
+    input.build.features,
+    feature.right.id,
+  ).map((feature) => feature.unitId);
+  if (currentWeaponUnitIds.length !== currentProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel,
+      featureUnitId: feature.right.id,
+      expectedCount: currentProfile.choiceCount,
+      actualCount: currentWeaponUnitIds.length,
+      message:
+        "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
+    });
+  }
+
+  const selectedWeaponUnitIds =
+    input.levelGain.weaponMastery.selectedWeaponUnitIds;
+  if (selectedWeaponUnitIds.length !== nextProfile.choiceCount) {
+    return Either.left({
+      code: "invalidWeaponMasterySelectionCount",
+      classLevel: currentClassLevel + 1,
+      featureUnitId: feature.right.id,
+      expectedCount: nextProfile.choiceCount,
+      actualCount: selectedWeaponUnitIds.length,
+      message:
+        "Weapon Mastery level gain must leave the build with the table count for the new class level.",
+    });
+  }
+
+  const selectedSet = new Set<UnitRecord["id"]>();
+  for (const weaponUnitId of selectedWeaponUnitIds) {
+    if (selectedSet.has(weaponUnitId)) {
+      return Either.left({
+        code: "duplicateWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message: "Weapon Mastery choices must not duplicate weapon Units.",
+      });
+    }
+    selectedSet.add(weaponUnitId);
+  }
+
+  const eligibleWeaponUnitIds = new Set(
+    nextProfile.eligibleWeapons.map((weapon) => weapon.id),
+  );
+  for (const weaponUnitId of selectedWeaponUnitIds) {
+    if (!eligibleWeaponUnitIds.has(weaponUnitId)) {
+      return Either.left({
+        code: "invalidWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message:
+          "Weapon Mastery level gain must choose eligible proficient weapons.",
+      });
+    }
+  }
+
+  const currentSet = new Set(currentWeaponUnitIds);
+  for (const weaponUnitId of currentWeaponUnitIds) {
+    if (!selectedSet.has(weaponUnitId)) {
+      return Either.left({
+        code: "missingExistingWeaponMasterySelection",
+        featureUnitId: feature.right.id,
+        weaponUnitId,
+        message:
+          "Weapon Mastery level gain can add the new table choices but cannot replace existing mastered weapons.",
+      });
+    }
+  }
+
+  const actualGains = selectedWeaponUnitIds.filter(
+    (weaponUnitId) => !currentSet.has(weaponUnitId),
+  ).length;
+  const expectedGains = nextProfile.choiceCount - currentProfile.choiceCount;
+  if (actualGains !== expectedGains) {
+    return Either.left({
+      code: "invalidWeaponMasteryGainCount",
+      classLevel: currentClassLevel + 1,
+      featureUnitId: feature.right.id,
+      expectedGains,
+      actualGains,
+      message:
+        "Weapon Mastery level gain must add exactly the new table choices.",
+    });
+  }
+
+  const weaponMasteryFeatures =
+    characterBuildFeaturesWithWeaponMasterySelections(
+      input.build.features,
+      feature.right.id,
+      selectedWeaponUnitIds,
+    );
+
+  return input.levelGain.tag !==
+    "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement"
+    ? Either.right(weaponMasteryFeatures)
+    : fightingStyleSelectedFeaturesReplaced({
+        build: { ...input.build, features: weaponMasteryFeatures },
+        unitLibrary: input.unitLibrary,
+        classUnitId: input.levelGain.classUnitId,
+        selectedFeatUnitId:
+          input.levelGain.fightingStyleReplacement.selectedFeatUnitId,
+      });
+}
+
+function characterBuildFeaturesWithWeaponMasterySelections(
+  features: readonly CharacterBuildFeature[],
+  featureUnitId: UnitRecord["id"],
+  selectedWeaponUnitIds: readonly UnitRecord["id"][],
+): readonly CharacterBuildFeature[] {
+  const nextFeatures: CharacterBuildFeature[] = [];
+  let inserted = false;
+
+  for (const feature of features) {
+    if (
+      feature.kind !== "selectedClassChoice" ||
+      feature.selectedFromUnitId !== featureUnitId
+    ) {
+      nextFeatures.push(feature);
+      continue;
+    }
+
+    if (!inserted) {
+      nextFeatures.push(
+        ...selectedWeaponUnitIds.map((unitId) => ({
+          kind: "selectedClassChoice" as const,
+          unitId,
+          selectedFromUnitId: featureUnitId,
+        })),
+      );
+      inserted = true;
+    }
+  }
+
+  if (!inserted) {
+    nextFeatures.push(
+      ...selectedWeaponUnitIds.map((unitId) => ({
+        kind: "selectedClassChoice" as const,
+        unitId,
+        selectedFromUnitId: featureUnitId,
+      })),
+    );
+  }
+
+  return nextFeatures;
+}
+
+function weaponMasteryFeatureForClass(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnit: ClassRecord;
+  readonly classUnitId: ClassUnitId;
+}): Either.Either<
+  WeaponMasteryChoiceFeature | undefined,
+  CharacterBuildAdvancementIssue
+> {
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
+  );
+  const featureUnitIds = input.classUnit.featureGrants
+    .filter((grant) => grant.level <= currentClassLevel)
+    .map((grant) => grant.unitId)
+    .filter((unitId) => {
+      const unit = input.unitLibrary.getUnit(unitId);
+      return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value);
+    });
+
+  if (featureUnitIds.length > 1) {
+    return Either.left({
+      code: "ambiguousWeaponMasteryFeatureChoice",
+      classUnitId: input.classUnitId,
+      featureUnitIds,
+      message: "Class has more than one Weapon Mastery choice feature.",
+    });
+  }
+
+  const featureUnitId = featureUnitIds[0];
+  if (featureUnitId === undefined) return Either.right(undefined);
+
+  const unit = input.unitLibrary.getUnit(featureUnitId);
+  return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value)
+    ? Either.right(unit.value)
+    : Either.left({
+        code: "missingWeaponMasteryFeatureChoice",
+        classUnitId: input.classUnitId,
+        message: "Cannot find the class Weapon Mastery choice feature.",
+      });
+}
+
+function selectedWeaponMasteryFeaturesForFeature(
+  features: readonly CharacterBuildFeature[],
+  featureUnitId: UnitRecord["id"],
+): readonly Extract<
+  CharacterBuildFeature,
+  { readonly kind: "selectedClassChoice" }
+>[] {
+  return features.filter(
+    (
+      feature,
+    ): feature is Extract<
+      CharacterBuildFeature,
+      { readonly kind: "selectedClassChoice" }
+    > =>
+      feature.kind === "selectedClassChoice" &&
+      feature.selectedFromUnitId === featureUnitId,
+  );
+}
+
 function replaceFightingStyleSelectedFeature(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -1180,9 +1986,41 @@ function replaceFightingStyleSelectedFeature(input: {
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
-  const classUnitId = fighterClassUnitId({
+  const replacedFeatures = fightingStyleSelectedFeaturesReplaced({
+    build: input.build,
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
+    selectedFeatUnitId: input.levelGain.replacement.selectedFeatUnitId,
+  });
+  if (Either.isLeft(replacedFeatures))
+    return Either.left(replacedFeatures.left);
+
+  const classUnit = classUnitRecord({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  return weaponMasterySelectionsCanRemainUnchanged({
+    build: { ...input.build, features: replacedFeatures.right },
+    unitLibrary: input.unitLibrary,
+    classUnit: classUnit.right,
+    classUnitId: input.levelGain.classUnitId,
+  });
+}
+
+function fightingStyleSelectedFeaturesReplaced(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly selectedFeatUnitId: FightingStyleFeatUnitId;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const classUnitId = fighterClassUnitId({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.classUnitId,
   });
   if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
 
@@ -1196,13 +2034,13 @@ function replaceFightingStyleSelectedFeature(input: {
   if (featureUnitId === undefined) {
     return Either.left({
       code: "missingFightingStyleFeatureChoice",
-      classUnitId: input.levelGain.classUnitId,
+      classUnitId: input.classUnitId,
       message:
         "Cannot find the Fighter class-feature Fighting Style feat choice.",
     });
   }
 
-  const selectedFeatUnitId = input.levelGain.replacement.selectedFeatUnitId;
+  const selectedFeatUnitId = input.selectedFeatUnitId;
   const selectedOptionId = creationChoiceOptionId(selectedFeatUnitId);
   if (!choiceOptionIdsFitHole(hole.right, [selectedOptionId])) {
     return Either.left({
@@ -1249,6 +2087,336 @@ function replaceFightingStyleSelectedFeature(input: {
       isSelectedFromFeature(feature, featureUnitId)
         ? { ...feature, unitId: selectedFeatUnitId }
         : feature,
+    ),
+  );
+}
+
+function updateFightingStyleCantrips(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildFightingStyleCantripReplacementLevelGain;
+}): Either.Either<
+  CharacterBuild["spellcasting"],
+  CharacterBuildAdvancementIssue
+> {
+  const featureChoice = fightingStyleCantripFeatureChoiceForClass({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+
+  const spellcasting = input.build.spellcasting;
+  const source = spellcasting?.sources.find(
+    (candidate) => candidate.sourceUnitId === input.levelGain.classUnitId,
+  );
+  if (spellcasting === undefined || source === undefined) {
+    return Either.left({
+      code: "missingFightingStyleCantripSpellcastingSource",
+      classUnitId: input.levelGain.classUnitId,
+      message:
+        "Cannot replace Fighting Style cantrips because the build has no matching class spellcasting source.",
+    });
+  }
+
+  const cantrips = fightingStyleCantripsReplaced({
+    currentCantrips: source.cantrips,
+    featureChoice: featureChoice.right,
+    replacement: input.levelGain.replacement,
+  });
+  if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
+
+  const preparedSpellcasting = applyListPreparedSpellcastingLevelGain({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+    source,
+    levelGain: input.levelGain.preparedSpellcasting,
+  });
+  if (Either.isLeft(preparedSpellcasting)) {
+    return Either.left(preparedSpellcasting.left);
+  }
+
+  return Either.right({
+    ...spellcasting,
+    sources: mapCharacterBuildSpellcastingSources(
+      spellcasting.sources,
+      (candidate) =>
+        candidate.sourceUnitId === input.levelGain.classUnitId
+          ? {
+              ...candidate,
+              cantrips: cantrips.right,
+              preparedSpells: preparedSpellcasting.right.preparedSpells,
+            }
+          : candidate,
+    ),
+    slotPools: {
+      ...spellcasting.slotPools,
+      spellcasting: {
+        kind: "spellcasting",
+        slots: preparedSpellcasting.right.spellSlots,
+      },
+    },
+  });
+}
+
+function fightingStyleCantripsReplaced(input: {
+  readonly currentCantrips: readonly UnitRecord["id"][];
+  readonly featureChoice: FightingStyleCantripFeatureChoice;
+  readonly replacement: CharacterBuildFightingStyleCantripReplacementLevelGain["replacement"];
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (input.currentCantrips.length !== input.featureChoice.grant.count) {
+    return Either.left({
+      code: "invalidFightingStyleCantripSelectionCount",
+      featureUnitId: input.featureChoice.featureUnitId,
+      expectedCount: input.featureChoice.grant.count,
+      actualCount: input.currentCantrips.length,
+      message:
+        "Cannot replace Fighting Style cantrips from a build whose current cantrip count does not match the feature grant.",
+    });
+  }
+
+  const invalidCurrentCantrip = input.currentCantrips.find(
+    (cantripId) =>
+      !allCantripsFromClassSpellList(input.featureChoice.grant.spellList, [
+        cantripId,
+      ]),
+  );
+  if (invalidCurrentCantrip !== undefined) {
+    return Either.left({
+      code: "invalidFightingStyleCantripReplacement",
+      cantripId: invalidCurrentCantrip,
+      message:
+        "Cannot replace Fighting Style cantrips from a build whose current cantrips do not match the granted class spell list.",
+    });
+  }
+
+  if (
+    input.replacement.replaceCantripId === input.replacement.selectedCantripId
+  ) {
+    return Either.left({
+      code: "sameFightingStyleCantripReplacement",
+      cantripId: input.replacement.selectedCantripId,
+      message:
+        "Fighting Style cantrip replacement must choose a different cantrip.",
+    });
+  }
+
+  if (!input.currentCantrips.includes(input.replacement.replaceCantripId)) {
+    return Either.left({
+      code: "missingFightingStyleCantripReplacement",
+      cantripId: input.replacement.replaceCantripId,
+      message:
+        "Cannot replace a Fighting Style cantrip that the build does not know.",
+    });
+  }
+
+  const finalCantrips = input.currentCantrips.map((cantripId) =>
+    cantripId === input.replacement.replaceCantripId
+      ? input.replacement.selectedCantripId
+      : cantripId,
+  );
+  const duplicateCantrip = duplicateValue(finalCantrips);
+  if (duplicateCantrip !== undefined) {
+    return Either.left({
+      code: "duplicateFightingStyleCantripSelection",
+      cantripId: duplicateCantrip,
+      message: "Fighting Style cantrip selections must be distinct.",
+    });
+  }
+
+  return Either.right(finalCantrips);
+}
+
+function applyListPreparedSpellcastingLevelGain(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly source: CharacterBuildSpellcastingSource;
+  readonly levelGain: CharacterBuildListPreparedSpellcastingLevelGain;
+}): Either.Either<
+  {
+    readonly preparedSpells: readonly UnitRecord["id"][];
+    readonly spellSlots: ListPreparedReadableSpellcasting["spellSlotProjection"]["slots"];
+  },
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord(input);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable" || !("spellcasting" in facts.value)) {
+    return Either.left({
+      code: "missingListPreparedSpellcasting",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot advance list-prepared spellcasting because the class has no readable spellcasting facts.",
+    });
+  }
+
+  const currentClassLevel = classLevelForUnit(
+    input.build.progression,
+    input.classUnitId,
+  );
+  const currentSpellcasting = classSpellcastingCreationAtLevel(
+    facts.value.spellcasting,
+    currentClassLevel,
+  );
+  const nextSpellcasting = classSpellcastingCreationAtLevel(
+    facts.value.spellcasting,
+    currentClassLevel + 1,
+  );
+  if (
+    currentSpellcasting === undefined ||
+    nextSpellcasting === undefined ||
+    !isListPreparedSpellcastingCreation(currentSpellcasting) ||
+    !isListPreparedSpellcastingCreation(nextSpellcasting) ||
+    !isFightingStyleCantripGrantSpellList(facts.value.className)
+  ) {
+    return Either.left({
+      code: "missingListPreparedSpellcasting",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot advance list-prepared spellcasting because the current or next class level has no supported list-prepared spellcasting facts.",
+    });
+  }
+
+  const preparedSpells = applyListPreparedSpellChanges({
+    className: facts.value.className,
+    currentPreparedSpells: input.source.preparedSpells,
+    levelGain: input.levelGain,
+    currentClassLevel,
+    nextClassLevel: currentClassLevel + 1,
+    currentSpellcasting,
+    nextSpellcasting,
+  });
+  if (Either.isLeft(preparedSpells)) return Either.left(preparedSpells.left);
+
+  return Either.right({
+    preparedSpells: preparedSpells.right,
+    spellSlots: nextSpellcasting.spellSlotProjection.slots,
+  });
+}
+
+function applyListPreparedSpellChanges(input: {
+  readonly className: FightingStyleCantripGrantSpellList;
+  readonly currentPreparedSpells: readonly UnitRecord["id"][];
+  readonly levelGain: CharacterBuildListPreparedSpellcastingLevelGain;
+  readonly currentClassLevel: number;
+  readonly nextClassLevel: number;
+  readonly currentSpellcasting: ListPreparedReadableSpellcasting;
+  readonly nextSpellcasting: ListPreparedReadableSpellcasting;
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (
+    input.currentPreparedSpells.length !==
+    input.currentSpellcasting.preparedAccess.choose
+  ) {
+    return Either.left({
+      code: "invalidListPreparedSpellSelectionCount",
+      classLevel: input.currentClassLevel,
+      expectedCount: input.currentSpellcasting.preparedAccess.choose,
+      actualCount: input.currentPreparedSpells.length,
+      message:
+        "Cannot advance list-prepared spellcasting from a build whose current prepared-spell count does not match its class level.",
+    });
+  }
+
+  const expectedGains =
+    input.nextSpellcasting.preparedAccess.choose -
+    input.currentSpellcasting.preparedAccess.choose;
+  if (input.levelGain.gainedPreparedSpells.length !== expectedGains) {
+    return Either.left({
+      code: "invalidListPreparedSpellGainCount",
+      classLevel: input.nextClassLevel,
+      expectedGains,
+      actualGains: input.levelGain.gainedPreparedSpells.length,
+      message:
+        "List-prepared spell gains must match the class spellcasting progression table.",
+    });
+  }
+
+  const replacedPreparedSpells = replaceListPreparedSpell({
+    currentPreparedSpells: input.currentPreparedSpells,
+    replacement: input.levelGain.preparedSpellReplacement,
+  });
+  if (Either.isLeft(replacedPreparedSpells)) {
+    return Either.left(replacedPreparedSpells.left);
+  }
+
+  const finalPreparedSpells = [
+    ...replacedPreparedSpells.right,
+    ...input.levelGain.gainedPreparedSpells,
+  ];
+  const availableSpellLevels = availableSpellSlotLevels(
+    input.nextSpellcasting.spellSlotProjection.slots,
+  );
+  const invalidSpell = finalPreparedSpells.find((spellId) => {
+    const spellLevel = classSpellListPreparedSpellLevel(
+      input.className,
+      spellId,
+    );
+    return spellLevel === undefined || !availableSpellLevels.has(spellLevel);
+  });
+  if (invalidSpell !== undefined) {
+    return Either.left({
+      code: "invalidListPreparedSpellChoice",
+      spellId: invalidSpell,
+      message:
+        "List-prepared spell choices must come from the class spell list at a level available to the new class level.",
+    });
+  }
+
+  const duplicateSpell = duplicateValue(finalPreparedSpells);
+  if (duplicateSpell !== undefined) {
+    return Either.left({
+      code: "duplicateListPreparedSpellSelection",
+      spellId: duplicateSpell,
+      message: "List-prepared spell choices must be distinct.",
+    });
+  }
+
+  return finalPreparedSpells.length ===
+    input.nextSpellcasting.preparedAccess.choose
+    ? Either.right(finalPreparedSpells)
+    : Either.left({
+        code: "invalidListPreparedSpellSelectionCount",
+        classLevel: input.nextClassLevel,
+        expectedCount: input.nextSpellcasting.preparedAccess.choose,
+        actualCount: finalPreparedSpells.length,
+        message:
+          "List-prepared spell changes must leave the build with the table count for the new class level.",
+      });
+}
+
+function replaceListPreparedSpell(input: {
+  readonly currentPreparedSpells: readonly UnitRecord["id"][];
+  readonly replacement?: CharacterBuildListPreparedSpellcastingLevelGain["preparedSpellReplacement"];
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (input.replacement === undefined) {
+    return Either.right(input.currentPreparedSpells);
+  }
+
+  if (input.replacement.replaceSpellId === input.replacement.selectedSpellId) {
+    return Either.left({
+      code: "sameListPreparedSpellReplacement",
+      spellId: input.replacement.selectedSpellId,
+      message: "List-prepared spell replacement must choose a different spell.",
+    });
+  }
+
+  if (!input.currentPreparedSpells.includes(input.replacement.replaceSpellId)) {
+    return Either.left({
+      code: "missingListPreparedSpellReplacement",
+      spellId: input.replacement.replaceSpellId,
+      message:
+        "Cannot replace a list-prepared spell that the build does not have prepared.",
+    });
+  }
+
+  return Either.right(
+    input.currentPreparedSpells.map((spellId) =>
+      spellId === input.replacement?.replaceSpellId
+        ? input.replacement.selectedSpellId
+        : spellId,
     ),
   );
 }
@@ -2154,6 +3322,105 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   }
 
   return Either.right(hole);
+}
+
+function fightingStyleCantripFeatureChoiceForClass(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: UnitRecord["id"];
+}): Either.Either<
+  FightingStyleCantripFeatureChoice,
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord(input);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable") {
+    return Either.left({
+      code: "unreadableClassUnit",
+      classUnitId: input.classUnitId,
+      message: `Cannot read class creation facts for ${input.classUnitId}.`,
+    });
+  }
+
+  const choices = facts.value.featureGrants.flatMap((grant) => {
+    const feature = input.unitLibrary.getUnit(grant.unitId);
+    if (
+      Option.isNone(feature) ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.className !== facts.value.className ||
+      feature.value.mechanics.family !== "class_feature_acquisition_choice"
+    ) {
+      return [];
+    }
+
+    const cantripGrants = feature.value.mechanics.options.flatMap((option) =>
+      option.mechanics.grants.flatMap((optionGrant) => {
+        if (
+          optionGrant.kind !== "grant_spell_access_choice" ||
+          optionGrant.mode !== "known" ||
+          optionGrant.spellLevel !== FIGHTING_STYLE_CANTRIP_SPELL_LEVEL ||
+          optionGrant.replacement?.trigger !== "class_level_gain" ||
+          optionGrant.replacement.replacementCount !==
+            FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT ||
+          !isFightingStyleCantripGrantSpellList(optionGrant.spellList)
+        ) {
+          return [];
+        }
+
+        const supportedGrant: SupportedFightingStyleCantripGrant = {
+          ...optionGrant,
+          replacement: {
+            trigger: optionGrant.replacement.trigger,
+            replacementCount: FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT,
+          },
+          spellList: optionGrant.spellList,
+        };
+        return [supportedGrant];
+      }),
+    );
+    return cantripGrants.map((optionGrant) => ({
+      featureUnitId: feature.value.id,
+      grant: optionGrant,
+    }));
+  });
+
+  if (choices.length === 0) {
+    return Either.left({
+      code: "missingFightingStyleCantripFeatureChoice",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot find a class-feature acquisition choice that grants known cantrip access for this class level gain.",
+    });
+  }
+
+  if (choices.length > 1) {
+    return Either.left({
+      code: "ambiguousFightingStyleCantripFeatureChoice",
+      classUnitId: input.classUnitId,
+      featureUnitIds: choices.map((choice) => choice.featureUnitId),
+      message:
+        "Cannot replace Fighting Style cantrips because multiple cantrip-granting class-feature acquisition choices were found.",
+    });
+  }
+
+  const choice = choices[0];
+  if (choice === undefined) {
+    return Either.left({
+      code: "missingFightingStyleCantripFeatureChoice",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot find a class-feature acquisition choice that grants known cantrip access for this class level gain.",
+    });
+  }
+
+  return Either.right(choice);
+}
+
+function isFightingStyleCantripGrantSpellList(
+  spellList: string,
+): spellList is FightingStyleCantripGrantSpellList {
+  return Object.hasOwn(CLASS_SPELL_LISTS, spellList);
 }
 
 function eldritchInvocationFeatureForWarlockClass(input: {

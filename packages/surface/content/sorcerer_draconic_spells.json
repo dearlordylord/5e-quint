@@ -1,31 +1,46 @@
 {
   "acquiredAtLevel": 3,
   "className": "sorcerer",
-  "description": "When you reach Sorcerer level 3, you thereafter always have Alter Self, Chromatic Orb, Command, and Dragon's Breath prepared.",
+  "description": "When you reach Sorcerer levels 3, 5, 7, and 9, you thereafter always have the listed Draconic spells prepared.",
   "id": "sorcerer_draconic_spells",
   "kind": "class_feature",
   "mechanics": {
     "family": "passive",
     "grants": [
       {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "alter_self"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "chromatic_orb"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "command"
-      },
-      {
-        "kind": "grant_spell_access",
-        "mode": "prepared",
-        "spellId": "dragons_breath"
+        "kind": "grant_class_level_prepared_spell_access",
+        "tiers": [
+          {
+            "minimumClassLevel": 3,
+            "spellIds": [
+              "alter_self",
+              "chromatic_orb",
+              "command",
+              "dragons_breath"
+            ]
+          },
+          {
+            "minimumClassLevel": 5,
+            "spellIds": [
+              "fear",
+              "fly"
+            ]
+          },
+          {
+            "minimumClassLevel": 7,
+            "spellIds": [
+              "arcane_eye",
+              "charm_monster"
+            ]
+          },
+          {
+            "minimumClassLevel": 9,
+            "spellIds": [
+              "legend_lore",
+              "summon_dragon"
+            ]
+          }
+        ]
       }
     ]
   },

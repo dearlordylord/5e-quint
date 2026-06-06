@@ -97,6 +97,54 @@ module characterCreationClassFeatureSelectedIdentityMbt {
     recordProjection("wizard-evocation-savant", "wizard_evocation_savant", "shatter", 2, 0, 0, 0, false, true),
   }
 
+  action stepSelectBardExpertise = any {
+    doSelectBardExpertise,
+  }
+
+  action stepProjectClericChannelDivinity = any {
+    doProjectClericChannelDivinity,
+  }
+
+  action stepProjectDruidWildShape = any {
+    doProjectDruidWildShape,
+  }
+
+  action stepProjectDruidWildCompanion = any {
+    doProjectDruidWildCompanion,
+  }
+
+  action stepProjectMonksFocus = any {
+    doProjectMonksFocus,
+  }
+
+  action stepProjectMonkUncannyMetabolism = any {
+    doProjectMonkUncannyMetabolism,
+  }
+
+  action stepSelectPaladinFightingStyle = any {
+    doSelectPaladinFightingStyle,
+  }
+
+  action stepSelectRangerDeftExplorer = any {
+    doSelectRangerDeftExplorer,
+  }
+
+  action stepSelectRangerFightingStyle = any {
+    doSelectRangerFightingStyle,
+  }
+
+  action stepProjectWarlockPactMagic = any {
+    doProjectWarlockPactMagic,
+  }
+
+  action stepSelectWizardScholar = any {
+    doSelectWizardScholar,
+  }
+
+  action stepSelectWizardEvocationSavant = any {
+    doSelectWizardEvocationSavant,
+  }
+
   action step = any {
     doSelectBardExpertise,
     doProjectClericChannelDivinity,

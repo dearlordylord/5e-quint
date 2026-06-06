@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
+// KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
@@ -48,6 +49,7 @@ import {
   characterSheetAbilityCheckAbility,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
+  characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetCurrentHp,
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
@@ -94,7 +96,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -192,6 +194,8 @@ const prayerOfHealingStoredLockoutGateTestName =
   "rejects stored Prayer of Healing recipient lockouts for unknown or unsupported spell ids";
 const subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName =
   "subclass always-prepared Spell Access blocks duplicate Book of Shadows selections";
+const subclassPreparedSpellAccessProgressionTestName =
+  "projects subclass always-prepared Spell Access from class-level tiers";
 const druidCircleLandSpellAccessProjectionTestName =
   "projects Circle of the Land prepared Spell Access from selected land state and Druid level";
 const druidCircleLandSpellAccessSelectedLandGateTestName =
@@ -1078,6 +1082,111 @@ describe("Character Sheet runtime", () => {
     }
   });
 
+  test(subclassPreparedSpellAccessProgressionTestName, () => {
+    const subclassAccess = (input: {
+      readonly startingClass: string;
+      readonly advancements: readonly string[];
+      readonly subclassUnitId: string;
+      readonly featureUnitId: string;
+    }) =>
+      characterSheetClassFeaturePreparedSpellAccessesForBuild({
+        build: armorClassBuild({
+          startingClass: input.startingClass,
+          advancements: input.advancements,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: input.startingClass,
+              unitId: input.subclassUnitId,
+            },
+          ],
+        }),
+        unitLibrary,
+      }).find((access) => access.sourceUnitId === input.featureUnitId)
+        ?.spellIds;
+
+    expect(
+      subclassAccess({
+        startingClass: "class_cleric",
+        advancements: ["class_cleric", "class_cleric"],
+        subclassUnitId: "subclass_cleric_life_domain",
+        featureUnitId: "cleric_life_domain_spells",
+      }),
+    ).toEqual(["aid", "bless", "cure_wounds", "lesser_restoration"]);
+    expect(
+      subclassAccess({
+        startingClass: "class_cleric",
+        advancements: Array.from({ length: 8 }, () => "class_cleric"),
+        subclassUnitId: "subclass_cleric_life_domain",
+        featureUnitId: "cleric_life_domain_spells",
+      }),
+    ).toEqual([
+      "aid",
+      "bless",
+      "cure_wounds",
+      "lesser_restoration",
+      "mass_healing_word",
+      "revivify",
+      "aura_of_life",
+      "death_ward",
+      "greater_restoration",
+      "mass_cure_wounds",
+    ]);
+    expect(
+      subclassAccess({
+        startingClass: "class_paladin",
+        advancements: Array.from({ length: 8 }, () => "class_paladin"),
+        subclassUnitId: "subclass_paladin_oath_of_devotion",
+        featureUnitId: "paladin_oath_of_devotion_spells",
+      }),
+    ).toEqual([
+      "protection_from_evil_and_good",
+      "shield_of_faith",
+      "aid",
+      "zone_of_truth",
+      "beacon_of_hope",
+      "dispel_magic",
+    ]);
+    expect(
+      subclassAccess({
+        startingClass: "class_sorcerer",
+        advancements: Array.from({ length: 8 }, () => "class_sorcerer"),
+        subclassUnitId: "subclass_sorcerer_draconic_sorcery",
+        featureUnitId: "sorcerer_draconic_spells",
+      }),
+    ).toEqual([
+      "alter_self",
+      "chromatic_orb",
+      "command",
+      "dragons_breath",
+      "fear",
+      "fly",
+      "arcane_eye",
+      "charm_monster",
+      "legend_lore",
+      "summon_dragon",
+    ]);
+    expect(
+      subclassAccess({
+        startingClass: "class_warlock",
+        advancements: Array.from({ length: 8 }, () => "class_warlock"),
+        subclassUnitId: "subclass_warlock_fiend_patron",
+        featureUnitId: "warlock_fiend_spells",
+      }),
+    ).toEqual([
+      "burning_hands",
+      "command",
+      "scorching_ray",
+      "suggestion",
+      "fireball",
+      "stinking_cloud",
+      "fire_shield",
+      "wall_of_fire",
+      "geas",
+      "insect_plague",
+    ]);
+  });
+
   test(druidCircleLandSpellAccessProjectionTestName, () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1611,7 +1720,9 @@ describe("Character Sheet runtime", () => {
     } as const;
 
     expect(
-      requireRight(characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary)),
+      requireRight(
+        characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
+      ),
     ).toEqual([]);
 
     expect(
@@ -2083,6 +2194,56 @@ describe("Character Sheet runtime", () => {
           "Weapon Mastery Long Rest reselection changes too many weapon choices.",
       },
     });
+  });
+
+  test("uses the class-level Weapon Mastery count for Long Rest reselection", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:fighter-level-4-mastery"),
+        build: weaponMasteryBuild({
+          startingClass: "class_fighter",
+          advancements: ["class_fighter", "class_fighter", "class_fighter"],
+          featureUnitId: "fighter_weapon_mastery",
+          selectedWeaponUnitIds: [
+            "weapon_longsword",
+            "weapon_dagger",
+            "weapon_spear",
+            "weapon_shortbow",
+          ],
+        }),
+        maximumHp: Hp(12),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const rested = requireRight(
+      completeLongRest({
+        sheet,
+        unitLibrary,
+        weaponMasteryReselections: [
+          {
+            featureUnitId: "fighter_weapon_mastery",
+            selectedWeaponUnitIds: [
+              "weapon_longsword",
+              "weapon_dagger",
+              "weapon_spear",
+              "weapon_flail",
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(
+      selectedClassChoiceUnitIds(rested.build, "fighter_weapon_mastery"),
+    ).toEqual([
+      "weapon_longsword",
+      "weapon_dagger",
+      "weapon_spear",
+      "weapon_flail",
+    ]);
   });
 
   test(layOnHandsSpendsHealingPoolTestName, () => {
@@ -4425,11 +4586,17 @@ function requireRight<A, E>(either: Either.Either<A, E>): A {
 
 function weaponMasteryBuild(input: {
   readonly startingClass: string;
+  readonly advancements?: readonly string[];
   readonly featureUnitId: string;
   readonly selectedWeaponUnitIds: readonly string[];
 }): CharacterBuild {
   return {
-    ...armorClassBuild({ startingClass: input.startingClass }),
+    ...armorClassBuild({
+      startingClass: input.startingClass,
+      ...(input.advancements === undefined
+        ? {}
+        : { advancements: input.advancements }),
+    }),
     features: input.selectedWeaponUnitIds.map((unitId) => ({
       kind: "selectedClassChoice" as const,
       selectedFromUnitId: input.featureUnitId,

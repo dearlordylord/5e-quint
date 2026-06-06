@@ -1748,9 +1748,11 @@ function validateRuntimeTestWitnessProfiles(
     const hasQntProof = verificationOwners.some(
       (owner) => owner.kind === "qnt-proof",
     );
-    if (!hasQntProof) {
+    const hasProfileQntOwner =
+      Array.isArray(profile.qntOwners) && profile.qntOwners.length > 0;
+    if (!hasQntProof && !hasProfileQntOwner) {
       issues.push(
-        `${obligation.id} runtime-test witness requires ${profileId} to already record profile-level qnt-proof ownership.`,
+        `${obligation.id} runtime-test witness requires ${profileId} to already record profile-level qnt-proof ownership or declared semantic-core QNT ownership.`,
       );
     }
     const hasRuntimeTestWitness = runtimeTestWitnesses.some((witness) =>
