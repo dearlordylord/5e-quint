@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Consolidate character advancement ledgers"
     },
     {
