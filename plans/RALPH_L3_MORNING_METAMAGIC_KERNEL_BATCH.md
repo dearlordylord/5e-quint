@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Seeking Spell missed-attack reroll fill"
     },
     {
