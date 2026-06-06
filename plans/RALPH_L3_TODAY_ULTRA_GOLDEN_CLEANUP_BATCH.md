@@ -67,8 +67,8 @@
     {
       "number": 11,
       "id": "L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING",
-      "status": "blocked",
-      "title": "Consolidate Metamagic after active task 22 lands"
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Consolidate Metamagic after task 22 landed"
     },
     {
       "number": 12,
@@ -113,14 +113,14 @@ decision boundaries.
 Declared Base SHA:
 
 ```text
-e111a87406b68caf417d694fce69fa0e2042eebe
+170409c02b062a931dcd0af0cd5a7f57019109d7
 ```
 
 Before each task, log:
 
 ```sh
 git rev-parse HEAD
-git merge-base --is-ancestor e111a87406b68caf417d694fce69fa0e2042eebe HEAD
+git merge-base --is-ancestor 170409c02b062a931dcd0af0cd5a7f57019109d7 HEAD
 ```
 
 If the ancestor check fails, stop and report the branch-base mismatch. Do not
@@ -144,9 +144,8 @@ Current generated facts:
   `owner-evidence-required: 1`, and `partial-battle-runtime: 1`.
 - Strict follow-up-split Units are `acid_arrow`, `druid_wild_shape`,
   `sorcerer_metamagic`, and `wizard_evocation_savant`.
-- `sorcerer_metamagic` still has an active prior Ralph task 22 in progress.
-  Do not duplicate that task; wait for it to merge before running the
-  Metamagic follow-up tasks in this plan.
+- `sorcerer_metamagic` prior Ralph task 22 is merged into this base. Do not
+  duplicate task 22; use the current generated residuals for follow-up work.
 
 ## DAG / Queue Order
 
@@ -162,7 +161,7 @@ Current generated facts:
 | 8 | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | ready-for-research | none | Inventory the remaining level-3-reachable Beast-form Stat Block action pressure. |
 | 9 | L3TODAY-09-WILD-SHAPE-FIRST-STAT-BLOCK-ACTION-SLICE | blocked | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | Promote the first inventory item only if it is level-3-reachable and battle-owned. |
 | 10 | L3TODAY-10-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | ready-for-research | none | Determine whether prior work already closed this or whether a shared projection tracer bullet remains. |
-| 11 | L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING | blocked | active metamagic task 22 merged | Regenerate accounting after task 22 and remove stale residual wording. |
+| 11 | L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING | ready-for-implementation-after-light-research | none | Regenerate accounting after task 22 and remove stale residual wording. |
 | 12 | L3TODAY-12-METAMAGIC-REMAINING-QUICKENED-INVENTORY | blocked | L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING | Recompute remaining Quickened procedures after task 22. |
 | 13 | L3TODAY-13-METAMAGIC-NEXT-QUICKENED-SLICE | blocked | L3TODAY-12-METAMAGIC-REMAINING-QUICKENED-INVENTORY | Promote one selected next Quickened tracer bullet. |
 | 14 | L3TODAY-14-ULTRA-GOLDEN-CONSOLIDATION | blocked | Tasks 1, 2, 5, 7, 8, 10 and any implemented dependent task | Regenerate ledgers, update this plan, and summarize remaining level-3 ultra-golden pressure. |
@@ -303,9 +302,9 @@ Acceptance:
 
 ### Task 11 - L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING
 
-Run only after the active metamagic task 22 has merged. Regenerate
-unit-profile and rules-kernel coverage and update `sorcerer_metamagic`
-residual text so it reflects task 22.
+Metamagic task 22 is merged into the declared base. Regenerate unit-profile and
+rules-kernel coverage and update `sorcerer_metamagic` residual text so it
+reflects task 22.
 
 Acceptance:
 
