@@ -101,6 +101,7 @@ import type {
   MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
+import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -254,6 +255,12 @@ function resolveBonusActionAttack(
       "invalidFill",
       `${label} roll result is outside the d20 attack-roll protocol.`,
     );
+  }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    fillSet.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) {
+    return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
   }
   const activatedOngoingFeatureProfile =
     attackRollOngoingFeatureActivationProfile(

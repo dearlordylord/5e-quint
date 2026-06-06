@@ -22,6 +22,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -43,6 +44,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -83,6 +85,7 @@ import {
   type Condition,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
+  type ResourceCount,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
@@ -1195,9 +1198,10 @@ type BattleInterruptCheckpointBase = {
   readonly choices: readonly BattleInterruptProcedureChoice[];
   readonly activeInterrupt?: BattleActiveInterruptProcedure;
 };
-type BattleInterruptCheckpointWithContinuationBase = BattleInterruptCheckpointBase & {
-  readonly continuation: BattleInterruptedProcedure;
-};
+type BattleInterruptCheckpointWithContinuationBase =
+  BattleInterruptCheckpointBase & {
+    readonly continuation: BattleInterruptedProcedure;
+  };
 export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "attackHit";
@@ -1255,7 +1259,10 @@ export type BattleFlySpeedGrantEndFallCleanupFrame = {
   readonly endedEffect: EndedFlySpeedGrant;
 };
 export type BattleInterruptFrame =
-  | { readonly kind: "interruptCheckpoint"; readonly frame: BattleInterruptCheckpoint }
+  | {
+      readonly kind: "interruptCheckpoint";
+      readonly frame: BattleInterruptCheckpoint;
+    }
   | BattleFlySpeedGrantEndFallCleanupFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame;
@@ -1289,14 +1296,18 @@ export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly handledInterruptTrigger: BattleInterruptTrigger;
 };
-export type BattleInterruptCheckpointInput = BattleInterruptCheckpoint extends infer T
-  ? T extends BattleInterruptCheckpoint
-    ? Omit<
-        T,
-        "eligibleResponders" | "offeredResponders" | "choices" | "activeInterrupt"
-      >
-    : never
-  : never;
+export type BattleInterruptCheckpointInput =
+  BattleInterruptCheckpoint extends infer T
+    ? T extends BattleInterruptCheckpoint
+      ? Omit<
+          T,
+          | "eligibleResponders"
+          | "offeredResponders"
+          | "choices"
+          | "activeInterrupt"
+        >
+      : never
+    : never;
 export type BattleInterruptDecision =
   | {
       readonly kind: "decline";
@@ -4533,6 +4544,21 @@ export type AttackRollMissToHitReplacement = {
   readonly unitId: UnitRecord["id"];
   readonly label: UnitRecord["name"];
 };
+export type BattleSpellAttackRerollOption = {
+  readonly effectKind: "missed_spell_attack_reroll";
+  readonly label: string;
+  readonly sorceryPointCost: ResourceCount;
+};
+export type BattleSpellAttackRerollDecision =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: "missed_spell_attack_reroll";
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: "missed_spell_attack_reroll";
+      readonly replacement: AttackRollResult;
+    };
 export type BattleSpellAttackRollHole = Extract<
   RuntimeHole,
   { readonly kind: "attackRoll" }
@@ -4541,6 +4567,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
+  readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
 };
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
@@ -5573,7 +5600,17 @@ export type BattleHole =
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
+  readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
 };
+export const SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE =
+  "Seeking Spell rerolls are not available for this attack-roll owner.";
+export function spellAttackRerollUnsupportedIssue(
+  attackRoll: BattleAttackRollResult,
+): string | null {
+  return attackRoll.spellAttackReroll === undefined
+    ? null
+    : SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE;
+}
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";
   readonly holeId: BattleHoleId;

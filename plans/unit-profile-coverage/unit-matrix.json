@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 112,
-      "numerator": 112,
+      "denominator": 113,
+      "numerator": 113,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 112,
-      "numerator": 109,
+      "denominator": 113,
+      "numerator": 110,
       "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 150,
-      "numerator": 150,
+      "denominator": 151,
+      "numerator": 151,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 150,
-      "numerator": 150,
+      "denominator": 151,
+      "numerator": 151,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 112,
-      "numerator": 112,
+      "denominator": 113,
+      "numerator": 113,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 112,
-      "numerator": 112,
+      "denominator": 113,
+      "numerator": 113,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -4837,19 +4837,51 @@
           "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.metamagic-missed-spell-attack-reroll",
+      "profileKind": "resource",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "sourceBoundary": "The runtime consumes selected Seeking Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and the pending single spell-attack-damage Attack Roll fill. A missed spell attack can reopen that same Attack Roll hole with a typed Seeking Spell reroll option; a reroll fill carries the original missed d20 and the forced replacement d20, spends 1 Sorcery Point only when the replacement is used, resolves hit, miss, natural-1 miss, and natural-20 critical from the replacement, and may combine with at most one different Metamagic option used for the same spell. Unknown options, unaffordable spends, original hits, generic miss-to-hit replacements, unsupported procedures, and repeated spell attack sequences are rejected before Sorcery Point spending without storing durable reroll opportunity state.",
+      "taskRefs": [
+        "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
+      ],
+      "title": "Unit feature applies Seeking Spell missed spell attack reroll",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 150,
-        "numerator": 150,
+        "denominator": 151,
+        "numerator": 151,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 150,
-        "numerator": 150,
+        "denominator": 151,
+        "numerator": 151,
         "percent": "100%"
       }
     },
@@ -7415,6 +7447,22 @@
         "profileKind": "bonus-action",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Seeking Spell Metamagic admits missed single spell attack rerolls, enforces known-option, Sorcery Point affordability, and different-Metamagic stacking gates, and resolves the forced replacement roll before damage"
+          }
+        ],
+        "profileId": "unit-feature.metamagic-missed-spell-attack-reroll",
+        "profileKind": "resource",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-metamagic.qnt"
         ]
       }
     ],
@@ -15208,6 +15256,22 @@
         "character-creation.fighting-style-cantrip-advancement-replacement"
       ],
       "taskId": "L3MCHAR-04"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model Seeking Spell admission for a missed single spell attack, known-option and Sorcery Point gates, the different-Metamagic stacking exception, replacement hit/miss/natural-1/natural-20 outcomes, original-hit rejection, and repeated spell attack sequence closure before Sorcery Point spending.",
+      "profileIds": [
+        "unit-feature.metamagic-missed-spell-attack-reroll"
+      ],
+      "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and selected-identity MBT cover Seeking Spell discovery and resolution for a missed Ray of Frost spell attack, reopening a typed spell attack reroll fill, declining without spending, rerolling with the forced replacement d20, spending 1 Sorcery Point from the shared Font of Magic pool, using the replacement for hit, miss, natural-1 miss, natural-20 critical, and rejecting unknown, unaffordable, original-hit, and Scorching Ray repeated attack sequence cases before spending.",
+      "profileIds": [
+        "unit-feature.metamagic-missed-spell-attack-reroll"
+      ],
+      "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15280,7 +15344,7 @@
         "installedUnitDenominator": 78,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 114,
+        "profileFactDenominator": 115,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 71,
@@ -19924,10 +19988,18 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "typed post-roll spell reroll fill boundary owner",
-              "reason": "Empowered Spell needs spell damage roll fills that can carry the original damage dice selected for reroll, the Charisma-modifier dice limit, and the forced replacement rolls; Seeking Spell needs spell attack roll fills that can carry a missed spell attack d20 and its forced replacement roll. The promoted battle-runtime Metamagic boundary rejects these reroll options before Sorcery Point spending instead of storing reroll opportunity state or overloading final roll fills."
+              "owner": "typed post-roll spell damage reroll fill boundary owner",
+              "reason": "Empowered Spell needs spell damage roll fills that can carry the original damage dice selected for reroll, the Charisma-modifier dice limit, and the forced replacement rolls. Seeking Spell now has a promoted missed single spell-attack reroll slice; Empowered remains rejected before Sorcery Point spending instead of storing reroll opportunity state or overloading final roll fills."
             },
-            "mechanic": "Empowered and Seeking Spell reroll modifiers: reroll damage dice up to Charisma modifier minimum one and reroll a missed spell attack d20, using the new rolls and preserving the options' different-Metamagic stacking exception."
+            "mechanic": "Empowered Spell reroll modifier: reroll damage dice up to Charisma modifier minimum one, using the new rolls and preserving the option's different-Metamagic stacking exception."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future repeated spell attack sequence reroll owner",
+              "reason": "The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary."
+            },
+            "mechanic": "Seeking Spell for repeated spell attack procedures such as Scorching Ray remains deferred until invocation-local one-use accounting can prevent more than one post-miss reroll per spell casting without durable reroll opportunity state."
           }
         ],
         "followUpTasks": [
@@ -19958,7 +20030,8 @@
           "unit-feature.metamagic-effective-level-extra-target",
           "unit-feature.metamagic-cast-range-increase",
           "unit-feature.metamagic-cast-duration-and-concentration",
-          "unit-feature.metamagic-cast-component-suppression"
+          "unit-feature.metamagic-cast-component-suppression",
+          "unit-feature.metamagic-missed-spell-attack-reroll"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
@@ -19973,7 +20046,8 @@
           "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Extended Spell for promoted duration-bearing spell owners, currently Enlarge/Reduce creature size change, by deriving a cast-local doubled duration fact from the selected Extended Spell and the canonical Surface duration shape, spending 1 Sorcery Point from the shared Font of Magic point pool, storing the doubled duration on the effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and rejecting unsupported procedures, Instantaneous durations, and sub-1-minute durations before resource spending.",
-          "The Metamagic Spell Invocation boundary promotes Subtle Spell for action-time spell casts with component requirements by deriving a cast-local component projection from the canonical Surface component shape, spending 1 Sorcery Point from the shared Font of Magic point pool, suppressing Verbal and Somatic components, suppressing focus-replaceable Material components, preserving priced or consumed Material requirements, and rejecting non-action-time or no-component casts before resource spending."
+          "The Metamagic Spell Invocation boundary promotes Subtle Spell for action-time spell casts with component requirements by deriving a cast-local component projection from the canonical Surface component shape, spending 1 Sorcery Point from the shared Font of Magic point pool, suppressing Verbal and Somatic components, suppressing focus-replaceable Material components, preserving priced or consumed Material requirements, and rejecting non-action-time or no-component casts before resource spending.",
+          "The Metamagic Spell Invocation boundary promotes Seeking Spell for missed single spell-attack-damage procedures by reopening the pending Attack Roll fill with a typed Seeking Spell reroll option, enforcing known-option, shared Sorcery Point affordability, spell-attack-only, missed-original-roll, and different-Metamagic stacking gates before spending, applying the forced replacement d20 to hit, miss, natural-1 miss, and natural-20 critical resolution, spending 1 Sorcery Point only when the replacement roll is used, and preserving Ray of Frost's normal damage/effect flow without storing durable reroll opportunity state."
         ],
         "tag": "profile-subset-supported"
       },
@@ -20038,6 +20112,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
         }
       ],
       "executableMechanics": true,
@@ -20395,6 +20474,38 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-missed-spell-attack-reroll",
+          "profileKind": "resource",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+          ],
+          "sourceBoundary": "The runtime consumes selected Seeking Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and the pending single spell-attack-damage Attack Roll fill. A missed spell attack can reopen that same Attack Roll hole with a typed Seeking Spell reroll option; a reroll fill carries the original missed d20 and the forced replacement d20, spends 1 Sorcery Point only when the replacement is used, resolves hit, miss, natural-1 miss, and natural-20 critical from the replacement, and may combine with at most one different Metamagic option used for the same spell. Unknown options, unaffordable spends, original hits, generic miss-to-hit replacements, unsupported procedures, and repeated spell attack sequences are rejected before Sorcery Point spending without storing durable reroll opportunity state.",
+          "taskRefs": [
+            "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
+          ],
+          "title": "Unit feature applies Seeking Spell missed spell attack reroll",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
             }
           ]
         }

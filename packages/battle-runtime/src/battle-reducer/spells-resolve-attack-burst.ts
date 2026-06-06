@@ -18,6 +18,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
   snapshotBattle,
+  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleFill,
@@ -282,6 +283,16 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       "Spell attack roll result is outside the d20 attack-roll protocol.",
     );
   }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.fillSet.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      spellAttackRerollIssue,
+    );
+  }
   if (!attackRollModeMatches(input.fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.input.state,
@@ -417,14 +428,15 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }
   }
 
-  const remarkableAthleteMovement =
-    resolveRemarkableAthleteCriticalHitMovement({
+  const remarkableAthleteMovement = resolveRemarkableAthleteCriticalHitMovement(
+    {
       state: attackResolvedState,
       subject: input.input.subject,
       attackerId: input.actorId,
       scoredCriticalHit: hitTarget && critical,
       fills: input.fillSet,
-    });
+    },
+  );
   if (remarkableAthleteMovement.tag === "result") {
     return remarkableAthleteMovement.result;
   }

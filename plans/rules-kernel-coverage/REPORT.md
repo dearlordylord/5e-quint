@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 111
-- Covered obligations: 105
+- Total obligations: 112
+- Covered obligations: 106
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 105 |
+| covered | 106 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 81 |
+| battle | 82 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -141,6 +141,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | battle | covered | `unit-feature.metamagic-missed-spell-attack-reroll` |
 
 ## Battle Hole Frontier
 
@@ -309,9 +310,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | semantic-core | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
-| `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
+| `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | profile-scoped: `unit-feature.monk-focus-battle-options` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -528,14 +529,14 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
@@ -594,6 +595,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `boolean-connective`, `pattern-match` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 
 ### Generator Readiness Backlog
 

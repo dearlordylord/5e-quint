@@ -1,13 +1,13 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 
 module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
   // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
   // - Classes/Sorcerer.md: Careful Spell, Distant Spell, Empowered Spell,
   //   Extended Spell,
-  //   Heightened Spell, Quickened Spell, Subtle Spell, Transmuted Spell, and Twinned Spell
-  //   Sorcery Point costs.
+  //   Heightened Spell, Quickened Spell, Seeking Spell, Subtle Spell,
+  //   Transmuted Spell, and Twinned Spell Sorcery Point costs.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
 
   type BattleRuntimeMetamagicEffectKind =
@@ -15,6 +15,7 @@ module unitFeatureMetamagicOptionFactCore {
     | SpellRangeIncrease
     | DurationExtensionAndConcentrationSaveAdvantage
     | DamageDiceRerollStackingException
+    | MissedSpellAttackRerollStackingException
     | SavingThrowProtection
     | SavingThrowDisadvantage
     | ComponentSuppression
@@ -30,6 +31,7 @@ module unitFeatureMetamagicOptionFactCore {
     | SpellRangeIncreaseOptionFact
     | DurationExtensionAndConcentrationSaveAdvantageOptionFact
     | DamageDiceRerollStackingExceptionOptionFact
+    | MissedSpellAttackRerollStackingExceptionOptionFact
     | SavingThrowProtectionOptionFact
     | SavingThrowDisadvantageOptionFact
     | ComponentSuppressionOptionFact
@@ -47,6 +49,9 @@ module unitFeatureMetamagicOptionFactCore {
 
   pure def empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     DamageDiceRerollStackingExceptionOptionFact
+
+  pure def seekingSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
+    MissedSpellAttackRerollStackingExceptionOptionFact
 
   pure def carefulSpellMetamagicFact: BattleRuntimeMetamagicOptionFact =
     SavingThrowProtectionOptionFact
@@ -74,6 +79,8 @@ module unitFeatureMetamagicOptionFactCore {
         DurationExtensionAndConcentrationSaveAdvantage
       | DamageDiceRerollStackingExceptionOptionFact =>
         DamageDiceRerollStackingException
+      | MissedSpellAttackRerollStackingExceptionOptionFact =>
+        MissedSpellAttackRerollStackingException
       | SavingThrowProtectionOptionFact => SavingThrowProtection
       | SavingThrowDisadvantageOptionFact => SavingThrowDisadvantage
       | ComponentSuppressionOptionFact => ComponentSuppression
@@ -87,6 +94,8 @@ module unitFeatureMetamagicOptionFactCore {
   ): BattleRuntimeMetamagicStackingMode =
     match option {
       | DamageDiceRerollStackingExceptionOptionFact =>
+        CanCombineWithDifferentMetamagic
+      | MissedSpellAttackRerollStackingExceptionOptionFact =>
         CanCombineWithDifferentMetamagic
       | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimitOptionFact => OnePerSpell
       | SpellRangeIncreaseOptionFact => OnePerSpell
@@ -106,6 +115,7 @@ module unitFeatureMetamagicOptionFactCore {
       | SpellRangeIncreaseOptionFact => 1
       | DurationExtensionAndConcentrationSaveAdvantageOptionFact => 1
       | DamageDiceRerollStackingExceptionOptionFact => 1
+      | MissedSpellAttackRerollStackingExceptionOptionFact => 1
       | SavingThrowProtectionOptionFact => 1
       | SavingThrowDisadvantageOptionFact => 2
       | ComponentSuppressionOptionFact => 1
@@ -119,6 +129,7 @@ module unitFeatureMetamagicOptionFactCore {
       SpellRangeIncrease,
       DurationExtensionAndConcentrationSaveAdvantage,
       DamageDiceRerollStackingException,
+      MissedSpellAttackRerollStackingException,
       SavingThrowProtection,
       SavingThrowDisadvantage,
       ComponentSuppression,

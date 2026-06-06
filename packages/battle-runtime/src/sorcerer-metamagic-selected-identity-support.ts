@@ -1,10 +1,11 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { resourceCount } from "@dnd/shared/types";
+import { DieRollResult, resourceCount } from "@dnd/shared/types";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
+  SEEKING_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./battle-reducer/metamagic.ts";
@@ -52,6 +53,7 @@ export type SorcererMetamagicProjection = {
     | "quickenedSaveGatedDamage"
     | "quickenedSpellAttack"
     | "quickenedSpellAttackSequence"
+    | "seekingSpellAttackReroll"
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
     | "twinnedTargetCount"
@@ -115,6 +117,63 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
       fills: [
         target,
         attackRoll,
+        damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  ).state;
+}
+
+export function resolveSeekingRayOfFrost(state: BattleState): BattleState {
+  const act = actionRayOfFrostAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const missedAttackRoll = attackRollFill(attackRollHole, {
+    total: 5,
+    naturalD20: 2,
+  });
+  const awaitingSeeking = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, missedAttackRoll],
+  });
+  const seekingHole = findHole(
+    awaitingSeeking.tag === "needsHoles" ? awaitingSeeking.holes : [],
+    "attackRoll",
+  );
+  const rerolledAttack = attackRollFill(seekingHole, {
+    total: 5,
+    naturalD20: 2,
+    spellAttackReroll: {
+      kind: "reroll",
+      effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+      replacement: { total: 15, naturalD20: DieRollResult(10) },
+    },
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, rerolledAttack],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        rerolledAttack,
         damageRollFillWithGroups(damageHole, [[4, 3]]),
       ],
     }),
@@ -440,6 +499,10 @@ export function twinnedSorcererMetamagicBattle(): BattleState {
   return sorcererMetamagicBattleWithOptions([twinnedMetamagicOption()]);
 }
 
+export function seekingSorcererMetamagicBattle(): BattleState {
+  return sorcererMetamagicBattleWithOptions([seekingMetamagicOption()]);
+}
+
 function sorcererMetamagicBattleWithOptions(
   knownOptions: readonly CharacterBattleMetamagicOptionFact[],
 ): BattleState {
@@ -543,6 +606,14 @@ function twinnedMetamagicOption(): CharacterBattleMetamagicOptionFact {
   };
 }
 
+function seekingMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+    stackingMode: "can_combine_with_different_metamagic",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
 type QuickenedBonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
     AvailableBattleAct["subject"],
@@ -641,6 +712,18 @@ type ActionSpellAct = AvailableBattleAct & {
     { readonly tag: "actionSpell" }
   >;
 };
+
+function actionRayOfFrostAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "spellAttackDamage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ray of Frost action spell act.");
+  }
+  return act;
+}
 
 function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(

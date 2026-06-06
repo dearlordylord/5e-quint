@@ -18,6 +18,7 @@ import {
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
+  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleAttackDamageDisposition,
@@ -407,6 +408,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         input.input.state,
         "invalidFill",
         "Spell attack roll result is outside the d20 attack-roll protocol.",
+      );
+    }
+    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+      step.attackRoll.value,
+    );
+    if (spellAttackRerollIssue !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        spellAttackRerollIssue,
       );
     }
     if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {

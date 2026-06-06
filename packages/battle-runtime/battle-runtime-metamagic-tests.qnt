@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-missed-spell-attack-reroll
 
 module battleRuntimeMetamagicTests {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -829,6 +830,193 @@ module battleRuntimeMetamagicTests {
         Set(),
         1,
       ) == Fire),
+    }
+  }
+
+  run test_seeking_spell_rerolls_missed_spell_attack_and_spends_one_point = {
+    val result = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(result.finalTotal == 15),
+      assert(result.finalNaturalD20 == 10),
+      assert(result.hit),
+      assert(not(result.critical)),
+      assert(result.sorceryPointsRemaining == 3),
+    }
+  }
+
+  run test_seeking_spell_replacement_miss_and_natural_one_remain_misses = {
+    val replacementMiss = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      7,
+      4,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val naturalOne = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      30,
+      1,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(not(replacementMiss.hit)),
+      assert(not(replacementMiss.critical)),
+      assert(replacementMiss.sorceryPointsRemaining == 3),
+      assert(not(naturalOne.hit)),
+      assert(not(naturalOne.critical)),
+      assert(naturalOne.sorceryPointsRemaining == 3),
+    }
+  }
+
+  run test_seeking_spell_replacement_natural_twenty_is_critical_hit = {
+    val result = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      20,
+      20,
+      30,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(result.hit),
+      assert(result.critical),
+      assert(result.sorceryPointsRemaining == 3),
+    }
+  }
+
+  run test_seeking_spell_rejects_original_hit_unknown_unaffordable_and_repeated_attack_sequence = {
+    val originalHit = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      15,
+      10,
+      5,
+      2,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val unknown = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(quickenedSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    val unaffordable = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      0,
+    )
+    val repeatedAttackSequence = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackSequenceProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(),
+      4,
+    )
+    all {
+      assert(originalHit.finalTotal == 15),
+      assert(originalHit.sorceryPointsRemaining == 4),
+      assert(unknown.finalTotal == 5),
+      assert(unknown.sorceryPointsRemaining == 4),
+      assert(unaffordable.finalTotal == 5),
+      assert(unaffordable.sorceryPointsRemaining == 0),
+      assert(repeatedAttackSequence.finalTotal == 5),
+      assert(repeatedAttackSequence.sorceryPointsRemaining == 4),
+    }
+  }
+
+  run test_seeking_spell_stacking_exception_allows_one_different_metamagic_only = {
+    val quickenedCast = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact, quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    val seekingAlreadyCast = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact),
+      Set(seekingSpellMetamagicFact),
+      4,
+    )
+    val twoCastMetamagics = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact, quickenedSpellMetamagicFact, empoweredSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact, empoweredSpellMetamagicFact),
+      4,
+    )
+    val quickenedCastCombinedUnaffordable = resolveSeekingSpellAttackReroll(
+      SeekingSpellAttackDamageProcedure,
+      5,
+      2,
+      15,
+      10,
+      13,
+      Set(seekingSpellMetamagicFact, quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      2,
+    )
+    all {
+      assert(quickenedCast.hit),
+      assert(quickenedCast.sorceryPointsRemaining == 1),
+      assert(seekingAlreadyCast.finalTotal == 5),
+      assert(seekingAlreadyCast.sorceryPointsRemaining == 4),
+      assert(twoCastMetamagics.finalTotal == 5),
+      assert(twoCastMetamagics.sorceryPointsRemaining == 4),
+      assert(quickenedCastCombinedUnaffordable.finalTotal == 5),
+      assert(quickenedCastCombinedUnaffordable.sorceryPointsRemaining == 2),
     }
   }
 

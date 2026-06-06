@@ -148,3 +148,4 @@
 {"profileId":"spell.invocation-spike-growth-movement-hazard","obligationIds":["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"]}
 {"profileId":"spell.invocation-see-invisible-observer-sight","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"]}
 {"profileId":"spell.invocation-spiritual-weapon-attack-proxy","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.metamagic-missed-spell-attack-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"]}

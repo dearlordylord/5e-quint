@@ -1515,6 +1515,10 @@ export function attackRollFill(
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
     readonly activatedOngoingFeatureUnitId?: string;
+    readonly spellAttackReroll?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["spellAttackReroll"];
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") {
@@ -1532,6 +1536,9 @@ export function attackRollFill(
         : {
             activatedOngoingFeatureUnitId: value.activatedOngoingFeatureUnitId,
           }),
+      ...(value.spellAttackReroll === undefined
+        ? {}
+        : { spellAttackReroll: value.spellAttackReroll }),
     },
   };
 }

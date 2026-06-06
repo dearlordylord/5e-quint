@@ -420,3 +420,4 @@
 {"unitId":"dwarf_dwarven_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-15-DISTANT-OBJECT-LIGHT","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"}}
+{"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"}}

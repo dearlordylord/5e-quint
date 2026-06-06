@@ -67,14 +67,19 @@ The promoted battle-runtime Metamagic replay actions are:
 
 ## Deferred Or Non-Applicable Metamagic Options
 
-Distant, Extended, Subtle, Empowered, and Seeking Spell are not promoted
-runtime profiles in the current `sorcerer_metamagic` claim. They remain
-documented as deferred mechanics:
+Distant, Extended, Subtle, and Empowered Spell are not promoted runtime
+profiles in the current `sorcerer_metamagic` claim. They remain documented as
+deferred mechanics:
 
 - Distant, Extended, and Subtle belong to future typed cast-property owners for
   range, duration or Concentration maintenance, and components.
-- Empowered and Seeking belong to future typed post-roll spell reroll fill
-  owners for damage dice and missed spell Attack Roll replacement.
+- Empowered belongs to a future typed post-roll spell damage dice reroll fill
+  owner.
+
+Seeking Spell is now promoted for the first missed spell Attack Roll replacement
+owner: the single `spellAttackDamage` Ray of Frost slice. Repeated spell attack
+procedures such as Scorching Ray remain deferred until invocation-local
+one-use accounting exists.
 
 No selected-identity replay should be added for those options until the
 corresponding typed runtime owner, focused QNT parity, and runtime verification

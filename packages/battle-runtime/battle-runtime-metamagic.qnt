@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.metamagic-missed-spell-attack-reroll
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-damage-type-substitution
@@ -16,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-component-suppression
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-missed-spell-attack-reroll
 
 module battleRuntimeMetamagic {
   import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
@@ -64,6 +66,14 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeSeekingSpellAttackRerollResult = {
+    finalTotal: int,
+    finalNaturalD20: int,
+    hit: bool,
+    critical: bool,
+    sorceryPointsRemaining: int,
+  }
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -75,6 +85,11 @@ module battleRuntimeMetamagic {
     | TransmutedSpellAttackDamageProcedure
     | TransmutedSpellAttackSequenceProcedure
     | NonTransmutedDamageProcedure
+
+  type BattleRuntimeSeekingSpellAttackRerollProcedure =
+    | SeekingSpellAttackDamageProcedure
+    | SeekingSpellAttackSequenceProcedure
+    | NonSeekingSpellAttackProcedure
 
   type BattleRuntimeTwinnedTargetCountProcedure =
     | TwinnedOneAdditionalCreatureTargetProcedure
@@ -201,6 +216,87 @@ module battleRuntimeMetamagic {
       targetDamageType
     else
       sourceDamageType
+
+  pure def seekingSpellProcedureSupportsMissedSpellAttackReroll(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+  ): bool =
+    match procedure {
+      | SeekingSpellAttackDamageProcedure => true
+      | SeekingSpellAttackSequenceProcedure => false
+      | NonSeekingSpellAttackProcedure => false
+    }
+
+  pure def seekingSpellAttackRollHits(
+    total: int,
+    naturalD20: int,
+    armorClass: int,
+  ): bool =
+    if (naturalD20 == 1)
+      false
+    else if (naturalD20 == 20)
+      true
+    else
+      total >= armorClass
+
+  pure def seekingSpellAttackRollIsCritical(naturalD20: int): bool =
+    naturalD20 == 20
+
+  pure def seekingSpellSelectedMetamagicOptions(
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+  ): Set[BattleRuntimeMetamagicOptionFact] =
+    castOptions.union(Set(seekingSpellMetamagicFact))
+
+  pure def seekingSpellCanRerollMissedSpellAttack(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+    originalTotal: int,
+    originalNaturalD20: int,
+    armorClass: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    knownOptions.contains(seekingSpellMetamagicFact) and
+    not(castOptions.contains(seekingSpellMetamagicFact)) and
+    selectedMetamagicOptionsCanStack(seekingSpellSelectedMetamagicOptions(castOptions)) and
+    selectedMetamagicOptionsAffordable(seekingSpellSelectedMetamagicOptions(castOptions), sorceryPointsRemaining) and
+    seekingSpellProcedureSupportsMissedSpellAttackReroll(procedure) and
+    not(seekingSpellAttackRollHits(originalTotal, originalNaturalD20, armorClass))
+
+  pure def resolveSeekingSpellAttackReroll(
+    procedure: BattleRuntimeSeekingSpellAttackRerollProcedure,
+    originalTotal: int,
+    originalNaturalD20: int,
+    replacementTotal: int,
+    replacementNaturalD20: int,
+    armorClass: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    castOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeSeekingSpellAttackRerollResult = {
+    val admitted = seekingSpellCanRerollMissedSpellAttack(
+      procedure,
+      originalTotal,
+      originalNaturalD20,
+      armorClass,
+      knownOptions,
+      castOptions,
+      sorceryPointsRemaining,
+    )
+    val finalTotal = if (admitted) replacementTotal else originalTotal
+    val finalNaturalD20 =
+      if (admitted) replacementNaturalD20 else originalNaturalD20
+    {
+      finalTotal: finalTotal,
+      finalNaturalD20: finalNaturalD20,
+      hit: seekingSpellAttackRollHits(finalTotal, finalNaturalD20, armorClass),
+      critical: seekingSpellAttackRollIsCritical(finalNaturalD20),
+      sorceryPointsRemaining:
+        if (admitted)
+          sorceryPointsRemaining - selectedMetamagicSorceryPointCost(seekingSpellSelectedMetamagicOptions(castOptions))
+        else
+          sorceryPointsRemaining,
+    }
+  }
 
   pure def twinnedSpellProcedureSupportsTargetCountProjection(
     procedure: BattleRuntimeTwinnedTargetCountProcedure,

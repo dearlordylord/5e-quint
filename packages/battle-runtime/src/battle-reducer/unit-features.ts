@@ -169,6 +169,7 @@ import type {
   UnitFeatureHeldWeaponActivationBattleResolutionInput,
   UnitFeatureRolledDiceFill,
 } from "../battle-reducer.ts";
+import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
 
 const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
   "druid-wild-shape-equipment-disposition";
@@ -1712,6 +1713,15 @@ function bardicInspirationD20TestOutcome(
       return {
         tag: "invalid",
         message: "Attack roll result is outside the d20 attack-roll protocol.",
+      };
+    }
+    const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+      input.d20Test.attackRoll,
+    );
+    if (spellAttackRerollIssue !== null) {
+      return {
+        tag: "invalid",
+        message: spellAttackRerollIssue,
       };
     }
     const criticalThreshold = input.d20Test.criticalThreshold ?? 20;

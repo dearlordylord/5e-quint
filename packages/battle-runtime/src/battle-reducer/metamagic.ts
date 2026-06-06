@@ -6,11 +6,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-component-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 
 import * as Either from "effect/Either";
 import type {
+  BattleAttackRollResult,
   BattleCreatureState,
+  BattleSpellAttackRerollOption,
   BattleState,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -95,12 +98,16 @@ export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
 export const EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Empowered Spell is not supported until spell damage roll fills carry a typed post-roll reroll boundary that selects original damage dice up to the caster's Charisma modifier and replaces them with forced new rolls without storing reroll opportunity state.";
 export const SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE =
-  "Seeking Spell is not supported until spell attack roll fills carry a typed missed-spell-attack reroll boundary that replaces one missed d20 with the forced new roll without storing reroll opportunity state.";
+  "Seeking Spell is supported only as a post-miss spell attack reroll fill that replaces one missed d20 with the forced new roll without storing reroll opportunity state.";
 
 export const QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE =
   "Quickened Spell is not supported for this action-casting spell procedure until its resolver threads a Bonus Action rewrite and Metamagic applications through the shared spell-cast resource boundary.";
 export const QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE =
   "Quickened Spell can modify only spells with a casting time of an action.";
+
+type SeekingSpellApplicationFact = CharacterBattleMetamagicOptionFact & {
+  readonly effectKind: typeof SEEKING_METAMAGIC_EFFECT_KIND;
+};
 
 type QuickenedActionRewriteProcedureDisposition =
   | "bonusActionRewrite"
@@ -277,6 +284,110 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
       applications: [quickened],
     }) === null
   );
+}
+
+export function seekingSpellAttackRerollOption(input: {
+  readonly actor: BattleCreatureState | undefined;
+}): BattleSpellAttackRerollOption | null {
+  const application = seekingSpellMetamagicApplication(input.actor);
+  return application === null
+    ? null
+    : {
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        label: "Seeking Spell",
+        sorceryPointCost: application.sorceryPointCost,
+      };
+}
+
+export function seekingSpellRerollApplicationForAttackRoll(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+}): SeekingSpellApplicationFact | string | null {
+  if (input.attackRoll.spellAttackReroll === undefined) {
+    return null;
+  }
+  const application = seekingSpellMetamagicApplication(input.actor);
+  if (application === null) {
+    return "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.";
+  }
+  const combinedUseIssue = seekingSpellCombinedUseIssue({
+    actor: input.actor,
+    castApplications: input.castApplications,
+    seekingApplication: application,
+  });
+  if (combinedUseIssue !== null) {
+    return combinedUseIssue;
+  }
+  return application;
+}
+
+export function seekingSpellStackingIssue(input: {
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly seekingApplication: CharacterBattleMetamagicOptionFact;
+}): string | null {
+  if (
+    input.castApplications.some(
+      (application) =>
+        application.effectKind === input.seekingApplication.effectKind,
+    )
+  ) {
+    return "Seeking Spell can combine only with a different Metamagic option.";
+  }
+  return metamagicStackingIssue([
+    ...input.castApplications,
+    input.seekingApplication,
+  ]);
+}
+
+export function seekingSpellCombinedUseIssue(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly seekingApplication: CharacterBattleMetamagicOptionFact;
+}): string | null {
+  const stackingIssue = seekingSpellStackingIssue({
+    castApplications: input.castApplications,
+    seekingApplication: input.seekingApplication,
+  });
+  if (stackingIssue !== null) {
+    return stackingIssue;
+  }
+  if (input.actor === undefined) {
+    return "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.";
+  }
+  return metamagicSorceryPointSpendIssue({
+    actor: input.actor,
+    applications: [...input.castApplications, input.seekingApplication],
+  }) === null
+    ? null
+    : "Seeking Spell requires enough unexpended Sorcery Points for all Metamagic options used on this spell.";
+}
+
+export function seekingSpellMetamagicApplication(
+  actor: BattleCreatureState | undefined,
+): SeekingSpellApplicationFact | null {
+  if (actor?.origin.kind !== "character") {
+    return null;
+  }
+  const seeking = actor.origin.metamagic?.knownOptions.find(
+    (option) => option.effectKind === SEEKING_METAMAGIC_EFFECT_KIND,
+  );
+  if (seeking === undefined) {
+    return null;
+  }
+  if (
+    metamagicSorceryPointSpendIssue({
+      actor,
+      applications: [seeking],
+    }) !== null
+  ) {
+    return null;
+  }
+  return {
+    effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+    stackingMode: seeking.stackingMode,
+    sorceryPointCost: seeking.sorceryPointCost,
+  };
 }
 
 export function spellInvocationHasMagicActionCastingTime(

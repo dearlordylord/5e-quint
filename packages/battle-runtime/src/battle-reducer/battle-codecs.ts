@@ -5,6 +5,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -14,6 +16,7 @@ import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   ArmorClass as SharedArmorClass,
+  ResourceCount,
   type Hp,
 } from "@dnd/shared/types";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
@@ -1169,6 +1172,16 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+    spellAttackRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("missed_spell_attack_reroll"),
+          label: Schema.String,
+          sorceryPointCost: ResourceCount,
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1784,6 +1797,26 @@ const BattleAttackRollResultSchema = Schema.Struct({
   missToHitReplacementUnitId: Schema.optionalWith(Schema.String, {
     exact: true,
   }),
+  spellAttackReroll: Schema.optionalWith(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("decline"),
+        effectKind: Schema.Literal("missed_spell_attack_reroll"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("reroll"),
+        effectKind: Schema.Literal("missed_spell_attack_reroll"),
+        replacement: Schema.Struct({
+          total: Schema.Number.pipe(Schema.int()),
+          naturalD20: BattleD20DieRollResultSchema,
+          rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+            exact: true,
+          }),
+        }),
+      }),
+    ),
+    { exact: true },
+  ),
 });
 
 const BattleRolledDiceGroupSchema = Schema.Struct({

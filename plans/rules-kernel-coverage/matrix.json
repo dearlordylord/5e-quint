@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 111,
-    "covered": 105,
+    "total": 112,
+    "covered": 106,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 81,
+      "battle": 82,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 105,
+      "covered": 106,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -3720,6 +3720,47 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Pilot slice - minimal creature-vs-creature attack interleaving with bounded HP state, per-action nondet damage and hit, and HP damage application via the SHARED.HIT_POINTS.POSITIVE_DAMAGE atomic"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-missed-spell-attack-reroll"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Seeking Spell",
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
+        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Attack Roll"
+      ],
+      "title": "Battle Seeking Spell Metamagic admits missed single spell attack rerolls, enforces known-option, Sorcery Point affordability, and different-Metamagic stacking gates, and resolves the forced replacement roll before damage"
     }
   ],
   "battleHoleFrontier": [
@@ -6026,6 +6067,12 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"
+      ],
+      "profileId": "unit-feature.metamagic-missed-spell-attack-reroll"
     }
   ],
   "qntOwnerRoles": [
@@ -6341,6 +6388,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
         "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
@@ -6356,6 +6404,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
         "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
@@ -6371,6 +6420,7 @@
         "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
         "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
         "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
         "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
         "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
         "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
@@ -8945,7 +8995,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "proofOnly": [
@@ -8985,7 +9036,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
       "proofOnly": [
@@ -9023,7 +9075,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
       "proofOnly": [
@@ -9061,7 +9114,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
       "proofOnly": [
@@ -9099,7 +9153,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
       "proofOnly": [
@@ -9137,7 +9192,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
       "proofOnly": [
@@ -9175,7 +9231,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
       "proofOnly": [
@@ -9213,7 +9270,8 @@
         "forall",
         "exists",
         "membership",
-        "size"
+        "size",
+        "set-operators"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
       "proofOnly": [
@@ -10942,6 +11000,43 @@
         "packages/battle-runtime/creature-attack.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "set-operators",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size",
+        "record-update"
+      ],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -11218,6 +11313,7 @@
     "unit-feature.metamagic-damage-type-substitution",
     "unit-feature.metamagic-effective-level-extra-target",
     "unit-feature.metamagic-heightened-save-disadvantage",
+    "unit-feature.metamagic-missed-spell-attack-reroll",
     "unit-feature.monk-focus-battle-options",
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",

@@ -80,6 +80,7 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-reducer.ts";
+import { spellAttackRerollUnsupportedIssue } from "../battle-reducer.ts";
 
 export function resolveOpportunityAttackCommand(
   input: BattleResolutionInputForSubject<
@@ -158,6 +159,12 @@ export function resolveOpportunityAttackCommand(
       "invalidFill",
       "Opportunity Attack roll result is outside the d20 attack-roll protocol.",
     );
+  }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    fillSet.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) {
+    return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
   }
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
