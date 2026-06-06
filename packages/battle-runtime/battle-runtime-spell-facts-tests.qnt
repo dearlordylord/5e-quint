@@ -61,6 +61,7 @@ module battleRuntimeSpellFactsTests {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
     val blindnessDeafnessDeafened = BlindnessDeafnessDeafened({
       source: Fighter,
+      heightenedRepeatSaveDisadvantage: false,
       durationTicks: blindnessDeafnessDurationTicks,
     })
     val shiningSmiteIllumination = ShiningSmiteIllumination({ durationTicks: 10 })

@@ -11,6 +11,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
+  type ActionSpellAct,
   blindnessDeafnessUnitId,
   colorSprayUnitId,
   entangleUnitId,
@@ -21,7 +22,9 @@ import {
   sleepUnitId,
   spellCasterId,
   spellTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   requireCombatant,
   requireHole,
@@ -45,7 +48,10 @@ import {
   BattleHoleSchema,
   breakBattleConcentration,
   combatantId,
+  discoverBattleActs,
   endTurn,
+  type BattleState,
+  type CombatantId,
   resolveBattleSubject,
 } from "./index.ts";
 import {
@@ -267,6 +273,93 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [],
     });
     expect(ended.state.combatants.get(spellCasterId)?.concentration).toBeNull();
+  });
+
+  test("Heightened hold_person carries Disadvantage only to the selected failed target repeat save", () => {
+    const secondHumanoidId = combatantId("heightened-hold-person-humanoid-2");
+    const cast = castHeightenedHoldPerson({
+      slotLevel: 3,
+      targetIds: [spellTargetId, secondHumanoidId],
+      heightenedTargetId: spellTargetId,
+      failedTargetIds: [spellTargetId, secondHumanoidId],
+    });
+
+    expect(requireCombatant(cast, spellTargetId).activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellConditionEndTurnSave",
+        sourceSpellId: holdPersonUnitId,
+        heightenedSpellTargetDisadvantage: {
+          kind: "heightenedSpellTargetDisadvantage",
+        },
+      }),
+    );
+    expect(
+      requireCombatant(cast, secondHumanoidId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellConditionEndTurnSave",
+        sourceSpellId: holdPersonUnitId,
+        heightenedSpellTargetDisadvantage: null,
+      }),
+    );
+
+    const selectedTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (selectedTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const selectedRepeatSave = requireResultHole(
+      endTurn({ state: selectedTurn.state, actorId: spellTargetId }),
+      "savingThrowOutcome",
+    );
+    expect(selectedRepeatSave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+    const selectedEnded = endTurn({
+      state: selectedTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(selectedRepeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    if (selectedEnded.tag !== "resolved") {
+      throw new Error("Expected selected Hold Person repeat save to resolve.");
+    }
+    expect(requireCombatant(selectedEnded.state, spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+
+    const unselectedRepeatSave = requireResultHole(
+      endTurn({ state: selectedEnded.state, actorId: secondHumanoidId }),
+      "savingThrowOutcome",
+    );
+    expect(unselectedRepeatSave.targetRollModes).not.toContainEqual({
+      targetId: secondHumanoidId,
+      rollMode: "disadvantage",
+    });
+    const unselectedEnded = endTurn({
+      state: selectedEnded.state,
+      actorId: secondHumanoidId,
+      fills: [
+        savingThrowOutcomeFill(unselectedRepeatSave, [
+          { targetId: secondHumanoidId, succeeded: true },
+        ]),
+      ],
+    });
+    if (unselectedEnded.tag !== "resolved") {
+      throw new Error(
+        "Expected unselected Hold Person repeat save to resolve.",
+      );
+    }
+    expect(
+      requireCombatant(unselectedEnded.state, secondHumanoidId),
+    ).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
   });
 
   test("hold_person self-target failed save spends resources then immediately breaks Concentration", () => {
@@ -814,6 +907,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       condition: "paralyzed" as const,
       conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
       save: {
         ability: "wis" as const,
         dc: { kind: "caster_spell_save_dc" as const },
@@ -829,6 +923,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       condition: "poisoned" as const,
       conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
       save: {
         ability: "con" as const,
         dc: { kind: "caster_spell_save_dc" as const },
@@ -941,6 +1036,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       condition: "paralyzed" as const,
       conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
       save: {
         ability: "wis" as const,
         dc: { kind: "caster_spell_save_dc" as const },
@@ -1000,3 +1096,97 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ).toBeNull();
   });
 });
+
+function castHeightenedHoldPerson(input: {
+  readonly slotLevel: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  readonly targetIds: readonly [typeof spellTargetId, ...CombatantId[]];
+  readonly heightenedTargetId: CombatantId;
+  readonly failedTargetIds: readonly CombatantId[];
+}): BattleState {
+  const spell = spellRecord(holdPersonUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+    extraTargetIds: input.targetIds.filter(
+      (targetId) => targetId !== spellTargetId,
+    ),
+    casterClassLevels: [{ className: "sorcerer", level: 5 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(4),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [
+        {
+          effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+          stackingMode: "one_per_spell",
+          sorceryPointCost: resourceCount(2),
+        },
+      ],
+    },
+  });
+  const act = heightenedSaveGatedConditionAct(state, holdPersonUnitId);
+  const targetHole = requireHole(act.initialHoles, "spellTargetList");
+  const heightenedHole = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetListFill(
+    targetHole,
+    spellCasterId,
+    holdPersonUnitId,
+    input.targetIds,
+  );
+  const heightenedFill = {
+    kind: "targetChoice" as const,
+    holeId: heightenedHole.holeId,
+    value: input.heightenedTargetId,
+  };
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, heightenedFill],
+  });
+  const savingThrow = requireResultHole(awaitingSave, "savingThrowOutcome");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      heightenedFill,
+      savingThrowOutcomeFill(
+        savingThrow,
+        input.targetIds.map((targetId) => ({
+          targetId,
+          succeeded: !input.failedTargetIds.includes(targetId),
+        })),
+      ),
+    ],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Heightened Hold Person to resolve.");
+  }
+  return resolved.state;
+}
+
+function heightenedSaveGatedConditionAct(
+  state: BattleState,
+  spellId: string,
+): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === spellId &&
+      candidate.subject.invocation.procedure === "saveGatedCondition" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened save-gated condition act.");
+  }
+  return act;
+}

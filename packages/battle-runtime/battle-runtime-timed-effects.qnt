@@ -217,15 +217,18 @@ module battleRuntimeTimedEffects {
           })
         | BlindnessDeafnessBlinded(data) => BlindnessDeafnessBlinded({
             source: data.source,
+            heightenedRepeatSaveDisadvantage: data.heightenedRepeatSaveDisadvantage,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | BlindnessDeafnessDeafened(data) => BlindnessDeafnessDeafened({
             source: data.source,
+            heightenedRepeatSaveDisadvantage: data.heightenedRepeatSaveDisadvantage,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HoldPersonParalyzed(data) => HoldPersonParalyzed({
             source: data.source,
             hadIncapacitated: data.hadIncapacitated,
+            heightenedRepeatSaveDisadvantage: data.heightenedRepeatSaveDisadvantage,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | AidHitPointMaximumIncrease(data) => AidHitPointMaximumIncrease({

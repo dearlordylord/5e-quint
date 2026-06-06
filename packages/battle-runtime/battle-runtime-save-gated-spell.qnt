@@ -799,6 +799,21 @@ module battleRuntimeSaveGatedSpell {
       count <= saveGatedTargetMaxTargets(targeting, slotLevel)
   }
 
+  type SaveGatedConditionHeightenedTarget =
+    | NoSaveGatedConditionHeightenedTarget
+    | HeightenedSaveGatedConditionTarget({ target: Actor })
+
+  pure val noSaveGatedConditionHeightenedTarget = NoSaveGatedConditionHeightenedTarget
+
+  pure def saveGatedConditionHeightenedRepeatSaveDisadvantage(
+    heightenedTarget: SaveGatedConditionHeightenedTarget,
+    targetActor: Actor,
+  ): bool =
+    match heightenedTarget {
+      | HeightenedSaveGatedConditionTarget(data) => data.target == targetActor
+      | NoSaveGatedConditionHeightenedTarget => false
+    }
+
   pure def resolveTargetListSaveGatedCondition(
     state: BattleState,
     invocation: SaveGatedConditionInvocation,
@@ -810,8 +825,33 @@ module battleRuntimeSaveGatedSpell {
     goblinCreatureType: RuntimeCreatureType,
     goblinSavingThrowSucceeded: bool,
   ): BattleState =
+    resolveTargetListSaveGatedConditionWithHeightenedTarget(
+      state,
+      invocation,
+      slotLevel,
+      fighterTargeted,
+      fighterCreatureType,
+      fighterSavingThrowSucceeded,
+      goblinTargeted,
+      goblinCreatureType,
+      goblinSavingThrowSucceeded,
+      noSaveGatedConditionHeightenedTarget,
+    )
+
+  pure def resolveTargetListSaveGatedConditionWithHeightenedTarget(
+    state: BattleState,
+    invocation: SaveGatedConditionInvocation,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+    heightenedTarget: SaveGatedConditionHeightenedTarget,
+  ): BattleState =
     if (invocation == HoldPersonSaveGate)
-      resolveHoldPerson(
+      resolveHoldPersonWithHeightenedTarget(
         state,
         slotLevel,
         fighterTargeted,
@@ -820,6 +860,7 @@ module battleRuntimeSaveGatedSpell {
         goblinTargeted,
         goblinCreatureType,
         goblinSavingThrowSucceeded,
+        heightenedTarget,
       )
     else if (
       not(state.actionAvailable) or
@@ -849,6 +890,15 @@ module battleRuntimeSaveGatedSpell {
     source: Actor,
     targetActor: Actor,
   ): Combatant =
+    holdPersonTargetWithHeightened(target, savingThrowSucceeded, source, targetActor, false)
+
+  pure def holdPersonTargetWithHeightened(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    source: Actor,
+    targetActor: Actor,
+    heightenedRepeatSaveDisadvantage: bool,
+  ): Combatant =
     if (savingThrowSucceeded)
       target
     else {
@@ -859,11 +909,23 @@ module battleRuntimeSaveGatedSpell {
         activeEffects: withoutPrior.activeEffects.union(Set(HoldPersonParalyzed({
           source: source,
           hadIncapacitated: withoutPrior.incapacitated,
+          heightenedRepeatSaveDisadvantage: heightenedRepeatSaveDisadvantage,
           durationTicks: holdPersonDurationTicks,
         }))),
       }
       breakConcentrationFromHoldPersonAppliedIncapacitated(held, targetActor)
     }
+
+  pure def holdPersonEndTurnRepeatSaveRollMode(target: Combatant, source: Actor): SavingThrowRollMode =
+    if (
+      target.activeEffects.exists(effect => match effect {
+        | HoldPersonParalyzed(data) => data.source == source and data.heightenedRepeatSaveDisadvantage
+        | _ => false
+      })
+    )
+      DisadvantageSavingThrow
+    else
+      NormalSavingThrow
 
   pure def resolveHoldPerson(
     state: BattleState,
@@ -874,6 +936,29 @@ module battleRuntimeSaveGatedSpell {
     goblinTargeted: bool,
     goblinCreatureType: RuntimeCreatureType,
     goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    resolveHoldPersonWithHeightenedTarget(
+      state,
+      slotLevel,
+      fighterTargeted,
+      fighterCreatureType,
+      fighterSavingThrowSucceeded,
+      goblinTargeted,
+      goblinCreatureType,
+      goblinSavingThrowSucceeded,
+      noSaveGatedConditionHeightenedTarget,
+    )
+
+  pure def resolveHoldPersonWithHeightenedTarget(
+    state: BattleState,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+    heightenedTarget: SaveGatedConditionHeightenedTarget,
   ): BattleState =
     if (
       not(state.actionAvailable) or
@@ -891,8 +976,20 @@ module battleRuntimeSaveGatedSpell {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
       val withTargets = {
         ...withoutPrior,
-        fighter: if (fighterTargeted) holdPersonTarget(withoutPrior.fighter, fighterSavingThrowSucceeded, Fighter, Fighter) else withoutPrior.fighter,
-        goblin: if (goblinTargeted) holdPersonTarget(withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, Goblin) else withoutPrior.goblin,
+        fighter: if (fighterTargeted) holdPersonTargetWithHeightened(
+          withoutPrior.fighter,
+          fighterSavingThrowSucceeded,
+          Fighter,
+          Fighter,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Fighter),
+        ) else withoutPrior.fighter,
+        goblin: if (goblinTargeted) holdPersonTargetWithHeightened(
+          withoutPrior.goblin,
+          goblinSavingThrowSucceeded,
+          Fighter,
+          Goblin,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Goblin),
+        ) else withoutPrior.goblin,
         actionAvailable: false,
       }
       val holdPersonHasEffect = holdPersonStillActiveFrom(withTargets, Fighter)
@@ -923,13 +1020,22 @@ module battleRuntimeSaveGatedSpell {
     }
 
   pure def blindnessDeafnessActiveEffect(choice: BlindnessDeafnessConditionChoice, source: Actor): ActiveEffect =
+    blindnessDeafnessActiveEffectWithHeightened(choice, source, false)
+
+  pure def blindnessDeafnessActiveEffectWithHeightened(
+    choice: BlindnessDeafnessConditionChoice,
+    source: Actor,
+    heightenedRepeatSaveDisadvantage: bool,
+  ): ActiveEffect =
     match choice {
       | BlindnessDeafnessBlindedChoice => BlindnessDeafnessBlinded({
           source: source,
+          heightenedRepeatSaveDisadvantage: heightenedRepeatSaveDisadvantage,
           durationTicks: blindnessDeafnessDurationTicks,
         })
       | BlindnessDeafnessDeafenedChoice => BlindnessDeafnessDeafened({
           source: source,
+          heightenedRepeatSaveDisadvantage: heightenedRepeatSaveDisadvantage,
           durationTicks: blindnessDeafnessDurationTicks,
         })
     }
@@ -979,14 +1085,44 @@ module battleRuntimeSaveGatedSpell {
     source: Actor,
     choice: BlindnessDeafnessConditionChoice,
   ): Combatant =
+    blindnessDeafnessTargetWithHeightened(target, savingThrowSucceeded, source, choice, false)
+
+  pure def blindnessDeafnessTargetWithHeightened(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+    heightenedRepeatSaveDisadvantage: bool,
+  ): Combatant =
     if (savingThrowSucceeded)
       target
     else
       {
         ...target,
         activeEffects: activeEffectsWithoutBlindnessDeafnessChoiceFrom(target.activeEffects, choice, source)
-          .union(Set(blindnessDeafnessActiveEffect(choice, source))),
+          .union(Set(blindnessDeafnessActiveEffectWithHeightened(choice, source, heightenedRepeatSaveDisadvantage))),
       }
+
+  pure def blindnessDeafnessEndTurnRepeatSaveRollMode(
+    target: Combatant,
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+  ): SavingThrowRollMode =
+    if (
+      target.activeEffects.exists(effect => match choice {
+        | BlindnessDeafnessBlindedChoice => match effect {
+            | BlindnessDeafnessBlinded(data) => data.source == source and data.heightenedRepeatSaveDisadvantage
+            | _ => false
+          }
+        | BlindnessDeafnessDeafenedChoice => match effect {
+            | BlindnessDeafnessDeafened(data) => data.source == source and data.heightenedRepeatSaveDisadvantage
+            | _ => false
+          }
+      })
+    )
+      DisadvantageSavingThrow
+    else
+      NormalSavingThrow
 
   pure def resolveBlindnessDeafness(
     state: BattleState,
@@ -996,6 +1132,27 @@ module battleRuntimeSaveGatedSpell {
     fighterSavingThrowSucceeded: bool,
     goblinTargeted: bool,
     goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    resolveBlindnessDeafnessWithHeightenedTarget(
+      state,
+      slotLevel,
+      choice,
+      fighterTargeted,
+      fighterSavingThrowSucceeded,
+      goblinTargeted,
+      goblinSavingThrowSucceeded,
+      noSaveGatedConditionHeightenedTarget,
+    )
+
+  pure def resolveBlindnessDeafnessWithHeightenedTarget(
+    state: BattleState,
+    slotLevel: int,
+    choice: BlindnessDeafnessConditionChoice,
+    fighterTargeted: bool,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinSavingThrowSucceeded: bool,
+    heightenedTarget: SaveGatedConditionHeightenedTarget,
   ): BattleState =
     if (
       not(state.actionAvailable) or
@@ -1010,8 +1167,20 @@ module battleRuntimeSaveGatedSpell {
     else
       commitActorSpellSlotUse({
         ...state,
-        fighter: if (fighterTargeted) blindnessDeafnessTarget(state.fighter, fighterSavingThrowSucceeded, Fighter, choice) else state.fighter,
-        goblin: if (goblinTargeted) blindnessDeafnessTarget(state.goblin, goblinSavingThrowSucceeded, Fighter, choice) else state.goblin,
+        fighter: if (fighterTargeted) blindnessDeafnessTargetWithHeightened(
+          state.fighter,
+          fighterSavingThrowSucceeded,
+          Fighter,
+          choice,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Fighter),
+        ) else state.fighter,
+        goblin: if (goblinTargeted) blindnessDeafnessTargetWithHeightened(
+          state.goblin,
+          goblinSavingThrowSucceeded,
+          Fighter,
+          choice,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Goblin),
+        ) else state.goblin,
         actionAvailable: false,
       }, Fighter)
 

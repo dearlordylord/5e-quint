@@ -1412,9 +1412,11 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
+      "sourceBoundary": "The runtime consumes authored save-gated condition spell procedure facts, caller-selected spell targets and condition choices, typed Saving Throw outcomes, and cast-local Metamagic selected-target facts supplied by the Metamagic boundary. It owns Magic Action and Spell Slot spending, Concentration where the spell requires it, target-count and target-creature-type admission for supported target-list spells, failed-save condition active effects, later end-turn repeat Saving Throw cleanup, and the presence-only Heightened Spell repeat-save rider on failed matching combatant-owned spellConditionEndTurnSave active effects. Successful saves, unselected failed targets, and ordinary non-Heightened casts do not carry that rider; automatic target discovery and unsupported social or table-adjudicated condition consequences remain outside this profile.",
       "taskRefs": [
         "SRDINV29B",
-        "SRDINV91C"
+        "SRDINV91C",
+        "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
       ],
       "title": "Spell invocation resolves supported save-gated condition effects",
       "verificationOwners": [
@@ -3843,10 +3845,11 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
       ],
-      "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter and occurrence-local Grease and Gust of Wind Line area Spell Effects, projecting Disadvantage only when the later save target matches the selected target; remaining repeating save-gated condition and multi-target ongoing lifecycles remain unsupported until their active-effect owners can carry the appropriate repeat-save rider without duplicating target state.",
+      "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area Spell Effects, and combatant-owned repeating save-gated condition effects, projecting Disadvantage only when the later save target matches the selected target. Repeating save-gated condition effects store only a presence rider because the active-effect owner is already the later save target.",
       "taskRefs": [
         "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES",
-        "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE"
+        "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE",
+        "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
       ],
       "title": "Unit feature gives one selected spell target Heightened Spell Saving Throw Disadvantage",
       "verificationOwners": [
@@ -15490,6 +15493,24 @@
         "unit-feature.metamagic-heightened-save-disadvantage"
       ],
       "taskId": "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused save-gated condition Quint owner models Heightened Spell selected-target carry-through at the resolver boundary for Hold Person and Blindness/Deafness, storing the repeat-save Disadvantage rider only on failed matching targets, leaving unselected failed targets at Normal repeat-save mode, and producing no repeat-save rider when the selected target succeeds.",
+      "profileIds": [
+        "spell.invocation-condition-save",
+        "unit-feature.metamagic-heightened-save-disadvantage"
+      ],
+      "taskId": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused runtime tests and selected-identity MBT cover Heightened repeating save-gated condition behavior for multi-target condition spells: only the selected failed target receives the presence-only spellConditionEndTurnSave rider, later end-turn saves project Disadvantage from that rider, unselected failed targets keep Normal repeat-save mode, selected successful saves create no active repeat-save effect, and ordinary success cleanup remains unchanged.",
+      "profileIds": [
+        "spell.invocation-condition-save",
+        "unit-feature.metamagic-heightened-save-disadvantage"
+      ],
+      "taskId": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -20201,10 +20222,6 @@
             "mechanic": "Quickened Spell for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock only after each procedure owner has a typed resource-threading and parity witness."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Heightened Spell repeat-save lifecycle targeting for remaining repeating save-gated condition and multi-target ongoing spell procedures remains deferred until selected target identity can be carried through later save commands without duplicating spell occurrence state."
-          },
-          {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "future procedure-specific range and duration consumers",
@@ -20236,13 +20253,6 @@
             "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
             "title": "Sorcerer Metamagic Quickened All Action Spells"
-          },
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
-            "mechanic": "Hideous Laughter, Grease, and Gust of Wind repeat-save carry-through are promoted; carry a selected Heightened Spell target through remaining later repeat-save commands for repeating save-gated condition and multi-target ongoing spell procedures without duplicating spell occurrence state.",
-            "owner": "battle-runtime later-save command owners plus Metamagic selected-target threading",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed later-save target threading, focused runtime tests, and promoted Quint/runtime parity for remaining repeat-save lifecycle Heightened behavior without option identity dispatch.",
-            "title": "Sorcerer Metamagic Repeat Save Lifecycles"
           }
         ],
         "profileIds": [
@@ -20269,7 +20279,7 @@
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
           "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
           "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures.",
-          "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through the combatant-owned Hideous Laughter repeat-save lifecycle and occurrence-local Grease and Gust of Wind Line area repeat-save lifecycles without duplicating spell occurrence state.",
+          "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area, and combatant-owned repeating save-gated condition repeat-save lifecycles without duplicating spell occurrence state.",
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Twinned Spell for Spell Slot casts whose Surface higher-slot targeting profile adds exactly one creature at the next effective spell level by projecting the next effective target maximum, spending 1 Sorcery Point from the shared Font of Magic point pool, preserving actual Spell Slot level and authored spell identity, and rejecting unsupported target-count shapes before resource spending.",
           "The Metamagic Spell Invocation boundary promotes Distant Spell for promoted range-bearing target owners, currently Touch-range object-light targeting, by deriving a cast-local range fact from the selected Distant Spell and the canonical Surface range shape, spending 1 Sorcery Point from the shared Font of Magic point pool, consuming only range-bearing object target witnesses, preserving the base spell effect such as Light radii, and rejecting unsupported procedures, Self range, sub-5-foot distance ranges, missing range facts, and non-range-bearing fills before resource spending.",
@@ -20351,6 +20361,11 @@
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
         }
       ],
       "executableMechanics": true,
@@ -20537,10 +20552,11 @@
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
           ],
-          "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter and occurrence-local Grease and Gust of Wind Line area Spell Effects, projecting Disadvantage only when the later save target matches the selected target; remaining repeating save-gated condition and multi-target ongoing lifecycles remain unsupported until their active-effect owners can carry the appropriate repeat-save rider without duplicating target state.",
+          "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area Spell Effects, and combatant-owned repeating save-gated condition effects, projecting Disadvantage only when the later save target matches the selected target. Repeating save-gated condition effects store only a presence rider because the active-effect owner is already the later save target.",
           "taskRefs": [
             "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES",
-            "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE"
+            "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE",
+            "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
           ],
           "title": "Unit feature gives one selected spell target Heightened Spell Saving Throw Disadvantage",
           "verificationOwners": [
@@ -24503,9 +24519,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored save-gated condition spell procedure facts, caller-selected spell targets and condition choices, typed Saving Throw outcomes, and cast-local Metamagic selected-target facts supplied by the Metamagic boundary. It owns Magic Action and Spell Slot spending, Concentration where the spell requires it, target-count and target-creature-type admission for supported target-list spells, failed-save condition active effects, later end-turn repeat Saving Throw cleanup, and the presence-only Heightened Spell repeat-save rider on failed matching combatant-owned spellConditionEndTurnSave active effects. Successful saves, unselected failed targets, and ordinary non-Heightened casts do not carry that rider; automatic target discovery and unsupported social or table-adjudicated condition consequences remain outside this profile.",
           "taskRefs": [
             "SRDINV29B",
-            "SRDINV91C"
+            "SRDINV91C",
+            "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [
@@ -25165,9 +25183,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored save-gated condition spell procedure facts, caller-selected spell targets and condition choices, typed Saving Throw outcomes, and cast-local Metamagic selected-target facts supplied by the Metamagic boundary. It owns Magic Action and Spell Slot spending, Concentration where the spell requires it, target-count and target-creature-type admission for supported target-list spells, failed-save condition active effects, later end-turn repeat Saving Throw cleanup, and the presence-only Heightened Spell repeat-save rider on failed matching combatant-owned spellConditionEndTurnSave active effects. Successful saves, unselected failed targets, and ordinary non-Heightened casts do not carry that rider; automatic target discovery and unsupported social or table-adjudicated condition consequences remain outside this profile.",
           "taskRefs": [
             "SRDINV29B",
-            "SRDINV91C"
+            "SRDINV91C",
+            "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [
@@ -26452,9 +26472,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored save-gated condition spell procedure facts, caller-selected spell targets and condition choices, typed Saving Throw outcomes, and cast-local Metamagic selected-target facts supplied by the Metamagic boundary. It owns Magic Action and Spell Slot spending, Concentration where the spell requires it, target-count and target-creature-type admission for supported target-list spells, failed-save condition active effects, later end-turn repeat Saving Throw cleanup, and the presence-only Heightened Spell repeat-save rider on failed matching combatant-owned spellConditionEndTurnSave active effects. Successful saves, unselected failed targets, and ordinary non-Heightened casts do not carry that rider; automatic target discovery and unsupported social or table-adjudicated condition consequences remain outside this profile.",
           "taskRefs": [
             "SRDINV29B",
-            "SRDINV91C"
+            "SRDINV91C",
+            "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [
@@ -33367,9 +33389,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored save-gated condition spell procedure facts, caller-selected spell targets and condition choices, typed Saving Throw outcomes, and cast-local Metamagic selected-target facts supplied by the Metamagic boundary. It owns Magic Action and Spell Slot spending, Concentration where the spell requires it, target-count and target-creature-type admission for supported target-list spells, failed-save condition active effects, later end-turn repeat Saving Throw cleanup, and the presence-only Heightened Spell repeat-save rider on failed matching combatant-owned spellConditionEndTurnSave active effects. Successful saves, unselected failed targets, and ordinary non-Heightened casts do not carry that rider; automatic target discovery and unsupported social or table-adjudicated condition consequences remain outside this profile.",
           "taskRefs": [
             "SRDINV29B",
-            "SRDINV91C"
+            "SRDINV91C",
+            "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [

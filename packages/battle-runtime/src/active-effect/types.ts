@@ -105,6 +105,11 @@ export type AreaSpellEffectHeightenedRepeatSaveRider =
       readonly kind: "heightenedSpellTargetDisadvantage";
       readonly targetId: CombatantId;
     };
+export type CombatantOwnedSpellEffectHeightenedRepeatSaveRider =
+  | null
+  | {
+      readonly kind: "heightenedSpellTargetDisadvantage";
+    };
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
@@ -438,6 +443,7 @@ export type BattleActiveEffect =
       readonly kind: "spellConditionEndTurnSave";
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
+      readonly heightenedSpellTargetDisadvantage: CombatantOwnedSpellEffectHeightenedRepeatSaveRider;
       readonly save: SpellConditionRepeatSave;
       readonly expiresAt: BattleActiveEffectExpiration;
     })

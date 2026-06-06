@@ -171,6 +171,7 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
+    heightenedSpellTargetDisadvantage: null,
     save: {
       ability: "wis" as const,
       dc: { kind: "caster_spell_save_dc" as const },
@@ -186,6 +187,7 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
     sourceCombatantId: spellCasterId,
     condition: "poisoned" as const,
     conditionHadNonSpellSource: false,
+    heightenedSpellTargetDisadvantage: null,
     save: {
       ability: "con" as const,
       dc: { kind: "caster_spell_save_dc" as const },
@@ -253,6 +255,7 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
+    heightenedSpellTargetDisadvantage: null,
     save: {
       ability: "wis" as const,
       dc: { kind: "caster_spell_save_dc" as const },

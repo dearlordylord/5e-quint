@@ -1,5 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-MBT-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
+// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
 // RAW trace:
@@ -20,6 +22,9 @@
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Gust of Wind:
 //   Gust of Wind creates a Line with end-turn Strength Saving Throws against
 //   the spell.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blindness/Deafness:
+//   Blindness/Deafness repeats the selected condition's Saving Throw at the
+//   end of each target's turns.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Disadvantage, Sorcery Points as a Pool, and Spend.
 import * as path from "node:path";
@@ -32,6 +37,7 @@ import {
   resolveHeightenedGreaseEntrySave,
   resolveHeightenedGustOfWindEndTurnSave,
   resolveHeightenedHideousLaughter,
+  resolveHeightenedSaveGatedConditionEndTurnSave,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
 defineSelectedIdentityWitness({
@@ -131,6 +137,24 @@ defineSelectedIdentityWitness({
                 heightenedSorcererMetamagicBattle(),
               ),
               "heightenedGustOfWindEndTurnSave",
+            ),
+        },
+        {
+          actionName: "doResolveHeightenedSaveGatedConditionEndTurnSave",
+          projectionAfter: {
+            magicActionAvailable: true,
+            bonusActionAvailable: true,
+            sorceryPointsRemaining: 2,
+            targetHp: 10,
+            targetActiveEffectCount: 0,
+            lastResult: "heightenedSaveGatedConditionEndTurnSave",
+          },
+          discover: () =>
+            projectBattleState(
+              resolveHeightenedSaveGatedConditionEndTurnSave(
+                heightenedSorcererMetamagicBattle(),
+              ),
+              "heightenedSaveGatedConditionEndTurnSave",
             ),
         },
       ],

@@ -10,8 +10,8 @@ module battleRuntimeDirectConditionRemovalTests {
   run test_lesser_restoration_cast_removes_selected_condition = {
     val targetEffects = Set(
       ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 }),
-      BlindnessDeafnessDeafened({ source: Fighter, durationTicks: 10 }),
-      HoldPersonParalyzed({ source: Fighter, hadIncapacitated: false, durationTicks: 10 }),
+      BlindnessDeafnessDeafened({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }),
+      HoldPersonParalyzed({ source: Fighter, hadIncapacitated: false, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }),
       RayOfSicknessPoisoned,
     )
     val affected = {
@@ -25,10 +25,10 @@ module battleRuntimeDirectConditionRemovalTests {
       assert(result.spellSlotUsesThisTurn.contains(BattleCommittedSpellSlotUse(Fighter))),
       assert(not(result.goblin.incapacitated)),
       assert(not(result.goblin.activeEffects.contains(
-        HoldPersonParalyzed({ source: Fighter, hadIncapacitated: false, durationTicks: 10 })
+        HoldPersonParalyzed({ source: Fighter, hadIncapacitated: false, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 })
       ))),
       assert(result.goblin.activeEffects.contains(ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 }))),
-      assert(result.goblin.activeEffects.contains(BlindnessDeafnessDeafened({ source: Fighter, durationTicks: 10 }))),
+      assert(result.goblin.activeEffects.contains(BlindnessDeafnessDeafened({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }))),
       assert(result.goblin.activeEffects.contains(RayOfSicknessPoisoned)),
     }
   }
@@ -75,6 +75,7 @@ module battleRuntimeDirectConditionRemovalTests {
         activeEffects: Set(HoldPersonParalyzed({
           source: Fighter,
           hadIncapacitated: false,
+          heightenedRepeatSaveDisadvantage: false,
           durationTicks: 10,
         })),
         incapacitated: true,
@@ -93,19 +94,19 @@ module battleRuntimeDirectConditionRemovalTests {
   run test_lesser_restoration_choice_removes_each_srd_condition_family = {
     val blinded = activeEffectsWithoutRemovedCondition(Set(
       ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 }),
-      BlindnessDeafnessBlinded({ source: Fighter, durationTicks: 10 }),
-      BlindnessDeafnessDeafened({ source: Fighter, durationTicks: 10 })
+      BlindnessDeafnessBlinded({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }),
+      BlindnessDeafnessDeafened({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 })
     ), DirectConditionRemovalBlinded)
     val deafened = activeEffectsWithoutRemovedCondition(Set(
-      BlindnessDeafnessBlinded({ source: Fighter, durationTicks: 10 }),
-      BlindnessDeafnessDeafened({ source: Fighter, durationTicks: 10 })
+      BlindnessDeafnessBlinded({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }),
+      BlindnessDeafnessDeafened({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 })
     ), DirectConditionRemovalDeafened)
     all {
-      assert(blinded == Set(BlindnessDeafnessDeafened({ source: Fighter, durationTicks: 10 }))),
-      assert(deafened == Set(BlindnessDeafnessBlinded({ source: Fighter, durationTicks: 10 }))),
+      assert(blinded == Set(BlindnessDeafnessDeafened({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }))),
+      assert(deafened == Set(BlindnessDeafnessBlinded({ source: Fighter, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 }))),
       assert(activeEffectsWithoutRemovedCondition(Set(RayOfSicknessPoisoned), DirectConditionRemovalPoisoned) == Set()),
       assert(activeEffectsWithoutRemovedCondition(Set(
-        HoldPersonParalyzed({ source: Fighter, hadIncapacitated: true, durationTicks: 10 })
+        HoldPersonParalyzed({ source: Fighter, hadIncapacitated: true, heightenedRepeatSaveDisadvantage: false, durationTicks: 10 })
       ), DirectConditionRemovalParalyzed) == Set()),
     }
   }

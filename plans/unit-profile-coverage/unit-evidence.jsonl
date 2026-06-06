@@ -427,3 +427,4 @@
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"}}
+{"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"}}

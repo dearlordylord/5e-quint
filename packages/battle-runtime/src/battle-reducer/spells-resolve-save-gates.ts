@@ -2429,6 +2429,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     failedTargets,
     input.invocation,
     selectedEffect.effect,
+    metamagicSelections.heightenedSpellTargetId,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,

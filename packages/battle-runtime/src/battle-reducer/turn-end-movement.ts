@@ -935,11 +935,28 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     targetRollModes:
       state === undefined
         ? []
-        : savingThrowRollModeProjections(state, effect.save.ability, {
-            condition: effect.condition,
-          }).filter((projection) => projection.targetId === targetId),
+        : savingThrowRollModeProjections(
+            state,
+            effect.save.ability,
+            {
+              condition: effect.condition,
+            },
+            spellConditionEndTurnSaveHeightenedRollModeProjection(
+              effect,
+              targetId,
+            ),
+          ).filter((projection) => projection.targetId === targetId),
     targetFlatBonuses,
   };
+}
+
+function spellConditionEndTurnSaveHeightenedRollModeProjection(
+  effect: SpellConditionEndTurnSaveEffect,
+  targetId: CombatantId,
+): BattleSavingThrowRollModeProjection | undefined {
+  return effect.heightenedSpellTargetDisadvantage === null
+    ? undefined
+    : { targetId, rollMode: "disadvantage" };
 }
 
 function spellConditionEndTurnSavingThrowOutcomeFor(

@@ -1427,6 +1427,7 @@ export function applyFailedSaveSpellConditionEffects(
     }
   >,
   appliedEffect: SpellSelectedFailedSaveConditionEffect,
+  heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -1484,6 +1485,11 @@ export function applyFailedSaveSpellConditionEffects(
                 target,
                 appliedEffect.condition,
               ),
+            heightenedSpellTargetDisadvantage:
+              spellConditionEndTurnSaveHeightenedRollMode(
+                targetId,
+                heightenedSpellTargetId,
+              ),
             save: appliedEffect.repeatSave,
             expiresAt,
           };
@@ -1508,6 +1514,18 @@ export function applyFailedSaveSpellConditionEffects(
     invocation.spell.id,
     appliedEffect,
   );
+}
+
+function spellConditionEndTurnSaveHeightenedRollMode(
+  targetId: CombatantId,
+  heightenedSpellTargetId: CombatantId | undefined,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConditionEndTurnSave" }
+>["heightenedSpellTargetDisadvantage"] {
+  return targetId === heightenedSpellTargetId
+    ? { kind: "heightenedSpellTargetDisadvantage" }
+    : null;
 }
 
 function breakConcentrationIfCombatantIsIncapacitated(

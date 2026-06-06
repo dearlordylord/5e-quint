@@ -57,6 +57,7 @@ import {
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { spellId } from "./identity.ts";
 import {
   characterSeed,
   battleId,
@@ -3264,37 +3265,28 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     });
   });
 
-  test("Heightened Spell is explicitly closed for repeat-save spell lifecycles", () => {
-    const state = gustOfWindMetamagicBattle({
+  test("Heightened Spell discovers promoted repeat-save spell lifecycles", () => {
+    const gustOfWindState = gustOfWindMetamagicBattle({
       knownOptions: [heightenedMetamagicOption()],
     });
-    const act = gustOfWindActionAct(state);
+    const saveGatedConditionState = repeatSaveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+      preparedSpell: "blindness_deafness",
+      spellSlotLevel: 3,
+    });
 
     expect(
-      discoverBattleActs(state).some(
-        (candidate) =>
-          candidate.subject.tag === "actionSpell" &&
-          candidate.subject.invocation.spellId === "gust_of_wind" &&
-          candidate.subject.metamagic?.some(
-            (selection) =>
-              selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-          ) === true,
+      hasHeightenedActionSpellAct(
+        gustOfWindState,
+        spellId("gust_of_wind"),
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
-      resolveBattleSubject({
-        state,
-        subject: {
-          ...act.subject,
-          metamagic: [{ effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND }],
-        },
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      message:
-        "Heightened Spell is not supported for spell procedures with repeat Saving Throws until the selected target is carried through later save holes.",
-    });
+      hasHeightenedActionSpellAct(
+        saveGatedConditionState,
+        spellId("blindness_deafness"),
+      ),
+    ).toBe(true);
   });
 
   test("save-affecting Metamagic is explicitly closed for Ready spell mode", () => {
@@ -3825,8 +3817,20 @@ function commandMetamagicBattle(input: {
 function gustOfWindMetamagicBattle(input: {
   readonly knownOptions: readonly MetamagicOptionFixture[];
 }): BattleState {
+  return repeatSaveMetamagicBattle({
+    knownOptions: input.knownOptions,
+    preparedSpell: "gust_of_wind",
+    spellSlotLevel: 2,
+  });
+}
+
+function repeatSaveMetamagicBattle(input: {
+  readonly knownOptions: readonly MetamagicOptionFixture[];
+  readonly preparedSpell: "blindness_deafness" | "gust_of_wind";
+  readonly spellSlotLevel: 2 | 3;
+}): BattleState {
   return startBattleRight({
-    battleId: battleId("battle:sorcerer-metamagic-gust-of-wind"),
+    battleId: battleId("battle:sorcerer-metamagic-repeat-save"),
     combatants: [
       characterSeed({
         combatantId: wizardId,
@@ -3850,8 +3854,8 @@ function gustOfWindMetamagicBattle(input: {
         },
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [spellRecord("gust_of_wind")],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
+            preparedSpells: [spellRecord(input.preparedSpell)],
+            spellSlots: [{ spellLevel: input.spellSlotLevel, count: 1 }],
           }),
           sourceClassName: "sorcerer",
         },
@@ -4472,6 +4476,21 @@ type ActionSpellAct = AvailableBattleAct & {
   >;
 };
 
+function hasHeightenedActionSpellAct(
+  state: BattleState,
+  spellId: ActionSpellAct["subject"]["invocation"]["spellId"],
+): boolean {
+  return discoverBattleActs(state).some(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === spellId &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+}
+
 function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
@@ -4530,19 +4549,6 @@ function twinnedBlessAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Twinned Bless act.");
-  }
-  return act;
-}
-
-function gustOfWindActionAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.spellId === "gust_of_wind" &&
-      candidate.subject.metamagic === undefined,
-  );
-  if (act === undefined) {
-    throw new Error("Expected Gust of Wind action spell act.");
   }
   return act;
 }

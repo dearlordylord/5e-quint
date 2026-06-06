@@ -1765,6 +1765,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
                 sourceCombatantId: spellCasterId,
                 condition: "poisoned" as const,
                 conditionHadNonSpellSource: false,
+                heightenedSpellTargetDisadvantage: null,
                 save: {
                   ability: "con" as const,
                   dc: { kind: "caster_spell_save_dc" as const },

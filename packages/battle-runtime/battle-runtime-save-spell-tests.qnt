@@ -885,6 +885,7 @@ module battleRuntimeSaveSpellTests {
     all {
       assert(deafened.goblin.activeEffects.contains(BlindnessDeafnessDeafened({
         source: Fighter,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: blindnessDeafnessDurationTicks,
       }))),
       assert(battleActorHasCommittedSpellSlotUse(deafened, Fighter)),
@@ -893,14 +894,17 @@ module battleRuntimeSaveSpellTests {
       assert(illegalTwoTargetsLevelTwo == initialState),
       assert(twoTargetsLevelThree.fighter.activeEffects.contains(BlindnessDeafnessBlinded({
         source: Fighter,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: blindnessDeafnessDurationTicks,
       }))),
       assert(twoTargetsLevelThree.goblin.activeEffects.contains(BlindnessDeafnessBlinded({
         source: Fighter,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: blindnessDeafnessDurationTicks,
       }))),
       assert(failedRepeat.goblin.activeEffects.contains(BlindnessDeafnessDeafened({
         source: Fighter,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: blindnessDeafnessDurationTicks - 1,
       }))),
       assert(not(successfulRepeat.goblin.activeEffects.exists(effect => match effect {
@@ -914,6 +918,7 @@ module battleRuntimeSaveSpellTests {
     val paralyzed = HoldPersonParalyzed({
       source: Fighter,
       hadIncapacitated: false,
+      heightenedRepeatSaveDisadvantage: false,
       durationTicks: holdPersonDurationTicks,
     })
     val rejectedBeast = resolveHoldPerson(
@@ -995,6 +1000,7 @@ module battleRuntimeSaveSpellTests {
         activeEffects: Set(HoldPersonParalyzed({
           source: Fighter,
           hadIncapacitated: false,
+          heightenedRepeatSaveDisadvantage: false,
           durationTicks: 1,
         })),
       },
@@ -1020,6 +1026,7 @@ module battleRuntimeSaveSpellTests {
       assert(failedRepeat.goblin.activeEffects.contains(HoldPersonParalyzed({
         source: Fighter,
         hadIncapacitated: false,
+        heightenedRepeatSaveDisadvantage: false,
         durationTicks: holdPersonDurationTicks - 1,
       }))),
       assert(not(successfulRepeat.fighter.concentrating)),
@@ -1031,6 +1038,86 @@ module battleRuntimeSaveSpellTests {
       assert(not(expired.fighter.concentrating)),
       assert(not(expired.goblin.incapacitated)),
       assert(not(activeEffectsContainHoldPersonFrom(expired.goblin.activeEffects, Fighter))),
+    }
+  }
+
+  run test_heightened_save_gated_condition_repeat_save_roll_modes = {
+    val heightenedHoldPersonGoblinFailed = resolveHoldPersonWithHeightenedTarget(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+      HeightenedSaveGatedConditionTarget({ target: Goblin }),
+    )
+    val heightenedHoldPersonGoblinSucceeded = resolveHoldPersonWithHeightenedTarget(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      true,
+      HeightenedSaveGatedConditionTarget({ target: Goblin }),
+    )
+    val ordinaryHoldPersonGoblinFailed = resolveHoldPerson(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val heightenedBlindnessBothFailed = resolveBlindnessDeafnessWithHeightenedTarget(
+      initialState,
+      3,
+      BlindnessDeafnessBlindedChoice,
+      true,
+      false,
+      true,
+      false,
+      HeightenedSaveGatedConditionTarget({ target: Goblin }),
+    )
+    val heightenedBlindnessSelectedSucceeded = resolveBlindnessDeafnessWithHeightenedTarget(
+      initialState,
+      3,
+      BlindnessDeafnessBlindedChoice,
+      true,
+      true,
+      true,
+      false,
+      HeightenedSaveGatedConditionTarget({ target: Fighter }),
+    )
+    all {
+      assert(holdPersonEndTurnRepeatSaveRollMode(heightenedHoldPersonGoblinFailed.goblin, Fighter) == DisadvantageSavingThrow),
+      assert(holdPersonEndTurnRepeatSaveRollMode(ordinaryHoldPersonGoblinFailed.goblin, Fighter) == NormalSavingThrow),
+      assert(not(activeEffectsContainHoldPersonFrom(heightenedHoldPersonGoblinSucceeded.goblin.activeEffects, Fighter))),
+      assert(blindnessDeafnessEndTurnRepeatSaveRollMode(
+        heightenedBlindnessBothFailed.goblin,
+        Fighter,
+        BlindnessDeafnessBlindedChoice,
+      ) == DisadvantageSavingThrow),
+      assert(blindnessDeafnessEndTurnRepeatSaveRollMode(
+        heightenedBlindnessBothFailed.fighter,
+        Fighter,
+        BlindnessDeafnessBlindedChoice,
+      ) == NormalSavingThrow),
+      assert(not(blindnessDeafnessRepeatSaveDue(
+        heightenedBlindnessSelectedSucceeded.fighter.activeEffects,
+        Fighter,
+        BlindnessDeafnessBlindedChoice,
+      ))),
+      assert(blindnessDeafnessEndTurnRepeatSaveRollMode(
+        heightenedBlindnessSelectedSucceeded.goblin,
+        Fighter,
+        BlindnessDeafnessBlindedChoice,
+      ) == NormalSavingThrow),
     }
   }
 
@@ -1427,6 +1514,7 @@ module battleRuntimeSaveSpellTests {
           HoldPersonParalyzed({
             source: Fighter,
             hadIncapacitated: false,
+            heightenedRepeatSaveDisadvantage: false,
             durationTicks: 1,
           }),
         ),

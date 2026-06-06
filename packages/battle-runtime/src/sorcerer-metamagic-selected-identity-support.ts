@@ -64,7 +64,8 @@ export type SorcererMetamagicProjection = {
     | "twinnedTargetCount"
     | "heightenedHideousLaughter"
     | "heightenedGreaseEntrySave"
-    | "heightenedGustOfWindEndTurnSave";
+    | "heightenedGustOfWindEndTurnSave"
+    | "heightenedSaveGatedConditionEndTurnSave";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -616,6 +617,115 @@ export function resolveHeightenedGustOfWindEndTurnSave(
   ).state;
 }
 
+export function resolveHeightenedSaveGatedConditionEndTurnSave(
+  state: BattleState,
+): BattleState {
+  const act = heightenedSaveGatedConditionAct(state);
+  const targetHole = findHole(act.initialHoles, "spellTargetList");
+  if (targetHole.kind !== "spellTargetList") {
+    throw new Error("Expected Heightened Blindness/Deafness target list.");
+  }
+  const conditionHole = findHole(act.initialHoles, "conditionChoice");
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const target = {
+    kind: "spellTargetList" as const,
+    holeId: targetHole.holeId,
+    value: { targetIds: [skeletonId, secondSkeletonId] },
+    spatialFacts: [skeletonId, secondSkeletonId].map((targetId) => ({
+      kind: "spellTarget" as const,
+      casterId: wizardId,
+      targetId,
+      spellId: "blindness_deafness",
+    })),
+  };
+  const condition = {
+    kind: "conditionChoice" as const,
+    holeId: conditionHole.holeId,
+    value: "blinded" as const,
+  };
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, heightenedTarget, condition],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Blindness/Deafness to request a save hole.",
+    );
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        heightenedTarget,
+        condition,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            outcomes: [
+              { targetId: skeletonId, succeeded: false },
+              { targetId: secondSkeletonId, succeeded: false },
+            ],
+          },
+        },
+      ],
+    }),
+  ).state;
+  const targetTurn = requireResolved(endTurn({ state: cast, actorId: wizardId }))
+    .state;
+  const awaitingEndTurnSave = endTurn({ state: targetTurn, actorId: skeletonId });
+  if (awaitingEndTurnSave.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Heightened Blindness/Deafness end turn to request a save hole.",
+    );
+  }
+  const endTurnSave = findHole(
+    awaitingEndTurnSave.holes,
+    "savingThrowOutcome",
+  );
+  if (endTurnSave.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Heightened Blindness/Deafness repeat save hole.");
+  }
+  if (!("spellConditionEndTurnSave" in endTurnSave)) {
+    throw new Error(
+      "Expected Heightened Blindness/Deafness spell condition repeat save hole.",
+    );
+  }
+  if (
+    !endTurnSave.targetRollModes.some(
+      (projection) =>
+        projection.targetId === endTurnSave.spellConditionEndTurnSave.targetId &&
+        projection.rollMode === "disadvantage",
+    )
+  ) {
+    throw new Error(
+      "Expected Heightened Blindness/Deafness repeat save to project Disadvantage.",
+    );
+  }
+  return requireResolved(
+    endTurn({
+      state: targetTurn,
+      actorId: skeletonId,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: endTurnSave.holeId,
+          value: {
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
 export function resolveTransmutedBurningHandsToPoison(
   state: BattleState,
 ): BattleState {
@@ -781,6 +891,7 @@ function sorcererMetamagicBattleWithOptions(
               spellRecord("eldritch_blast"),
             ],
             preparedSpells: [
+              spellRecord("blindness_deafness"),
               spellRecord("bless"),
               spellRecord("burning_hands"),
               spellRecord("command"),
@@ -791,6 +902,7 @@ function sorcererMetamagicBattleWithOptions(
             spellSlots: [
               { spellLevel: 1, count: 3 },
               { spellLevel: 2, count: 1 },
+              { spellLevel: 3, count: 1 },
             ],
           }),
           sourceClassName: "sorcerer",
@@ -1075,6 +1187,25 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Heightened Gust of Wind act.");
+  }
+  return act;
+}
+
+function heightenedSaveGatedConditionAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "saveGatedCondition" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      Number(candidate.subject.invocation.slotLevel) === 3 &&
+      candidate.initialHoles.some((hole) => hole.kind === "conditionChoice") &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Blindness/Deafness act.");
   }
   return act;
 }

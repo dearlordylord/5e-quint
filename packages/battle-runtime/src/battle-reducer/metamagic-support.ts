@@ -486,12 +486,6 @@ export function saveMetamagicSupportIssue(input: {
   if (input.invocation.procedure === "sleepTargetAdmission") {
     return "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.";
   }
-  if (
-    input.effectKinds.has(HEIGHTENED_METAMAGIC_EFFECT_KIND) &&
-    spellInvocationHasRepeatSavingThrowLifecycle(input.invocation)
-  ) {
-    return "Heightened Spell is not supported for spell procedures with repeat Saving Throws until the selected target is carried through later save holes.";
-  }
   if (!spellInvocationSupportsSaveMetamagic(input.invocation)) {
     return "Selected Metamagic option effect is not supported for this spell procedure.";
   }
@@ -546,15 +540,6 @@ function spellInvocationSupportsSaveMetamagic(
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "gustOfWindLine"
-  );
-}
-
-function spellInvocationHasRepeatSavingThrowLifecycle(
-  invocation: SupportedSpellInvocation,
-): boolean {
-  return (
-    (invocation.procedure === "saveGatedCondition" &&
-      invocation.effect.repeatSave !== null)
   );
 }
 
