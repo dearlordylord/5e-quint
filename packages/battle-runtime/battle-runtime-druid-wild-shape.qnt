@@ -6,11 +6,12 @@
 //
 // Focused semantic core for SRD Druid Wild Shape battle form lifecycle state.
 // RAW anchors:
-// - .references/srd-5.2.1/Classes/Druid.md lines 95-121: Bonus Action known
+// - .references/srd-5.2.1/Classes/Druid.md lines 95-122: Bonus Action known
 //   Beast form assumption, use spending, replacement by reuse, early Bonus
 //   Action dismissal, Incapacitated/death reversion, Temporary Hit Points,
 //   Beast stat-block projection, retained mental statistics/proficiencies, and
-//   no spellcasting while shape-shifted.
+//   no spellcasting while shape-shifted; chosen equipment can merge, fall, or
+//   be worn when practical, and worn equipment functions normally.
 // - .references/srd-5.2.1/Rules-Glossary.md lines 871-874: shape-shifting
 //   effects specify their own form rules and revert to true form on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Stat Block, Action
@@ -21,11 +22,34 @@ module battleRuntimeDruidWildShape {
 
   type DruidWildShapeFormFacts = ShapeShiftedReplacementFormFacts
   type DruidWildShapeFormState = DruidWildShapeRuntimeState
+  // This owner admits only the battle-visible effective-loadout projection for
+  // armor and Shield. Weapon and held-object function remains an object/form-limb
+  // follow-up.
+  type DruidWildShapeEquipmentDisposition = {
+    wornArmor: bool,
+    wornShield: bool,
+  }
   type DruidWildShapeProjection = {
     bonusActionAvailable: bool,
     usesRemaining: int,
     activeForm: DruidWildShapeFormState,
     tempHp: int,
+    equipmentDisposition: DruidWildShapeEquipmentDisposition,
+  }
+
+  pure def allMergedEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
+    wornArmor: false,
+    wornShield: false,
+  }
+
+  pure def wornShieldEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
+    wornArmor: false,
+    wornShield: true,
+  }
+
+  pure def wornArmorEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
+    wornArmor: true,
+    wornShield: false,
   }
 
   pure def initialProjection: DruidWildShapeProjection = {
@@ -33,6 +57,7 @@ module battleRuntimeDruidWildShape {
     usesRemaining: 2,
     activeForm: DruidWildShapeTrueForm,
     tempHp: 0,
+    equipmentDisposition: allMergedEquipmentDisposition,
   }
 
   pure def proficiencyBonus: int = 2
@@ -50,6 +75,8 @@ module battleRuntimeDruidWildShape {
     characterDexterityModifier + proficiencyBonus
   pure def characterWisdomSavingThrowModifier: int =
     characterWisdomModifier + proficiencyBonus
+  pure def characterArmorBase: int = 16
+  pure def shieldArmorClassBonus: int = 2
 
   pure def druidWildShapeSource: ClassFeatureShapeShiftSource =
     {
@@ -85,8 +112,14 @@ module battleRuntimeDruidWildShape {
 
   pure def projectedArmorClass(state: DruidWildShapeProjection): int =
     match state.activeForm {
-      | DruidWildShapeTrueForm => 16
-      | DruidWildShapeShifted(data) => data.replacementForm.armorClass
+      | DruidWildShapeTrueForm => characterArmorBase
+      | DruidWildShapeShifted(data) =>
+        (
+          if (state.equipmentDisposition.wornArmor)
+            characterArmorBase
+          else
+            data.replacementForm.armorClass
+        ) + (if (state.equipmentDisposition.wornShield) shieldArmorClassBonus else 0)
     }
 
   pure def projectedSize(state: DruidWildShapeProjection): str =
@@ -192,6 +225,13 @@ module battleRuntimeDruidWildShape {
     state: DruidWildShapeProjection,
     form: DruidWildShapeFormFacts,
   ): DruidWildShapeProjection =
+    assumeFormWithEquipment(state, form, allMergedEquipmentDisposition)
+
+  pure def assumeFormWithEquipment(
+    state: DruidWildShapeProjection,
+    form: DruidWildShapeFormFacts,
+    equipmentDisposition: DruidWildShapeEquipmentDisposition,
+  ): DruidWildShapeProjection =
     if (canAssumeForm(state)) {
       bonusActionAvailable: false,
       usesRemaining: state.usesRemaining - 1,
@@ -200,6 +240,7 @@ module battleRuntimeDruidWildShape {
         replacementForm: form,
       }),
       tempHp: if (state.tempHp > 2) state.tempHp else 2,
+      equipmentDisposition: equipmentDisposition,
     } else state
 
   pure def dismissForm(state: DruidWildShapeProjection): DruidWildShapeProjection =
@@ -208,6 +249,7 @@ module battleRuntimeDruidWildShape {
       usesRemaining: state.usesRemaining,
       activeForm: druidWildShapeStateAfterReversion(state.activeForm),
       tempHp: state.tempHp,
+      equipmentDisposition: allMergedEquipmentDisposition,
     } else state
 
   pure def revertForm(state: DruidWildShapeProjection): DruidWildShapeProjection = {
@@ -215,6 +257,7 @@ module battleRuntimeDruidWildShape {
     usesRemaining: state.usesRemaining,
     activeForm: druidWildShapeStateAfterReversion(state.activeForm),
     tempHp: state.tempHp,
+    equipmentDisposition: allMergedEquipmentDisposition,
   }
 
 }

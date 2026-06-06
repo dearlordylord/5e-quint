@@ -1,9 +1,15 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
+import {
+  armorClassDelta,
+  defaultArmorClassState,
+  type ArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { ClassLevel } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 
@@ -12,6 +18,7 @@ import {
   activeDruidWildShapeEffect,
   battleDruidWildShapeKnownForms,
   battleShapeShiftedRuntimeState,
+  BattleFillSchema,
   combatantAbilityCheckModifier,
   combatantD20AbilityScore,
   combatantHasActiveDruidWildShape,
@@ -166,8 +173,84 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
 });
 
+test("decodes Wild Shape worn equipment disposition fills only for armor and Shields", () => {
+  const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+  expect(
+    Either.isRight(
+      decodeFill({
+        kind: "wildShapeEquipmentDisposition",
+        holeId: "wild-shape-equipment-hole",
+        value: {
+          choices: [
+            {
+              item: {
+                kind: "shield",
+                objectId: "shield:equipment_shield",
+                unitId: "equipment_shield",
+              },
+              disposition: "worn",
+              practicality: { kind: "practicalToWear" },
+            },
+          ],
+        },
+      }),
+    ),
+  ).toBe(true);
+  expect(
+    Either.isRight(
+      decodeFill({
+        kind: "wildShapeEquipmentDisposition",
+        holeId: "wild-shape-equipment-hole",
+        value: {
+          choices: [
+            {
+              item: {
+                kind: "mainWeapon",
+                objectId: "main:weapon_quarterstaff",
+                unitId: "weapon_quarterstaff",
+              },
+              disposition: "merges",
+            },
+          ],
+        },
+      }),
+    ),
+  ).toBe(true);
+
+  for (const wornWeaponKind of ["mainWeapon", "offHandWeapon"] as const) {
+    expect(
+      Either.isLeft(
+        decodeFill({
+          kind: "wildShapeEquipmentDisposition",
+          holeId: "wild-shape-equipment-hole",
+          value: {
+            choices: [
+              {
+                item: {
+                  kind: wornWeaponKind,
+                  objectId:
+                    wornWeaponKind === "mainWeapon"
+                      ? "main:weapon_quarterstaff"
+                      : "offhand:weapon_dagger",
+                  unitId:
+                    wornWeaponKind === "mainWeapon"
+                      ? "weapon_quarterstaff"
+                      : "weapon_dagger",
+                },
+                disposition: "worn",
+                practicality: { kind: "practicalToWear" },
+              },
+            ],
+          },
+        }),
+      ),
+    ).toBe(true);
+  }
+});
+
 test("requires and validates Wild Shape equipment disposition fills for selected loadout equipment", () => {
   const initial = druidWildShapeBattle({
+    armorClass: shieldArmorClassState({ rightHandUse: "mainWeapon" }),
     selectedLoadout: wildShapeBattleSelectedLoadout(),
   });
   const subject = wildShapeSubject(initial, {
@@ -206,6 +289,9 @@ test("requires and validates Wild Shape equipment disposition fills for selected
     dispositionHole.candidates.map((item) => ({ item, disposition: "merges" })),
   );
   expect(druidWildShapeUsesRemaining(activeDruid)).toBe(1);
+  expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
+    11,
+  );
 
   const activeActs = discoverBattleActs(resolved.state);
   expect(
@@ -268,12 +354,18 @@ test("rejects Wild Shape equipment disposition fills from a different form hole"
   });
 });
 
-test("rejects practical worn Wild Shape equipment until effective-loadout support exists", () => {
+test("projects practical worn Wild Shape equipment into the effective loadout", () => {
   const initial = druidWildShapeBattle({
+    armorClass: shieldArmorClassState({ rightHandUse: "mainWeapon" }),
     selectedLoadout: {
       shield: {
         itemId: "shield:equipment_shield",
         unitId: "equipment_shield",
+      },
+      weapon: {
+        itemId: "main:weapon_quarterstaff",
+        unitId: "weapon_quarterstaff",
+        grip: "one_handed",
       },
     },
   });
@@ -291,11 +383,14 @@ test("rejects practical worn Wild Shape equipment until effective-loadout suppor
   const shield = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "shield",
   );
-  if (shield === undefined) {
-    throw new Error("Expected shield disposition candidate.");
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  if (shield === undefined || mainWeapon === undefined) {
+    throw new Error("Expected shield and main weapon disposition candidates.");
   }
 
-  expect(
+  const resolved = requireResolved(
     resolveDruidWildShape(initial, subject, [
       wildShapeDispositionFill(dispositionHole, [
         {
@@ -303,14 +398,79 @@ test("rejects practical worn Wild Shape equipment until effective-loadout suppor
           disposition: "worn",
           practicality: { kind: "practicalToWear" },
         },
+        {
+          item: mainWeapon,
+          disposition: "merges",
+        },
       ]),
     ]),
-  ).toMatchObject({
-    tag: "invalid",
-    reason: "invalidFill",
-    message:
-      "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+  );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  const effect = activeDruidWildShapeEffect(activeDruid);
+  expect(effect?.equipmentDisposition).toEqual([
+    { item: shield, disposition: "worn" },
+    { item: mainWeapon, disposition: "merges" },
+  ]);
+  expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
+    13,
+  );
+  expect(
+    discoverBattleActs(resolved.state).some(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.attackName === "Quarterstaff",
+    ),
+  ).toBe(false);
+});
+
+test("projects practical worn Wild Shape armor into the effective loadout", () => {
+  const initial = druidWildShapeBattle({
+    armorClass: heavyArmorClassState(),
+    selectedLoadout: {
+      armor: {
+        itemId: "armor:equipment_chain_mail",
+        unitId: "equipment_chain_mail",
+      },
+    },
   });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const armor = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "armor",
+  );
+  if (armor === undefined) {
+    throw new Error("Expected armor disposition candidate.");
+  }
+
+  const resolved = requireResolved(
+    resolveDruidWildShape(initial, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: armor,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  const effect = activeDruidWildShapeEffect(activeDruid);
+  expect(effect?.equipmentDisposition).toEqual([
+    { item: armor, disposition: "worn" },
+  ]);
+  expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
+    16,
+  );
 });
 
 test("rejects fallen Wild Shape equipment until fallen-object boundary support exists", () => {
@@ -366,7 +526,8 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
       unitId: "equipment_shield",
     },
   });
-  const [armor, shield] = candidates;
+  const armor = candidates.find(isWildShapeArmorLoadoutObjectRef);
+  const shield = candidates.find(isWildShapeShieldLoadoutObjectRef);
   if (armor === undefined || shield === undefined) {
     throw new Error("Expected armor and shield candidates.");
   }
@@ -478,9 +639,36 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
       },
     }),
   ).toEqual({
+    tag: "valid",
+    dispositions: [{ item: shield, disposition: "worn" }],
+  });
+
+  const [mainWeapon] = wildShapeLoadoutObjectRefs({
+    weapon: {
+      itemId: "main:weapon_quarterstaff",
+      unitId: "weapon_quarterstaff",
+      grip: "one_handed",
+    },
+  });
+  if (mainWeapon === undefined) {
+    throw new Error("Expected main weapon candidate.");
+  }
+  const practicalWornMainWeapon = {
+    item: mainWeapon,
+    disposition: "worn",
+    practicality: { kind: "practicalToWear" },
+  } as unknown as WildShapeEquipmentDispositionChoice;
+  expect(
+    validateWildShapeEquipmentDispositionFill({
+      candidates: [mainWeapon],
+      value: {
+        choices: [practicalWornMainWeapon],
+      },
+    }),
+  ).toEqual({
     tag: "invalid",
     message:
-      "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require form-limb object support.",
   });
 });
 
@@ -880,6 +1068,7 @@ test("rounds odd-level duration down through the general division rule", () => {
 
 function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
+  readonly armorClass?: ArmorClassState;
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
@@ -895,6 +1084,7 @@ function druidWildShapeBattle(input?: {
 
 function druidWildShapeCreatureInit(input?: {
   readonly druidLevel?: number;
+  readonly armorClass?: ArmorClassState;
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
@@ -908,6 +1098,9 @@ function druidWildShapeCreatureInit(input?: {
     ...(input?.d20Statistics === undefined
       ? {}
       : { d20Statistics: input.d20Statistics }),
+    ...(input?.armorClass === undefined
+      ? {}
+      : { armorClass: input.armorClass }),
     druidWildShapeKnownForms:
       input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
     selectedLoadout: input?.selectedLoadout ?? {},
@@ -1013,6 +1206,49 @@ function wildShapeBattleSelectedLoadout(): CharacterBattleCreatureState["origin"
       grip: "one_handed",
     },
   };
+}
+
+function shieldArmorClassState(input?: {
+  readonly rightHandUse?: ArmorClassState["rightHandUse"];
+}): ArmorClassState {
+  return {
+    ...defaultArmorClassState(),
+    bonuses: [
+      {
+        kind: "shield",
+        bonus: armorClassDelta(2),
+        handUse: "shield",
+        trainingRequired: "shield",
+      },
+    ],
+    armorTraining: new Set(["shield"]),
+    leftHandUse: "shield",
+    rightHandUse: input?.rightHandUse ?? "free",
+  };
+}
+
+function heavyArmorClassState(): ArmorClassState {
+  return {
+    ...defaultArmorClassState(),
+    base: {
+      kind: "armor",
+      category: "heavy",
+      formula: { kind: "heavy_fixed", ac: 16 },
+    },
+    armorTraining: new Set(["heavy"]),
+  };
+}
+
+function isWildShapeArmorLoadoutObjectRef(
+  item: WildShapeLoadoutObjectRef,
+): item is Extract<WildShapeLoadoutObjectRef, { readonly kind: "armor" }> {
+  return item.kind === "armor";
+}
+
+function isWildShapeShieldLoadoutObjectRef(
+  item: WildShapeLoadoutObjectRef,
+): item is Extract<WildShapeLoadoutObjectRef, { readonly kind: "shield" }> {
+  return item.kind === "shield";
 }
 
 function requireWildShapeEquipmentDispositionHole(

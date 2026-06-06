@@ -11,6 +11,10 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
+  type WildShapeEffectiveLoadoutWornKind,
+  wildShapeEquipmentDispositionWearsKind,
+} from "./wild-shape-equipment.ts";
+import {
   type BattleSeeInvisibleEtherealWitness,
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
@@ -98,7 +102,10 @@ export function combatantWearingArmorCategory(
   combatant: BattleCreatureState,
   category: ArmorCategory,
 ): boolean {
-  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
+  if (
+    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
+  ) {
     return false;
   }
   return (
@@ -108,7 +115,10 @@ export function combatantWearingArmorCategory(
 }
 
 export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
-  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
+  if (
+    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
+  ) {
     return false;
   }
   return combatant.armorClass.base.kind === "armor";
@@ -117,7 +127,10 @@ export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
 export function combatantWieldingShield(
   combatant: BattleCreatureState,
 ): boolean {
-  if (combatantDruidWildShapeEquipmentSuppressesLoadout(combatant)) {
+  if (
+    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    !combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
+  ) {
     return false;
   }
   return (
@@ -137,16 +150,14 @@ export function combatantHandUses(
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): { readonly left: HandUse; readonly right: HandUse } {
-  const leftHandUse = combatantDruidWildShapeEquipmentSuppressesLoadout(
+  const leftHandUse = combatantWildShapeEffectiveHandUse(
     combatant,
-  )
-    ? "free"
-    : combatant.armorClass.leftHandUse;
-  const rightHandUse = combatantDruidWildShapeEquipmentSuppressesLoadout(
+    combatant.armorClass.leftHandUse,
+  );
+  const rightHandUse = combatantWildShapeEffectiveHandUse(
     combatant,
-  )
-    ? "free"
-    : combatant.armorClass.rightHandUse;
+    combatant.armorClass.rightHandUse,
+  );
   return {
     left: handUseForOccupancy(
       leftHandUse,
@@ -167,8 +178,29 @@ export function combatantHandUses(
   };
 }
 
-function combatantDruidWildShapeEquipmentSuppressesLoadout(
+function combatantWildShapeEffectiveHandUse(
   combatant: BattleCreatureState,
+  handUse: HandUse,
+): HandUse {
+  if (!combatantHasUnendedDruidWildShapeEffect(combatant)) return handUse;
+  return Match.value(handUse).pipe(
+    Match.when("shield", () =>
+      combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
+        ? handUse
+        : "free",
+    ),
+    Match.when("mainWeapon", () => "free" as const),
+    Match.when("offWeapon", () => "free" as const),
+    Match.when("free", () => handUse),
+    Match.when("grapple", () => handUse),
+    Match.when("spellCreatedHeldObject", () => handUse),
+    Match.exhaustive,
+  );
+}
+
+function combatantDruidWildShapeEquipmentWearsKind(
+  combatant: BattleCreatureState,
+  kind: WildShapeEffectiveLoadoutWornKind,
 ): boolean {
   if (
     !combatantHasUnendedDruidWildShapeEffect(combatant) ||
@@ -180,7 +212,10 @@ function combatantDruidWildShapeEquipmentSuppressesLoadout(
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "druidWildShapeForm" &&
-      effect.equipmentDisposition.length > 0 &&
+      wildShapeEquipmentDispositionWearsKind(
+        effect.equipmentDisposition,
+        kind,
+      ) &&
       origin.druidWildShapeKnownForms?.some(
         (form) => form.id === effect.formStatBlockId,
       ) === true,

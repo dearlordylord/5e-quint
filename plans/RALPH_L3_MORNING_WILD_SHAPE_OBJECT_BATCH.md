@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Wild Shape worn-equipment effective-loadout projection"
     },
     {
@@ -112,7 +112,7 @@ repair branch state by rebasing against `master`.
 | ----: | ---------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 |     1 | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION | ready-for-implementation-after-light-research | none                                                                                                                                                                                                                           | Implement the projection described by `plans/WILD_SHAPE_SENSE_LANGUAGE_PROJECTION_PLAN.md`.                                           |
 |     2 | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER         | done                                          | none                                                                                                                                                                                                                           | Implemented merge-only disposition owner, selected-loadout object refs, active-effect storage, and all-merged no-effect preservation. |
-|     3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT    | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Project effective loadout for practical worn equipment now that disposition storage exists.                                           |
+|     3 | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT    | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted practical worn armor/Shield effective-loadout projection.                                                                    |
 |     4 | L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY    | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Keep fallen equipment at an explicit object/table boundary before accepting `falls` disposition.                                      |
 |     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | ready-for-research                            | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Audit remaining merged-equipment parity/coverage after Task 2's merge-only active storage and no-effect behavior.                     |
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | ready-for-implementation-after-light-research | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Close or promote object/Utilize consumers that need form-limb witnesses.                                                              |
@@ -157,14 +157,23 @@ Landed scope:
 
 - Production resolution accepts merge-only completed dispositions and stores
   selected-loadout object refs on the active Wild Shape effect.
-- `falls` and practical `worn` choices remain rejected until Tasks 4 and 3 own
-  their executable consequences.
-- Form-limb object handling remains Task 6.
+- `falls` choices remain rejected until Task 4 owns their executable
+  consequences.
+- Practical worn armor/Shield is promoted by Task 3; worn weapons, held
+  objects, and form-limb object handling remain Task 6.
 
 ### Task 3 - L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT
 
 Promote effective-loadout projection for worn equipment after the disposition
 owner exists.
+
+Landed scope:
+
+- Production resolution accepts practical `worn` choices for selected-loadout
+  armor and Shields and projects their Armor Class, armor/shield predicates, and
+  shield hand use while shaped.
+- Worn weapons and held objects remain rejected until Task 6 owns the
+  form-limb object-consumer boundary; fallen equipment remains Task 4.
 
 ### Task 4 - L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY
 

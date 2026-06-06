@@ -19,6 +19,24 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_worn_equipment_projects_effective_loadout = {
+    val state = assumeFormWithEquipment(initialProjection, largeFastFormFacts, wornShieldEquipmentDisposition)
+    all {
+      assert(projectedArmorClass(state) == 13),
+      assert(projectedSize(state) == "large"),
+      assert(canCastSpells(state) == false),
+    }
+  }
+
+  run test_druid_wild_shape_worn_armor_projects_effective_loadout = {
+    val state = assumeFormWithEquipment(initialProjection, largeFastFormFacts, wornArmorEquipmentDisposition)
+    all {
+      assert(projectedArmorClass(state) == 16),
+      assert(projectedSize(state) == "large"),
+      assert(canCastSpells(state) == false),
+    }
+  }
+
   run test_druid_wild_shape_projects_d20_statistics = {
     val state = assumeForm(initialProjection, mediumSwiftFormFacts)
     all {
@@ -65,9 +83,11 @@ module battleRuntimeDruidWildShapeTests {
       assert(dismissed.usesRemaining == 1),
       assert(projectedSize(dismissed) == "medium"),
       assert(projectedSpeedFeet(dismissed) == 30),
+      assert(dismissed.equipmentDisposition == allMergedEquipmentDisposition),
       assert(reverted.activeForm == DruidWildShapeTrueForm),
       assert(projectedSize(reverted) == "medium"),
       assert(projectedSpeedFeet(reverted) == 30),
+      assert(reverted.equipmentDisposition == allMergedEquipmentDisposition),
     }
   }
 

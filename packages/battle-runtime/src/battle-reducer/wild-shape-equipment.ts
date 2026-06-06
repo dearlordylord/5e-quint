@@ -37,6 +37,17 @@ export type WildShapeLoadoutObjectRef =
       >["unitId"];
     };
 
+export const WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS = [
+  "armor",
+  "shield",
+] as const satisfies ReadonlyArray<WildShapeLoadoutObjectRef["kind"]>;
+export type WildShapeEffectiveLoadoutWornKind =
+  (typeof WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS)[number];
+export type WildShapeWornLoadoutObjectRef = Extract<
+  WildShapeLoadoutObjectRef,
+  { readonly kind: WildShapeEffectiveLoadoutWornKind }
+>;
+
 export type WildShapeWearPracticalityWitness =
   | { readonly kind: "practicalToWear" }
   | {
@@ -56,15 +67,20 @@ export type WildShapeEquipmentDispositionChoice =
       >;
     }
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeWornLoadoutObjectRef;
       readonly disposition: "worn";
       readonly practicality: WildShapeWearPracticalityWitness;
     };
 
-export type ActiveWildShapeEquipmentDisposition = {
-  readonly item: WildShapeLoadoutObjectRef;
-  readonly disposition: "merges";
-};
+export type ActiveWildShapeEquipmentDisposition =
+  | {
+      readonly item: WildShapeLoadoutObjectRef;
+      readonly disposition: "merges";
+    }
+  | {
+      readonly item: WildShapeWornLoadoutObjectRef;
+      readonly disposition: "worn";
+    };
 
 export type WildShapeEquipmentDispositionFillValue = {
   readonly choices: readonly WildShapeEquipmentDispositionChoice[];
@@ -207,10 +223,15 @@ function activeDispositionForChoice(
         },
       };
     }
+    if (!wildShapeLoadoutObjectSupportsEffectiveWornProjection(choice.item)) {
+      return unsupportedWornEquipmentDisposition();
+    }
     return {
-      tag: "invalid",
-      message:
-        "Druid Wild Shape worn equipment requires effective loadout support before battle resolution.",
+      tag: "valid",
+      value: {
+        item: choice.item,
+        disposition: "worn",
+      },
     };
   }
   if (choice.disposition === "falls") {
@@ -235,6 +256,36 @@ function unsupportedFallenEquipmentDisposition(): {
       "Druid Wild Shape fallen equipment requires fallen-object boundary support before battle resolution.",
   };
 }
+
+function unsupportedWornEquipmentDisposition(): {
+  readonly tag: "invalid";
+  readonly message: string;
+} {
+  return {
+    tag: "invalid",
+    message:
+      "Druid Wild Shape practical worn equipment support is limited to armor and Shields; worn weapon and held-object handling require form-limb object support.",
+  };
+}
+
+export function wildShapeEquipmentDispositionWearsKind(
+  dispositions: readonly ActiveWildShapeEquipmentDisposition[],
+  kind: WildShapeEffectiveLoadoutWornKind,
+): boolean {
+  return dispositions.some(
+    (disposition) =>
+      disposition.disposition === "worn" && disposition.item.kind === kind,
+  );
+}
+
+function wildShapeLoadoutObjectSupportsEffectiveWornProjection(
+  item: WildShapeLoadoutObjectRef,
+): item is WildShapeWornLoadoutObjectRef {
+  return WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.includes(
+    item.kind as WildShapeEffectiveLoadoutWornKind,
+  );
+}
+
 function sameLoadoutObject(
   left: WildShapeLoadoutObjectRef,
   right: WildShapeLoadoutObjectRef,

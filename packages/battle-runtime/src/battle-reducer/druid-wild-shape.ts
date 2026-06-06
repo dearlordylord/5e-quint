@@ -6,6 +6,8 @@ import {
   abilityModifier,
   armorClass,
   statBlockArmorClassState,
+  type ArmorClassBonusSource,
+  type ArmorClassBaseSource,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
@@ -45,9 +47,8 @@ import {
   activeCreatureSizeChangeEffect,
   type SpellCreatureSizeChangeEffect,
 } from "./creature-size-change-effects.ts";
-import type {
-  ActiveWildShapeEquipmentDisposition,
-} from "./wild-shape-equipment.ts";
+import type { ActiveWildShapeEquipmentDisposition } from "./wild-shape-equipment.ts";
+import { wildShapeEquipmentDispositionWearsKind } from "./wild-shape-equipment.ts";
 
 const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
   "str",
@@ -154,12 +155,59 @@ function shiftedCreatureSize(
 export function combatantDruidWildShapeArmorClassState(
   combatant: BattleCreatureState,
 ): ArmorClassState | null {
-  const form = activeDruidWildShapeForm(combatant);
-  if (form === null) return null;
-  return {
-    ...statBlockArmorClassState(literalStatBlockArmorClass(form)),
-    abilityModifiers: statBlockAbilityModifiers(form),
+  const active = activeDruidWildShape(combatant);
+  if (active === null) return null;
+  const formArmorClassState = {
+    ...statBlockArmorClassState(literalStatBlockArmorClass(active.form)),
+    abilityModifiers: statBlockAbilityModifiers(active.form),
   };
+  if (combatant.origin.kind !== "character") return formArmorClassState;
+  const armorWorn = wildShapeEquipmentDispositionWearsKind(
+    active.effect.equipmentDisposition,
+    "armor",
+  );
+  const shieldWorn = wildShapeEquipmentDispositionWearsKind(
+    active.effect.equipmentDisposition,
+    "shield",
+  );
+  return {
+    ...formArmorClassState,
+    base: wildShapeEffectiveArmorClassBase({
+      characterArmorClass: combatant.armorClass,
+      formArmorClass: formArmorClassState,
+      armorWorn,
+    }),
+    bonuses: wildShapeEffectiveArmorClassBonuses({
+      characterArmorClass: combatant.armorClass,
+      armorWorn,
+      shieldWorn,
+    }),
+    armorTraining: combatant.armorClass.armorTraining,
+    leftHandUse: shieldWorn ? combatant.armorClass.leftHandUse : "free",
+    rightHandUse: shieldWorn ? combatant.armorClass.rightHandUse : "free",
+  };
+}
+
+function wildShapeEffectiveArmorClassBase(input: {
+  readonly characterArmorClass: ArmorClassState;
+  readonly formArmorClass: ArmorClassState;
+  readonly armorWorn: boolean;
+}): ArmorClassBaseSource {
+  return input.armorWorn && input.characterArmorClass.base.kind === "armor"
+    ? input.characterArmorClass.base
+    : input.formArmorClass.base;
+}
+
+function wildShapeEffectiveArmorClassBonuses(input: {
+  readonly characterArmorClass: ArmorClassState;
+  readonly armorWorn: boolean;
+  readonly shieldWorn: boolean;
+}): readonly ArmorClassBonusSource[] {
+  return input.characterArmorClass.bonuses.filter((bonus) => {
+    if (bonus.kind === "shield") return input.shieldWorn;
+    if (bonus.kind === "wearing_armor") return input.armorWorn;
+    return false;
+  });
 }
 
 export function combatantD20ProficiencyBonus(
@@ -178,10 +226,7 @@ export function combatantD20AbilityScore(
   ability: Ability,
 ): number {
   const activeForm = activeDruidWildShapeForm(combatant);
-  if (
-    activeForm !== null &&
-    isWildShapeBeastAbilityScoreAbility(ability)
-  ) {
+  if (activeForm !== null && isWildShapeBeastAbilityScoreAbility(ability)) {
     return activeForm.statBlock.abilityScores[ability];
   }
   return trueFormD20AbilityScore(combatant, ability);
