@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve area and multi-target Heightened repeat-save carry-through"
     },
     {
@@ -163,7 +163,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 11 | L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify every promoted Metamagic profile has selected-identity replay or documented non-applicability. |
 | 12 | L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION | done | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL, L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED, L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED, L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED, L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT, L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | Regenerated and confirmed metrics. |
 | 13 | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | Promote combatant-owned Heightened repeat-save carry-through for Hideous Laughter. |
-| 14 | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | blocked | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | Resolve area and multi-target selected-target carry-through after the combatant-owned slice establishes the occurrence-local pattern. |
+| 14 | L3MMETA-14-HEIGHTENED-AREA-MULTITARGET-REPEAT-SAVE-BOUNDARY | ready-for-research | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | Resolve area and multi-target selected-target carry-through after the combatant-owned slice establishes the occurrence-local pattern. |
 | 15 | L3MMETA-15-DISTANT-CAST-RANGE-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local range modifier plus one range-bearing Spell Invocation witness. |
 | 16 | L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local duration modifier plus same-occurrence Concentration-maintenance roll-mode rider. |
 | 17 | L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local component projection with priced or consumed Material preservation. |
