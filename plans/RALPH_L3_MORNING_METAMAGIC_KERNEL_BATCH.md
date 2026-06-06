@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit metamagic selected-identity replay completeness"
     },
     {
