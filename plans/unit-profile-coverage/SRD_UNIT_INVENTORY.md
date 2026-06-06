@@ -45,27 +45,27 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 601/607 (99%)
+- Accepted: 602/607 (99.2%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 436
+- accepted: 437
 - accepted-no-battle-effect: 165
 - battle-runtime-required: 1
-- owner-evidence-required: 4
+- owner-evidence-required: 3
 - partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 48/51 (94.1%)
+- Accepted: 49/51 (96.1%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 34
+- accepted: 35
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 3
+- owner-evidence-required: 2
 
 ### Spell-Level-3 Battle Readiness
 
@@ -93,8 +93,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 34
-- catalog-installed-owner-evidence-required: 3
+- catalog-installed-owner-evidence-present: 35
+- catalog-installed-owner-evidence-required: 2
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -432,7 +432,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Bard Cutting Words|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:332|
 |Bard level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:38|
 |Bard Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:105|
-|Cleric Disciple of Life|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; spell invocation healing modifier owner: owner evidence required|Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.|.references/srd-5.2.1/Classes/Cleric.md:313|
+|Cleric Disciple of Life|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:313|
 |Cleric Preserve Life|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:330|
 |Cleric level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:37|
 |Cleric Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:102|

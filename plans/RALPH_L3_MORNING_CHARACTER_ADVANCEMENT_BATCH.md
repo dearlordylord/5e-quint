@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Disciple of Life inventory row evidence"
     },
     {
@@ -147,7 +147,7 @@ repair branch state by rebasing against `master`.
 | 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | done | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
 | 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | done | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Reported the next row-evidence reconciliation split for Bard Jack of All Trades, Cleric Disciple of Life, Fighter Remarkable Athlete, and Rogue Steady Aim. |
 | 13 | L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected the existing Character Sheet Jack of All Trades owner evidence to the generated inventory readiness path. |
-| 14 | L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Disciple of Life direct spell Hit Point restoration owner evidence. |
+| 14 | L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Disciple of Life battle-runtime and QNT evidence to the generated inventory readiness path. |
 | 15 | L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Remarkable Athlete roll-mode and critical-hit movement owner evidence. |
 | 16 | L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE | ready-for-research | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Reconcile or complete Steady Aim Bonus Action, movement, next-attack Advantage, and Speed owner evidence. |
 

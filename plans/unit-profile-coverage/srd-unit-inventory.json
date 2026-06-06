@@ -232,24 +232,24 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 601,
-      "percent": "99%",
+      "numerator": 602,
+      "percent": "99.2%",
       "rowsByStatus": {
-        "accepted": 436,
+        "accepted": 437,
         "accepted-no-battle-effect": 165,
-        "owner-evidence-required": 4,
         "partial-battle-runtime": 1,
+        "owner-evidence-required": 3,
         "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 48,
-      "percent": "94.1%",
+      "numerator": 49,
+      "percent": "96.1%",
       "rowsByStatus": {
-        "accepted": 34,
+        "accepted": 35,
         "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 3
+        "owner-evidence-required": 2
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -274,10 +274,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 34,
+      "catalog-installed-owner-evidence-present": 35,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 3
+      "catalog-installed-owner-evidence-required": 2
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -286,12 +286,12 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 470,
+      "catalog-installed-owner-evidence-present": 471,
       "non-runtime": 36,
       "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-installed-owner-evidence-required": 3,
+      "catalog-installed-owner-evidence-required": 2,
       "catalog-installed-needs-owner-evidence": 1,
       "catalog-authored-executable-follow-up": 1
     },
@@ -8784,7 +8784,7 @@
         "unitId": "cleric_disciple_of_life"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8792,13 +8792,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "spell invocation healing modifier owner",
-          "evidence": "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A16 at packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",

@@ -149,14 +149,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-    {
-      owner: "spell invocation healing modifier owner",
-      requirement:
-        "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
-    },
-  ],
-  [
     "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
     {
       owner: "battle-runtime initiative, Athletics, and critical-hit movement owner",
@@ -283,6 +275,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
+  "cleric_disciple_of_life",
   "druid_wild_companion",
   "druid_wild_shape",
   "fighter_fighting_style",
