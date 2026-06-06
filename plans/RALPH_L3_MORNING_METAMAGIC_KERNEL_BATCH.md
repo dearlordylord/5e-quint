@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3MMETA-10-REROLL-METAMAGIC-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Empowered and Seeking reroll boundary"
     },
     {
@@ -105,6 +105,18 @@
       "id": "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE",
       "status": "ready-for-implementation-after-light-research",
       "title": "Promote first Subtle Spell component projection slice"
+    },
+    {
+      "number": 18,
+      "id": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote first Seeking Spell missed-attack reroll fill"
+    },
+    {
+      "number": 19,
+      "id": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Promote first Empowered Spell damage-dice reroll fill"
     }
   ]
 }
@@ -147,7 +159,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 7 | L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE | ready-for-implementation-after-light-research | L3MMETA-06-QUICKENED-REMAINING-ACTION-SPELLS-SURVEY | Promote `spellAttackSequence` through QNT, runtime, MBT, and ledgers. |
 | 8 | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | done | none | Boundary artifact identifies occurrence-local repeat-save state and the first Heightened Hideous Laughter slice. |
 | 9 | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | done | none | Boundary artifact splits Distant/Extended/Subtle into distinct cast-local range, duration/Concentration, and component slices. |
-| 10 | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | ready-for-research | none | Close or plan Empowered/Seeking post-roll reroll fill boundary. |
+| 10 | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | done | none | Boundary artifact splits Empowered/Seeking into distinct post-roll spell damage dice and missed spell attack reroll fill slices. |
 | 11 | L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify every promoted Metamagic profile has selected-identity replay or documented non-applicability. |
 | 12 | L3MMETA-12-METAMAGIC-KERNEL-CONSOLIDATION | blocked | L3MMETA-01-KERNEL-JOIN-METAMAGIC-CAREFUL, L3MMETA-02-KERNEL-JOIN-METAMAGIC-HEIGHTENED, L3MMETA-03-KERNEL-JOIN-METAMAGIC-TRANSMUTED, L3MMETA-04-KERNEL-JOIN-METAMAGIC-TWINNED, L3MMETA-05-ANTIMAGIC-QNT-PROOF-EVIDENCE-AUDIT, L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT | Regenerate and confirm metrics. |
 | 13 | L3MMETA-13-HEIGHTENED-HIDEOUS-LAUGHTER-REPEAT-SAVE-SLICE | ready-for-implementation-after-light-research | L3MMETA-08-HEIGHTENED-REPEAT-SAVE-BOUNDARY | Promote combatant-owned Heightened repeat-save carry-through for Hideous Laughter. |
@@ -155,6 +167,8 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 15 | L3MMETA-15-DISTANT-CAST-RANGE-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local range modifier plus one range-bearing Spell Invocation witness. |
 | 16 | L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local duration modifier plus same-occurrence Concentration-maintenance roll-mode rider. |
 | 17 | L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE | ready-for-implementation-after-light-research | L3MMETA-09-CAST-PROPERTY-METAMAGIC-BOUNDARY | Promote generic cast-local component projection with priced or consumed Material preservation. |
+| 18 | L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE | ready-for-implementation-after-light-research | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | Promote typed missed spell attack reroll fill plus one Ray of Frost `spellAttackDamage` witness. |
+| 19 | L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE | ready-for-implementation-after-light-research | L3MMETA-10-REROLL-METAMAGIC-BOUNDARY | Promote typed spell damage dice reroll fill plus one single-damage-hole `spellAttackDamage` witness. |
 
 ## Task Details
 
@@ -241,6 +255,12 @@ maintenance, and components. The boundary artifact is
 ### Task 10 - L3MMETA-10-REROLL-METAMAGIC-BOUNDARY
 
 Resolve or plan Empowered and Seeking post-roll reroll fill boundaries.
+
+Boundary decision: Empowered and Seeking belong to post-roll fill owners, not
+to cast-time Spell Invocation Metamagic admission. Keep current runtime support
+closed until typed fills exist for spell damage dice replacement and missed
+spell attack d20 replacement. The boundary artifact is
+`plans/unit-profile-coverage/L3MMETA-10_REROLL_METAMAGIC_BOUNDARY.md`.
 
 ### Task 11 - L3MMETA-11-METAMAGIC-SELECTED-IDENTITY-AUDIT
 
@@ -345,6 +365,47 @@ Recommended scope:
   before using the projection in any visibility, silence, free-hand, or
   Reaction-spell owner.
 
+### Task 18 - L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE
+
+Promote the first Seeking Spell missed-attack reroll fill.
+
+Recommended scope:
+
+- Add a typed missed spell attack reroll fill owned by the pending spell
+  Attack Roll continuation, not by cast-time Metamagic admission.
+- Start with Ray of Frost through the `spellAttackDamage` profile: an initial
+  miss opens the Seeking opportunity, the replacement result is forced, and a
+  replacement hit opens the existing damage hole.
+- Enforce known option, shared Sorcery Point affordability, the
+  different-Metamagic stacking exception, missed-original-roll eligibility, and
+  spell-attack-only scope before spending Sorcery Points.
+- Keep Scorching Ray and other repeated spell-attack procedures closed until
+  invocation-local one-use accounting exists for post-roll rerolls.
+- Add focused runtime tests, focused QNT parity, selected-identity MBT evidence
+  after runtime and QNT witnesses exist, and ledger updates only for the
+  promoted owner.
+
+### Task 19 - L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE
+
+Promote the first Empowered Spell damage-dice reroll fill.
+
+Recommended scope:
+
+- Add a typed spell damage dice reroll fill owned by a pending `rolledDice`
+  spell damage continuation, pairing each selected original die with its
+  forced replacement roll.
+- Start with one single-damage-hole `spellAttackDamage` witness, preferably
+  Ray of Frost at a character level where the damage has at least two dice.
+- Enforce known option, shared Sorcery Point affordability, the
+  different-Metamagic stacking exception, Charisma-modifier selected-die limit,
+  and forced use of replacement rolls before spending Sorcery Points.
+- Keep Scorching Ray, Magic Missile allocation, saving-throw area damage,
+  ongoing damage, and multi-hole damage procedures closed until each owner has
+  its own post-roll fill witness and invocation-local one-use accounting.
+- Add focused runtime tests, focused QNT parity, selected-identity MBT evidence
+  after runtime and QNT witnesses exist, and ledger updates only for the
+  promoted owner.
+
 ## Task Rules
 
 - Do not make bookkeeping tasks claim runtime behavior they do not execute.
@@ -357,6 +418,10 @@ Recommended scope:
 - Tasks 15-17 are Task 9 follow-up implementation slices. They may promote
   runtime behavior only through their named cast-property owners and only after
   focused runtime, QNT, selected-identity MBT, and ledger evidence exist.
+- Tasks 18-19 are Task 10 follow-up implementation slices. They may promote
+  runtime behavior only through their named post-roll reroll fill owners and
+  only after focused runtime, QNT, selected-identity MBT, and ledger evidence
+  exist.
 
 ## Verification
 
