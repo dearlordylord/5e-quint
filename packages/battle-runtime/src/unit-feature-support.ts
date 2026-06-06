@@ -293,11 +293,22 @@ export type BattleAttackActionAreaSaveDamageReplacementSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE;
   readonly breath: AttackActionAreaSaveDamageReplacementProfile;
 };
-export type PassiveSavingThrowRollModeProfile = {
-  readonly mode: "advantage";
-  readonly ability: "dex";
-  readonly suppressedByCondition: "incapacitated";
-};
+export type PassiveSavingThrowRollModeProfile =
+  | {
+      readonly mode: "advantage";
+      readonly scope: {
+        readonly kind: "savingThrowAbility";
+        readonly ability: "dex";
+        readonly suppressedByCondition: "incapacitated";
+      };
+    }
+  | {
+      readonly mode: "advantage";
+      readonly scope: {
+        readonly kind: "condition";
+        readonly condition: "poisoned";
+      };
+    };
 export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly kind: typeof PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE;
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
@@ -2965,11 +2976,17 @@ function hasAttackActionAreaSaveDamageReplacementMechanics(
 }
 
 function hasPassiveSavingThrowRollModeMechanics(unit: UnitRecord): boolean {
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+  if (
+    (unit.kind !== "class_feature" && unit.kind !== "species_trait") ||
+    unit.mechanics.family !== "passive"
+  ) {
     return false;
   }
-  const [effect] = unit.mechanics.grants;
-  return effect?.kind === "modify_roll_advantage";
+  return unit.mechanics.grants.some(
+    (effect) =>
+      effect.kind === "modify_roll_advantage" &&
+      sameStringSet(effect.on, ["saving_throw"]),
+  );
 }
 
 function hasPassiveDamageResistanceMechanics(unit: UnitRecord): boolean {
@@ -3913,40 +3930,73 @@ export function passiveDamageResistanceProfileForUnit(input: {
 export function passiveSavingThrowRollModeProfileForUnit(
   unit: UnitRecord,
 ): PassiveSavingThrowRollModeProfile | null {
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+  if (
+    (unit.kind !== "class_feature" && unit.kind !== "species_trait") ||
+    unit.mechanics.family !== "passive"
+  ) {
     return null;
   }
-  const [effect, ...extraEffects] = unit.mechanics.grants;
+  const rollModeEffects = unit.mechanics.grants.filter(isRollModeAdvantage);
+  const [effect] = rollModeEffects;
   const [suppressor, ...extraSuppressors] = unit.mechanics.suppressedBy ?? [];
   if (
-    effect?.kind !== "modify_roll_advantage" ||
+    effect === undefined ||
+    rollModeEffects.length !== 1 ||
     effect.mode !== "advantage" ||
     !sameStringSet(effect.on, ["saving_throw"]) ||
-    !sameStringSet(effect.saveAbilityFilter ?? [], ["dex"]) ||
     effect.affects !== undefined ||
     effect.spellSourceFilter !== undefined ||
     effect.attackerTypeFilter !== undefined ||
     effect.skillFilter !== undefined ||
-    effect.conditionFilter !== undefined ||
     effect.abilityFilter !== undefined ||
     effect.saveSourceFilter !== undefined ||
     effect.contextRangeFeet !== undefined ||
     effect.count !== undefined ||
     effect.expiresOn !== undefined ||
-    extraEffects.length > 0 ||
     unit.mechanics.condition !== undefined ||
-    unit.mechanics.operations !== undefined ||
-    suppressor?.kind !== "condition_active" ||
-    !sameStringSet(suppressor.conditions, ["incapacitated"]) ||
-    extraSuppressors.length > 0
+    unit.mechanics.operations !== undefined
   ) {
     return null;
   }
-  return {
-    mode: "advantage",
-    ability: "dex",
-    suppressedByCondition: "incapacitated",
-  };
+  if (
+    unit.kind === "class_feature" &&
+    sameStringSet(effect.saveAbilityFilter ?? [], ["dex"]) &&
+    effect.conditionFilter === undefined &&
+    suppressor?.kind === "condition_active" &&
+    sameStringSet(suppressor.conditions, ["incapacitated"]) &&
+    extraSuppressors.length === 0
+  ) {
+    return {
+      mode: "advantage",
+      scope: {
+        kind: "savingThrowAbility",
+        ability: "dex",
+        suppressedByCondition: "incapacitated",
+      },
+    };
+  }
+  if (
+    unit.kind === "species_trait" &&
+    sameStringSet(effect.saveAbilityFilter ?? [], []) &&
+    sameStringSet(effect.conditionFilter ?? [], ["poisoned"]) &&
+    suppressor === undefined &&
+    extraSuppressors.length === 0
+  ) {
+    return {
+      mode: "advantage",
+      scope: {
+        kind: "condition",
+        condition: "poisoned",
+      },
+    };
+  }
+  return null;
+}
+
+function isRollModeAdvantage(
+  effect: EffectAtom,
+): effect is Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }> {
+  return effect.kind === "modify_roll_advantage";
 }
 
 export function passiveSpeedBonusProfileForUnit(

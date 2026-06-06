@@ -4,13 +4,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE dwarf_dwarven_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-damage-resistance unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
+import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
   barbarianFrenzyUnitId,
   barbarianRageUnitId,
@@ -37,6 +38,7 @@ import {
   battleMartialArtsAttackProjectionSupportForUnit,
   battlePassiveDamageResistanceSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
+  battlePassiveSavingThrowRollModeSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
@@ -48,6 +50,7 @@ import {
   movementFeet,
   oppositionSide,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+  PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   passiveDamageResistanceProfileForUnit,
   partySide,
   parseSupportedUnitFeatureProfile,
@@ -59,6 +62,7 @@ import { characterCreature } from "./unit-profile-admission-creature-fixture-sup
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
 describe("L3MSPEC species battle support", () => {
+  const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
   const dragonbornSpeciesRecord = decodeSpeciesRecordSync(
     speciesDragonbornInput,
   );
@@ -134,6 +138,16 @@ describe("L3MSPEC species battle support", () => {
       damageType: {
         kind: "fixed",
         value: "poison",
+      },
+    },
+  } as const;
+  const expectedPoisonedSaveAdvantageSupport = {
+    kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+    savingThrow: {
+      mode: "advantage",
+      scope: {
+        kind: "condition",
+        condition: "poisoned",
       },
     },
   } as const;
@@ -461,7 +475,7 @@ describe("L3MSPEC species battle support", () => {
     expect(damageAmountAfterTargetAdjustments(target, 9, "cold")).toBe(9);
   });
 
-  test("dwarf_dwarven_resilience admits only the Poison damage Resistance fact", () => {
+  test("dwarf_dwarven_resilience admits separate Poison Resistance and Poisoned save Advantage facts", () => {
     const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
 
     expect(
@@ -469,8 +483,14 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual(
       Either.right({
         unitId: dwarfDwarvenResilienceUnitId,
-        supportProfiles: [expectedPoisonResistanceSupport],
+        supportProfiles: [
+          expectedPoisonedSaveAdvantageSupport,
+          expectedPoisonResistanceSupport,
+        ],
       }),
+    );
+    expect(battlePassiveSavingThrowRollModeSupportForUnit(unit)).toEqual(
+      expectedPoisonedSaveAdvantageSupport,
     );
     expect(
       battlePassiveDamageResistanceSupportForUnit({
@@ -484,6 +504,13 @@ describe("L3MSPEC species battle support", () => {
         draconicAncestryDamageType: undefined,
       }),
     ).toEqual(expectedPoisonResistanceSupport.resistance);
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toEqual(
+      expect.objectContaining({
+        kind: "passiveSavingThrowRollMode",
+        unit,
+        savingThrow: expectedPoisonedSaveAdvantageSupport.savingThrow,
+      }),
+    );
   });
 
   test("Dwarven Resilience fixed Resistance admission follows mechanics shape rather than Unit identity", () => {
@@ -504,40 +531,42 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual(expectedPoisonResistanceSupport);
   });
 
-  test("Dwarven Resilience halves only Poison damage on the target", () => {
+  test("Dwarven Resilience Poisoned save Advantage admission follows mechanics shape rather than Unit identity", () => {
     const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
-    const unitRef = battleUnitRefWithSupportProfiles({
-      unitRef: { unitId: unit.id },
-      unit,
-    });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) {
-      throw new Error(unitRef.left.message);
+    if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Dwarven Resilience passive trait.");
     }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_poisoned_save_advantage_fixture",
+      mechanics: unit.mechanics,
+    });
+
+    expect(
+      battlePassiveSavingThrowRollModeSupportForUnit(syntheticUnit),
+    ).toEqual(expectedPoisonedSaveAdvantageSupport);
+  });
+
+  test("Dwarven Resilience projects Advantage only for Saving Throws against Poisoned", () => {
+    const state = dwarvenResilienceBattle();
     const targetId = combatantId("dwarven-resilience-target");
-    const result = startBattle({
-      battleId: battleId("dwarven-resilience"),
-      combatants: [
-        characterCreature({
-          combatantId: targetId,
-          displayName: "Dwarf Target",
-          initiative: 10,
-          side: partySide,
-          characterUnitRefs: [unitRef.right],
-        }),
-        characterCreature({
-          combatantId: combatantId("dwarven-resilience-attacker"),
-          displayName: "Attacker",
-          initiative: 5,
-          side: oppositionSide,
-        }),
-      ],
-    });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      throw new Error(result.left.message);
-    }
-    const target = result.right.combatants.get(targetId);
+
+    expect(
+      savingThrowRollModeProjections(state, "con", { condition: "poisoned" }),
+    ).toEqual([{ targetId, rollMode: "advantage" }]);
+    expect(savingThrowRollModeProjections(state, "con")).toEqual([]);
+    expect(
+      savingThrowRollModeProjections(state, "con", { condition: "charmed" }),
+    ).toEqual([]);
+    expect(
+      savingThrowRollModeProjections(state, "wis", { condition: "poisoned" }),
+    ).toEqual([{ targetId, rollMode: "advantage" }]);
+  });
+
+  test("Dwarven Resilience halves only Poison damage on the target", () => {
+    const result = dwarvenResilienceBattle();
+    const target = result.combatants.get(
+      combatantId("dwarven-resilience-target"),
+    );
     if (target === undefined) {
       throw new Error("Expected Dwarven Resilience target combatant.");
     }
@@ -545,7 +574,59 @@ describe("L3MSPEC species battle support", () => {
     expect(damageAmountAfterTargetAdjustments(target, 9, "poison")).toBe(4);
     expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(9);
   });
+
+  test("Goliath Powerful Build ability-check Advantage stays outside passive Saving Throw roll-mode admission", () => {
+    const unit = unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId);
+
+    expect(battlePassiveSavingThrowRollModeSupportForUnit(unit)).toBeNull();
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: speciesGoliathPowerfulBuildUnitId,
+        supportProfiles: [],
+      }),
+    );
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+  });
 });
+
+function dwarvenResilienceBattle() {
+  const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(Either.isRight(unitRef)).toBe(true);
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const targetId = combatantId("dwarven-resilience-target");
+  const result = startBattle({
+    battleId: battleId("dwarven-resilience"),
+    combatants: [
+      characterCreature({
+        combatantId: targetId,
+        displayName: "Dwarf Target",
+        initiative: 10,
+        side: partySide,
+        unitFeatures: [{ unit }],
+        characterUnitRefs: [unitRef.right],
+      }),
+      characterCreature({
+        combatantId: combatantId("dwarven-resilience-attacker"),
+        displayName: "Attacker",
+        initiative: 5,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
   test("monk_martial_arts is admitted as an attack projection profile", () => {

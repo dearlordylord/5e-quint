@@ -9,6 +9,7 @@ module unitFeatureSaveDamageCore {
   // RAW anchors:
   // - Classes/Barbarian.md: Danger Sense.
   // - Classes/Rogue.md and Classes/Monk.md: Evasion.
+  // - .references/srd-5.2.1/Character-Origins.md:139 Dwarven Resilience.
   // - Playing-the-Game.md: Saving Throws and Damage.
   // - Rules-Glossary.md: Saving Throw and Incapacitated.
   // - UBIQUITOUS_LANGUAGE.md: Saving Throw and Damage.
@@ -25,8 +26,18 @@ module unitFeatureSaveDamageCore {
     | NormalSavingThrowMode
     | AdvantageSavingThrowMode
 
+  type PassiveSavingThrowRollModeProfile =
+    | DexterityNotIncapacitatedSavingThrowAdvantageProfile
+    | PoisonedConditionSavingThrowAdvantageProfile
+
+  type SavingThrowConditionFact =
+    | NoSavingThrowConditionFact
+    | PoisonedSavingThrowConditionFact
+
   type PassiveSavingThrowRollModeFacts = {
+    profile: PassiveSavingThrowRollModeProfile,
     savingThrowAbility: SavingThrowAbilityFact,
+    savingThrowCondition: SavingThrowConditionFact,
     incapacitated: bool,
   }
 
@@ -76,8 +87,16 @@ module unitFeatureSaveDamageCore {
   pure def passiveSavingThrowRollMode(
     facts: PassiveSavingThrowRollModeFacts
   ): PassiveSavingThrowRollMode =
-    if (facts.savingThrowAbility == DexteritySavingThrowFact and not(facts.incapacitated))
-      AdvantageSavingThrowMode
-    else
-      NormalSavingThrowMode
+    match facts.profile {
+      | DexterityNotIncapacitatedSavingThrowAdvantageProfile =>
+        if (
+          facts.savingThrowAbility == DexteritySavingThrowFact and
+          not(facts.incapacitated)
+        ) AdvantageSavingThrowMode else NormalSavingThrowMode
+      | PoisonedConditionSavingThrowAdvantageProfile =>
+        if (facts.savingThrowCondition == PoisonedSavingThrowConditionFact)
+          AdvantageSavingThrowMode
+        else
+          NormalSavingThrowMode
+    }
 }

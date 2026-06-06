@@ -32,17 +32,46 @@ module unitFeatureSaveDamageCoreExamples {
   run test_danger_sense_grants_dexterity_saving_throw_advantage_when_not_incapacitated = {
     all {
       assert(passiveSavingThrowRollMode({
+        profile: DexterityNotIncapacitatedSavingThrowAdvantageProfile,
         savingThrowAbility: DexteritySavingThrowFact,
+        savingThrowCondition: NoSavingThrowConditionFact,
         incapacitated: false,
       }) == AdvantageSavingThrowMode),
       assert(passiveSavingThrowRollMode({
+        profile: DexterityNotIncapacitatedSavingThrowAdvantageProfile,
         savingThrowAbility: DexteritySavingThrowFact,
+        savingThrowCondition: NoSavingThrowConditionFact,
         incapacitated: true,
       }) == NormalSavingThrowMode),
       assert(passiveSavingThrowRollMode({
+        profile: DexterityNotIncapacitatedSavingThrowAdvantageProfile,
         savingThrowAbility: ConstitutionSavingThrowFact,
+        savingThrowCondition: NoSavingThrowConditionFact,
         incapacitated: false,
       }) == NormalSavingThrowMode),
+    }
+  }
+
+  run test_dwarven_resilience_grants_saving_throw_advantage_for_poisoned_condition_scope = {
+    all {
+      assert(passiveSavingThrowRollMode({
+        profile: PoisonedConditionSavingThrowAdvantageProfile,
+        savingThrowAbility: ConstitutionSavingThrowFact,
+        savingThrowCondition: PoisonedSavingThrowConditionFact,
+        incapacitated: false,
+      }) == AdvantageSavingThrowMode),
+      assert(passiveSavingThrowRollMode({
+        profile: PoisonedConditionSavingThrowAdvantageProfile,
+        savingThrowAbility: WisdomSavingThrowFact,
+        savingThrowCondition: NoSavingThrowConditionFact,
+        incapacitated: false,
+      }) == NormalSavingThrowMode),
+      assert(passiveSavingThrowRollMode({
+        profile: PoisonedConditionSavingThrowAdvantageProfile,
+        savingThrowAbility: ConstitutionSavingThrowFact,
+        savingThrowCondition: PoisonedSavingThrowConditionFact,
+        incapacitated: true,
+      }) == AdvantageSavingThrowMode),
     }
   }
 }

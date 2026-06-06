@@ -144,11 +144,15 @@ module battleRuntimeFeatureBridge {
   }
 
   pure def battleRuntimePassiveSavingThrowRollMode(
+    profile: PassiveSavingThrowRollModeProfile,
     ability: SavingThrowAbilityFact,
+    condition: SavingThrowConditionFact,
     incapacitated: bool
   ): PassiveSavingThrowRollMode =
     passiveSavingThrowRollMode({
+      profile: profile,
       savingThrowAbility: ability,
+      savingThrowCondition: condition,
       incapacitated: incapacitated,
     })
 

@@ -62,9 +62,36 @@ module battleRuntimeFeatureBridgeExamples {
 
   run test_passive_saving_throw_roll_mode_runtime_projection_uses_feature_profile = {
     all {
-      assert(battleRuntimePassiveSavingThrowRollMode(DexteritySavingThrowFact, false) == AdvantageSavingThrowMode),
-      assert(battleRuntimePassiveSavingThrowRollMode(DexteritySavingThrowFact, true) == NormalSavingThrowMode),
-      assert(battleRuntimePassiveSavingThrowRollMode(ConstitutionSavingThrowFact, false) == NormalSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(
+        DexterityNotIncapacitatedSavingThrowAdvantageProfile,
+        DexteritySavingThrowFact,
+        NoSavingThrowConditionFact,
+        false
+      ) == AdvantageSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(
+        DexterityNotIncapacitatedSavingThrowAdvantageProfile,
+        DexteritySavingThrowFact,
+        NoSavingThrowConditionFact,
+        true
+      ) == NormalSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(
+        DexterityNotIncapacitatedSavingThrowAdvantageProfile,
+        ConstitutionSavingThrowFact,
+        NoSavingThrowConditionFact,
+        false
+      ) == NormalSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(
+        PoisonedConditionSavingThrowAdvantageProfile,
+        ConstitutionSavingThrowFact,
+        PoisonedSavingThrowConditionFact,
+        false
+      ) == AdvantageSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(
+        PoisonedConditionSavingThrowAdvantageProfile,
+        ConstitutionSavingThrowFact,
+        NoSavingThrowConditionFact,
+        false
+      ) == NormalSavingThrowMode),
     }
   }
 

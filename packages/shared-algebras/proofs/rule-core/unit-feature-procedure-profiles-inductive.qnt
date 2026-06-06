@@ -465,8 +465,18 @@ module unitFeatureProcedureProfilesInductive {
       DexteritySavingThrowFact,
       ConstitutionSavingThrowFact
     ).oneOf()
+    nondet savingThrowCondition = Set(
+      NoSavingThrowConditionFact,
+      PoisonedSavingThrowConditionFact
+    ).oneOf()
+    nondet profile = Set(
+      DexterityNotIncapacitatedSavingThrowAdvantageProfile,
+      PoisonedConditionSavingThrowAdvantageProfile
+    ).oneOf()
     val mode = passiveSavingThrowRollMode({
+      profile: profile,
       savingThrowAbility: savingThrowAbility,
+      savingThrowCondition: savingThrowCondition,
       incapacitated: incapacitated,
     })
     all {
