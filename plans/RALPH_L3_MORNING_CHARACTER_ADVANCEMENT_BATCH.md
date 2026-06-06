@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Report next character advancement candidates"
     }
   ]
@@ -121,7 +121,7 @@ repair branch state by rebasing against `master`.
 | 9 | L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | ready-for-research | none | Resolve jump-distance support without adding absent movement state. |
 | 10 | L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify character advancement selected identity is connected to production code. |
 | 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | ready-for-research | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
-| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | blocked | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Report remaining high-value L3 candidates for future parallel lanes. |
+| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | ready-for-research | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Report remaining high-value L3 candidates for future parallel lanes. |
 
 ## Task Details
 
