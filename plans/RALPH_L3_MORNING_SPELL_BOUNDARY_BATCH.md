@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit selected-identity replay for promoted spells"
     },
     {
@@ -120,7 +120,7 @@ repair branch state by rebasing against `master`.
 | 8 | L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE | done | none | Spike Growth camouflaged terrain recognition remains a runtime-detached Search/perception witness; do not add Spike Growth-local recognized terrain state. |
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | done | none | Fly cleanup already uses the promoted scalar-buff/end-fall witness boundary; automatic elevation, landing, and can-stop-fall derivation remain table/spatial facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | done | none | Moonbeam shape-shift support is resolved through the shared class-feature and spell-effect shape-shift owners; stat-block Shape-Shift specials remain outside this profile until a generic Stat Block special-action active-form owner exists. |
-| 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Confirm promoted spell profiles replay selected identity through production reducer paths. |
+| 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | done | none | Promoted spell profiles already replay selected identity through production reducer or package-public runtime paths; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_11_SPELL_SELECTED_IDENTITY_AUDIT.md`. |
 | 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | blocked | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
 
 ## Task Details
@@ -272,6 +272,13 @@ Audit promoted spell profiles to make sure selected identity flows through the
 same production reducer path the app/MCP would reach, and that every MBT replay
 is connected to that path rather than a dead test-only projection.
 
+Outcome: promoted supported and profile-subset-supported spell Units have
+selected-identity replay evidence connected to the production reducer or
+package-public runtime path. The remaining `selectedIdentityMbtCoverage`
+denominator gap is non-spell deterministic projection work and does not block
+spell boundary consolidation. Evidence is consolidated in
+`plans/unit-profile-coverage/L3MSPELL_11_SPELL_SELECTED_IDENTITY_AUDIT.md`.
+
 ### Task 12 - L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION
 
 Regenerate profile ledgers, remove stale plan leftovers made obsolete by this
@@ -280,7 +287,8 @@ component-boundary note, the Task 4 Continual Flame light-projection evidence
 note, the Task 5 Enlarge/Reduce object-lifecycle note, the Task 6 Levitate
 loose-object boundary note, the Task 7 Fireball area-object closure note, the
 Task 8 Spike Growth Search/perception closure note, the Task 10 Moonbeam
-shape-shift closure note, and regenerated ledgers.
+shape-shift closure note, the Task 11 selected-identity audit note, and
+regenerated ledgers.
 
 ## Task Rules
 
