@@ -14464,7 +14464,7 @@
     },
     {
       "claimKind": "accepted-runtime-closure",
-      "note": "Task 7 confirmed active Wild Shape non-battle persistence remains closed by ASSUMPTIONS.md A27: Character Battle handoff rejects active Wild Shape and requires dismissal or reversion before Character Sheet settlement. A future session active-effect persistence owner must revise that assumption before promoting cross-boundary active-form duration.",
+      "note": "Task 7 records active Wild Shape non-battle persistence as an explicit ASSUMPTIONS.md A27 owner-decision boundary: Character Battle handoff rejects active Wild Shape and requires dismissal or reversion before Character Sheet settlement. Promoting cross-boundary active-form duration requires a future owner-decision to revise A27 and add a session active-effect persistence owner.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE"
     },
@@ -17733,14 +17733,18 @@
             "mechanic": "Wild Shape object-use execution still outside the promoted object boundary: worn weapons and held objects, non-resizing/non-reshaping object behavior, downstream table placement/use of dropped objects, and concrete object interaction/Utilize consumers remain unpromoted. Future consumers must use the stored form-limb witness rather than deriving object handling from Beast authored identity."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE",
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "ASSUMPTIONS.md A27 owner-decision plus character-battle-runtime handoff boundary",
+              "reason": "ASSUMPTIONS.md A27 explicitly rejects active Wild Shape at Character Sheet handoff. Cross-session active-form persistence requires a future owner-decision to revise that assumption and introduce a session active-effect persistence owner for selected form identity and remaining half-Druid-level duration without duplicating Character Sheet or Stat Block facts."
+            },
             "mechanic": "Wild Shape active-form duration across non-battle time remains closed at the Character Sheet handoff boundary by ASSUMPTIONS.md A27 until a session active-effect persistence owner exists."
           }
         ],
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Remaining object-handling anatomy, senses, languages, speech, and non-battle active-form persistence are owned by the narrower follow-ups below.",
+            "mechanic": "Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Remaining object-handling anatomy, senses, languages, and speech are owned by the narrower follow-ups below; non-battle active-form persistence is closed separately by the ASSUMPTIONS.md A27 owner-decision boundary.",
             "owner": "battle-runtime, Stat Block action runtime, Beast Spells owner, and focused QNT/MBT parity",
             "requiredOutput": "Supported Unit profile or narrower profile-subset with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity for each admitted battle executable branch; otherwise leave each branch unpromoted with a precise blocked disposition.",
             "title": "Druid Wild Shape Remaining Battle Shape-Shifting Runtime"
@@ -17758,13 +17762,6 @@
             "owner": "equipment/loadout runtime plus form-anatomy and table-witness boundary owners",
             "requiredOutput": "Typed object-handling workflows with focused tests deriving from existing loadout, active-form, stored form-limb witness, and table-position facts, without adding parallel equipment inventories to Wild Shape state.",
             "title": "Druid Wild Shape Object Anatomy And Equipment Disposition"
-          },
-          {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE",
-            "mechanic": "Keep active Wild Shape from crossing Character Sheet handoff under ASSUMPTIONS.md A27 unless a future task introduces a session active-effect persistence model for active form identity and remaining half-Druid-level duration.",
-            "owner": "character-battle-runtime handoff boundary and future session active-effect persistence owner",
-            "requiredOutput": "Either preserve the existing typed handoff rejection with assumption-backed evidence, or revise ASSUMPTIONS.md and add a session persistence owner that derives active-form duration from the Surface feature and Druid level without duplicating true-form or Stat Block facts.",
-            "title": "Druid Wild Shape Active Form Non-Battle Persistence Boundary"
           }
         ],
         "profileIds": [
