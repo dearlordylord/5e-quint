@@ -18675,9 +18675,10 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
+              "firstTriggerCharacterLevel": 5,
               "kind": "later-level-only",
               "owner": "SRDINV78 later-level scaling",
-              "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1."
+              "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim."
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
@@ -20762,13 +20763,17 @@
       "claim": {
         "deferredMechanics": [
           {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future character advancement Wizard spell slot level access owner",
-              "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow."
-            },
             "followUpTaskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS",
-            "mechanic": "Later one-spell Wizard Evocation spellbook grant whenever Wizard gains access to a new Wizard Spell Slot level"
+            "mechanic": "Resolve whether Evocation Savant's one-spell new-slot-level grant triggers at Wizard level 3 when the subclass is acquired and Wizard level-2 slots first appear, or only on later Wizard advancement to a new slot level."
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS",
+            "mechanic": "Decide and implement the Wizard level-3 Evocation Savant interaction between subclass acquisition and first access to Wizard level-2 Spell Slots, without treating a potentially level-3 trigger as later-level-only.",
+            "owner": "RAW/ASSUMPTIONS owner plus character-creation-runtime Wizard spellbook learning owner",
+            "requiredOutput": "Owner-approved RAW/ASSUMPTIONS decision; if the level-3 trigger applies, Character Creation must discover/finalize the extra Evocation spellbook choice at Wizard level 3 with deterministic admission/projection and selected-identity evidence. If the trigger is owner-decided to apply only on later advancement, record that decision explicitly and keep the later advancement grant out of the level-3 support claim.",
+            "title": "Wizard Evoker Evocation Savant Slot Access Trigger Audit"
           }
         ],
         "profileIds": [
@@ -21296,9 +21301,10 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
+              "firstTriggerCharacterLevel": 11,
               "kind": "later-level-only",
               "owner": "future Paladin later-level resource scaling owner",
-              "reason": "Task L13UG-A17 promotes only the level-3 two-use resource facts; the remaining Channel Divinity use increase occurs after level 3."
+              "reason": "Task L13UG-A17 promotes only the level-3 two-use resource facts; the remaining Channel Divinity use increase first occurs at Paladin level 11."
             },
             "mechanic": "Paladin level 11 Channel Divinity use scaling to three uses."
           }
@@ -33355,6 +33361,7 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 20,
           "kind": "later-level-only",
           "owner": "future level-20 Character Sheet ability-score projection owner",
           "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Strength and Constitution at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
@@ -33467,6 +33474,7 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 20,
           "kind": "later-level-only",
           "owner": "future level-20 spell-access and Power Word spell invocation profile owners",
           "reason": "The always-prepared Power Word Heal and Power Word Kill facts are later-level Character Sheet spell access, and the second-target casting rider can be promoted only with future supported Power Word spell invocation profiles."
@@ -34059,9 +34067,10 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 10,
           "kind": "later-level-only",
           "owner": "future Circle of the Land selected-land and passive target-side resistance/condition-immunity owner",
-          "reason": "The feature is acquired after level 1 and its Resistance damage type is determined by the Druid's Circle Spells land choice. Promoted Unit profiles in this branch do not install the subclass feature, store the Long Rest selected-land source fact, or project a passive condition immunity plus derived Resistance from authored class-feature Units."
+          "reason": "The feature is acquired at Druid level 10 and its Resistance damage type is determined by the Druid's Circle Spells land choice. Promoted Unit profiles in this branch do not install the subclass feature, store the Long Rest selected-land source fact, or project a passive condition immunity plus derived Resistance from authored class-feature Units."
         },
         "reason": "Nature's Ward is a level-10 Circle of the Land subclass feature with Poisoned condition immunity plus land-choice-derived Resistance; no standalone promoted Unit profile is claimed until the selected-land source fact and passive target-side projection are modeled together.",
         "tag": "unsupported-profile"
@@ -36063,6 +36072,7 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 20,
           "kind": "later-level-only",
           "owner": "future level-20 Character Sheet ability-score projection owner",
           "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Dexterity and Wisdom at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
@@ -36283,9 +36293,10 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 18,
           "kind": "later-level-only",
           "owner": "future sight and sense projection owner",
-          "reason": "The feature is acquired after level 1 and grants Blindsight with a range of 30 feet. Current promoted Unit profiles do not install class-feature sense grants or project Blindsight from authored feature Units into battle sight state."
+          "reason": "The feature is acquired at Ranger level 18 and grants Blindsight with a range of 30 feet. Current promoted Unit profiles do not install class-feature sense grants or project Blindsight from authored feature Units into battle sight state."
         },
         "reason": "Feral Senses is a level-18 Blindsight sense grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature sense grants have a sight projection owner.",
         "tag": "unsupported-profile"
@@ -36311,9 +36322,10 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 10,
           "kind": "later-level-only",
           "owner": "future Tireless feature owner spanning Temporary Hit Points actions and Short Rest Exhaustion recovery",
-          "reason": "The feature is acquired after level 1 and combines a Magic action Temporary Hit Points resource with a separate Short Rest Exhaustion reduction benefit. Current promoted Unit profiles do not support this ability-modifier Magic action resource or the rest-triggered Exhaustion recovery clause."
+          "reason": "The feature is acquired at Ranger level 10 and combines a Magic action Temporary Hit Points resource with a separate Short Rest Exhaustion reduction benefit. Current promoted Unit profiles do not support this ability-modifier Magic action resource or the rest-triggered Exhaustion recovery clause."
         },
         "reason": "Tireless is a level-10 two-part feature: a Magic action Wisdom-derived Temporary Hit Points use pool plus Short Rest Exhaustion reduction; no standalone promoted battle Unit profile is claimed for the partial authored action shape.",
         "tag": "unsupported-profile"
@@ -36821,9 +36833,10 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "firstTriggerCharacterLevel": 9,
           "kind": "later-level-only",
           "owner": "future Contact Patron Spell Access and feature-scoped spell-invocation override owner",
-          "reason": "The feature is acquired after level 1, adds Contact Other Plane Spell Access, and changes only the Contact Patron no-slot Spell Invocation used to contact the patron by auto-succeeding on Contact Other Plane's Intelligence Saving Throw. Current promoted owners handle Favored Enemy's narrower Hunter's Mark free-cast resource and selected invocation Spell Access, not this level-9 feature-scoped save override or its table-mediated divination answers."
+          "reason": "The feature is acquired at Warlock level 9, adds Contact Other Plane Spell Access, and changes only the Contact Patron no-slot Spell Invocation used to contact the patron by auto-succeeding on Contact Other Plane's Intelligence Saving Throw. Current promoted owners handle Favored Enemy's narrower Hunter's Mark free-cast resource and selected invocation Spell Access, not this level-9 feature-scoped save override or its table-mediated divination answers."
         },
         "reason": "Contact Patron is a level-9 always-prepared Contact Other Plane Spell Access and once-per-Long-Rest patron-contact no-slot cast with a feature-scoped automatic Intelligence Saving Throw success; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
         "tag": "unsupported-profile"

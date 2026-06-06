@@ -2054,7 +2054,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
+      "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2588,12 +2588,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow.",
+      "reason": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS: Decide and implement the Wizard level-3 Evocation Savant interaction between subclass acquisition and first access to Wizard level-2 Spell Slots, without treating a potentially level-3 trigger as later-level-only. Owner: RAW/ASSUMPTIONS owner plus character-creation-runtime Wizard spellbook learning owner. Required output: Owner-approved RAW/ASSUMPTIONS decision; if the level-3 trigger applies, Character Creation must discover/finalize the extra Evocation spellbook choice at Wizard level 3 with deterministic admission/projection and selected-identity evidence. If the trigger is owner-decided to apply only on later advancement, record that decision explicitly and keep the later advancement grant out of the level-3 support claim.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2613,7 +2613,7 @@
           }
         }
       ],
-      "status": "closed-later-level-only",
+      "status": "blocked-follow-up-split",
       "strictTargetClosed": true,
       "unitId": "wizard_evocation_savant"
     },
@@ -2886,13 +2886,14 @@
       ]
     },
     {
-      "count": 3,
+      "count": 4,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "druid_wild_shape",
-        "sorcerer_metamagic"
+        "sorcerer_metamagic",
+        "wizard_evocation_savant"
       ]
     },
     {
@@ -2915,12 +2916,11 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
-        "ranger_favored_enemy",
-        "wizard_evocation_savant"
+        "ranger_favored_enemy"
       ]
     }
   ],
@@ -10565,10 +10565,10 @@
       "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 3,
+      "blocked-follow-up-split": 4,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
-      "closed-later-level-only": 2,
+      "closed-later-level-only": 1,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
       "supported-profile": 145

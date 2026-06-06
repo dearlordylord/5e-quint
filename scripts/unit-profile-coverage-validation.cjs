@@ -177,6 +177,16 @@ function battleReadinessClosureIssues(unitId, closure, context) {
   ) {
     issues.push(`${context} for ${unitId} reason must be a non-empty string.`);
   }
+  if (closure.kind === "later-level-only") {
+    if (
+      !Number.isInteger(closure.firstTriggerCharacterLevel) ||
+      closure.firstTriggerCharacterLevel <= 3
+    ) {
+      issues.push(
+        `${context} for ${unitId} later-level-only closures require firstTriggerCharacterLevel > 3.`,
+      );
+    }
+  }
   return issues;
 }
 

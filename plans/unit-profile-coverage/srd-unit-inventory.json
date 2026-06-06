@@ -19017,7 +19017,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV78 later-level scaling",
-        "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1."
+        "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim."
       },
       "ownerEvidence": [
         {
@@ -30000,12 +30000,6 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future character advancement Wizard spell slot level access owner",
-        "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
