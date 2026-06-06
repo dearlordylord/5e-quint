@@ -1771,6 +1771,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | completed-runtime-parity | `unit-feature.passive-saving-throw-roll-mode` |
 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | qnt-proof | `unit-feature.passive-ability-check-roll-mode` |
 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | completed-runtime-parity | `unit-feature.passive-ability-check-roll-mode` |
+| L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | accepted-runtime-closure | _none_ |
 | L3MCHAR-01 | completed-runtime-parity | `character-sheet.weapon-mastery-class-level-reselection` |
 | L3MCHAR-04 | completed-runtime-parity | `character-creation.fighting-style-cantrip-advancement-replacement` |
 

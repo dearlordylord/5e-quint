@@ -15160,6 +15160,12 @@
       "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Reviewed SRD species Darkvision, the Darkvision spell, current Surface grant_sense records, and promoted light/obscurement projection. Species and spell Darkvision remain authored sense source facts rather than standalone Unit procedures: battle projection already consumes typed Darkvision observer range and distance facts supplied at the caller/table boundary, while Character Sheet species sense derivation, active spell-granted sense projection, item senses, automatic sight-line derivation, map geometry, and color-only darkness presentation require a future shared creature perception projection owner.",
+      "profileIds": [],
+      "taskId": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet Long Rest tests cover Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally relies on runtime-test evidence plus the shared semantic core, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [

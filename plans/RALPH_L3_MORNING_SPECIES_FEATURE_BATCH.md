@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3MSPEC-10-SPECIES-DARKVISION-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close or plan species Darkvision sense projection"
     },
     {
@@ -121,7 +121,7 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 7 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Promote only the battle-relevant Advantage on ability checks to end Grappled; leave carrying capacity to Character Sheet or inventory projection. |
 | 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | done | none | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`. |
 | 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | done | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Closed without implementation: Task 8 found no missing runtime slice, and existing attack-damage rider owners already cover Frenzy. |
-| 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | ready-for-research | none | Close species Darkvision as table-owned sight projection, or create concrete shared sense-source projection follow-up work if repository evidence shows that owner already exists. |
+| 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | done | none | Closure recorded in `plans/unit-profile-coverage/L3MSPEC_10_SPECIES_DARKVISION_CLOSURE.md`: no concrete shared sense-source projection owner exists to extend, and current light/obscurement projection consumes caller-supplied typed observer facts. |
 | 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | ready-for-research | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
 | 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | blocked | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
 
@@ -201,6 +201,9 @@ Close or plan species Darkvision as a shared sense projection owner.
 Task 1 classified species Darkvision as a source fact for sight/illumination
 projection, not a standalone battle Unit procedure. Prefer closure/report work
 unless a concrete shared sight projection owner is already available to extend.
+
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_10_SPECIES_DARKVISION_CLOSURE.md`.
 
 ### Task 11 - L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT
 
