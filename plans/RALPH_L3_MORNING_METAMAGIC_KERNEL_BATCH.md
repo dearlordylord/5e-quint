@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote Heightened Gust of Wind Line repeat-save carry-through"
     },
     {
