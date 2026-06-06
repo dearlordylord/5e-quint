@@ -11996,8 +11996,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV86 companion review boundary plus Druid Wild Shape follow-up owners",
-        "reason": "Wild Companion delegates familiar lifecycle behavior to the existing Find Familiar Unit; unsupported companion control remains under SRDINV86, while Wild Shape resource reset, known-form, duration, and shape-shifting execution stay under the Druid Wild Shape follow-up split."
+        "owner": "SRDINV86 companion review boundary",
+        "reason": "Wild Companion delegates familiar lifecycle behavior to the promoted Find Familiar Unit; unsupported familiar form attacks and companion command/action selection beyond table choices remain under the explicit SRDINV86 companion-control boundary."
       },
       "ownerEvidence": [
         {

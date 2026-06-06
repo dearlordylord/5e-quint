@@ -13663,7 +13663,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation runtime tests cover Druid level 2 Wild Companion feature-retention source facts from the Surface class feature while companion lifecycle execution stays owned by Find Familiar and Druid Wild Shape follow-up boundaries.",
+      "note": "Focused Character Creation runtime tests cover Druid level 2 Wild Companion feature-retention source facts from the Surface class feature while familiar lifecycle execution is delegated to the promoted Find Familiar Unit and remaining unsupported companion control stays under SRDINV86.",
       "profileIds": [
         "character-creation.class-feature-source-fact-projection"
       ],
@@ -17932,11 +17932,11 @@
           {
             "battleReadinessClosure": {
               "kind": "companion-control-boundary",
-              "owner": "SRDINV86 companion review boundary plus Druid Wild Shape follow-up owners",
-              "reason": "Wild Companion delegates familiar lifecycle behavior to the existing Find Familiar Unit; unsupported companion control remains under SRDINV86, while Wild Shape resource reset, known-form, duration, and shape-shifting execution stay under the Druid Wild Shape follow-up split."
+              "owner": "SRDINV86 companion review boundary",
+              "reason": "Wild Companion delegates familiar lifecycle behavior to the promoted Find Familiar Unit; unsupported familiar form attacks and companion command/action selection beyond table choices remain under the explicit SRDINV86 companion-control boundary."
             },
             "followUpTaskId": "SRDINV86",
-            "mechanic": "Find Familiar companion lifecycle execution outside the existing promoted subset, autonomous companion command/action selection, familiar form attacks, and Wild Shape shape-shifting execution."
+            "mechanic": "Unsupported familiar form attacks and companion command/action selection beyond table choices."
           }
         ],
         "profileIds": [

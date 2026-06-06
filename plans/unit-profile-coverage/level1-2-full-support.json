@@ -484,7 +484,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Wild Companion delegates familiar lifecycle behavior to the existing Find Familiar Unit; unsupported companion control remains under SRDINV86, while Wild Shape resource reset, known-form, duration, and shape-shifting execution stay under the Druid Wild Shape follow-up split.",
+      "reason": "Wild Companion delegates familiar lifecycle behavior to the promoted Find Familiar Unit; unsupported familiar form attacks and companion command/action selection beyond table choices remain under the explicit SRDINV86 companion-control boundary.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"

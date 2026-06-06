@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Wild Companion boundary after Find Familiar and Wild Shape splits"
     },
     {
@@ -126,7 +126,7 @@ repair branch state by rebasing against `master`.
 |     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Recorded Acid Arrow as blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                        |
 |     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | done                                          | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerated and verified residual ledgers; generated artifacts were already current.                                                  |
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | done                                          | none                                                                                                                                                                                                                           | Wild Shape selected-identity replay is covered by the focused form-lifecycle MBT witness.                                             |
-|    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | ready-for-research                            | none                                                                                                                                                                                                                           | Audit whether Wild Companion still has only explicit companion-control closure.                                                       |
+|    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | done                                          | none                                                                                                                                                                                                                           | Wild Companion now closes only the explicit SRDINV86 companion-control residue and delegates familiar lifecycle to the promoted Find Familiar Unit. |
 |    12 | L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION   | ready-for-research                            | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE                                                                                                                                                                                   | Promote concrete Wild Shape object/Utilize consumers from the stored form-limb witness without deriving anatomy from authored identity. |
 |    13 | L3MWILD-13-MORNING-WILD-SHAPE-CONSOLIDATION    | blocked                                       | L3MWILD-03-WORN-EQUIPMENT-EFFECTIVE-LOADOUT, L3MWILD-04-FALLEN-EQUIPMENT-OBJECT-BOUNDARY, L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY, L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE, L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION, L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION | Final lane report and cleanup.                                                                                                        |
 
@@ -265,6 +265,15 @@ Landed scope:
 ### Task 11 - L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT
 
 Audit Wild Companion after Find Familiar and Wild Shape splits.
+
+Landed scope:
+
+- `druid_wild_companion` now delegates familiar lifecycle behavior to the
+  promoted `find_familiar` Unit and no longer lists Druid Wild Shape follow-up
+  owners as Wild Companion residue.
+- Remaining Wild Companion deferred mechanics are limited to unsupported
+  familiar form attacks and companion command/action selection beyond table
+  choices under the explicit `SRDINV86` companion-control boundary.
 
 ### Task 12 - L3MWILD-12-OBJECT-UTILIZE-CONSUMER-EXECUTION
 
