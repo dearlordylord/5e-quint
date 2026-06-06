@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L3MMETA-17-SUBTLE-CAST-COMPONENT-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Promote first Subtle Spell component projection slice"
     },
     {
