@@ -49,14 +49,14 @@
     {
       "number": 8,
       "id": "L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Audit Barbarian Frenzy attack-damage rider"
     },
     {
       "number": 9,
       "id": "L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME",
-      "status": "blocked",
-      "title": "Promote Barbarian Frenzy runtime parity"
+      "status": "done",
+      "title": "Close Barbarian Frenzy runtime parity as already owned"
     },
     {
       "number": 10,
@@ -119,8 +119,8 @@ If the ancestor check fails, stop and report the branch-base mismatch.
 | 5 | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | done | L3MSPEC-01-CANDIDATE-TRIAGE | Poison damage Resistance slice only; keep Poisoned saving-throw Advantage in Task 6. |
 | 6 | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | done | L3MSPEC-05-DWARVEN-RESILIENCE-RESISTANCE | Advantage on saves to avoid/end Poisoned, after resistance facts are settled. |
 | 7 | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | ready-for-implementation-after-light-research | L3MSPEC-01-CANDIDATE-TRIAGE | Promote only the battle-relevant Advantage on ability checks to end Grappled; leave carrying capacity to Character Sheet or inventory projection. |
-| 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | ready-for-implementation-after-light-research | none | Audit whether existing `unit-feature.attack-damage-rider` owners already cover Frenzy. |
-| 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | blocked | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Implement only if the audit finds a real missing runtime slice. |
+| 8 | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | done | none | Audit recorded in `plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`. |
+| 9 | L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | done | L3MSPEC-08-BARBARIAN-FRENZY-RIDER-AUDIT | Closed without implementation: Task 8 found no missing runtime slice, and existing attack-damage rider owners already cover Frenzy. |
 | 10 | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE | ready-for-research | none | Close species Darkvision as table-owned sight projection, or create concrete shared sense-source projection follow-up work if repository evidence shows that owner already exists. |
 | 11 | L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | blocked | L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME, L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE, L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE, L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE, L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME | Audit only after promoted slices land. |
 | 12 | L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION | blocked | L3MSPEC-10-SPECIES-DARKVISION-CLOSURE, L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT | Regenerate reports and record remaining pressure. |
@@ -185,9 +185,14 @@ into battle state.
 
 Audit whether current attack-damage rider owners already cover Frenzy.
 
+Task output is recorded in
+`plans/unit-profile-coverage/L3MSPEC_08_BARBARIAN_FRENZY_RIDER_AUDIT.md`.
+
 ### Task 9 - L3MSPEC-09-BARBARIAN-FRENZY-RUNTIME
 
-Implement Frenzy runtime parity only if Task 8 finds a real missing slice.
+Task 8 found no real missing slice. Existing attack-damage rider owners already
+cover Barbarian Frenzy, so this task is closed without runtime, QNT, schema, or
+MBT changes.
 
 ### Task 10 - L3MSPEC-10-SPECIES-DARKVISION-CLOSURE
 
