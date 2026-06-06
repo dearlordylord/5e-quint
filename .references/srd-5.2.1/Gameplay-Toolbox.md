@@ -58,7 +58,7 @@ A character's background represents what the character did prior to becoming an 
 
 This section describes, step by step, how you can create backgrounds tailored for your world and the heroes in it.
 
-### I: Choose Abilities
+### 1: Choose Abilities
 
 Choose three abilities that seem appropriate for the background:
 

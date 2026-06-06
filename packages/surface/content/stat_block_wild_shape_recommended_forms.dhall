@@ -83,7 +83,7 @@ in  [ { challengeRating = 0.25
   , id = "stat_block_wolf"
   , kind = "statBlock"
   , name = "Wolf"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2587-2632" }
+  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2587-2611" }
   , statBlock =
     { abilityScores =
       { cha = 6, con = 12, dex = 15, int = 3, str = 14, wis = 12 }

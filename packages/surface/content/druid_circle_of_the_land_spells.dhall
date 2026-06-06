@@ -1,6 +1,6 @@
 -- Circle of the Land Spells (Druid L3) — SRD 5.2.1 Druid subclass feature.
 --
--- RAW (Classes / Druid / Circle of the Land / Level 3: Circle Spells):
+-- RAW (Classes / Druid / Circle of the Land / Level 3: Circle of the Land Spells):
 --   After a Long Rest, choose Arid, Polar, Temperate, or Tropical.
 --   You always have the spells prepared in the Circle Spells table for
 --   your Druid level and lower.
@@ -17,7 +17,7 @@ let circleOfTheLandSpells =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Druid#Circle Spells"
+          , section = "Classes/Druid#Circle of the Land Spells"
           }
       , description =
           "Whenever you finish a Long Rest, choose one type of land: Arid, Polar, Temperate, or Tropical. You always have the spells prepared that are listed in the Circle Spells table for your Druid level and lower."

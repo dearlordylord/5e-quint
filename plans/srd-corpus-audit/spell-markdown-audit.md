@@ -10,25 +10,27 @@ This report treats `.references/srd-5.2.1/Spells/*.md` as the corpus to repair, 
 - Open5e SRD-2024 structured spell rows: 339
 - Local 5e-tools SRD alias rows: 339
 - Local 5e-tools renamed SRD alias rows: 17
-- Findings: 75
-- Level <= 2 findings: 27
-- Level > 2 findings: 48
+- Candidate findings: 73
+- Open candidate findings: 71
+- Fixed manual findings: 3
+- Manual review records: 4
+- Level <= 2 candidate findings: 25
+- Level <= 2 open candidate findings: 23
+- Level > 2 candidate findings: 48
+- Level > 2 open candidate findings: 48
 
-## Level <= 2 Findings
+## Level <= 2 Open Candidates
 
-The independent low-level audit reviewed all cantrip through level-2 spell sections against PDF provenance and structured cross-checks. The PDF-confirmed markdown defects in the current app frontier are Acid Arrow, Enlarge/Reduce, and Levitate. Augury is table-rendering noise. The table below is the automated candidate list, not a final manual disposition for every row.
+The independent low-level audit reviewed all cantrip through level-2 spell sections against PDF provenance and structured cross-checks. Acid Arrow, Enlarge/Reduce, and Levitate were PDF-confirmed markdown defects and are now fixed. Augury is closed as table-rendering noise. The table below is the remaining automated candidate list, not a final manual disposition for every row.
 
 | Spell | Level | Kind | Manual disposition | Source | Structured similarity | Missing reference words | PDF text line |
 |---|---:|---|---|---|---:|---|---:|
-| Acid Arrow | 2 | low-level-needs-pdf-review | real-markdown-corruption | .references/srd-5.2.1/Spells/Descriptions-A-D.md:5 | Open5e ref 0.95<br>Open5e md 0.9268<br>5e-tools ref 0.9419<br>5e-tools md 0.9878 | -2d4, -acid, -damage, -and, +a |  |
 | Aid | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:35 | Open5e ref 1<br>Open5e md 0.8571<br>5e-tools ref 0.9762<br>5e-tools md 0.9762 | +a |  |
-| Augury | 2 | formatting-or-prose-needs-review | table-title-rendering-only | .references/srd-5.2.1/Spells/Descriptions-A-D.md:352 | Open5e ref 0.9905<br>Open5e md 1<br>5e-tools ref 0.9875<br>5e-tools md 0.7596 | -table |  |
 | Burning Hands | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:608 | Open5e ref 1<br>Open5e md 0.913<br>5e-tools ref 0.9067<br>5e-tools md 0.9855 | +a |  |
 | Chromatic Orb | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:724 | Open5e ref 1<br>Open5e md 0.9615<br>5e-tools ref 0.9936<br>5e-tools md 0.9936 | +a |  |
 | Dissonant Whispers | 1 | low-level-needs-pdf-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:1558 | Open5e ref 1<br>Open5e md 0.7907<br>5e-tools ref 0.9884<br>5e-tools md 0.9884 | +a, +the, +damage, +increases, +by, +1d6, +for, +each, +above, +1 |  |
 | Divine Smite | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:1601 | Open5e ref 1<br>Open5e md 0.8605<br>5e-tools ref 0.9767<br>5e-tools md 0.9767 | +a |  |
 | Dragon's Breath | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-A-D.md:1695 | Open5e ref 1<br>Open5e md 0.9231<br>5e-tools ref 0.9506<br>5e-tools md 0.9872 | +a |  |
-| Enlarge/Reduce | 2 | formatting-or-prose-needs-review | real-markdown-corruption | .references/srd-5.2.1/Spells/Descriptions-E-L.md:83 | Open5e ref 0.9738<br>Open5e md 1<br>5e-tools ref 0.9738<br>5e-tools md 1 | -see, -chosen, -effect, -the, -below |  |
 | Find Steed | 2 | low-level-needs-pdf-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:319 | Open5e ref 1<br>Open5e md 0.4409<br>5e-tools ref 1<br>5e-tools md 0.4536 | +a, +otherworldly, +steed, +large, +celestial, +fey, +or, +fiend, +your, +choice, +neutral, +ac, +10, ++, +1, +per, +hp, +5, +the, +has, +number, +of, +hit, +dice |  |
 | Flame Blade | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:482 | Open5e ref 1<br>Open5e md 0.9469<br>5e-tools ref 0.9912<br>5e-tools md 0.9912 | +a | 8260 |
 | Flaming Sphere | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:516 | Open5e ref 1<br>Open5e md 0.9661<br>5e-tools ref 0.9944<br>5e-tools md 0.9944 | +a |  |
@@ -37,7 +39,6 @@ The independent low-level audit reviewed all cantrip through level-2 spell secti
 | Hellish Rebuke | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:1153 | Open5e ref 1<br>Open5e md 0.8846<br>5e-tools ref 0.9808<br>5e-tools md 0.9808 | +a |  |
 | Ice Knife | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:1307 | Open5e ref 1<br>Open5e md 0.9241<br>5e-tools ref 0.9873<br>5e-tools md 0.9873 | +a |  |
 | Inflict Wounds | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-E-L.md:1417 | Open5e ref 1<br>Open5e md 0.8636<br>5e-tools ref 0.9773<br>5e-tools md 0.9773 | +a |  |
-| Levitate | 2 | formatting-or-prose-needs-review | real-markdown-corruption | .references/srd-5.2.1/Spells/Descriptions-E-L.md:1560 | Open5e ref 0.9868<br>Open5e md 1<br>5e-tools ref 0.9868<br>5e-tools md 1 | -within, -range |  |
 | Mind Spike | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-M-P.md:322 | Open5e ref 1<br>Open5e md 0.9487<br>5e-tools ref 0.9915<br>5e-tools md 0.9915 | +a |  |
 | Moonbeam | 2 | low-level-needs-pdf-review |  | .references/srd-5.2.1/Spells/Descriptions-M-P.md:445 | Open5e ref 1<br>Open5e md 0.6686<br>5e-tools ref 0.913<br>5e-tools md 0.9941 | +silvery, +beam, +pale, +light, +shines, +down, +5, +radius, +40, +high, +centered, +point, +within, +dim, +fills, +you, +can, +take, +magic, +later, +turns, +move, +cylinder, +60 |  |
 | Prayer of Healing | 2 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-M-P.md:718 | Open5e ref 1<br>Open5e md 0.9048<br>5e-tools ref 0.9841<br>5e-tools md 0.9841 | +a |  |
@@ -48,12 +49,24 @@ The independent low-level audit reviewed all cantrip through level-2 spell secti
 | Sorcerous Burst | 0 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-S-Z.md:384 | Open5e ref 1<br>Open5e md 0.9806<br>5e-tools ref 0.9903<br>5e-tools md 0.9903 |  |  |
 | Thunderwave | 1 | formatting-or-prose-needs-review |  | .references/srd-5.2.1/Spells/Descriptions-S-Z.md:873 | Open5e ref 1<br>Open5e md 0.9375<br>5e-tools ref 0.9314<br>5e-tools md 0.9896 | +a |  |
 
+## Fixed Manual Findings
+
+| Spell | Disposition | Still automated candidate? | Evidence |
+|---|---|---|---|
+| Acid Arrow | fixed-markdown-corruption | yes | PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown now includes the later 2d4 phrase in the hit sentence. |
+| Enlarge/Reduce | fixed-markdown-corruption | no | PDF text around lines 7919-7925 includes the parenthetical '(see the chosen effect below)'; markdown now includes it. |
+| Levitate | fixed-markdown-corruption | no | PDF text around lines 9128-9130 says the target is one creature or loose object that you can see within range; markdown now includes 'within range' in that sentence. |
+
+## Closed Manual Findings
+
+| Spell | Disposition | Still automated candidate? | Evidence |
+|---|---|---|---|
+| Augury | table-title-rendering-only | yes | PDF text around lines 6761-6779 uses an Omens table; markdown keeps the same table as a heading plus markdown table. |
+
 ### Level <= 2 Manual PDF Review Notes
 
-- Acid Arrow: PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown omits the later 2d4 phrase from the hit sentence.
+- Acid Arrow: PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown now includes the later 2d4 phrase in the hit sentence.
 - Augury: PDF text around lines 6761-6779 uses an Omens table; markdown keeps the same table as a heading plus markdown table.
-- Enlarge/Reduce: PDF text around lines 7919-7925 includes the parenthetical '(see the chosen effect below)'; markdown omits it.
-- Levitate: PDF text around lines 9128-9130 says the target is one creature or loose object that you can see within range; markdown omits 'within range' from that sentence.
 
 ## Level > 2 Findings
 

@@ -22,14 +22,16 @@ const manualReviewByName = new Map([
   [
     "Acid Arrow",
     {
-      disposition: "real-markdown-corruption",
+      status: "fixed",
+      disposition: "fixed-markdown-corruption",
       evidence:
-        "PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown omits the later 2d4 phrase from the hit sentence.",
+        "PDF text around lines 6476-6486 includes immediate 4d4 Acid damage and later 2d4 Acid damage; markdown now includes the later 2d4 phrase in the hit sentence.",
     },
   ],
   [
     "Augury",
     {
+      status: "closed",
       disposition: "table-title-rendering-only",
       evidence:
         "PDF text around lines 6761-6779 uses an Omens table; markdown keeps the same table as a heading plus markdown table.",
@@ -38,17 +40,19 @@ const manualReviewByName = new Map([
   [
     "Enlarge/Reduce",
     {
-      disposition: "real-markdown-corruption",
+      status: "fixed",
+      disposition: "fixed-markdown-corruption",
       evidence:
-        "PDF text around lines 7919-7925 includes the parenthetical '(see the chosen effect below)'; markdown omits it.",
+        "PDF text around lines 7919-7925 includes the parenthetical '(see the chosen effect below)'; markdown now includes it.",
     },
   ],
   [
     "Levitate",
     {
-      disposition: "real-markdown-corruption",
+      status: "fixed",
+      disposition: "fixed-markdown-corruption",
       evidence:
-        "PDF text around lines 9128-9130 says the target is one creature or loose object that you can see within range; markdown omits 'within range' from that sentence.",
+        "PDF text around lines 9128-9130 says the target is one creature or loose object that you can see within range; markdown now includes 'within range' in that sentence.",
     },
   ],
 ]);
@@ -416,6 +420,7 @@ function buildAudit() {
         file: markdownSpell.file,
         line: markdownSpell.line,
         kind,
+        reviewStatus: manualReview?.status ?? "open",
         manualDisposition: manualReview?.disposition,
         manualEvidence: manualReview?.evidence,
         open5eReferenceCoverage: Number(open5eRatio.toFixed(4)),
@@ -445,6 +450,10 @@ function buildAudit() {
   const higherLevelIssues = issues.filter(
     (issue) => issue.level !== undefined && issue.level > lowLevelMaxSpellLevel,
   );
+  const openIssues = issues.filter((issue) => issue.reviewStatus === "open");
+  const fixedReviews = [...manualReviewByName.values()].filter(
+    (review) => review.status === "fixed",
+  );
 
   return {
     generatedAt: new Date().toISOString(),
@@ -463,9 +472,25 @@ function buildAudit() {
       fiveToolsSrdAliasRows: fiveToolsBySrdName.size,
       fiveToolsRenamedSrdAliasRows: aliasCount,
       issueCount: issues.length,
+      openIssueCount: openIssues.length,
+      fixedIssueCount: fixedReviews.length,
       lowLevelIssueCount: lowLevelIssues.length,
       higherLevelIssueCount: higherLevelIssues.length,
+      openLowLevelIssueCount: lowLevelIssues.filter(
+        (issue) => issue.reviewStatus === "open",
+      ).length,
+      openHigherLevelIssueCount: higherLevelIssues.filter(
+        (issue) => issue.reviewStatus === "open",
+      ).length,
+      manualReviewCount: manualReviewByName.size,
     },
+    manualReviews: [...manualReviewByName.entries()].map(([name, review]) => ({
+      name,
+      status: review.status,
+      disposition: review.disposition,
+      evidence: review.evidence,
+      currentCandidate: issues.some((issue) => issue.name === name),
+    })),
     issues,
   };
 }
@@ -512,6 +537,15 @@ function renderMarkdownReport(audit) {
     (issue) => issue.level !== undefined && issue.level > lowLevelMaxSpellLevel,
   );
   const unlevelledIssues = audit.issues.filter((issue) => issue.level === undefined);
+  const openLowLevelIssues = lowLevelIssues.filter(
+    (issue) => issue.reviewStatus === "open",
+  );
+  const fixedReviews = audit.manualReviews.filter(
+    (review) => review.status === "fixed",
+  );
+  const closedReviews = audit.manualReviews.filter(
+    (review) => review.status === "closed",
+  );
 
   return [
     "# SRD 5.2.1 Spell Markdown Audit",
@@ -526,15 +560,38 @@ function renderMarkdownReport(audit) {
     `- Open5e SRD-2024 structured spell rows: ${audit.metrics.open5eStructuredSpells}`,
     `- Local 5e-tools SRD alias rows: ${audit.metrics.fiveToolsSrdAliasRows}`,
     `- Local 5e-tools renamed SRD alias rows: ${audit.metrics.fiveToolsRenamedSrdAliasRows}`,
-    `- Findings: ${audit.metrics.issueCount}`,
-    `- Level <= 2 findings: ${audit.metrics.lowLevelIssueCount}`,
-    `- Level > 2 findings: ${audit.metrics.higherLevelIssueCount}`,
+    `- Candidate findings: ${audit.metrics.issueCount}`,
+    `- Open candidate findings: ${audit.metrics.openIssueCount}`,
+    `- Fixed manual findings: ${audit.metrics.fixedIssueCount}`,
+    `- Manual review records: ${audit.metrics.manualReviewCount}`,
+    `- Level <= 2 candidate findings: ${audit.metrics.lowLevelIssueCount}`,
+    `- Level <= 2 open candidate findings: ${audit.metrics.openLowLevelIssueCount}`,
+    `- Level > 2 candidate findings: ${audit.metrics.higherLevelIssueCount}`,
+    `- Level > 2 open candidate findings: ${audit.metrics.openHigherLevelIssueCount}`,
     "",
-    "## Level <= 2 Findings",
+    "## Level <= 2 Open Candidates",
     "",
-    "The independent low-level audit reviewed all cantrip through level-2 spell sections against PDF provenance and structured cross-checks. The PDF-confirmed markdown defects in the current app frontier are Acid Arrow, Enlarge/Reduce, and Levitate. Augury is table-rendering noise. The table below is the automated candidate list, not a final manual disposition for every row.",
+    "The independent low-level audit reviewed all cantrip through level-2 spell sections against PDF provenance and structured cross-checks. Acid Arrow, Enlarge/Reduce, and Levitate were PDF-confirmed markdown defects and are now fixed. Augury is closed as table-rendering noise. The table below is the remaining automated candidate list, not a final manual disposition for every row.",
     "",
-    ...renderIssueTable(lowLevelIssues),
+    ...renderIssueTable(openLowLevelIssues),
+    "",
+    "## Fixed Manual Findings",
+    "",
+    "| Spell | Disposition | Still automated candidate? | Evidence |",
+    "|---|---|---|---|",
+    ...fixedReviews.map(
+      (review) =>
+        `| ${review.name} | ${review.disposition} | ${review.currentCandidate ? "yes" : "no"} | ${review.evidence} |`,
+    ),
+    "",
+    "## Closed Manual Findings",
+    "",
+    "| Spell | Disposition | Still automated candidate? | Evidence |",
+    "|---|---|---|---|",
+    ...closedReviews.map(
+      (review) =>
+        `| ${review.name} | ${review.disposition} | ${review.currentCandidate ? "yes" : "no"} | ${review.evidence} |`,
+    ),
     "",
     "### Level <= 2 Manual PDF Review Notes",
     "",
