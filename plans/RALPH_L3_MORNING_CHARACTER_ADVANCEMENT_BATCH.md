@@ -73,8 +73,32 @@
     {
       "number": 12,
       "id": "L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Report next character advancement candidates"
+    },
+    {
+      "number": 13,
+      "id": "L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE",
+      "status": "done",
+      "title": "Connect Jack of All Trades inventory row evidence"
+    },
+    {
+      "number": 14,
+      "id": "L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE",
+      "status": "done",
+      "title": "Reconcile Disciple of Life inventory row evidence"
+    },
+    {
+      "number": 15,
+      "id": "L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE",
+      "status": "done",
+      "title": "Reconcile Remarkable Athlete inventory row evidence"
+    },
+    {
+      "number": 16,
+      "id": "L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE",
+      "status": "done",
+      "title": "Reconcile Steady Aim inventory row evidence"
     }
   ]
 }
@@ -110,18 +134,22 @@ repair branch state by rebasing against `master`.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE | ready-for-research | none | Close Fighter/Barbarian later-count support as character-build facts unless battle reducer reachability exists. |
+| 1 | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE | done | none | Close Fighter/Barbarian later-count support as character-build facts unless battle reducer reachability exists. |
 | 2 | L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE | done | none | Close later Expertise progression without duplicating skill selection state. |
 | 3 | L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION | done | none | Cover Life, Fiend, Draconic, Devotion, and similar access rows through one typed owner shape. |
 | 4 | L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT | done | none | Resolve Ranger/Paladin Fighting Style replacement and cantrip access rows. |
 | 5 | L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT | done | none | Later-slot support is closed to the future character-advancement Wizard spell slot level access owner; level-3 acquisition-time Evocation Savant spellbook evidence is present. |
 | 6 | L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS | done | none | Cast witness and rest interaction close to the existing character-sheet spell-rest benefit owner, with casting progress, range maintenance, and interruption remaining caller/table facts. |
 | 7 | L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE | done | none | Sorcery-point slot creation remains Character Sheet-owned; Character Battle receives aggregate Spell Slot capacity, rejects source-ambiguous handoff, and exposes no Font of Magic battle Unit Bonus Action. |
-| 8 | L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP | ready-for-implementation-after-light-research | none | Remove duplicated delegated owner rows or make the single owner executable. |
-| 9 | L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | ready-for-research | none | Resolve jump-distance support without adding absent movement state. |
-| 10 | L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | ready-for-implementation-after-light-research | none | Verify character advancement selected identity is connected to production code. |
-| 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | ready-for-research | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
-| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | ready-for-research | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Report remaining high-value L3 candidates for future parallel lanes. |
+| 8 | L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP | done | none | Remove duplicated delegated owner rows or make the single owner executable. |
+| 9 | L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE | done | none | Resolve jump-distance support without adding absent movement state. |
+| 10 | L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | done | none | Verify character advancement selected identity is connected to production code. |
+| 11 | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | done | L3MCHAR-01-WEAPON-MASTERY-LATER-COUNT-CLOSURE, L3MCHAR-02-BARD-EXPERTISE-L9-CLOSURE, L3MCHAR-03-SUBCLASS-SPELL-ACCESS-PROGRESSION, L3MCHAR-04-FIGHTING-STYLE-CANTRIP-REPLACEMENT, L3MCHAR-05-WIZARD-EVOCATION-SAVANT-LATER-SLOT, L3MCHAR-06-PRAYER-OF-HEALING-CAST-WITNESS, L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE, L3MCHAR-08-FAST-HANDS-DELEGATED-OWNER-DEDUP, L3MCHAR-09-MONK-FOCUS-JUMP-WITNESS-CLOSURE, L3MCHAR-10-CHARACTER-SHEET-SELECTED-IDENTITY-AUDIT | Regenerate ledgers after all closures. |
+| 12 | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | done | L3MCHAR-11-ADVANCEMENT-LEDGER-CONSOLIDATION | Reported the next row-evidence reconciliation split for Bard Jack of All Trades, Cleric Disciple of Life, Fighter Remarkable Athlete, and Rogue Steady Aim. |
+| 13 | L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected the existing Character Sheet Jack of All Trades owner evidence to the generated inventory readiness path. |
+| 14 | L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Disciple of Life battle-runtime and QNT evidence to the generated inventory readiness path. |
+| 15 | L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Remarkable Athlete deterministic admission and selected-identity MBT evidence to the generated inventory readiness path. |
+| 16 | L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE | done | L3MCHAR-12-ADVANCEMENT-NEXT-BATCH-REPORT | Connected existing Steady Aim deterministic admission and selected-identity MBT evidence to the generated inventory readiness path. |
 
 ## Task Details
 
@@ -191,6 +219,45 @@ lane.
 
 Record the remaining L3 character advancement candidates with a recommended
 next parallel split.
+
+Closed by
+`plans/unit-profile-coverage/L3MCHAR_12_ADVANCEMENT_NEXT_BATCH_REPORT.md`.
+The recommended next split is one Character Sheet row-evidence task for Bard
+Jack of All Trades and three battle-runtime row-evidence tasks for Cleric
+Disciple of Life, Fighter Remarkable Athlete, and Rogue Steady Aim. The report
+also records that current Unit matrix claims/evidence already exist for these
+Unit ids, while the generated SRD inventory still keeps their row-level owner
+evidence open.
+
+### Task 13 - L3MCHAR-NB-01-JACK-OF-ALL-TRADES-ROW-EVIDENCE
+
+Connect `bard_jack_of_all_trades` to the generated SRD inventory readiness path
+using the existing Character Sheet Ability Check Proficiency Bonus owner
+evidence. Do not add skill, Expertise, or Jack of All Trades state beside
+existing CharacterBuild facts; fix the checker input, owner symbol, or
+generator path that still leaves the row open.
+
+### Task 14 - L3MCHAR-NB-02-DISCIPLE-OF-LIFE-ROW-EVIDENCE
+
+Reconcile or complete `cleric_disciple_of_life` as a spell-slot Hit Point
+restoration modifier. If the target branch already has runtime and QNT evidence,
+connect that evidence to the generated SRD inventory readiness path; otherwise
+promote the direct spell healing modifier with focused runtime tests and Quint
+parity before closing the row.
+
+### Task 15 - L3MCHAR-NB-03-REMARKABLE-ATHLETE-ROW-EVIDENCE
+
+Reconcile or complete `fighter_remarkable_athlete` for Initiative Advantage,
+Strength (Athletics) Advantage, and immediately-after-Critical-Hit movement up
+to half Speed without Opportunity Attacks. Use existing roll-mode, movement, and
+Opportunity Attack owners rather than adding a generic feature flag.
+
+### Task 16 - L3MCHAR-NB-04-STEADY-AIM-ROW-EVIDENCE
+
+Reconcile or complete `rogue_steady_aim` as a Bonus Action available only if the
+Rogue has not moved on the current turn, granting Advantage on the next attack
+roll on that turn and setting Speed to 0 until turn end. Keep movement history,
+action economy, attack-roll, and Speed facts in their existing owners.
 
 ## Task Rules
 

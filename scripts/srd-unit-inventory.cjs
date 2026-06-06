@@ -2,7 +2,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   battleReadinessClosureKinds,
+  deterministicAdmissionProjectionEvidenceTag,
   isUnitFeatureProfileId,
+  selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 
 const classDir = ".references/srd-5.2.1/Classes";
@@ -50,8 +52,6 @@ const classContainerOwnedCreationRowKinds = new Set([
   "multiclass-entry",
 ]);
 
-const deterministicAdmissionProjectionEvidenceTag =
-  "deterministic-admission-projection";
 const characterCreationProfileIdPrefix = "character-creation.";
 const characterSheetProfileIdPrefix = "character-sheet.";
 const unitFeatureProfileIdPrefix = "unit-feature.";
@@ -74,6 +74,31 @@ const catalogAuthoredReviewRequiredDisposition =
   "catalog-authored-review-required";
 const levelThreeFollowUpRequiredDisposition = "level-3-follow-up-required";
 const subclassSelectionLevel = 3;
+
+const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
+  [
+    "fighter_remarkable_athlete",
+    [
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES",
+      },
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
+      },
+    ],
+  ],
+  [
+    "rogue_steady_aim",
+    [
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME",
+      },
+    ],
+  ],
+]);
 
 const ownerEvidenceRequired = new Map([
   [
@@ -149,22 +174,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-    {
-      owner: "spell invocation healing modifier owner",
-      requirement:
-        "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
-    },
-  ],
-  [
-    "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-    {
-      owner: "battle-runtime initiative, Athletics, and critical-hit movement owner",
-      requirement:
-        "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
-    },
-  ],
-  [
     "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
     {
       owner:
@@ -197,14 +206,6 @@ const levelThreeClassFeatureOwnerSplits = new Map([
       owner: "character-sheet Speed projection plus movement/jump owner",
       requirement:
         "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
-    },
-  ],
-  [
-    "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
-    {
-      owner: "battle-runtime turn movement and attack-roll Advantage owner",
-      requirement:
-        "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
     },
   ],
   [
@@ -283,9 +284,11 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
+  "cleric_disciple_of_life",
   "druid_wild_companion",
   "druid_wild_shape",
   "fighter_fighting_style",
+  "fighter_remarkable_athlete",
   "fighter_weapon_mastery",
   "monk_martial_arts",
   "monk_monks_focus",
@@ -296,6 +299,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "ranger_favored_enemy",
   "ranger_fighting_style",
   "ranger_weapon_mastery",
+  "rogue_steady_aim",
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",
@@ -1712,23 +1716,38 @@ function buildOwnerEvidenceSources({
       .filter((row) => row.collectionId === "srd-5.2.1")
       .map((row) => [row.unitId, row]),
   );
-  const deterministicEvidenceByUnitId = new Map();
+  const unitEvidenceByUnitId = unitEvidence.reduce((rowsByUnitId, row) => {
+    if (row?.unitId === undefined || row.evidence === undefined) {
+      return rowsByUnitId;
+    }
+    const rows = rowsByUnitId.get(row.unitId) ?? [];
+    rows.push(row);
+    rowsByUnitId.set(row.unitId, rows);
+    return rowsByUnitId;
+  }, new Map());
+  const battleRuntimeEvidenceByUnitId = new Map();
   for (const row of unitEvidence) {
     if (row.evidence?.tag !== deterministicAdmissionProjectionEvidenceTag) {
       continue;
     }
     if (!admissionEvidenceEligibleSrdUnitIds.has(row.unitId)) continue;
-    deterministicEvidenceByUnitId.set(
+    const executableEvidence = requiredBattleRuntimeExecutableEvidence(
+      row.unitId,
+      unitEvidenceByUnitId,
+    );
+    if (executableEvidence === undefined) continue;
+    battleRuntimeEvidenceByUnitId.set(
       row.unitId,
       [
         "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported",
         `plans/unit-profile-coverage/unit-evidence.jsonl records ${deterministicAdmissionProjectionEvidenceTag} evidence`,
         `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
+        ...executableEvidence,
       ].join("; "),
     );
   }
   return {
-    battleRuntime: deterministicEvidenceByUnitId,
+    battleRuntime: battleRuntimeEvidenceByUnitId,
     unitClaims: unitClaimsByUnitId,
     characterCreation: buildCharacterCreationEvidenceSources(
       root,
@@ -1743,6 +1762,31 @@ function buildOwnerEvidenceSources({
       sharedAlgebraOwnerEvidence,
     ),
   };
+}
+
+function requiredBattleRuntimeExecutableEvidence(unitId, unitEvidenceByUnitId) {
+  const requirements =
+    battleRuntimeExecutableEvidenceRequirementsByUnitId.get(unitId);
+  if (requirements === undefined) {
+    return [];
+  }
+  const unitEvidence = unitEvidenceByUnitId.get(unitId) ?? [];
+  const matchedRows = requirements.map((requirement) =>
+    unitEvidence.find(
+      (row) =>
+        row.evidence?.tag === requirement.tag &&
+        row.evidence.taskId === requirement.taskId,
+    ),
+  );
+  if (matchedRows.some((row) => row === undefined)) {
+    return undefined;
+  }
+  return [
+    `plans/unit-profile-coverage/unit-evidence.jsonl records required ${selectedIdentityMbtEvidenceTag} executable evidence`,
+    ...matchedRows.map(
+      (row) => `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
+    ),
+  ];
 }
 
 function buildCharacterCreationEvidenceSources(root, manifest) {
