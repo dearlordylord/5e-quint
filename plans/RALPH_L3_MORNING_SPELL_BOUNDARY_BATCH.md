@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Consolidate spell boundary evidence"
     }
   ]
@@ -110,7 +110,7 @@ repair branch state by rebasing against `master`.
 
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
-| 1 | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER | ready-for-research | none | Classify remaining Antimagic Field gaps as executable battle support or owner-decision blockers. |
+| 1 | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER | done | none | Classify remaining Antimagic Field gaps as executable battle support or owner-decision blockers. |
 | 2 | L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY | done | none | Broader Dispel Magic occurrence support is not represented in the real reducer path; keep it assigned to the broader ongoing Spell Effect occurrence owner. |
 | 3 | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | done | none | Costly consumed Material component availability, hand/access legality, focus/component substitution eligibility, and consumed Material inventory mutation belong to the character equipment/component legality boundary, not battle runtime. |
 | 4 | L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION | done | L3MSPELL-03-CONTINUAL-FLAME-COMPONENT-BOUNDARY | Continual Flame light projection is already represented by `spell.invocation-object-light`; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_04_CONTINUAL_FLAME_LIGHT_PROJECTION.md`. |
@@ -121,7 +121,7 @@ repair branch state by rebasing against `master`.
 | 9 | L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE | done | none | Fly cleanup already uses the promoted scalar-buff/end-fall witness boundary; automatic elevation, landing, and can-stop-fall derivation remain table/spatial facts. |
 | 10 | L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE | done | none | Moonbeam shape-shift support is resolved through the shared class-feature and spell-effect shape-shift owners; stat-block Shape-Shift specials remain outside this profile until a generic Stat Block special-action active-form owner exists. |
 | 11 | L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | done | none | Promoted spell profiles already replay selected identity through production reducer or package-public runtime paths; evidence is consolidated in `plans/unit-profile-coverage/L3MSPELL_11_SPELL_SELECTED_IDENTITY_AUDIT.md`. |
-| 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | ready-for-research | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Regenerate ledgers and record the next spell candidates after real closure. |
+| 12 | L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | done | L3MSPELL-01-ANTIMAGIC-REMAINING-BLOCKER-LEDGER, L3MSPELL-02-DISPEL-ONGOING-EFFECT-BOUNDARY, L3MSPELL-04-CONTINUAL-FLAME-LIGHT-PROJECTION, L3MSPELL-05-ENLARGE-REDUCE-OBJECT-LIFECYCLE, L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY, L3MSPELL-07-FIREBALL-AREA-OBJECT-CLOSURE, L3MSPELL-08-SPIKE-GROWTH-SEARCH-CLOSURE, L3MSPELL-09-FLY-FALLING-SPATIAL-CLOSURE, L3MSPELL-10-MOONBEAM-SHAPESHIFT-CLOSURE, L3MSPELL-11-SPELL-SELECTED-IDENTITY-AUDIT | Ledgers regenerated and remaining spell-level-3 pressure recorded in `plans/unit-profile-coverage/L3MSPELL_12_SPELL_BOUNDARY_CONSOLIDATION.md`. |
 
 ## Task Details
 
@@ -289,6 +289,13 @@ loose-object boundary note, the Task 7 Fireball area-object closure note, the
 Task 8 Spike Growth Search/perception closure note, the Task 10 Moonbeam
 shape-shift closure note, the Task 11 selected-identity audit note, and
 regenerated ledgers.
+
+Outcome: spell-boundary consolidation is complete. The generated Unit profile
+ledgers were refreshed, the lane status was closed, and remaining
+spell-level-3 pressure was recorded in
+`plans/unit-profile-coverage/L3MSPELL_12_SPELL_BOUNDARY_CONSOLIDATION.md`.
+No runtime promotion was added; future spell work should start from the
+recorded missing-authored-record and owner-evidence-required spell candidates.
 
 ## Task Rules
 

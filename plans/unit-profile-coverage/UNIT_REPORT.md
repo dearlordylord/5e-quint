@@ -1696,6 +1696,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | qnt-proof | `spell.invocation-levitated-creature` |
 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | completed-runtime-parity | `spell.invocation-levitated-creature` |
 | L3MSPELL-06-LEVITATE-LOOSE-OBJECT-BOUNDARY | accepted-runtime-closure | _none_ |
+| L3MSPELL-12-SPELL-BOUNDARY-CONSOLIDATION | accepted-runtime-closure | _none_ |
 | L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION | qnt-proof | `spell.invocation-dragons-breath-granted-action` |
 | L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION | completed-runtime-parity | `spell.invocation-dragons-breath-granted-action` |
 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | accepted-follow-up-split | _none_ |
