@@ -22,9 +22,11 @@ import {
 } from "./index.ts";
 import {
   attackRollFill,
+  battleAreaId,
   battleId,
   characterSeed,
   damageRollFillWithGroups,
+  endTurn,
   fighterId,
   findHole,
   partySide,
@@ -59,7 +61,8 @@ export type SorcererMetamagicProjection = {
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
     | "twinnedTargetCount"
-    | "heightenedHideousLaughter";
+    | "heightenedHideousLaughter"
+    | "heightenedGreaseEntrySave";
 };
 
 export function resolveQuickenedBurningHands(state: BattleState): BattleState {
@@ -432,6 +435,88 @@ export function resolveHeightenedHideousLaughter(
   ).state;
 }
 
+export function resolveHeightenedGreaseEntrySave(state: BattleState): BattleState {
+  const act = heightenedGreaseAct(state);
+  const heightenedTarget = targetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    skeletonId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Grease to request a save hole.");
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            area: {
+              kind: "greaseGroundArea",
+              areaId: battleAreaId("heightened-grease-ground-area"),
+              originAnchorId: wizardId,
+              affectedTargetIds: [skeletonId],
+            },
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  ).state;
+  const targetTurn = requireResolved(
+    endTurn({ state: cast, actorId: wizardId }),
+  ).state;
+  const entryAct = discoverBattleActs(targetTurn).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.trigger === "entersArea",
+  );
+  if (entryAct === undefined) {
+    throw new Error("Expected Heightened Grease entry save act.");
+  }
+  const entryTargetId = entryAct.subject.actorId;
+  const entrySave = findHole(entryAct.initialHoles, "savingThrowOutcome");
+  if (entrySave.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Heightened Grease entry save hole.");
+  }
+  if (
+    !entrySave.targetRollModes.some(
+      (projection) =>
+        projection.targetId === entryTargetId &&
+        projection.rollMode === "disadvantage",
+    )
+  ) {
+    throw new Error(
+      "Expected Heightened Grease entry save to project Disadvantage for the selected target.",
+    );
+  }
+  return requireResolved(
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: entryAct.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: entrySave.holeId,
+          value: {
+            outcomes: [{ targetId: entryTargetId, succeeded: false }],
+          },
+        },
+      ],
+    }),
+  ).state;
+}
+
 export function resolveTransmutedBurningHandsToPoison(
   state: BattleState,
 ): BattleState {
@@ -600,6 +685,7 @@ function sorcererMetamagicBattleWithOptions(
               spellRecord("bless"),
               spellRecord("burning_hands"),
               spellRecord("command"),
+              spellRecord("grease"),
               spellRecord("hideous_laughter"),
             ],
             spellSlots: [{ spellLevel: 1, count: 3 }],
@@ -854,6 +940,22 @@ function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Heightened Hideous Laughter act.");
+  }
+  return act;
+}
+
+function heightenedGreaseAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "greaseGroundHazard" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Grease act.");
   }
   return act;
 }

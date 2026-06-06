@@ -254,6 +254,7 @@ import type {
   BattleTurnResources,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowFlatBonusProjection,
+  BattleSavingThrowRollModeProjection,
   SpellTurnStartDamage,
 } from "../battle-reducer.ts";
 import {
@@ -1793,11 +1794,22 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
     targetRollModes: savingThrowRollModeProjections(
       state,
       effect.save.ability,
+      undefined,
+      greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
     targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
       (projection) => projection.targetId === targetId,
     ),
   };
+}
+
+function greaseGroundHazardHeightenedRollModeProjection(
+  effect: GreaseGroundHazardEffect,
+  targetId: CombatantId,
+): BattleSavingThrowRollModeProjection | undefined {
+  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
+    ? { targetId, rollMode: "disadvantage" }
+    : undefined;
 }
 
 function greaseGroundHazardSavingThrowOutcomeFor(

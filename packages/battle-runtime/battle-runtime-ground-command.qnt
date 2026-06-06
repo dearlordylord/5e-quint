@@ -41,6 +41,7 @@ module battleRuntimeGroundCommand {
   pure val webDurationTicks = 600
   pure val webAreaId = 4
   pure val webSideFeet = 20
+  pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
 
   type GreaseGroundHazardSaveTrigger =
     | GreaseGroundHazardAppears
@@ -72,10 +73,28 @@ module battleRuntimeGroundCommand {
     else
       { ...target, prone: true }
 
+  pure def greaseGroundHazard(
+    areaId: int,
+    heightenedTarget: AreaSpellEffectHeightenedTarget,
+  ): ActiveEffect =
+    GreaseGroundHazard({
+      areaId: areaId,
+      heightenedTarget: heightenedTarget,
+      durationTicks: greaseDurationTicks,
+    })
+
   pure def resolveGrease(
     state: BattleState,
     goblinIncludedInArea: bool,
     goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    resolveGreaseWithHeightenedTarget(state, goblinIncludedInArea, goblinSavingThrowSucceeded, noHeightenedSpellTarget)
+
+  pure def resolveGreaseWithHeightenedTarget(
+    state: BattleState,
+    goblinIncludedInArea: bool,
+    goblinSavingThrowSucceeded: bool,
+    heightenedTarget: AreaSpellEffectHeightenedTarget,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
@@ -85,11 +104,34 @@ module battleRuntimeGroundCommand {
         fighter: {
           ...state.fighter,
           activeEffects: activeEffectsWithoutGreaseGroundHazard(state.fighter.activeEffects, greaseAreaId)
-            .union(Set(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+            .union(Set(greaseGroundHazard(greaseAreaId, heightenedTarget))),
         },
         goblin: if (goblinIncludedInArea) combatantAfterGreaseSave(state.goblin, goblinSavingThrowSucceeded) else state.goblin,
         actionAvailable: false,
       }, Fighter)
+
+  pure def greaseGroundHazardHeightenedTarget(state: BattleState, areaId: int): AreaSpellEffectHeightenedTarget =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | GreaseGroundHazard(data) => if (data.areaId == areaId) data.heightenedTarget else noHeightenedSpellTarget
+        | _ => noHeightenedSpellTarget
+      })
+      .fold(noHeightenedSpellTarget, (selected, candidate) =>
+        match selected {
+          | HeightenedSpellTarget(_) => selected
+          | NoHeightenedSpellTarget => candidate
+        }
+      )
+
+  pure def greaseGroundHazardSaveRollMode(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+  ): SavingThrowRollMode =
+    match greaseGroundHazardHeightenedTarget(state, areaId) {
+      | HeightenedSpellTarget(data) => if (data.target == targetActor) DisadvantageSavingThrow else NormalSavingThrow
+      | NoHeightenedSpellTarget => NormalSavingThrow
+    }
 
   pure def greaseGroundHazardActive(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect {

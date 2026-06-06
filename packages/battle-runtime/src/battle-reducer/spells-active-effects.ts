@@ -1688,6 +1688,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
     SupportedSpellInvocation,
     { readonly procedure: "greaseGroundHazard" }
   >;
+  readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
   const caster = combatants.get(input.actorId);
@@ -1706,6 +1707,13 @@ export function applyGreaseGroundHazardCastEffects(input: {
         sourceSpellId: input.invocation.spell.id,
         sourceCombatantId: input.actorId,
         areaId: input.area.areaId,
+        heightenedSpellTargetDisadvantage:
+          input.heightenedSpellTargetId === null
+            ? null
+            : {
+                kind: "heightenedSpellTargetDisadvantage" as const,
+                targetId: input.heightenedSpellTargetId,
+              },
         save: {
           ability: input.invocation.ability,
           dc: input.invocation.dc,

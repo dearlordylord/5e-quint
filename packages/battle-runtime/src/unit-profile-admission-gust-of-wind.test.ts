@@ -512,6 +512,7 @@ function withGreaseGroundHazard(state: BattleState): BattleState {
           sourceCombatantId: spellCasterId,
           sourceSpellId: greaseUnitId,
           areaId: greaseAreaId,
+          heightenedSpellTargetDisadvantage: null,
           save: {
             ability: "dex" as const,
             dc: { kind: "caster_spell_save_dc" as const },

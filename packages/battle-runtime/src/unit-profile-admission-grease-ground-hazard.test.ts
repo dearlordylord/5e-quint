@@ -1,16 +1,34 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
+import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import {
+  battleId,
+  characterSeed,
+  partySide,
+  startBattleRight,
+  statBlockCreatureInit,
+  wizardSpellcasting,
+} from "./battle-runtime-test-support.ts";
 import {
   greaseAreaId,
   greaseUnitId,
   spellCasterId,
   spellTargetId,
+  thunderwaveSecondTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  type AvailableBattleAct,
+  type BattleState,
+  discoverBattleActs,
+} from "./index.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   greaseGroundHazardEndTurnAct,
@@ -30,6 +48,13 @@ import {
   spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
+
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+};
 
 describe("QMBT14 deterministic Grease ground hazard admission", () => {
   test("grease is admitted as a one-minute point-origin Cube ground hazard", () => {
@@ -123,6 +148,25 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     ]);
   });
+  test("Heightened Grease stores the selected target on the ground hazard occurrence", () => {
+    const cast = castHeightenedGreaseWithSelectedTarget();
+
+    const greaseEffect = requireCombatant(
+      cast,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+
+    expect(greaseEffect).toEqual(
+      expect.objectContaining({
+        kind: "greaseGroundHazard",
+        areaId: greaseAreaId,
+        heightenedSpellTargetDisadvantage: {
+          kind: "heightenedSpellTargetDisadvantage",
+          targetId: spellTargetId,
+        },
+      }),
+    );
+  });
   test("grease saving throw resolution rejects non-ground-area facts", () => {
     const spell = spellRecord(greaseUnitId);
     const state = spellBattle({
@@ -209,6 +253,54 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       { conditions: expect.not.arrayContaining(["prone"]) },
     );
   });
+  test("Heightened Grease entry saves project Disadvantage for the selected target", () => {
+    const cast = castHeightenedGreaseWithSelectedTarget();
+    const targetTurn = endTurn({
+      state: cast,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Grease caster end turn to resolve.");
+    }
+    const selectedEntryAct = greaseGroundHazardSaveAct(
+      targetTurn.state,
+      spellTargetId,
+      "entersArea",
+    );
+    const selectedEntrySave = requireHole(
+      selectedEntryAct.initialHoles,
+      "savingThrowOutcome",
+    );
+
+    expect(selectedEntrySave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+
+    const entryFailed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: selectedEntryAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(
+          selectedEntrySave,
+          spellTargetId,
+          false,
+        ),
+      ],
+    });
+
+    expect(entryFailed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ]),
+      },
+    });
+  });
   test("grease end-turn saves resolve at the End Turn boundary", () => {
     const spell = spellRecord(greaseUnitId);
     const state = spellBattle({
@@ -261,6 +353,55 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
           }),
         ],
       },
+    });
+  });
+  test("Heightened Grease end-turn saves project Disadvantage only for the selected target", () => {
+    const cast = castHeightenedGreaseWithSelectedTarget();
+    const targetTurn = endTurn({
+      state: cast,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Grease caster end turn to resolve.");
+    }
+
+    const endTurnAct = greaseGroundHazardEndTurnAct(
+      targetTurn.state,
+      spellTargetId,
+    );
+    const endTurnSave = requireHole(
+      endTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+
+    expect(endTurnSave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+
+    const selectedTurnDone = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: endTurnAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(endTurnSave, spellTargetId, true),
+      ],
+    });
+    if (selectedTurnDone.tag !== "resolved") {
+      throw new Error("Expected selected Grease end-turn save to resolve.");
+    }
+
+    const nonSelectedEndTurnAct = greaseGroundHazardEndTurnAct(
+      selectedTurnDone.state,
+      thunderwaveSecondTargetId,
+    );
+    const nonSelectedEndTurnSave = requireHole(
+      nonSelectedEndTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+
+    expect(nonSelectedEndTurnSave.targetRollModes).not.toContainEqual({
+      targetId: thunderwaveSecondTargetId,
+      rollMode: "disadvantage",
     });
   });
   test("grease subject identity distinguishes hazards and triggers", () => {
@@ -363,3 +504,105 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     });
   });
 });
+
+function castHeightenedGreaseWithSelectedTarget(): BattleState {
+  const spell = spellRecord(greaseUnitId);
+  const state = startBattleRight({
+    battleId: battleId("heightened-grease-ground-hazard"),
+    combatants: [
+      characterSeed({
+        combatantId: spellCasterId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: [
+            {
+              effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+              stackingMode: "one_per_spell",
+              sorceryPointCost: resourceCount(2),
+            },
+          ],
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      statBlockCreatureInit({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+      }),
+      statBlockCreatureInit({
+        combatantId: thunderwaveSecondTargetId,
+        displayName: "Second Target",
+        initiative: 9,
+      }),
+    ],
+  });
+  const act = heightenedGreaseAct(state);
+  const heightenedTarget = requireHole(act.initialHoles, "targetChoice");
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      {
+        kind: "targetChoice",
+        holeId: heightenedTarget.holeId,
+        value: spellTargetId,
+      },
+    ],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Heightened Grease to request a save hole.");
+  }
+  const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      {
+        kind: "targetChoice",
+        holeId: heightenedTarget.holeId,
+        value: spellTargetId,
+      },
+      greaseSavingThrowOutcomeFill(savingThrow, [
+        { targetId: spellTargetId, succeeded: true },
+      ]),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Heightened Grease to resolve.");
+  }
+  return resolved.state;
+}
+
+function heightenedGreaseAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "greaseGroundHazard" &&
+      candidate.subject.metamagic?.some(
+        (selection) =>
+          selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Grease act.");
+  }
+  return act;
+}

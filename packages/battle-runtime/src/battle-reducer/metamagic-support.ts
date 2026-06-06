@@ -553,7 +553,6 @@ function spellInvocationHasRepeatSavingThrowLifecycle(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return (
-    invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "gustOfWindLine" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.effect.repeatSave !== null)

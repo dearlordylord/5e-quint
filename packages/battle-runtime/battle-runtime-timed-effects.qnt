@@ -343,6 +343,7 @@ module battleRuntimeTimedEffects {
           })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
+            heightenedTarget: data.heightenedTarget,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | SpikeGrowthMovementHazard(data) => SpikeGrowthMovementHazard({

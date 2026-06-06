@@ -36,8 +36,14 @@ module battleRuntimeSorcererMetamagicHeightenedSelectedIdentityMbt {
     recordProjection(false, true, 2, 10, 1, "heightenedHideousLaughter")
   }
 
+  action doResolveHeightenedGreaseEntrySave = all {
+    qLastResult == "init",
+    recordProjection(true, true, 2, 10, 0, "heightenedGreaseEntrySave")
+  }
+
   action step = any {
     doResolveHeightenedSaveGatedDamage,
     doResolveHeightenedHideousLaughter,
+    doResolveHeightenedGreaseEntrySave,
   }
 }

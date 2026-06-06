@@ -564,6 +564,10 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     area,
     failedTargetIds: failedTargets,
     invocation: input.invocation,
+    heightenedSpellTargetId:
+      metamagicSelections.heightenedSpellTargetId === undefined
+        ? null
+        : metamagicSelections.heightenedSpellTargetId,
   });
   return {
     tag: "resolved",

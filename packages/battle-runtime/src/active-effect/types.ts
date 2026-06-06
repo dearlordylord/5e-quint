@@ -95,6 +95,12 @@ export type TurnAnchoredBattleActiveEffectExpiration = Extract<
   BattleActiveEffectExpiration,
   { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
 >;
+export type AreaSpellEffectHeightenedRepeatSaveRider =
+  | null
+  | {
+      readonly kind: "heightenedSpellTargetDisadvantage";
+      readonly targetId: CombatantId;
+    };
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
@@ -498,6 +504,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";
       readonly areaId: BattleAreaId;
+      readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
