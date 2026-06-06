@@ -95,6 +95,19 @@ module battleRuntimeFeatureBridgeExamples {
     }
   }
 
+  run test_passive_ability_check_roll_mode_runtime_projection_uses_feature_profile = {
+    all {
+      assert(battleRuntimePassiveAbilityCheckRollMode(
+        GrappledConditionEndAbilityCheckAdvantageProfile,
+        GrappledAbilityCheckConditionEndFact
+      ) == AdvantageAbilityCheckMode),
+      assert(battleRuntimePassiveAbilityCheckRollMode(
+        GrappledConditionEndAbilityCheckAdvantageProfile,
+        NoAbilityCheckConditionEndFact
+      ) == NormalAbilityCheckMode),
+    }
+  }
+
   run test_innate_sorcery_runtime_projection_uses_feature_profile = {
     val active = battleRuntimeActivateInnateSorcery(true, 2, false)
     val exhausted = battleRuntimeActivateInnateSorcery(true, 0, false)

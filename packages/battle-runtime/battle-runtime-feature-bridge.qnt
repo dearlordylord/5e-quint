@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation unit-feature.passive-saving-throw-roll-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation unit-feature.passive-ability-check-roll-mode unit-feature.passive-saving-throw-roll-mode
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
@@ -154,6 +154,15 @@ module battleRuntimeFeatureBridge {
       savingThrowAbility: ability,
       savingThrowCondition: condition,
       incapacitated: incapacitated,
+    })
+
+  pure def battleRuntimePassiveAbilityCheckRollMode(
+    profile: PassiveAbilityCheckRollModeProfile,
+    conditionEnd: AbilityCheckConditionEndFact,
+  ): PassiveAbilityCheckRollMode =
+    passiveAbilityCheckRollMode({
+      profile: profile,
+      abilityCheckConditionEnd: conditionEnd,
     })
 
   pure def battleRuntimeCuttingWordsRollTotal(originalTotal: int, bardicDieRoll: int): int =

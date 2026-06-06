@@ -62,8 +62,8 @@
       "value": 275
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 173,
-      "numerator": 169,
+      "denominator": 174,
+      "numerator": 170,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 109,
-      "numerator": 106,
-      "percent": "97.2%"
+      "denominator": 110,
+      "numerator": 107,
+      "percent": "97.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 147,
-      "numerator": 147,
+      "denominator": 148,
+      "numerator": 148,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 166,
-      "numerator": 166,
+      "denominator": 167,
+      "numerator": 167,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 173,
+      "denominator": 174,
       "numerator": 167,
-      "percent": "96.5%"
+      "percent": "96%"
     },
     "supportedProfileCoverage": {
       "denominator": 228,
-      "numerator": 173,
-      "percent": "75.9%"
+      "numerator": 174,
+      "percent": "76.3%"
     }
   },
   "metricSemantics": [
@@ -764,6 +764,33 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-ability-check-roll-mode",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+      ],
+      "sourceBoundary": "Surface passive Ability Check roll-mode facts are admitted by typed roll target and condition-ending scope. Battle runtime consumes the selected Unit support profile to project Advantage on the existing Escape Grapple outcome hole when the Ability Check is made to end Grappled; carrying capacity remains outside this battle profile.",
+      "taskRefs": [
+        "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+      ],
+      "title": "Unit feature passively grants Ability Check roll mode for a condition-ending check",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         }
       ]
     },
@@ -4759,13 +4786,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 147,
-        "numerator": 147,
+        "denominator": 148,
+        "numerator": 148,
         "percent": "100%"
       }
     },
@@ -5076,6 +5103,22 @@
           }
         ],
         "profileId": "unit-feature.passive-saving-throw-roll-mode",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.passive-ability-check-roll-mode",
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
@@ -7294,8 +7337,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 166,
-          "numerator": 166,
+          "denominator": 167,
+          "numerator": 167,
           "percent": "100%"
         }
       },
@@ -11494,6 +11537,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-ability-check-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_goliath_powerful_build"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -11895,7 +11960,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 2,
+    "rowCount": 3,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -11931,6 +11996,23 @@
           "tag": "supported-profile"
         },
         "unitId": "species_dragonborn_damage_resistance"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.passive-ability-check-roll-mode"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "species_goliath_powerful_build"
       }
     ]
   },
@@ -15060,6 +15142,22 @@
         "unit-feature.passive-saving-throw-roll-mode"
       ],
       "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared rule-core and battle-runtime bridge QNT facts model a passive Ability Check roll-mode profile whose Advantage applies only when the Ability Check is made to end Grappled, leaving unrelated Ability Checks normal.",
+      "profileIds": [
+        "unit-feature.passive-ability-check-roll-mode"
+      ],
+      "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and runtime tests cover Goliath Powerful Build admission from its passive ability_check Grappled condition-ending Surface fact, identity-independent support profile projection, selected Unit ref gating, and Escape Grapple outcome-hole Advantage projection. Carrying capacity remains outside the battle profile.",
+      "profileIds": [
+        "unit-feature.passive-ability-check-roll-mode"
+      ],
+      "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -23012,19 +23110,68 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
-          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
-        },
-        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "character-sheet carrying-capacity or inventory projection owner",
+              "reason": "Carrying Capacity is durable character/equipment math rather than battle execution; the battle profile admits only the Grappled escape Ability Check roll-mode fact."
+            },
+            "mechanic": "count as one size larger when determining carrying capacity"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.passive-ability-check-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the passive Ability Check Advantage fact from the Surface modify_roll_advantage shape with ability_check target and Grappled condition-ending scope, without dispatching on Goliath or Powerful Build identity.",
+          "Battle runtime projects Advantage on the existing Escape Grapple outcome hole only for characters retaining the selected Powerful Build Unit support profile.",
+          "The carrying-capacity sentence is not copied into battle state and remains Character Sheet or inventory projection work outside this battle profile."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-ability-check-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+          ],
+          "sourceBoundary": "Surface passive Ability Check roll-mode facts are admitted by typed roll target and condition-ending scope. Battle runtime consumes the selected Unit support profile to project Advantage on the existing Escape Grapple outcome hole when the Ability Check is made to end Grappled; carrying capacity remains outside this battle profile.",
+          "taskRefs": [
+            "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
+          ],
+          "title": "Unit feature passively grants Ability Check roll mode for a condition-ending check",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
       "unitId": "species_goliath_powerful_build"
     },

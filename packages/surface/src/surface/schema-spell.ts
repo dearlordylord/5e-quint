@@ -866,6 +866,10 @@ type EffectAtom =
       readonly mode: "advantage" | "disadvantage";
       readonly affects?: "self_roll" | "rolls_against_self";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
+      readonly abilityCheckTrigger?: {
+        readonly kind: "condition_end";
+        readonly condition: Condition;
+      };
       readonly spellSourceFilter?: { readonly className: ClassName };
       readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?:
@@ -2807,6 +2811,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Literal("self_roll", "rolls_against_self"),
         ),
         on: nonEmpty(RollKindSchema),
+        abilityCheckTrigger: optionalExact(
+          strictStruct({
+            kind: Schema.Literal("condition_end"),
+            condition: ConditionSchema,
+          }),
+        ),
         spellSourceFilter: optionalExact(
           Schema.Struct({ className: ClassNameSchema }),
         ),

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -73,6 +73,8 @@ export const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE =
   "attackActionAreaSaveDamageReplacement";
 export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
   "passiveSavingThrowRollMode";
+export const PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE =
+  "passiveAbilityCheckRollMode";
 export const PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE =
   "passiveDamageResistance";
 export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
@@ -179,6 +181,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+  PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
@@ -312,6 +315,17 @@ export type PassiveSavingThrowRollModeProfile =
 export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly kind: typeof PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE;
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
+};
+export type PassiveAbilityCheckRollModeProfile = {
+  readonly mode: "advantage";
+  readonly scope: {
+    readonly kind: "endingCondition";
+    readonly condition: "grappled";
+  };
+};
+export type BattlePassiveAbilityCheckRollModeSupportProfile = {
+  readonly kind: typeof PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE;
+  readonly abilityCheck: PassiveAbilityCheckRollModeProfile;
 };
 export type PassiveDamageResistanceProfile = {
   readonly damageType:
@@ -751,6 +765,7 @@ export type BattleUnitSupportProfile =
   | BattleAttackRollMissToHitReplacementSupportProfile
   | BattleAttackActionAreaSaveDamageReplacementSupportProfile
   | BattlePassiveSavingThrowRollModeSupportProfile
+  | BattlePassiveAbilityCheckRollModeSupportProfile
   | BattlePassiveDamageResistanceSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
@@ -778,6 +793,7 @@ export type BattleUnitSupportProfile =
       | "attackRollMissToHitReplacement"
       | "attackActionAreaSaveDamageReplacement"
       | "passiveSavingThrowRollMode"
+      | "passiveAbilityCheckRollMode"
       | "passiveDamageResistance"
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
@@ -983,6 +999,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (passiveSavingThrowRollModeSupport !== null) {
     supportProfiles.push(passiveSavingThrowRollModeSupport);
+  }
+
+  const passiveAbilityCheckRollModeSupport =
+    battlePassiveAbilityCheckRollModeSupportForUnit(input.unit);
+  if (passiveAbilityCheckRollModeSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive Ability Check roll-mode Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (passiveAbilityCheckRollModeSupport !== null) {
+    supportProfiles.push(passiveAbilityCheckRollModeSupport);
   }
 
   const passiveDamageResistanceSupport =
@@ -1748,6 +1775,11 @@ export type SupportedUnitFeatureProfile =
       readonly savingThrow: PassiveSavingThrowRollModeProfile;
     }
   | {
+      readonly kind: "passiveAbilityCheckRollMode";
+      readonly unit: UnitRecord;
+      readonly abilityCheck: PassiveAbilityCheckRollModeProfile;
+    }
+  | {
       readonly kind: "passiveSpeedBonus";
       readonly unit: UnitRecord;
       readonly speed: PassiveSpeedBonusProfile;
@@ -2484,6 +2516,11 @@ export type BattlePassiveSavingThrowRollModeSupport =
   | "unsupported"
   | null;
 
+export type BattlePassiveAbilityCheckRollModeSupport =
+  | BattlePassiveAbilityCheckRollModeSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattlePassiveDamageResistanceSupport =
   | BattlePassiveDamageResistanceSupportProfile
   | "unsupported"
@@ -2633,6 +2670,21 @@ export function battlePassiveSavingThrowRollModeSupportForUnit(
     : {
         kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
         savingThrow,
+      };
+}
+
+export function battlePassiveAbilityCheckRollModeSupportForUnit(
+  unit: UnitRecord,
+): BattlePassiveAbilityCheckRollModeSupport {
+  if (!hasPassiveAbilityCheckRollModeMechanics(unit)) {
+    return null;
+  }
+  const abilityCheck = passiveAbilityCheckRollModeProfileForUnit(unit);
+  return abilityCheck === null
+    ? "unsupported"
+    : {
+        kind: PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
+        abilityCheck,
       };
 }
 
@@ -2986,6 +3038,17 @@ function hasPassiveSavingThrowRollModeMechanics(unit: UnitRecord): boolean {
     (effect) =>
       effect.kind === "modify_roll_advantage" &&
       sameStringSet(effect.on, ["saving_throw"]),
+  );
+}
+
+function hasPassiveAbilityCheckRollModeMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  return unit.mechanics.grants.some(
+    (effect) =>
+      effect.kind === "modify_roll_advantage" &&
+      sameStringSet(effect.on, ["ability_check"]),
   );
 }
 
@@ -3948,6 +4011,7 @@ export function passiveSavingThrowRollModeProfileForUnit(
     effect.spellSourceFilter !== undefined ||
     effect.attackerTypeFilter !== undefined ||
     effect.skillFilter !== undefined ||
+    effect.abilityCheckTrigger !== undefined ||
     effect.abilityFilter !== undefined ||
     effect.saveSourceFilter !== undefined ||
     effect.contextRangeFeet !== undefined ||
@@ -3991,6 +4055,47 @@ export function passiveSavingThrowRollModeProfileForUnit(
     };
   }
   return null;
+}
+
+export function passiveAbilityCheckRollModeProfileForUnit(
+  unit: UnitRecord,
+): PassiveAbilityCheckRollModeProfile | null {
+  if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const rollModeEffects = unit.mechanics.grants.filter(isRollModeAdvantage);
+  const [effect] = rollModeEffects;
+  if (
+    effect === undefined ||
+    rollModeEffects.length !== 1 ||
+    effect.mode !== "advantage" ||
+    !sameStringSet(effect.on, ["ability_check"]) ||
+    effect.abilityCheckTrigger?.kind !== "condition_end" ||
+    effect.abilityCheckTrigger.condition !== "grappled" ||
+    effect.conditionFilter !== undefined ||
+    effect.affects !== undefined ||
+    effect.spellSourceFilter !== undefined ||
+    effect.attackerTypeFilter !== undefined ||
+    effect.skillFilter !== undefined ||
+    effect.abilityFilter !== undefined ||
+    effect.saveAbilityFilter !== undefined ||
+    effect.saveSourceFilter !== undefined ||
+    effect.contextRangeFeet !== undefined ||
+    effect.count !== undefined ||
+    effect.expiresOn !== undefined ||
+    unit.mechanics.condition !== undefined ||
+    unit.mechanics.operations !== undefined ||
+    (unit.mechanics.suppressedBy ?? []).length !== 0
+  ) {
+    return null;
+  }
+  return {
+    mode: "advantage",
+    scope: {
+      kind: "endingCondition",
+      condition: "grappled",
+    },
+  };
 }
 
 function isRollModeAdvantage(
@@ -4479,6 +4584,7 @@ export function parseSupportedUnitFeatureProfile(
           draconicAncestryDamageType: sourceFacts.draconicAncestryDamageType,
         })) ??
     parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
+    parsePassiveAbilityCheckRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
@@ -5621,6 +5727,22 @@ function parsePassiveSavingThrowRollModeUnitFeatureProfile(
         kind: "passiveSavingThrowRollMode",
         unit,
         savingThrow,
+      };
+}
+
+function parsePassiveAbilityCheckRollModeUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "passiveAbilityCheckRollMode" }
+> | null {
+  const abilityCheck = passiveAbilityCheckRollModeProfileForUnit(unit);
+  return abilityCheck === null
+    ? null
+    : {
+        kind: "passiveAbilityCheckRollMode",
+        unit,
+        abilityCheck,
       };
 }
 

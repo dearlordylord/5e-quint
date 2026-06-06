@@ -74,4 +74,17 @@ module unitFeatureSaveDamageCoreExamples {
       }) == AdvantageSavingThrowMode),
     }
   }
+
+  run test_powerful_build_grants_ability_check_advantage_to_end_grappled_only = {
+    all {
+      assert(passiveAbilityCheckRollMode({
+        profile: GrappledConditionEndAbilityCheckAdvantageProfile,
+        abilityCheckConditionEnd: GrappledAbilityCheckConditionEndFact,
+      }) == AdvantageAbilityCheckMode),
+      assert(passiveAbilityCheckRollMode({
+        profile: GrappledConditionEndAbilityCheckAdvantageProfile,
+        abilityCheckConditionEnd: NoAbilityCheckConditionEndFact,
+      }) == NormalAbilityCheckMode),
+    }
+  }
 }

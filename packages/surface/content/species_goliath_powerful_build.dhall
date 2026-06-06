@@ -15,7 +15,10 @@ let grappleEscapeAdvantage =
       { kind = "modify_roll_advantage"
       , mode = "advantage"
       , on = [ "ability_check" ]
-      , conditionFilter = [ "grappled" ]
+      , abilityCheckTrigger =
+          { kind = "condition_end"
+          , condition = "grappled"
+          }
       }
 
 let powerfulBuild =

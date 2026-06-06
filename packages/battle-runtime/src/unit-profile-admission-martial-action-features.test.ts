@@ -5,8 +5,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE species_goliath_powerful_build
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
@@ -36,6 +37,7 @@ import {
   battleAttackActionAreaSaveDamageReplacementSupportForUnit,
   battleId,
   battleMartialArtsAttackProjectionSupportForUnit,
+  battlePassiveAbilityCheckRollModeSupportForUnit,
   battlePassiveDamageResistanceSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
   battlePassiveSavingThrowRollModeSupportForUnit,
@@ -45,24 +47,35 @@ import {
   combatantId,
   dwarfDwarvenResilienceUnitId,
   Either,
+  endTurn,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   movementFeet,
   oppositionSide,
+  PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+  passiveAbilityCheckRollModeProfileForUnit,
   passiveDamageResistanceProfileForUnit,
   partySide,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  resolveBattleSubject,
   startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  grappleOutcomeFill,
+  requireHole,
+  requireResolved,
+  targetFill,
+} from "./battle-runtime-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
+const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
+
 describe("L3MSPEC species battle support", () => {
-  const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
   const dragonbornSpeciesRecord = decodeSpeciesRecordSync(
     speciesDragonbornInput,
   );
@@ -79,6 +92,16 @@ describe("L3MSPEC species battle support", () => {
   const draconicAncestryDamageType = selectedDraconicAncestry.damageType;
   const draconicAncestrySourceFacts = {
     draconicAncestryDamageType,
+  } as const;
+  const expectedPowerfulBuildSupport = {
+    kind: PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
+    abilityCheck: {
+      mode: "advantage",
+      scope: {
+        kind: "endingCondition",
+        condition: "grappled",
+      },
+    },
   } as const;
   const expectedBreathWeaponSupport = {
     kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -575,21 +598,176 @@ describe("L3MSPEC species battle support", () => {
     expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(9);
   });
 
-  test("Goliath Powerful Build ability-check Advantage stays outside passive Saving Throw roll-mode admission", () => {
+  test("Goliath Powerful Build admits only Grappled escape ability-check Advantage", () => {
     const unit = unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId);
 
     expect(battlePassiveSavingThrowRollModeSupportForUnit(unit)).toBeNull();
+    expect(battlePassiveAbilityCheckRollModeSupportForUnit(unit)).toEqual(
+      expectedPowerfulBuildSupport,
+    );
+    expect(passiveAbilityCheckRollModeProfileForUnit(unit)).toEqual(
+      expectedPowerfulBuildSupport.abilityCheck,
+    );
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
         unitId: speciesGoliathPowerfulBuildUnitId,
-        supportProfiles: [],
+        supportProfiles: [expectedPowerfulBuildSupport],
       }),
     );
-    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toEqual({
+      kind: "passiveAbilityCheckRollMode",
+      unit,
+      abilityCheck: expectedPowerfulBuildSupport.abilityCheck,
+    });
+
+    const genericGrappledFilterUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_grappled_scoped_ability_check_fixture",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "modify_roll_advantage",
+            mode: "advantage",
+            on: ["ability_check"],
+            conditionFilter: ["grappled"],
+          },
+        ],
+      },
+    });
+    expect(
+      passiveAbilityCheckRollModeProfileForUnit(genericGrappledFilterUnit),
+    ).toBeNull();
+    expect(
+      battlePassiveAbilityCheckRollModeSupportForUnit(
+        genericGrappledFilterUnit,
+      ),
+    ).toBe("unsupported");
+    expect(
+      parseSupportedUnitFeatureProfile(genericGrappledFilterUnit, []),
+    ).toBeNull();
+
+    const selected = powerfulBuildEscapeGrappleHole({ selected: true });
+    expect(selected.kind).toBe("grappleOutcome");
+    if (selected.kind !== "grappleOutcome") {
+      throw new Error("Expected Powerful Build selected escape Grapple hole.");
+    }
+    expect(selected.rollMode).toBe("advantage");
+    const poisoned = powerfulBuildEscapeGrappleHole({
+      selected: true,
+      poisoned: true,
+    });
+    expect(poisoned.kind).toBe("grappleOutcome");
+    if (poisoned.kind !== "grappleOutcome") {
+      throw new Error("Expected Powerful Build poisoned escape Grapple hole.");
+    }
+    expect(poisoned).not.toHaveProperty("rollMode");
+    const unselected = powerfulBuildEscapeGrappleHole({ selected: false });
+    expect(unselected.kind).toBe("grappleOutcome");
+    if (unselected.kind !== "grappleOutcome") {
+      throw new Error(
+        "Expected Powerful Build unselected escape Grapple hole.",
+      );
+    }
+    expect(unselected).not.toHaveProperty("rollMode");
   });
 });
+
+function powerfulBuildEscapeGrappleHole(input: {
+  readonly selected: boolean;
+  readonly poisoned?: boolean;
+}) {
+  const unit = unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(Either.isRight(unitRef)).toBe(true);
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const scenarioId = input.selected
+    ? input.poisoned === true
+      ? "powerful-build-poisoned"
+      : "powerful-build"
+    : "powerful-build-unselected";
+  const goliathId = combatantId(
+    input.selected ? `${scenarioId}-goliath` : scenarioId,
+  );
+  const grapplerId = combatantId(`${scenarioId}-grappler`);
+  const state = startBattle({
+    battleId: battleId(`${scenarioId}-grapple-escape`),
+    combatants: [
+      characterCreature({
+        combatantId: grapplerId,
+        displayName: "Powerful Build Grappler",
+        initiative: 12,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: goliathId,
+        displayName: "Powerful Build Goliath",
+        initiative: 10,
+        side: partySide,
+        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        unitFeatures: [{ unit }],
+        conditions: input.poisoned === true ? ["poisoned"] : [],
+      }),
+    ],
+  });
+  expect(Either.isRight(state)).toBe(true);
+  if (Either.isLeft(state)) {
+    throw new Error(state.left.message);
+  }
+  const grappleSubject = {
+    tag: "action",
+    actorId: grapplerId,
+    action: "grapple",
+  } as const;
+  const target = requireHole(
+    resolveBattleSubject({
+      state: state.right,
+      subject: grappleSubject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetChoice = targetFill(target, goliathId, [
+    { kind: "grappleTargetWithinReach", grapplerId, targetId: goliathId },
+  ]);
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state: state.right,
+      subject: grappleSubject,
+      fills: [targetChoice],
+    }),
+    "grappleOutcome",
+  );
+  const grappled = requireResolved(
+    resolveBattleSubject({
+      state: state.right,
+      subject: grappleSubject,
+      fills: [targetChoice, grappleOutcomeFill(outcome, false)],
+    }),
+  );
+  const escapeSubject = {
+    tag: "action",
+    actorId: goliathId,
+    action: "escapeGrapple",
+  } as const;
+  const goliathTurn = requireResolved(
+    endTurn({ state: grappled.state, actorId: grapplerId }),
+  ).state;
+  return requireHole(
+    resolveBattleSubject({
+      state: goliathTurn,
+      subject: escapeSubject,
+      fills: [],
+    }),
+    "grappleOutcome",
+  );
+}
 
 function dwarvenResilienceBattle() {
   const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);

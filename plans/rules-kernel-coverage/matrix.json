@@ -5117,6 +5117,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-ability-check-roll-mode"
+    },
+    {
+      "obligationIds": [
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
       ],
       "profileId": "unit-feature.passive-damage-resistance"
@@ -7289,6 +7295,12 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
+          "profileId": "unit-feature.passive-ability-check-roll-mode"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
           "profileId": "unit-feature.passive-saving-throw-roll-mode"
         },
         {
@@ -7865,6 +7877,18 @@
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
           "role": "proof-only"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.passive-ability-check-roll-mode",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+          "role": "semantic-core"
         }
       ]
     },
@@ -10957,6 +10981,7 @@
     "unit-feature.monk-focus-battle-options",
     "unit-feature.open-hand-technique",
     "unit-feature.paladin-sacred-weapon",
+    "unit-feature.passive-ability-check-roll-mode",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-damage-resistance",
     "unit-feature.passive-ranged-attack-roll-bonus",

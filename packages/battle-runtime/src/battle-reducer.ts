@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
@@ -3932,6 +3933,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "passiveSavingThrowRollMode" }
           >
         >;
+        readonly passiveAbilityCheckRollModeProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "passiveAbilityCheckRollMode" }
+          >
+        >;
         readonly reactionRollOrDamageReductionProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
@@ -5389,6 +5397,7 @@ export type BattleGrappleOutcomeHole = {
   readonly targetId: CombatantId;
   readonly dc: DifficultyClass;
   readonly mode: "grappleSave" | "escapeCheck";
+  readonly rollMode?: AttackRollMode;
 };
 export type BattleShoveOutcomeValue =
   | {

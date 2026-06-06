@@ -418,3 +418,4 @@
 {"unitId":"species_dragonborn_damage_resistance","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
 {"unitId":"dwarf_dwarven_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
 {"unitId":"dwarf_dwarven_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"species_goliath_powerful_build","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}

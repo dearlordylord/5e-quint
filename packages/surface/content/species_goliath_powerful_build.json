@@ -6,14 +6,13 @@
     "family": "passive",
     "grants": [
       {
-        "conditionFilter": [
-          "grappled"
-        ],
+        "abilityCheckTrigger": {
+          "condition": "grappled",
+          "kind": "condition_end"
+        },
         "kind": "modify_roll_advantage",
         "mode": "advantage",
-        "on": [
-          "ability_check"
-        ]
+        "on": ["ability_check"]
       }
     ]
   },
