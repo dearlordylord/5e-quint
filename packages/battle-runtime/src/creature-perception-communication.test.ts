@@ -206,7 +206,7 @@ function wildShapeBattle(input: {
         classLevels: [{ className: "druid", level: 2 }],
         knownLanguages: input.knownLanguages,
         resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
-        druidWildShapeKnownForms: input.knownForms,
+        druidWildShapeAvailableForms: input.knownForms,
         spellcasting: {
           ...wizardSpellcasting({
             cantrips: [spellRecord("produce_flame")],

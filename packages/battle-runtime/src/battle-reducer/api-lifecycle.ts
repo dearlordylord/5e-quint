@@ -31,7 +31,7 @@ import {
 import {
   battleCreatureStateFromInit,
   combatantInitiativeInsertionIndex,
-  characterDruidWildShapeKnownFormsInitIssue,
+  characterDruidWildShapeAvailableFormsInitIssue,
   characterResourceInitIssue,
   characterSpellcastingInitIssue,
   hidePrerequisitesReferenceCombatantsIssue,
@@ -158,10 +158,10 @@ export function startBattle(
     if (characterResourceIssue !== null) {
       return characterResourceIssue;
     }
-    const druidWildShapeKnownFormsIssue =
-      characterDruidWildShapeKnownFormsInitIssue(combatant);
-    if (druidWildShapeKnownFormsIssue !== null) {
-      return druidWildShapeKnownFormsIssue;
+    const druidWildShapeAvailableFormsIssue =
+      characterDruidWildShapeAvailableFormsInitIssue(combatant);
+    if (druidWildShapeAvailableFormsIssue !== null) {
+      return druidWildShapeAvailableFormsIssue;
     }
     const characterSpellcastingIssue =
       characterSpellcastingInitIssue(combatant);
@@ -369,10 +369,10 @@ export function addBattleCombatant(input: {
   if (characterResourceIssue !== null) {
     return characterResourceIssue;
   }
-  const druidWildShapeKnownFormsIssue =
-    characterDruidWildShapeKnownFormsInitIssue(input.combatant);
-  if (druidWildShapeKnownFormsIssue !== null) {
-    return druidWildShapeKnownFormsIssue;
+  const druidWildShapeAvailableFormsIssue =
+    characterDruidWildShapeAvailableFormsInitIssue(input.combatant);
+  if (druidWildShapeAvailableFormsIssue !== null) {
+    return druidWildShapeAvailableFormsIssue;
   }
   const characterSpellcastingIssue = characterSpellcastingInitIssue(
     input.combatant,

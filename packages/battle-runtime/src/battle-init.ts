@@ -42,6 +42,10 @@ import type {
 } from "./unit-feature-support.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
+import {
+  wildShapeKnownFormEligibilityIssue,
+  type WildShapeKnownFormEligibilityIssueCode,
+} from "./druid-wild-shape-form-eligibility.ts";
 
 export type BattleUnitRef = {
   readonly unitId: UnitRecord["id"];
@@ -146,72 +150,51 @@ export type BattleDruidWildShapeKnownFormIssue = {
   readonly message: string;
 };
 
-export function battleDruidWildShapeKnownForms(input: {
+const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
+  creatureType:
+    "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+  challengeRating:
+    "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
+  flySpeed:
+    "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+} as const satisfies Record<WildShapeKnownFormEligibilityIssueCode, string>;
+
+export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
 }): Either.Either<
-  ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>,
+  readonly BattleDruidWildShapeKnownForm[],
   BattleDruidWildShapeKnownFormIssue
 > {
-  if (
-    input.forms.length !== input.profile.knownFormRoster.count ||
-    new Set(input.forms.map((form) => form.id)).size !== input.forms.length
-  ) {
+  if (new Set(input.forms.map((form) => form.id)).size !== input.forms.length) {
     return Either.left({
       tag: "battleDruidWildShapeKnownFormIssue",
       message:
-        "Druid Wild Shape battle initialization requires the character's distinct known-form count.",
+        "Druid Wild Shape battle initialization requires distinct available known forms.",
     });
   }
   const parsed: BattleDruidWildShapeKnownForm[] = [];
   for (const form of input.forms) {
-    if (
-      form.statBlock.creatureType !== input.profile.knownFormRoster.creatureType
-    ) {
+    const eligibilityIssue = wildShapeKnownFormEligibilityIssue({
+      form,
+      profile: input.profile,
+    });
+    if (eligibilityIssue !== undefined) {
       return Either.left({
         tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
-      });
-    }
-    if (
-      form.challengeRating > input.profile.knownFormRoster.maxChallengeRating
-    ) {
-      return Either.left({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
-      });
-    }
-    if (
-      input.profile.knownFormRoster.flySpeed === "forbidden" &&
-      statBlockHasFlySpeed(form)
-    ) {
-      return Either.left({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+        message: WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[
+          eligibilityIssue.code
+        ],
       });
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);
     if (Either.isLeft(projected)) return Either.left(projected.left);
     if (!statBlockActionSurfaceIsSupported(form.statBlock)) {
-      return Either.left({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms require supported Stat Block action sections.",
-      });
+      continue;
     }
     parsed.push(battleDruidWildShapeKnownForm(projected.right));
   }
-  const first = parsed[0];
-  return first === undefined
-    ? Either.left({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle initialization requires at least one known form.",
-      })
-    : Either.right([first, ...parsed.slice(1)]);
+  return Either.right(parsed);
 }
 
 function battleDruidWildShapeKnownForm(
@@ -290,10 +273,6 @@ function battleDruidWildShapeFormProjectionSpeeds(
   ]);
 }
 
-function statBlockHasFlySpeed(form: StatBlockRecord): boolean {
-  return form.statBlock.speeds.some((speed) => speed.kind === "fly");
-}
-
 // SRD 5.2.1 "Knocking Out a Creature": a knocked-out creature is left at 1 HP
 // with the Unconscious condition. That condition ends when the Short Rest
 // started by Knock Out completes, when it regains HP, or after successful
@@ -313,7 +292,7 @@ export type CharacterBattleCreatureInit = {
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
   readonly d20Statistics: CharacterBattleD20Statistics;
-  readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
+  readonly druidWildShapeAvailableForms?: readonly BattleDruidWildShapeKnownForm[];
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly armorClass: ArmorClassState;
   readonly size: Size;

@@ -88,12 +88,12 @@ export type ActiveDruidWildShape = {
   readonly form: BattleDruidWildShapeKnownForm;
 };
 
-export function druidWildShapeKnownFormsIssueForProfile(
+export function druidWildShapeAvailableFormsIssueForProfile(
   forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
   _profile: BattleDruidWildShapeKnownFormSupportProfile,
 ): string | null {
   if (forms === undefined) {
-    return "Druid Wild Shape battle initialization requires known Beast forms.";
+    return "Druid Wild Shape battle initialization requires an available known-form subset.";
   }
   return null;
 }
@@ -129,7 +129,7 @@ export function activeDruidWildShape(
   for (const effect of combatant.activeEffects) {
     if (effect.kind !== "druidWildShapeForm") continue;
     const form =
-      combatant.origin.druidWildShapeKnownForms?.find(
+      combatant.origin.druidWildShapeAvailableForms?.find(
         (candidate) => candidate.id === effect.formStatBlockId,
       ) ?? null;
     if (form !== null) return { effect, form };

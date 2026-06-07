@@ -131,7 +131,7 @@ import {
   activeDruidWildShapeEffect,
   combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
-  druidWildShapeKnownFormsIssueForProfile,
+  druidWildShapeAvailableFormsIssueForProfile,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
@@ -223,10 +223,10 @@ export function battleCreatureStateFromInit(
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
         d20Statistics: creatureInit.d20Statistics,
-        ...(creatureInit.druidWildShapeKnownForms === undefined
+        ...(creatureInit.druidWildShapeAvailableForms === undefined
           ? {}
           : {
-              druidWildShapeKnownForms: creatureInit.druidWildShapeKnownForms,
+              druidWildShapeAvailableForms: creatureInit.druidWildShapeAvailableForms,
             }),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
@@ -864,7 +864,7 @@ export function characterResourceInitIssue(
   return null;
 }
 
-export function characterDruidWildShapeKnownFormsInitIssue(
+export function characterDruidWildShapeAvailableFormsInitIssue(
   input: BattleCreatureInit,
 ): Either.Either<never, BattleStateInitIssue> | null {
   const creatureInit = input.creatureInit;
@@ -904,14 +904,14 @@ export function characterDruidWildShapeKnownFormsInitIssue(
         "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
       );
     }
-    return creatureInit.druidWildShapeKnownForms === undefined
+    return creatureInit.druidWildShapeAvailableForms === undefined
       ? null
       : battleStateInitIssue(
-          "Druid Wild Shape known forms require the Druid Wild Shape feature.",
+          "Druid Wild Shape available forms require the Druid Wild Shape feature.",
         );
   }
-  const issue = druidWildShapeKnownFormsIssueForProfile(
-    creatureInit.druidWildShapeKnownForms,
+  const issue = druidWildShapeAvailableFormsIssueForProfile(
+    creatureInit.druidWildShapeAvailableForms,
     wildShapeProfile,
   );
   return issue === null ? null : battleStateInitIssue(issue);

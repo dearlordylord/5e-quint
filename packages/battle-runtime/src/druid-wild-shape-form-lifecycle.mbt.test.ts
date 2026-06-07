@@ -415,7 +415,7 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           initiative: 20,
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
-          druidWildShapeKnownForms: druidWildShapeKnownForms(),
+          druidWildShapeAvailableForms: druidWildShapeAvailableForms(),
           armorClass: heavyArmorClassState(),
           selectedLoadout: {
             armor: {
@@ -627,7 +627,7 @@ function activeFormFromStatBlock(
   throw new Error(`Unexpected Druid Wild Shape form ${form.id}.`);
 }
 
-function druidWildShapeKnownForms(): readonly StatBlockRecord[] {
+function druidWildShapeAvailableForms(): readonly StatBlockRecord[] {
   return [
     statBlockCatalog.requireStatBlock(ratId),
     statBlockCatalog.requireStatBlock(ridingHorseId),

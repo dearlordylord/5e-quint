@@ -3949,7 +3949,7 @@ type BattleCreatureStateCommon = {
         readonly classLevels: readonly CharacterBattleClassLevel[];
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
-        readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
+        readonly druidWildShapeAvailableForms?: readonly BattleDruidWildShapeKnownForm[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];

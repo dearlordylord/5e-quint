@@ -90,7 +90,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -391,8 +391,120 @@ describe("Character Sheet battle handoff", () => {
     expect(init.creatureInit.kind).toBe("character");
     if (init.creatureInit.kind !== "character") return;
     expect(
-      init.creatureInit.druidWildShapeKnownForms?.map((form) => form.id),
+      init.creatureInit.druidWildShapeAvailableForms?.map((form) => form.id),
     ).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS);
+  });
+
+  test("allows Druid Wild Shape battle initialization when selected form records are unavailable", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:druid-wild-shape-no-catalog"),
+        build: druidWildShapeBuild(),
+        maximumHp: Hp(15),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+        statBlockCatalog,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("druid-wild-shape-no-catalog"),
+        displayName: "Druid",
+        sheet,
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        statBlockCatalog: emptyStatBlockCatalog(),
+      }),
+    );
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-druid-wild-shape-no-catalog"),
+        combatants: [
+          init,
+          battleCreatureInitFromStatBlock({
+            combatantId: combatantId("combatant:no-catalog-skeleton"),
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            side: battleCombatantSide("monsters"),
+          }),
+        ],
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.druidWildShapeAvailableForms).toEqual([]);
+    expect(
+      discoverBattleActs(state).filter(
+        (act) =>
+          act.subject.tag === "druidWildShape" &&
+          act.subject.action === "assumeForm",
+      ),
+    ).toEqual([]);
+  });
+
+  test("admits available supported selected Wild Shape forms without rejecting unsupported selected forms", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:druid-wild-shape-subset"),
+        build: druidWildShapeBuild(),
+        maximumHp: Hp(15),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+        statBlockCatalog,
+        druidWildShapeKnownFormStatBlockIds: [
+          "stat_block_rat",
+          "stat_block_riding_horse",
+          "stat_block_spider",
+          "stat_block_wolf",
+        ],
+      }),
+    );
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("druid-wild-shape-subset"),
+        displayName: "Druid",
+        sheet,
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-druid-wild-shape-subset"),
+        combatants: [
+          init,
+          battleCreatureInitFromStatBlock({
+            combatantId: combatantId("combatant:wild-shape-subset-skeleton"),
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            side: battleCombatantSide("monsters"),
+          }),
+        ],
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(
+      init.creatureInit.druidWildShapeAvailableForms?.map((form) => form.id),
+    ).toEqual(["stat_block_rat", "stat_block_riding_horse"]);
+    expect(
+      discoverBattleActs(state).flatMap((act) =>
+        act.subject.tag === "druidWildShape" &&
+        act.subject.action === "assumeForm"
+          ? [act.subject.formStatBlockId]
+          : [],
+      ),
+    ).toEqual(["stat_block_rat", "stat_block_riding_horse"]);
   });
 
   test("projects reduced Character Sheet Hit Point maximum into battle initialization", () => {
@@ -487,7 +599,7 @@ describe("Character Sheet battle handoff", () => {
       initiative: initiativeScore(20),
       side: battleCombatantSide("party"),
       unitLibrary,
-      druidWildShapeKnownForms: [
+      druidWildShapeAvailableForms: [
         statBlockCatalog.requireStatBlock("stat_block_rat"),
         statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
         statBlockCatalog.requireStatBlock("stat_block_cat"),
@@ -500,6 +612,28 @@ describe("Character Sheet battle handoff", () => {
         tag: "battleCreatureInitIssue",
         message:
           "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+      }),
+    );
+  });
+
+  test("rejects omitted Druid Wild Shape available forms during CharacterBuild battle initialization", () => {
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("druid-wild-shape-omitted-available-forms"),
+      characterId: characterId(
+        "character:druid-wild-shape-omitted-available-forms",
+      ),
+      displayName: "Druid",
+      build: druidWildShapeBuild(),
+      initiative: initiativeScore(20),
+      side: battleCombatantSide("party"),
+      unitLibrary,
+    });
+
+    expect(init).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Druid Wild Shape battle initialization requires an available known-form subset.",
       }),
     );
   });
@@ -3295,6 +3429,16 @@ function statBlockCatalogWithLookupCount(): {
       requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
     },
     lookupCount: () => getStatBlockCalls,
+  };
+}
+
+function emptyStatBlockCatalog(): StatBlockCatalog {
+  return {
+    getStatBlock: () => Option.none(),
+    listStatBlocks: () => [],
+    requireStatBlock: (id) => {
+      throw new Error(`Unexpected Stat Block lookup: ${id}`);
+    },
   };
 }
 

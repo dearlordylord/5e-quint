@@ -31,7 +31,7 @@ import {
   addBattleCombatant,
   battleAreaId,
   battleObscurementZones,
-  battleDruidWildShapeKnownForms,
+  battleAvailableDruidWildShapeKnownForms,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   battleId,
@@ -1981,7 +1981,7 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["d20Statistics"];
-  readonly druidWildShapeKnownForms?: readonly StatBlockRecord[];
+  readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2007,7 +2007,7 @@ export function characterSeed(input: {
     },
   ];
   const druidWildShapeProfile =
-    input.druidWildShapeKnownForms === undefined
+    input.druidWildShapeAvailableForms === undefined
       ? undefined
       : (input.resources ?? []).flatMap((resource) => {
           const profile = parseSupportedUnitFeatureProfile(
@@ -2017,43 +2017,31 @@ export function characterSeed(input: {
           return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
         })[0];
   if (
-    input.druidWildShapeKnownForms !== undefined &&
+    input.druidWildShapeAvailableForms !== undefined &&
     druidWildShapeProfile === undefined
   ) {
     throw new Error(
-      "Test Druid Wild Shape known forms require a support profile.",
+      "Test Druid Wild Shape available forms require a support profile.",
     );
   }
-  const druidWildShapeKnownForms =
-    input.druidWildShapeKnownForms === undefined ||
+  const druidWildShapeAvailableForms =
+    input.druidWildShapeAvailableForms === undefined ||
     druidWildShapeProfile === undefined
       ? undefined
-      : battleDruidWildShapeKnownForms({
-          forms: input.druidWildShapeKnownForms,
+      : battleAvailableDruidWildShapeKnownForms({
+          forms: input.druidWildShapeAvailableForms,
           profile: druidWildShapeProfile,
         });
   if (
-    druidWildShapeKnownForms !== undefined &&
-    Either.isLeft(druidWildShapeKnownForms)
+    druidWildShapeAvailableForms !== undefined &&
+    Either.isLeft(druidWildShapeAvailableForms)
   ) {
-    throw new Error(druidWildShapeKnownForms.left.message);
+    throw new Error(druidWildShapeAvailableForms.left.message);
   }
-  const firstDruidWildShapeKnownForm = druidWildShapeKnownForms?.right[0];
-  if (
-    input.druidWildShapeKnownForms !== undefined &&
-    firstDruidWildShapeKnownForm === undefined
-  ) {
-    throw new Error("Test Druid Wild Shape known forms must be non-empty.");
-  }
-  const parsedDruidWildShapeKnownForms =
-    druidWildShapeKnownForms === undefined
+  const parsedDruidWildShapeAvailableForms =
+    druidWildShapeAvailableForms === undefined
       ? undefined
-      : firstDruidWildShapeKnownForm === undefined
-        ? undefined
-        : ([
-            firstDruidWildShapeKnownForm,
-            ...druidWildShapeKnownForms.right.slice(1),
-          ] as const);
+      : druidWildShapeAvailableForms.right;
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -2100,9 +2088,9 @@ export function characterSeed(input: {
         : { invocationFeatures: input.invocationFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
       ...(input.metamagic === undefined ? {} : { metamagic: input.metamagic }),
-      ...(parsedDruidWildShapeKnownForms === undefined
+      ...(parsedDruidWildShapeAvailableForms === undefined
         ? {}
-        : { druidWildShapeKnownForms: parsedDruidWildShapeKnownForms }),
+        : { druidWildShapeAvailableForms: parsedDruidWildShapeAvailableForms }),
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),

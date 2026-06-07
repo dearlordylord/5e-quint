@@ -818,7 +818,7 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
         side: oppositionSide,
         classLevels: [{ className: "druid", level: 2 }],
         resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
-        druidWildShapeKnownForms: [
+        druidWildShapeAvailableForms: [
           statBlockCatalog.requireStatBlock("stat_block_rat"),
           statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
           statBlockCatalog.requireStatBlock("stat_block_lizard"),

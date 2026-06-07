@@ -106,7 +106,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "spellSlots"
   | "bookOfShadowsPresence"
   | "resourceExpenditures"
-  | "druidWildShapeKnownForms"
+  | "druidWildShapeAvailableForms"
 > & {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -126,12 +126,13 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   if (stableRecoveryIssue !== null) {
     return battleCreatureInitIssue(stableRecoveryIssue);
   }
-  const druidWildShapeKnownForms = battleDruidWildShapeKnownFormsFromSheet({
-    sheet,
-    statBlockCatalog,
-  });
-  if (Either.isLeft(druidWildShapeKnownForms)) {
-    return Either.left(druidWildShapeKnownForms.left);
+  const druidWildShapeAvailableForms =
+    battleDruidWildShapeAvailableFormsFromSheet({
+      sheet,
+      statBlockCatalog,
+    });
+  if (Either.isLeft(druidWildShapeAvailableForms)) {
+    return Either.left(druidWildShapeAvailableForms.left);
   }
   return battleCreatureInitFromCharacterBuild({
     ...battleInput,
@@ -142,9 +143,9 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
-    ...(druidWildShapeKnownForms.right === undefined
+    ...(druidWildShapeAvailableForms.right === undefined
       ? {}
-      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
+      : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
   });
 }
 
@@ -621,7 +622,7 @@ function characterSheetDruidWildShapeResourceUnitId(input: {
   return Either.right(unitId);
 }
 
-function battleDruidWildShapeKnownFormsFromSheet(input: {
+function battleDruidWildShapeAvailableFormsFromSheet(input: {
   readonly sheet: CharacterSheet;
   readonly statBlockCatalog: StatBlockCatalog;
 }): Either.Either<
@@ -633,12 +634,9 @@ function battleDruidWildShapeKnownFormsFromSheet(input: {
   const forms: StatBlockRecord[] = [];
   for (const statBlockId of knownForms.statBlockIds) {
     const statBlock = input.statBlockCatalog.getStatBlock(statBlockId);
-    if (Option.isNone(statBlock)) {
-      return battleCreatureInitIssue(
-        `Wild Shape known-form Stat Block is unavailable to battle initialization: ${statBlockId}.`,
-      );
+    if (Option.isSome(statBlock)) {
+      forms.push(statBlock.value);
     }
-    forms.push(statBlock.value);
   }
   return Either.right(forms);
 }
