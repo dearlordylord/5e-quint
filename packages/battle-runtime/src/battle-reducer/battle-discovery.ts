@@ -42,6 +42,7 @@ import {
 } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
+import { presentCompanionCombatantId } from "../companion-state.ts";
 import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
@@ -664,10 +665,10 @@ function companionProtocolActs(
     return [];
   }
   const familiar = familiarEntry.companion;
-  const familiarId = familiarEntry.companionId;
   const actor = state.combatants.get(actorId);
   const actorCanAct = combatantCanTakeActions(actor);
   if (familiar.status !== "present") {
+    const familiarId = familiarEntry.companionId;
     if (!actorCanAct || !canSpendAction(state.currentTurnResources, "magic")) {
       return [];
     }
@@ -710,6 +711,10 @@ function companionProtocolActs(
     }
     return [permanentlyDismiss];
   }
+  const familiarId = presentCompanionCombatantId(
+    familiarEntry.companionId,
+    familiar,
+  );
   const familiarCombatant = state.combatants.get(familiarId);
   if (familiarCombatant === undefined) {
     return [];
@@ -978,7 +983,10 @@ function pactOfTheChainFamiliarAttackActs(
   if (familiarEntry?.companion.status !== "present") {
     return [];
   }
-  const familiarId = familiarEntry.companionId;
+  const familiarId = presentCompanionCombatantId(
+    familiarEntry.companionId,
+    familiarEntry.companion,
+  );
   const familiarCombatant = state.combatants.get(familiarId);
   if (
     familiarCombatant?.origin.kind !== "statBlock" ||

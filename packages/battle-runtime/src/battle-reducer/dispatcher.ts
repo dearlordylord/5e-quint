@@ -49,7 +49,10 @@ import {
   reappearTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
 } from "../find-familiar-lifecycle.ts";
-import type { BattleCompanionSnapshot } from "../companion-state.ts";
+import {
+  presentCompanionCombatantId,
+  type BattleCompanionSnapshot,
+} from "../companion-state.ts";
 import {
   deliverTouchSpellThroughFindFamiliar,
   shareFindFamiliarSenses,
@@ -1235,7 +1238,6 @@ function resolveCompanionLifecycleSubject(
       state: input.state,
       casterId: input.subject.actorId,
       catalog: input.statBlockCatalog,
-      familiarId: input.subject.companionId,
       initiative: initiative.initiative,
       placement: placement.placement,
     });
@@ -1405,9 +1407,22 @@ function companionHeldObjectIdsForDismissal(
       readonly objectIds: readonly BattleDroppedObjectOutcome["objectId"][];
     }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const expectedHole = companionHeldObjectFactsHole({
-    companionId: input.subject.companionId,
-  });
+  const companionEntry = findFamiliarCompanionEntryForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (companionEntry?.companion.status !== "present") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Familiar dismissal held-object facts require a present familiar.",
+    );
+  }
+  const companionId = presentCompanionCombatantId(
+    companionEntry.companionId,
+    companionEntry.companion,
+  );
+  const expectedHole = companionHeldObjectFactsHole({ companionId });
   const fill = input.fills.find(
     (
       candidate,
@@ -4512,19 +4527,23 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
           companionId: entry.companionId,
         };
       }
+      const companionId = presentCompanionCombatantId(
+        entry.companionId,
+        entry.companion,
+      );
       return {
         ...entry.companion,
-        companionId: entry.companionId,
+        companionId,
         resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
           state,
-          entry.companionId,
+          companionId,
         ),
         initiative: requirePresentFamiliarCombatantInitiative(
           state,
-          entry.companionId,
+          companionId,
         ),
       };
-    }),
+    }) satisfies readonly BattleCompanionSnapshot[],
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
     acts: discoverBattleActs(state),

@@ -87,6 +87,7 @@ import {
   type Condition,
   type DifficultyClass,
   type ProficiencyBonus,
+  type PositiveInteger,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -308,6 +309,110 @@ type CharacterSheetWithSpellSlots = CharacterSheet & {
   readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
 };
 
+export type CharacterSheetRetainedCompanionId = string &
+  Brand.Brand<"CharacterSheetRetainedCompanionId">;
+const CharacterSheetRetainedCompanionId =
+  Brand.nominal<CharacterSheetRetainedCompanionId>();
+
+export function characterSheetRetainedCompanionId(
+  value: string,
+): CharacterSheetRetainedCompanionId {
+  return CharacterSheetRetainedCompanionId(value);
+}
+
+const CHARACTER_SHEET_COMPANION_CREATURE_TYPE_OVERRIDES = [
+  "celestial",
+  "fey",
+  "fiend",
+] as const;
+export type CharacterSheetCompanionCreatureTypeOverride =
+  (typeof CHARACTER_SHEET_COMPANION_CREATURE_TYPE_OVERRIDES)[number];
+
+export type CharacterSheetCompanionFormSelection =
+  | {
+      readonly tag: "normalNamedForm";
+      readonly formId: string;
+    }
+  | {
+      readonly tag: "challengeRatingZeroBeast";
+      readonly statBlockId: StatBlockId;
+    }
+  | {
+      readonly tag: "specialForm";
+      readonly formId: string;
+    };
+
+export type CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol = {
+  readonly tag: "ordinaryFamiliarLikeOneAtATime";
+  readonly initiative: "own";
+  readonly attack: { readonly tag: "cannotAttack" };
+  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
+  readonly expiration: { readonly tag: "none" };
+};
+
+export type CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol = {
+  readonly tag: "attackExceptionFamiliarLikeOneAtATime";
+  readonly initiative: "own";
+  readonly attack: { readonly tag: "ownerForgoesAttackForReactionAttack" };
+  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
+  readonly expiration: { readonly tag: "none" };
+};
+
+export type CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol = {
+  readonly tag: "ownerLongRestFamiliarLikeOneAtATime";
+  readonly initiative: "own";
+  readonly attack: { readonly tag: "cannotAttack" };
+  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
+  readonly expiration: { readonly tag: "ownerFinishedLongRest" };
+};
+
+export type CharacterSheetRetainedCompanionProtocol =
+  | CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol
+  | CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol
+  | CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol;
+
+export type CharacterSheetRetainedCompanionCurrentHitPoints = HpType &
+  PositiveInteger;
+
+export type CharacterSheetRetainedCompanionHitPoints = {
+  readonly currentHp: CharacterSheetRetainedCompanionCurrentHitPoints;
+  readonly tempHp: HpType;
+};
+
+export type CharacterSheetRetainedCompanionResolvedFormProof = {
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly creatureTypeOverride: CharacterSheetCompanionCreatureTypeOverride;
+  readonly resolvedStatBlockId: StatBlockId;
+};
+
+export type CharacterSheetRetainedCompanionManifestation =
+  | ({
+      readonly tag: "embodiedOutsideBattle";
+    } & CharacterSheetRetainedCompanionResolvedFormProof & {
+        readonly hitPoints: CharacterSheetRetainedCompanionHitPoints;
+      })
+  | ({
+      readonly tag: "temporarilyDismissed";
+    } & CharacterSheetRetainedCompanionResolvedFormProof & {
+        readonly hitPoints: CharacterSheetRetainedCompanionHitPoints;
+      })
+  | ({
+      readonly tag: "disappearedAtZeroHitPoints";
+    } & CharacterSheetRetainedCompanionResolvedFormProof);
+
+export type CharacterSheetRetainedCompanionState = {
+  readonly companionId: CharacterSheetRetainedCompanionId;
+  readonly protocol: CharacterSheetRetainedCompanionProtocol;
+  readonly manifestation: CharacterSheetRetainedCompanionManifestation;
+};
+
+export type CharacterSheetCompanion =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "retainedOneAtATime";
+      readonly companion: CharacterSheetRetainedCompanionState;
+    };
+
 export type CharacterSheet =
   | {
       readonly tag: "available";
@@ -320,6 +425,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence:
         | CharacterSheetBookOfShadowsPresence
         | undefined;
@@ -340,6 +446,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence?: never;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly druidCircleLand?: CharacterSheetDruidCircleLand;
@@ -747,6 +854,7 @@ export type CharacterSheetInput = {
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly companion?: CharacterSheetCompanion;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;
   readonly statBlockCatalog?: StatBlockCatalog;
@@ -1249,6 +1357,10 @@ function createCharacterSheet(
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
+  const companion = companionFromInput(input.companion);
+  if (Either.isLeft(companion)) {
+    return Either.left(companion.left);
+  }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
@@ -1295,6 +1407,7 @@ function createCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
@@ -1344,6 +1457,7 @@ function createCharacterSheet(
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
+    companion: companion.right,
     bookOfShadowsPresence: bookOfShadowsPresence.right,
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
@@ -1361,6 +1475,85 @@ export function characterSheetDruidWildShapeKnownForms(
   sheet: CharacterSheet,
 ): CharacterSheetDruidWildShapeKnownForms | undefined {
   return sheet.druidWildShapeKnownForms;
+}
+
+export function characterSheetCompanion(
+  sheet: CharacterSheet,
+): CharacterSheetCompanion {
+  return sheet.companion;
+}
+
+export function replaceCharacterSheetCompanion(input: {
+  readonly sheet: CharacterSheet;
+  readonly companion: CharacterSheetCompanion;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const companion = companionFromInput(input.companion);
+  return Either.isLeft(companion)
+    ? Either.left(companion.left)
+    : Either.right({ ...input.sheet, companion: companion.right });
+}
+
+function companionFromInput(
+  companion: CharacterSheetCompanion | undefined,
+): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
+  if (companion === undefined || companion.tag === "none") {
+    return Either.right({ tag: "none" });
+  }
+  if (companion.tag !== "retainedOneAtATime") {
+    return characterSheetIssue("Character Sheet companion state is invalid.");
+  }
+  if (companion.companion.companionId.length === 0) {
+    return characterSheetIssue("Retained companion requires companion id.");
+  }
+  const hitPointsIssue = retainedCompanionHitPointsIssue(
+    companion.companion.manifestation,
+  );
+  if (hitPointsIssue !== null) return characterSheetIssue(hitPointsIssue);
+  const protocolIssue = retainedCompanionProtocolIssue(companion.companion);
+  if (protocolIssue !== null) return characterSheetIssue(protocolIssue);
+  return Either.right(companion);
+}
+
+function retainedCompanionHitPointsIssue(
+  manifestation: CharacterSheetRetainedCompanionManifestation,
+): string | null {
+  if (manifestation.tag === "disappearedAtZeroHitPoints") {
+    return null;
+  }
+  return manifestation.hitPoints.currentHp < Hp(1)
+    ? "Retained companion current HP must be positive unless it disappeared at 0 HP."
+    : null;
+}
+
+function retainedCompanionProtocolIssue(
+  companion: CharacterSheetRetainedCompanionState,
+): string | null {
+  const selectedForm = companion.manifestation.selectedForm;
+  if (
+    selectedForm.tag === "specialForm" &&
+    !isAttackExceptionRetainedCompanionProtocol(companion.protocol)
+  ) {
+    return "Retained companion special forms require the attack-exception protocol.";
+  }
+  if (
+    isOwnerLongRestRetainedCompanionProtocol(companion.protocol) &&
+    companion.manifestation.creatureTypeOverride !== "fey"
+  ) {
+    return "Owner-long-rest expiring retained companions must use the Fey creature type override.";
+  }
+  return null;
+}
+
+function isAttackExceptionRetainedCompanionProtocol(
+  protocol: CharacterSheetRetainedCompanionProtocol,
+): protocol is CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol {
+  return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
+}
+
+function isOwnerLongRestRetainedCompanionProtocol(
+  protocol: CharacterSheetRetainedCompanionProtocol,
+): protocol is CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol {
+  return protocol.tag === "ownerLongRestFamiliarLikeOneAtATime";
 }
 
 export function characterSheetDruidCircleLandPreparedSpellAccess(input: {
@@ -1566,6 +1759,13 @@ export function parseCharacterSheet(
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
+  if (!Object.hasOwn(value, "companion")) {
+    return characterSheetIssue("Character Sheet companion slot is required.");
+  }
+  const companion = parseStoredCompanion(value.companion);
+  if (Either.isLeft(companion)) {
+    return Either.left(companion.left);
+  }
 
   return createCharacterSheet(
     {
@@ -1590,6 +1790,7 @@ export function parseCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : {
@@ -2063,7 +2264,7 @@ function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
       });
 }
 
-function spendCharacterSheetSpellSlot(input: {
+export function spendCharacterSheetSpellSlot(input: {
   readonly sheet: CharacterSheet;
   readonly spellLevel: SpellSlotLevel;
   readonly spellSlotSource:
@@ -2546,6 +2747,7 @@ export function completeLongRest(
     tempHp: Hp(0),
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const companion = companionAfterLongRest(sheet.companion);
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
@@ -2572,6 +2774,7 @@ export function completeLongRest(
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      companion,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
@@ -2614,6 +2817,7 @@ export function completeLongRest(
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
+    companion,
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
       : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
@@ -2621,6 +2825,15 @@ export function completeLongRest(
       ? {}
       : { druidCircleLand: druidCircleLand.right }),
   });
+}
+
+function companionAfterLongRest(
+  companion: CharacterSheetCompanion,
+): CharacterSheetCompanion {
+  if (companion.tag === "none") return companion;
+  return isOwnerLongRestRetainedCompanionProtocol(companion.companion.protocol)
+    ? { tag: "none" }
+    : companion;
 }
 
 export function interruptLongRest(
@@ -5575,6 +5788,309 @@ function parseStoredHitPoints(
         tempHp: tempHp.right,
         zeroHpLifecycle: lifecycle.right,
       });
+}
+
+function parseStoredCompanion(
+  value: unknown,
+): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected Character Sheet companion state.");
+  }
+  if (value.tag === "none") return Either.right({ tag: "none" });
+  if (value.tag !== "retainedOneAtATime") {
+    return characterSheetIssue("Expected Character Sheet companion slot.");
+  }
+  const companion = parseStoredRetainedCompanion(value.companion);
+  return Either.isLeft(companion)
+    ? Either.left(companion.left)
+    : companionFromInput({
+        tag: "retainedOneAtATime",
+        companion: companion.right,
+      });
+}
+
+function parseStoredRetainedCompanion(
+  value: unknown,
+): Either.Either<CharacterSheetRetainedCompanionState, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion state.");
+  }
+  if (typeof value.companionId !== "string" || value.companionId.length === 0) {
+    return characterSheetIssue("Retained companion requires companion id.");
+  }
+  const protocol = parseStoredRetainedCompanionProtocol(value.protocol);
+  if (Either.isLeft(protocol)) return Either.left(protocol.left);
+  const manifestation = parseStoredRetainedCompanionManifestation(
+    value.manifestation,
+  );
+  if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
+  return Either.right({
+    companionId: characterSheetRetainedCompanionId(value.companionId),
+    protocol: protocol.right,
+    manifestation: manifestation.right,
+  });
+}
+
+function parseStoredRetainedCompanionProtocol(
+  value: unknown,
+): Either.Either<CharacterSheetRetainedCompanionProtocol, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion protocol.");
+  }
+  if (
+    value.tag !== "ordinaryFamiliarLikeOneAtATime" &&
+    value.tag !== "attackExceptionFamiliarLikeOneAtATime" &&
+    value.tag !== "ownerLongRestFamiliarLikeOneAtATime"
+  ) {
+    return characterSheetIssue("Expected retained companion protocol.");
+  }
+  if (value.initiative !== "own") {
+    return characterSheetIssue(
+      "Retained companion protocol requires own Initiative.",
+    );
+  }
+  const attack = parseStoredRetainedCompanionAttack(value.attack);
+  if (Either.isLeft(attack)) return Either.left(attack.left);
+  if (
+    !isRecord(value.dismissal) ||
+    value.dismissal.tag !== "temporaryDismissalAndReappearance"
+  ) {
+    return characterSheetIssue(
+      "Retained companion protocol requires temporary dismissal and reappearance.",
+    );
+  }
+  const expiration = parseStoredRetainedCompanionExpiration(value.expiration);
+  if (Either.isLeft(expiration)) return Either.left(expiration.left);
+  if (value.tag === "ordinaryFamiliarLikeOneAtATime") {
+    if (
+      attack.right.tag !== "cannotAttack" ||
+      expiration.right.tag !== "none"
+    ) {
+      return characterSheetIssue(
+        "Ordinary retained companion protocol cannot attack and does not expire at Long Rest.",
+      );
+    }
+    return Either.right({
+      tag: "ordinaryFamiliarLikeOneAtATime",
+      initiative: "own",
+      attack: { tag: "cannotAttack" },
+      dismissal: { tag: "temporaryDismissalAndReappearance" },
+      expiration: { tag: "none" },
+    });
+  }
+  if (value.tag === "attackExceptionFamiliarLikeOneAtATime") {
+    if (
+      attack.right.tag !== "ownerForgoesAttackForReactionAttack" ||
+      expiration.right.tag !== "none"
+    ) {
+      return characterSheetIssue(
+        "Attack-exception retained companion protocol requires the owner-forgoes-attack reaction and no Long Rest expiration.",
+      );
+    }
+    return Either.right({
+      tag: "attackExceptionFamiliarLikeOneAtATime",
+      initiative: "own",
+      attack: { tag: "ownerForgoesAttackForReactionAttack" },
+      dismissal: { tag: "temporaryDismissalAndReappearance" },
+      expiration: { tag: "none" },
+    });
+  }
+  if (
+    attack.right.tag !== "cannotAttack" ||
+    expiration.right.tag !== "ownerFinishedLongRest"
+  ) {
+    return characterSheetIssue(
+      "Owner-long-rest retained companion protocol cannot attack and must expire when the owner finishes a Long Rest.",
+    );
+  }
+  return Either.right({
+    tag: "ownerLongRestFamiliarLikeOneAtATime",
+    initiative: "own",
+    attack: { tag: "cannotAttack" },
+    dismissal: { tag: "temporaryDismissalAndReappearance" },
+    expiration: { tag: "ownerFinishedLongRest" },
+  });
+}
+
+function parseStoredRetainedCompanionAttack(
+  value: unknown,
+): Either.Either<
+  CharacterSheetRetainedCompanionProtocol["attack"],
+  CharacterSheetIssue
+> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion attack protocol.");
+  }
+  if (value.tag === "cannotAttack")
+    return Either.right({ tag: "cannotAttack" });
+  if (value.tag === "ownerForgoesAttackForReactionAttack") {
+    return Either.right({ tag: "ownerForgoesAttackForReactionAttack" });
+  }
+  return characterSheetIssue("Expected retained companion attack protocol.");
+}
+
+function parseStoredRetainedCompanionExpiration(
+  value: unknown,
+): Either.Either<
+  CharacterSheetRetainedCompanionProtocol["expiration"],
+  CharacterSheetIssue
+> {
+  if (!isRecord(value)) {
+    return characterSheetIssue(
+      "Expected retained companion expiration policy.",
+    );
+  }
+  if (value.tag === "none") return Either.right({ tag: "none" });
+  if (value.tag === "ownerFinishedLongRest") {
+    return Either.right({ tag: "ownerFinishedLongRest" });
+  }
+  return characterSheetIssue("Expected retained companion expiration policy.");
+}
+
+function parseStoredRetainedCompanionManifestation(
+  value: unknown,
+): Either.Either<
+  CharacterSheetRetainedCompanionManifestation,
+  CharacterSheetIssue
+> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion manifestation.");
+  }
+  const proof = parseStoredRetainedCompanionResolvedFormProof(value);
+  if (Either.isLeft(proof)) return Either.left(proof.left);
+  if (value.tag === "disappearedAtZeroHitPoints") {
+    return Either.right({
+      tag: "disappearedAtZeroHitPoints",
+      ...proof.right,
+    });
+  }
+  if (
+    value.tag !== "embodiedOutsideBattle" &&
+    value.tag !== "temporarilyDismissed"
+  ) {
+    return characterSheetIssue("Expected retained companion manifestation.");
+  }
+  const hitPoints = parseStoredRetainedCompanionHitPoints(value.hitPoints);
+  return Either.isLeft(hitPoints)
+    ? Either.left(hitPoints.left)
+    : Either.right({
+        tag: value.tag,
+        ...proof.right,
+        hitPoints: hitPoints.right,
+      });
+}
+
+function parseStoredRetainedCompanionResolvedFormProof(
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<
+  CharacterSheetRetainedCompanionResolvedFormProof,
+  CharacterSheetIssue
+> {
+  const selectedForm = parseStoredRetainedCompanionFormSelection(
+    value.selectedForm,
+  );
+  if (Either.isLeft(selectedForm)) return Either.left(selectedForm.left);
+  if (
+    !isCharacterSheetCompanionCreatureTypeOverride(value.creatureTypeOverride)
+  ) {
+    return characterSheetIssue(
+      "Expected retained companion creature type override.",
+    );
+  }
+  if (
+    typeof value.resolvedStatBlockId !== "string" ||
+    value.resolvedStatBlockId.length === 0
+  ) {
+    return characterSheetIssue(
+      "Retained companion requires resolved Stat Block id.",
+    );
+  }
+  return Either.right({
+    selectedForm: selectedForm.right,
+    creatureTypeOverride: value.creatureTypeOverride,
+    resolvedStatBlockId: value.resolvedStatBlockId,
+  });
+}
+
+function parseStoredRetainedCompanionFormSelection(
+  value: unknown,
+): Either.Either<CharacterSheetCompanionFormSelection, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion form selection.");
+  }
+  if (value.tag === "normalNamedForm") {
+    return typeof value.formId === "string" && value.formId.length > 0
+      ? Either.right({ tag: "normalNamedForm", formId: value.formId })
+      : characterSheetIssue("Retained companion normal form requires form id.");
+  }
+  if (value.tag === "challengeRatingZeroBeast") {
+    return typeof value.statBlockId === "string" && value.statBlockId.length > 0
+      ? Either.right({
+          tag: "challengeRatingZeroBeast",
+          statBlockId: value.statBlockId,
+        })
+      : characterSheetIssue(
+          "Retained companion Beast form requires Stat Block id.",
+        );
+  }
+  if (value.tag === "specialForm") {
+    return typeof value.formId === "string" && value.formId.length > 0
+      ? Either.right({ tag: "specialForm", formId: value.formId })
+      : characterSheetIssue(
+          "Retained companion special form requires form id.",
+        );
+  }
+  return characterSheetIssue("Expected retained companion form selection.");
+}
+
+function parseStoredRetainedCompanionHitPoints(
+  value: unknown,
+): Either.Either<
+  CharacterSheetRetainedCompanionHitPoints,
+  CharacterSheetIssue
+> {
+  if (!isRecord(value)) {
+    return characterSheetIssue("Expected retained companion hit points.");
+  }
+  const currentHp = parseHp(value.currentHp);
+  if (Either.isLeft(currentHp)) return Either.left(currentHp.left);
+  const positiveCurrentHp = retainedCompanionCurrentHitPoints(currentHp.right);
+  if (Either.isLeft(positiveCurrentHp))
+    return Either.left(positiveCurrentHp.left);
+  const tempHp = parseHp(value.tempHp);
+  return Either.isLeft(tempHp)
+    ? Either.left(tempHp.left)
+    : Either.right({
+        currentHp: positiveCurrentHp.right,
+        tempHp: tempHp.right,
+      });
+}
+
+function retainedCompanionCurrentHitPoints(
+  hp: HpType,
+): Either.Either<
+  CharacterSheetRetainedCompanionCurrentHitPoints,
+  CharacterSheetIssue
+> {
+  if (hp < Hp(1)) {
+    return characterSheetIssue(
+      "Retained companion current HP must be positive.",
+    );
+  }
+  // Cast evidence: Hp proves a non-negative integer, and the branch above
+  // proves the positive-integer part of retained companion current HP.
+  return Either.right(hp as CharacterSheetRetainedCompanionCurrentHitPoints);
+}
+
+function isCharacterSheetCompanionCreatureTypeOverride(
+  value: unknown,
+): value is CharacterSheetCompanionCreatureTypeOverride {
+  return (
+    typeof value === "string" &&
+    CHARACTER_SHEET_COMPANION_CREATURE_TYPE_OVERRIDES.some(
+      (creatureType) => creatureType === value,
+    )
+  );
 }
 
 function parseStoredZeroHpLifecycle(

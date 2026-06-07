@@ -22,6 +22,7 @@ import {
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
+import type { BattleCompanionStateId } from "./companion-state.ts";
 import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -123,6 +124,8 @@ export type MonkFocusStepOfTheWindMode =
   (typeof MONK_FOCUS_STEP_OF_THE_WIND_MODES)[number];
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
+const BattleCompanionStateIdSchema =
+  BattleSubjectTextSchema as unknown as Schema.Schema<BattleCompanionStateId>;
 
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
@@ -615,7 +618,7 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("companionLifecycle"),
     actorId: CombatantId,
-    companionId: CombatantId,
+    companionId: BattleCompanionStateIdSchema,
     action: Schema.Literal(
       "temporarilyDismiss",
       "reappear",

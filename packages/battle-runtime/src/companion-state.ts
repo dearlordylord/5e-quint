@@ -14,6 +14,20 @@ import type {
   InitiativeScore,
 } from "./identity.ts";
 
+export type BattleCompanionStateId = string;
+export type BattleCompanionDurableId = string;
+
+export type BattleCompanionIdentity =
+  | { readonly tag: "battleOnly" }
+  | {
+      readonly tag: "retainedBetweenBattles";
+      readonly durableCompanionId: BattleCompanionDurableId;
+    };
+
+export type BattleCompanionExpiration =
+  | { readonly tag: "none" }
+  | { readonly tag: "ownerFinishedLongRest" };
+
 export type BattleCompanionPlacement =
   | {
       readonly kind: "unoccupiedSpaceWithinSpellRange";
@@ -67,6 +81,8 @@ export type BattleCompanionHitPoints = {
 
 export type BattleCompanionProtocolState = {
   readonly ownerId: CombatantId;
+  readonly identity: BattleCompanionIdentity;
+  readonly expiration: BattleCompanionExpiration;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 };
 
@@ -80,6 +96,7 @@ export type BattleCompanionTemporarilyDismissedState =
   BattleCompanionStoredForm &
     BattleCompanionProtocolState & {
       readonly status: "temporarilyDismissed";
+      readonly reappearanceCombatantId: CombatantId;
       readonly hitPoints: BattleCompanionHitPoints;
     };
 
@@ -107,32 +124,49 @@ export type BattleCompanionSnapshot =
       readonly initiative: InitiativeScore;
     })
   | (BattleCompanionAbsentState & {
-      readonly companionId: CombatantId;
+      readonly companionId: BattleCompanionStateId;
     });
 
-export type BattleCompanionEntry = {
+export type BattleCompanionPresentEntry = {
   readonly companionId: CombatantId;
-  readonly companion: BattleCompanionState;
+  readonly companion: BattleCompanionPresentState;
 };
 
+export type BattleCompanionAbsentEntry = {
+  readonly companionId: BattleCompanionStateId;
+  readonly companion: BattleCompanionAbsentState;
+};
+
+export type BattleCompanionEntry =
+  | BattleCompanionPresentEntry
+  | BattleCompanionAbsentEntry;
+
 export function companionEntries(
-  companions: ReadonlyMap<CombatantId, BattleCompanionState>,
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
 ): readonly BattleCompanionEntry[] {
-  return [...companions].map(([companionId, companion]) => ({
-    companionId,
-    companion,
-  }));
+  const entries: BattleCompanionEntry[] = [];
+  for (const [companionId, companion] of companions) {
+    if (companion.status === "present") {
+      entries.push({
+        companionId: presentCompanionCombatantId(companionId, companion),
+        companion,
+      });
+    } else {
+      entries.push({ companionId, companion });
+    }
+  }
+  return entries;
 }
 
 export function findCompanionByOwner(
-  companions: ReadonlyMap<CombatantId, BattleCompanionState>,
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
   ownerId: CombatantId,
 ): BattleCompanionState | undefined {
   return findCompanionEntryByOwner(companions, ownerId)?.companion;
 }
 
 export function findCompanionEntryByOwner(
-  companions: ReadonlyMap<CombatantId, BattleCompanionState>,
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
   ownerId: CombatantId,
 ): BattleCompanionEntry | undefined {
   return companionEntries(companions).find(
@@ -141,13 +175,57 @@ export function findCompanionEntryByOwner(
 }
 
 export function setCompanion(
-  companions: ReadonlyMap<CombatantId, BattleCompanionState>,
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
   companionId: CombatantId,
   companion: BattleCompanionState,
-): ReadonlyMap<CombatantId, BattleCompanionState> {
+): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
+  const companionStateId = companionStateIdFor(companionId, companion);
+  return setCompanionByStateId(companions, companionStateId, companion);
+}
+
+export function setRetainedAbsentCompanion(
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
+  companion: BattleCompanionAbsentState & {
+    readonly identity: Extract<
+      BattleCompanionIdentity,
+      { readonly tag: "retainedBetweenBattles" }
+    >;
+  },
+): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
+  return setCompanionByStateId(
+    companions,
+    companion.identity.durableCompanionId,
+    companion,
+  );
+}
+
+function setCompanionByStateId(
+  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
+  companionStateId: BattleCompanionStateId,
+  companion: BattleCompanionState,
+): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
   const withoutSameOwner = [...companions].filter(
     ([key, candidate]) =>
-      candidate.ownerId !== companion.ownerId && key !== companionId,
+      candidate.ownerId !== companion.ownerId && key !== companionStateId,
   );
-  return new Map(withoutSameOwner).set(companionId, companion);
+  return new Map(withoutSameOwner).set(companionStateId, companion);
+}
+
+export function companionStateIdFor(
+  companionId: CombatantId,
+  companion: BattleCompanionState,
+): BattleCompanionStateId {
+  return companion.status !== "present" &&
+    companion.identity.tag === "retainedBetweenBattles"
+    ? companion.identity.durableCompanionId
+    : companionId;
+}
+
+export function presentCompanionCombatantId(
+  companionId: BattleCompanionStateId,
+  _companion: BattleCompanionPresentState,
+): CombatantId {
+  // Cast evidence: setCompanion keys present companions by their active battle
+  // combatant id, and present companion entries are created only from that map.
+  return companionId as CombatantId;
 }

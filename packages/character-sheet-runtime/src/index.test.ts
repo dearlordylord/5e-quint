@@ -50,6 +50,7 @@ import {
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetCompanion,
   characterSheetCurrentHp,
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
@@ -65,6 +66,7 @@ import {
   characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
+  characterSheetRetainedCompanionId,
   completeLongRest as completeLongRestCore,
   completeMagicalCunningRite,
   completeShortRest as completeShortRestCore,
@@ -83,10 +85,15 @@ import {
   timePassed,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
+  type CharacterSheetCompanion,
+  type CharacterSheetCompanionCreatureTypeOverride,
+  type CharacterSheetCompanionFormSelection,
   type CharacterSheetInput,
   type CharacterSheetLongRestInput,
   type CharacterSheetLongRestInterruption,
   type CharacterSheetLongRestStartTiming,
+  type CharacterSheetRetainedCompanionCurrentHitPoints,
+  type CharacterSheetRetainedCompanionProtocol,
   type CharacterSheetShortRestInterruption,
   type CharacterSheetShortRestInput,
   type CharacterSheetWeaponMasteryReselection,
@@ -312,7 +319,264 @@ function interruptLongRest(
   });
 }
 
+function retainedCompanionInput(
+  input: {
+    readonly companionId?: string;
+    readonly currentHp?: Hp;
+    readonly selectedForm?: CharacterSheetCompanionFormSelection;
+    readonly creatureTypeOverride?: CharacterSheetCompanionCreatureTypeOverride;
+    readonly protocolTag?: CharacterSheetCompanion["tag"] extends "none"
+      ? never
+      : CharacterSheetRetainedCompanionProtocol["tag"];
+  } = {},
+): CharacterSheetCompanion {
+  const protocol = retainedCompanionProtocolInput(input.protocolTag);
+  return {
+    tag: "retainedOneAtATime",
+    companion: {
+      companionId: characterSheetRetainedCompanionId(
+        input.companionId ?? "companion:cat",
+      ),
+      protocol,
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        selectedForm: input.selectedForm ?? {
+          tag: "normalNamedForm",
+          formId: "cat",
+        },
+        creatureTypeOverride: input.creatureTypeOverride ?? "fey",
+        resolvedStatBlockId: "stat_block_cat",
+        hitPoints: {
+          // Cast evidence: retainedCompanionInput is a test fixture helper; tests
+          // pass zero explicitly only when asserting the constructor rejects it.
+          currentHp: (input.currentHp ??
+            Hp(2)) as CharacterSheetRetainedCompanionCurrentHitPoints,
+          tempHp: Hp(1),
+        },
+      },
+    },
+  };
+}
+
+function retainedCompanionProtocolInput(
+  protocolTag: CharacterSheetRetainedCompanionProtocol["tag"] | undefined,
+): CharacterSheetRetainedCompanionProtocol {
+  if (protocolTag === "attackExceptionFamiliarLikeOneAtATime") {
+    return {
+      tag: "attackExceptionFamiliarLikeOneAtATime",
+      initiative: "own",
+      attack: { tag: "ownerForgoesAttackForReactionAttack" },
+      dismissal: { tag: "temporaryDismissalAndReappearance" },
+      expiration: { tag: "none" },
+    };
+  }
+  if (protocolTag === "ownerLongRestFamiliarLikeOneAtATime") {
+    return {
+      tag: "ownerLongRestFamiliarLikeOneAtATime",
+      initiative: "own",
+      attack: { tag: "cannotAttack" },
+      dismissal: { tag: "temporaryDismissalAndReappearance" },
+      expiration: { tag: "ownerFinishedLongRest" },
+    };
+  }
+  return {
+    tag: "ordinaryFamiliarLikeOneAtATime",
+    initiative: "own",
+    attack: { tag: "cannotAttack" },
+    dismissal: { tag: "temporaryDismissalAndReappearance" },
+    expiration: { tag: "none" },
+  };
+}
+
 describe("Character Sheet runtime", () => {
+  test("creates and parses an empty durable companion slot", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:no-companion"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetCompanion(sheet)).toEqual({ tag: "none" });
+    expect(parseCharacterSheet(sheet, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: { companion: { tag: "none" } },
+    });
+  });
+
+  test("retains one familiar-like companion with resolved form proof", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:retained-companion"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput(),
+      }),
+    );
+
+    expect(characterSheetCompanion(sheet)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:cat",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          resolvedStatBlockId: "stat_block_cat",
+          hitPoints: { currentHp: 2, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("rejects retained embodied companions with zero current HP", () => {
+    expect(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:bad-companion-hp"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({ currentHp: Hp(0) }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion current HP must be positive unless it disappeared at 0 HP.",
+      },
+    });
+  });
+
+  test("rejects retained companions with an empty durable id", () => {
+    expect(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:bad-companion-id"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({ companionId: "" }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Retained companion requires companion id.",
+      },
+    });
+  });
+
+  test.each([
+    {
+      title: "special form without attack exception",
+      companion: retainedCompanionInput({
+        selectedForm: { tag: "specialForm", formId: "sprite" },
+      }),
+      message:
+        "Retained companion special forms require the attack-exception protocol.",
+    },
+    {
+      title: "Long Rest expiration without Fey override",
+      companion: retainedCompanionInput({
+        creatureTypeOverride: "fiend",
+        protocolTag: "ownerLongRestFamiliarLikeOneAtATime",
+      }),
+      message:
+        "Owner-long-rest expiring retained companions must use the Fey creature type override.",
+    },
+  ])(
+    "rejects retained companion protocol hybrids: $title",
+    ({ companion, message }) => {
+      expect(
+        createFreshCharacterSheet({
+          characterId: characterSheetId("character:bad-companion-protocol"),
+          build,
+          maximumHp: Hp(12),
+          currentHp: Hp(12),
+          tempHp: Hp(0),
+          unitLibrary,
+          companion,
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message },
+      });
+    },
+  );
+
+  test("rejects stored retained companion protocol products with contradictory fields", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:stored-bad-companion-protocol",
+        ),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({
+          protocolTag: "attackExceptionFamiliarLikeOneAtATime",
+        }),
+      }),
+    );
+    const companion = characterSheetCompanion(sheet);
+    expect(companion.tag).toBe("retainedOneAtATime");
+    if (companion.tag !== "retainedOneAtATime") return;
+
+    expect(
+      parseCharacterSheet(
+        {
+          ...sheet,
+          companion: {
+            tag: "retainedOneAtATime",
+            companion: {
+              ...companion.companion,
+              protocol: {
+                ...companion.companion.protocol,
+                expiration: { tag: "ownerFinishedLongRest" },
+              },
+            },
+          },
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Attack-exception retained companion protocol requires the owner-forgoes-attack reaction and no Long Rest expiration.",
+      },
+    });
+  });
+
+  test("removes owner-long-rest retained companions on Long Rest", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:wild-companion"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({
+          protocolTag: "ownerLongRestFamiliarLikeOneAtATime",
+        }),
+      }),
+    );
+
+    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+
+    expect(characterSheetCompanion(rested)).toEqual({ tag: "none" });
+  });
+
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),
@@ -1003,6 +1267,7 @@ describe("Character Sheet runtime", () => {
         conditions: [],
         spentHitDice: [],
         resourceExpenditures: [],
+        companion: { tag: "none" },
         spellSlotExpenditures: [],
         pactSlotExpenditure: { expended: 0 },
       },
@@ -4500,6 +4765,7 @@ function storedAvailableSheetInput(input: {
     conditions: [],
     spentHitDice: [],
     resourceExpenditures: [],
+    companion: { tag: "none" },
   };
 }
 

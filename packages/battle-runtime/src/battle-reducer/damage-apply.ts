@@ -78,6 +78,7 @@ import {
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle.ts";
 import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
@@ -787,6 +788,8 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     ...retainedForm,
     status: "disappearedAtZeroHitPoints" as const,
     ownerId: entry.ownerId,
+    identity: entry.familiar.identity,
+    expiration: entry.familiar.expiration,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
   };
   const removed = removeBattleCombatants({
@@ -798,7 +801,8 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     : removed.right;
   return {
     ...stateWithoutFamiliar,
-    companions: new Map(stateWithoutFamiliar.companions).set(
+    companions: setCompanion(
+      stateWithoutFamiliar.companions,
       entry.companionId,
       disappearedFamiliar,
     ),

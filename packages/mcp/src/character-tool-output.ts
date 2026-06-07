@@ -111,6 +111,7 @@ const CharacterSessionRowSchema = Schema.Union(
     spellSlots: Schema.optionalWith(Schema.Array(JsonObjectSchema), {
       exact: true,
     }),
+    companion: JsonObjectSchema,
   }),
   Schema.Struct({
     characterId: Schema.String,
@@ -118,6 +119,8 @@ const CharacterSessionRowSchema = Schema.Union(
     displayName: Schema.Null,
     build: JsonObjectSchema,
     battleId: Schema.String,
+    companion: JsonObjectSchema,
+    companionAdmission: JsonObjectSchema,
   }),
 );
 const CreationFillResultSchema = Schema.Union(
@@ -155,6 +158,10 @@ export const FinalizeCharacterOutputSchema = Schema.Struct({
 });
 export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
+  session: McpSessionSnapshotSchema,
+});
+export const CharacterSessionOperationOutputSchema = Schema.Struct({
+  character: JsonObjectSchema,
   session: McpSessionSnapshotSchema,
 });
 

@@ -1,4 +1,4 @@
-import type { CharacterId } from "@dnd/battle-runtime";
+import { characterId, type CharacterId } from "@dnd/battle-runtime";
 import {
   createCharacterDraft,
   discoverCreationHoles,
@@ -8,8 +8,16 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import { characterSheetHitPointMaximum } from "@dnd/character-sheet-runtime";
-import { Hp } from "@dnd/shared/types";
+import {
+  createRetainedFamiliarLikeCompanion,
+  type CharacterSheetRetainedCompanionCreationSource,
+} from "@dnd/character-battle-runtime";
+import {
+  characterSheetCompanion,
+  characterSheetHitPointMaximum,
+  characterSheetRetainedCompanionId,
+} from "@dnd/character-sheet-runtime";
+import { Hp, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
@@ -20,6 +28,7 @@ import {
   characterIdFromDraftId,
   characterBattleSpellSlots,
   characterSessionCurrentHp,
+  type AvailableCharacterSession,
   type CharacterSession,
 } from "./session-store.ts";
 import {
@@ -30,10 +39,12 @@ import {
   emptyInputSchema,
   finalizeCharacterInputSchema,
   fillCreationHolesInputSchema,
+  applyCharacterSessionOperationInputSchema,
   type CharacterToolCall,
   type CharacterToolName,
 } from "./character-tool-input.ts";
 import {
+  CharacterSessionOperationOutputSchema,
   CreationDraftOutputSchema,
   FillCreationHolesOutputSchema,
   FinalizeCharacterOutputSchema,
@@ -72,6 +83,13 @@ export const characterToolDefinitions = [
       "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft. Druid Wild Shape drafts require selected known Beast Stat Block ids.",
     inputSchema: finalizeCharacterInputSchema,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
+  },
+  {
+    name: characterToolNames.applyCharacterSessionOperation,
+    description:
+      "Apply a supported durable character-session operation. Retained one-at-a-time companion creation delegates source, form, and cost validation to runtime support facts; MCP does not own companion eligibility.",
+    inputSchema: applyCharacterSessionOperationInputSchema,
+    outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
   {
     name: characterToolNames.listCharacters,
@@ -208,6 +226,10 @@ export function handleCharacterToolCall(
         session: root.sessionStore.snapshot(),
       });
     }),
+    Match.when(
+      { name: characterToolNames.applyCharacterSessionOperation },
+      (matched) => applyCharacterSessionOperation(root, matched.args),
+    ),
     Match.when({ name: characterToolNames.listCharacters }, () => {
       const rows = characterListRows(root);
       if (Either.isLeft(rows)) {
@@ -223,6 +245,130 @@ export function handleCharacterToolCall(
     }),
     Match.exhaustive,
   );
+}
+
+function applyCharacterSessionOperation(
+  root: McpCompositionRoot,
+  input: Extract<
+    CharacterToolCall,
+    { readonly name: typeof characterToolNames.applyCharacterSessionOperation }
+  >["args"],
+): CharacterToolResult {
+  const id = characterId(input.characterId);
+  const session = root.sessionStore.characters.get(id);
+  if (session === undefined) {
+    return errorContent(`Unknown character session: ${input.characterId}`, {
+      code: "UNKNOWN_CHARACTER_SESSION",
+      characterId: input.characterId,
+    });
+  }
+  if (session.tag === "inBattle") {
+    return errorContent(
+      "Character session operation requires an available character.",
+      {
+        code: "CHARACTER_SESSION_IN_BATTLE",
+        characterId: input.characterId,
+      },
+    );
+  }
+
+  return Match.value(input.operation).pipe(
+    Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) =>
+      applyRetainOneAtATimeCompanionOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function applyRetainOneAtATimeCompanionOperation(
+  root: McpCompositionRoot,
+  input: {
+    readonly characterId: string;
+    readonly session: AvailableCharacterSession;
+    readonly operation: Extract<
+      Extract<
+        CharacterToolCall,
+        {
+          readonly name: typeof characterToolNames.applyCharacterSessionOperation;
+        }
+      >["args"]["operation"],
+      { readonly kind: "retainOneAtATimeCompanion" }
+    >;
+  },
+): CharacterToolResult {
+  const updated = createRetainedFamiliarLikeCompanion({
+    sheet: input.session,
+    unitLibrary: root.unitLibrary,
+    statBlockCatalog: root.statBlockCatalog,
+    companionId: characterSheetRetainedCompanionId(input.operation.companionId),
+    source: retainedCompanionSourceFromTool(input.operation.source),
+    selectedForm: input.operation.selectedForm,
+    ...(input.operation.creatureTypeOverrideChoiceId === undefined
+      ? {}
+      : {
+          creatureTypeOverrideChoiceId:
+            input.operation.creatureTypeOverrideChoiceId,
+        }),
+    ...(input.operation.currentHp === undefined
+      ? {}
+      : { currentHp: Hp(input.operation.currentHp) }),
+    ...(input.operation.tempHp === undefined
+      ? {}
+      : { tempHp: Hp(input.operation.tempHp) }),
+  });
+  if (Either.isLeft(updated)) {
+    return errorContent("Character session operation failed.", {
+      code: "CHARACTER_SESSION_OPERATION_INVALID",
+      characterId: input.characterId,
+      message: updated.left.message,
+    });
+  }
+  root.sessionStore.characters.set(updated.right);
+  return schemaJsonContent(CharacterSessionOperationOutputSchema, {
+    character: updated.right,
+    session: root.sessionStore.snapshot(),
+  });
+}
+
+function retainedCompanionSourceFromTool(
+  source: Extract<
+    Extract<
+      CharacterToolCall,
+      {
+        readonly name: typeof characterToolNames.applyCharacterSessionOperation;
+      }
+    >["args"]["operation"],
+    { readonly kind: "retainOneAtATimeCompanion" }
+  >["source"],
+): CharacterSheetRetainedCompanionCreationSource {
+  if (source.tag === "spellSlotSpellCast") {
+    return {
+      tag: "spellSlotSpellCast",
+      spellId: source.spellId,
+      spellLevel: spellSlotLevel(source.spellLevel),
+    };
+  }
+  if (source.tag === "ritualSpell") {
+    return { tag: "ritualSpell", spellId: source.spellId };
+  }
+  if (source.tag === "invocationSpellAccess") {
+    return { tag: "invocationSpellAccess", spellId: source.spellId };
+  }
+  return {
+    tag: "classFeatureSpellCast",
+    featureUnitId: source.featureUnitId,
+    spend:
+      source.spend.tag === "spellSlot"
+        ? {
+            tag: "spellSlot",
+            spellLevel: spellSlotLevel(source.spend.spellLevel),
+          }
+        : source.spend,
+  };
 }
 
 function unknownDraftContent(draftId: CharacterDraftId) {
@@ -299,6 +445,7 @@ function characterListRow(
         state: session.hitPoints,
       },
       ...(spellSlots === undefined ? {} : { spellSlots }),
+      companion: characterSheetCompanion(session),
     });
   }
 
@@ -308,5 +455,7 @@ function characterListRow(
     displayName: null,
     build: session.sheet.build,
     battleId: session.battleId,
+    companion: characterSheetCompanion(session.sheet),
+    companionAdmission: session.companionAdmission,
   });
 }

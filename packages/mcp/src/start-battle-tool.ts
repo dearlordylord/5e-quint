@@ -1,5 +1,4 @@
 import {
-  admitPresentFindFamiliarToBattle,
   battleTablePositionId,
   battleCreatureInitFromStatBlock,
   snapshotBattle,
@@ -7,9 +6,13 @@ import {
   type BattleCreatureInit,
   type BattleState,
   type CombatantId,
-  type FindFamiliarBattleAdmissionInput,
 } from "@dnd/battle-runtime";
-import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
+import {
+  admitCharacterSheetCompanionToBattle,
+  characterSheetBattleInit,
+  type CharacterSheetCompanionBattleAdmissionState,
+} from "@dnd/character-battle-runtime";
+import { characterSheetCompanion } from "@dnd/character-sheet-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
@@ -19,8 +22,7 @@ import { type AvailableCharacterSession } from "./session-store.ts";
 import {
   type InitialBattleCombatantToolInput,
   type InitialCharacterSessionCombatantToolInput,
-  type InitialSourceLinkedStatBlockCombatantToolInput,
-  type SourceLinkedCombatantAdmissionSourceToolInput,
+  type CompanionAdmissionToolInput,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -34,7 +36,6 @@ type StartableCharacterSessionCombatant = {
 
 type StartableBattleCombatants = {
   readonly creatureInits: readonly BattleCreatureInit[];
-  readonly sourceLinkedAdmissions: readonly SourceLinkedBattleAdmission[];
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
 };
 
@@ -47,16 +48,7 @@ type StartableBattleCombatant =
   | {
       readonly tag: "encounterCombatant";
       readonly creatureInit: BattleCreatureInit;
-    }
-  | {
-      readonly tag: "sourceLinkedAdmission";
-      readonly sourceLinkedAdmission: SourceLinkedBattleAdmission;
     };
-
-type SourceLinkedBattleAdmission = Omit<
-  FindFamiliarBattleAdmissionInput,
-  "state" | "catalog"
->;
 
 export function handleStartBattleToolCall(
   root: McpCompositionRoot,
@@ -72,8 +64,10 @@ export function handleStartBattleToolCall(
 
   const duplicateInput = duplicateStartBattleInputContent(
     input.initialCombatants,
+    input.companionAdmissions,
   );
   if (duplicateInput !== null) return duplicateInput;
+  const initialCombatantOrder = initialCombatantOrderForStartInput(input);
 
   const combatants = startableBattleCombatants({
     root,
@@ -91,10 +85,12 @@ export function handleStartBattleToolCall(
       message: state.left.message,
     });
   }
-  const admittedState = admitSourceLinkedCombatants({
+  const admittedState = admitCompanionAdmissions({
     root,
     state: state.right,
-    admissions: combatants.right.sourceLinkedAdmissions,
+    admissions: input.companionAdmissions,
+    characterSessions: combatants.right.characterSessions,
+    initialCombatantOrder,
   });
   if (Either.isLeft(admittedState)) return admittedState.left;
 
@@ -105,6 +101,10 @@ export function handleStartBattleToolCall(
       tag: "inBattle",
       sheet: session,
       battleId: input.battleId,
+      companionAdmission: companionAdmissionStateForCharacter({
+        session,
+        admissions: input.companionAdmissions,
+      }),
     });
   }
 
@@ -116,6 +116,7 @@ export function handleStartBattleToolCall(
 
 function duplicateStartBattleInputContent(
   initialCombatants: readonly InitialBattleCombatantToolInput[],
+  companionAdmissions: readonly CompanionAdmissionToolInput[],
 ) {
   const characters = initialCombatants.filter(isCharacterSessionCombatant);
   const duplicateCharacterId = firstDuplicate(
@@ -128,13 +129,28 @@ function duplicateStartBattleInputContent(
     });
   }
 
-  const duplicateCombatantId = firstDuplicate(
-    initialCombatants.map((combatant) => combatant.combatantId),
-  );
+  const duplicateCombatantId = firstDuplicate([
+    ...initialCombatants.map((combatant) => combatant.combatantId),
+    ...companionAdmissions.flatMap((admission) =>
+      admission.companionCombatantId === undefined
+        ? []
+        : [admission.companionCombatantId],
+    ),
+  ]);
   if (duplicateCombatantId !== null) {
     return errorContent("Duplicate combatant id in battle start.", {
       code: "DUPLICATE_BATTLE_COMBATANT_ID",
       combatantId: duplicateCombatantId,
+    });
+  }
+
+  const duplicateCompanionOwner = firstDuplicate(
+    companionAdmissions.map((admission) => admission.ownerCharacterId),
+  );
+  if (duplicateCompanionOwner !== null) {
+    return errorContent("Duplicate companion owner in battle start.", {
+      code: "DUPLICATE_BATTLE_COMPANION_OWNER",
+      characterId: duplicateCompanionOwner,
     });
   }
 
@@ -145,24 +161,10 @@ function startableBattleCombatants(input: {
   readonly root: McpCompositionRoot;
   readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
 }): Either.Either<StartableBattleCombatants, ReturnType<typeof errorContent>> {
-  const initialCombatantsById = new Map(
-    input.initialCombatants.map((combatant) => [
-      combatant.combatantId,
-      combatant,
-    ]),
-  );
-  const initialCombatantOrder = new Map(
-    input.initialCombatants.map((combatant, index) => [
-      combatant.combatantId,
-      index,
-    ]),
-  );
   const combatants = traverseValidation(input.initialCombatants, (combatant) =>
     startableBattleCombatant({
       root: input.root,
       combatant,
-      initialCombatantsById,
-      initialCombatantOrder,
     }),
   );
   if (Either.isLeft(combatants)) {
@@ -176,11 +178,6 @@ function startableBattleCombatants(input: {
         ? [combatant.creatureInit]
         : [],
     ),
-    sourceLinkedAdmissions: combatants.right.flatMap((combatant) =>
-      combatant.tag !== "sourceLinkedAdmission"
-        ? []
-        : [combatant.sourceLinkedAdmission],
-    ),
     characterSessions: combatants.right.flatMap((combatant) =>
       combatant.tag === "characterSession" ? [combatant.characterSession] : [],
     ),
@@ -190,11 +187,6 @@ function startableBattleCombatants(input: {
 function startableBattleCombatant(input: {
   readonly root: McpCompositionRoot;
   readonly combatant: InitialBattleCombatantToolInput;
-  readonly initialCombatantsById: ReadonlyMap<
-    InitialBattleCombatantToolInput["combatantId"],
-    InitialBattleCombatantToolInput
-  >;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 }): Either.Either<StartableBattleCombatant, ToolError> {
   const { root, combatant } = input;
   return Match.value(combatant).pipe(
@@ -242,14 +234,6 @@ function startableBattleCombatant(input: {
           });
     }),
     Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-      if (isSourceLinkedStatBlockCombatant(statBlockCombatant)) {
-        return startableSourceLinkedStatBlockCombatant({
-          combatant: statBlockCombatant,
-          admissionSource: statBlockCombatant.admissionSource,
-          initialCombatantsById: input.initialCombatantsById,
-          initialCombatantOrder: input.initialCombatantOrder,
-        });
-      }
       const encounterCombatant = statBlockCombatant;
       const statBlock = root.statBlockCatalog.getStatBlock(
         encounterCombatant.statBlockId,
@@ -284,81 +268,58 @@ function startableBattleCombatant(input: {
   );
 }
 
-function startableSourceLinkedStatBlockCombatant(input: {
-  readonly combatant: InitialSourceLinkedStatBlockCombatantToolInput;
-  readonly admissionSource: SourceLinkedCombatantAdmissionSourceToolInput;
-  readonly initialCombatantsById: ReadonlyMap<
-    InitialBattleCombatantToolInput["combatantId"],
-    InitialBattleCombatantToolInput
-  >;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
-}): Either.Either<StartableBattleCombatant, ToolError> {
-  if (!input.initialCombatantsById.has(input.admissionSource.sourceActorId)) {
-    return Either.left(
-      errorContent("Source-linked combatant source actor is not in roster.", {
-        code: "SOURCE_LINKED_ACTOR_NOT_IN_ROSTER",
-        combatantId: input.combatant.combatantId,
-        sourceActorId: input.admissionSource.sourceActorId,
-      }),
-    );
-  }
-
-  return Either.right({
-    tag: "sourceLinkedAdmission" as const,
-    sourceLinkedAdmission: {
-      casterId: input.admissionSource.sourceActorId,
-      familiarId: input.combatant.combatantId,
-      initiative: input.combatant.initiative,
-      ...(input.combatant.currentHp === undefined
-        ? {}
-        : { currentHp: input.combatant.currentHp }),
-      ...(input.combatant.tempHp === undefined
-        ? {}
-        : { tempHp: input.combatant.tempHp }),
-      initialCombatantOrder: input.initialCombatantOrder,
-      selection: input.admissionSource.selection.form,
-      creatureTypeOverrideChoiceId:
-        input.admissionSource.selection.creatureTypeOverrideChoiceId,
-      placement:
-        input.admissionSource.selection.positionId === undefined
-          ? { kind: "unoccupiedSpaceWithinSpellRange" }
-          : {
-              kind: "unoccupiedSpaceWithinSpellRange",
-              positionId: battleTablePositionId(
-                input.admissionSource.selection.positionId,
-              ),
-            },
-    },
-  });
-}
-
-function isSourceLinkedStatBlockCombatant(
-  combatant: Extract<
-    InitialBattleCombatantToolInput,
-    { readonly kind: "statBlock" }
-  >,
-): combatant is InitialSourceLinkedStatBlockCombatantToolInput {
-  return combatant.admissionSource.kind === "sourceLinked";
-}
-
-function admitSourceLinkedCombatants(input: {
+function admitCompanionAdmissions(input: {
   readonly root: McpCompositionRoot;
   readonly state: BattleState;
-  readonly admissions: readonly SourceLinkedBattleAdmission[];
+  readonly admissions: readonly CompanionAdmissionToolInput[];
+  readonly characterSessions: readonly StartableCharacterSessionCombatant[];
+  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 }): Either.Either<BattleState, ReturnType<typeof errorContent>> {
   let state = input.state;
   for (const admission of input.admissions) {
-    const admitted = admitPresentFindFamiliarToBattle({
-      ...admission,
+    const owner = input.characterSessions.find(
+      ({ character }) => character.characterId === admission.ownerCharacterId,
+    );
+    if (owner === undefined) {
+      return Either.left(
+        errorContent("Companion admission owner is not in the battle roster.", {
+          code: "COMPANION_OWNER_NOT_IN_ROSTER",
+          characterId: admission.ownerCharacterId,
+          ...(admission.companionCombatantId === undefined
+            ? {}
+            : { companionCombatantId: admission.companionCombatantId }),
+        }),
+      );
+    }
+    const admitted = admitCharacterSheetCompanionToBattle({
       state,
-      catalog: input.root.statBlockCatalog,
+      sheet: owner.session,
+      unitLibrary: input.root.unitLibrary,
+      ownerCombatantId: owner.character.combatantId,
+      ...(admission.companionCombatantId === undefined
+        ? {}
+        : { companionCombatantId: admission.companionCombatantId }),
+      ...(admission.initiative === undefined
+        ? {}
+        : { initiative: admission.initiative }),
+      placement:
+        admission.positionId === undefined
+          ? { kind: "unoccupiedSpaceWithinSpellRange" }
+          : {
+              kind: "unoccupiedSpaceWithinSpellRange",
+              positionId: battleTablePositionId(admission.positionId),
+            },
+      initialCombatantOrder: input.initialCombatantOrder,
+      statBlockCatalog: input.root.statBlockCatalog,
     });
     if (Either.isLeft(admitted)) {
       return Either.left(
-        errorContent("Source-linked combatant admission failed.", {
-          code: "SOURCE_LINKED_COMBATANT_ADMISSION_FAILED",
-          combatantId: admission.familiarId,
-          sourceActorId: admission.casterId,
+        errorContent("Companion admission failed.", {
+          code: "COMPANION_ADMISSION_FAILED",
+          characterId: admission.ownerCharacterId,
+          ...(admission.companionCombatantId === undefined
+            ? {}
+            : { combatantId: admission.companionCombatantId }),
           message: admitted.left.message,
         }),
       );
@@ -366,6 +327,41 @@ function admitSourceLinkedCombatants(input: {
     state = admitted.right;
   }
   return Either.right(state);
+}
+
+function initialCombatantOrderForStartInput(
+  input: StartBattleToolInput,
+): ReadonlyMap<CombatantId, number> {
+  return new Map(
+    [
+      ...input.initialCombatants.map((combatant) => combatant.combatantId),
+      ...input.companionAdmissions.flatMap((admission) =>
+        admission.companionCombatantId === undefined
+          ? []
+          : [admission.companionCombatantId],
+      ),
+    ].map((combatantId, index) => [combatantId, index]),
+  );
+}
+
+function companionAdmissionStateForCharacter(input: {
+  readonly session: AvailableCharacterSession;
+  readonly admissions: readonly CompanionAdmissionToolInput[];
+}): CharacterSheetCompanionBattleAdmissionState {
+  if (
+    !input.admissions.some(
+      (admission) => admission.ownerCharacterId === input.session.characterId,
+    )
+  ) {
+    return { tag: "notAdmitted" };
+  }
+  const companion = characterSheetCompanion(input.session);
+  return companion.tag === "none"
+    ? { tag: "notAdmitted" }
+    : {
+        tag: "retainedOneAtATime",
+        companionId: companion.companion.companionId,
+      };
 }
 
 function invalidBattleCombatantsContent(issues: readonly ToolError[]) {

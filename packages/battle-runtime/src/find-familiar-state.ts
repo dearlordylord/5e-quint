@@ -57,6 +57,18 @@ export function findPresentFamiliarById(
   if (familiar?.status === "present") {
     return { ownerId: familiar.ownerId, companionId: familiarId, familiar };
   }
+  const entry = battleCompanionEntries(state).find(
+    (candidate) =>
+      candidate.companion.status === "present" &&
+      candidate.companionId === familiarId,
+  );
+  if (entry?.companion.status === "present") {
+    return {
+      ownerId: entry.companion.ownerId,
+      companionId: familiarId,
+      familiar: entry.companion,
+    };
+  }
   return null;
 }
 

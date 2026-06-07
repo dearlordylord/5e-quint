@@ -26,6 +26,11 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 );
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+const HpSchema = NonNegativeIntegerSchema;
 const EmptyArgsSchema = Schema.Struct({});
 
 const DraftIdArgsSchema = Schema.Struct({
@@ -130,6 +135,83 @@ const FillCreationHolesArgsSchema = Schema.Struct({
   }),
 });
 
+const RetainedCompanionNormalFormSelectionArgsSchema = Schema.Struct({
+  tag: Schema.Literal("normalNamedForm"),
+  formId: Schema.NonEmptyTrimmedString,
+});
+const RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema =
+  Schema.Struct({
+    tag: Schema.Literal("challengeRatingZeroBeast"),
+    statBlockId: Schema.NonEmptyTrimmedString,
+  });
+const RetainedCompanionSpecialFormSelectionArgsSchema = Schema.Struct({
+  tag: Schema.Literal("specialForm"),
+  formId: Schema.NonEmptyTrimmedString,
+});
+const RetainedCompanionFormSelectionArgsSchema = Schema.Union(
+  RetainedCompanionNormalFormSelectionArgsSchema,
+  RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema,
+  RetainedCompanionSpecialFormSelectionArgsSchema,
+);
+const RetainedCompanionSourceArgsSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("spellSlotSpellCast"),
+    spellId: Schema.NonEmptyTrimmedString,
+    spellLevel: Schema.Number.pipe(
+      Schema.int(),
+      Schema.greaterThanOrEqualTo(1),
+      Schema.lessThanOrEqualTo(9),
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("ritualSpell"),
+    spellId: Schema.NonEmptyTrimmedString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invocationSpellAccess"),
+    spellId: Schema.NonEmptyTrimmedString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("classFeatureSpellCast"),
+    featureUnitId: Schema.NonEmptyTrimmedString,
+    spend: Schema.Union(
+      Schema.Struct({
+        tag: Schema.Literal("spellSlot"),
+        spellLevel: Schema.Number.pipe(
+          Schema.int(),
+          Schema.greaterThanOrEqualTo(1),
+          Schema.lessThanOrEqualTo(9),
+        ),
+      }),
+      Schema.Struct({
+        tag: Schema.Literal("useCountResource"),
+        resourceUnitId: Schema.NonEmptyTrimmedString,
+      }),
+    ),
+  }),
+);
+const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("retainOneAtATimeCompanion"),
+  companionId: Schema.NonEmptyTrimmedString,
+  source: RetainedCompanionSourceArgsSchema,
+  selectedForm: RetainedCompanionFormSelectionArgsSchema,
+  creatureTypeOverrideChoiceId: Schema.optionalWith(
+    Schema.NonEmptyTrimmedString,
+    {
+      exact: true,
+    },
+  ),
+  currentHp: Schema.optionalWith(PositiveIntegerSchema, { exact: true }),
+  tempHp: Schema.optionalWith(HpSchema, { exact: true }),
+});
+const CharacterSessionOperationArgsSchema = Schema.Union(
+  RetainOneAtATimeCompanionOperationArgsSchema,
+);
+const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
+  characterId: Schema.String,
+  operation: CharacterSessionOperationArgsSchema,
+});
+
 type FillCreationHolesArgs = Schema.Schema.Type<
   typeof FillCreationHolesArgsSchema
 >;
@@ -140,6 +222,7 @@ export const characterToolNames = {
   discoverCreationHoles: "discover_creation_holes",
   fillCreationHoles: "fill_creation_holes",
   finalizeCharacter: "finalize_character",
+  applyCharacterSessionOperation: "apply_character_session_operation",
   listCharacters: "list_characters",
 } as const;
 export const CHARACTER_TOOL_NAMES = [
@@ -147,6 +230,7 @@ export const CHARACTER_TOOL_NAMES = [
   characterToolNames.discoverCreationHoles,
   characterToolNames.fillCreationHoles,
   characterToolNames.finalizeCharacter,
+  characterToolNames.applyCharacterSessionOperation,
   characterToolNames.listCharacters,
 ] as const;
 export type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
@@ -167,6 +251,22 @@ type FillCreationHolesToolInput = {
   readonly fills: readonly CreationFill[];
 };
 type EmptyToolInput = Record<string, never>;
+type ApplyCharacterSessionOperationArgs = Schema.Schema.Type<
+  typeof ApplyCharacterSessionOperationArgsSchema
+>;
+type CharacterSessionOperationArgs =
+  ApplyCharacterSessionOperationArgs["operation"];
+
+export type RetainedCompanionFormSelectionToolInput =
+  CharacterSessionOperationArgs extends {
+    readonly kind: "retainOneAtATimeCompanion";
+  }
+    ? CharacterSessionOperationArgs["selectedForm"]
+    : never;
+export type ApplyCharacterSessionOperationToolInput = {
+  readonly characterId: string;
+  readonly operation: CharacterSessionOperationArgs;
+};
 
 export type CharacterToolCall =
   | {
@@ -186,6 +286,10 @@ export type CharacterToolCall =
       readonly args: FinalizeCharacterToolInput;
     }
   | {
+      readonly name: typeof characterToolNames.applyCharacterSessionOperation;
+      readonly args: ApplyCharacterSessionOperationToolInput;
+    }
+  | {
       readonly name: typeof characterToolNames.listCharacters;
       readonly args: EmptyToolInput;
     };
@@ -199,6 +303,9 @@ export const createCharacterDraftInputSchema = mcpObjectJsonSchema(
 );
 export const fillCreationHolesInputSchema = mcpObjectJsonSchema(
   FillCreationHolesArgsSchema,
+);
+export const applyCharacterSessionOperationInputSchema = mcpObjectJsonSchema(
+  ApplyCharacterSessionOperationArgsSchema,
 );
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 
@@ -234,6 +341,15 @@ export function decodeCharacterToolCall(input: {
         args,
       })),
     ),
+    Match.when(characterToolNames.applyCharacterSessionOperation, () =>
+      Either.map(
+        decodeApplyCharacterSessionOperationArgs(input.args),
+        (args) => ({
+          name: characterToolNames.applyCharacterSessionOperation,
+          args,
+        }),
+      ),
+    ),
     Match.when(characterToolNames.listCharacters, () =>
       Either.map(decodeEmptyArgs(input.args), (args) => ({
         name: characterToolNames.listCharacters,
@@ -241,6 +357,16 @@ export function decodeCharacterToolCall(input: {
       })),
     ),
     Match.exhaustive,
+  );
+}
+
+function decodeApplyCharacterSessionOperationArgs(
+  args: unknown,
+): ToolInputResult<ApplyCharacterSessionOperationToolInput> {
+  return decodeToolArgs(
+    ApplyCharacterSessionOperationArgsSchema,
+    args,
+    characterToolNames.applyCharacterSessionOperation,
   );
 }
 

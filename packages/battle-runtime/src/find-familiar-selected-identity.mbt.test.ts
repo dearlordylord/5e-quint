@@ -190,7 +190,6 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
     state: withFreshMagicAction(dismissed.state),
     casterId,
     catalog: statBlockCatalog,
-    familiarId,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });

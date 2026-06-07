@@ -35,7 +35,9 @@ import {
   characterBattleResourceForUnit,
   characterId,
   combatantId,
+  castFindFamiliar,
   discoverBattleActs,
+  findFamiliarFormEligibilityForSpell,
   initiativeScore,
   resolveBattleSubject,
   spendCharacterPointPoolResource,
@@ -54,9 +56,12 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetCurrentHp,
+  characterSheetCompanion,
   characterSheetPactSlots,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
+  characterSheetResources,
+  characterSheetRetainedCompanionId,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetId,
@@ -64,6 +69,7 @@ import {
   convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   parseCharacterSheet,
+  replaceCharacterSheetCompanion,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
@@ -95,9 +101,12 @@ import { describe, expect, test } from "vitest";
 
 import {
   applyBattleHandoffToCharacterSheet,
+  applyBattleCompanionHandoffToCharacterSheet,
+  admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild,
   characterUnitRefsWithBattleSupportProfiles,
   characterSheetBattleInit,
+  createRetainedFamiliarLikeCompanion,
   characterArmorClassState,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
@@ -320,6 +329,410 @@ describe("Character Sheet battle handoff", () => {
         statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       });
     }
+  });
+
+  test("creates retained Wild Companion state and spends a Wild Shape use", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:wild-companion-retained"),
+        build: druidWildShapeBuild(),
+        maximumHp: Hp(15),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+        statBlockCatalog,
+      }),
+    );
+
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId("companion:wild-cat"),
+        source: {
+          tag: "classFeatureSpellCast",
+          featureUnitId: "druid_wild_companion",
+          spend: {
+            tag: "useCountResource",
+            resourceUnitId: "druid_wild_shape",
+          },
+        },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      }),
+    );
+
+    expect(characterSheetCompanion(retained)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        protocol: {
+          attack: { tag: "cannotAttack" },
+          expiration: { tag: "ownerFinishedLongRest" },
+        },
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverride: "fey",
+          resolvedStatBlockId: "stat_block_cat",
+        },
+      },
+    });
+    expect(
+      expectRight(characterSheetResources(retained, unitLibrary)),
+    ).toContainEqual(
+      expect.objectContaining({
+        tag: "useCountResource",
+        unitId: "druid_wild_shape",
+        expended: resourceCount(1),
+      }),
+    );
+  });
+
+  test("creates retained ordinary companion state and spends a Spell Slot", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:slot-familiar-retained"),
+        build: {
+          ...trueStrikeWizardBuild(),
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_wizard",
+                spellcastingAbility: "int",
+                cantrips: ["true_strike"],
+                spellbook: ["find_familiar"],
+                preparedSpells: ["find_familiar"],
+                spellcastingFocuses: ["spellbook"],
+              },
+            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [{ spellLevel: 1, count: 2 }],
+              },
+            },
+          },
+        },
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId("companion:slot-cat"),
+        source: {
+          tag: "spellSlotSpellCast",
+          spellId: "find_familiar",
+          spellLevel: spellSlotLevel(1),
+        },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(retained)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        protocol: {
+          attack: { tag: "cannotAttack" },
+          expiration: { tag: "none" },
+        },
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverride: "fey",
+          resolvedStatBlockId: "stat_block_cat",
+        },
+      },
+    });
+    expect(characterSheetSpellSlots(retained)).toEqual([
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(2),
+        expended: resourceCount(1),
+      },
+    ]);
+  });
+
+  test("rejects forged retained normal-form proof before battle admission", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:forged-companion-form"),
+        build: {
+          ...trueStrikeWizardBuild(),
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_wizard",
+                spellcastingAbility: "int",
+                cantrips: ["true_strike"],
+                spellbook: ["find_familiar"],
+                preparedSpells: [],
+                spellcastingFocuses: ["spellbook"],
+              },
+            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [{ spellLevel: 1, count: 2 }],
+              },
+            },
+          },
+        },
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId("companion:forged-form"),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+    const retainedCompanion = characterSheetCompanion(retained);
+    expect(retainedCompanion.tag).toBe("retainedOneAtATime");
+    if (retainedCompanion.tag !== "retainedOneAtATime") return;
+    const forged = expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: retained,
+        companion: {
+          tag: "retainedOneAtATime",
+          companion: {
+            ...retainedCompanion.companion,
+            manifestation: {
+              ...retainedCompanion.companion.manifestation,
+              selectedForm: {
+                tag: "normalNamedForm",
+                formId: "goblin_warrior",
+              },
+              resolvedStatBlockId: "stat_block_goblin_warrior",
+            },
+          },
+        },
+      }),
+    );
+    const ownerId = combatantId("forged-companion-owner");
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-forged-companion-form"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: ownerId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(12),
+            side: battleCombatantSide("party"),
+          }),
+        ],
+      }),
+    );
+
+    const admitted = admitCharacterSheetCompanionToBattle({
+      sheet: forged,
+      state,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      companionCombatantId: combatantId("forged-companion"),
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      initialCombatantOrder: new Map([
+        [ownerId, 0],
+        [combatantId("forged-companion"), 1],
+      ]),
+      statBlockCatalog,
+    });
+
+    expect(admitted).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion admission requires a familiar-like form catalog matching the retained form.",
+      },
+    });
+  });
+
+  test("rejects forged retained Challenge Rating 0 Beast proof before battle admission", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:forged-companion-cr0-beast"),
+        build: {
+          ...trueStrikeWizardBuild(),
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_wizard",
+                spellcastingAbility: "int",
+                cantrips: ["true_strike"],
+                spellbook: ["find_familiar"],
+                preparedSpells: [],
+                spellcastingFocuses: ["spellbook"],
+              },
+            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [{ spellLevel: 1, count: 2 }],
+              },
+            },
+          },
+        },
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId(
+          "companion:forged-cr0-beast",
+        ),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: {
+          tag: "challengeRatingZeroBeast",
+          statBlockId: "stat_block_cat",
+        },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+    const retainedCompanion = characterSheetCompanion(retained);
+    expect(retainedCompanion.tag).toBe("retainedOneAtATime");
+    if (retainedCompanion.tag !== "retainedOneAtATime") return;
+    const forged = expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: retained,
+        companion: {
+          tag: "retainedOneAtATime",
+          companion: {
+            ...retainedCompanion.companion,
+            manifestation: {
+              ...retainedCompanion.companion.manifestation,
+              selectedForm: {
+                tag: "challengeRatingZeroBeast",
+                statBlockId: "stat_block_goblin_warrior",
+              },
+              resolvedStatBlockId: "stat_block_goblin_warrior",
+            },
+          },
+        },
+      }),
+    );
+    const ownerId = combatantId("forged-cr0-beast-owner");
+    const companionId = combatantId("forged-cr0-beast-companion");
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-forged-companion-cr0-beast"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: ownerId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(12),
+            side: battleCombatantSide("party"),
+          }),
+        ],
+      }),
+    );
+
+    const admitted = admitCharacterSheetCompanionToBattle({
+      sheet: forged,
+      state,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      initialCombatantOrder: new Map([
+        [ownerId, 0],
+        [companionId, 1],
+      ]),
+      statBlockCatalog,
+    });
+
+    expect(admitted).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.",
+      },
+    });
+  });
+
+  test("ignores battle-only companions during retained companion handoff", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:battle-only-companion-handoff",
+        ),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const ownerId = combatantId("battle-only-companion-owner");
+    const battleOnlyCompanionId = combatantId("battle-only-companion");
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-only-companion-handoff"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: ownerId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(12),
+            side: battleCombatantSide("party"),
+          }),
+        ],
+      }),
+    );
+    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
+    if (findFamiliarUnit.kind !== "spell") {
+      throw new Error("Find Familiar fixture must be a Spell.");
+    }
+    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
+    if (eligibility === null) {
+      throw new Error("Find Familiar fixture must expose form eligibility.");
+    }
+    const cast = castFindFamiliar({
+      state,
+      casterId: ownerId,
+      familiarId: battleOnlyCompanionId,
+      catalog: statBlockCatalog,
+      eligibility,
+      selection: { tag: "normalNamedForm", formId: "cat" },
+      creatureTypeOverrideChoiceId: "fey",
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const handoff = expectRight(
+      applyBattleCompanionHandoffToCharacterSheet({
+        sheet,
+        state: cast.state,
+        ownerCombatantId: ownerId,
+        admission: { tag: "notAdmitted" },
+      }),
+    );
+
+    expect(characterSheetCompanion(handoff)).toEqual({ tag: "none" });
   });
 
   test("passes the caller Stat Block catalog while preserving Wild Shape forms", () => {

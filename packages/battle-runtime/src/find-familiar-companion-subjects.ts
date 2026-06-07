@@ -13,6 +13,7 @@ import type {
   BattleHeldObjectFactsHole,
 } from "./battle-reducer.ts";
 import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./find-familiar-telepathy.ts";
+import type { BattleCompanionStateId } from "./companion-state.ts";
 import type { CombatantId } from "./identity.ts";
 
 export const FIND_FAMILIAR_TOUCH_DELIVERY_TARGET_LABEL =
@@ -64,7 +65,7 @@ export function companionHeldObjectFactsHole(input: {
 
 export function companionReappearancePlacementHole(input: {
   readonly ownerId: CombatantId;
-  readonly companionId: CombatantId;
+  readonly companionId: BattleCompanionStateId;
 }): BattleCompanionReappearancePlacementHole {
   const key = `battle:companion:reappearance-placement:${input.ownerId}:${input.companionId}`;
   return {
@@ -79,7 +80,7 @@ export function companionReappearancePlacementHole(input: {
 
 export function companionReappearanceInitiativeHole(input: {
   readonly ownerId: CombatantId;
-  readonly companionId: CombatantId;
+  readonly companionId: BattleCompanionStateId;
 }): BattleCompanionReappearanceInitiativeHole {
   const key = `battle:companion:reappearance-initiative:${input.ownerId}:${input.companionId}`;
   return {

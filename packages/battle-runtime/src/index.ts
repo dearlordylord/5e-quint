@@ -114,16 +114,19 @@ export {
   type PactOfTheChainSpecialFormRef,
 } from "./find-familiar-forms.ts";
 export {
-  admitPresentFindFamiliarToBattle,
+  admitCompanionToBattle,
   applyCompanionLongRestDisappearance,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
   castWildCompanion,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
+  retainedStoredFormForPresentCompanion,
   temporarilyDismissFindFamiliar,
+  type CompanionBattleAdmissionInput,
+  type CompanionBattleAdmissionFormEligibility,
+  type CompanionBattleAdmissionManifestation,
   type FindFamiliarAbsentState,
-  type FindFamiliarBattleAdmissionInput,
   type FindFamiliarCastInput,
   type FindFamiliarLifecycleInputBase,
   type FindFamiliarPlacement,
@@ -133,8 +136,13 @@ export {
   type WildCompanionSpend,
 } from "./find-familiar-lifecycle.ts";
 export type {
+  BattleCompanionPlacement,
+  BattleCompanionDurableId,
+  BattleCompanionIdentity,
   BattleCompanionSnapshot,
   BattleCompanionState,
+  BattleCompanionStateId,
+  BattleCompanionStoredForm,
 } from "./companion-state.ts";
 export {
   findFamiliarCompanionEntryForOwner,

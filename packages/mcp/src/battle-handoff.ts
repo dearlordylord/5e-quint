@@ -1,5 +1,8 @@
 import type { BattleState } from "@dnd/battle-runtime";
-import { applyBattleHandoffToCharacterSheet } from "@dnd/character-battle-runtime";
+import {
+  applyBattleCompanionHandoffToCharacterSheet,
+  applyBattleHandoffToCharacterSheet,
+} from "@dnd/character-battle-runtime";
 import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -41,7 +44,20 @@ export function finalizeCharacterSessionsFromBattle(
         message: availableSession.left.message,
       });
     }
-    root.sessionStore.characters.set(availableSession.right);
+    const withCompanion = applyBattleCompanionHandoffToCharacterSheet({
+      sheet: availableSession.right,
+      state,
+      ownerCombatantId: combatant.combatantId,
+      admission: session.companionAdmission,
+    });
+    if (Either.isLeft(withCompanion)) {
+      return errorContent("Battle companion session handoff failed.", {
+        code: "COMPANION_SESSION_HANDOFF_INVALID",
+        characterId,
+        message: withCompanion.left.message,
+      });
+    }
+    root.sessionStore.characters.set(withCompanion.right);
   }
 
   return null;

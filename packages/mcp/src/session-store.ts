@@ -21,6 +21,7 @@ import {
   type CharacterSheetZeroHpLifecycle,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
+import type { CharacterSheetCompanionBattleAdmissionState } from "@dnd/character-battle-runtime";
 import type {
   StatBlockCatalog,
   StatBlockId,
@@ -46,6 +47,7 @@ export type InBattleCharacterSession = {
   readonly tag: "inBattle";
   readonly sheet: AvailableCharacterSession;
   readonly battleId: BattleId;
+  readonly companionAdmission: CharacterSheetCompanionBattleAdmissionState;
 };
 
 export type CharacterSession =
