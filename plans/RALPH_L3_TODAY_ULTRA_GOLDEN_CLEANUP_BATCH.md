@@ -13,20 +13,20 @@
     {
       "number": 2,
       "id": "L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET",
-      "status": "ready-for-research",
-      "title": "Prepare Acid Arrow RAW reconciliation decision packet"
+      "status": "done",
+      "title": "Superseded: Acid Arrow RAW reconciliation is complete"
     },
     {
       "number": 3,
       "id": "L3TODAY-03-ACID-ARROW-SURFACE-SHAPE",
-      "status": "blocked",
-      "title": "Repair Acid Arrow Surface damage shape after RAW decision"
+      "status": "done",
+      "title": "Superseded: Acid Arrow Surface damage shape is repaired"
     },
     {
       "number": 4,
       "id": "L3TODAY-04-ACID-ARROW-RUNTIME-TRACER-BULLET",
-      "status": "blocked",
-      "title": "Promote Acid Arrow delayed damage runtime tracer bullet"
+      "status": "done",
+      "title": "Superseded: Acid Arrow runtime tracer bullet is promoted"
     },
     {
       "number": 5,
@@ -139,11 +139,15 @@ Use these source artifacts before choosing work:
 
 Current generated facts:
 
-- Diagnostic product readiness is `604/607`.
-- Diagnostic non-green counts are `battle-runtime-required: 1`,
-  `owner-evidence-required: 1`, and `partial-battle-runtime: 1`.
-- Strict follow-up-split Units are `acid_arrow`, `druid_wild_shape`,
-  `sorcerer_metamagic`, and `wizard_evocation_savant`.
+- Diagnostic product readiness is `605/607`.
+- Diagnostic non-green counts are `owner-evidence-required: 1` and
+  `partial-battle-runtime: 1`.
+- Strict follow-up-split Units are `druid_wild_shape` and
+  `sorcerer_metamagic`.
+- `acid_arrow` is no longer pending in this lane. It is a supported profile
+  under `spell.invocation-acid-arrow-attack-timing`; the closure is recorded by
+  `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION` and
+  `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT`.
 - `sorcerer_metamagic` prior Ralph task 22 is merged into this base. Do not
   duplicate task 22; use the current generated residuals for follow-up work.
 
@@ -152,12 +156,12 @@ Current generated facts:
 | Order | Task | Status | Depends On | Notes |
 |---:|---|---|---|---|
 | 1 | L3TODAY-01-DIAGNOSTIC-ROW-TRANSPARENCY | ready-for-implementation-after-light-research | none | Make the three current diagnostic non-green rows explicit and keep the stale diagnostic audit from drifting again. |
-| 2 | L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET | ready-for-research | none | RAW/ASSUMPTIONS decision packet only; do not invent the decision if local RAW remains contradictory. |
-| 3 | L3TODAY-03-ACID-ARROW-SURFACE-SHAPE | blocked | L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET | Runnable only if Task 2 records an owner-approved or locally unambiguous damage timing decision. |
-| 4 | L3TODAY-04-ACID-ARROW-RUNTIME-TRACER-BULLET | blocked | L3TODAY-03-ACID-ARROW-SURFACE-SHAPE | Full QNT/TS/MBT tracer bullet for the approved Surface shape. |
+| 2 | L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET | done | none | Superseded by `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION`; no `ASSUMPTIONS.md` override was needed after the local SRD corpus repair. |
+| 3 | L3TODAY-03-ACID-ARROW-SURFACE-SHAPE | done | L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET | Superseded by the repaired Surface Acid Arrow shape and generated SRD Unit catalog evidence. |
+| 4 | L3TODAY-04-ACID-ARROW-RUNTIME-TRACER-BULLET | done | L3TODAY-03-ACID-ARROW-SURFACE-SHAPE | Superseded by `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT`; runtime/QNT evidence owns delayed damage and cleanup. |
 | 5 | L3TODAY-05-WIZARD-EVOCATION-SAVANT-LEVEL3-TRIGGER | ready-for-research | none | Decide whether the level-3 subclass acquisition also triggers the new Wizard Spell Slot level grant. |
 | 6 | L3TODAY-06-WIZARD-EVOCATION-SAVANT-LEVEL3-IMPLEMENTATION | blocked | L3TODAY-05-WIZARD-EVOCATION-SAVANT-LEVEL3-TRIGGER | Runnable only if Task 5 decides the trigger applies at Wizard level 3. |
-| 7 | L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT | blocked | later-level-only | Beast Spells is Druid level 18 pressure; parked here beside Acid Arrow so it remains planned but not current level-3 work. |
+| 7 | L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT | blocked | later-level-only | Beast Spells is Druid level 18 pressure; parked here so it remains planned but not current level-3 work. |
 | 8 | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | ready-for-research | none | Inventory the remaining level-3-reachable Beast-form Stat Block action pressure. |
 | 9 | L3TODAY-09-WILD-SHAPE-FIRST-STAT-BLOCK-ACTION-SLICE | blocked | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | Promote the first inventory item only if it is level-3-reachable and battle-owned. |
 | 10 | L3TODAY-10-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | ready-for-research | none | Determine whether prior work already closed this or whether a shared projection tracer bullet remains. |
@@ -184,44 +188,23 @@ Acceptance:
 - `pnpm unit-profile-coverage:check:self-test` and
   `pnpm unit-profile-coverage:check` pass.
 
-### Task 2 - L3TODAY-02-ACID-ARROW-RAW-DECISION-PACKET
+### Tasks 2-4 - Acid Arrow Superseded
 
-Read local SRD 5.2.1 Acid Arrow text and existing
-`ACID_ARROW_RAW_CORPUS_RECONCILIATION.md`. Produce one of:
+These tasks are no longer runnable work. Acid Arrow is covered by
+`spell.invocation-acid-arrow-attack-timing`.
 
-- an owner-ready `ASSUMPTIONS.md` patch if the repo already has enough local
-  authority to make the initial/later/miss/slot-scaling decision; or
-- a sharper blocker document with the exact owner question and no runtime or
-  Surface implementation changes.
+Closure evidence:
 
-Acceptance:
-
-- No runtime behavior is implemented without the RAW decision.
-- The packet states whether Tasks 3 and 4 are runnable or still blocked.
-- The local RAW citation is included.
-
-### Task 3 - L3TODAY-03-ACID-ARROW-SURFACE-SHAPE
-
-After Task 2 unblocks it, repair Acid Arrow's Surface spell shape so the
-approved damage timing, miss branch, delayed damage, and slot scaling are
-lossless facts.
-
-Acceptance:
-
-- No derived miss damage is stored as an independent approximation.
-- Surface schema/parser tests cover the new shape.
-- Unit-profile coverage remains valid.
-
-### Task 4 - L3TODAY-04-ACID-ARROW-RUNTIME-TRACER-BULLET
-
-Promote Acid Arrow vertically: QNT obligation/witness, TS admission and reducer
-behavior, runtime tests, and MBT/selected identity evidence as appropriate.
-
-Acceptance:
-
-- The real reducer path can execute the approved hit, miss, delayed target-turn
-  damage, slot scaling, resource spending, and cleanup behavior.
-- The supported Unit claim and evidence rows point at production code.
+- `plans/unit-profile-coverage/ACID_ARROW_RAW_CORPUS_RECONCILIATION.md`
+  records the local SRD corpus repair.
+- `plans/unit-profile-coverage/task-claims.jsonl` records
+  `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION` and
+  `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT`.
+- `plans/rules-kernel-coverage/obligations.jsonl` marks
+  `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` covered.
+- `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts`
+  owns focused runtime evidence for immediate damage, miss-half-initial-only
+  damage, hit-only delayed target-end damage, slot scaling, and cleanup.
 
 ### Task 5 - L3TODAY-05-WIZARD-EVOCATION-SAVANT-LEVEL3-TRIGGER
 

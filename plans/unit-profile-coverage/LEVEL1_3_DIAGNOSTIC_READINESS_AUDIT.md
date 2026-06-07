@@ -20,6 +20,12 @@ Darkness object-origin branch as table/object-spatial adjudication, so the
 current generated ledger no longer counts Darkness as partial battle-runtime
 pressure.
 
+Subsequent update: Acid Arrow is now a supported profile under
+`spell.invocation-acid-arrow-attack-timing`. The old `battle-runtime-required`
+diagnostic row was superseded by the local SRD corpus repair and delayed
+runtime support tasks recorded in
+`plans/unit-profile-coverage/task-claims.jsonl`.
+
 ## Gate Check
 
 Checked `scripts/level1-full-support-report.cjs`.
@@ -37,9 +43,9 @@ Checked generated artifacts:
 
 - `plans/unit-profile-coverage/level1-3-full-support.json` reports
   `claimGate.status: "pass"` with blocker counts `0/0/0`.
-- Product readiness is `577/607 (95.1%)`.
-- Non-green diagnostic rows are `battle-runtime-required: 1`,
-  `owner-evidence-required: 18`, and `partial-battle-runtime: 11`.
+- Product readiness is now `605/607 (99.7%)`.
+- Non-green diagnostic rows are now `owner-evidence-required: 1` and
+  `partial-battle-runtime: 1`.
 - `srdAuthoredProductReadiness.blockerRows` is empty.
 
 ## RAW And Language Check
@@ -66,15 +72,15 @@ Effect`, `Using a Higher-Level Spell Slot`, `Spell Attack`, `Area of Effect`,
 
 | Product-readiness status | Rows | Blocks current claim? | Audit result |
 | --- | ---: | --- | --- |
-| `battle-runtime-required` | 1 | No | The sole row is Acid Arrow from the Wizard level-2 spell-list pressure. It is already represented in the strict view as `blocked-follow-up-split` with concrete RAW reconciliation, Surface repair, and battle-runtime support owners. Task 7 audited that split as non-blocking under the current gate. |
-| `owner-evidence-required` | 18 | No | None of these rows appear in SRD-authored-product-readiness blockers. Fifteen are level-3 class feature rows with no Unit matrix row yet, kept visible for the no-matrix/future-owner audits. The other three are installed Units needing better checker-readable owner evidence or follow-up accounting: `bard_jack_of_all_trades`, `sorcerer_metamagic`, and `wizard_evocation_savant`. |
-| `partial-battle-runtime` | 11 | No | At audit time, these 11 source rows collapsed to four profile-subset-supported Units: `darkness`, `druid_wild_shape`, `enhance_ability`, and `moonbeam`. Each had selected-identity evidence and concrete follow-up split owners for the residual mechanics. Task 7 audited those follow-up splits as non-blocking under the current gate. Darkness was later closed by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION`. |
+| `battle-runtime-required` | 0 | No | Acid Arrow no longer appears here; it is covered by `spell.invocation-acid-arrow-attack-timing`. |
+| `owner-evidence-required` | 1 | No | One diagnostic row remains outside the strict claim gate. |
+| `partial-battle-runtime` | 1 | No | One diagnostic row remains outside the strict claim gate. |
 
 ## Row Inventory
 
 | Status | Candidate Unit | Source row | Current disposition | Claim relation |
 | --- | --- | --- | --- | --- |
-| `battle-runtime-required` | `acid_arrow` | Wizard spell list Acid Arrow | `catalog-authored-executable-follow-up` | Strict row is `blocked-follow-up-split`; existing follow-ups own RAW reconciliation, Surface repair, and delayed runtime support. |
+| `battle-runtime-required` | `acid_arrow` | Wizard spell list Acid Arrow | superseded: `supported-profile` | Historical row. Acid Arrow is now covered by `spell.invocation-acid-arrow-attack-timing`; see `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION` and `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT`. |
 | `owner-evidence-required` | `barbarian_primal_knowledge` | Barbarian Primal Knowledge | `level-3-follow-up-required` | No Unit matrix row yet; outside strict denominator and retained for no-matrix audit. |
 | `owner-evidence-required` | `bard_jack_of_all_trades` | Bard Jack of All Trades | `catalog-installed-owner-evidence-required` | Supported Unit profile exists; product metric still wants checker-readable character-sheet owner evidence. |
 | `owner-evidence-required` | `cleric_disciple_of_life` | Cleric Disciple of Life | `level-3-follow-up-required` | No Unit matrix row yet; outside strict denominator and retained for no-matrix audit. |

@@ -394,7 +394,8 @@ Acceptance:
 
 The level 1-2 report still records six `blocked-follow-up-split` rows:
 
-- `acid_arrow`
+- `acid_arrow` — superseded; now covered by
+  `spell.invocation-acid-arrow-attack-timing`
 - `darkness`
 - `druid_wild_shape`
 - `enhance_ability`

@@ -19,6 +19,11 @@ Subsequent update: `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION` closed the
 Darkness object-origin branch as table/object-spatial adjudication, so Darkness
 is no longer a live follow-up-split row in the current generated ledger.
 
+Subsequent update: Acid Arrow is also no longer a live follow-up-split row. It
+is now a supported profile under `spell.invocation-acid-arrow-attack-timing`;
+the RAW corpus reconciliation and delayed runtime support are recorded as
+completed task claims.
+
 ## Gate Check
 
 Checked `scripts/level1-full-support-report.cjs`.
@@ -58,7 +63,7 @@ Higher-Level Spell Slot`, `Spell Attack`, `Ability Check`, `Concentration`,
 
 | Unit | Current claim shape | Existing split owner | Audit result |
 | --- | --- | --- | --- |
-| `acid_arrow` | `unsupported-profile`; selected identity `not-required`; not in Unit catalog | RAW corpus reconciliation, Surface damage shape, delayed battle-runtime support | Correctly non-blocking under the current gate. Local RAW has an internal damage-timing contradiction: hit text gives delayed Acid damage, miss text refers to initial damage, and higher-slot text distinguishes initial and later damage. The row already blocks admission until owner-approved RAW or assumption input exists; promoting runtime support before that would invent a rule. |
+| `acid_arrow` | superseded: `supported-profile`; selected identity and deterministic runtime evidence present | `L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION`; `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT` | Historical row. Acid Arrow now has a repaired local SRD corpus shape, Surface catalog evidence, focused QNT obligation coverage, and runtime tests for immediate damage, miss-half-initial-only damage, hit-only delayed damage, slot scaling, and cleanup. |
 | `darkness` | `profile-subset-supported`; selected identity `witness-present`; installed | Object-origin spell-area and opaque-cover owner | Superseded by `L3SPELL-02-DARKNESS-OBJECT-ORIGIN-DECISION`, which closed the object-origin Emanation and opaque-cover branch as table/object-spatial adjudication outside promoted battle runtime. |
 | `druid_wild_shape` | `profile-subset-supported`; selected identity `witness-present`; installed | Remaining shape-shifting runtime and retained-statistics owners | Correctly non-blocking under the current gate. The supported subset covers character facts, known-form/resource ownership, selected identity, and a promoted battle subset. The remaining equipment, anatomy, Beast Spells, Stat Block action, non-D20 retained-statistic, and active-form persistence questions are explicitly split. `ASSUMPTIONS.md` A27 already owns the active-form character-sheet handoff boundary. |
 | `enhance_ability` | `profile-subset-supported`; selected identity `witness-present`; installed | Higher-level-slot per-target ability-choice owner | Correctly non-blocking under the current gate. The supported subset covers the level-2 one-target Spell Invocation and chosen Ability Check Advantage. The remaining higher-level-slot branch requires multiple targets with independent ability choices, which is a narrower target-list and choice-lifecycle follow-up rather than a hidden level-2 support gap. |
@@ -69,11 +74,10 @@ Higher-Level Spell Slot`, `Spell Attack`, `Ability Check`, `Concentration`,
 
 Round 1 findings:
 
-- Acid Arrow is the highest-risk row because it is an executable level-2 spell
-  with no supported runtime profile. The existing split is still correct because
-  the local RAW contradiction prevents a lossless executable model until owner
-  input exists. No new task is needed; the existing RAW corpus reconciliation,
-  Surface shape, and delayed runtime tasks are the correct atomic sequence.
+- Acid Arrow was the highest-risk row in the original audit, but that finding is
+  superseded. The local SRD corpus repair and delayed runtime support tasks are
+  complete, and Acid Arrow is now covered by
+  `spell.invocation-acid-arrow-attack-timing`.
 - The other five rows are subset-supported with selected-identity evidence.
   Their remaining work is represented by domain-specific follow-up owners and
   does not invalidate the supported subset.

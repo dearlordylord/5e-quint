@@ -50,13 +50,13 @@
       "number": 8,
       "id": "L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER",
       "status": "done",
-      "title": "Record Acid Arrow RAW owner-decision blocker"
+      "title": "Superseded: Acid Arrow RAW blocker is closed"
     },
     {
       "number": 9,
       "id": "L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION",
       "status": "done",
-      "title": "Consolidate residual Wild Shape and Acid Arrow ledgers"
+      "title": "Consolidate residual Wild Shape ledgers after Acid Arrow closure"
     },
     {
       "number": 10,
@@ -129,7 +129,7 @@ repair branch state by rebasing against `master`.
 |     5 | L3MWILD-05-MERGED-EQUIPMENT-NO-EFFECT-PARITY   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Merged-equipment no-effect parity is covered in the Wild Shape lifecycle MBT witness; generated coverage text no longer treats it as unsupported residue. |
 |     6 | L3MWILD-06-FORM-LIMB-OBJECT-CONSUMER-CLOSURE   | done                                          | L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER                                                                                                                                                                                         | Promoted explicit form-limb object-handling witness storage on the active Wild Shape effect.                                          |
 |     7 | L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER     | done                                          | none                                                                                                                                                                                                                           | Replaced stale dependency text with an explicit owner-decision blocker.                                                               |
-|     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Recorded Acid Arrow as blocked until owner approves RAW correction or `ASSUMPTIONS.md` entry.                                        |
+|     8 | L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER   | done                                          | none                                                                                                                                                                                                                           | Superseded by completed Acid Arrow RAW corpus reconciliation and delayed runtime support; no `ASSUMPTIONS.md` override is pending.    |
 |     9 | L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION       | done                                          | L3MWILD-01-PERCEPTION-COMMUNICATION-PROJECTION, L3MWILD-02-EQUIPMENT-DISPOSITION-OWNER, L3MWILD-07-ACTIVE-FORM-PERSISTENCE-BLOCKER, L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER                                               | Regenerated and verified residual ledgers; generated artifacts were already current.                                                  |
 |    10 | L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT  | done                                          | none                                                                                                                                                                                                                           | Wild Shape selected-identity replay is covered by the focused form-lifecycle MBT witness.                                             |
 |    11 | L3MWILD-11-WILD-COMPANION-BOUNDARY-AUDIT       | done                                          | none                                                                                                                                                                                                                           | Wild Companion now closes only the explicit SRDINV86 companion-control residue and delegates familiar lifecycle to the promoted Find Familiar Unit. |
@@ -247,8 +247,10 @@ owner-decision row, not a stale dependency label.
 
 ### Task 8 - L3MWILD-08-ACID-ARROW-OWNER-DECISION-BLOCKER
 
-These are not implementation tasks. Their output is a non-stale blocker row
-that Ralph can understand. Do not invent Acid Arrow damage semantics.
+Historical note: this task originally recorded Acid Arrow as an owner-decision
+blocker. That blocker is now superseded by the completed local SRD corpus
+reconciliation and delayed runtime support. Do not use this task as live Acid
+Arrow work.
 
 ### Task 9 - L3MWILD-09-RESIDUAL-LEDGER-CONSOLIDATION
 
