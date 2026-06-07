@@ -348,7 +348,7 @@ function landsAidBattle(
           sourceClassName: "druid",
         },
         attack: null,
-        druidWildShapeKnownForms: druidWildShapeKnownForms(druidLevel),
+        druidWildShapeAvailableForms: druidWildShapeAvailableForms(druidLevel),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -502,7 +502,7 @@ function rolledDiceFill(
   };
 }
 
-function druidWildShapeKnownForms(druidLevel: number) {
+function druidWildShapeAvailableForms(druidLevel: number) {
   const forms = [
     statBlockCatalog.requireStatBlock("stat_block_rat"),
     statBlockCatalog.requireStatBlock("stat_block_riding_horse"),

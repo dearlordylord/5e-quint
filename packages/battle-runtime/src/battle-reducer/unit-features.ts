@@ -592,7 +592,7 @@ export function druidWildShapeActsForResource(
   const assumeActs =
     resourceHasUsesRemaining(resource) &&
     !combatantShapeShiftingSuppressed(state, actor.combatantId)
-      ? (actor.origin.druidWildShapeKnownForms ?? []).map((form) => ({
+      ? (actor.origin.druidWildShapeAvailableForms ?? []).map((form) => ({
           subject: {
             tag: "druidWildShape" as const,
             actorId: actor.combatantId,
@@ -1378,14 +1378,14 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape has no uses remaining.",
     );
   }
-  const form = actor.origin.druidWildShapeKnownForms?.find(
+  const form = actor.origin.druidWildShapeAvailableForms?.find(
     (candidate) => candidate.id === subject.formStatBlockId,
   );
   if (form === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Druid Wild Shape form is not one of the character's known Beast forms.",
+      "Druid Wild Shape form is not battle-available.",
     );
   }
   const equipmentCandidates = wildShapeLoadoutObjectRefs(

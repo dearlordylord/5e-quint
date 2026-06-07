@@ -1,6 +1,6 @@
 import {
   battleCreatureInitFromStatBlock,
-  battleDruidWildShapeKnownForms,
+  battleAvailableDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
@@ -110,7 +110,7 @@ export type CharacterBuildCreatureInput = {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
-  readonly druidWildShapeKnownForms?: readonly StatBlockRecord[];
+  readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
   readonly pactBladeBondedWeaponItemId?:
     | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
@@ -375,13 +375,14 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(druidWildShapeProfile)) {
     return Either.left(druidWildShapeProfile.left);
   }
-  const druidWildShapeKnownForms = battleDruidWildShapeKnownFormsFromInput(
-    input.druidWildShapeKnownForms,
-    druidWildShapeFacts.right,
-    druidWildShapeProfile.right,
-  );
-  if (Either.isLeft(druidWildShapeKnownForms)) {
-    return Either.left(druidWildShapeKnownForms.left);
+  const druidWildShapeAvailableForms =
+    battleDruidWildShapeAvailableFormsFromInput(
+      input.druidWildShapeAvailableForms,
+      druidWildShapeFacts.right,
+      druidWildShapeProfile.right,
+    );
+  if (Either.isLeft(druidWildShapeAvailableForms)) {
+    return Either.left(druidWildShapeAvailableForms.left);
   }
 
   return Either.right({
@@ -439,9 +440,9 @@ export function battleCreatureInitFromCharacterBuild(
       ...(spellcasting === undefined
         ? {}
         : { spellcasting: spellcasting.right }),
-      ...(druidWildShapeKnownForms.right === undefined
+      ...(druidWildShapeAvailableForms.right === undefined
         ? {}
-        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
+        : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
     },
   });
 }
@@ -489,40 +490,39 @@ function singleDruidWildShapeProfile(
   return Either.right(profiles[0]);
 }
 
-function battleDruidWildShapeKnownFormsFromInput(
+function battleDruidWildShapeAvailableFormsFromInput(
   forms: readonly StatBlockRecord[] | undefined,
   facts: CharacterBuildDruidWildShapeFacts | undefined,
   profile: SupportedDruidWildShapeProfile | undefined,
 ): Either.Either<
-  | readonly [BattleDruidWildShapeKnownForm, ...BattleDruidWildShapeKnownForm[]]
-  | undefined,
+  readonly BattleDruidWildShapeKnownForm[] | undefined,
   BattleCreatureInitIssue
 > {
   if (facts === undefined) {
     return forms === undefined
       ? Either.right(undefined)
       : battleCreatureInitIssue(
-          "Druid Wild Shape known forms require the Druid Wild Shape feature.",
+          "Druid Wild Shape available forms require the Druid Wild Shape feature.",
         );
-  }
-  if (forms === undefined) {
-    return battleCreatureInitIssue(
-      "Druid Wild Shape battle initialization requires known Beast forms.",
-    );
   }
   if (profile === undefined) {
     return battleCreatureInitIssue(
       "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
     );
   }
-  const knownForms = battleDruidWildShapeKnownForms({
+  if (forms === undefined) {
+    return battleCreatureInitIssue(
+      "Druid Wild Shape battle initialization requires an available known-form subset.",
+    );
+  }
+  const availableForms = battleAvailableDruidWildShapeKnownForms({
     forms,
     profile,
   });
-  if (Either.isLeft(knownForms)) {
-    return battleCreatureInitIssue(knownForms.left.message);
+  if (Either.isLeft(availableForms)) {
+    return battleCreatureInitIssue(availableForms.left.message);
   }
-  return Either.right(knownForms.right);
+  return Either.right(availableForms.right);
 }
 
 function characterBattleSpeciesSize(

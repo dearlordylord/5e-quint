@@ -16,7 +16,7 @@ import { expect, test } from "vitest";
 import {
   activeDruidWildShapeForm,
   activeDruidWildShapeEffect,
-  battleDruidWildShapeKnownForms,
+  battleAvailableDruidWildShapeKnownForms,
   battleShapeShiftedRuntimeState,
   BattleFillSchema,
   combatantAbilityCheckModifier,
@@ -30,6 +30,7 @@ import {
   startBattle,
   validateWildShapeEquipmentDispositionFill,
   wildShapeLoadoutObjectRefs,
+  wildShapeFormActionSurfaceInventory,
   type BattleFill,
   type BattleCreatureState,
   type BattleHole,
@@ -1255,6 +1256,41 @@ test("offers one assume-form act for each known Beast form", () => {
   ).toHaveLength(4);
 });
 
+test("offers no assume-form acts when no Wild Shape forms are battle-available", () => {
+  const initial = druidWildShapeBattle({ knownForms: [] });
+  const acts = discoverBattleActs(initial);
+  expect(
+    acts.filter(
+      (act) =>
+        act.subject.tag === "druidWildShape" &&
+        act.subject.action === "assumeForm",
+    ),
+  ).toEqual([]);
+});
+
+test("rejects omitted Wild Shape available-form subset for a direct battle init", () => {
+  const result = startBattle({
+    battleId: battleId("battle-druid-wild-shape-omitted-forms"),
+    combatants: [
+      characterSeed({
+        combatantId: druidId,
+        displayName: "Druid",
+        initiative: 20,
+        classLevels: [{ className: "druid", level: 2 }],
+        resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+
+  expect(Either.isLeft(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    expect(result.left.message).toBe(
+      "Druid Wild Shape battle initialization requires an available known-form subset.",
+    );
+  }
+});
+
 test("rejects ineligible known Beast forms before battle initialization", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
@@ -1263,7 +1299,7 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const result = battleDruidWildShapeKnownForms({
+  const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
       statBlockCatalog.requireStatBlock(ratId),
@@ -1277,6 +1313,30 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
   if (Either.isLeft(result)) {
     expect(result.left.message).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+    );
+  }
+});
+
+test("rejects duplicate supplied Wild Shape form records before battle initialization", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [
+      statBlockCatalog.requireStatBlock(ratId),
+      statBlockCatalog.requireStatBlock(ratId),
+    ],
+  });
+
+  expect(Either.isLeft(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    expect(result.left.message).toBe(
+      "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
 });
@@ -1302,7 +1362,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
       ] as const,
     },
   };
-  const result = battleDruidWildShapeKnownForms({
+  const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
       statBlockCatalog.requireStatBlock(ratId),
@@ -1320,7 +1380,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
   }
 });
 
-test("rejects known Beast forms with unsupported stat block action riders", () => {
+test("filters unsupported selected Beast form action shapes from battle-available forms", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -1328,7 +1388,7 @@ test("rejects known Beast forms with unsupported stat block action riders", () =
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const result = battleDruidWildShapeKnownForms({
+  const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
       statBlockCatalog.requireStatBlock(ratId),
@@ -1338,12 +1398,90 @@ test("rejects known Beast forms with unsupported stat block action riders", () =
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
-      "Druid Wild Shape battle forms require supported Stat Block action sections.",
-    );
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isRight(result)) {
+    expect(result.right.map((form) => form.id)).toEqual([
+      ratId,
+      ridingHorseId,
+    ]);
   }
+});
+
+test("filters trait-derived attack-roll advantage from battle-available forms", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const traitAdvantageForm = {
+    ...baseForm,
+    id: "synthetic_pack_tactics_shape",
+    statBlock: {
+      ...baseForm.statBlock,
+      traits: [
+        {
+          name: "Synthetic Tactics",
+          description:
+            "The form has Advantage on attack rolls against a creature if an ally is next to the creature.",
+        },
+      ],
+    },
+  } satisfies StatBlockRecord;
+
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [baseForm, traitAdvantageForm],
+  });
+
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isRight(result)) {
+    expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
+  }
+});
+
+test("classifies eligible Wild Shape Beast action surfaces without making ids the category owner", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const inventory = wildShapeFormActionSurfaceInventory({
+    forms: [
+      ...statBlockCatalog.listStatBlocks(),
+      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    ],
+    profile,
+  });
+
+  expect(inventory).toEqual(
+    expect.arrayContaining([
+      {
+        category: "simpleLiteralAttackSingleDamage",
+        exampleStatBlockIds: expect.arrayContaining([ratId, ridingHorseId]),
+      },
+      {
+        category: "multiDamageComponentsOnHit",
+        exampleStatBlockIds: expect.arrayContaining([spiderId]),
+      },
+      {
+        category: "attackHitRider",
+        exampleStatBlockIds: expect.arrayContaining([wolfId]),
+      },
+      {
+        category: "traitDerivedConditionalAttackRollAdvantage",
+        exampleStatBlockIds: expect.arrayContaining([wolfId]),
+      },
+      {
+        category: "tableOrProseOnlyTrait",
+        exampleStatBlockIds: expect.arrayContaining([ratId]),
+      },
+    ]),
+  );
 });
 
 test("projects automatic reversion when Wild Shape ends from Incapacitated", () => {
@@ -1510,7 +1648,7 @@ function druidWildShapeCreatureInit(input?: {
     ...(input?.offHandAttack === undefined
       ? {}
       : { offHandAttack: input.offHandAttack }),
-    druidWildShapeKnownForms:
+    druidWildShapeAvailableForms:
       input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
     selectedLoadout: input?.selectedLoadout ?? {},
     spellcasting: {

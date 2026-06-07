@@ -241,7 +241,7 @@ function combatantDruidWildShapeEquipmentWearsKind(
         effect.equipmentDisposition,
         kind,
       ) &&
-      origin.druidWildShapeKnownForms?.some(
+      origin.druidWildShapeAvailableForms?.some(
         (form) => form.id === effect.formStatBlockId,
       ) === true,
   );

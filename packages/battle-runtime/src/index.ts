@@ -219,8 +219,14 @@ export type {
 } from "./battle-init.ts";
 export {
   KNOCKED_OUT_UNCONSCIOUS,
-  battleDruidWildShapeKnownForms,
+  battleAvailableDruidWildShapeKnownForms,
 } from "./battle-init.ts";
+export {
+  WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES,
+  wildShapeFormActionSurfaceInventory,
+  type WildShapeFormActionSurfaceCategory,
+  type WildShapeFormActionSurfaceInventoryEntry,
+} from "./statblock-action-support.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
