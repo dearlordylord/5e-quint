@@ -33,7 +33,7 @@ import {
   admitPresentFindFamiliarToBattle,
   applyCompanionLongRestDisappearance,
   applyFindFamiliarZeroHitPointDisappearance,
-  battleDruidWildShapeKnownForms,
+  battleAvailableDruidWildShapeKnownForms,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleCombatantSide,
   battleId,
@@ -134,7 +134,7 @@ function druidWildShapeKnownForms() {
   if (profile === null || profile === "unsupported") {
     throw new Error("Expected Druid Wild Shape known-form support profile.");
   }
-  const forms = battleDruidWildShapeKnownForms({
+  const forms = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
       statBlockCatalog.requireStatBlock("stat_block_rat"),
@@ -611,7 +611,7 @@ function characterCreature(input: {
   readonly druidWildShapeKnownForms?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
-  >["druidWildShapeKnownForms"];
+  >["druidWildShapeAvailableForms"];
   readonly currentHp?: number;
   readonly maxHp?: number;
 }): BattleCreatureInit {
@@ -657,7 +657,7 @@ function characterCreature(input: {
       ...(input.resources === undefined ? {} : { resources: input.resources }),
       ...(input.druidWildShapeKnownForms === undefined
         ? {}
-        : { druidWildShapeKnownForms: input.druidWildShapeKnownForms }),
+        : { druidWildShapeAvailableForms: input.druidWildShapeKnownForms }),
     },
   };
 }
